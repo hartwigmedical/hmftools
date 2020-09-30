@@ -55,8 +55,8 @@ public class FragmentSizeCalcs implements Callable
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
-    private final List<int[]> mFragmentLengths;
-    private final List<int[]> mFragmentLengthsByGene;
+    private final List<FragmentSize> mFragmentLengths;
+    private final List<FragmentSize> mFragmentLengthsByGene;
     private int mMaxReadLength;
 
     private BufferedWriter mGeneWriter;
@@ -74,11 +74,6 @@ public class FragmentSizeCalcs implements Callable
     private static final int MAX_GENE_TRANS = 50;
     private static final int MAX_GENE_FRAGMENT_COUNT = 5000; // to avoid impact of highly enriched genes
     private static final int MAX_FRAGMENT_LENGTH = 5000; // ignored beyond this
-
-    private static final int FD_LENGTH = 0;
-    private static final int FD_FREQUENCY = 1;
-
-    private final List<Integer> mSoftClipLengthBuckets;
 
     private PerformanceCounter mPerfCounter;
 
@@ -108,19 +103,16 @@ public class FragmentSizeCalcs implements Callable
         mFragmentLengths = Lists.newArrayList();
         mFragmentLengthsByGene = Lists.newArrayList();
 
-        mSoftClipLengthBuckets = Lists.newArrayList(1,2,3,5,10,25,50);
-        
         mChromosome = "";
         mRequiredFragCount = 0;
 
         mPerfCounter = new PerformanceCounter("FragLengthDist");
     }
 
-    public final List<int[]> getFragmentLengths() { return mFragmentLengths; }
+    public final List<FragmentSize> getFragmentLengths() { return mFragmentLengths; }
     public final int getMaxReadLength() { return mMaxReadLength; }
     public final PerformanceCounter getPerformanceCounter() { return mPerfCounter; }
-    public final List<Integer> getSoftClipLengthBuckets() { return mSoftClipLengthBuckets; }
-    
+
     public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList, int requiredFragCount)
     {
         mChromosome = chromosome;
@@ -332,37 +324,28 @@ public class FragmentSizeCalcs implements Callable
         return true;
     }
 
-    private void addFragmentLength(final SAMRecord record, final List<int[]> fragmentLengths)
+    private void addFragmentLength(final SAMRecord record, final List<FragmentSize> fragmentLengths)
     {
         int fragmentLength = getLengthBucket(abs(record.getInferredInsertSize()));
 
         if(fragmentLength == 0)
             return;
 
-        int scLength = record.getCigar().getCigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.S).mapToInt(x -> x.getLength()).sum();
-
-        int scIndex = getSoftClipBucketIndex(scLength);
-
         int index = 0;
         boolean exists = false;
         while(index < fragmentLengths.size())
         {
-            final int[] fragLengthCount = fragmentLengths.get(index);
+            final FragmentSize fragLengthCount = fragmentLengths.get(index);
 
-            if(fragLengthCount[FD_LENGTH] < fragmentLength)
+            if(fragLengthCount.Length < fragmentLength)
             {
                 ++index;
                 continue;
             }
 
-            if(fragLengthCount[FD_LENGTH] == fragmentLength)
+            if(fragLengthCount.Length == fragmentLength)
             {
-                ++fragLengthCount[FD_FREQUENCY];
-
-                if(scIndex >= 0)
-                    ++fragLengthCount[scIndex];
-
+                ++fragLengthCount.Frequency;
                 exists = true;
             }
 
@@ -371,13 +354,7 @@ public class FragmentSizeCalcs implements Callable
 
         if(!exists)
         {
-            int[] newFragLengthCount = new int[2 + mSoftClipLengthBuckets.size()];
-            newFragLengthCount[FD_LENGTH] = fragmentLength;
-            newFragLengthCount[FD_FREQUENCY] = 1;
-
-            if(scIndex >= 0)
-                ++newFragLengthCount[scIndex];
-
+            FragmentSize newFragLengthCount = new FragmentSize(fragmentLength, 1);
             fragmentLengths.add(index, newFragLengthCount);
         }
 
@@ -396,30 +373,16 @@ public class FragmentSizeCalcs implements Callable
         return 100 * (int)round(fragmentLength/100.0);
     }
 
-    private int getSoftClipBucketIndex(int scLength)
+    public static void setConfigFragmentLengthData(final IsofoxConfig config, final List<FragmentSize> fragmentLengths)
     {
-        if(scLength == 0)
-            return -1;
-
-        for(int i = 0; i < mSoftClipLengthBuckets.size(); ++i)
-        {
-            if(scLength <= mSoftClipLengthBuckets.get(i))
-                return i;
-        }
-
-        return mSoftClipLengthBuckets.size() - 1;
-    }
-
-    public static void setConfigFragmentLengthData(final IsofoxConfig config, final List<int[]> fragmentLengths)
-    {
-        final List<int[]> lengthFrequencies = config.FragmentLengthData;
+        final List<FragmentSize> lengthFrequencies = config.FragmentSizeData;
 
         int currentRangeMin = 0;
         int currentRangeMax = 0;
 
         for(int i = 0; i < lengthFrequencies.size(); ++i)
         {
-            int[] lengthFrequency = lengthFrequencies.get(i);
+            FragmentSize lengthFrequency = lengthFrequencies.get(i);
 
             currentRangeMin = (i == 0) ? 0 : currentRangeMax + 1;
 
@@ -429,79 +392,76 @@ public class FragmentSizeCalcs implements Callable
             }
             else
             {
-                int[] nextLengthFrequency = lengthFrequencies.get(i + 1);
-                currentRangeMax = (lengthFrequency[FD_LENGTH] + nextLengthFrequency[FD_LENGTH]) / 2;
+                FragmentSize nextLengthFrequency = lengthFrequencies.get(i + 1);
+                currentRangeMax = (lengthFrequency.Length + nextLengthFrequency.Length) / 2;
             }
 
             int lengthCount = 0;
 
-            for (final int[] fragLengthCount : fragmentLengths)
+            for (final FragmentSize fragLengthCount : fragmentLengths)
             {
-                if(fragLengthCount[FD_LENGTH] >= currentRangeMin && fragLengthCount[FD_LENGTH] <= currentRangeMax)
+                if(fragLengthCount.Length >= currentRangeMin && fragLengthCount.Length <= currentRangeMax)
                 {
-                    lengthCount += fragLengthCount[FD_FREQUENCY];
+                    lengthCount += fragLengthCount.Frequency;
                 }
             }
 
-            lengthFrequency[FD_FREQUENCY] = lengthCount;
-            ISF_LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency[FD_LENGTH], lengthCount);
+            lengthFrequency.Frequency = lengthCount;
+            ISF_LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency.Length, lengthCount);
         }
     }
 
-    public static List<Double> calcPercentileData(final List<int[]> fragmentLengths, final List<Double> percentiles)
+    public static List<Double> calcPercentileData(final List<FragmentSize> fragmentLengths, final List<Double> percentiles)
     {
         final List<Double> percentileLengths = Lists.newArrayList();
 
-        double totalFragments = fragmentLengths.stream().mapToLong(x -> x[FD_FREQUENCY]).sum();
+        double totalFragments = fragmentLengths.stream().mapToLong(x -> x.Frequency).sum();
 
         for(Double percentile : percentiles)
         {
             int currentTotal = 0;
             int prevLength = 0;
 
-            for (final int[] fragLengthCount : fragmentLengths)
+            for (final FragmentSize fragLengthCount : fragmentLengths)
             {
-                double nextPercTotal = (currentTotal + fragLengthCount[FD_FREQUENCY]) / totalFragments;
+                double nextPercTotal = (currentTotal + fragLengthCount.Frequency) / totalFragments;
 
                 if(nextPercTotal >= percentile)
                 {
-                    double percLength = prevLength > 0 ? (prevLength + fragLengthCount[FD_LENGTH]) * 0.5 : fragLengthCount[FD_LENGTH];
+                    double percLength = prevLength > 0 ? (prevLength + fragLengthCount.Length) * 0.5 : fragLengthCount.Length;
                     percentileLengths.add(percLength);
                     break;
                 }
 
-                currentTotal += fragLengthCount[FD_FREQUENCY];
-                prevLength = fragLengthCount[FD_LENGTH];
+                currentTotal += fragLengthCount.Frequency;
+                prevLength = fragLengthCount.Length;
             }
         }
 
         return percentileLengths;
     }
 
-    public static void mergeData(final List<int[]> fragmentLengths, final FragmentSizeCalcs other)
+    public static void mergeData(final List<FragmentSize> fragmentLengths, final FragmentSizeCalcs other)
     {
-        for(final int[] otherLengthData : other.getFragmentLengths())
+        for(FragmentSize otherLengthData : other.getFragmentLengths())
         {
-            int fragmentLength = otherLengthData[FD_LENGTH];
+            int fragmentLength = otherLengthData.Length;
 
             int index = 0;
             boolean exists = false;
             while (index < fragmentLengths.size())
             {
-                final int[] fragLengthCount = fragmentLengths.get(index);
+                final FragmentSize fragLengthCount = fragmentLengths.get(index);
 
-                if (fragLengthCount[FD_LENGTH] < fragmentLength)
+                if (fragLengthCount.Length < fragmentLength)
                 {
                     ++index;
                     continue;
                 }
 
-                if (fragLengthCount[FD_LENGTH] == fragmentLength)
+                if (fragLengthCount.Length == fragmentLength)
                 {
-                    for(int i = FD_FREQUENCY; i < fragLengthCount.length; ++i)
-                    {
-                        fragLengthCount[i] += otherLengthData[i];
-                    }
+                    fragLengthCount.Frequency += otherLengthData.Frequency;
                     exists = true;
                 }
 
@@ -510,12 +470,7 @@ public class FragmentSizeCalcs implements Callable
 
             if (!exists)
             {
-                int[] newLengthData = new int[otherLengthData.length];
-
-                for(int i = 0; i < otherLengthData.length; ++i)
-                {
-                    newLengthData[i] = otherLengthData[i];
-                }
+                FragmentSize newLengthData = new FragmentSize(fragmentLength, otherLengthData.Frequency);
                 fragmentLengths.add(index, newLengthData);
             }
         }
@@ -542,7 +497,7 @@ public class FragmentSizeCalcs implements Callable
     }
 
     public synchronized static void writeGeneFragmentLengths(
-            final BufferedWriter writer, final List<int[]> fragmentLengths, final String geneNames, int geneCount,
+            final BufferedWriter writer, final List<FragmentSize> fragmentLengths, final String geneNames, int geneCount,
             final String chromosome, final int[] genesRegion)
     {
         if(writer == null)
@@ -553,12 +508,12 @@ public class FragmentSizeCalcs implements Callable
 
         try
         {
-            for (final int[] fragLengthCount : fragmentLengths)
+            for (FragmentSize fragLengthCount : fragmentLengths)
             {
                 writer.write(String.format("%s,%d,%s,%d,%d",
                         geneNames, geneCount, chromosome, genesRegion[SE_START], genesRegion[SE_END]));
 
-                writer.write(String.format(",%d,%d", fragLengthCount[FD_LENGTH], fragLengthCount[FD_FREQUENCY]));
+                writer.write(String.format(",%d,%d", fragLengthCount.Length, fragLengthCount.Frequency));
                 writer.newLine();
             }
         }
@@ -568,7 +523,7 @@ public class FragmentSizeCalcs implements Callable
         }
     }
 
-    public static void writeFragmentLengths(final IsofoxConfig config, final List<int[]> fragmentLengths, final List<Integer> scLengths)
+    public static void writeFragmentLengths(final IsofoxConfig config, final List<FragmentSize> fragmentLengths)
     {
         if(fragmentLengths.isEmpty())
             return;
@@ -580,23 +535,11 @@ public class FragmentSizeCalcs implements Callable
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             writer.write("FragmentLength,Count");
-
-            for(Integer scLength : scLengths)
-            {
-                writer.write(String.format(",Sc%d", scLength));
-            }
-
             writer.newLine();
 
-            for (final int[] fragLengthData : fragmentLengths)
+            for (final FragmentSize fragLengthData : fragmentLengths)
             {
-                writer.write(String.format("%d,%d", fragLengthData[FD_LENGTH], fragLengthData[FD_FREQUENCY]));
-
-                for(int i = 2; i < fragLengthData.length; ++i)
-                {
-                    writer.write(String.format(",%d", fragLengthData[i]));
-                }
-
+                writer.write(String.format("%d,%d", fragLengthData.Length, fragLengthData.Frequency));
                 writer.newLine();
             }
 

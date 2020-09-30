@@ -18,6 +18,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.sun.org.apache.bcel.internal.generic.DUP;
 
@@ -48,7 +49,7 @@ public abstract class SummaryStats
 
     public static SummaryStats createSummaryStats(
             final int[] totalCounts, int enrichedGeneFragCount,
-            double medianGCRatio, final List<int[]> fragmentLengths, int maxReadLength)
+            double medianGCRatio, final List<FragmentSize> fragmentLengths, int maxReadLength)
     {
         int totalFragments = totalCounts[typeAsInt(TOTAL)];
         int totalDuplicates = totalCounts[typeAsInt(DUPLICATE)];

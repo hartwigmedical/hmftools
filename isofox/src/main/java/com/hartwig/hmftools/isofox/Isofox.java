@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.adjusts.BamReadCounter;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.TaskExecutor;
@@ -72,7 +73,7 @@ public class Isofox
     private final FusionTaskManager mFusionTaskManager;
 
     private int mMaxObservedReadLength;
-    private final List<int[]> mFragmentLengthDistribution;
+    private final List<FragmentSize> mFragmentLengthDistribution;
 
     public Isofox(final IsofoxConfig config, final CommandLine cmd)
     {
@@ -354,7 +355,7 @@ public class Isofox
 
         if (mConfig.WriteFragmentLengths)
         {
-            FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution, fragSizeCalcs.get(0).getSoftClipLengthBuckets());
+            FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution);
         }
 
         final PerformanceCounter combinedPc = fragSizeCalcs.get(0).getPerformanceCounter();

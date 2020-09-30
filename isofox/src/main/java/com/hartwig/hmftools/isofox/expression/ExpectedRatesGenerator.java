@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -89,11 +90,11 @@ public class ExpectedRatesGenerator
         // apply fragment reads across each transcript as though it were fully transcribed
         final List<TranscriptData> transDataList = mGeneCollection.getTranscripts();
 
-        for(mFragSizeIndex = 0; mFragSizeIndex < mConfig.FragmentLengthData.size(); ++mFragSizeIndex)
+        for(mFragSizeIndex = 0; mFragSizeIndex < mConfig.FragmentSizeData.size(); ++mFragSizeIndex)
         {
-            final int[] flData = mConfig.FragmentLengthData.get(mFragSizeIndex);
-            mCurrentFragSize = flData[FL_LENGTH];
-            mCurrentFragFrequency = flData[FL_FREQUENCY];
+            final FragmentSize flData = mConfig.FragmentSizeData.get(mFragSizeIndex);
+            mCurrentFragSize = flData.Length;
+            mCurrentFragFrequency = flData.Frequency;
 
             for (TranscriptData transData : transDataList)
             {
@@ -174,7 +175,7 @@ public class ExpectedRatesGenerator
                 // force an empty entry even though it won't have any category ratios set for it
                 List<String> allGeneIds = mGeneCollection.genes().stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
                 CategoryCountsData genesWithoutCounts = new CategoryCountsData(emptyTrans, allGeneIds);
-                genesWithoutCounts.initialiseLengthCounts(mConfig.FragmentLengthData.size());
+                genesWithoutCounts.initialiseLengthCounts(mConfig.FragmentSizeData.size());
                 List<CategoryCountsData> emptyList = Lists.newArrayList(genesWithoutCounts);
 
                 for(GeneReadData gene : mGeneCollection.genes())
@@ -192,7 +193,7 @@ public class ExpectedRatesGenerator
                 continue;
 
             CategoryCountsData genesWithoutCounts = new CategoryCountsData(Lists.newArrayList(), Lists.newArrayList(geneId));
-            genesWithoutCounts.initialiseLengthCounts(mConfig.FragmentLengthData.size());
+            genesWithoutCounts.initialiseLengthCounts(mConfig.FragmentSizeData.size());
             List<CategoryCountsData> emptyList = Lists.newArrayList(genesWithoutCounts);
 
             mTransCategoryCounts.put(geneId, emptyList);
@@ -347,7 +348,7 @@ public class ExpectedRatesGenerator
             matchingCounts = new CategoryCountsData(transcripts, unsplicedGenes);
 
             if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
-                matchingCounts.initialiseLengthCounts(mConfig.FragmentLengthData.size());
+                matchingCounts.initialiseLengthCounts(mConfig.FragmentSizeData.size());
 
             transComboDataList.add(matchingCounts);
         }
@@ -693,9 +694,9 @@ public class ExpectedRatesGenerator
             {
                 writer.write("GeneSetId,TransId,Category");
 
-                for(int[] fragLength : config.FragmentLengthData)
+                for(FragmentSize fragLength : config.FragmentSizeData)
                 {
-                    writer.write(String.format(",%s_%d", EXP_COUNT_LENGTH_HEADER, fragLength[FL_LENGTH]));
+                    writer.write(String.format(",%s_%d", EXP_COUNT_LENGTH_HEADER, fragLength.Length));
                 }
             }
             else

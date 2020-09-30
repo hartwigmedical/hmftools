@@ -531,7 +531,7 @@ public class BamFragmentReader implements Callable
     {
         for (final TranscriptData transData : geneReadData.getTranscripts())
         {
-            final TranscriptResult results = new TranscriptResult(geneCollection, geneReadData, transData, mConfig.FragmentLengthData);
+            final TranscriptResult results = new TranscriptResult(geneCollection, geneReadData, transData, mConfig.FragmentSizeData);
 
             geneCollectionSummary.TranscriptResults.add(results);
         }

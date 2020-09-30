@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -241,7 +242,7 @@ public class ExpectedRatesTest
     {
         IsofoxConfig config = new IsofoxConfig();
         config.ReadLength = 10;
-        config.FragmentLengthData.add(new int[] {30, 1});
+        config.FragmentSizeData.add(new FragmentSize(30, 1));
 
         ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
 
@@ -310,7 +311,7 @@ public class ExpectedRatesTest
     public void testMultipleTranscriptCounts()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.FragmentLengthData.add(new int[] {30, 1});
+        config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 
         ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
@@ -424,7 +425,7 @@ public class ExpectedRatesTest
     public void testSingleExonicRegions()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.FragmentLengthData.add(new int[] {30, 1});
+        config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 
         ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
@@ -512,7 +513,7 @@ public class ExpectedRatesTest
     public void testOverlappingGeneCounts()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.FragmentLengthData.add(new int[] { 30, 1 });
+        config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 
         ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);

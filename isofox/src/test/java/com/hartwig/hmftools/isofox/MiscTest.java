@@ -13,6 +13,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 
 import org.junit.Test;
@@ -22,11 +23,11 @@ public class MiscTest
     @Test
     public void testEffectiveLength()
     {
-        final List<int[]> fragmentLengthData = Lists.newArrayList();
+        final List<FragmentSize> fragmentLengthData = Lists.newArrayList();
 
-        fragmentLengthData.add(new int[]{100, 1});
-        fragmentLengthData.add(new int[]{200, 2});
-        fragmentLengthData.add(new int[]{300, 1});
+        fragmentLengthData.add(new FragmentSize(100, 1));
+        fragmentLengthData.add(new FragmentSize(200, 2));
+        fragmentLengthData.add(new FragmentSize(300, 1));
 
         assertEquals(800, calcEffectiveLength(1000, fragmentLengthData), 0.001);
 

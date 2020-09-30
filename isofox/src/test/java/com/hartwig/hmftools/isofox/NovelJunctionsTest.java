@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
@@ -47,7 +48,7 @@ public class NovelJunctionsTest
     public void testAltSpliceJunctionTypes()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.FragmentLengthData.add(new int[] { 30, 1 });
+        config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 
         String chromosome = CHR_1;
@@ -242,7 +243,7 @@ public class NovelJunctionsTest
     public void testRetainedIntrons()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.FragmentLengthData.add(new int[] { 30, 1 });
+        config.FragmentSizeData.add(new FragmentSize(30, 1));
         config.ReadLength = 10;
 
         String chromosome = CHR_1;

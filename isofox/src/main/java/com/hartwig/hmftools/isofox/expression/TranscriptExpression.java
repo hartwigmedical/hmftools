@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
@@ -57,7 +58,7 @@ public class TranscriptExpression
 
     private void applyFragmentLengthDistributionToExpectedCounts(final Map<String,List<CategoryCountsData>> geneSetCountsData)
     {
-        final List<int[]> fragmentLengthData = mConfig.FragmentLengthData;
+        final List<FragmentSize> fragmentLengthData = mConfig.FragmentSizeData;
 
         for(List<CategoryCountsData> categoryCountsData : geneSetCountsData.values())
         {

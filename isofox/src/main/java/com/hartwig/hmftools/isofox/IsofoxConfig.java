@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.CHR_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
@@ -33,6 +32,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.fusion.FusionConfig;
 
@@ -124,7 +124,7 @@ public class IsofoxConfig
     public final boolean ApplyMapQualityAdjust;
     public final boolean ApplyGcBiasAdjust;
     public int ReadLength;
-    public final List<int[]> FragmentLengthData;
+    public final List<FragmentSize> FragmentSizeData;
     public final boolean WriteExpectedRates;
 
     public final boolean WriteFragmentLengths;
@@ -262,7 +262,7 @@ public class IsofoxConfig
         ApplyMapQualityAdjust = cmd.hasOption(APPLY_MQ_ADJUST);
         ApplyGcBiasAdjust = cmd.hasOption(APPLY_GC_BIAS_ADJUSTMENT);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
-        FragmentLengthData = Lists.newArrayList();
+        FragmentSizeData = Lists.newArrayList();
 
         if(cmd.hasOption(ER_FRAGMENT_LENGTHS))
         {
@@ -272,7 +272,7 @@ public class IsofoxConfig
                 String[] flItem = fragLengths[i].split("-");
                 int fragLength = Integer.parseInt(flItem[FL_LENGTH]);
                 int fragFrequency = Integer.parseInt(flItem[ExpectedRatesGenerator.FL_FREQUENCY]);
-                FragmentLengthData.add(new int[]{ fragLength, fragFrequency });
+                FragmentSizeData.add(new FragmentSize(fragLength, fragFrequency));
             }
         }
 
@@ -321,9 +321,9 @@ public class IsofoxConfig
             return false;
         }
 
-        if(!FragmentLengthData.isEmpty())
+        if(!FragmentSizeData.isEmpty())
         {
-            if(FragmentLengthData.stream().anyMatch(x -> x[FL_LENGTH] <= 0 || x[FL_FREQUENCY] < 0))
+            if(FragmentSizeData.stream().anyMatch(x -> x.Length <= 0 || x.Frequency < 0))
             {
                 ISF_LOGGER.error("invalid fragment lengths");
                 return false;
@@ -332,7 +332,7 @@ public class IsofoxConfig
 
         if(runFunction(EXPECTED_TRANS_COUNTS))
         {
-            if(ReadLength == 0 || FragmentLengthData.isEmpty())
+            if(ReadLength == 0 || FragmentSizeData.isEmpty())
             {
                 ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans counts");
                 return false;
@@ -364,7 +364,7 @@ public class IsofoxConfig
             }
             else
             {
-                if(ReadLength == 0 || FragmentLengthData.isEmpty())
+                if(ReadLength == 0 || FragmentSizeData.isEmpty())
                 {
                     ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
                     return false;
@@ -488,7 +488,7 @@ public class IsofoxConfig
 
         ApplyExpectedRates = false;
         ReadLength = 0;
-        FragmentLengthData = Lists.newArrayList();
+        FragmentSizeData = Lists.newArrayList();
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
 

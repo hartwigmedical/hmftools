@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_F
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 
 // counts of fragments which could support a set of transcripts and/or unspliced genes
 
@@ -107,13 +108,13 @@ public class CategoryCountsData
         mFragmentCountsByLength[lengthIndex] += count;
     }
 
-    public void applyFrequencies(final List<int[]> lengthFrequencies)
+    public void applyFrequencies(final List<FragmentSize> lengthFrequencies)
     {
         mFragmentCount = 0;
 
         for(int i = 0; i < mFragmentCountsByLength.length; ++i)
         {
-            mFragmentCountsByLength[i] *= lengthFrequencies.get(i)[FL_FREQUENCY];
+            mFragmentCountsByLength[i] *= lengthFrequencies.get(i).Frequency;
             mFragmentCount += mFragmentCountsByLength[i];
         }
     }

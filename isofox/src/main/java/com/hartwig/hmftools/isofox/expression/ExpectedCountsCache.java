@@ -17,6 +17,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 
 public class ExpectedCountsCache
 {
@@ -94,22 +95,22 @@ public class ExpectedCountsCache
             // extract the fragment lengths from the header if not already populated (in which case they must match)
             int fileFragmentLengthCount = headerItems.length - 3;
 
-            if(mConfig.FragmentLengthData.size() == 0)
+            if(mConfig.FragmentSizeData.size() == 0)
             {
                 for(int i = 3; i < headerItems.length; ++i)
                 {
                     int fragmentLength = Integer.parseInt(headerItems[i].replaceAll(EXP_COUNT_LENGTH_HEADER, ""));
-                    mConfig.FragmentLengthData.add(new int[] { fragmentLength, 0 } );
+                    mConfig.FragmentSizeData.add(new FragmentSize(fragmentLength, 0));
                 }
             }
-            else if(mConfig.FragmentLengthData.size() != fileFragmentLengthCount)
+            else if(mConfig.FragmentSizeData.size() != fileFragmentLengthCount)
             {
                 ISF_LOGGER.error("expected counts file has {} fragment lengths vs configuredCount({})",
-                        fileFragmentLengthCount, mConfig.FragmentLengthData.size());
+                        fileFragmentLengthCount, mConfig.FragmentSizeData.size());
                 return false;
             }
 
-            int fragLengths = mConfig.FragmentLengthData.size();
+            int fragLengths = mConfig.FragmentSizeData.size();
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
             int geneSetIdIndex = fieldsIndexMap.get("GeneSetId");

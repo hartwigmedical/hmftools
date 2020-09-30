@@ -18,6 +18,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -42,7 +43,7 @@ public class TranscriptResult
 
     public TranscriptResult(
             final GeneCollection geneCollection, final GeneReadData geneReadData, final TranscriptData transData,
-            final List<int[]> expRateFragmentLengths)
+            final List<FragmentSize> expRateFragmentLengths)
     {
         Trans = transData;
 
@@ -112,7 +113,7 @@ public class TranscriptResult
 
     public double getFitAllocation() { return mFitAllocation; }
 
-    public static double calcEffectiveLength(int transLength, final List<int[]> fragmentLengthData)
+    public static double calcEffectiveLength(int transLength, final List<FragmentSize> fragmentLengthData)
     {
         if(fragmentLengthData.isEmpty())
             return transLength;
@@ -120,10 +121,10 @@ public class TranscriptResult
         long flFrequencyTotal = 0;
         long flBasesTotal = 0;
 
-        for(final int[] flData : fragmentLengthData)
+        for(final FragmentSize flData : fragmentLengthData)
         {
-            int fragLength = flData[FL_LENGTH];
-            int fragFrequency = flData[FL_FREQUENCY];
+            int fragLength = flData.Length;
+            int fragFrequency = flData.Frequency;
 
             if(fragLength >= transLength)
                 continue;
