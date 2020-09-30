@@ -78,7 +78,7 @@ public class FisherExactTest
         return p;
     }
 
-    private final double getP(int a, int b, int c, int d)
+    private double getP(int a, int b, int c, int d)
     {
         int n = a + b + c + d;
 

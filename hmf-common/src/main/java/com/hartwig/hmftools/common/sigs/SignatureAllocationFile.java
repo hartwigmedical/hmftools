@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SignatureAllocationFile
+public final class SignatureAllocationFile
 {
     public static final String DELIMITER = "\t";
 

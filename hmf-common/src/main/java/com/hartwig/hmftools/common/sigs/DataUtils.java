@@ -5,12 +5,11 @@ import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
-import static java.lang.Math.round;
 
 import java.util.List;
 import java.util.Random;
 
-public class DataUtils {
+public final class DataUtils {
 
     public static double[] convertList(final List<Double> dataSet)
     {

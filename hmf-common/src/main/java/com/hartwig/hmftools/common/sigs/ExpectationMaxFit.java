@@ -7,19 +7,19 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ExpectationMaxFit
+public final class ExpectationMaxFit
 {
     private static final int MAX_ITERATIONS = 20;
     private static final double RESIDUALS_EXIT_PERC = 0.001;
 
     private static final Logger LOGGER = LogManager.getLogger(ExpectationMaxFit.class);
 
-    public static final double[] performFit(final double[] transCounts, final SigMatrix transDefinitions)
+    public static double[] performFit(final double[] transCounts, final SigMatrix transDefinitions)
     {
         return performFit(transCounts, transDefinitions, RESIDUALS_EXIT_PERC, MAX_ITERATIONS);
     }
 
-    public static final double[] performFit(
+    public static double[] performFit(
             final double[] transCounts, final SigMatrix transDefinitions, double minResidualsPerc, int maxIterations)
     {
         int definitionCount = transDefinitions.Cols;

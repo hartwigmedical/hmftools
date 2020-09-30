@@ -6,7 +6,10 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Integers {
+public final class Integers {
+
+    private Integers() {
+    }
 
     public static int medianPositiveValue(@NotNull final List<Integer> values) {
         return median(values, x -> x > 0);
@@ -21,7 +24,6 @@ public class Integers {
 
         return count % 2 == 0 ? (sortedFiltered.get(count / 2) + sortedFiltered.get(count / 2 - 1)) / 2 : sortedFiltered.get(count / 2);
     }
-
 }
 
 

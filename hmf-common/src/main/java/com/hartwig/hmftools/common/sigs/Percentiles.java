@@ -6,7 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.capValue;
 
-public class Percentiles
+public final class Percentiles
 {
     public static final double INVALID_VALUE = -1;
     public static final int PERCENTILE_COUNT = 101;

@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-public class VectorUtils
+public final class VectorUtils
 {
     public static double sumVector(double[] vec)
     {

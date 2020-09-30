@@ -3,28 +3,20 @@ package com.hartwig.hmftools.common.sigs;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_DECIMAL;
-import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_INTEGER;
-import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.utils.GenericDataLoader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SigUtils
+public final class SigUtils
 {
     public static final Logger SU_LOGGER = LogManager.getLogger(SigUtils.class);
 
@@ -43,7 +35,7 @@ public class SigUtils
         }
     }
 
-    public static final double[] calculateFittedCounts(final SigMatrix signatures, final double[] allocations)
+    public static double[] calculateFittedCounts(final SigMatrix signatures, final double[] allocations)
     {
         double[] fittedCounts = new double[signatures.Rows];
 
@@ -284,6 +276,4 @@ public class SigUtils
     {
         writeMatrixData(writer, null, matrix, asInt);
     }
-
-
 }

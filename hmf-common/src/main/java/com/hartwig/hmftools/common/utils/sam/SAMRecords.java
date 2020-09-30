@@ -10,7 +10,10 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-public class SAMRecords {
+public final class SAMRecords {
+
+    private SAMRecords() {
+    }
 
     public static final int PHRED_OFFSET = 33;
 

@@ -5,16 +5,11 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class SigMatrix
 {
-
     final public int Rows;
     final public int Cols;
 
