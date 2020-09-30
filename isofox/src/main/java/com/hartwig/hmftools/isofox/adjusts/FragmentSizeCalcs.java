@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.BamFragmentReader.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.BufferedWriter;
@@ -91,7 +91,7 @@ public class FragmentSizeCalcs implements Callable
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, false, false);
+        mBamSlicer = new BamSlicer(SINGLE_MAP_QUALITY, false, false, false);
 
         mCurrentGenes = "";
         mCurrentGenesRange = new int[SE_PAIR];
@@ -332,31 +332,6 @@ public class FragmentSizeCalcs implements Callable
         return true;
     }
 
-    private int getLengthBucket(int fragmentLength)
-    {
-        if(fragmentLength < 1000)
-            return fragmentLength;
-
-        if(fragmentLength < 3000)
-            return 10 * (int)round(fragmentLength/10.0);
-
-        return 100 * (int)round(fragmentLength/100.0);
-    }
-
-    private int getSoftClipBucketIndex(int scLength)
-    {
-        if(scLength == 0)
-            return -1;
-
-        for(int i = 0; i < mSoftClipLengthBuckets.size(); ++i)
-        {
-            if(scLength <= mSoftClipLengthBuckets.get(i))
-                return i;
-        }
-
-        return mSoftClipLengthBuckets.size() - 1;
-    }
-
     private void addFragmentLength(final SAMRecord record, final List<int[]> fragmentLengths)
     {
         int fragmentLength = getLengthBucket(abs(record.getInferredInsertSize()));
@@ -409,18 +384,34 @@ public class FragmentSizeCalcs implements Callable
         ++mProcessedFragments;
     }
 
-    public static void setConfigFragmentLengthData(final IsofoxConfig config, int maxReadLength, final List<int[]> fragmentLengths)
+    private int getLengthBucket(int fragmentLength)
     {
-        if(maxReadLength > 0)
+        // round to nearest unit up to 1000, then 10s up to 3000 then 100s
+        if(fragmentLength < 1000)
+            return fragmentLength;
+
+        if(fragmentLength < 3000)
+            return 10 * (int)round(fragmentLength/10.0);
+
+        return 100 * (int)round(fragmentLength/100.0);
+    }
+
+    private int getSoftClipBucketIndex(int scLength)
+    {
+        if(scLength == 0)
+            return -1;
+
+        for(int i = 0; i < mSoftClipLengthBuckets.size(); ++i)
         {
-            config.ReadLength = maxReadLength;
-            ISF_LOGGER.info("max read length({}) set", maxReadLength);
-        }
-        else
-        {
-            ISF_LOGGER.warn("max read length not determined from fragment length calcs");
+            if(scLength <= mSoftClipLengthBuckets.get(i))
+                return i;
         }
 
+        return mSoftClipLengthBuckets.size() - 1;
+    }
+
+    public static void setConfigFragmentLengthData(final IsofoxConfig config, final List<int[]> fragmentLengths)
+    {
         final List<int[]> lengthFrequencies = config.FragmentLengthData;
 
         int currentRangeMin = 0;

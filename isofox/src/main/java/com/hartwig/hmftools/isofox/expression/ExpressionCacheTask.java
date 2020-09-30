@@ -104,6 +104,6 @@ public class ExpressionCacheTask implements Callable
         }
 
         if(nextLogCount > 100)
-            ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
+            ISF_LOGGER.info("chromosome({}) expected transcript counts complete", mChromosome);
     }
 }

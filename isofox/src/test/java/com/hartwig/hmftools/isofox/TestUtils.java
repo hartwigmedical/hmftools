@@ -8,8 +8,7 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateExo
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.HIGH_MAP_QUAL;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -271,7 +270,7 @@ public class TestUtils
 
         read.setFlag(SAMFlag.PROPER_PAIR, true);
         read.setStrand(false, true);
-        read.setMapQuality(HIGH_MAP_QUAL);
+        read.setMapQuality(SINGLE_MAP_QUALITY);
         return read;
     }
 

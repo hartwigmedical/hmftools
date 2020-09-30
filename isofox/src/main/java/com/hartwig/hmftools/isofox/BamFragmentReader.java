@@ -16,12 +16,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
@@ -59,7 +57,7 @@ public class BamFragmentReader implements Callable
     private final ExpectedRatesGenerator mExpRatesGenerator;
     private final GcTranscriptCalculator mTranscriptGcRatios;
     private final ExpectedCountsCache mExpectedCountsCache;
-    private final Map<String,ExpectedRatesData> mGeneSetExpectedRatesDataMap; // cached computed results for this chromosome
+    private final Map<String,ExpectedRatesData> mExpectedRatesDataMap; // cached computed results for this chromosome
 
     private final List<EnsemblGeneData> mGeneDataList;
     private int mCollectionId;
@@ -109,7 +107,7 @@ public class BamFragmentReader implements Callable
         mCurrentTaskType = null;
 
         mExpectedCountsCache = expectedCountsCache;
-        mGeneSetExpectedRatesDataMap = Maps.newHashMap();
+        mExpectedRatesDataMap = Maps.newHashMap();
 
         mBamFragmentAllocator = new BamFragmentAllocator(mConfig, resultsWriter);
         mBamFragmentAllocator.registerKnownFusionPairs(mGeneTransCache);
@@ -419,7 +417,7 @@ public class BamFragmentReader implements Callable
                 expRatesData = mExpRatesGenerator.getExpectedRatesData();
 
                 if (mConfig.ApplyGcBiasAdjust) // cache the generated data since it will be used again in GC adjustment calcs
-                    mGeneSetExpectedRatesDataMap.put(geneCollection.chrId(), expRatesData);
+                    mExpectedRatesDataMap.put(geneCollection.chrId(), expRatesData);
             }
 
             mExpTransRates.runTranscriptEstimation(geneCollectionSummary, expRatesData);
@@ -518,7 +516,7 @@ public class BamFragmentReader implements Callable
             geneSummaryData.applyGcAdjustments(gcAdjustments);
 
             // retrieve any previously computed expected rates
-            final ExpectedRatesData expRatesData = mGeneSetExpectedRatesDataMap.get(geneSummaryData.ChrId);
+            final ExpectedRatesData expRatesData = mExpectedRatesDataMap.get(geneSummaryData.ChrId);
             mExpTransRates.runTranscriptEstimation(geneSummaryData, expRatesData);
 
             geneSummaryData.setFitAllocations();

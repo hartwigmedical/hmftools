@@ -71,6 +71,7 @@ public class Isofox
     private final GcTranscriptCalculator mGcTranscriptCalcs;
     private final FusionTaskManager mFusionTaskManager;
 
+    private int mMaxObservedReadLength;
     private final List<int[]> mFragmentLengthDistribution;
 
     public Isofox(final IsofoxConfig config, final CommandLine cmd)
@@ -96,6 +97,7 @@ public class Isofox
 
         mFusionTaskManager = mConfig.runFunction(FUSIONS) ? new FusionTaskManager(mConfig, mGeneTransCache) : null;
 
+        mMaxObservedReadLength = 0;
         mFragmentLengthDistribution = Lists.newArrayList();
     }
 
@@ -224,7 +226,7 @@ public class Isofox
 
         final SummaryStats summaryStats = createSummaryStats(
                 totalCounts, enrichedGeneFragCount,
-                medianGCRatio, mFragmentLengthDistribution, mConfig.ReadLength);
+                medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
 
         mResultsWriter.writeSummaryStats(summaryStats);
 
@@ -320,7 +322,7 @@ public class Isofox
 
     private void calcFragmentLengths(final Map<String,List<EnsemblGeneData>> chrGeneMap)
     {
-        int requiredFragCount = mConfig.FragmentLengthMinCount / chrGeneMap.size(); // split evenly amongst chromosomes
+        int requiredFragCount = mConfig.FragmentLengthSamplingCount / chrGeneMap.size(); // split evenly amongst chromosomes
 
         final List<FragmentSizeCalcs> fragSizeCalcs = Lists.newArrayList();
 
@@ -338,15 +340,17 @@ public class Isofox
             return;
 
         // merge results from all chromosomes
-        int maxReadLength = 0;
         for(final FragmentSizeCalcs fragSizeCalc : fragSizeCalcs)
         {
-            maxReadLength = max(maxReadLength, fragSizeCalc.getMaxReadLength());
+            mMaxObservedReadLength = max(mMaxObservedReadLength, fragSizeCalc.getMaxReadLength());
             FragmentSizeCalcs.mergeData(mFragmentLengthDistribution, fragSizeCalc);
         }
 
         if(mConfig.ApplyFragmentLengthAdjust)
-            setConfigFragmentLengthData(mConfig, maxReadLength, mFragmentLengthDistribution);
+        {
+            ISF_LOGGER.info("max observed read length({}) set", mMaxObservedReadLength); // purely for informational purposes
+            setConfigFragmentLengthData(mConfig, mFragmentLengthDistribution);
+        }
 
         if (mConfig.WriteFragmentLengths)
         {

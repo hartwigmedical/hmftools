@@ -3,7 +3,6 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
@@ -61,7 +60,6 @@ public class IsofoxConfig
     private static final String CANONICAL_ONLY = "canonical_only";
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_READ_DATA = "write_read_data";
-    private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
 
     public static final String REF_GENOME = "ref_genome";
     private static final String BAM_FILE = "bam_file";
@@ -85,6 +83,7 @@ public class IsofoxConfig
     private static final String APPLY_FRAG_LENGTH_ADJUSTMENT = "apply_calc_frag_lengths";
     private static final String APPLY_GC_BIAS_ADJUSTMENT = "apply_gc_bias_adjust";
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
+    private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
     private static final String APPLY_MQ_ADJUST = "apply_map_qual_adjust";
 
     private static final String SPECIFIC_CHR = "specific_chr";
@@ -129,7 +128,7 @@ public class IsofoxConfig
     public final boolean WriteExpectedRates;
 
     public final boolean WriteFragmentLengths;
-    public final int FragmentLengthMinCount;
+    public final int FragmentLengthSamplingCount;
     public final boolean WriteFragmentLengthsByGene;
 
     public final boolean WriteGcData;
@@ -241,7 +240,7 @@ public class IsofoxConfig
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
         DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
         MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
-        FragmentLengthMinCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, String.valueOf(DEFAULT_FRAG_LENGTH_MIN_COUNT)));
+        FragmentLengthSamplingCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, "0"));
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
@@ -357,7 +356,7 @@ public class IsofoxConfig
         {
             if(ApplyFragmentLengthAdjust)
             {
-                if(FragmentLengthMinCount == 0)
+                if(FragmentLengthSamplingCount == 0)
                 {
                     ISF_LOGGER.error("invalid min fragment length count for fragment length sampling");
                     return false;
@@ -430,11 +429,6 @@ public class IsofoxConfig
     public boolean runFusionsOnly() { return Functions.contains(FUSIONS) && Functions.size() == 1; }
     public boolean runStatisticsOnly() { return Functions.contains(STATISTICS) && Functions.size() == 1; }
 
-    public boolean skipChromosome(final String chromosome)
-    {
-        return !SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome);
-    }
-
     public boolean generateExpectedDataOnly()
     {
         return runFunction(EXPECTED_GC_COUNTS) || runFunction(EXPECTED_TRANS_COUNTS);
@@ -442,7 +436,7 @@ public class IsofoxConfig
 
     public boolean requireFragmentLengthCalcs()
     {
-        return WriteFragmentLengths || ApplyFragmentLengthAdjust;
+        return WriteFragmentLengths || FragmentLengthSamplingCount > 0;
     }
     public boolean requireGcRatioCalcs() { return WriteGcData || ApplyGcBiasAdjust; }
 
@@ -511,7 +505,7 @@ public class IsofoxConfig
         ApplyGcBiasAdjust = false;
         OutputIdentifier = null;
         WriteFragmentLengthsByGene = false;
-        FragmentLengthMinCount = 0;
+        FragmentLengthSamplingCount = 0;
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();

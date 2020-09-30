@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
@@ -79,7 +80,6 @@ public class ReadRecord
     private final Map<RegionMatchType,List<TransExonRef>> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
 
     public static final int NO_GENE_ID = -1;
-    public static final short HIGH_MAP_QUAL = 255;
 
     public static ReadRecord from(final SAMRecord record)
     {
@@ -163,7 +163,7 @@ public class ReadRecord
 
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
     public short mapQuality() { return mMapQuality; }
-    public boolean isMultiMapped() { return mMapQuality < HIGH_MAP_QUAL; }
+    public boolean isMultiMapped() { return mMapQuality < SINGLE_MAP_QUALITY; }
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 

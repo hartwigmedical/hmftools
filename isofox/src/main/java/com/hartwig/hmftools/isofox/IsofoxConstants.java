@@ -9,7 +9,7 @@ public class IsofoxConstants
 
     public static final double DEFAULT_GC_RATIO_BUCKET = 0.01;
 
-    public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
+    public static final short SINGLE_MAP_QUALITY = 255; // multi-mapped fragments are given map quals of 3 or lower
 
     public static final int ENRICHED_GENE_BUFFER = 100000;
 

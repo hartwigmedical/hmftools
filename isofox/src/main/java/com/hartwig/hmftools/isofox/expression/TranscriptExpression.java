@@ -256,12 +256,6 @@ public class TranscriptExpression
     {
         mCurrentExpRatesData = null;
 
-        if(mCache.hasExpectedRatesCached())
-        {
-            mCurrentExpRatesData = mCache.getGeneExpectedRatesData(chrId);
-            return;
-        }
-
         final Map<String,List<CategoryCountsData>> geneSetCountsData = mCache.getGeneExpectedRatesData(chrId, geneIds);
 
         if(geneSetCountsData == null)

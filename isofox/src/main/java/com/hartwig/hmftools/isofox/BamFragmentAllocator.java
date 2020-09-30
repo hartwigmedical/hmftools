@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.HIGH_MAP_QUAL;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
@@ -135,7 +134,7 @@ public class BamFragmentAllocator
         boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
         boolean keepSupplementaries = mRunFusions;
         boolean keepSecondaries = mConfig.ApplyMapQualityAdjust;
-        int minMapQuality = keepSecondaries ? 0 : HIGH_MAP_QUAL;
+        int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
 
@@ -368,7 +367,7 @@ public class BamFragmentAllocator
 
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
         int minMapQuality = min(read1.mapQuality(), read2.mapQuality());
-        boolean isMultiMapped = minMapQuality < HIGH_MAP_QUAL;
+        boolean isMultiMapped = minMapQuality < SINGLE_MAP_QUALITY;
         boolean isChimeric = read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection();
 
         if(!isChimeric && !isDuplicate && !isMultiMapped && mRunFusions && (read1.containsSplit() || read2.containsSplit()))
@@ -790,7 +789,7 @@ public class BamFragmentAllocator
 
         double fragmentCount = 1;
 
-        if(minMapQuality < HIGH_MAP_QUAL && mConfig.ApplyMapQualityAdjust)
+        if(minMapQuality < SINGLE_MAP_QUALITY && mConfig.ApplyMapQualityAdjust)
         {
             if(minMapQuality == 3)
                 fragmentCount = 0.5;

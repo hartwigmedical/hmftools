@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.BamFragmentReader.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
@@ -49,6 +48,7 @@ public class BamReadCounter implements Callable
     private final List<EnsemblGeneData> mGeneDataList;
     private String mCurrentGenes;
     private final FragmentTracker mFragmentTracker;
+    private final int[] mMaqQualFrequencies;
 
     public BamReadCounter(final IsofoxConfig config)
     {
@@ -56,7 +56,7 @@ public class BamReadCounter implements Callable
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true, true);
+        mBamSlicer = new BamSlicer(0, true, true, true);
 
         mGeneDataList = Lists.newArrayList();
         mChromosome = "";
@@ -68,6 +68,7 @@ public class BamReadCounter implements Callable
         mSecondaryReads = 0;
         mReadTypeCounts = new int[typeAsInt(FragmentType.MAX)];
         mFragmentTracker = new FragmentTracker();
+        mMaqQualFrequencies = new int[4];
     }
 
     public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList)
@@ -130,9 +131,9 @@ public class BamReadCounter implements Callable
             mBamSlicer.slice(mSamReader, regions, this::processBamRead);
         }
 
-        ISF_LOGGER.info("chromosome({}) processing complete: total({}) duplicates({}) chimeric({}) secondaries({})",
-                mChromosome, mTotalReadCount, mReadTypeCounts[typeAsInt(DUPLICATE)],
-                mReadTypeCounts[typeAsInt(CHIMERIC)], mSecondaryReads);
+        ISF_LOGGER.info("chromosome({}) processing complete: total({}) duplicates({}) chimeric({}) secondaries({}) mapQuals(0={} 1={} 2={} 3={})",
+                mChromosome, mTotalReadCount, mReadTypeCounts[typeAsInt(DUPLICATE)], mReadTypeCounts[typeAsInt(CHIMERIC)], mSecondaryReads,
+                mMaqQualFrequencies[0], mMaqQualFrequencies[1], mMaqQualFrequencies[2], mMaqQualFrequencies[3]);
     }
 
     private void processBamRead(@NotNull final SAMRecord read)
@@ -149,6 +150,11 @@ public class BamReadCounter implements Callable
 
         if(read.isSecondaryAlignment())
             ++mSecondaryReads;
+
+        if(read.getMappingQuality() <= 3)
+        {
+            mMaqQualFrequencies[read.getMappingQuality()]++;
+        }
 
         if(mConfig.GeneReadLimit > 0 && mCurrentGeneReadCount > mConfig.GeneReadLimit)
         {

@@ -38,16 +38,9 @@ public class ExpectedCountsCache
         }
     }
 
-    public boolean hasExpectedRatesCached() { return !mGeneSetExpectedRatesDataMap.isEmpty(); }
-
-    public ExpectedRatesData getGeneExpectedRatesData(final String chrId)
-    {
-        return mGeneSetExpectedRatesDataMap.get(chrId);
-    }
-
     public Map<String,List<CategoryCountsData>> getGeneExpectedRatesData(final String chrId, final List<String> geneIds)
     {
-        Map<String, List<CategoryCountsData>> geneSetCountsData = mGeneSetCategoryDataMap.get(chrId);
+        Map<String,List<CategoryCountsData>> geneSetCountsData = mGeneSetCategoryDataMap.get(chrId);
 
         if (geneSetCountsData == null || !geneSetCountsDataMatches(geneIds, geneSetCountsData.keySet()))
         {
