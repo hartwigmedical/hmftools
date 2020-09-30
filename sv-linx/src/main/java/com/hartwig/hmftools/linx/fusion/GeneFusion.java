@@ -169,12 +169,10 @@ public class GeneFusion
         if(isUpstream)
         {
             return max(mTranscripts[FS_UPSTREAM].nextSpliceExonRank() - mExonsSkipped[FS_UPSTREAM], 1);
-            // return max(mTranscripts[FS_UPSTREAM].ExonUpstream - mExonsSkipped[FS_UPSTREAM], 1);
         }
         else
         {
             return min(mTranscripts[FS_DOWNSTREAM].nextSpliceExonRank() + mExonsSkipped[FS_DOWNSTREAM], mTranscripts[FS_DOWNSTREAM].ExonMax);
-            // return min(mTranscripts[FS_DOWNSTREAM].ExonDownstream + mExonsSkipped[FS_DOWNSTREAM], mTranscripts[FS_DOWNSTREAM].ExonMax);
         }
     }
 

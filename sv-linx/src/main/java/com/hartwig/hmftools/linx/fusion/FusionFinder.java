@@ -597,9 +597,6 @@ public class FusionFinder
 
         final Transcript downTrans = fusion.downstreamTrans();
 
-        if(!downTrans.getProteinFeaturesKept().isEmpty() || !downTrans.getProteinFeaturesLost().isEmpty())
-            return;
-
         if(downTrans.nonCoding())
             return;
 
@@ -628,12 +625,12 @@ public class FusionFinder
                     featureEnd = max(transProteinData.get(j).SeqEnd, featureEnd);
             }
 
-            boolean pfPreserved = proteinFeaturePreserved(downTrans, true, feature, featureStart, featureEnd);
+            boolean pfPreserved = proteinFeaturePreserved(downTrans, true, featureStart, featureEnd);
 
             if(!pfPreserved && downTrans.gene().StableId.equals(fusion.upstreamTrans().gene().StableId))
             {
                 // for same gene fusions, check whether the upstream transcript section preserves this feature
-                pfPreserved = proteinFeaturePreserved(fusion.upstreamTrans(), false, feature, featureStart, featureEnd);
+                pfPreserved = proteinFeaturePreserved(fusion.upstreamTrans(), false, featureStart, featureEnd);
             }
 
             downTrans.addProteinFeature(feature, pfPreserved);
@@ -644,7 +641,7 @@ public class FusionFinder
     }
 
     private static boolean proteinFeaturePreserved(
-            final Transcript transcript, boolean isDownstream, final String feature, int featureStart, int featureEnd)
+            final Transcript transcript, boolean isDownstream, int featureStart, int featureEnd)
     {
         boolean featurePreserved;
 
