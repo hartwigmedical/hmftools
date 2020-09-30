@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 
 import org.jetbrains.annotations.NotNull;

@@ -16,12 +16,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -332,7 +333,7 @@ public class ProtectActionability {
     private static PatientTumorLocation extractTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId)
             throws IOException {
         LOGGER.info("Reading primary tumor location from {}", tumorLocationCsv);
-        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecordsCSV(tumorLocationCsv);
+        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.readRecordsCSV(tumorLocationCsv);
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
         return PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocations, sampleId);

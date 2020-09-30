@@ -6,7 +6,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;

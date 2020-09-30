@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.Lims;

@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;

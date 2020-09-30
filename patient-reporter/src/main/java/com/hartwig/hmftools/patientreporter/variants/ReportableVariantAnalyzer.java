@@ -6,7 +6,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
