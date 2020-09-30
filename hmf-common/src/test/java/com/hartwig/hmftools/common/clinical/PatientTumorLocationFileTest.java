@@ -9,7 +9,6 @@ import java.util.List;
 import com.google.common.io.Resources;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PatientTumorLocationFileTest {
@@ -31,15 +30,8 @@ public class PatientTumorLocationFileTest {
             .build();
 
     @Test
-    public void canReadInputFiles() throws IOException {
-        List<PatientTumorLocation> tumorLocationsFromCsv = PatientTumorLocationFile.readRecordsCSV(TEST_CSV);
-        assertTumorLocations(tumorLocationsFromCsv);
-
-        List<PatientTumorLocation> tumorLocationsFromTsv = PatientTumorLocationFile.readRecordsTSV(TEST_TSV);
-        assertTumorLocations(tumorLocationsFromTsv);
-    }
-
-    private static void assertTumorLocations(@NotNull List<PatientTumorLocation> patientTumorLocations) {
+    public void canReadInputTSV() throws IOException {
+        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.readRecordsTSV(TEST_TSV);
         assertEquals(2, patientTumorLocations.size());
 
         PatientTumorLocation patient1 = patientTumorLocations.get(0);
@@ -52,5 +44,4 @@ public class PatientTumorLocationFileTest {
         assertEquals(PATIENT2.primaryTumorLocation(), patient2.primaryTumorLocation());
         assertEquals(PATIENT2.cancerSubtype(), patient2.cancerSubtype());
     }
-
 }

@@ -46,7 +46,7 @@ public class LoadEvidenceData {
     private static final String SAMPLE = "sample";
 
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
-    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
+    private static final String TUMOR_LOCATION_TSV = "tumor_location_tsv";
 
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
@@ -61,7 +61,7 @@ public class LoadEvidenceData {
 
         // General params needed for every sample
         String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
-        String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
+        String tumorLocationTsv = cmd.getOptionValue(TUMOR_LOCATION_TSV);
 
         // Params specific for specific sample
         String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
@@ -71,7 +71,7 @@ public class LoadEvidenceData {
 
         if (Utils.anyNull(sampleId,
                 knowledgebaseDirectory,
-                tumorLocationCsv,
+                tumorLocationTsv,
                 somaticVariantVcf,
                 purpleGeneCnvTsv,
                 purpleDriverCatalogTsv,
@@ -88,7 +88,7 @@ public class LoadEvidenceData {
         LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
-        String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, sampleId);
+        String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationTsv, sampleId);
         List<SomaticVariant> passSomaticVariants = readPassSomaticVariants(sampleId, somaticVariantVcf);
         List<ReportableGainLoss> reportableGainLosses = getReportableGainsAndLosses(purpleDriverCatalogTsv, purpleGeneCnvTsv);
         List<ReportableGeneFusion> geneFusions = readGeneFusions(linxFusionTsv);
@@ -155,9 +155,9 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static String extractPatientTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
-        LOGGER.info("Reading primary tumor location from {}", tumorLocationCsv);
-        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.readRecordsCSV(tumorLocationCsv);
+    private static String extractPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String sampleId) throws IOException {
+        LOGGER.info("Reading primary tumor location from {}", tumorLocationTsv);
+        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.readRecordsTSV(tumorLocationTsv);
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
         PatientTumorLocation patientTumorLocation =
@@ -220,7 +220,7 @@ public class LoadEvidenceData {
         options.addOption(SAMPLE, true, "Tumor sample of run");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
-        options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
+        options.addOption(TUMOR_LOCATION_TSV, true, "Path towards the (curated) tumor location TSV.");
 
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
