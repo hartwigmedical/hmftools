@@ -135,6 +135,11 @@ public final class FeatureTypeExtractor {
                 if (countCombined > 1) {
                     return FeatureType.COMBINED;
                 }
+            } else if (featureName.contains("splice")) {
+                int countSplice = featureName.split("splice").length-1;
+                if (countSplice >1) {
+                    return FeatureType.COMBINED;
+                }
             }
         } else if (DetermineHotspot.isHotspot(proteinAnnotation)) {
             return FeatureType.HOTSPOT;
