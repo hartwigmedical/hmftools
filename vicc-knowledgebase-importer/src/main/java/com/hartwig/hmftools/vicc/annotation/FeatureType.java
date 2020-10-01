@@ -10,5 +10,6 @@ public enum FeatureType {
     FUSION_PAIR,
     FUSION_PROMISCUOUS,
     SIGNATURE,
+    COMBINED,
     UNKNOWN
 }
