@@ -403,17 +403,16 @@ Note that a segment is diploid only if both the major and minor allele are betwe
 
 #### Somatic Purity
 
-If any of the candidate solutions are highly diploid (>= 0.97) and there is a wide range (>= 0.15) of valid purities in the candidate solutions we enter somatic mode. Once in this mode, the sample status will be changed from NORMAL to one of HIGHLY_DIPLOID, NO_TUMOR or SOMATIC according to the logic described below.  
+If any of the candidate solutions are highly diploid (>= 0.97) and there is a wide range (>= 0.15) of valid purities in the candidate solutions and a somatic point mutation vcf has been supplied then a somatic mode of fitting is triggered, since there may be insufficient copy number events to resolve a purity.
 
-First we calculate a somatic purity from all passing or unfiltered variants. To do this, we use a kernel density estimator to find significant (n >= 50) somatic variant allele frequency peaks. Each peak implies a tumor purity of twice the frequency. 
-We select the peak that implies the largest purity within the candidate solutions as the somatic purity.
+When somatic mode is triggered, PURPLE checks first for the presence of TUMOR.  If NONE of the following criteria are satisfied, then PURPLE sets qcStatus = FAIL_NO_TUMOR, fitMethod=NO_TUMOR and sets purity to min_purity value [0.08]:
+- Tumor has one or more HOTSPOT SV or point mutation
+- SNV sum(allele read count) > 5000
+- SV sum(startTumorVariantFragmentSupport) > 1000 (excluding SGL breakends)
 
-If the somatics are unable to help, either because there are none, or because the somatic purity and the fitted purity are both too low (< 0.17) then we continue to use the fitted purity but flag the solution with a status of HIGHLY_DIPLOID. 
+If a tumor is detected, then PURPLE fits somatic peaks in VAF space. First PURPLE groups all somatic SNV by VAF with 0.6 x AverageTumorDepth < totalReadCount < 1.4x AverageTumorDepth.     A kernel density estimator is used to find peaks in the VAF range [min_purity-min(0.5,max_purity)], and the somatic fitted purity is set to 2* the highest VAF peak with weight > max(10,3% SNV count in depth range).   If no peak meets this criteria but the sample has at least 10 SNV within the depth range in total choose 2 * VAF peak with the greatest count, else set the purity to min_purity [0.08]
 
-If there are only a small number of somatics variants (< 300) with a sufficiently large (>= 0.1) allelic frequency we will flag the solution as NO_TUMOR and use the somatic purity if it exists otherwise fall back on the fitted purity. 
-
-If we have not met the criteria for HIGHLY_DIPLOID or NO_TUMOR then we set the status to SOMATIC and use the somatic purity.
-
+If (somatic fitted purity and the copy number fitted purity are both < 0.17 AND the somatic purity > copy number purity) OR if there are no SNV that meet the VAF criteria, then use the copy number fit and set fitMethod = NORMAL.   Otherwise use the somatic fitted purity, set ploidy =2 and set fit method = SOMATIC.
 
 ### 4. Copy Number Smoothing 
 
@@ -1024,7 +1023,6 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Refreshed DNDS values with larger cohort (4404 samples)
   - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X germline aberrations. Requires [patch](../patient-db/src/main/resources/patches/purple/purple2.47_to_2.48_migration.sql) to load to data base.
   - Removed MALE_KLINEFELTER as a gender. Gender will instead be MALE and KLINEFELTER will be added to the germline abberations field.
-  - Updated somatic fit logic
 - [2.47](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.47) 
   - Add hg38 support for driver gene panel
   - Phased inframe indels only annotated as MISSENSE if they are otherwise NONSENSE or FRAMESHIFT
