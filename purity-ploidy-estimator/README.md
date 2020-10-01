@@ -580,7 +580,7 @@ Column  | Example Value | Description
 ---|---|---
 Version | 2.25 | Version of PURPLE
 Purity  | 0.98 | Purity of tumor in the sample
-NormFactor | 0.64 | Factor to convert tumor ratio to copy number. Lower number implies higher ploidy
+NormFactor | 0.64 | Internal to convert tumor ratio to copy number.
 Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity
 SomaticDeviation | 0.00 | Penalty from somatic variants with implied variant copy numbers that are inconsistent with the minor and major allele copy number 
 Score | 0.68 | Score of fit (lower is better)
