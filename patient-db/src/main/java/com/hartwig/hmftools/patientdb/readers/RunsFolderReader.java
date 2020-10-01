@@ -5,14 +5,17 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.io.FolderChecker;
 import com.hartwig.hmftools.patientdb.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class RunsFolderReader {
-    
+
+    private static final Logger LOGGER = LogManager.getLogger(RunsFolderReader.class);
+
     private RunsFolderReader() {
     }
 
@@ -25,8 +28,11 @@ public final class RunsFolderReader {
         }
 
         for (File folder : folders) {
-            String runDirectory = FolderChecker.build().checkFolder(folder.getPath());
-            runContexts.add(ProductionRunContextFactory.fromRunDirectory(runDirectory));
+            if (folder.exists() && folder.isDirectory()) {
+                runContexts.add(ProductionRunContextFactory.fromRunDirectory(folder.getPath()));
+            } else {
+                LOGGER.warn("Could not process run since file '{}' doesn't seem to be a folder", folder.getPath());
+            }
         }
         return runContexts;
     }

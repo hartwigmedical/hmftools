@@ -12,8 +12,8 @@ public final class RegionZipper {
     private RegionZipper() {
     }
 
-    public static <S extends GenomeRegion, T extends GenomeRegion> void zip(List<S> primary, List<T> secondary,
-            RegionZipperHandler<S, T> handler) {
+    public static <S extends GenomeRegion, T extends GenomeRegion> void zip(@NotNull List<S> primary, @NotNull List<T> secondary,
+            @NotNull RegionZipperHandler<S, T> handler) {
         String chromosome = "";
 
         int i = 0, j = 0;

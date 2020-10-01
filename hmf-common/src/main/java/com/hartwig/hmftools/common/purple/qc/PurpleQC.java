@@ -37,7 +37,7 @@ public abstract class PurpleQC {
             result.add(PurpleQCStatus.WARN_DELETED_GENES);
         }
 
-        if (Doubles.lessThan(purity(), MIN_PURITY)) {
+        if (Doubles.lessThan(purity(), MIN_PURITY) && !method().equals(FittedPurityMethod.NO_TUMOR)) {
             result.add(PurpleQCStatus.WARN_LOW_PURITY);
         }
 

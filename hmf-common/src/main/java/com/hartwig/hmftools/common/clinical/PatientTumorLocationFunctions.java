@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.ecrf.projections;
+package com.hartwig.hmftools.common.clinical;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,9 +20,9 @@ public final class PatientTumorLocationFunctions {
     @Nullable
     public static PatientTumorLocation findTumorLocationForSample(@NotNull List<PatientTumorLocation> patientTumorLocations,
             @NotNull String sample) {
-         String patientIdentifier = toPatientIdentifier(sample);
+        String patientIdentifier = toPatientIdentifier(sample);
 
-         List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
+        List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
                 .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
                 .collect(Collectors.toList());
 

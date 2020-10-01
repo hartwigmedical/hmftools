@@ -140,22 +140,22 @@ public class DatabaseAccess implements AutoCloseable {
         driverGenePanelDAO = new DriverGenePanelDAO(context);
     }
 
-    public static void addDatabaseCmdLineArgs(final Options options) {
+    public static void addDatabaseCmdLineArgs(@NotNull Options options) {
         addDatabaseCmdLineArgs(options, false);
     }
 
-    public static void addDatabaseCmdLineArgs(final Options options, boolean isRequired) {
+    public static void addDatabaseCmdLineArgs(@NotNull Options options, boolean isRequired) {
         options.addOption(Option.builder(DB_USER).desc("Database username").hasArg(true).required(isRequired).build());
         options.addOption(Option.builder(DB_PASS).desc("Database password").hasArg(true).required(isRequired).build());
         options.addOption(Option.builder(DB_URL).desc("Database url").hasArg(true).required(isRequired).build());
     }
 
-    public static boolean hasDatabaseConfig(@NotNull final CommandLine cmd) {
+    public static boolean hasDatabaseConfig(@NotNull CommandLine cmd) {
         return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER) && cmd.hasOption(DB_PASS);
     }
 
     @NotNull
-    public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
+    public static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
         String userName = cmd.getOptionValue(DB_USER);
         String password = cmd.getOptionValue(DB_PASS);
         String databaseUrl = cmd.getOptionValue(DB_URL);
@@ -164,7 +164,7 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @Nullable
-    public static DatabaseAccess createDatabaseAccess(@NotNull final CommandLine cmd) {
+    public static DatabaseAccess createDatabaseAccess(@NotNull CommandLine cmd) {
         if (!hasDatabaseConfig(cmd)) {
             return null;
         }

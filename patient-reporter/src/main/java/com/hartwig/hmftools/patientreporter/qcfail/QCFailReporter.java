@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;

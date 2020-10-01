@@ -2,10 +2,10 @@ package com.hartwig.hmftools.common.utils.sv;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
-public class SvCommonUtils
+public final class SvCommonUtils
 {
-    public static byte POS_ORIENT = 1;
-    public static byte NEG_ORIENT = -1;
+    public static final byte POS_ORIENT = 1;
+    public static final byte NEG_ORIENT = -1;
 
     public static boolean lowerChromosome(final String chr, final String otherChr)
     {

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -59,8 +60,10 @@ import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
 import com.hartwig.hmftools.common.variant.clonality.PeakModel;
 import com.hartwig.hmftools.common.variant.clonality.PeakModelFactory;
 import com.hartwig.hmftools.common.variant.clonality.PeakModelFile;
+import com.hartwig.hmftools.common.variant.enrich.VariantHotspotEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.recovery.RecoverStructuralVariants;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
@@ -68,7 +71,7 @@ import com.hartwig.hmftools.purple.config.DBConfig;
 import com.hartwig.hmftools.purple.config.FitScoreConfig;
 import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.config.SmoothingConfig;
-import com.hartwig.hmftools.purple.config.SomaticConfig;
+import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
@@ -85,6 +88,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
+import htsjdk.variant.vcf.VCFFileReader;
 
 public class PurityPloidyEstimateApplication {
 
@@ -154,8 +158,13 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
             final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltChromosomes, fitScoreConfig);
-            final BestFit bestFit =
-                    fitPurity(executorService, configSupplier, cobaltChromosomes, fittingSomatics, observedRegions, fittedRegionFactory);
+            final BestFit bestFit = fitPurity(executorService,
+                    configSupplier,
+                    cobaltChromosomes,
+                    fittingSomatics,
+                    observedRegions,
+                    fittedRegionFactory,
+                    structuralVariants.variants());
             final FittedPurity fittedPurity = bestFit.fit();
             final PurityAdjuster purityAdjuster =
                     new PurityAdjusterAbnormalChromosome(fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
@@ -306,9 +315,10 @@ public class PurityPloidyEstimateApplication {
     @NotNull
     private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier,
             final CobaltChromosomes cobaltChromosomes, final List<SomaticVariant> snpSomatics, final List<ObservedRegion> observedRegions,
-            final FittedRegionFactory fittedRegionFactory) throws ExecutionException, InterruptedException {
+            final FittedRegionFactory fittedRegionFactory, final List<StructuralVariant> structuralVariants)
+            throws ExecutionException, InterruptedException {
         final FittingConfig fittingConfig = configSupplier.fittingConfig();
-        final SomaticConfig somaticConfig = configSupplier.somaticConfig();
+        final SomaticFitConfig somaticFitConfig = configSupplier.somaticConfig();
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
                 cobaltChromosomes,
                 fittingConfig.maxPloidy(),
@@ -318,20 +328,26 @@ public class PurityPloidyEstimateApplication {
                 fittingConfig.minNormFactor(),
                 fittingConfig.maxNormFactor(),
                 fittingConfig.normFactorIncrement(),
-                somaticConfig.somaticPenaltyWeight(),
+                somaticFitConfig.somaticPenaltyWeight(),
                 fittedRegionFactory,
                 observedRegions,
                 snpSomatics);
 
-        final BestFitFactory bestFitFactory = new BestFitFactory(somaticConfig.minSomaticUnadjustedVaf(),
-                somaticConfig.minTotalVariants(),
-                somaticConfig.minPeakVariants(),
-                somaticConfig.highlyDiploidPercentage(),
-                somaticConfig.minSomaticPurity(),
-                somaticConfig.minSomaticPuritySpread(),
-                fittedPurityFactory.bestFitPerPurity(),
+        final BestFitFactory bestFitFactory = new BestFitFactory(somaticFitConfig.enabled(),
+                somaticFitConfig.minSomaticTotalReadCount(),
+                somaticFitConfig.maxSomaticTotalReadCount(),
+                fittingConfig.minPurity(),
+                fittingConfig.maxPurity(),
+                somaticFitConfig.minTotalVariants(),
+                somaticFitConfig.minPeakVariants(),
+                somaticFitConfig.highlyDiploidPercentage(),
+                somaticFitConfig.minSomaticPurity(),
+                somaticFitConfig.minSomaticPuritySpread(),
+                somaticFitConfig.minTotalSvFragmentCount(),
+                somaticFitConfig.minTotalSomaticVariantAlleleReadCount(),
                 fittedPurityFactory.all(),
-                snpSomatics);
+                snpSomatics,
+                structuralVariants);
         return bestFitFactory.bestFit();
     }
 
@@ -367,15 +383,28 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private static List<SomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) throws IOException {
-        final SomaticConfig config = configSupplier.somaticConfig();
-        if (config.file().isPresent()) {
-            String filename = config.file().get().toString();
-            LOGGER.info("Loading somatic variants from {}", filename);
+    private static List<SomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) {
+        final String sample = configSupplier.commonConfig().tumorSample();
+        final SomaticFitConfig somaticConfig = configSupplier.somaticConfig();
+        if (somaticConfig.file().isPresent()) {
+            final List<SomaticVariant> result = Lists.newArrayList();
 
-            SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
+            final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
+            final Consumer<VariantContext> convertThenSave = context -> factory.createVariant(sample, context).ifPresent(result::add);
+            final VariantHotspotEnrichment enrich =
+                    new VariantHotspotEnrichment(configSupplier.driverCatalogConfig().hotspots(), convertThenSave);
 
-            return factory.fromVCFFile(configSupplier.commonConfig().tumorSample(), filename);
+            LOGGER.info("Loading somatic variants from {}", somaticConfig.file().get().toString());
+            try (VCFFileReader vcfReader = new VCFFileReader(somaticConfig.file().get(), false)) {
+                for (VariantContext variantContext : vcfReader) {
+                    if (factory.test(variantContext)) {
+                        enrich.accept(variantContext);
+                    }
+                }
+            }
+
+            enrich.flush();
+            return result;
         } else {
             LOGGER.info("Somatic variants support disabled.");
             return Collections.emptyList();
@@ -405,7 +434,7 @@ public class PurityPloidyEstimateApplication {
     }
 
     @NotNull
-    private List<PeakModel> modelSomaticPeaks(@NotNull final SomaticConfig config,
+    private List<PeakModel> modelSomaticPeaks(@NotNull final SomaticFitConfig config,
             @NotNull final List<PurityAdjustedSomaticVariant> enrichedSomatics) {
         final List<ModifiableWeightedPloidy> weightedPloidies = Lists.newArrayList();
         for (PurityAdjustedSomaticVariant enrichedSomatic : enrichedSomatics) {

@@ -1,86 +1,124 @@
 package com.hartwig.hmftools.common.purple.purity;
 
+import static java.util.stream.Collectors.toList;
+
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 
-import java.util.Collection;
+import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
+import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class BestFitFactory {
 
+    private static final DecimalFormat FORMAT = new DecimalFormat("0%");
+    private static final Logger LOGGER = LogManager.getLogger(BestFitFactory.class);
+
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
 
-    private final double minSomaticUnadjustedVaf;
+    private final int minReadCount;
+    private final int maxReadCount;
+    private final boolean somaticFitEnabled;
+
     private final double highlyDiploidPercentage;
-    private final int minVariants;
     private final double minSomaticPurity;
+    private final double minSomaticPuritySpread;
+
+    private final int minTotalSvFragmentCount;
+    private final int minTotalSomaticVariantAlleleReadCount;
+
+    private final SomaticFitFactory somaticFitFactory;
 
     @NotNull
     private final BestFit bestFit;
 
-    public BestFitFactory(double minSomaticUnadjustedVaf, int minVariants, int minPeak, double highlyDiploidPercentage,
-            double minSomaticPurity, double minSomaticPuritySpread, @NotNull final List<FittedPurity> bestFitPerPurity,
-            @NotNull final List<FittedPurity> all, @NotNull final List<SomaticVariant> somatics) {
-        assert (!bestFitPerPurity.isEmpty());
-        this.minSomaticUnadjustedVaf = minSomaticUnadjustedVaf;
-        this.minVariants = minVariants;
+    public BestFitFactory(boolean somaticFitEnabled, int minReadCount, int maxReadCount, double minPurity, double maxPurity,
+            int minVariants, int minPeak, double highlyDiploidPercentage, double minSomaticPurity, double minSomaticPuritySpread,
+            int minTotalSvFragmentCount, int minTotalSomaticVariantAlleleReadCount, @NotNull final List<FittedPurity> allCandidates,
+            @NotNull final List<SomaticVariant> somatics, @NotNull final List<StructuralVariant> structuralVariants) {
+        assert (!allCandidates.isEmpty());
+        this.somaticFitEnabled = somaticFitEnabled;
+        this.minReadCount = minReadCount;
+        this.maxReadCount = maxReadCount;
+        this.minSomaticPuritySpread = minSomaticPuritySpread;
+        this.minTotalSvFragmentCount = minTotalSvFragmentCount;
+        this.minTotalSomaticVariantAlleleReadCount = minTotalSomaticVariantAlleleReadCount;
+
         this.minSomaticPurity = minSomaticPurity;
         this.highlyDiploidPercentage = highlyDiploidPercentage;
 
-        long somaticsWithSufficientVafCount = somaticsWithSufficientVaf(somatics);
+        this.somaticFitFactory = new SomaticFitFactory(minPeak, minVariants, minPurity, maxPurity);
+        this.bestFit = bestFit(allCandidates, somatics, structuralVariants);
+    }
 
-        Collections.sort(bestFitPerPurity);
-        FittedPurity lowestScore = bestFitPerPurity.get(0);
+    private BestFit bestFit(@NotNull final List<FittedPurity> allCandidates, @NotNull final List<SomaticVariant> somatics,
+            @NotNull final List<StructuralVariant> structuralVariants) {
+        Collections.sort(allCandidates);
+        FittedPurity lowestScoreFit = allCandidates.get(0);
 
-        final List<FittedPurity> bestFitPerPurityCandidates = inRangeOfLowest(lowestScore.score(), bestFitPerPurity);
+        final List<FittedPurity> bestFitPerPurityCandidates = inRangeOfLowest(lowestScoreFit.score(), allCandidates);
         final FittedPurityScore score = FittedPurityScoreFactory.score(bestFitPerPurityCandidates);
 
-        final FittedPurity fit;
-        final FittedPurityMethod status;
-        if (Doubles.greaterOrEqual(score.puritySpread(), minSomaticPuritySpread) && isHighlyDiploid(score)) {
-            final Optional<FittedPurity> somaticFit = new SomaticFitFactory(minPeak).fromSomatics(bestFitPerPurityCandidates, somatics);
+        final ImmutableBestFit.Builder builder = ImmutableBestFit.builder().score(score).allFits(allCandidates);
 
-            if (noDetectableTumor(somaticsWithSufficientVafCount)) {
-                status = FittedPurityMethod.NO_TUMOR;
-                fit = somaticFit.orElse(lowestScore);
-            } else if (somaticsWontHelp(somatics.size(), lowestScore.purity(), somaticFit)) {
-                status = FittedPurityMethod.HIGHLY_DIPLOID;
-                fit = lowestScore;
-            } else {
-                status = FittedPurityMethod.SOMATIC;
-                assert somaticFit.isPresent();
-                fit = somaticFit.get();
-            }
-
-        } else {
-            status = FittedPurityMethod.NORMAL;
-            fit = lowestScore;
+        boolean useSomatics =
+                somaticFitEnabled && Doubles.greaterOrEqual(score.puritySpread(), minSomaticPuritySpread) && isHighlyDiploid(score);
+        if (!useSomatics) {
+            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
         }
 
-        bestFit = ImmutableBestFit.builder().fit(fit).method(status).score(score).bestFitPerPurity(bestFitPerPurity).allFits(all).build();
+        LOGGER.info("Sample is highly diploid [{}] with large purity range [{}:{}]",
+                FORMAT.format(score.maxDiploidProportion()),
+                FORMAT.format(score.minPurity()),
+                FORMAT.format(score.maxPurity()));
+
+        final List<FittedPurity> diploidCandidates = BestFit.mostDiploidPerPurity(allCandidates);
+        if (diploidCandidates.isEmpty()) {
+            LOGGER.warn("Unable to use somatic fit as there are no diploid candidates");
+            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
+        }
+
+        final FittedPurity lowestPurityFit = diploidCandidates.stream().min(Comparator.comparingDouble(FittedPurity::purity)).get();
+
+        final SvSummary svSummary = new SvSummary(structuralVariants);
+        final SomaticSummary somaticSummary = new SomaticSummary(somatics);
+        boolean hasTumor = somaticSummary.hotspots() > 0 || somaticSummary.totalAlleleReadCount() >= minTotalSomaticVariantAlleleReadCount
+                || svSummary.hotspots() > 0 || svSummary.totalFragmentCount() >= minTotalSvFragmentCount;
+
+        if (!hasTumor) {
+            LOGGER.warn("No tumor found");
+            return builder.fit(lowestPurityFit).method(FittedPurityMethod.NO_TUMOR).build();
+        }
+
+        final Optional<FittedPurity> somaticFit = somaticFitFactory.fromSomatics(diploidCandidates, somaticSummary.filteredVariants());
+        if (!somaticFit.isPresent()) {
+            return builder.fit(lowestPurityFit).method(FittedPurityMethod.SOMATIC).build();
+        } else if (soamticFitIsWorse(lowestScoreFit, somaticFit.get())) {
+            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
+        } else {
+            return builder.fit(somaticFit.get()).method(FittedPurityMethod.SOMATIC).build();
+        }
     }
 
-    private long somaticsWithSufficientVaf(@NotNull Collection<SomaticVariant> variants) {
-        return variants.stream().filter(x -> Doubles.greaterOrEqual(x.alleleFrequency(), minSomaticUnadjustedVaf)).count();
-    }
+    private boolean soamticFitIsWorse(@NotNull final FittedPurity lowestScore, @NotNull final FittedPurity somaticFit) {
+        double lowestPurity = lowestScore.purity();
+        double somaticPurity = somaticFit.purity();
 
-    private boolean noDetectableTumor(long somaticCount) {
-        return somaticCount > 0 && somaticCount < minVariants;
-    }
-
-    private boolean somaticsWontHelp(int somaticCount, double lowestScoringPurity, @NotNull final Optional<FittedPurity> somaticFit) {
-        return !somaticFit.isPresent() || somaticCount == 0 || (Doubles.lessThan(lowestScoringPurity, minSomaticPurity) && Doubles.lessThan(
-                somaticFit.get().purity(),
-                minSomaticPurity));
+        return Doubles.lessThan(lowestPurity, minSomaticPurity) && Doubles.lessThan(somaticPurity, minSomaticPurity) && Doubles.greaterThan(
+                somaticPurity,
+                lowestPurity);
     }
 
     private boolean isHighlyDiploid(@NotNull final FittedPurityScore score) {
@@ -94,7 +132,7 @@ public class BestFitFactory {
 
     @NotNull
     private static List<FittedPurity> inRangeOfLowest(double lowestScore, @NotNull final List<FittedPurity> purities) {
-        return purities.stream().filter(inRangeOfLowest(lowestScore)).collect(Collectors.toList());
+        return purities.stream().filter(inRangeOfLowest(lowestScore)).collect(toList());
     }
 
     @NotNull
@@ -104,5 +142,75 @@ public class BestFitFactory {
             double relDifference = Math.abs(absDifference / score);
             return lessOrEqual(absDifference, ABS_RANGE) || lessOrEqual(relDifference, PERCENT_RANGE);
         };
+    }
+
+    static class SvSummary {
+
+        private int hotspotCount = 0;
+        private int fragmentReadCount = 0;
+
+        public SvSummary(@NotNull final List<StructuralVariant> variants) {
+            for (StructuralVariant variant : variants) {
+                if (variant.isFiltered()) {
+                    continue;
+                }
+
+                if (variant.hotspot()) {
+                    hotspotCount++;
+                }
+
+                Integer startTumorVariantFragmentCount = variant.start().tumorVariantFragmentCount();
+                if (variant.end() != null && startTumorVariantFragmentCount != null) {
+                    fragmentReadCount += startTumorVariantFragmentCount;
+                }
+            }
+        }
+
+        public int hotspots() {
+            return hotspotCount;
+        }
+
+        public int totalFragmentCount() {
+            return fragmentReadCount;
+        }
+
+    }
+
+    class SomaticSummary {
+
+        private int hotspotCount = 0;
+        private int alleleReadCountTotal = 0;
+        private final List<SomaticVariant> variantsInReadCountRange = Lists.newArrayList();
+
+        public SomaticSummary(@NotNull final List<SomaticVariant> somatics) {
+            for (SomaticVariant somatic : somatics) {
+                if (somatic.isFiltered() || !somatic.isSnp()) {
+                    continue;
+                }
+
+                if (somatic.isHotspot()) {
+                    hotspotCount++;
+                }
+
+                alleleReadCountTotal += somatic.alleleReadCount();
+
+                if (somatic.totalReadCount() >= minReadCount && somatic.totalReadCount() <= maxReadCount) {
+                    variantsInReadCountRange.add(somatic);
+                }
+            }
+        }
+
+        public int hotspots() {
+            return hotspotCount;
+        }
+
+        public int totalAlleleReadCount() {
+            return alleleReadCountTotal;
+        }
+
+        @NotNull
+        public List<SomaticVariant> filteredVariants() {
+            return variantsInReadCountRange;
+        }
     }
 }

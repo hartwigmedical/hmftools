@@ -6,9 +6,9 @@ import com.google.common.collect.Lists;
 
 public class GenericDataCollection {
 
-    public static int GD_TYPE_DECIMAL = 0;
-    public static int GD_TYPE_INTEGER = 1;
-    public static int GD_TYPE_STRING = 2;
+    public static final int GD_TYPE_DECIMAL = 0;
+    public static final int GD_TYPE_INTEGER = 1;
+    public static final int GD_TYPE_STRING = 2;
 
     private List<String> mFieldNames;
 

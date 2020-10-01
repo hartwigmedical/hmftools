@@ -103,4 +103,11 @@ public interface StructuralVariant {
 
     @Nullable
     String recoveryFilter();
+
+    boolean hotspot();
+
+    default boolean isFiltered() {
+        String filter = filter();
+        return filter != null && !filter.equals("PASS");
+    }
 }

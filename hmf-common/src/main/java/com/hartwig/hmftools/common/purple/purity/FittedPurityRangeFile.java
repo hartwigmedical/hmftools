@@ -2,18 +2,17 @@ package com.hartwig.hmftools.common.purple.purity;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.purple.purity.BestFit.bestFitPerPurity;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
-import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.TreeSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -44,7 +43,6 @@ public final class FittedPurityRangeFile {
         return bestFitPerPurity(readAll(basePath, sample));
     }
 
-
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final List<FittedPurity> purity)
             throws IOException {
         final String filePath = generateFilenameForWriting(basePath, sample);
@@ -73,22 +71,6 @@ public final class FittedPurityRangeFile {
                 .map(FittedPurityRangeFile::fromString)
                 .sorted()
                 .collect(toList());
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static List<FittedPurity> bestFitPerPurity(@NotNull final List<FittedPurity> all) {
-        Collections.sort(all);
-
-        final List<FittedPurity> result = Lists.newArrayList();
-        final TreeSet<Double> purities = new TreeSet<>(Doubles.comparator());
-        for (FittedPurity fittedPurity : all) {
-            if (purities.add(fittedPurity.purity())) {
-                result.add(fittedPurity);
-            }
-        }
-
-        return result;
     }
 
     @NotNull

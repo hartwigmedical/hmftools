@@ -5,7 +5,7 @@ import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
-public class CosineSimilarity
+public final class CosineSimilarity
 {
     public static double calcCosineSim(final double[] set1, final double[] set2)
     {

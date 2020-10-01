@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.purple.purity.PurityContextFileTest.cr
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -13,17 +12,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
 import org.junit.Test;
 
 public class FittedPurityRangeFileTest {
-
-    private Random random;
-
-    @Before
-    public void setup() {
-        random = new Random();
-    }
 
     @Test
     public void testHeaderIsGenerated() {
@@ -45,22 +36,6 @@ public class FittedPurityRangeFileTest {
         }
     }
 
-    @Test
-    public void testBestFitPerPurity() {
-        final FittedPurity fp1 = createRandomPurity(0.3, 0.3);
-        final FittedPurity fp2 = createRandomPurity(0.3, 0.2);
-        final FittedPurity fp3 = createRandomPurity(0.4, 0.4);
-        final FittedPurity fp4 = createRandomPurity(0.4, 0.3);
-
-        final List<FittedPurity> all = Lists.newArrayList(fp1, fp2, fp3, fp4);
-        Collections.shuffle(all);
-
-        final List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.bestFitPerPurity(all);
-        assertEquals(2, bestFitPerPurity.size());
-        assertEquals(fp2, bestFitPerPurity.get(0));
-        assertEquals(fp4, bestFitPerPurity.get(1));
-    }
-
     @NotNull
     private static List<FittedPurity> create(int count) {
         Random random = new Random();
@@ -69,10 +44,5 @@ public class FittedPurityRangeFileTest {
             result.add(createRandomPurityBuilder(random).purity(i).build());
         }
         return result;
-    }
-
-    @NotNull
-    private FittedPurity createRandomPurity(double purity, double score) {
-        return createRandomPurityBuilder(random).purity(purity).score(score).build();
     }
 }

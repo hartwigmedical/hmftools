@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.utils;
 
 import java.util.List;
 
-public class Strings
+public final class Strings
 {
     public static String appendStr(final String dest, final String source, char delim)
     {
@@ -24,7 +24,7 @@ public class Strings
         return combinedStr.toString();
     }
 
-    public static final String reverseString(final String str)
+    public static String reverseString(final String str)
     {
         String reverse = "";
 

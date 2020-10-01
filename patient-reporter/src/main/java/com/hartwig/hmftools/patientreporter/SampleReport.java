@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.time.LocalDate;
 
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;

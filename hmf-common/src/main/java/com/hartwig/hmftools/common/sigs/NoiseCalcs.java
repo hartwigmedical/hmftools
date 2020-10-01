@@ -11,7 +11,7 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NoiseCalcs
+public final class NoiseCalcs
 {
     private static final Logger LOGGER = LogManager.getLogger(NoiseCalcs.class);
 

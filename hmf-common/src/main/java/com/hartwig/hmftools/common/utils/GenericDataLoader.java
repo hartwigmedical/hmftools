@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class GenericDataLoader {
+public final class GenericDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(GenericDataLoader.class);
 

@@ -16,12 +16,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -74,7 +75,7 @@ public class ProtectActionability {
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String KNOWLEDGEBASE_DIRECTORY_V2 = "knowledgebase_dir_v2";
 
-    private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
+    private static final String TUMOR_LOCATION_TSV = "tumor_location_tsv";
     private static final String TEMPLATE_CONCLUSION_TSV = "template_conclusion";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
     private static final String LIMS_DIRECTORY = "lims_dir";
@@ -105,7 +106,7 @@ public class ProtectActionability {
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String knowledgebaseDirectory_v2 = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY_V2);
 
-        final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
+        final String tumorLocationTsv = cmd.getOptionValue(TUMOR_LOCATION_TSV);
         final String templateConclusionTsv = cmd.getOptionValue(TEMPLATE_CONCLUSION_TSV);
         final String germlineGenesCsv = cmd.getOptionValue(GERMLINE_GENES_CSV);
         final String limsDir = cmd.getOptionValue(LIMS_DIRECTORY);
@@ -149,8 +150,8 @@ public class ProtectActionability {
         LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
         Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
 
-        String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
-        String patientCancerSubtype = extractCancerSubtype(tumorLocationCsv, tumorSampleId);
+        String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationTsv, tumorSampleId);
+        String patientCancerSubtype = extractCancerSubtype(tumorLocationTsv, tumorSampleId);
 
         LOGGER.info("Extracting genomic alteration from sample {}", tumorSampleId);
         PurityContext purityContext = PurityContextFile.readWithQC(purpleQCTsv, purplePurityTsv);
@@ -329,18 +330,18 @@ public class ProtectActionability {
     }
 
     @Nullable
-    private static PatientTumorLocation extractTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId)
+    private static PatientTumorLocation extractTumorLocation(@NotNull String tumorLocationTsv, @NotNull String sampleId)
             throws IOException {
-        LOGGER.info("Reading primary tumor location from {}", tumorLocationCsv);
-        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecordsCSV(tumorLocationCsv);
+        LOGGER.info("Reading primary tumor location from {}", tumorLocationTsv);
+        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.readRecordsTSV(tumorLocationTsv);
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
         return PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocations, sampleId);
     }
 
     @NotNull
-    private static String extractCancerSubtype(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
-        PatientTumorLocation tumorLocation = extractTumorLocation(tumorLocationCsv, sampleId);
+    private static String extractCancerSubtype(@NotNull String tumorLocationTsv, @NotNull String sampleId) throws IOException {
+        PatientTumorLocation tumorLocation = extractTumorLocation(tumorLocationTsv, sampleId);
 
         String cancerSubtype = Strings.EMPTY;
         if (tumorLocation != null) {
@@ -353,8 +354,8 @@ public class ProtectActionability {
     }
 
     @NotNull
-    private static String extractPatientTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
-        PatientTumorLocation tumorLocation = extractTumorLocation(tumorLocationCsv, sampleId);
+    private static String extractPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String sampleId) throws IOException {
+        PatientTumorLocation tumorLocation = extractTumorLocation(tumorLocationTsv, sampleId);
 
         String patientPrimaryTumorLocation = Strings.EMPTY;
         if (tumorLocation != null) {
@@ -368,7 +369,7 @@ public class ProtectActionability {
 
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
         return valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(cmd, TUMOR_BARCODE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY)
-                && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY_V2) && dirExists(cmd, LIMS_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV)
+                && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY_V2) && dirExists(cmd, LIMS_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_TSV)
                 && fileExists(cmd, SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV)
                 && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV) && fileExists(
                 cmd,
@@ -427,7 +428,7 @@ public class ProtectActionability {
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY_V2, true, "Path towards the folder containing knowledgebase files from version 2.");
 
-        options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
+        options.addOption(TUMOR_LOCATION_TSV, true, "Path towards the (curated) tumor location TSV.");
         options.addOption(TEMPLATE_CONCLUSION_TSV, true, "Path towards the template for conclusion TSV.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
