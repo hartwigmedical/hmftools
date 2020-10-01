@@ -15,6 +15,7 @@ import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
@@ -85,13 +86,19 @@ public class WidePatientReader {
         String gender = !fiveDays.isEmpty() ? fiveDays.get(0).gender() : null;
         LocalDate informedConsentDate = !fiveDays.isEmpty() ? fiveDays.get(0).informedConsentDate() : null;
 
+        CuratedTumorLocation curatedTumorLocation = tumorLocationCurator.search(limsPrimaryTumorLocation);
+        if (curatedTumorLocation.primaryTumorLocation() == null && limsPrimaryTumorLocation != null
+                && !limsPrimaryTumorLocation.isEmpty()) {
+            LOGGER.warn("Could not curate WIDE primary tumor location '{}'", limsPrimaryTumorLocation);
+        }
+
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(informedConsentDate)
                 .gender(gender)
                 .hospital(null)
                 .birthYear(birthYear)
-                .curatedTumorLocation(tumorLocationCurator.search(limsPrimaryTumorLocation))
+                .curatedTumorLocation(curatedTumorLocation)
                 .deathDate(null)
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())
