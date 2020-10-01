@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import static com.hartwig.hmftools.common.utils.Doubles.greaterOrEqual;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.common.utils.Doubles.positiveOrZero;
 
@@ -35,16 +34,14 @@ public class FittedPurityFactory {
     private static final int MAX_SOMATICS_TO_FIT = 1000;
     private static final double MAX_TUMOR_RATIO_TO_FIT = 3;
 
-    private final int maxPloidy;
     private final double minPurity;
     private final double maxPurity;
-    private final int totalBAFCount;
     private final double purityIncrements;
-    private final double normFactorIncrements;
-    private final double minNormFactor;
-    private final double maxNormFactor;
     private final double somaticPenaltyWeight;
     private final CobaltChromosomes cobaltChromosomes;
+
+    private final int totalBAFCount;
+    private final double averageFittingRatio;
 
     @NotNull
     private final FittedRegionFactory fittedRegionFactory;
@@ -52,37 +49,40 @@ public class FittedPurityFactory {
     private final Collection<SomaticVariant> variants;
 
     private final List<FittedPurity> all = Lists.newArrayList();
-    private final List<FittedPurity> bestScoringPerPurity = Lists.newArrayList();
     private final List<ObservedRegion> filteredRegions = Lists.newArrayList();
+    private final List<Double> ploidyRange;
 
-    public FittedPurityFactory(final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes, final int maxPloidy, final double minPurity,
-            final double maxPurity, final double purityIncrements, final double minNormFactor, final double maxNormFactor,
-            final double normFactorIncrements, final double somaticPenaltyWeight, @NotNull final FittedRegionFactory fittedRegionFactory,
+    public FittedPurityFactory(final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes, final double minPurity,
+            final double maxPurity, final double purityIncrements, final double minPloidy, final double maxPloidy,
+            final double somaticPenaltyWeight, @NotNull final FittedRegionFactory fittedRegionFactory,
             @NotNull final Collection<ObservedRegion> observedRegions, @NotNull final Collection<SomaticVariant> variants)
             throws ExecutionException, InterruptedException {
         this.executorService = executorService;
-        this.maxPloidy = maxPloidy;
         this.minPurity = minPurity;
         this.maxPurity = maxPurity;
         this.purityIncrements = purityIncrements;
-        this.minNormFactor = minNormFactor;
-        this.maxNormFactor = maxNormFactor;
-        this.normFactorIncrements = normFactorIncrements;
         this.somaticPenaltyWeight = somaticPenaltyWeight;
         this.fittedRegionFactory = fittedRegionFactory;
         this.cobaltChromosomes = cobaltChromosomes;
+        this.ploidyRange = ploidyRange(minPloidy, maxPloidy);
 
         final List<SomaticVariant> filteredVariants = Lists.newArrayList();
         final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
 
+        int accumulatedBafCount = 0;
+        double accumulatedWeightedRatio = 0;
         for (final ObservedRegion region : observedRegions) {
             if (useRegionToFitPurity(cobaltChromosomes, region)) {
                 filteredRegions.add(region);
                 variantSelector.select(region, filteredVariants::add);
+                accumulatedBafCount += region.bafCount();
+                accumulatedWeightedRatio += region.bafCount() * region.observedTumorRatio();
             }
         }
+
+        this.totalBAFCount = accumulatedBafCount;
+        this.averageFittingRatio = accumulatedWeightedRatio / accumulatedBafCount;
         this.variants = Downsample.downsample(MAX_SOMATICS_TO_FIT, filteredVariants);
-        this.totalBAFCount = filteredRegions.stream().mapToInt(ObservedRegion::bafCount).sum();
 
         fitPurity();
     }
@@ -113,10 +113,6 @@ public class FittedPurityFactory {
         return chromosome.isNormal() && chromosome.isDiploid();
     }
 
-    public List<FittedPurity> bestFitPerPurity() {
-        return bestScoringPerPurity;
-    }
-
     public List<FittedPurity> all() {
         return all;
     }
@@ -132,12 +128,10 @@ public class FittedPurityFactory {
 
             if (!fittedPurities.isEmpty()) {
                 all.addAll(fittedPurities);
-                bestScoringPerPurity.add(fittedPurities.get(0));
             }
         }
 
         Collections.sort(all);
-        Collections.sort(bestScoringPerPurity);
     }
 
     @NotNull
@@ -148,12 +142,9 @@ public class FittedPurityFactory {
     @NotNull
     private List<FittedPurity> fitPurity(final double purity) {
         final List<FittedPurity> fittedPurities = Lists.newArrayList();
-        for (double normFactor = minNormFactor; lessOrEqual(normFactor, maxNormFactor); normFactor += normFactorIncrements) {
-            double impliedPloidy = PurityAdjuster.impliedSamplePloidy(purity, normFactor);
-
-            if (greaterOrEqual(impliedPloidy, 1) && lessOrEqual(impliedPloidy, maxPloidy)) {
-                fittedPurities.add(fitPurity(purity, normFactor));
-            }
+        for (Double ploidy : ploidyRange) {
+            double impliedNormFactor = PurityAdjuster.impliedNormFactor(averageFittingRatio, purity, ploidy);
+            fittedPurities.add(fitPurity(purity, impliedNormFactor));
         }
 
         Collections.sort(fittedPurities);
@@ -197,4 +188,28 @@ public class FittedPurityFactory {
                 .somaticPenalty(somaticPenalty)
                 .build();
     }
+
+    @NotNull
+    static List<Double> ploidyRange(double minPloidy, double maxPloidy) {
+        List<Double> results = Lists.newArrayList();
+        results.addAll(sequence(Math.max(0, minPloidy), Math.min(3, maxPloidy), 0.02));
+        results.addAll(sequence(Math.max(3, minPloidy), Math.min(5, maxPloidy), 0.05));
+        results.addAll(sequence(Math.max(5, minPloidy), maxPloidy, 0.1));
+        results.add(maxPloidy);
+
+        return results;
+    }
+
+    @NotNull
+    private static List<Double> sequence(double inclusiveMin, double exclusiveMax, double increment) {
+        List<Double> results = Lists.newArrayList();
+
+        double ploidy = inclusiveMin;
+        while (Doubles.lessThan(ploidy, exclusiveMax)) {
+            results.add(ploidy);
+            ploidy += increment;
+        }
+        return results;
+    }
+
 }
