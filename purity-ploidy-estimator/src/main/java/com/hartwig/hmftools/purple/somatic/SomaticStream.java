@@ -27,7 +27,7 @@ import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import com.hartwig.hmftools.purple.config.DriverCatalogConfig;
 import com.hartwig.hmftools.purple.config.RefGenomeData;
-import com.hartwig.hmftools.purple.config.SomaticConfig;
+import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 import com.hartwig.hmftools.purple.plot.RChartData;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +41,7 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticStream {
 
-    private final SomaticConfig somaticConfig;
+    private final SomaticFitConfig somaticFitConfig;
     private final DriverCatalogConfig driverCatalogConfig;
     private final CommonConfig commonConfig;
     private final RefGenomeData refGenomeData;
@@ -58,12 +58,12 @@ public class SomaticStream {
 
     public SomaticStream(final ConfigSupplier configSupplier) {
         this.genePanel = configSupplier.driverCatalogConfig().genePanel();
-        this.somaticConfig = configSupplier.somaticConfig();
+        this.somaticFitConfig = configSupplier.somaticConfig();
         this.commonConfig = configSupplier.commonConfig();
         this.driverCatalogConfig = configSupplier.driverCatalogConfig();
         this.outputVCF = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.somatic.vcf.gz";
-        this.enabled = somaticConfig.file().isPresent();
-        this.inputVCF = enabled ? somaticConfig.file().get().toString() : "";
+        this.enabled = somaticFitConfig.file().isPresent();
+        this.inputVCF = enabled ? somaticFitConfig.file().get().toString() : "";
         this.refGenomeData = configSupplier.refGenomeConfig();
         this.tumorMutationalLoad = new TumorMutationalLoad();
         this.microsatelliteIndels = new MicrosatelliteIndels();
@@ -129,8 +129,8 @@ public class SomaticStream {
                         microsatelliteIndels.andThen(driverConsumer).andThen(writer::add).andThen(rChartData);
 
                 final VariantContextEnrichmentPurple enricher = new VariantContextEnrichmentPurple(driverCatalogConfig.enabled(),
-                        somaticConfig.clonalityMaxPloidy(),
-                        somaticConfig.clonalityBinWidth(),
+                        somaticFitConfig.clonalityMaxPloidy(),
+                        somaticFitConfig.clonalityBinWidth(),
                         commonConfig.version(),
                         commonConfig.tumorSample(),
                         indexedFastaSequenceFile,

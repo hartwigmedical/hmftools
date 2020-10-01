@@ -50,7 +50,7 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticVariantFactory {
+public class SomaticVariantFactory implements VariantContextFilter {
 
     @NotNull
     public static SomaticVariantFactory passOnlyInstance() {
@@ -259,4 +259,10 @@ public class SomaticVariantFactory {
     private static String alt(@NotNull final VariantContext context) {
         return context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
     }
+
+    @Override
+    public boolean test(final VariantContext variantContext) {
+        return filter.test(variantContext);
+    }
+
 }

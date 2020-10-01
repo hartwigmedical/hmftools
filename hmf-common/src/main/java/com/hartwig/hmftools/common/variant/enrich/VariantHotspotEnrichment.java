@@ -27,7 +27,7 @@ public class VariantHotspotEnrichment implements VariantContextEnrichment {
     private final Consumer<VariantContext> consumer;
     private final HotspotEnrichment hotspotEnrichment;
 
-    VariantHotspotEnrichment(@NotNull final Multimap<Chromosome, VariantHotspot> hotspots,
+    public VariantHotspotEnrichment(@NotNull final Multimap<Chromosome, VariantHotspot> hotspots,
             @NotNull final Consumer<VariantContext> consumer) {
         this.consumer = consumer;
         this.hotspotEnrichment = new HotspotEnrichment(hotspots);

@@ -1024,6 +1024,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Refreshed DNDS values with larger cohort (4404 samples)
   - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X germline aberrations. Requires [patch](../patient-db/src/main/resources/patches/purple/purple2.47_to_2.48_migration.sql) to load to data base.
   - Removed MALE_KLINEFELTER as a gender. Gender will instead be MALE and KLINEFELTER will be added to the germline abberations field.
+  - Updated somatic fit logic
 - [2.47](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.47) 
   - Add hg38 support for driver gene panel
   - Phased inframe indels only annotated as MISSENSE if they are otherwise NONSENSE or FRAMESHIFT

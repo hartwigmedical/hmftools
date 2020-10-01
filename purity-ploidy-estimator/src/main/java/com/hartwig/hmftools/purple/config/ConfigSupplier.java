@@ -60,7 +60,7 @@ public class ConfigSupplier {
         DBConfig.addOptions(options);
         FittingConfig.addOptions(options);
         FitScoreConfig.addOptions(options);
-        SomaticConfig.addOptions(options);
+        SomaticFitConfig.addOptions(options);
         StructuralVariantConfig.addOptions(options);
         RefGenomeData.addOptions(options);
         ChartConfig.addOptions(options);
@@ -68,7 +68,7 @@ public class ConfigSupplier {
     }
 
     private final CommonConfig commonConfig;
-    private final SomaticConfig somaticConfig;
+    private final SomaticFitConfig somaticFitConfig;
     private final StructuralVariantConfig structuralVariantConfig;
     private final ChartConfig chartConfig;
     private final DBConfig dbConfig;
@@ -134,7 +134,7 @@ public class ConfigSupplier {
         cobaltData = CobaltData.createCobaltData(commonConfig);
         amberData = AmberData.createAmberData(commonConfig);
 
-        somaticConfig = SomaticConfig.createSomaticConfig(cmd, amberData);
+        somaticFitConfig = SomaticFitConfig.createSomaticConfig(cmd, amberData);
     }
 
     @NotNull
@@ -163,8 +163,8 @@ public class ConfigSupplier {
     }
 
     @NotNull
-    public SomaticConfig somaticConfig() {
-        return somaticConfig;
+    public SomaticFitConfig somaticConfig() {
+        return somaticFitConfig;
     }
 
     @NotNull
