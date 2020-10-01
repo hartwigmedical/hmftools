@@ -1029,7 +1029,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.48](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.48) 
   - Do not produce somatic variant rainfall plot if >100000 variants
   - Refreshed DNDS values with larger cohort (4404 samples)
   - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X germline aberrations. Requires [patch](../patient-db/src/main/resources/patches/purple/purple2.47_to_2.48_migration.sql) to load to data base.
