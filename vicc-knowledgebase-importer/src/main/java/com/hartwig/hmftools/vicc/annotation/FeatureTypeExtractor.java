@@ -35,6 +35,7 @@ public final class FeatureTypeExtractor {
     public static final Set<String> SEARCH_FUSION_PAIRS = Sets.newHashSet("Fusion",
             "Disruptive Inframe Deletion",
             "Gene Fusion",
+            "fusion",
             "EGFR-KDD",
             "Transcript Regulatory Region Fusion",
             "FGFR3 - BAIAP2L1 Fusion",
@@ -110,7 +111,32 @@ public final class FeatureTypeExtractor {
             }
         }
 
-        if (DetermineHotspot.isHotspot(proteinAnnotation)) {
+        if (biomarkerType != null && provenanceRule != null) {
+            if (featureName.contains("+") || (biomarkerType.equals("amp") && provenanceRule.contains("is_fusion_acceptor") || provenanceRule
+                    .contains("is_fusion_donor"))) {
+                return FeatureType.COMBINED;
+            } else if (featureName.contains("insertion")) {
+                int countInsertion = featureName.split("insertion").length -1;
+                if (countInsertion > 1) {
+                    return FeatureType.COMBINED;
+                }
+            } else if (featureName.contains("deletion")) {
+                int countDeletion = featureName.split("deletion").length -1;
+                if (countDeletion > 1) {
+                    return FeatureType.COMBINED;
+                }
+            } else if (featureName.contains("frameshift")) {
+                int countFrameshift = featureName.split("frameshift").length -1;
+                if (countFrameshift > 1) {
+                    return FeatureType.COMBINED;
+                }
+            } else if (featureName.contains("insertions") && featureName.contains("deletion")) {
+                int countCombined = (featureName.split("insertion").length -1) + (featureName.split("deletion").length -1);
+                if (countCombined > 1) {
+                    return FeatureType.COMBINED;
+                }
+            }
+        } else if (DetermineHotspot.isHotspot(proteinAnnotation)) {
             return FeatureType.HOTSPOT;
         } else if (FeatureTypeExtractor.SIGNATURES.contains(feature)) {
             return FeatureType.SIGNATURE;
