@@ -112,7 +112,7 @@ public final class FeatureTypeExtractor {
         }
 
         if (biomarkerType != null && provenanceRule != null) {
-            if (featureName.contains("+") || (biomarkerType.equals("amp") && provenanceRule.contains("is_fusion_acceptor") || provenanceRule
+            if (featureName.contains("+") && (biomarkerType.equals("amp") && provenanceRule.contains("is_fusion_acceptor") || provenanceRule
                     .contains("is_fusion_donor"))) {
                 return FeatureType.COMBINED;
             } else if (featureName.contains("insertion")) {
