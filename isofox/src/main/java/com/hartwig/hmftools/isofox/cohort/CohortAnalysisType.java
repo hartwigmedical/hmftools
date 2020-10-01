@@ -18,7 +18,8 @@ public enum CohortAnalysisType
     PASSING_FUSION,
     RETAINED_INTRON,
     SAMPLE_ROUTINES,
-    EXTERNAL_EXPRESSION_COMPARE;
+    EXTERNAL_EXPRESSION_COMPARE,
+    GENE_EXPRESSION_COMPARE;
 
     public static String getFileId(CohortAnalysisType type)
     {
@@ -26,6 +27,7 @@ public enum CohortAnalysisType
         {
             case GENE_DISTRIBUTION:
             case SAMPLE_GENE_PERCENTILES:
+            case GENE_EXPRESSION_COMPARE:
                 return GENE_RESULTS_FILE;
 
             case TRANSCRIPT_DISTRIBUTION:

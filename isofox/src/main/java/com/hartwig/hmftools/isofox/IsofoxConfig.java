@@ -354,21 +354,10 @@ public class IsofoxConfig
 
         if(ApplyExpectedRates && ExpCountsFile == null)
         {
-            if(ApplyFragmentLengthAdjust)
+            if(ReadLength == 0 || FragmentSizeData.isEmpty())
             {
-                if(FragmentLengthSamplingCount == 0)
-                {
-                    ISF_LOGGER.error("invalid min fragment length count for fragment length sampling");
-                    return false;
-                }
-            }
-            else
-            {
-                if(ReadLength == 0 || FragmentSizeData.isEmpty())
-                {
-                    ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
-                    return false;
-                }
+                ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
+                return false;
             }
 
             return true;

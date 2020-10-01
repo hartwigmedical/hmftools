@@ -28,6 +28,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
+import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
+
 public class SampleGenePercentiles
 {
     private final CohortConfig mConfig;
@@ -46,27 +48,32 @@ public class SampleGenePercentiles
         mConfig = config;
         mCancerTypesGeneDistribution = Maps.newHashMap();
 
-        if(mConfig.Expression.CancerGeneFiles != null)
-        {
-            final Map<String, String> cancerGeneFilenames = loadCancerGeneDistributionFilenames(mConfig.Expression.CancerGeneFiles);
-
-            for(Map.Entry<String, String> entry : cancerGeneFilenames.entrySet())
-            {
-                final String cancerType = entry.getKey();
-                final String filename = entry.getValue();
-
-                ISF_LOGGER.debug("cancerType({}) loading gene records", cancerType);
-
-                final Map<String, double[]> geneDistributionMap = Maps.newHashMap();
-                loadCohortDistribution(filename, geneDistributionMap, "gene", DISTRIBUTION_SIZE + 2, mConfig.RestrictedGeneIds);
-
-                ISF_LOGGER.info("cancerType({}) loaded {} gene records", cancerType, geneDistributionMap.size());
-
-                mCancerTypesGeneDistribution.put(cancerType, geneDistributionMap);
-            }
-        }
+        loadCancerPercentileData();
 
         mWriter = null;
+    }
+
+    private void loadCancerPercentileData()
+    {
+        if(mConfig.Expression.CancerGeneFiles == null)
+            return;
+
+        final Map<String, String> cancerGeneFilenames = loadCancerGeneDistributionFilenames(mConfig.Expression.CancerGeneFiles);
+
+        for(Map.Entry<String, String> entry : cancerGeneFilenames.entrySet())
+        {
+            final String cancerType = entry.getKey();
+            final String filename = entry.getValue();
+
+            ISF_LOGGER.debug("cancerType({}) loading gene records", cancerType);
+
+            final Map<String, double[]> geneDistributionMap = Maps.newHashMap();
+            loadCohortDistribution(filename, geneDistributionMap, "gene", DISTRIBUTION_SIZE + 2, mConfig.RestrictedGeneIds);
+
+            ISF_LOGGER.info("cancerType({}) loaded {} gene records", cancerType, geneDistributionMap.size());
+
+            mCancerTypesGeneDistribution.put(cancerType, geneDistributionMap);
+        }
     }
 
     public void processSampleFiles()
@@ -182,7 +189,11 @@ public class SampleGenePercentiles
             final String outputFileName = mConfig.formCohortFilename("sample_gene_perc_data.csv");
             mWriter = createBufferedWriter(outputFileName, false);
 
-            mWriter.write("SampleId,CancerType,GeneId,GeneName,TPM,CohortMedianTPM,CancerMedianTPM,CohortPercentile,CancerPercentile");
+            mWriter.write("SampleId,CancerType,GeneId,GeneName,TPM");
+
+            if(!mCancerTypesGeneDistribution.isEmpty())
+                mWriter.write(",CohortMedianTPM,CancerMedianTPM,CohortPercentile,CancerPercentile");
+
             mWriter.newLine();
         }
         catch(IOException e)
@@ -199,7 +210,9 @@ public class SampleGenePercentiles
         {
             mWriter.write(String.format("%s,%s,%s,%s,%6.3e", sampleId, cancerType, geneId, geneName, tpm));
 
-            mWriter.write(String.format(",%6.3e,%6.3e,%.1f,%.1f", panCancerMedian, cancerMedian, panCancerPerc, cancerPerc));
+            if(!mCancerTypesGeneDistribution.isEmpty())
+                mWriter.write(String.format(",%6.3e,%6.3e,%.1f,%.1f", panCancerMedian, cancerMedian, panCancerPerc, cancerPerc));
+
             mWriter.newLine();
         }
         catch(IOException e)
