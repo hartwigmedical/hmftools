@@ -37,6 +37,8 @@ public class TranscriptExpression
 
     private ExpectedRatesData mCurrentExpRatesData;
 
+    private final List<Double> mFragmentFrequencyRates;
+
     public TranscriptExpression(final IsofoxConfig config, final ExpectedCountsCache cache, final ResultsWriter resultsWriter)
     {
         mConfig = config;
@@ -44,6 +46,18 @@ public class TranscriptExpression
 
         mCache = cache;
         mCurrentExpRatesData = null;
+
+        // convert fragment distribution counts to rates
+        double totalFrequencyFrags = mConfig.FragmentSizeData.stream().mapToDouble(x -> x.Frequency).sum();
+        mFragmentFrequencyRates = Lists.newArrayList();
+
+        if(totalFrequencyFrags > 0)
+        {
+            for(final FragmentSize fragFrequency : mConfig.FragmentSizeData)
+            {
+                mFragmentFrequencyRates.add(fragFrequency.Frequency / totalFrequencyFrags);
+            }
+        }
     }
 
     public static TranscriptExpression from(final IsofoxConfig config)
@@ -58,11 +72,9 @@ public class TranscriptExpression
 
     private void applyFragmentLengthDistributionToExpectedCounts(final Map<String,List<CategoryCountsData>> geneSetCountsData)
     {
-        final List<FragmentSize> fragmentLengthData = mConfig.FragmentSizeData;
-
         for(List<CategoryCountsData> categoryCountsData : geneSetCountsData.values())
         {
-            categoryCountsData.forEach(x -> x.applyFrequencies(fragmentLengthData));
+            categoryCountsData.forEach(x -> x.applyFrequencies(mFragmentFrequencyRates));
         }
     }
 

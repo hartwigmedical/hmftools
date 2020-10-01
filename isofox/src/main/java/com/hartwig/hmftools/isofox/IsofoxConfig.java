@@ -115,7 +115,6 @@ public class IsofoxConfig
 
     public final boolean WriteExonData;
     public final boolean WriteReadData;
-    public final boolean WriteTransComboData;
 
     public final String ExpCountsFile;
     public final String ExpGcRatiosFile;
@@ -126,6 +125,7 @@ public class IsofoxConfig
     public int ReadLength;
     public final List<FragmentSize> FragmentSizeData;
     public final boolean WriteExpectedRates;
+    public final boolean WriteTransComboData;
 
     public final boolean WriteFragmentLengths;
     public final int FragmentLengthSamplingCount;

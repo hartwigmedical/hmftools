@@ -15,8 +15,10 @@ public class CategoryCountsData
     private final List<Integer> mTranscripts;
     private final List<String> mUnsplicedGenes;
     private double mFragmentCount;
-    private int[] mFragmentCountsByLength;
     private double[] mFragmentCountsByGcRatio;
+
+    // counts by length is only used for expected not actual counts, and is then adjusted by the observed fragment length distribution
+    private int[] mFragmentCountsByLength;
 
     private final String mCombinedKey;
 
@@ -30,23 +32,6 @@ public class CategoryCountsData
 
         mFragmentCountsByLength = null;
         mFragmentCountsByGcRatio = null;
-    }
-
-    public CategoryCountsData(final String categoryStr, int fragLengths)
-    {
-        mCombinedKey = categoryStr;
-        mTranscripts = Lists.newArrayList();
-        mUnsplicedGenes = Lists.newArrayList();
-        mFragmentCount = 0;
-        mFragmentCountsByLength = new int[fragLengths];
-
-        parseCombinedKey();
-    }
-
-    public void initialiseLengthCounts(int fragLengths)
-    {
-        if(fragLengths > 0)
-            mFragmentCountsByLength = new int[fragLengths];
     }
 
     public void initialiseGcRatioCounts(int gcRatioBuckets)
@@ -90,7 +75,6 @@ public class CategoryCountsData
     }
 
     public final double fragmentCount() { return mFragmentCount; }
-    public final int[] fragmentCountsByLength() { return mFragmentCountsByLength; }
     public final double[] fragmentCountsByGcRatio() { return mFragmentCountsByGcRatio; }
 
     public void addCounts(double count)
@@ -100,23 +84,6 @@ public class CategoryCountsData
     public void adjustCounts(double factor)
     {
         mFragmentCount *= factor;
-    }
-
-    public void addFragLengthCounts(int count, int lengthIndex)
-    {
-        mFragmentCount += count;
-        mFragmentCountsByLength[lengthIndex] += count;
-    }
-
-    public void applyFrequencies(final List<FragmentSize> lengthFrequencies)
-    {
-        mFragmentCount = 0;
-
-        for(int i = 0; i < mFragmentCountsByLength.length; ++i)
-        {
-            mFragmentCountsByLength[i] *= lengthFrequencies.get(i).Frequency;
-            mFragmentCount += mFragmentCountsByLength[i];
-        }
     }
 
     public void addGcRatioCounts(double count, final int[] gcRatioIndex, final double[] counts)
@@ -141,6 +108,46 @@ public class CategoryCountsData
         {
             mFragmentCountsByGcRatio[i] *= gcAdjustments[i];
             mFragmentCount += mFragmentCountsByGcRatio[i];
+        }
+    }
+
+    // methods for expected counts routine and fragment lenth distribution adjustments
+    public CategoryCountsData(final String categoryStr, int fragLengths)
+    {
+        mCombinedKey = categoryStr;
+        mTranscripts = Lists.newArrayList();
+        mUnsplicedGenes = Lists.newArrayList();
+        mFragmentCount = 0;
+        mFragmentCountsByLength = new int[fragLengths];
+
+        parseCombinedKey();
+    }
+
+    public void initialiseLengthCounts(int fragLengths)
+    {
+        if(fragLengths > 0)
+            mFragmentCountsByLength = new int[fragLengths];
+    }
+
+    public final int[] fragmentCountsByLength() { return mFragmentCountsByLength; }
+
+    public void addFragLengthCounts(int count, int lengthIndex)
+    {
+        mFragmentCount += count;
+        mFragmentCountsByLength[lengthIndex] += count;
+    }
+
+    public void applyFrequencies(final List<Double> lengthFrequencyRates)
+    {
+        if(lengthFrequencyRates.size() != mFragmentCountsByLength.length)
+            return;
+
+        mFragmentCount = 0;
+
+        for(int i = 0; i < mFragmentCountsByLength.length; ++i)
+        {
+            mFragmentCountsByLength[i] *= lengthFrequencyRates.get(i);
+            mFragmentCount += mFragmentCountsByLength[i];
         }
     }
 
