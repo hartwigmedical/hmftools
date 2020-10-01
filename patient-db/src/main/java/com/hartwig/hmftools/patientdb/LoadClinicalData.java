@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_PASS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_USER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -74,9 +72,10 @@ public final class LoadClinicalData {
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
+
+    private static final String DO_LOAD_CLINICAL_DATA = "do_load_clinical_data";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
-    private static final String DO_CURATE_TUMOR_LOCATIONS = "do_curate_tumor_location";
     private static final String CURATED_TUMOR_LOCATION_CSV = "curated_tumor_location_csv";
     private static final String CURATED_TUMOR_LOCATION_TSV = "curated_tumor_location_tsv";
 
@@ -104,9 +103,6 @@ public final class LoadClinicalData {
             System.exit(1);
         }
 
-        LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
-        DatabaseAccess dbWriter = databaseAccess(cmd);
-
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
         List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
         Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
@@ -127,25 +123,28 @@ public final class LoadClinicalData {
 
         EcrfModels ecrfModels = loadEcrfModels(cmd);
 
-        if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
-            writeRawEcrf(dbWriter, sequencedPatientIds, ecrfModels);
-        }
-
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
         Map<String, Patient> patients =
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
 
-        if (cmd.hasOption(DO_CURATE_TUMOR_LOCATIONS)) {
-            LOGGER.info("Writing curated tumor locations");
+        LOGGER.info("Writing curated tumor locations");
+        DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_CSV), patients.values());
+        DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
 
-            DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_CSV), patients.values());
-            DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
-            LOGGER.info("Complete");
-        } else {
+        if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
+            LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
+            DatabaseAccess dbWriter = databaseAccess(cmd);
+
+            if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
+                writeRawEcrf(dbWriter, sequencedPatientIds, ecrfModels);
+            }
+
             writeClinicalData(dbWriter, lims, sequencedPatientIds, sampleDataPerPatient, patients, treatmentCurator, tumorLocationCurator);
         }
+
+        LOGGER.info("Complete");
     }
 
     @NotNull
@@ -372,8 +371,6 @@ public final class LoadClinicalData {
         }
         dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
         dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
-
-        LOGGER.info("Complete");
     }
 
     @NotNull
@@ -541,9 +538,6 @@ public final class LoadClinicalData {
         String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);
 
         boolean allParamsPresent = !Utils.anyNull(runsDirectory,
-                cmd.getOptionValue(DB_USER),
-                cmd.getOptionValue(DB_PASS),
-                cmd.getOptionValue(DB_URL),
                 cmd.getOptionValue(CPCT_ECRF_FILE),
                 cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
                 cmd.getOptionValue(DRUP_ECRF_FILE),
@@ -556,6 +550,10 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV),
                 cmd.getOptionValue(TREATMENT_MAPPING_CSV),
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV));
+
+        if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
+            allParamsPresent = allParamsPresent && DatabaseAccess.hasDatabaseConfig(cmd);
+        }
 
         boolean validRunDirectories = true;
         if (allParamsPresent) {
@@ -582,7 +580,7 @@ public final class LoadClinicalData {
         options.addOption(DRUP_ECRF_FILE, true, "Path towards the drup ecrf file.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database");
 
-        options.addOption(DO_CURATE_TUMOR_LOCATIONS, false, "If set, curated tumor locations will be written to csv file");
+        options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, curated tumor locations will be written to csv file");
         options.addOption(CURATED_TUMOR_LOCATION_CSV, true, "Path towards to the CSV of curated tumor locations.");
         options.addOption(CURATED_TUMOR_LOCATION_TSV, true, "Path towards to the TSV of curated tumor locations.");
 
