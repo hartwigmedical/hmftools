@@ -229,33 +229,33 @@ public class GeneRangeExtractor {
             @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature, @NotNull HmfTranscriptRegion canonicalTranscript) {
         String transcriptIdVicc = viccEntry.transcriptId();
 
-        if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-            String geneSymbol = feature.geneSymbol();
-            int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+", ""));
-            List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
-            if (genomeRegions.size() == 1) {
-                long start = genomeRegions.get(0).start();
-                long end = genomeRegions.get(0).end();
-                String chromosome = genomeRegions.get(0).chromosome();
-
-                geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
-                        .gene(geneSymbol)
-                        .start(start)
-                        .end(end)
-                        .chromosome(chromosome)
-                        .event(feature.name())
-                        .build());
-                geneRangesPerFeature.put(feature, geneRangeAnnotation);
-
-            } else {
-                LOGGER.warn("Multiple genomic regions known for event {}", feature);
-            }
-        } else {
-            //                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-            //                            transcriptIdVicc,
-            //                            canonicalTranscript.transcriptID(),
-            //                            feature);
-        }
+//        if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+//            String geneSymbol = feature.geneSymbol();
+//            int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+", ""));
+//            List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
+//            if (genomeRegions.size() == 1) {
+//                long start = genomeRegions.get(0).start();
+//                long end = genomeRegions.get(0).end();
+//                String chromosome = genomeRegions.get(0).chromosome();
+//
+//                geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+//                        .gene(geneSymbol)
+//                        .start(start)
+//                        .end(end)
+//                        .chromosome(chromosome)
+//                        .event(feature.name())
+//                        .build());
+//                geneRangesPerFeature.put(feature, geneRangeAnnotation);
+//
+//            } else {
+//                LOGGER.warn("Multiple genomic regions known for event {}", feature);
+//            }
+//        } else {
+//            //                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+//            //                            transcriptIdVicc,
+//            //                            canonicalTranscript.transcriptID(),
+//            //                            feature);
+//        }
         return geneRangesPerFeature;
     }
 

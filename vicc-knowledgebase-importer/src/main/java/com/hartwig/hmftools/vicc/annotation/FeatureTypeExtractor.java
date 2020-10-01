@@ -141,7 +141,8 @@ public final class FeatureTypeExtractor {
                     return FeatureType.COMBINED;
                 }
             }
-        } else if (DetermineHotspot.isHotspot(proteinAnnotation)) {
+        }
+        if (DetermineHotspot.isHotspot(proteinAnnotation)) {
             return FeatureType.HOTSPOT;
         } else if (FeatureTypeExtractor.SIGNATURES.contains(feature)) {
             return FeatureType.SIGNATURE;
@@ -153,13 +154,7 @@ public final class FeatureTypeExtractor {
             return FeatureType.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PROMISCUOUS;
-        } else if (!DetermineHotspot.isHotspot(proteinAnnotation)) {
-            if (FeatureTypeExtractor.GENE_LEVEL.contains(biomarkerType) || FeatureTypeExtractor.GENE_LEVEL.contains(feature)
-                    || FeatureTypeExtractor.GENE_LEVEL.contains(provenanceRule) || FeatureTypeExtractor.GENE_LEVEL.contains(
-                    proteinAnnotation)) {
-                return FeatureType.GENE_LEVEL;
-            }
-        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
+        }  else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
             return FeatureType.GENE_RANGE_EXON;
         } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
                 proteinAnnotation.length() - 1).equals("X") && FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
@@ -172,6 +167,12 @@ public final class FeatureTypeExtractor {
             return FeatureType.GENE_RANGE_CODON;
         } else if (proteinAnnotation.contains("del") && proteinAnnotation.contains("_")) {
             return FeatureType.GENE_RANGE_CODON;
+        } else if (!DetermineHotspot.isHotspot(proteinAnnotation)) {
+            if (FeatureTypeExtractor.GENE_LEVEL.contains(biomarkerType) || FeatureTypeExtractor.GENE_LEVEL.contains(feature)
+                    || FeatureTypeExtractor.GENE_LEVEL.contains(provenanceRule) || FeatureTypeExtractor.GENE_LEVEL.contains(
+                    proteinAnnotation)) {
+                return FeatureType.GENE_LEVEL;
+            }
         }
 
         return FeatureType.UNKNOWN;
