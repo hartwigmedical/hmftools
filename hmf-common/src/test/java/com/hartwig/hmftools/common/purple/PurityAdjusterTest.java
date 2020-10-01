@@ -46,6 +46,21 @@ public class PurityAdjusterTest {
     }
 
 
+    @Test
+    public void testNormFactorPloidyAverageRatioConsistency() {
+        double averageRatio = 0.990374738586366;
+        double normFactor = 0.8782;
+        double purity = 0.08;
+
+        double impliedPloidy = PurityAdjuster.impliedPloidy(averageRatio, purity, normFactor);
+        double impliedNormFactor = PurityAdjuster.impliedNormFactor(averageRatio, purity, impliedPloidy);
+        double impliedAverageRatio = PurityAdjuster.impliedAverageRatio(purity, normFactor, impliedPloidy);
+
+        assertEquals(averageRatio, impliedAverageRatio, EPSILON);
+        assertEquals(normFactor, impliedNormFactor, EPSILON);
+
+    }
+
     private void assertFrequencyMatchesPloidy(final PurityAdjuster victim, final int normalCopyNumber, final int normalPloidy,
             final double tumorCopyNumber, final double tumorPloidy) {
 

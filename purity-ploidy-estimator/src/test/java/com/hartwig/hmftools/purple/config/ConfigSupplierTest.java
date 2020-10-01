@@ -12,7 +12,7 @@ public class ConfigSupplierTest {
     public void testDefaultValues() {
         assertEquals(0.08, FittingConfig.MIN_PURITY_DEFAULT, EPSILON);
         assertEquals(1.0, FittingConfig.MAX_PURITY_DEFAULT, EPSILON);
-        assertEquals(0.33, FittingConfig.MIN_NORM_FACTOR_DEFAULT, EPSILON);
-        assertEquals(2.0, FittingConfig.MAX_NORM_FACTOR_DEFAULT, EPSILON);
+        assertEquals(1, FittingConfig.MIN_PLOIDY_DEFAULT, EPSILON);
+        assertEquals(8, FittingConfig.MAX_PLOIDY_DEFAULT, EPSILON);
     }
 }

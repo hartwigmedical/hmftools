@@ -138,10 +138,10 @@ The following arguments control the somatic fit. Changing these values without a
 
 Argument | Default | Description 
 ---|---|---
-somatic_min_peak | 50 | Minimum number of somatic variants to consider a peak.
-somatic_min_total | 300 | Minimum number of somatic variants required to assist highly diploid fits.
-somatic_min_purity_spread | 0.15 | Minimum spread within candidate purities before somatics can be used.
+somatic_min_peak | 10 | Minimum number of somatic variants to consider a peak.
+somatic_min_variants | 10 | Minimum number of somatic variants required to assist highly diploid fits.
 somatic_min_purity | 0.17 | Somatic fit will not be used if both somatic and fitted purities are less than this value.
+somatic_min_purity_spread | 0.15 | Minimum spread within candidate purities before somatics can be used.
 somatic_penalty_weight | 1 | Proportion of somatic penalty to include in fitted purity score.
 highly_diploid_percentage | 0.97 | Proportion of genome that must be diploid before using somatic fit.
 
@@ -158,10 +158,21 @@ The following arguments control the fitting behaviour. Changing these values wit
 
 Argument | Default | Description 
 ---|---|---
+min_ploidy | 1 | Minimum ploidy to fit
+max_ploidy | 8 | Maximum ploidy to fit
 min_purity | 0.08 | Minimum purity to fit to 
 max_purity | 1 | Maximum purity to fit to 
 purity_increment | 0.01 | Sets the increment from min to max purity  
 
+Min/max purity/ploidy arguments are inclusive.
+
+Purity increments at a fixed rate. Ploidy, however, increments according to the following schedule: 
+
+Min Ploidy | Max Ploidy | Increment
+---|---|---
+0 | 3 | 0.02
+3 | 5 | 0.05
+5 | 5+ | 0.1 
 
 #### Optional Driver Catalog Arguments
 The following arguments control the driver catalog behaviour.
@@ -580,7 +591,7 @@ Column  | Example Value | Description
 ---|---|---
 Version | 2.25 | Version of PURPLE
 Purity  | 0.98 | Purity of tumor in the sample
-NormFactor | 0.64 | Internal to convert tumor ratio to copy number.
+NormFactor | 0.64 | Internal factor to convert tumor ratio to copy number.
 Ploidy | 3.10 | Average ploidy of the tumor sample after adjusting for purity
 SomaticDeviation | 0.00 | Penalty from somatic variants with implied variant copy numbers that are inconsistent with the minor and major allele copy number 
 Score | 0.68 | Score of fit (lower is better)
@@ -1023,6 +1034,13 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Refreshed DNDS values with larger cohort (4404 samples)
   - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X germline aberrations. Requires [patch](../patient-db/src/main/resources/patches/purple/purple2.47_to_2.48_migration.sql) to load to data base.
   - Removed MALE_KLINEFELTER as a gender. Gender will instead be MALE and KLINEFELTER will be added to the germline abberations field.
+  - QC Status improvements.
+  - Changing fitting space from ‘normFactor’ to ‘ploidy’ (allows configuration of min-max ploidy and improves fitting resolution at low purity).
+  - Add `min_ploidy` [1] and `max_ploidy` [8] parameters. 
+  - Renamed `somatic_min_total` parameter to `somatic_min_variants`
+  - Changed default value of `somatic_min_total` to 10
+  - Changed default value of `somatic_min_peak` to 10
+  - Write all purity range records to `TUMOR.purple.purity.range.tsv` file
 - [2.47](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.47) 
   - Add hg38 support for driver gene panel
   - Phased inframe indels only annotated as MISSENSE if they are otherwise NONSENSE or FRAMESHIFT
