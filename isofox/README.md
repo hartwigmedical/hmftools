@@ -103,7 +103,7 @@ exp_counts_file | Pre-computed expected counts per transcript and gene
 apply_gc_bias_adjust | Adjusted transcript counts by actual vs expected GC ratio distribution
 exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
-long_frag_limit | Default 550 bases, fragments longer than this are not considered to support a gene for the purposes of expression
+long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
 enriched_gene_ids | Recommended 'ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735'
 gc_ratio_bucket | Default 0.01 ie percentiles. Ratio unit for GC distribution.
 
