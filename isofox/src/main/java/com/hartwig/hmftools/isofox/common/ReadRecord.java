@@ -538,7 +538,7 @@ public class ReadRecord
         {
             final int[] readSection = mMappedCoords.get(i);
 
-            if(positionsOverlap(readSection[SE_START], readSection[SE_END], region.PosStart, region.PosEnd))
+            if(positionsOverlap(readSection[SE_START], readSection[SE_END], region.start(), region.end()))
                 return i;
         }
 
@@ -865,7 +865,7 @@ public class ReadRecord
     public static List<RegionReadData> findOverlappingRegions(final List<RegionReadData> regions, final ReadRecord read)
     {
         return regions.stream()
-                .filter(x -> read.overlapsMappedReads(x.PosStart, x.PosEnd))
+                .filter(x -> read.overlapsMappedReads(x.start(), x.end()))
                 .collect(Collectors.toList());
     }
 
@@ -902,8 +902,8 @@ public class ReadRecord
 
         mMappedRegions.entrySet().stream()
                 .filter(x -> exonBoundary(x.getValue()))
-                .filter(x -> (isJunctionStart && x.getKey().PosEnd == junctionPosition)
-                        || (!isJunctionStart && x.getKey().PosStart == junctionPosition))
+                .filter(x -> (isJunctionStart && x.getKey().end() == junctionPosition)
+                        || (!isJunctionStart && x.getKey().start() == junctionPosition))
                 .forEach(x -> matchedTransRefs.addAll(x.getKey().getTransExonRefs()));
 
         return matchedTransRefs;

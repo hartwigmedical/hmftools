@@ -18,12 +18,11 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 
 public class RegionReadData implements Comparable< RegionReadData>
 {
-    public final String Chromosome;
-    public final int PosStart;
-    public final int PosEnd;
+    public final SvRegion Region;
 
     private final List<TransExonRef> mTransExonRefs; // identifiers for this region, eg transcript & exon
 
@@ -44,9 +43,7 @@ public class RegionReadData implements Comparable< RegionReadData>
 
     public RegionReadData(final String chromosome, int posStart, int posEnd)
     {
-        Chromosome = chromosome;
-        PosStart = posStart;
-        PosEnd = posEnd;
+        Region = new SvRegion(chromosome, posStart, posEnd);
 
         mTransExonRefs = Lists.newArrayList();
 
@@ -59,8 +56,9 @@ public class RegionReadData implements Comparable< RegionReadData>
         mTranscriptJunctionCounts = Maps.newHashMap();
     }
 
-    public int start() { return PosStart; }
-    public int end() { return PosEnd; }
+    public String chromosome() { return Region.Chromosome; }
+    public int start() { return Region.start(); }
+    public int end() { return Region.end(); }
 
     public static final int NO_EXON = -1;
 
@@ -261,7 +259,8 @@ public class RegionReadData implements Comparable< RegionReadData>
         int reads = mTranscriptReadCounts.values().stream().mapToInt(x -> x[TRANS_COUNT]).sum();
 
         return String.format("%s %s:%d -> %d refs(%d) %s",
-                !mTransExonRefs.isEmpty() ? mTransExonRefs.get(0) : "unknown", Chromosome, PosStart, PosEnd, mTransExonRefs.size(),
+                !mTransExonRefs.isEmpty() ? mTransExonRefs.get(0) : "unknown",
+                Region.Chromosome, Region.start(), Region.end(), mTransExonRefs.size(),
                 mRefBases != null ? String.format("reads(%d sj=%d)",reads, sjReads) : "intron");
     }
 
@@ -276,13 +275,13 @@ public class RegionReadData implements Comparable< RegionReadData>
 
     public static boolean regionExists(final List<RegionReadData> regions, int posStart, int posEnd)
     {
-        return regions.stream().anyMatch(x -> x.PosStart == posStart && x.PosEnd == posEnd);
+        return regions.stream().anyMatch(x -> x.start() == posStart && x.end() == posEnd);
     }
 
     public static RegionReadData findExonRegion(final List<RegionReadData> regions, int posStart, int posEnd)
     {
         return regions.stream()
-                .filter(x -> x.PosStart == posStart && x.PosEnd == posEnd)
+                .filter(x -> x.start() == posStart && x.end() == posEnd)
                 .findFirst().orElse(null);
     }
 

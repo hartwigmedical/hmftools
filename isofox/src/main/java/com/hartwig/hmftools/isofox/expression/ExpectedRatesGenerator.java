@@ -235,16 +235,16 @@ public class ExpectedRatesGenerator
     {
         if(mGeneCollection.genes().size() == 1)
         {
-            if(mGeneCollection.getExonRegions().size() == 1)
-                return Lists.newArrayList();
-            else
+            if(mGeneCollection.genes().get(0).hasUnsplicedRegions())
                 return Lists.newArrayList(mGeneCollection.genes().get(0).GeneData.GeneId);
+            else
+                return Lists.newArrayList();
         }
 
         int fragEnd = fragStart + mCurrentFragSize - 1;
 
         return mGeneCollection.genes().stream()
-                .filter(x -> x.getExonRegions().size() > 1) // must have at least one unspliced region
+                .filter(x -> x.hasUnsplicedRegions()) // must have at least one unspliced region
                 .filter(x -> positionsWithin(fragStart,fragEnd, x.GeneData.GeneStart, x.GeneData.GeneEnd))
                 .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
     }

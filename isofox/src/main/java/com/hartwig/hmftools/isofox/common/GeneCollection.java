@@ -204,6 +204,8 @@ public class GeneCollection
                     gene.addExonRegion(exonReadData);
                 }
             }
+
+            gene.setHasUnsplicedRegions();
         }
 
         generateCommonExonicRegions(mExonRegions, mCommonExonicRegions);
@@ -213,9 +215,9 @@ public class GeneCollection
     {
         if(checkUnspliced)
         {
-            // check for the region being a) contained within the gene and b) the gene containing more than 1 exon
+            // check for the region being a) contained within the gene and b) the gene has unspliced sections
             return mGenes.stream()
-                    .filter(x -> x.getExonRegions().size() > 1)
+                    .filter(x -> x.hasUnsplicedRegions())
                     .filter(x -> positionsWithin(posStart, posEnd, x.GeneData.GeneStart, x.GeneData.GeneEnd))
                     .collect(Collectors.toList());
         }

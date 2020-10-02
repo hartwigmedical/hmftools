@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.common;
 
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.regionExists;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -26,6 +27,7 @@ public class GeneReadData
     private final List<RegionReadData> mExonRegions; // set of unique exons ie with differing start and end positions
 
     private final List<TranscriptData> mTranscripts;
+    private boolean mHasUnsplicedRegions;
 
     public GeneReadData(final EnsemblGeneData geneData)
     {
@@ -33,6 +35,7 @@ public class GeneReadData
 
         mExonRegions = Lists.newArrayList();
         mTranscripts = Lists.newArrayList();
+        mHasUnsplicedRegions = false;
     }
 
     public String name() { return GeneData.GeneName;}
@@ -47,8 +50,27 @@ public class GeneReadData
 
     public void addExonRegion(final RegionReadData region)
     {
-        if(!regionExists(mExonRegions, region.PosStart, region.PosEnd))
+        if(!regionExists(mExonRegions, region.start(), region.end()))
             mExonRegions.add(region);
+    }
+
+    public boolean hasUnsplicedRegions() { return mHasUnsplicedRegions; }
+
+    public void setHasUnsplicedRegions()
+    {
+        mHasUnsplicedRegions = false;
+
+        // check for any region which doesn't overlap any others
+        for(RegionReadData region : mExonRegions)
+        {
+            if(mExonRegions.stream()
+                    .filter(x -> x != region)
+                    .noneMatch(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())))
+            {
+                mHasUnsplicedRegions = true;
+                return;
+            }
+        }
     }
 
     public static void generateCommonExonicRegions(final List<RegionReadData> regions, final List<int[]> allCommonRegions)
