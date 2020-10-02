@@ -115,7 +115,7 @@ public final class ViccUtil {
         for (Feature feature : featuresWithoutGenomicEvents) {
             LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
             writer.write(
-                    FeatureType.UNKNOWN + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
+                    feature.type() + "\t" + feature.geneSymbol() + "\t" + feature.name() + "\t" + feature.biomarkerType() + "\t"
                             + feature + "\n");
         }
 
