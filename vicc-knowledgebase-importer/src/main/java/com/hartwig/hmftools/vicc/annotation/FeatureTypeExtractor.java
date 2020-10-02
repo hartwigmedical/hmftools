@@ -166,7 +166,7 @@ public final class FeatureTypeExtractor {
             }
         }
 
-        //TODO: check if below is needed
+        //TODO: check if below is needed for extract gene exons
         //        else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !featureName.toLowerCase().contains("deletion")) {
         //            return FeatureType.GENE_RANGE_EXON;
         //        } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
