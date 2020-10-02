@@ -188,7 +188,7 @@ Genes that overlap each other on the same chromosome (either sense, anti-sense o
 
 ### 2. Modelling sample specific fragment distribution
 
-The fragment length distribution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments. Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution. 
+The fragment length distribution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments. Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 5000 fragments is permitted to be sampled per gene collection so no individual gene can dominate the sample distribution. 
 
 ### 3. Expected rates per 'category' and expected GC distribution per transcript
 
