@@ -19,7 +19,7 @@ We recommend to mark duplicates in your pipeline. They are included in gene and 
 
 We find that 6 genes in particular (RN7SL2,RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK) and are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts. Isofox excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.  For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.  We suggest to use the adjusted TPM for expression analysis.
 
-### A note on alignment
+### A note on alignment and multi-mapping
 We use STAR as our aligner. ISOFOX expects BAM output with chimeric reads in the BAm itself, so it is essential when using STAR to set the outSAMtype to 'BAM Unsorted' and the chimOutType to 'WithinBAM'
 
 The full list of non default pararmeters we use internally is:
@@ -31,6 +31,8 @@ The full list of non default pararmeters we use internally is:
 --chimScoreSeparation 1 --outFilterScoreMinOverLread 0.33 --outFilterMatchNminOverLread 0.33 --outFilterMatchNmin 35 
 --alignSplicedMateMapLminOverLmate 0.33 --alignSplicedMateMapLmin 35 --alignSJstitchMismatchNmax 5 -1 5 5
 ```
+
+STAR allows setting of the '—outFilterMultimapNmax ‘ parameter to specify the maximum number of multimaps to allow for an alignment and we use the default value (10).   STAR will mark one of the multi-mappable reads as primary and the remainder as secondary reads. MAPQ by default in STAR for mappable reads to 255, whereas multi-mappable reads will have qual scores of 3 or less. For transcript abundance only, Isofox counts both primary and secondary reads at all locations, but reduces the weight of the reads to reflect the multi-mapping  (MAPQ 3 = 50%,  MAPQ 2 = 33%, MAPQ 1 = 20%, MAPQ 0 => 10%).    Reads with MAPQ of <10 are excluded from novel splice junction and chimeric analysis
 
 ## Configuration
 The 3 core functions of Isofox are controlled by the 'functions' argument:
