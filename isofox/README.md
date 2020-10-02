@@ -19,7 +19,7 @@ We recommend to mark duplicates in your pipeline. They are included in gene and 
 
 We find that 6 genes in particular (RN7SL2,RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK) and are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts. Isofox excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.  For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.  We suggest to use the adjusted TPM for expression analysis.
 
-### A note on alignment
+### A note on alignment and multi-mapping
 We use STAR as our aligner. ISOFOX expects BAM output with chimeric reads in the BAm itself, so it is essential when using STAR to set the outSAMtype to 'BAM Unsorted' and the chimOutType to 'WithinBAM'
 
 The full list of non default pararmeters we use internally is:
@@ -31,6 +31,8 @@ The full list of non default pararmeters we use internally is:
 --chimScoreSeparation 1 --outFilterScoreMinOverLread 0.33 --outFilterMatchNminOverLread 0.33 --outFilterMatchNmin 35 
 --alignSplicedMateMapLminOverLmate 0.33 --alignSplicedMateMapLmin 35 --alignSJstitchMismatchNmax 5 -1 5 5
 ```
+
+STAR allows setting of the '—outFilterMultimapNmax ‘ parameter to specify the maximum number of multimaps to allow for an alignment and we use the default value (10).   STAR will mark one of the multi-mappable reads as primary and the remainder as secondary reads. MAPQ by default in STAR for mappable reads to 255, whereas multi-mappable reads will have qual scores of 3 or less. For transcript abundance only, Isofox counts both primary and secondary reads at all locations, but reduces the weight of the reads to reflect the multi-mapping  (MAPQ 3 = 50%,  MAPQ 2 = 33%, MAPQ 1 = 20%, MAPQ 0 => 10%).    Reads with MAPQ of <10 are excluded from novel splice junction and chimeric analysis
 
 ## Configuration
 The 3 core functions of Isofox are controlled by the 'functions' argument:
@@ -103,7 +105,7 @@ exp_counts_file | Pre-computed expected counts per transcript and gene
 apply_gc_bias_adjust | Adjusted transcript counts by actual vs expected GC ratio distribution
 exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
-long_frag_limit | Default 550 bases, fragments longer than this are not considered to support a gene for the purposes of expression
+long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
 enriched_gene_ids | Recommended 'ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735'
 gc_ratio_bucket | Default 0.01 ie percentiles. Ratio unit for GC distribution.
 
@@ -188,7 +190,7 @@ Genes that overlap each other on the same chromosome (either sense, anti-sense o
 
 ### 2. Modelling sample specific fragment distribution
 
-The fragment length distribution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments. Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution. 
+The fragment length distribution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments. Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 5000 fragments is permitted to be sampled per gene collection so no individual gene can dominate the sample distribution. 
 
 ### 3. Expected rates per 'category' and expected GC distribution per transcript
 
@@ -196,7 +198,7 @@ The fragment length distribution of the sample is measured by sampling the inser
 
 For each transcript in a group of overlapping genes, Isofox measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in Isofox, but generally referred to as an equivalence class in other tools such as Salmon). For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a independent transcript that could be expressed.  
 
-The proportion is calculated by determining which category or set of transcripts that fragments of length {50, 100, 150,200,250,300,350,400,450,500,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
+The proportion is calculated by determining which category or set of transcripts that fragments of length {50,75,100,125,150,200,250,300,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
 
 For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following expected rates:
 
@@ -322,6 +324,8 @@ max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if e
 '** 'unspliced' junctions that are asscoicated with a passing Splice Site - Splice Site junction get the same filter cutoffs (excluding DEL / DUP <1M bases). 
 
 '*** see below for cohort frequency calculation
+
+In addition to the above filters, note that any junction which maps in the Poly-G region of LINC00486 is filtered as a chimeric fragment (hg38: chr2:32,916,190-32,916,630; GRCH37: 2:33,141,260-33,141,700) as they are likely the result of Poly-G sequencer artefacts.
 
 ### 10. Cohort frequency <TO DO>
 

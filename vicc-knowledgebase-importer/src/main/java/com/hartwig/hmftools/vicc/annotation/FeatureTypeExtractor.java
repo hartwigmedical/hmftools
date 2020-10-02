@@ -35,6 +35,7 @@ public final class FeatureTypeExtractor {
     public static final Set<String> SEARCH_FUSION_PAIRS = Sets.newHashSet("Fusion",
             "Disruptive Inframe Deletion",
             "Gene Fusion",
+            "fusion",
             "EGFR-KDD",
             "Transcript Regulatory Region Fusion",
             "FGFR3 - BAIAP2L1 Fusion",
@@ -110,6 +111,37 @@ public final class FeatureTypeExtractor {
             }
         }
 
+        if (biomarkerType != null && provenanceRule != null) {
+            if (featureName.contains("+") && (biomarkerType.equals("amp") && provenanceRule.contains("is_fusion_acceptor") || provenanceRule
+                    .contains("is_fusion_donor"))) {
+                return FeatureType.COMBINED;
+            } else if (featureName.contains("insertion")) {
+                int countInsertion = featureName.split("insertion").length -1;
+                if (countInsertion > 1) {
+                    return FeatureType.COMBINED;
+                }
+            } else if (featureName.contains("deletion")) {
+                int countDeletion = featureName.split("deletion").length -1;
+                if (countDeletion > 1) {
+                    return FeatureType.COMBINED;
+                }
+            } else if (featureName.contains("frameshift")) {
+                int countFrameshift = featureName.split("frameshift").length -1;
+                if (countFrameshift > 1) {
+                    return FeatureType.COMBINED;
+                }
+            } else if (featureName.contains("insertions") && featureName.contains("deletion")) {
+                int countCombined = (featureName.split("insertion").length -1) + (featureName.split("deletion").length -1);
+                if (countCombined > 1) {
+                    return FeatureType.COMBINED;
+                }
+            } else if (featureName.contains("splice")) {
+                int countSplice = featureName.split("splice").length-1;
+                if (countSplice >1) {
+                    return FeatureType.COMBINED;
+                }
+            }
+        }
         if (DetermineHotspot.isHotspot(proteinAnnotation)) {
             return FeatureType.HOTSPOT;
         } else if (FeatureTypeExtractor.SIGNATURES.contains(feature)) {
@@ -122,13 +154,7 @@ public final class FeatureTypeExtractor {
             return FeatureType.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PROMISCUOUS;
-        } else if (!DetermineHotspot.isHotspot(proteinAnnotation)) {
-            if (FeatureTypeExtractor.GENE_LEVEL.contains(biomarkerType) || FeatureTypeExtractor.GENE_LEVEL.contains(feature)
-                    || FeatureTypeExtractor.GENE_LEVEL.contains(provenanceRule) || FeatureTypeExtractor.GENE_LEVEL.contains(
-                    proteinAnnotation)) {
-                return FeatureType.GENE_LEVEL;
-            }
-        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
+        }  else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
             return FeatureType.GENE_RANGE_EXON;
         } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
                 proteinAnnotation.length() - 1).equals("X") && FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
@@ -141,6 +167,12 @@ public final class FeatureTypeExtractor {
             return FeatureType.GENE_RANGE_CODON;
         } else if (proteinAnnotation.contains("del") && proteinAnnotation.contains("_")) {
             return FeatureType.GENE_RANGE_CODON;
+        } else if (!DetermineHotspot.isHotspot(proteinAnnotation)) {
+            if (FeatureTypeExtractor.GENE_LEVEL.contains(biomarkerType) || FeatureTypeExtractor.GENE_LEVEL.contains(feature)
+                    || FeatureTypeExtractor.GENE_LEVEL.contains(provenanceRule) || FeatureTypeExtractor.GENE_LEVEL.contains(
+                    proteinAnnotation)) {
+                return FeatureType.GENE_LEVEL;
+            }
         }
 
         return FeatureType.UNKNOWN;

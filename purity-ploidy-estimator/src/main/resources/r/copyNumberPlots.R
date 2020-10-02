@@ -2,7 +2,7 @@ library(ggplot2)
 library(dplyr)
 theme_set(theme_bw())
 
-#sample = "COLO829T"
+#sample = "COLO829v003T"
 #purpleDir = "~/hmf/analysis/COLO829T/purple"
 #plotDir = "~/hmf/analysis/COLO829T/purple/plot"
 

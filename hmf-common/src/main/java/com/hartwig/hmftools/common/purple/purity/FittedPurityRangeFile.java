@@ -59,7 +59,7 @@ public final class FittedPurityRangeFile {
     static List<String> toLines(@NotNull final List<FittedPurity> purity) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        purity.stream().limit(MAX_RECORDS).map(FittedPurityRangeFile::toString).forEach(lines::add);
+        purity.stream().map(FittedPurityRangeFile::toString).forEach(lines::add);
         return lines;
     }
 

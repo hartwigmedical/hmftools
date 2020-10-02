@@ -105,14 +105,14 @@ public class BestFitFactory {
         final Optional<FittedPurity> somaticFit = somaticFitFactory.fromSomatics(diploidCandidates, somaticSummary.filteredVariants());
         if (!somaticFit.isPresent()) {
             return builder.fit(lowestPurityFit).method(FittedPurityMethod.SOMATIC).build();
-        } else if (soamticFitIsWorse(lowestScoreFit, somaticFit.get())) {
+        } else if (somaticFitIsWorse(lowestScoreFit, somaticFit.get())) {
             return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
         } else {
             return builder.fit(somaticFit.get()).method(FittedPurityMethod.SOMATIC).build();
         }
     }
 
-    private boolean soamticFitIsWorse(@NotNull final FittedPurity lowestScore, @NotNull final FittedPurity somaticFit) {
+    private boolean somaticFitIsWorse(@NotNull final FittedPurity lowestScore, @NotNull final FittedPurity somaticFit) {
         double lowestPurity = lowestScore.purity();
         double somaticPurity = somaticFit.purity();
 

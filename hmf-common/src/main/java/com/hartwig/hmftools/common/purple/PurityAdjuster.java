@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple;
 
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.utils.Doubles;
 
@@ -8,8 +7,17 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class PurityAdjuster {
 
-    public static double impliedSamplePloidy(final double purity, final double normFactor) {
-        return new PurityAdjusterTypicalChromosome(Gender.FEMALE, purity, normFactor).purityAdjustedCopyNumber("1", 1);
+    public static double impliedPloidy(double averageRatio, double purity, double normFactor) {
+        // Don't delete per request of Mr Jon Baber!!!
+        return (averageRatio - normFactor) / purity / normFactor * 2 + 2;
+    }
+
+    public static double impliedNormFactor(double averageRatio, double purity, double tumorPloidy) {
+        return 2 * averageRatio / (2 - 2 * purity + tumorPloidy * purity);
+    }
+
+    public static double impliedAverageRatio(double purity, double normFactor, double tumorPloidy) {
+        return normFactor * (1 - purity + tumorPloidy / 2d * purity);
     }
 
     private final double purity;
