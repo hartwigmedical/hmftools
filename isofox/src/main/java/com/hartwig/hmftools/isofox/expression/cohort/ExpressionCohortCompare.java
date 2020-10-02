@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
+import static com.hartwig.hmftools.common.stats.FdrCalcs.calculateFDRs;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -20,6 +21,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.stats.PValueResult;
 import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
@@ -89,7 +91,7 @@ public class ExpressionCohortCompare
             final String outputFileName = mConfig.formCohortFilename("gene_expression_compare.csv");
             mWriter = createBufferedWriter(outputFileName, false);
 
-            mWriter.write("GeneId,GeneName,PValue");
+            mWriter.write("GeneId,GeneName,PValue,QValue,TestRank");
             mWriter.newLine();
         }
         catch(IOException e)
@@ -165,13 +167,15 @@ public class ExpressionCohortCompare
 
     private void compareGeneDistributions()
     {
-        final String testCohort = mConfig.SampleData.CohortNames.get(0);
-        final String controlCohort = mConfig.SampleData.CohortNames.get(1);
+        final String testCohort = mConfig.SampleData.CohortNames.get(1);
+        final String controlCohort = mConfig.SampleData.CohortNames.get(0);
 
         final Map<String,List<Double>> testGeneExpData = mCohortGeneExpDataMap.get(testCohort);
         final Map<String,List<Double>> controlGeneExpData = mCohortGeneExpDataMap.get(controlCohort);
 
         MannWhitneyUTest mww = new MannWhitneyUTest();
+
+        final List<PValueResult> pValueResults = Lists.newArrayList();
 
         for(Map.Entry<String,List<Double>> entry : testGeneExpData.entrySet())
         {
@@ -185,22 +189,27 @@ public class ExpressionCohortCompare
             double[] testExpValues = convertList(testGeneExp);
             double[] controlExpValues = convertList(controlGeneExp);
 
-            // double pValue = mww.mannWhitneyU(testExpValues, controlExpValues);
             double pValue = mww.mannWhitneyUTest(testExpValues, controlExpValues);
 
-            final String geneName = mGeneIdNameMap.get(geneId);
+            pValueResults.add(new PValueResult(geneId, pValue));
+        }
 
-            ISF_LOGGER.debug("gene({}:{}) pValue({})", geneId, geneName, pValue);
+        ISF_LOGGER.debug("calculating FDRs for {} results", pValueResults.size());
+        calculateFDRs(pValueResults);
 
-            writeResults(geneId, geneName, pValue);
+        for(final PValueResult pValue : pValueResults)
+        {
+            writeResults(pValue.Id, pValue);
         }
     }
 
-    private void writeResults(final String geneId, final String geneName, double pValue)
+    private void writeResults(final String geneId, final PValueResult pValue)
     {
         try
         {
-            mWriter.write(String.format("%s,%s,%g", geneId, geneName, pValue));
+            final String geneName = mGeneIdNameMap.get(geneId);
+
+            mWriter.write(String.format("%s,%s,%g,%g,%d", geneId, geneName, pValue.PValue, pValue.QValue, pValue.Rank));
             mWriter.newLine();
         }
         catch (IOException e)
