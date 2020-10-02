@@ -196,7 +196,7 @@ The fragment length distribution of the sample is measured by sampling the inser
 
 For each transcript in a group of overlapping genes, Isofox measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in Isofox, but generally referred to as an equivalence class in other tools such as Salmon). For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a independent transcript that could be expressed.  
 
-The proportion is calculated by determining which category or set of transcripts that fragments of length {50, 100, 150,200,250,300,350,400,450,500,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
+The proportion is calculated by determining which category or set of transcripts that fragments of length {50,75,100,125,150,200,250,300,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
 
 For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following expected rates:
 
