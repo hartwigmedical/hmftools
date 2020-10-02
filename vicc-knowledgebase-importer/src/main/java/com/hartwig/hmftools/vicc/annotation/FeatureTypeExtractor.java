@@ -148,7 +148,7 @@ public final class FeatureTypeExtractor {
             return FeatureType.SIGNATURE;
         } else if (DetermineCopyNumber.isAmplification(feature, biomarkerType)) {
             return FeatureType.AMPLIFICATION;
-        } else if (DetermineCopyNumber.isDeletion(feature, biomarkerType)) {
+        } else if (DetermineCopyNumber.isDeletion(feature, biomarkerType) && !feature.toLowerCase().contains("exon")) {
             return FeatureType.DELETION;
         } else if (DetermineFusion.isFusion(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PAIR;
