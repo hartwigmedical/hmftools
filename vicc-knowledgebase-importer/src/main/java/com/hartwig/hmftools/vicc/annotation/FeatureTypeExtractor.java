@@ -116,28 +116,28 @@ public final class FeatureTypeExtractor {
                     .contains("is_fusion_donor"))) {
                 return FeatureType.COMBINED;
             } else if (featureName.contains("insertion")) {
-                int countInsertion = featureName.split("insertion").length -1;
+                int countInsertion = featureName.split("insertion").length - 1;
                 if (countInsertion > 1) {
                     return FeatureType.COMBINED;
                 }
             } else if (featureName.contains("deletion")) {
-                int countDeletion = featureName.split("deletion").length -1;
+                int countDeletion = featureName.split("deletion").length - 1;
                 if (countDeletion > 1) {
                     return FeatureType.COMBINED;
                 }
             } else if (featureName.contains("frameshift")) {
-                int countFrameshift = featureName.split("frameshift").length -1;
+                int countFrameshift = featureName.split("frameshift").length - 1;
                 if (countFrameshift > 1) {
                     return FeatureType.COMBINED;
                 }
             } else if (featureName.contains("insertions") && featureName.contains("deletion")) {
-                int countCombined = (featureName.split("insertion").length -1) + (featureName.split("deletion").length -1);
+                int countCombined = (featureName.split("insertion").length - 1) + (featureName.split("deletion").length - 1);
                 if (countCombined > 1) {
                     return FeatureType.COMBINED;
                 }
             } else if (featureName.contains("splice")) {
-                int countSplice = featureName.split("splice").length-1;
-                if (countSplice >1) {
+                int countSplice = featureName.split("splice").length - 1;
+                if (countSplice > 1) {
                     return FeatureType.COMBINED;
                 }
             }
@@ -148,13 +148,13 @@ public final class FeatureTypeExtractor {
             return FeatureType.SIGNATURE;
         } else if (DetermineCopyNumber.isAmplification(feature, biomarkerType)) {
             return FeatureType.AMPLIFICATION;
-        } else if (DetermineCopyNumber.isDeletion(feature, biomarkerType) && !feature.toLowerCase().contains("exon")) {
+        } else if (DetermineCopyNumber.isDeletion(feature, biomarkerType) && !featureName.toLowerCase().contains("exon")) {
             return FeatureType.DELETION;
         } else if (DetermineFusion.isFusion(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PROMISCUOUS;
-        }  else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
+        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
             return FeatureType.GENE_RANGE_EXON;
         } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
                 proteinAnnotation.length() - 1).equals("X") && FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
