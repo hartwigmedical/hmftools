@@ -13,6 +13,9 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.formTranscriptDefinitions;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.writeExpectedRates;
 
+import static org.apache.logging.log4j.Level.DEBUG;
+import static org.apache.logging.log4j.Level.WARN;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
@@ -28,6 +31,8 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
+
+import org.apache.logging.log4j.Level;
 
 public class TranscriptExpression
 {
@@ -323,9 +328,13 @@ public class TranscriptExpression
         if(skippedComboCounts > 0)
         {
             double totalCounts = sumVector(categoryCounts) + skippedComboCounts;
+            double skippedPerc = skippedComboCounts/totalCounts;
 
-            ISF_LOGGER.debug(String.format("gene(%s) skippedCounts(%d perc=%.3f of total=%.0f)",
-                    geneSummaryData.GeneNames, skippedComboCounts, skippedComboCounts/totalCounts, totalCounts));
+
+            Level logLevel = skippedPerc > 0.1 && skippedComboCounts > 100 ? WARN : DEBUG;
+
+            ISF_LOGGER.log(logLevel, String.format("gene(%s) skippedCounts(%d perc=%.3f of total=%.0f)",
+                    geneSummaryData.GeneNames, skippedComboCounts, skippedPerc, totalCounts));
         }
 
         return categoryCounts;

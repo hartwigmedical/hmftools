@@ -266,23 +266,4 @@ public class GeneCollection
             mFragmentCounts[i] = 0;
     }
 
-    public void logOverlappingGenes(final List<GeneReadData> overlappingGenes)
-    {
-        String geneNamesStr = "";
-        int transcriptCount = 0;
-        int minRange = -1;
-        int maxRange = 0;
-
-        for(GeneReadData geneReadData : overlappingGenes)
-        {
-            geneNamesStr = appendStr(geneNamesStr, geneReadData.GeneData.GeneId, ';');
-            transcriptCount += geneReadData.getTranscripts().size();
-            maxRange =  max(maxRange, geneReadData.GeneData.GeneEnd);
-            minRange =  minRange < 0 ? geneReadData.GeneData.GeneStart : min(minRange, geneReadData.GeneData.GeneStart);
-        }
-
-        // Time,Chromosome,GeneCount,TranscriptCount,RangeStart,RangeEnd,GeneNames
-        ISF_LOGGER.info("GENE_OVERLAP: {},{},{},{},{},{}", // chr({}) genes({}) transcripts({}) range({} -> {}),
-                mChromosome, overlappingGenes.size(), transcriptCount, minRange, maxRange, geneNamesStr);
-    }
 }

@@ -818,13 +818,10 @@ Shown below is an example of a SS18-SSX1 fusion:
 1.11
 - Functional:
     - uses driver gene panel with reportable disruptions to report homozygous disruptions and disruptive breakends
-    - allow 5P known-pair genes to use a downstream breakend in a fusion (optional config: five_prime_downstream_distance)
     - exon DEL-DUP fusions now allow exon skipping
-    - allow SGL to use alt mappings without QualScore specified
     - resolved pairs cannot be interrupted by non-simple, non-contained SVs
     - satellite SGL merge requires same arm
     - disallow single-cluster DELs from being AMP candidates
-    - support alternate mapping for known and IG-region fusions
 
 - Fusion changes:
     - see Linx documentation for full details
@@ -834,6 +831,8 @@ Shown below is an example of a SS18-SSX1 fusion:
     - write a likelihood column: HIGH if known, IG known, exon del-dup or promiscuous exon, othereise LOW or NA is not reported
     - set exons skipped to zero for exonic breakends
     - allow chain terminated for IG known pair and exon del-dups
+    - allow SGL to use alt mappings without QualScore specified
+    - support alternate mapping for known and IG-region fusions
 
 - Bugs:
     - re-test cluster-merge by foldbacks after final chaining for non-assembled chained foldbacks

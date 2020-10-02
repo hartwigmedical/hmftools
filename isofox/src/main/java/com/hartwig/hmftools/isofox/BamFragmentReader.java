@@ -540,6 +540,7 @@ public class BamFragmentReader implements Callable
         geneCollectionSummary.GeneResults.add(geneResult);
 
         geneCollectionSummary.setFitAllocations();
+        geneCollectionSummary.assignLowMapQualityFragments();
         geneCollectionSummary.TranscriptResults.forEach(x -> x.setPreGcFitAllocation(x.getFitAllocation()));
     }
 

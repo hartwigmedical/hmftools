@@ -8,6 +8,7 @@ public enum FragmentType
     UNSPLICED,
     CHIMERIC,
     DUPLICATE,
+    LOW_MAP_QUAL,
     MAX;
 
     public static int typeAsInt(FragmentType type)
@@ -20,7 +21,8 @@ public enum FragmentType
             case UNSPLICED: return 3;
             case CHIMERIC: return 5;
             case DUPLICATE: return 6;
-            case MAX: return 7;
+            case LOW_MAP_QUAL: return 7;
+            case MAX: return 8;
 
             default: return 0;
         }

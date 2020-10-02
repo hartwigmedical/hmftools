@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.LOW_MAP_QUAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
@@ -802,6 +803,8 @@ public class BamFragmentAllocator
                 fragmentCount = 0.2;
             else
                 fragmentCount = 0.1;
+
+            mCurrentGenes.addCount(LOW_MAP_QUAL, 1);
         }
 
         addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, fragmentCount);

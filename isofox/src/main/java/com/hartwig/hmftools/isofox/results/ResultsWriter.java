@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.LOW_MAP_QUAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
@@ -213,7 +214,7 @@ public class ResultsWriter
 
             mGeneCollectionWriter = createBufferedWriter(outputFileName, false);
             mGeneCollectionWriter.write("GeneSetId,GeneCount,Chromosome,RangeStart,RangeEnd");
-            mGeneCollectionWriter.write(",TotalFragments,Duplicates,SupportingTrans,Unspliced,AltSJ,Chimeric");
+            mGeneCollectionWriter.write(",TotalFragments,Duplicates,SupportingTrans,Unspliced,AltSJ,Chimeric,LowMapQual");
             mGeneCollectionWriter.write(",Genes");
             mGeneCollectionWriter.newLine();
         }
@@ -236,10 +237,10 @@ public class ResultsWriter
 
             final int[] fragmentCounts = geneCollection.getCounts();
 
-            mGeneCollectionWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
+            mGeneCollectionWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
                     fragmentCounts[typeAsInt(TOTAL)], fragmentCounts[typeAsInt(DUPLICATE)], fragmentCounts[typeAsInt(TRANS_SUPPORTING)],
                     fragmentCounts[typeAsInt(UNSPLICED)], fragmentCounts[typeAsInt(ALT)],
-                    fragmentCounts[typeAsInt(CHIMERIC)]));
+                    fragmentCounts[typeAsInt(CHIMERIC)], fragmentCounts[typeAsInt(LOW_MAP_QUAL)]));
 
             mGeneCollectionWriter.write(String.format(",%s", geneCollection.geneNames(geneCollection.genes().size())));
 

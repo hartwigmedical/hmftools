@@ -105,8 +105,34 @@ public class GeneCollectionSummary
         }
 
         // ensure no overall net change to counts after the adjustment
-        // eg if old total was 10K and new is 2K, then will mutiply all new counts by 5
+        // eg if old total was 10K and new is 2K, then will multiply all new counts by 5
         double adjustFactor = originalTotal/newTotal;
         TransCategoryCounts.forEach(x -> x.adjustCounts(adjustFactor));
+    }
+
+    public void assignLowMapQualityFragments()
+    {
+        int totalLowMqFragments = TransCategoryCounts.stream().mapToInt(x -> x.lowMapQualFragments()).sum();
+
+        if(totalLowMqFragments == 0)
+            return;
+
+        double totalTranscriptAlloc = TranscriptResults.stream().mapToDouble(x -> x.getFitAllocation()).sum();
+        double totalUnsplicedAlloc = GeneResults.stream().mapToDouble(x -> x.getUnsplicedAlloc()).sum();
+        double totalAlloc = totalTranscriptAlloc + totalUnsplicedAlloc;
+
+        if(totalAlloc == 0)
+            return;
+
+        double splicedLowMqFrags = totalLowMqFragments * totalTranscriptAlloc / totalAlloc;
+        double unsplicedLowMqFrags = totalLowMqFragments * totalUnsplicedAlloc / totalAlloc;
+
+        // split amongst genes as per fragment allocation
+        for(final GeneResult geneResult : GeneResults)
+        {
+            double splicedAlloc = geneResult.getSplicedAlloc() / totalTranscriptAlloc * splicedLowMqFrags;
+            double unsplicedAlloc = geneResult.getUnsplicedAlloc() / totalUnsplicedAlloc * unsplicedLowMqFrags;
+            geneResult.setLowMapQualsAllocation(splicedAlloc + unsplicedAlloc);
+        }
     }
 }

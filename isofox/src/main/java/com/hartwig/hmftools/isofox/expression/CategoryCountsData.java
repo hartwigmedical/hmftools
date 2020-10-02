@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.isofox.expression;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_FREQUENCY;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 
 // counts of fragments which could support a set of transcripts and/or unspliced genes
 
@@ -15,6 +13,7 @@ public class CategoryCountsData
     private final List<Integer> mTranscripts;
     private final List<String> mUnsplicedGenes;
     private double mFragmentCount;
+    private int mLowMapQualFragments;
     private double[] mFragmentCountsByGcRatio;
 
     // counts by length is only used for expected not actual counts, and is then adjusted by the observed fragment length distribution
@@ -27,6 +26,7 @@ public class CategoryCountsData
         mTranscripts = transcripts;
         mUnsplicedGenes = unsplicedGenes;
         mFragmentCount = 0;
+        mLowMapQualFragments = 0;
 
         mCombinedKey = formTranscriptIds();
 
@@ -75,12 +75,17 @@ public class CategoryCountsData
     }
 
     public final double fragmentCount() { return mFragmentCount; }
+    public final int lowMapQualFragments() { return mLowMapQualFragments; }
     public final double[] fragmentCountsByGcRatio() { return mFragmentCountsByGcRatio; }
 
     public void addCounts(double count)
     {
         mFragmentCount += count;
+
+        if(count < 1)
+            ++mLowMapQualFragments;
     }
+
     public void adjustCounts(double factor)
     {
         mFragmentCount *= factor;
@@ -89,6 +94,9 @@ public class CategoryCountsData
     public void addGcRatioCounts(double count, final int[] gcRatioIndex, final double[] counts)
     {
         mFragmentCount += count;
+
+        if(count < 1)
+            ++mLowMapQualFragments;
 
         if(gcRatioIndex != null && counts != null)
         {
