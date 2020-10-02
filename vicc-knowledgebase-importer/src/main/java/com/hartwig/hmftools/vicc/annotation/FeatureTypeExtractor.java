@@ -153,6 +153,8 @@ public final class FeatureTypeExtractor {
             return FeatureType.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(featureName, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PROMISCUOUS;
+        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !featureName.toLowerCase().contains("deletion")) {
+            return FeatureType.GENE_RANGE_EXON;
         } else if (proteinAnnotation.length() > 1 && proteinAnnotation.substring(proteinAnnotation.length() - 1).equals("X")) {
             return FeatureType.GENE_RANGE_CODON;
         } else if (proteinAnnotation.length() >= 1 && isValidSingleCodonRange(proteinAnnotation)) {
@@ -164,21 +166,6 @@ public final class FeatureTypeExtractor {
                 return FeatureType.GENE_LEVEL;
             }
         }
-
-        //TODO: check if below is needed for extract gene exons
-        //        else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !featureName.toLowerCase().contains("deletion")) {
-        //            return FeatureType.GENE_RANGE_EXON;
-        //        } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
-        //                proteinAnnotation.length() - 1).equals("X") && FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
-        //            return FeatureType.GENE_RANGE_CODON;
-        //        } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
-        //            return FeatureType.GENE_RANGE_CODON;
-        //        } else if (featureName.contains("DEL") && FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
-        //            return FeatureType.GENE_RANGE_CODON;
-        //        } else if (proteinAnnotation.contains("del") && proteinAnnotation.contains("_")) {
-        //            return FeatureType.GENE_RANGE_CODON;
-        //        }
-
         return FeatureType.UNKNOWN;
     }
 
