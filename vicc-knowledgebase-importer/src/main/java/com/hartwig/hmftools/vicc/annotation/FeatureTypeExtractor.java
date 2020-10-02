@@ -41,7 +41,7 @@ public final class FeatureTypeExtractor {
             "FGFR3 - BAIAP2L1 Fusion",
             "p61BRAF-V600E");
     public static final Set<String> SEARCH_FUSION_PROMISCUOUS =
-            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "nonsense", "FUSIONS");
+            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "FUSIONS");
 
     public static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
 
@@ -79,7 +79,7 @@ public final class FeatureTypeExtractor {
 
     public static final Set<String> GENE_EXON = Sets.newHashSet("exon", "Exon Variant");
     public static final Set<String> GENE_MULTIPLE_CODONS =
-            Sets.newHashSet("nonsense", "(V600)", "splice_region_variant", "Splice Donor Variant", "Inframe Deletion");
+            Sets.newHashSet("(V600)", "splice_region_variant", "Splice Donor Variant", "Inframe Deletion");
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
