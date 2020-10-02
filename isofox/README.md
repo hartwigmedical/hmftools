@@ -325,6 +325,8 @@ max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if e
 
 '*** see below for cohort frequency calculation
 
+In addition to the above filters, note that any junction which maps in the Poly-G region of LINC00486 is filtered as a chimeric fragment (hg38: chr2:32,916,190-32,916,630; GRCH37: 2:33,141,260-33,141,700) as they are likely the result of Poly-G sequencer artefacts.
+
 ### 10. Cohort frequency <TO DO>
 
 We have determined a cohort frequency for each chimeric junction, novel splice junctions and novel retained introns across a cohort of 1700 samples.  The purpose of this is created to estimate population level frequencies of each of the 'novel' features. 
