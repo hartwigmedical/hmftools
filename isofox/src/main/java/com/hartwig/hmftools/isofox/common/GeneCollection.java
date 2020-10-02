@@ -209,18 +209,23 @@ public class GeneCollection
         generateCommonExonicRegions(mExonRegions, mCommonExonicRegions);
     }
 
-    public boolean hasGeneData(int transId) { return mTransIdsGeneMap.containsKey(transId); }
-
-    public GeneReadData findGeneData(int transId)
+    public List<GeneReadData> findGenesCoveringRange(int posStart, int posEnd, boolean checkUnspliced)
     {
-        return mTransIdsGeneMap.get(transId);
-    }
-
-    public List<GeneReadData> findGenesCoveringRange(int posStart, int posEnd)
-    {
-        return mGenes.stream()
-                .filter(x -> positionsOverlap(x.GeneData.GeneStart, x.GeneData.GeneEnd, posStart, posEnd))
-                .collect(Collectors.toList());
+        if(checkUnspliced)
+        {
+            // check for the region being a) contained within the gene and b) the gene containing more than 1 exon
+            return mGenes.stream()
+                    .filter(x -> x.getExonRegions().size() > 1)
+                    .filter(x -> positionsWithin(posStart, posEnd, x.GeneData.GeneStart, x.GeneData.GeneEnd))
+                    .collect(Collectors.toList());
+        }
+        else
+        {
+            // any overlap
+            return mGenes.stream()
+                    .filter(x -> positionsOverlap(x.GeneData.GeneStart, x.GeneData.GeneEnd, posStart, posEnd))
+                    .collect(Collectors.toList());
+        }
     }
 
     public static final int TRANS_COUNT = 0;

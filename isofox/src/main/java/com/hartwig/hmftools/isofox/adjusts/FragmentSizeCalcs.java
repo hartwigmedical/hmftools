@@ -231,6 +231,17 @@ public class FragmentSizeCalcs implements Callable
         }
 
         ISF_LOGGER.debug("chromosome({}) processing complete", mChromosome);
+
+        if(mConfig.WriteFragmentLengthsByGene)
+        {
+            final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(mFragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
+
+            if(!fragLengths.isEmpty())
+            {
+                ISF_LOGGER.info("chromosome({}) frag lengths 5th({}) 50th({}) 95th({})",
+                        mChromosome, fragLengths.get(0), fragLengths.get(1), fragLengths.get(2));
+            }
+        }
     }
 
     private List<int[]> generateExcludedRegions()

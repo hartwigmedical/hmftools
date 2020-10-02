@@ -251,7 +251,7 @@ public class BamFragmentAllocator
             int readPosMin = min(read1.PosStart, read2.PosStart);
             int readPosMax = max(read1.PosEnd, read2.PosEnd);
 
-            final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax);
+            final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, false);
             mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, invalidTrans);
         }
     }
@@ -426,7 +426,7 @@ public class BamFragmentAllocator
         int readPosMin = min(read1.PosStart, read2.PosStart);
         int readPosMax = max(read1.PosEnd, read2.PosEnd);
 
-        final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax);
+        final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, true);
         mCurrentGenes.addCount(TOTAL, 1);
 
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
@@ -539,8 +539,11 @@ public class BamFragmentAllocator
             {
                 List<String> unsplicedGeneIds = overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
-                CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-                addGcCounts(catCounts, commonMappings, minMapQuality);
+                if(!unsplicedGeneIds.isEmpty())
+                {
+                    CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
+                    addGcCounts(catCounts, commonMappings, minMapQuality);
+                }
             }
         }
         else
@@ -657,7 +660,7 @@ public class BamFragmentAllocator
 
         // add to category counts
         final int[] enrichedRegion = mCurrentGenes.getEnrichedRegion();
-        final List<String> unsplicedGeneIds = mCurrentGenes.findGenesCoveringRange(enrichedRegion[SE_START], enrichedRegion[SE_END])
+        final List<String> unsplicedGeneIds = mCurrentGenes.findGenesCoveringRange(enrichedRegion[SE_START], enrichedRegion[SE_END], true)
                 .stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
         final List<Integer> transIds = mCurrentGenes.getEnrichedTranscripts().stream().map(x -> new Integer(x.TransId)).collect(Collectors.toList());

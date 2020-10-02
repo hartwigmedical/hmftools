@@ -185,7 +185,7 @@ public class ExpectedRatesGenerator
             }
         }
 
-        // add in any genes which ended up without counts, those with a single exon
+        // add in any genes which ended up without counts, ie those with a single exon
         for(GeneReadData gene : geneCollection.genes())
         {
             final String geneId = gene.GeneData.GeneId;
@@ -234,11 +234,17 @@ public class ExpectedRatesGenerator
     private List<String> findUnsplicedGenes(int fragStart)
     {
         if(mGeneCollection.genes().size() == 1)
-            return Lists.newArrayList(mGeneCollection.genes().get(0).GeneData.GeneId);
+        {
+            if(mGeneCollection.getExonRegions().size() == 1)
+                return Lists.newArrayList();
+            else
+                return Lists.newArrayList(mGeneCollection.genes().get(0).GeneData.GeneId);
+        }
 
         int fragEnd = fragStart + mCurrentFragSize - 1;
 
         return mGeneCollection.genes().stream()
+                .filter(x -> x.getExonRegions().size() > 1) // must have at least one unspliced region
                 .filter(x -> positionsWithin(fragStart,fragEnd, x.GeneData.GeneStart, x.GeneData.GeneEnd))
                 .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
     }
