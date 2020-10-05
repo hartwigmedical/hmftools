@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.fusion;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 
 import org.immutables.value.Value;
@@ -35,6 +37,12 @@ public abstract class ReportableGeneFusion {
     @Nullable
     public abstract Double junctionCopyNumber();
 
+    @NotNull
+    public abstract FusionPhasedType phased();
+
+    @NotNull
+    public abstract FusionLikelihoodType likelihood();
+
     public static List<ReportableGeneFusion> from(final List<LinxFusion> linxFusions)
     {
         return linxFusions.stream()
@@ -47,6 +55,8 @@ public abstract class ReportableGeneFusion {
                         .geneContextEnd(x.geneContextEnd())
                         .geneTranscriptEnd(x.geneTranscriptEnd())
                         .junctionCopyNumber(x.junctionCopyNumber())
+                        .phased(x.phased())
+                        .likelihood(x.likelihood())
                         .build())
                 .collect(Collectors.toList());
     }

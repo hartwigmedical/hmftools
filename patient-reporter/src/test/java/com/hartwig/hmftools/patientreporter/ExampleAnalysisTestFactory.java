@@ -30,6 +30,8 @@ import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
@@ -675,6 +677,8 @@ public final class ExampleAnalysisTestFactory {
                 .geneTranscriptEnd("ENST00000406427")
                 .geneContextEnd("Intron 3")
                 .junctionCopyNumber(0.4)
+                .phased(FusionPhasedType.INFRAME)
+                .likelihood(FusionLikelihoodType.HIGH)
                 .build();
 
         ReportableGeneFusion fusion2 = ImmutableReportableGeneFusion.builder()
@@ -685,6 +689,8 @@ public final class ExampleAnalysisTestFactory {
                 .geneTranscriptEnd("ENST00000288602")
                 .geneContextEnd("Intron 8")
                 .junctionCopyNumber(1D)
+                .phased(FusionPhasedType.OUT_OF_FRAME)
+                .likelihood(FusionLikelihoodType.LOW)
                 .build();
 
         return Lists.newArrayList(fusion1, fusion2);

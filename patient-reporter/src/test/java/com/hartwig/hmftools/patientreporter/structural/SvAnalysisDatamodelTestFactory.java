@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientreporter.structural;
 
 import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
 import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +20,8 @@ final class SvAnalysisDatamodelTestFactory {
                 .geneContextEnd(Strings.EMPTY)
                 .geneTranscriptStart(Strings.EMPTY)
                 .geneTranscriptEnd(Strings.EMPTY)
+                .phased(FusionPhasedType.SKIPPED_EXONS)
+                .likelihood(FusionLikelihoodType.NA)
                 .junctionCopyNumber(1D);
     }
 

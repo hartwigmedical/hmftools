@@ -178,11 +178,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 95, 85, 85, 40, 40, 40 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 40, 40, 35,66,45 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
                         TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
-                        TableUtil.createHeaderCell("3' Start"),
-                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER) });
+                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies"), TableUtil.createHeaderCell("Phased"),
+                        TableUtil.createHeaderCell("Likelihood").setTextAlignment(TextAlignment.CENTER) });
 
         for (ReportableGeneFusion fusion : GeneFusions.sort(fusions)) {
             contentTable.addCell(TableUtil.createContentCell(GeneFusions.name(fusion)));
@@ -195,6 +195,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(fusion.junctionCopyNumber(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(fusion.phased().name()));
+            contentTable.addCell(TableUtil.createContentCell(fusion.likelihood().name()));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
