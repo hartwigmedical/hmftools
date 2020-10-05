@@ -226,7 +226,7 @@ Similarly to the estimated rate calculation above we also use the same grouping 
 Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to. We allow a fragment may belong to a transcript if:
 * Every base of the fragment is exonic in that transcript (allowing for homology with reads that marginally overlap exon boundaries) AND
 * Every splice junction called exists in that transcript AND
-* the distance between the paired reads in that transcript is not > maximum insert size distribution 
+* the distance between the paired reads in that transcript is not > maximum insert size distribution (currently fixed at 550 bases)
 
 Any fragment which does not contain a splice junction, is wholly contained within the bounds of a gene, and with fragment size <= maximum insert size distribution is also allowed to map to an ‘UNSPLICED’ transcript of that gene.
 
