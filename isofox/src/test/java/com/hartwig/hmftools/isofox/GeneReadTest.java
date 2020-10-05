@@ -45,6 +45,12 @@ public class GeneReadTest
         geneReadData.setHasUnsplicedRegions();
         assertTrue(geneReadData.hasUnsplicedRegions());
 
+        RegionReadData region5 = new RegionReadData(CHR_1, 1600, 1800); // still leaves an unspliced region 1400-1500
+        geneReadData.addExonRegion(region5);
+
+        geneReadData.setHasUnsplicedRegions();
+        assertTrue(geneReadData.hasUnsplicedRegions());
+
     }
 
 }

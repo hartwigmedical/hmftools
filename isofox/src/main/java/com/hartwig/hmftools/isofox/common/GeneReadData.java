@@ -1,24 +1,19 @@
 package com.hartwig.hmftools.isofox.common;
 
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.regionExists;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class GeneReadData
 {
@@ -60,12 +55,24 @@ public class GeneReadData
     {
         mHasUnsplicedRegions = false;
 
-        // check for any region which doesn't overlap any others
+        if(mExonRegions.isEmpty())
+            return;
+
+        int transPosMin = mExonRegions.stream().mapToInt(x -> x.start()).min().orElse(0);
+        int transPosMax = mExonRegions.stream().mapToInt(x -> x.end()).max().orElse(0);
+
         for(RegionReadData region : mExonRegions)
         {
-            if(mExonRegions.stream()
-                    .filter(x -> x != region)
-                    .noneMatch(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())))
+            // if any base directly before or after this exon isn't covered by another region, then it is unspliced
+            if(region.start() > transPosMin
+            && mExonRegions.stream().noneMatch(x -> positionWithin(region.start() - 1, x.start(), x.end())))
+            {
+                mHasUnsplicedRegions = true;
+                return;
+            }
+
+            if(region.end() < transPosMax
+            && mExonRegions.stream().noneMatch(x -> positionWithin(region.end() + 1, x.start(), x.end())))
             {
                 mHasUnsplicedRegions = true;
                 return;

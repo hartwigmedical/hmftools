@@ -772,10 +772,13 @@ public class BamFragmentAllocator
 
         List<String> unsplicedGeneIds = genes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
-        CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
+        if(!unsplicedGeneIds.isEmpty())
+        {
+            CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
 
-        List<int[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
-        addGcCounts(catCounts, readRegions, min(read1.mapQuality(), read2.mapQuality()));
+            List<int[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+            addGcCounts(catCounts, readRegions, min(read1.mapQuality(), read2.mapQuality()));
+        }
 
         mCurrentGenes.addCount(UNSPLICED, 1);
     }

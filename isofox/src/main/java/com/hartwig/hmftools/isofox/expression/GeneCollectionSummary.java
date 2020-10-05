@@ -130,8 +130,8 @@ public class GeneCollectionSummary
         // split amongst genes as per fragment allocation
         for(final GeneResult geneResult : GeneResults)
         {
-            double splicedAlloc = geneResult.getSplicedAlloc() / totalTranscriptAlloc * splicedLowMqFrags;
-            double unsplicedAlloc = geneResult.getUnsplicedAlloc() / totalUnsplicedAlloc * unsplicedLowMqFrags;
+            double splicedAlloc = totalTranscriptAlloc > 0 ? geneResult.getSplicedAlloc() / totalTranscriptAlloc * splicedLowMqFrags : 0;
+            double unsplicedAlloc = totalUnsplicedAlloc > 0 ? geneResult.getUnsplicedAlloc() / totalUnsplicedAlloc * unsplicedLowMqFrags : 0;
             geneResult.setLowMapQualsAllocation(splicedAlloc + unsplicedAlloc);
         }
     }

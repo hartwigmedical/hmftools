@@ -43,6 +43,7 @@ public class GeneResult
         mRawTpm = 0;
         mAdjustedTpm = 0;
         mUnsplicedAlloc = 0;
+        mLowMapQualsAllocation = 0;
     }
 
     public void setFitAllocation(double splicedAlloc, double unsplicedAlloc)
