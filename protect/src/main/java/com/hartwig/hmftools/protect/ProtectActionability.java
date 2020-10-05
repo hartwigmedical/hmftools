@@ -132,10 +132,6 @@ public class ProtectActionability {
             printUsageAndExit(options);
         }
 
-        LOGGER.info("Reading knowledgebase generator v2 from {}", knowledgebaseDirectory_v2);
-        com.hartwig.hmftools.serve.actionability.ActionabilityAnalyzer actionabilityAnalyzer_v2 =
-                com.hartwig.hmftools.serve.actionability.ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory_v2);
-
         LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 

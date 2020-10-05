@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
@@ -136,6 +137,7 @@ public final class PatientReporterTestFactory {
                 .totalCopyNumber(0)
                 .biallelic(false)
                 .driverLikelihood(0D)
+                .driverLikelihoodInterpretation(DriverInterpretation.LOW)
                 .notifyClinicalGeneticist(false);
     }
 

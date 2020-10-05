@@ -1,2 +1,2 @@
-Gene	Chromosome	Position	Ref	Alt	Source	Drug	Drug Type	Cancer Type	Level	Direction	Link
-BRAF	7	140453136	A	T	CGI	Vemurafenib	BRAF Inhibitor	Skin Melanoma	A	Responsive	-
+gene	chromosome	position	ref	alt	source	treatment	cancerType	doid	level	direction
+BRAF	7	140453136	A	T	CGI	Vemurafenib	Skin Melanoma	X	A	Responsive

@@ -32,6 +32,7 @@ final class ReportableVariantFactory {
             }
 
             allReportableVariants.add(fromSomaticVariant(somaticDriverVariant.variant()).driverLikelihood(adjustedDriverLikelihood)
+                    .driverLikelihoodInterpretation(DriverInterpretation.interpret(adjustedDriverLikelihood))
                     .notifyClinicalGeneticist(false)
                     .build());
         }
@@ -45,6 +46,7 @@ final class ReportableVariantFactory {
             }
 
             allReportableVariants.add(fromGermlineVariant(driverGermlineVariant.variant()).driverLikelihood(adjustedDriverLikelihood)
+                    .driverLikelihoodInterpretation(DriverInterpretation.interpret(adjustedDriverLikelihood))
                     .notifyClinicalGeneticist(germlineReportingChoice == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
                             && germlineReportingModel.notifyAboutGene(driverGermlineVariant.variant().gene()))
                     .build());

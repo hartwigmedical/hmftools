@@ -13,10 +13,10 @@ public abstract class ActionableEvidence {
     public abstract String drugs();
 
     @NotNull
-    public abstract String cancerTypeString();
+    public abstract String cancerType();
 
     @NotNull
-    public abstract String cancerTypeDOID();
+    public abstract String doid();
 
     @NotNull
     public abstract String level();

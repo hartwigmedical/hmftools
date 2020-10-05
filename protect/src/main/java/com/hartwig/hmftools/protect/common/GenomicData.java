@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.linx.ReportableGeneFusionFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,10 +44,8 @@ public class GenomicData {
     @NotNull
     public static List<ReportableGeneFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
         LOGGER.info("Reading gene fusions from {}", linxFusionTsv);
-        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
-        // TODO Below code can be used once linx v1.11 is in production.
-        // final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
-      //  List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
+        final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
+        List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
 
         LOGGER.info(" Loaded {} fusions", fusions.size());
         return fusions;
@@ -164,7 +162,7 @@ public class GenomicData {
 
     @Nullable
     private static DriverCategory catalogDriverGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
-        for (DriverGene driverGene: driverGenes) {
+        for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
                 return driverGene.likelihoodType();
             }

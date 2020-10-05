@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.variants;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.Variant;
@@ -63,6 +64,8 @@ public abstract class ReportableVariant implements Variant {
     public abstract double clonalLikelihood();
 
     public abstract double driverLikelihood();
+
+    public abstract DriverInterpretation driverLikelihoodInterpretation();
 
     public abstract boolean biallelic();
 
