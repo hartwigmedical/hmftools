@@ -30,8 +30,9 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariantFile;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
-import com.hartwig.hmftools.common.variant.structural.linx.ReportableGeneFusionFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -39,7 +40,6 @@ import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisru
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 import com.hartwig.hmftools.patientreporter.purple.PurpleAnalyzer;
-import com.hartwig.hmftools.patientreporter.structural.ReportableDisruptionFile;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
@@ -227,16 +227,12 @@ class AnalysedPatientReporter {
     @NotNull
     private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxDisruptionsTsv,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        // TODO Below code can be used once linx v1.11 is in production.
-        // List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
-        // List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusionTsv);
-        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
+        List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
+        List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
         LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
 
-        // TODO Below code can be used once linx v1.11 is in production.
-        // List<LinxBreakend> linxBreakends = LinxBreakend.read(linxDisruptionsTsv);
-        // List<ReportableDisruption> disruptions = ReportableDisruption.from(linxBreakends);
-        List<ReportableDisruption> disruptions = ReportableDisruptionFile.read(linxDisruptionsTsv);
+        List<LinxBreakend> linxBreakends = LinxBreakend.read(linxDisruptionsTsv);
+        List<ReportableDisruption> disruptions = ReportableDisruption.from(linxBreakends);
         LOGGER.info("Loaded {} disruptions from {}", disruptions.size(), linxDisruptionsTsv);
 
         return SvAnalyzer.run(fusions, disruptions, reportData.actionabilityAnalyzer(), patientTumorLocation);
