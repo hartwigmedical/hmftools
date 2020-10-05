@@ -12,12 +12,22 @@ import org.jetbrains.annotations.NotNull;
 public final class GeneEvidenceAnalyzerFactory {
 
     private static final String DELIMITER = "\t";
+    private static final String ACTIONABLE_GENE_TSV = "actionableGenes.tsv";
 
     private GeneEvidenceAnalyzerFactory() {
     }
 
     @NotNull
-    public static GeneEvidenceAnalyzer loadFromActionableGeneTsv(@NotNull String actionableGeneTsv) throws IOException {
+    public static String actionableGeneTsvFilePath(@NotNull String serveActionabilityDir) {
+        return serveActionabilityDir + File.separator + ACTIONABLE_GENE_TSV;
+    }
+
+    public static void writeToActionableFusionTsv(@NotNull List<ActionableGene> actionableGenes) {
+        // TODO Implement
+    }
+
+    @NotNull
+    public static List<ActionableGene> loadFromActionableGeneTsv(@NotNull String actionableGeneTsv) throws IOException {
         List<ActionableGene> actionableGenes = Lists.newArrayList();
         List<String> lines = Files.readAllLines(new File(actionableGeneTsv).toPath());
 
@@ -25,7 +35,7 @@ public final class GeneEvidenceAnalyzerFactory {
         for (String line : lines.subList(1, lines.size())) {
             actionableGenes.add(fromLine(line));
         }
-        return new GeneEvidenceAnalyzer(actionableGenes);
+        return actionableGenes;
     }
 
     @NotNull

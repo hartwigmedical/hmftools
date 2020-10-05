@@ -12,12 +12,22 @@ import org.jetbrains.annotations.NotNull;
 public final class FusionEvidenceAnalyzerFactory {
 
     private static final String DELIMITER = "\t";
+    private static final String ACTIONABLE_FUSION_TSV = "actionableFusions.tsv";
 
     private FusionEvidenceAnalyzerFactory() {
     }
 
     @NotNull
-    public static FusionEvidenceAnalyzer loadFromActionableFusionTsv(@NotNull String actionableFusionTsv) throws IOException {
+    public static String actionableFusionTsvFilePath(@NotNull String serveActionabilityDir) {
+        return serveActionabilityDir + File.separator + ACTIONABLE_FUSION_TSV;
+    }
+
+    public static void writeToActionableFusionTsv(@NotNull List<ActionableFusion> actionableFusions) {
+        // TODO Implement
+    }
+
+    @NotNull
+    public static List<ActionableFusion> loadFromActionableFusionTsv(@NotNull String actionableFusionTsv) throws IOException {
         List<ActionableFusion> actionableFusions = Lists.newArrayList();
         List<String> lines = Files.readAllLines(new File(actionableFusionTsv).toPath());
 
@@ -25,7 +35,7 @@ public final class FusionEvidenceAnalyzerFactory {
         for (String line : lines.subList(1, lines.size())) {
             actionableFusions.add(fromLine(line));
         }
-        return new FusionEvidenceAnalyzer(actionableFusions);
+        return actionableFusions;
     }
 
     @NotNull

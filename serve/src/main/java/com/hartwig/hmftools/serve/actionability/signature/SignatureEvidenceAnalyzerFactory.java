@@ -12,12 +12,22 @@ import org.jetbrains.annotations.NotNull;
 public final class SignatureEvidenceAnalyzerFactory {
 
     private static final String DELIMITER = "\t";
+    private static final String ACTIONABLE_SIGNATURE_TSV = "actionableSignatures.tsv";
 
     private SignatureEvidenceAnalyzerFactory(){
     }
 
     @NotNull
-    public static SignatureEvidenceAnalyzer loadFromActionableSignatureTsv(@NotNull String actionableSignatureTsv) throws IOException {
+    public static String actionableSignatureTsvFilePath(@NotNull String serveActionabilityDir) {
+        return serveActionabilityDir + File.separator + ACTIONABLE_SIGNATURE_TSV;
+    }
+
+    public static void writeToActionableSignatureTsv(@NotNull List<ActionableSignature> actionableSignatures) {
+        // TODO Implement
+    }
+
+    @NotNull
+    public static List<ActionableSignature> loadFromActionableSignatureTsv(@NotNull String actionableSignatureTsv) throws IOException {
          List<ActionableSignature> actionableSignatures = Lists.newArrayList();
          List<String> lines = Files.readAllLines(new File(actionableSignatureTsv).toPath());
 
@@ -25,7 +35,7 @@ public final class SignatureEvidenceAnalyzerFactory {
         for (String line : lines.subList(1, lines.size())) {
             actionableSignatures.add(fromLine(line));
         }
-        return new SignatureEvidenceAnalyzer(actionableSignatures);
+        return actionableSignatures;
     }
 
     @NotNull

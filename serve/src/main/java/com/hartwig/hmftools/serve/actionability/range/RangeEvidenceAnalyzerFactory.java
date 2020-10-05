@@ -12,12 +12,22 @@ import org.jetbrains.annotations.NotNull;
 public final class RangeEvidenceAnalyzerFactory {
 
     private static final String DELIMITER = "\t";
+    private static final String ACTIONABLE_RANGE_TSV = "actionableRanges.tsv";
 
     private RangeEvidenceAnalyzerFactory() {
     }
 
     @NotNull
-    public static RangeEvidenceAnalyzer loadFromActionableRangeTsv(@NotNull String actionableRangeTsv) throws IOException {
+    public static String actionableRangeTsvFilePath(@NotNull String serveActionabilityDir) {
+        return serveActionabilityDir + File.separator + ACTIONABLE_RANGE_TSV;
+    }
+
+    public static void writeToActionableFusionTsv(@NotNull List<ActionableRange> actionableRanges) {
+        // TODO Implement
+    }
+
+    @NotNull
+    public static List<ActionableRange> loadFromActionableRangeTsv(@NotNull String actionableRangeTsv) throws IOException {
         List<ActionableRange> actionableRanges = Lists.newArrayList();
         List<String> lines = Files.readAllLines(new File(actionableRangeTsv).toPath());
 
@@ -25,7 +35,7 @@ public final class RangeEvidenceAnalyzerFactory {
         for (String line : lines.subList(1, lines.size())) {
             actionableRanges.add(fromLine(line));
         }
-        return new RangeEvidenceAnalyzer(actionableRanges);
+        return actionableRanges;
     }
 
     @NotNull

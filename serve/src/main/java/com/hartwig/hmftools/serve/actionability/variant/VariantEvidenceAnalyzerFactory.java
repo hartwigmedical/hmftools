@@ -12,12 +12,22 @@ import org.jetbrains.annotations.NotNull;
 public final class VariantEvidenceAnalyzerFactory {
 
     private static final String DELIMITER = "\t";
+    private static final String ACTIONABLE_VARIANT_TSV = "actionableVariants.tsv";
 
     private VariantEvidenceAnalyzerFactory() {
     }
 
     @NotNull
-    public static VariantEvidenceAnalyzer loadFromActionableVariantTsv(@NotNull String actionableVariantTsv) throws IOException {
+    public static String actionableVariantTsvFilePath(@NotNull String serveActionabilityDir) {
+        return serveActionabilityDir + File.separator + ACTIONABLE_VARIANT_TSV;
+    }
+
+    public static void writeToActionableVariantsTsv(@NotNull List<ActionableVariant> actionableVariants) {
+        // TODO Implement
+    }
+
+    @NotNull
+    public static List<ActionableVariant> loadFromActionableVariantTsv(@NotNull String actionableVariantTsv) throws IOException {
         List<ActionableVariant> actionableVariants = Lists.newArrayList();
         List<String> lines = Files.readAllLines(new File(actionableVariantTsv).toPath());
 
@@ -25,7 +35,7 @@ public final class VariantEvidenceAnalyzerFactory {
         for (String line : lines.subList(1, lines.size())) {
             actionableVariants.add(fromLine(line));
         }
-        return new VariantEvidenceAnalyzer(actionableVariants);
+        return actionableVariants;
     }
 
     @NotNull
