@@ -9,38 +9,36 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SignatureEvidenceAnalyzerFactory {
+public final class SignatureEvidenceAnalyzerFactory {
 
     private static final String DELIMITER = "\t";
 
     private SignatureEvidenceAnalyzerFactory(){
-
     }
 
     @NotNull
-    public static SignatureEvidenceAnalyzer loadFromFileSignature(@NotNull String actionableSignatureTsv) throws IOException {
-        final List<ActionableSignature> signatures = Lists.newArrayList();
-        final List<String> lineSignature = Files.readAllLines(new File(actionableSignatureTsv).toPath());
+    public static SignatureEvidenceAnalyzer loadFromActionableSignatureTsv(@NotNull String actionableSignatureTsv) throws IOException {
+         List<ActionableSignature> actionableSignatures = Lists.newArrayList();
+         List<String> lines = Files.readAllLines(new File(actionableSignatureTsv).toPath());
 
         // Skip header line for signatures
-        for (String lineSignatures : lineSignature.subList(1, lineSignature.size())) {
-            signatures.add(fromLineSignatures(lineSignatures));
+        for (String line : lines.subList(1, lines.size())) {
+            actionableSignatures.add(fromLine(line));
         }
-        return new SignatureEvidenceAnalyzer(signatures);
+        return new SignatureEvidenceAnalyzer(actionableSignatures);
     }
 
     @NotNull
-    private static ActionableSignature fromLineSignatures(@NotNull String line) {
-        final String[] values = line.split(DELIMITER);
+    private static ActionableSignature fromLine(@NotNull String line) {
+         String[] values = line.split(DELIMITER);
         return ImmutableActionableSignature.builder()
                 .signature(values[0])
                 .source(values[1])
                 .drug(values[2])
-                .drugType(values[3])
-                .cancerType(values[4])
+                .cancerType(values[3])
+                .doid(values[4])
                 .level(values[5])
                 .direction(values[6])
-                .link(values[7])
                 .build();
     }
 }

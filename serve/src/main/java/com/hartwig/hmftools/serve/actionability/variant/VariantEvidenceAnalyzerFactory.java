@@ -9,29 +9,28 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VariantEvidenceAnalyzerFactory {
+public final class VariantEvidenceAnalyzerFactory {
 
     private static final String DELIMITER = "\t";
 
-    private VariantEvidenceAnalyzerFactory(){
-
+    private VariantEvidenceAnalyzerFactory() {
     }
 
     @NotNull
-    public static VariantEvidenceAnalyzer loadFromFileVariant(@NotNull String actionableVariantTsv) throws IOException {
-        final List<ActionableVariant> variants = Lists.newArrayList();
-        final List<String> lineVariant = Files.readAllLines(new File(actionableVariantTsv).toPath());
+    public static VariantEvidenceAnalyzer loadFromActionableVariantTsv(@NotNull String actionableVariantTsv) throws IOException {
+        List<ActionableVariant> actionableVariants = Lists.newArrayList();
+        List<String> lines = Files.readAllLines(new File(actionableVariantTsv).toPath());
 
         // Skip header line for variant
-        for (String lineVariants : lineVariant.subList(1, lineVariant.size())) {
-            variants.add(fromLineVariant(lineVariants));
+        for (String line : lines.subList(1, lines.size())) {
+            actionableVariants.add(fromLine(line));
         }
-        return new VariantEvidenceAnalyzer(variants);
+        return new VariantEvidenceAnalyzer(actionableVariants);
     }
 
     @NotNull
-    private static ActionableVariant fromLineVariant(@NotNull String line) {
-        final String[] values = line.split(DELIMITER);
+    private static ActionableVariant fromLine(@NotNull String line) {
+        String[] values = line.split(DELIMITER);
         return ImmutableActionableVariant.builder()
                 .gene(values[0])
                 .chromosome(values[1])
@@ -40,11 +39,10 @@ public class VariantEvidenceAnalyzerFactory {
                 .alt(values[4])
                 .source(values[5])
                 .drug(values[6])
-                .drugType(values[7])
-                .cancerType(values[8])
+                .cancerType(values[7])
+                .doid(values[8])
                 .level(values[9])
                 .direction(values[10])
-                .link(values[11])
                 .build();
     }
 }

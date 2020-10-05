@@ -17,29 +17,28 @@ public final class FusionEvidenceAnalyzerFactory {
     }
 
     @NotNull
-    public static FusionEvidenceAnalyzer loadFromFileFusion(@NotNull String actionableFusionTsv) throws IOException {
-        final List<ActionableFusion> fusions = Lists.newArrayList();
-        final List<String> lineFusion = Files.readAllLines(new File(actionableFusionTsv).toPath());
+    public static FusionEvidenceAnalyzer loadFromActionableFusionTsv(@NotNull String actionableFusionTsv) throws IOException {
+        List<ActionableFusion> actionableFusions = Lists.newArrayList();
+        List<String> lines = Files.readAllLines(new File(actionableFusionTsv).toPath());
 
         // Skip header line for fusions
-        for (String lineFusions : lineFusion.subList(1, lineFusion.size())) {
-            fusions.add(fromLineFusion(lineFusions));
+        for (String line : lines.subList(1, lines.size())) {
+            actionableFusions.add(fromLine(line));
         }
-        return new FusionEvidenceAnalyzer(fusions);
+        return new FusionEvidenceAnalyzer(actionableFusions);
     }
 
     @NotNull
-    private static ActionableFusion fromLineFusion(@NotNull String line) {
-        final String[] values = line.split(DELIMITER);
+    private static ActionableFusion fromLine(@NotNull String line) {
+        String[] values = line.split(DELIMITER);
         return ImmutableActionableFusion.builder()
                 .fusion(values[0])
                 .source(values[1])
                 .drug(values[2])
-                .drugType(values[3])
-                .cancerType(values[4])
+                .cancerType(values[3])
+                .doid(values[4])
                 .level(values[5])
                 .direction(values[6])
-                .link(values[7])
                 .build();
     }
 }

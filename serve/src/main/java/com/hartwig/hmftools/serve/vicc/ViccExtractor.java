@@ -89,24 +89,24 @@ public final class ViccExtractor {
     private static ActionableEvidence extractEvidence(@NotNull ViccEntry entry) {
         String drugs = entry.association().drugLabels();
 
-        String cancerTypeString = null;
-        String cancerTypeDOID = null;
+        String cancerType = null;
+        String doid = null;
         Phenotype phenotype = entry.association().phenotype();
         if (phenotype != null) {
-            cancerTypeString = phenotype.description();
+            cancerType = phenotype.description();
             PhenotypeType type = phenotype.type();
             if (type != null) {
-                cancerTypeDOID = type.id();
+                doid = type.id();
             }
         }
         String level = entry.association().evidenceLabel();
         String direction = entry.association().responseType();
 
-        if (drugs != null && cancerTypeString != null && cancerTypeDOID != null && level != null && direction != null) {
+        if (drugs != null && cancerType != null && doid != null && level != null && direction != null) {
             return ImmutableActionableEvidence.builder()
                     .drugs(drugs)
-                    .cancerTypeString(cancerTypeString)
-                    .cancerTypeDOID(cancerTypeDOID)
+                    .cancerType(cancerType)
+                    .doid(doid)
                     .level(level)
                     .direction(direction)
                     .build();

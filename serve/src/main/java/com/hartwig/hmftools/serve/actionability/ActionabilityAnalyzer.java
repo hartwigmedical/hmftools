@@ -38,14 +38,13 @@ public class ActionabilityAnalyzer {
 
     @NotNull
     public static ActionabilityAnalyzer fromKnowledgebase(@NotNull String knowledgebaseDirectory) throws IOException {
-
         String basePath = knowledgebaseDirectory + File.separator;
-        FusionEvidenceAnalyzer actionableFusion = FusionEvidenceAnalyzerFactory.loadFromFileFusion(basePath + ACTIONABLE_FUSION_TSV);
-        GeneEvidenceAnalyzer actionableGene = GeneEvidenceAnalyzerFactory.loadFromFileGene(basePath + ACTIONABLE_GENE_TSV);
-        RangeEvidenceAnalyzer actionableRange = RangeEvidenceAnalyzerFactory.loadFromFileRange(basePath + ACTIONABLE_RANGE_TSV);
+        FusionEvidenceAnalyzer actionableFusion = FusionEvidenceAnalyzerFactory.loadFromActionableFusionTsv(basePath + ACTIONABLE_FUSION_TSV);
+        GeneEvidenceAnalyzer actionableGene = GeneEvidenceAnalyzerFactory.loadFromActionableGeneTsv(basePath + ACTIONABLE_GENE_TSV);
+        RangeEvidenceAnalyzer actionableRange = RangeEvidenceAnalyzerFactory.loadFromActionableRangeTsv(basePath + ACTIONABLE_RANGE_TSV);
         SignatureEvidenceAnalyzer actionableSignature =
-                SignatureEvidenceAnalyzerFactory.loadFromFileSignature(basePath + ACTIONABLE_SIGNATURE_TSV);
-        VariantEvidenceAnalyzer actionableVariant = VariantEvidenceAnalyzerFactory.loadFromFileVariant(basePath + ACTIONABLE_VARIANT_TSV);
+                SignatureEvidenceAnalyzerFactory.loadFromActionableSignatureTsv(basePath + ACTIONABLE_SIGNATURE_TSV);
+        VariantEvidenceAnalyzer actionableVariant = VariantEvidenceAnalyzerFactory.loadFromActionableVariantTsv(basePath + ACTIONABLE_VARIANT_TSV);
 
         return new ActionabilityAnalyzer(actionableFusion, actionableGene, actionableRange, actionableSignature, actionableVariant);
     }
