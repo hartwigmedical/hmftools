@@ -149,7 +149,7 @@ public final class FeatureTypeExtractor {
             return FeatureType.AMPLIFICATION;
         } else if (DetermineCopyNumber.isDeletion(featureName, biomarkerType) && !featureName.toLowerCase().contains("exon")) {
             return FeatureType.DELETION;
-        } else if (DetermineFusion.isFusion(featureName, biomarkerType, provenanceRule, proteinAnnotation)) {
+        } else if (DetermineFusion.isFusion(featureName, biomarkerType, provenanceRule, proteinAnnotation) && !featureName.contains("p61BRAF")) {
             return FeatureType.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(featureName, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PROMISCUOUS;
