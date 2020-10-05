@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sig_analyser.loaders;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 
+import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
@@ -11,12 +13,21 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.readers.LineIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
+import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
+import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class SigSnvLoader
 {
@@ -98,7 +109,7 @@ public class SigSnvLoader
         }
     }
 
-    public void loadData(final DatabaseAccess dbAccess, boolean writePosFreqData)
+    public void loadData(final DatabaseAccess dbAccess, final String vcfFile, boolean writePosFreqData)
     {
         mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, mSampleIds.size());
 
@@ -107,7 +118,9 @@ public class SigSnvLoader
         for(int sampleIndex = 0; sampleIndex < mSampleIds.size(); ++sampleIndex)
         {
             String sampleId = mSampleIds.get(sampleIndex);
-            final List<SomaticVariant> variants = dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
+
+            final List<SomaticVariant> variants = vcfFile != null ?
+                    loadSomaticVariants(vcfFile, sampleId) : dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
 
             LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
 
@@ -126,11 +139,43 @@ public class SigSnvLoader
             {
                 SIG_LOGGER.info("processed {} samples", sampleIndex);
             }
-
         }
 
         if(writePosFreqData)
             mPositionFrequencies.forEach(x -> x.close());
+    }
+
+    private List<SomaticVariant> loadSomaticVariants(final String vcfFile, final String sampleId)
+    {
+        CompoundFilter filter = new CompoundFilter(true);
+        filter.add(new PassingVariantFilter());
+
+        SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
+        final List<SomaticVariant> variantList = Lists.newArrayList();
+
+        try
+        {
+            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
+
+            for (VariantContext variant : reader.iterator())
+            {
+                if (filter.test(variant))
+                {
+                    final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
+
+                    if(somaticVariant == null || !somaticVariant.isSnp())
+                        continue;
+
+                    variantList.add(somaticVariant);
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            SIG_LOGGER.error(" failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+        }
+
+        return variantList;
     }
 
     public void writeSampleCounts(final String filename)

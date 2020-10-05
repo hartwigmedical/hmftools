@@ -69,6 +69,7 @@ public class SampleFitter
     private final int mMaxSampleCount;
 
     private final DatabaseAccess mDbAccess;
+    private final String mVcfFile;
     private final SigSnvLoader mSnvLoader;
     private boolean mUploadToDb;
     private BufferedWriter mFitWriter;
@@ -77,6 +78,7 @@ public class SampleFitter
     private static final double MIN_ALLOCATION_PERC = 0.005;
 
     private static final String UPLOAD_TO_DB = "upload_to_db";
+    private static final String SOMATIC_VCF_FILE = "somatic_vcf_file";
 
     public SampleFitter(final CommandLine cmd)
     {
@@ -93,6 +95,7 @@ public class SampleFitter
         mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mFitWriter = null;
         mDbAccess = createDatabaseAccess(cmd);
+        mVcfFile = cmd.getOptionValue(SOMATIC_VCF_FILE);
         mUploadToDb = Boolean.parseBoolean(cmd.getOptionValue(UPLOAD_TO_DB, "true"));
 
         mPositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "0"));
@@ -134,27 +137,34 @@ public class SampleFitter
 
         mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames);
 
-        if(mSnvCountsFile != null)
+        if(mVcfFile != null)
         {
-            mSampleCountsMatrix = loadSampleMatrixCounts(mSnvCountsFile, mSampleIdList);
+            mSampleIdList.add(mSampleIdsConfig);
         }
         else
         {
-            if(mDbAccess == null)
+            if(mSnvCountsFile != null)
             {
-                SIG_LOGGER.error("missing DB connection when no sample counts file configured");
-                return false;
-            }
-
-            // load from file or delimitered list
-            if(mSampleIdsConfig.contains(".csv"))
-            {
-                // load from file
-                mSampleIdList.addAll(loadSampleListFile(mSampleIdsConfig));
+                mSampleCountsMatrix = loadSampleMatrixCounts(mSnvCountsFile, mSampleIdList);
             }
             else
             {
-                mSampleIdList.add(mSampleIdsConfig);
+                if(mDbAccess == null)
+                {
+                    SIG_LOGGER.error("missing DB connection when no sample counts file configured");
+                    return false;
+                }
+
+                // load from file or delimitered list
+                if(mSampleIdsConfig.contains(".csv"))
+                {
+                    // load from file
+                    mSampleIdList.addAll(loadSampleListFile(mSampleIdsConfig));
+                }
+                else
+                {
+                    mSampleIdList.add(mSampleIdsConfig);
+                }
             }
         }
 
@@ -205,7 +215,7 @@ public class SampleFitter
 
         mSnvLoader.setSampleIds(Lists.newArrayList(sampleId));
 
-        mSnvLoader.loadData(mDbAccess, false);
+        mSnvLoader.loadData(mDbAccess, mVcfFile, false);
 
         if(mSampleIdList.size() == 1)
         {
@@ -335,6 +345,7 @@ public class SampleFitter
         options.addOption(POSITION_BUCKET_SIZE, true, "Position bucket size");
         options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count, default = 20K");
         options.addOption(UPLOAD_TO_DB, true, "Upload results to database (default: true)");
+        options.addOption(SOMATIC_VCF_FILE, true, "Somatic variant VCF file");
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
