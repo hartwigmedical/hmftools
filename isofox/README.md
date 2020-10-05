@@ -99,7 +99,7 @@ Argument | Description
 ---|---
 apply_calc_frag_lengths | Use the actual fragment length distribution to adjust  
 frag_length_min_count | Minimum number of fragments to observe for length distributon calcs, default = 1M 
-exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;550-0' 
+exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0' 
 apply_exp_rates 
 exp_counts_file | Pre-computed expected counts per transcript and gene
 apply_gc_bias_adjust | Adjusted transcript counts by actual vs expected GC ratio distribution
@@ -198,7 +198,7 @@ The fragment length distribution of the sample is measured by sampling the inser
 
 For each transcript in a group of overlapping genes, Isofox measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in Isofox, but generally referred to as an equivalence class in other tools such as Salmon). For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a independent transcript that could be expressed.  
 
-The proportion is calculated by determining which category or set of transcripts that fragments of length {50,75,100,125,150,200,250,300,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
+The proportion is calculated by determining which category or set of transcripts that fragments of length {50,75,100,125,150,200,250,300,400,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
 
 For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following expected rates:
 
