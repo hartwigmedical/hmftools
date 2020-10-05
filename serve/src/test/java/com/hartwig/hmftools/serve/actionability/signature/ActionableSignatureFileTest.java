@@ -9,14 +9,13 @@ import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 
 import org.junit.Test;
 
-public class SignatureEvidenceAnalyzerFactoryTest {
+public class ActionableSignatureFileTest {
 
     @Test
     public void canLoadActionableSignatures() throws IOException {
         String actionableSignatureTsv =
-                SignatureEvidenceAnalyzerFactory.actionableSignatureTsvFilePath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
-        List<ActionableSignature> actionableSignatures =
-                SignatureEvidenceAnalyzerFactory.loadFromActionableSignatureTsv(actionableSignatureTsv);
+                ActionableSignatureFile.actionableSignatureTsvFilePath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
+        List<ActionableSignature> actionableSignatures = ActionableSignatureFile.loadFromActionableSignatureTsv(actionableSignatureTsv);
 
         assertEquals(1, actionableSignatures.size());
     }

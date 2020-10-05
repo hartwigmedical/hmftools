@@ -9,12 +9,12 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class FusionEvidenceAnalyzerFactory {
+public final class ActionableFusionFile {
 
     private static final String DELIMITER = "\t";
     private static final String ACTIONABLE_FUSION_TSV = "actionableFusions.tsv";
 
-    private FusionEvidenceAnalyzerFactory() {
+    private ActionableFusionFile() {
     }
 
     @NotNull

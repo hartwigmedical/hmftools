@@ -9,12 +9,12 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class GeneEvidenceAnalyzerFactory {
+public final class ActionableGeneFile {
 
     private static final String DELIMITER = "\t";
     private static final String ACTIONABLE_GENE_TSV = "actionableGenes.tsv";
 
-    private GeneEvidenceAnalyzerFactory() {
+    private ActionableGeneFile() {
     }
 
     @NotNull

@@ -9,13 +9,12 @@ import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 
 import org.junit.Test;
 
-public class VariantEvidenceAnalyzerFactoryTest {
+public class ActionableVariantFileTest {
 
     @Test
     public void canLoadActionableVariants() throws IOException {
-        String actionableVariantTsv =
-                VariantEvidenceAnalyzerFactory.actionableVariantTsvFilePath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
-        List<ActionableVariant> actionableVariants = VariantEvidenceAnalyzerFactory.loadFromActionableVariantTsv(actionableVariantTsv);
+        String actionableVariantTsv = ActionableVariantFile.actionableVariantTsvFilePath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
+        List<ActionableVariant> actionableVariants = ActionableVariantFile.loadFromActionableVariantTsv(actionableVariantTsv);
 
         assertEquals(1, actionableVariants.size());
     }

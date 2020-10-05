@@ -9,12 +9,12 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class SignatureEvidenceAnalyzerFactory {
+public final class ActionableSignatureFile {
 
     private static final String DELIMITER = "\t";
     private static final String ACTIONABLE_SIGNATURE_TSV = "actionableSignatures.tsv";
 
-    private SignatureEvidenceAnalyzerFactory(){
+    private ActionableSignatureFile(){
     }
 
     @NotNull

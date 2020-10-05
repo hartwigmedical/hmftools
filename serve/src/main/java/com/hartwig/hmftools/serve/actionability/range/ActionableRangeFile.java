@@ -9,12 +9,12 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class RangeEvidenceAnalyzerFactory {
+public final class ActionableRangeFile {
 
     private static final String DELIMITER = "\t";
     private static final String ACTIONABLE_RANGE_TSV = "actionableRanges.tsv";
 
-    private RangeEvidenceAnalyzerFactory() {
+    private ActionableRangeFile() {
     }
 
     @NotNull

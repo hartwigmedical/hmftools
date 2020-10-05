@@ -9,13 +9,12 @@ import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 
 import org.junit.Test;
 
-public class FusionEvidenceAnalyzerFactoryTest {
+public class ActionableFusionFileTest {
 
     @Test
     public void canLoadActionableFusions() throws IOException {
-        String actionableFusionTsv =
-                FusionEvidenceAnalyzerFactory.actionableFusionTsvFilePath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
-        List<ActionableFusion> actionableFusions = FusionEvidenceAnalyzerFactory.loadFromActionableFusionTsv(actionableFusionTsv);
+        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvFilePath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
+        List<ActionableFusion> actionableFusions = ActionableFusionFile.loadFromActionableFusionTsv(actionableFusionTsv);
 
         assertEquals(2, actionableFusions.size());
     }
