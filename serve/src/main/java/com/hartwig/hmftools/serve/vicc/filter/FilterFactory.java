@@ -37,6 +37,8 @@ final class FilterFactory {
         // Copy number variation is too vague.
         FEATURE_KEYWORDS_TO_FILTER.add("COPY NUMBER VARIATION");
 
+        // exon number not exist in the using transcript //TODO move to vicc curation
+        FEATURE_KEYWORDS_TO_FILTER.add("NPM1 EXON 12 MUTATION");
 
         // TODO All of below needs some further investigation & explanation
         FEATURE_KEYWORDS_TO_FILTER.add("EXPRESSION");
@@ -106,9 +108,6 @@ final class FilterFactory {
         FEATURE_KEYWORDS_TO_FILTER.add("RS67376798 HOMOZYGOSITY");
         FEATURE_KEYWORDS_TO_FILTER.add("rs681673");
         FEATURE_KEYWORDS_TO_FILTER.add("RS751402");
-
-        // exon number not exist in the using transcript
-        FEATURE_KEYWORDS_TO_FILTER.add("NPM1 EXON 12 MUTATION");
     }
 
     private static void populateFeatureKeysToFilter() {

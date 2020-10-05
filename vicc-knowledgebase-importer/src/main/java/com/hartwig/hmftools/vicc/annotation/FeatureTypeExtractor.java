@@ -41,7 +41,7 @@ public final class FeatureTypeExtractor {
             "FGFR3 - BAIAP2L1 Fusion",
             "p61BRAF-V600E");
     public static final Set<String> SEARCH_FUSION_PROMISCUOUS =
-            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "nonsense", "FUSIONS");
+            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "FUSIONS");
 
     public static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
 
@@ -79,7 +79,7 @@ public final class FeatureTypeExtractor {
 
     public static final Set<String> GENE_EXON = Sets.newHashSet("exon", "Exon Variant");
     public static final Set<String> GENE_MULTIPLE_CODONS =
-            Sets.newHashSet("nonsense", "(V600)", "splice_region_variant", "Splice Donor Variant", "Inframe Deletion");
+            Sets.newHashSet("(V600)", "splice_region_variant", "Splice Donor Variant", "Inframe Deletion");
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
@@ -103,7 +103,7 @@ public final class FeatureTypeExtractor {
         }
 
         String event = Strings.EMPTY;
-        if (feature.toLowerCase().contains("exon")) {
+        if (featureName.toLowerCase().contains("exon")) {
             event = "exon";
         } else if (biomarkerType != null) {
             if (biomarkerType.equals("Exon Variant")) {
@@ -112,69 +112,60 @@ public final class FeatureTypeExtractor {
         }
 
         if (biomarkerType != null && provenanceRule != null) {
-            if (featureName.contains("+") && (biomarkerType.equals("amp") && provenanceRule.contains("is_fusion_acceptor") || provenanceRule
-                    .contains("is_fusion_donor"))) {
+            if (featureName.contains("+") && !featureName.toLowerCase().contains("c.") && !featureName.contains(">")) {
                 return FeatureType.COMBINED;
             } else if (featureName.contains("insertion")) {
-                int countInsertion = featureName.split("insertion").length -1;
+                int countInsertion = featureName.split("insertion").length - 1;
                 if (countInsertion > 1) {
                     return FeatureType.COMBINED;
                 }
             } else if (featureName.contains("deletion")) {
-                int countDeletion = featureName.split("deletion").length -1;
+                int countDeletion = featureName.split("deletion").length - 1;
                 if (countDeletion > 1) {
                     return FeatureType.COMBINED;
                 }
             } else if (featureName.contains("frameshift")) {
-                int countFrameshift = featureName.split("frameshift").length -1;
+                int countFrameshift = featureName.split("frameshift").length - 1;
                 if (countFrameshift > 1) {
                     return FeatureType.COMBINED;
                 }
             } else if (featureName.contains("insertions") && featureName.contains("deletion")) {
-                int countCombined = (featureName.split("insertion").length -1) + (featureName.split("deletion").length -1);
+                int countCombined = (featureName.split("insertion").length - 1) + (featureName.split("deletion").length - 1);
                 if (countCombined > 1) {
                     return FeatureType.COMBINED;
                 }
             } else if (featureName.contains("splice")) {
-                int countSplice = featureName.split("splice").length-1;
-                if (countSplice >1) {
+                int countSplice = featureName.split("splice").length - 1;
+                if (countSplice > 1) {
                     return FeatureType.COMBINED;
                 }
             }
         }
         if (DetermineHotspot.isHotspot(proteinAnnotation)) {
             return FeatureType.HOTSPOT;
-        } else if (FeatureTypeExtractor.SIGNATURES.contains(feature)) {
+        } else if (FeatureTypeExtractor.SIGNATURES.contains(featureName)) {
             return FeatureType.SIGNATURE;
-        } else if (DetermineCopyNumber.isAmplification(feature, biomarkerType)) {
+        } else if (DetermineCopyNumber.isAmplification(featureName, biomarkerType)) {
             return FeatureType.AMPLIFICATION;
-        } else if (DetermineCopyNumber.isDeletion(feature, biomarkerType)) {
+        } else if (DetermineCopyNumber.isDeletion(featureName, biomarkerType) && !featureName.toLowerCase().contains("exon")) {
             return FeatureType.DELETION;
-        } else if (DetermineFusion.isFusion(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
+        } else if (DetermineFusion.isFusion(featureName, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PAIR;
-        } else if (DetermineFusion.isFusionPromiscuous(feature, biomarkerType, provenanceRule, proteinAnnotation)) {
+        } else if (DetermineFusion.isFusionPromiscuous(featureName, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PROMISCUOUS;
-        }  else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !feature.toLowerCase().contains("deletion")) {
+        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !featureName.toLowerCase().contains("deletion")) {
             return FeatureType.GENE_RANGE_EXON;
-        } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType) && proteinAnnotation.substring(
-                proteinAnnotation.length() - 1).equals("X") && FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(proteinAnnotation)) {
+        } else if (proteinAnnotation.length() > 1 && proteinAnnotation.substring(proteinAnnotation.length() - 1).equals("X")) {
             return FeatureType.GENE_RANGE_CODON;
         } else if (proteinAnnotation.length() >= 1 && isValidSingleCodonRange(proteinAnnotation)) {
             return FeatureType.GENE_RANGE_CODON;
-        } else if (FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
-            return FeatureType.GENE_RANGE_CODON;
-        } else if (feature.contains("DEL") && FeatureTypeExtractor.GENE_MULTIPLE_CODONS.contains(biomarkerType)) {
-            return FeatureType.GENE_RANGE_CODON;
-        } else if (proteinAnnotation.contains("del") && proteinAnnotation.contains("_")) {
-            return FeatureType.GENE_RANGE_CODON;
         } else if (!DetermineHotspot.isHotspot(proteinAnnotation)) {
-            if (FeatureTypeExtractor.GENE_LEVEL.contains(biomarkerType) || FeatureTypeExtractor.GENE_LEVEL.contains(feature)
+            if (FeatureTypeExtractor.GENE_LEVEL.contains(biomarkerType) || FeatureTypeExtractor.GENE_LEVEL.contains(featureName)
                     || FeatureTypeExtractor.GENE_LEVEL.contains(provenanceRule) || FeatureTypeExtractor.GENE_LEVEL.contains(
                     proteinAnnotation)) {
                 return FeatureType.GENE_LEVEL;
             }
         }
-
         return FeatureType.UNKNOWN;
     }
 
