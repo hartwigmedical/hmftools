@@ -12,10 +12,19 @@ import org.junit.Test;
 public class ActionableRangeFileTest {
 
     @Test
-    public void canLoadActionableRanges() throws IOException {
-        String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvFilePath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
-        List<ActionableRange> actionableRanges = ActionableRangeFile.loadFromActionableRangeTsv(actionableRangeTsv);
+    public void canReadFromFileAndConvert() throws IOException {
+        String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
+        List<ActionableRange> actionableRanges = ActionableRangeFile.read(actionableRangeTsv);
 
         assertEquals(2, actionableRanges.size());
+
+        List<String> lines = ActionableRangeFile.toLines(actionableRanges);
+        List<ActionableRange> regeneratedRanges = ActionableRangeFile.fromLines(lines);
+        List<String> regeneratedLines = ActionableRangeFile.toLines(regeneratedRanges);
+        assertEquals(lines.size(), regeneratedLines.size());
+
+        for (int i = 0; i < lines.size(); i++) {
+            assertEquals(lines.get(i), regeneratedLines.get(i));
+        }
     }
 }

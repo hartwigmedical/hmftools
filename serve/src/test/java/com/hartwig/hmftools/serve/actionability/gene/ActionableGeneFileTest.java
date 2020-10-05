@@ -12,10 +12,19 @@ import org.junit.Test;
 public class ActionableGeneFileTest {
 
     @Test
-    public void canLoadActionableGenes() throws IOException {
-        String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvFilePath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
-        List<ActionableGene> actionableGenes = ActionableGeneFile.loadFromActionableGeneTsv(actionableGeneTsv);
+    public void canReadFromFileAndConvert() throws IOException {
+        String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
+        List<ActionableGene> actionableGenes = ActionableGeneFile.read(actionableGeneTsv);
 
         assertEquals(7, actionableGenes.size());
+
+        List<String> lines = ActionableGeneFile.toLines(actionableGenes);
+        List<ActionableGene> regeneratedGenes = ActionableGeneFile.fromLines(lines);
+        List<String> regeneratedLines = ActionableGeneFile.toLines(regeneratedGenes);
+        assertEquals(lines.size(), regeneratedLines.size());
+
+        for (int i = 0; i < lines.size(); i++) {
+            assertEquals(lines.get(i), regeneratedLines.get(i));
+        }
     }
 }

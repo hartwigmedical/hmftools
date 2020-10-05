@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,21 +20,45 @@ public final class ActionableRangeFile {
     }
 
     @NotNull
-    public static String actionableRangeTsvFilePath(@NotNull String serveActionabilityDir) {
+    public static String actionableRangeTsvPath(@NotNull String serveActionabilityDir) {
         return serveActionabilityDir + File.separator + ACTIONABLE_RANGE_TSV;
     }
 
-    public static void writeToActionableFusionTsv(@NotNull List<ActionableRange> actionableRanges) {
-        // TODO Implement
+    public static void write(@NotNull String actionableRangeTsv, @NotNull List<ActionableRange> actionableRanges) throws IOException {
+        List<String> lines = Lists.newArrayList();
+        lines.add(header());
+        lines.addAll(toLines(actionableRanges));
+        Files.write(new File(actionableRangeTsv).toPath(), lines);
     }
 
     @NotNull
-    public static List<ActionableRange> loadFromActionableRangeTsv(@NotNull String actionableRangeTsv) throws IOException {
-        List<ActionableRange> actionableRanges = Lists.newArrayList();
+    public static List<ActionableRange> read(@NotNull String actionableRangeTsv) throws IOException {
         List<String> lines = Files.readAllLines(new File(actionableRangeTsv).toPath());
+        // Skip header
+        return fromLines(lines.subList(1, lines.size()));
+    }
 
-        // Skip header line for range
-        for (String line : lines.subList(1, lines.size())) {
+    @NotNull
+    private static String header() {
+        return new StringJoiner(DELIMITER, "", "").add("gene")
+                .add("chromosome")
+                .add("start")
+                .add("end")
+                .add("mutationType")
+                .add("source")
+                .add("treatment")
+                .add("cancerType")
+                .add("doid")
+                .add("level")
+                .add("direction")
+                .toString();
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ActionableRange> fromLines(@NotNull List<String> lines) {
+        List<ActionableRange> actionableRanges = Lists.newArrayList();
+        for (String line : lines) {
             actionableRanges.add(fromLine(line));
         }
         return actionableRanges;
@@ -54,5 +80,31 @@ public final class ActionableRangeFile {
                 .level(values[9])
                 .direction(values[10])
                 .build();
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<String> toLines(@NotNull List<ActionableRange> actionableRanges) {
+        List<String> lines = Lists.newArrayList();
+        for (ActionableRange actionableRange : actionableRanges) {
+            lines.add(toLine(actionableRange));
+        }
+        return lines;
+    }
+
+    @NotNull
+    private static String toLine(@NotNull ActionableRange range) {
+        return new StringJoiner(DELIMITER).add(range.gene())
+                .add(range.chromosome())
+                .add(range.start())
+                .add(range.end())
+                .add(range.mutationType())
+                .add(range.source())
+                .add(range.treatment())
+                .add(range.cancerType())
+                .add(range.doid())
+                .add(range.level())
+                .add(range.direction())
+                .toString();
     }
 }

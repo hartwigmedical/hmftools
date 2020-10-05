@@ -34,6 +34,7 @@ public final class ActionableFusionFile {
     @NotNull
     public static List<ActionableFusion> read(@NotNull String actionableFusionTsv) throws IOException {
         List<String> lines = Files.readAllLines(new File(actionableFusionTsv).toPath());
+        // Skip header
         return fromLines(lines.subList(1, lines.size()));
     }
 
