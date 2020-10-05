@@ -7,6 +7,8 @@ import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzerTestFactory;
 import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -67,6 +69,8 @@ public class FusionEvidenceAnalyzerTest {
                 .geneContextEnd(Strings.EMPTY)
                 .geneTranscriptStart(Strings.EMPTY)
                 .geneTranscriptEnd(Strings.EMPTY)
-                .junctionCopyNumber(1D);
+                .junctionCopyNumber(1D)
+                .phased(FusionPhasedType.SKIPPED_EXONS)
+                .likelihood(FusionLikelihoodType.HIGH);
     }
 }

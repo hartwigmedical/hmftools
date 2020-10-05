@@ -143,11 +143,6 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String driverString(double driverLikelihood) {
-        return DriverInterpretation.interpret(driverLikelihood).display();
-    }
-
-    @NotNull
     public static Set<String> driverGenesWithVariant(@NotNull List<ReportableVariant> variants) {
         Set<String> genes = Sets.newHashSet();
         for (ReportableVariant variant : variants) {

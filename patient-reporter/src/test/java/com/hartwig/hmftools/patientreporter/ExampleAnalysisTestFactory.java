@@ -40,6 +40,7 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
@@ -517,6 +518,7 @@ public final class ExampleAnalysisTestFactory {
                 .hotspot(Hotspot.HOTSPOT)
                 .biallelic(false)
                 .driverLikelihood(1D)
+                .driverLikelihoodInterpretation(DriverInterpretation.HIGH)
                 .clonalLikelihood(1D)
                 .build();
 
@@ -539,6 +541,7 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(true)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.9)
+                .driverLikelihoodInterpretation(DriverInterpretation.HIGH)
                 .build();
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
@@ -560,6 +563,7 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(true)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.85)
+                .driverLikelihoodInterpretation(DriverInterpretation.HIGH)
                 .build();
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
@@ -581,6 +585,7 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(false)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.5)
+                .driverLikelihoodInterpretation(DriverInterpretation.MEDIUM)
                 .build();
 
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
@@ -602,6 +607,7 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(false)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.1)
+                .driverLikelihoodInterpretation(DriverInterpretation.LOW)
                 .build();
 
         return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
@@ -628,6 +634,7 @@ public final class ExampleAnalysisTestFactory {
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(0.47)
                 .driverLikelihood(0.1)
+                .driverLikelihoodInterpretation(DriverInterpretation.LOW)
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
@@ -649,6 +656,7 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(true)
                 .clonalLikelihood(0.68)
                 .driverLikelihood(0.1)
+                .driverLikelihoodInterpretation(DriverInterpretation.LOW)
                 .build();
 
         return Lists.newArrayList(variant1, variant2);

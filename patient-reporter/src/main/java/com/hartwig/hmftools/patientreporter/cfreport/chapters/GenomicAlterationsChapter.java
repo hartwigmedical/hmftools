@@ -111,8 +111,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 contentTable.addCell(TableUtil.createContentCell(SomaticVariants.clonalString(variant.clonalLikelihood()))
                         .setTextAlignment(TextAlignment.CENTER));
             }
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.driverString(variant.driverLikelihood()))
-                    .setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(variant.driverLikelihoodInterpretation().display()))
+                    .setTextAlignment(TextAlignment.CENTER);
         }
 
         if (SomaticVariants.hasNotifiableGermlineVariant(reportableVariants)) {
