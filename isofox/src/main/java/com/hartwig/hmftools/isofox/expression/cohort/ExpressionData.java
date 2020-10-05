@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
+import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig.EXT_SOURCE_RSEM;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig.EXT_SOURCE_SALMON;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig.SOURCE_ISOFOX;
 
@@ -21,20 +22,29 @@ public class ExpressionData
     private int mReadCount;
     private double mTPM;
 
+    public final int SplicedFragments;
+    public final int UnsplicedFragments;
+    public final double LowMapQualFrags;
+
     public ExpressionData(
             final String source, final String geneId, final String geneName, final String transName,
-            double fittedFrags, double rawFrags, int readCount, double tpm, int effectiveLength)
+            double fittedFrags, double rawFrags, int readCount, double tpm, int effectiveLength,
+            int splicedFragments, int unsplicedFragments, double lowMapQualFrags)
     {
         Source = source;
         GeneId = geneId;
         GeneName = geneName;
         TransName = transName;
+        EffectiveLength = effectiveLength;
+        SplicedFragments = splicedFragments;
+        UnsplicedFragments = unsplicedFragments;
+        LowMapQualFrags = lowMapQualFrags;
 
         mFittedFragmentCount = fittedFrags;
         mRawFragmentCount = rawFrags;
         mReadCount = readCount;
         mTPM = tpm;
-        EffectiveLength = effectiveLength;
+
     }
 
     public void addCounts(double tpm, double fittedFrags, double rawFrags, int reads)
@@ -45,7 +55,6 @@ public class ExpressionData
         mFittedFragmentCount += fittedFrags;
     }
 
-    public void setTpm(double tpm) { mTPM = tpm; }
     public double tpm() { return mTPM; }
     public int readCount() { return mReadCount; }
     public double fittedFragments() { return mFittedFragmentCount; }
@@ -60,18 +69,20 @@ public class ExpressionData
         return new ExpressionData(
                 SOURCE_ISOFOX, items[geneIdIndex], items[geneNameIndex], items[transIndex],
                 Double.parseDouble(items[fittedFragIndex]), Double.parseDouble(items[rawFragsIndex]),
-                0, Double.parseDouble(items[tpmIndex]), Integer.parseInt(items[effectiveLengthIndex]));
+                0, Double.parseDouble(items[tpmIndex]), Integer.parseInt(items[effectiveLengthIndex]),
+                0, 0, 0);
     }
 
     public static ExpressionData fromIsofoxGene(
-            final String data, int geneIdIndex, int geneNameIndex, int fittedFragIndex, int rawFragsIndex, int tpmIndex)
+            final String data, int geneIdIndex, int geneNameIndex, int tpmIndex, int splicedIndex, int unsplicedIndex, Integer lowQualIndex)
     {
         final String[] items = data.split(",");
 
         return new ExpressionData(
                 SOURCE_ISOFOX, items[geneIdIndex], items[geneNameIndex], "",
-                Double.parseDouble(items[fittedFragIndex]), Double.parseDouble(items[rawFragsIndex]),
-                0, Double.parseDouble(items[tpmIndex]), 0);
+                0, 0, 0, Double.parseDouble(items[tpmIndex]), 0,
+                Integer.parseInt(items[splicedIndex]), Integer.parseInt(items[unsplicedIndex]),
+                lowQualIndex != null ? Double.parseDouble(items[lowQualIndex]) : 0);
     }
 
     public static String getExternalSourceFilename(final String source, final String sampleId, boolean transScope)
@@ -116,7 +127,9 @@ public class ExpressionData
         int readCount = (int)Double.parseDouble(items[4]);
         int effectiveLength = (int)Double.parseDouble(items[2]);
 
-        return new ExpressionData(EXT_SOURCE_SALMON, geneId, geneName, transName, 0, 0, readCount, tpm, effectiveLength);
+        return new ExpressionData(
+                EXT_SOURCE_SALMON, geneId, geneName, transName, 0, 0, readCount, tpm,
+                effectiveLength, 0, 0, 0);
     }
 
     public static ExpressionData fromRsemTranscript(final String data, final Map<String,String[]> geneTransMap)
@@ -143,7 +156,9 @@ public class ExpressionData
         int readCount = 0;
         int effectiveLength = (int)Double.parseDouble(items[3]);
 
-        return new ExpressionData(EXT_SOURCE_SALMON, geneId, geneName, transName, 0, 0, readCount, tpm, effectiveLength);
+        return new ExpressionData(
+                EXT_SOURCE_RSEM, geneId, geneName, transName, 0, 0, readCount, tpm,
+                effectiveLength, 0, 0, 0);
     }
 
     public static ExpressionData fromRsemGene(final String data, final EnsemblDataCache geneTransCache)
@@ -170,6 +185,8 @@ public class ExpressionData
         int readCount = 0;
         int effectiveLength = (int)Double.parseDouble(items[3]);
 
-        return new ExpressionData(EXT_SOURCE_SALMON, geneId, geneName, "", 0, 0, readCount, tpm, effectiveLength);
+        return new ExpressionData(
+                EXT_SOURCE_RSEM, geneId, geneName, "", 0, 0, readCount, tpm,
+                effectiveLength, 0, 0, 0);
     }
 }

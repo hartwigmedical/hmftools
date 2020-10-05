@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromR
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromRsemTranscript;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromSalmon;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.getExternalSourceFilename;
+import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
+import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
@@ -148,11 +150,16 @@ public class ExternalExpressionCompare
 
             mWriter.write("SampleId,GeneId,GeneName");
 
-            if(mTransScope)
-                mWriter.write(",TransName");
-
             final String sourceName = mConfig.Expression.ExternalSource;
-            mWriter.write(String.format(",ISOFOX_TPM,%s_TPM,RawFrags,FittedFrags,%s_Reads,EffectiveLength", sourceName, sourceName));
+
+            if(mTransScope)
+            {
+                mWriter.write(String.format(",TransName,ISOFOX_TPM,%s_TPM,RawFrags,FittedFrags,%s_Reads,EffectiveLength", sourceName, sourceName));
+            }
+            else
+            {
+                mWriter.write(String.format(",ISOFOX_TPM,%s_TPM,SplicedFragments,UnsplicedFragments,LowMapQualFrags", sourceName));
+            }
 
             mWriter.newLine();
         }
@@ -169,12 +176,18 @@ public class ExternalExpressionCompare
             mWriter.write(String.format("%s,%s,%s", sampleId, isofoxExpData.GeneId, isofoxExpData.GeneName));
 
             if(mTransScope)
-                mWriter.write(String.format(",%s", isofoxExpData.TransName));
-
-            mWriter.write(String.format(",%.3g,%.3g,%.1f,%.1f,%d,%d",
-                    isofoxExpData.tpm(), externalExpData != null ? externalExpData.tpm() : -1,
-                    isofoxExpData.rawFragment(), isofoxExpData.fittedFragments(),
-                    externalExpData != null ? externalExpData.readCount() : -1, isofoxExpData.EffectiveLength));
+            {
+                mWriter.write(String.format(",%s,%.3g,%.3g,%.1f,%.1f,%d,%d",
+                        isofoxExpData.TransName, isofoxExpData.tpm(), externalExpData != null ? externalExpData.tpm() : -1,
+                        isofoxExpData.rawFragment(), isofoxExpData.fittedFragments(),
+                        externalExpData != null ? externalExpData.readCount() : -1, isofoxExpData.EffectiveLength));
+            }
+            else
+            {
+                mWriter.write(String.format(",%.3g,%.3g,%d,%d,%.1f",
+                        isofoxExpData.tpm(), externalExpData != null ? externalExpData.tpm() : -1,
+                        isofoxExpData.SplicedFragments, isofoxExpData.UnsplicedFragments, isofoxExpData.LowMapQualFrags));
+            }
 
             mWriter.newLine();
         }
@@ -197,18 +210,22 @@ public class ExternalExpressionCompare
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
-            int transNameIndex = fieldsMap.get(FLD_TRANS_NAME);
-            int fittedFragsIndex = fieldsMap.get(FLD_FITTED_FRAGMENTS);
-            int rawFragsIndex = fieldsMap.get(FLD_RAW_FRAGMENTS);
             int tpmIndex = fieldsMap.get(FLD_TPM);
-            int effectiveLengthIndex = fieldsMap.get(FLD_EFFECTIVE_LENGTH);
+
+            Integer fittedFragsIndex = fieldsMap.get(FLD_FITTED_FRAGMENTS);
+            Integer rawFragsIndex = fieldsMap.get(FLD_RAW_FRAGMENTS);
+            Integer transNameIndex = fieldsMap.get(FLD_TRANS_NAME);
+            Integer effectiveLengthIndex = fieldsMap.get(FLD_EFFECTIVE_LENGTH);
+            Integer splicedIndex = fieldsMap.get(FLD_SPLICED_FRAGS);
+            Integer unsplicedIndex = fieldsMap.get(FLD_UNSPLICED_FRAGS);
+            Integer lowQualIndex = fieldsMap.get("LowMapQualFrags");
 
             for(final String data : lines)
             {
                 ExpressionData expData = mTransScope ?
                         fromIsofoxTranscript(
                                 data, geneIdIndex, geneNameIndex, transNameIndex, fittedFragsIndex, rawFragsIndex, tpmIndex, effectiveLengthIndex) :
-                        fromIsofoxGene(data, geneIdIndex, geneNameIndex, fittedFragsIndex, rawFragsIndex, tpmIndex);
+                        fromIsofoxGene(data, geneIdIndex, geneNameIndex, tpmIndex, splicedIndex, unsplicedIndex, lowQualIndex);
 
                 if(expData == null)
                     continue;
@@ -268,7 +285,8 @@ public class ExternalExpressionCompare
                         if(geneExpData == null)
                         {
                             geneExpData = new ExpressionData(source, expData.GeneId, expData.GeneName, "",
-                                    0, 0, expData.readCount(), expData.tpm(), 0);
+                                    0, 0, expData.readCount(), expData.tpm(),
+                                    0, 0, 0, 0);
                             expressionDataMap.put(expData.GeneId, geneExpData);
                         }
                         else
