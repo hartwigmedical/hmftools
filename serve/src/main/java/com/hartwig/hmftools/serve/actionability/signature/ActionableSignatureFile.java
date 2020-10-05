@@ -44,7 +44,7 @@ public final class ActionableSignatureFile {
         return ImmutableActionableSignature.builder()
                 .signature(values[0])
                 .source(values[1])
-                .drug(values[2])
+                .treatment(values[2])
                 .cancerType(values[3])
                 .doid(values[4])
                 .level(values[5])

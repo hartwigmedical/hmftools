@@ -48,7 +48,7 @@ public final class ActionableRangeFile {
                 .end(values[3])
                 .mutationType(values[4])
                 .source(values[5])
-                .drug(values[6])
+                .treatment(values[6])
                 .cancerType(values[7])
                 .doid(values[8])
                 .level(values[9])

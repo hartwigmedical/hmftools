@@ -8,7 +8,7 @@ public abstract class ActionableEvent {
     public abstract String source();
 
     @NotNull
-    public abstract String drug();
+    public abstract String treatment();
 
     @NotNull
     public abstract String cancerType();

@@ -1,4 +1,4 @@
-Gene	Type	Source	Treatment	Cancer Type	DOID	Level	Direction
+gene	type	source	treatment	cancerType	doid	level	direction
 ERBB2	Amplification	CIViC	Trastuzumab	Breast Cancer	X	A	Responsive
 ERBB2	Amplification	CIViC	Panitumumab	Colorectal Cancer	X	B	Resistant
 MET	Amplification	iClusion	DRUP	Solid Tumors	X	B	Responsive

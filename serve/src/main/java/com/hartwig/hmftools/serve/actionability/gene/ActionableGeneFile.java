@@ -45,7 +45,7 @@ public final class ActionableGeneFile {
                 .gene(values[0])
                 .type(values[1])
                 .source(values[2])
-                .drug(values[3])
+                .treatment(values[3])
                 .cancerType(values[4])
                 .doid(values[5])
                 .level(values[6])

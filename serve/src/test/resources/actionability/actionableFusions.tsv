@@ -1,3 +1,3 @@
-Fusion	Source	Treatment	Cancer Type	DOID	Level	Direction
+fusion	source	treatment	cancerType	doid	level	direction
 EML4_ALK	CIViC	Crizotinib	Lung Cancer	X	A	Responsive
 PCM1_JAK2	OncoKB	Ruxolitinib	Leukemia	X	B	Responsive

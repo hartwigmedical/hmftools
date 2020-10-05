@@ -1,2 +1,2 @@
-Gene	Chromosome	Position	Ref	Alt	Source	Drug	Cancer Type	DOID	Level	Direction
+gene	chromosome	position	ref	alt	source	treatment	cancerType	doid	level	direction
 BRAF	7	140453136	A	T	CGI	Vemurafenib	Skin Melanoma	X	A	Responsive

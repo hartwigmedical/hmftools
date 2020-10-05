@@ -12,10 +12,19 @@ import org.junit.Test;
 public class ActionableFusionFileTest {
 
     @Test
-    public void canLoadActionableFusions() throws IOException {
-        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvFilePath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
-        List<ActionableFusion> actionableFusions = ActionableFusionFile.loadFromActionableFusionTsv(actionableFusionTsv);
+    public void canReadFromFileAndConvert() throws IOException {
+        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
+        List<ActionableFusion> actionableFusions = ActionableFusionFile.read(actionableFusionTsv);
 
         assertEquals(2, actionableFusions.size());
+
+        List<String> lines = ActionableFusionFile.toLines(actionableFusions);
+        List<ActionableFusion> regeneratedFusions = ActionableFusionFile.fromLines(lines);
+        List<String> regeneratedLines = ActionableFusionFile.toLines(regeneratedFusions);
+        assertEquals(lines.size(), regeneratedLines.size());
+
+        for (int i = 0; i < lines.size(); i++) {
+            assertEquals(lines.get(i), regeneratedLines.get(i));
+        }
     }
 }
