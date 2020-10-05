@@ -37,6 +37,16 @@ final class FilterFactory {
         // Copy number variation is too vague.
         FEATURE_KEYWORDS_TO_FILTER.add("COPY NUMBER VARIATION");
 
+
+        // to specific
+        FEATURE_KEYWORDS_TO_FILTER.add("EGFR (L858R,L861,G719,S768I)");
+        FEATURE_KEYWORDS_TO_FILTER.add("ESR1 (E380Q,537,538,L536,P535H)");
+        FEATURE_KEYWORDS_TO_FILTER.add("KIT (550-592,627-664,788-828,829-860)");
+        FEATURE_KEYWORDS_TO_FILTER.add("MAP2K1 (Q56P,P124S,P124L;C121S)");
+        FEATURE_KEYWORDS_TO_FILTER.add("PDGFRA (552-596,631-668,814-854)");
+        FEATURE_KEYWORDS_TO_FILTER.add("FGFR2 (V565I,M536I,M538I,I548V,N550,E566G,L618M,K660E)");
+        FEATURE_KEYWORDS_TO_FILTER.add("FLT3 (F691,D835,N676,Y842)");
+
         // exon number not exist in the using transcript //TODO move to vicc curation
         FEATURE_KEYWORDS_TO_FILTER.add("NPM1 EXON 12 MUTATION");
 
