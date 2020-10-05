@@ -48,9 +48,6 @@ public class LinxDataLoader
 
     public static final String VCF_FILE = "sv_vcf";
 
-    private static final String LOAD_SV_DATA = "load_sv_data";
-    private static final String LOAD_LINX_DATA = "load_linx_data";
-
     public static void main(@NotNull final String[] args) throws ParseException, SQLException
     {
         final Options options = createBasicOptions();
@@ -64,20 +61,9 @@ public class LinxDataLoader
         }
 
         final String sampleId = cmd.getOptionValue(SAMPLE);
-
-        boolean loadSvData = cmd.hasOption(LOAD_SV_DATA);
-        boolean loadLinxData = cmd.hasOption(LOAD_LINX_DATA);
         final String svDataPath = cmd.getOptionValue(SV_DATA_DIR);
 
-        if(loadSvData)
-        {
-            loadStructuralVariants(cmd, dbAccess, sampleId, svDataPath);
-        }
-
-        if(loadLinxData)
-        {
-            loadLinxData(dbAccess, sampleId, svDataPath);
-        }
+        loadLinxData(dbAccess, sampleId, svDataPath);
 
         LOGGER.info("sample({}) data loading complete", sampleId);
     }
@@ -153,40 +139,6 @@ public class LinxDataLoader
         }
     }
 
-    private static void loadStructuralVariants(
-            final CommandLine cmd, final DatabaseAccess dbAccess, final String sampleId, final String svDataOutputDir)
-    {
-        if(!cmd.hasOption(VCF_FILE))
-        {
-            LOGGER.error("missing VCF to load VCF file");
-            return;
-        }
-
-        final String vcfFile = cmd.getOptionValue(VCF_FILE);
-        final List<StructuralVariantData> svDataList = loadSvDataFromVcf(vcfFile);
-
-        if(!svDataList.isEmpty())
-        {
-            LOGGER.info("Persisting {} SVs to database", svDataList.size());
-            dbAccess.writeStructuralVariants(sampleId, svDataList);
-
-        }
-
-        // write a flat file of SV data if the output directory is configured
-        if (svDataOutputDir != null)
-        {
-            // write data to file
-            try
-            {
-                final String svFilename = StructuralVariantFile.generateFilename(svDataOutputDir, sampleId);
-                StructuralVariantFile.write(svFilename, svDataList);
-            }
-            catch (IOException e)
-            {
-                LOGGER.error("failed to write SV data: {}", e.toString());
-            }
-        }
-    }
 
     public static final List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile)
     {
@@ -379,8 +331,6 @@ public class LinxDataLoader
         addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE");
         options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
-        options.addOption(LOAD_SV_DATA, false, "Optional: load purple VCF into SV database table");
-        options.addOption(LOAD_LINX_DATA, false, "Optional: load all LINX files to database");
         options.addOption(SV_DATA_DIR, true, "Directory to read or write SV data");
 
         return options;

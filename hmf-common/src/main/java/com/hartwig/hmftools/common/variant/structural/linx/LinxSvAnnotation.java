@@ -74,7 +74,7 @@ public abstract class LinxSvAnnotation
     @NotNull
     private static List<LinxSvAnnotation> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("svId")).map(LinxSvAnnotation::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("vcfId")).map(LinxSvAnnotation::fromString).collect(toList());
     }
 
     @NotNull
