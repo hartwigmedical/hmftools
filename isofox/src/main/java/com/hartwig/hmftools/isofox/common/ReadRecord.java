@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
@@ -192,9 +191,6 @@ public class ReadRecord
     {
         return Id.equals(other.Id) && Cigar.toString().equals(other.Cigar.toString()) && PosStart == other.PosStart && PosEnd == other.PosEnd;
     }
-
-    // public boolean outsideGeneCollection() { return mGeneCollections[SE_START] == NO_GENE_ID && mGeneCollections[SE_END] == NO_GENE_ID; }
-    // public boolean withinGeneCollection(int seIndex) { return mGeneCollections[seIndex] != NO_GENE_ID; }
 
     public boolean spansGeneCollections()
     {
@@ -500,33 +496,6 @@ public class ReadRecord
         return regions;
     }
 
-    public static boolean hasSkippedExons(final List<RegionReadData> regions, int transId, int longFragmentLimit)
-    {
-        int minExonRank = -1;
-        int maxExonRank = 0;
-        int regionCount = 0;
-
-        int minRegionPos = -1;
-        int maxRegionPos = 0;
-
-        for(RegionReadData region : regions)
-        {
-            if(!region.hasTransId(transId))
-                continue;
-
-            ++regionCount;
-            int exonRank = region.getExonRank(transId);
-
-            maxExonRank = max(maxExonRank, exonRank);
-            minExonRank = minExonRank == -1 ? exonRank : min(exonRank, exonRank);
-            minRegionPos = minRegionPos == -1 ? region.start() : min(minRegionPos, region.start());
-            maxRegionPos = max(maxRegionPos, region.end());
-        }
-
-        int expectedRegions = maxExonRank - minExonRank + 1;
-        return regionCount < expectedRegions && maxRegionPos - minRegionPos > longFragmentLimit * 2;
-    }
-
     public static boolean validTranscriptType(TransMatchType transType)
     {
         return transType == EXONIC || transType == SPLICE_JUNCTION;
@@ -582,9 +551,6 @@ public class ReadRecord
 
         if (readStartPos > region.start() && readEndPos < region.end())
             return WITHIN_EXON;
-
-        if (readStartPos == region.start() && readEndPos == region.end())
-            return EXON_MATCH;
 
         return EXON_BOUNDARY;
     }

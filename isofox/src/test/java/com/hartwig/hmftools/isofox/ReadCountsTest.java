@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
-import static com.hartwig.hmftools.isofox.TestUtils.createGeneReadData;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -118,7 +116,7 @@ public class ReadCountsTest
         assertEquals(EXON_INTRON, read.getRegionMatchType(region));
 
         read = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 101, 0));
-        assertEquals(EXON_MATCH, read.getRegionMatchType(region));
+        assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region));
 
         read = createReadRecord(1, "1", 100, 150, REF_BASE_STR_1, createCigar(0, 51, 0));
         assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region));
@@ -146,7 +144,7 @@ public class ReadCountsTest
         RegionReadData region3 = new RegionReadData("1", 180, 200);
 
         assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region1));
-        assertEquals(EXON_MATCH, read.getRegionMatchType(region2));
+        assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region2));
         assertEquals(EXON_INTRON, read.getRegionMatchType(region3));
     }
 

@@ -140,7 +140,7 @@ public class AltSpliceJunctionFinder
                 for (int i = 0; i < transData.exons().size() - 1; ++i)
                 {
                     if (transData.exons().get(i).ExonEnd == spliceJunction[SE_START]
-                            && transData.exons().get(i + 1).ExonStart == spliceJunction[SE_END])
+                    && transData.exons().get(i + 1).ExonStart == spliceJunction[SE_END])
                         return true;
                 }
             }
