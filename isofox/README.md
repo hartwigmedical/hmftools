@@ -50,7 +50,7 @@ output_dir | Directory for Isofox output files
 bam_file | Input BAM file - must be sorted, preferably with duplicates marked and requires a corresponding index file
 ref_genome | Reference genome fasta file
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation or access below.
-functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS'. Other values: FUSIONS, EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS.
+functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS'. Other values: EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS, STATISTICS and READ_COUNTS.
 
 For instructions on how to generate the Ensembl data cache, see subsection below.
 
@@ -64,7 +64,9 @@ enriched_gene_ids | List of EnsemblGeneIds separated by ';', see Enriched Genes 
 drop_dups | Default is false. By default duplicate fragments will be counted towards transcript expression.
 
 ### Transcript Expression
-The expression function in Isofox depends on the calculation of expected rates for each gene and transcript given a set of fragment lengths. These can be computed from scratch each time a sample is run, or pre-computed independently once and then loaded from file for subsequent sample runs. Using the pre-computed expected counts file reduces the processing time by around 95%. To generate this file, using the function EXPECTED_TRANS_COUNTS passing in the same fragment length values used for normal transcript expression.
+The expression function in Isofox depends on the calculation of expected rates for each gene and transcript given a set of fragment lengths. These can be computed from scratch each time a sample is run, or pre-computed independently once and then loaded from file for subsequent sample runs. Using the pre-computed expected counts file reduces the processing time by around 95%.
+
+Each release of Isofox will be accompanied by a set of pre-computed cache files. Alternatively to generate this file, use the function EXPECTED_TRANS_COUNTS, passing in the same fragment length values used for normal transcript expression.
 
 ```
 java -jar isofox.jar 
@@ -73,11 +75,11 @@ java -jar isofox.jar
     -gene_transcripts_dir /path_ensembl_data_cache_files/ 
     -read_length 76 
     -long_frag_limit 550 
-    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;550-0" 
+    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0" 
     -threads 10 
 ```
 
-The output file is approximately 376MB.
+The output file is approximately 400MB.
 
 Generate Expected GC Ratio Counts
 
@@ -93,7 +95,7 @@ java -jar isofox.jar
     -threads 10 
 ```
 
-The output file is approximately 113MB.
+The output file is approximately 100MB.
 
 Argument | Description
 ---|---
@@ -106,6 +108,7 @@ apply_gc_bias_adjust | Adjusted transcript counts by actual vs expected GC ratio
 exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
 long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
+apply_map_qual_adjust | Include multi-mapped fragments in transcript counting, weighted by inverse of # multi-mapped locations
 enriched_gene_ids | Recommended 'ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735'
 gc_ratio_bucket | Default 0.01 ie percentiles. Ratio unit for GC distribution.
 
@@ -147,15 +150,14 @@ java -jar isofox.jar
     -output_dir /path_to_output_data/ 
     -apply_calc_frag_lengths 
     -apply_exp_rates 
+    -read_length 76 
     -exp_counts_file /path_to_ref_files/read_76_exp_counts.csv 
     -apply_gc_bias_adjust 
     -exp_gc_ratios_file /path_to_ref_files/read_100_exp_gc_ratios.csv 
-    -read_length 76 
     -long_frag_limit 550 
-    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;550-0" 
+    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0"
+    -apply_map_qual_adjust 
     -enriched_gene_ids "ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735" 
-    -write_gc_data 
-    -write_frag_lengths     
     -threads 10 
 ```
 
@@ -171,6 +173,7 @@ java -jar isofox.jar
     -output_dir /path_to_output_data/ 
     -read_length 76 
     -long_frag_limit 550 
+    -known_fusion_file /path_to_fusion_ref_file/known_fusion_data.csv
     -threads 10 
 ```
 
