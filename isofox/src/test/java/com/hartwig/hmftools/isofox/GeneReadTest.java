@@ -50,7 +50,6 @@ public class GeneReadTest
 
         geneReadData.setHasUnsplicedRegions();
         assertTrue(geneReadData.hasUnsplicedRegions());
-
     }
 
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -20,7 +21,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.calcFragmentLength;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.MAX_SC_BASE_MATCH;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.hasSkippedExons;
@@ -43,12 +44,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
@@ -442,9 +447,7 @@ public class BamFragmentAllocator
 
         // first find valid transcripts in both reads
         final List<Integer> validTranscripts = Lists.newArrayList();
-        final List<Integer> invalidTranscripts = Lists.newArrayList();
-        int calcFragmentLength = calcFragmentLength(read1, read2);
-        boolean validFragmentLength = calcFragmentLength <= mConfig.MaxFragmentLength;
+        final Set<Integer> invalidTranscripts = Sets.newHashSet();
 
         final List<RegionReadData> validRegions = getUniqueValidRegion(read1, read2);
 
@@ -463,25 +466,45 @@ public class BamFragmentAllocator
         {
             int transId = entry.getKey();
 
-            if(validFragmentLength && validTranscriptType(entry.getValue()))
+            if(validTranscriptType(entry.getValue()) && secondReadTransTypes.containsKey(transId) && validTranscriptType(secondReadTransTypes.get(transId)))
             {
-                if(secondReadTransTypes.containsKey(transId) && validTranscriptType(secondReadTransTypes.get(transId)))
+                int calcFragmentLength = calcFragmentLength(transId, read1, read2);
+                boolean validFragmentLength = calcFragmentLength <= mConfig.MaxFragmentLength;
+
+                if(validFragmentLength) // !hasSkippedExons(validRegions, transId, mConfig.MaxFragmentLength)
                 {
-                    if(!hasSkippedExons(validRegions, transId, mConfig.MaxFragmentLength))
+                    validTranscripts.add(transId);
+                }
+                else
+                {
+                    invalidTranscripts.add(transId);
+                }
+
+                if(ISF_LOGGER.isDebugEnabled())
+                {
+                    final RegionReadData region1 =
+                            read1.getMappedRegions().keySet().stream().filter(x -> x.hasTransId(transId)).findFirst().orElse(null);
+                    final RegionReadData region2 =
+                            read2.getMappedRegions().keySet().stream().filter(x -> x.hasTransId(transId)).findFirst().orElse(null);
+
+                    if(region1 != region2 && region1.getExonRank(transId) != region2.getExonRank(transId))
                     {
-                        validTranscripts.add(transId);
-                        continue;
+                        ISF_LOGGER.debug("geneNames({}) trans({}) read({}) {} length({}) exon-to-exon fragment, exons({} -> {}) readPos({} -> {})",
+                                mCurrentGenes.geneNames(), transId, read1.Id, validFragmentLength ? "valid" : "invalid",
+                                calcFragmentLength, region1.getExonRank(transId), region2.getExonRank(transId),
+                                min(read1.PosStart, read2.PosStart), max(read1.PosEnd, read2.PosEnd));
                     }
                 }
             }
-
-            if(!invalidTranscripts.contains(transId))
+            else
+            {
                 invalidTranscripts.add(transId);
+            }
         }
 
         for(Integer transId : secondReadTransTypes.keySet())
         {
-            if(!validTranscripts.contains(transId) && !invalidTranscripts.contains(transId))
+            if(!validTranscripts.contains(transId))
                 invalidTranscripts.add(transId);
         }
 
@@ -498,7 +521,10 @@ public class BamFragmentAllocator
                 fragmentType = ALT;
 
                 if(mAltSpliceJunctionFinder != null)
-                    mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, invalidTranscripts);
+                {
+                    mAltSpliceJunctionFinder.evaluateFragmentReads(
+                            overlapGenes, read1, read2, invalidTranscripts.stream().collect(Collectors.toList()));
+                }
 
                 checkRetainedIntrons = true;
             }
@@ -626,13 +652,68 @@ public class BamFragmentAllocator
         {
             for(final GeneReadData geneReadData : overlapGenes)
             {
-                writeReadData(mReadDataWriter, geneReadData, 0, read1, fragmentType, validTranscripts.size(), calcFragmentLength);
-                writeReadData(mReadDataWriter, geneReadData, 1, read2, fragmentType, validTranscripts.size(), calcFragmentLength);
+                writeReadData(mReadDataWriter, geneReadData, 0, read1, read2, fragmentType, validTranscripts.size());
+                writeReadData(mReadDataWriter, geneReadData, 1, read2, read1, fragmentType, validTranscripts.size());
             }
         }
     }
 
-    private static final int LOW_MAP_QUALITY = 10;
+    public int calcFragmentLength(int transId, final ReadRecord read1, final ReadRecord read2)
+    {
+        final TranscriptData transData = mCurrentGenes.getTranscripts().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+        if(transData == null)
+            return -1;
+
+        return calcFragmentLength(transData, read1, read2);
+    }
+
+    public static int calcFragmentLength(final TranscriptData transData, final ReadRecord read1, final ReadRecord read2)
+    {
+        // calculate fragment length within this transcript assuming it has been spliced
+        int minReadPos = min(read1.PosStart, read2.PosStart);
+        int maxReadPos = max(read1.PosEnd, read2.PosEnd);
+        int transcriptBases = 0;
+        boolean startFound = false;
+
+        for(final ExonData exon : transData.exons())
+        {
+            if(!startFound)
+            {
+                if(minReadPos < exon.ExonStart - MAX_SC_BASE_MATCH)
+                    break;
+
+                if(minReadPos > exon.ExonEnd)
+                    continue;
+
+                if(maxReadPos <= exon.ExonEnd)
+                {
+                    // within same exon
+                    return maxReadPos - minReadPos + 1;
+                }
+
+                startFound = true;
+                transcriptBases = exon.ExonEnd - max(exon.ExonStart, minReadPos) + 1;
+            }
+            else
+            {
+                if(maxReadPos > exon.ExonEnd)
+                {
+                    transcriptBases += exon.baseLength();
+                }
+                else if(maxReadPos < exon.ExonStart)
+                {
+                    break;
+                }
+                else
+                {
+                    transcriptBases += maxReadPos - exon.ExonStart + 1;
+                    break;
+                }
+            }
+        }
+
+        return transcriptBases;
+    }
 
     private boolean checkDuplicateEnrichedReads(final SAMRecord record)
     {
@@ -894,8 +975,8 @@ public class BamFragmentAllocator
     }
 
     private synchronized static void writeReadData(
-            final BufferedWriter writer, final GeneReadData geneReadData, int readIndex, final ReadRecord read,
-            FragmentType geneReadType, int validTranscripts, int calcFragmentLength)
+            final BufferedWriter writer, final GeneReadData geneReadData, int readIndex, final ReadRecord read, final ReadRecord otherRead,
+            FragmentType geneReadType, int validTranscripts)
     {
         if(read.getTranscriptClassifications().isEmpty())
             return;
@@ -917,6 +998,9 @@ public class BamFragmentAllocator
 
                     writer.write(String.format("%s,%s,%d,%s",
                             geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, readIndex, read.Id));
+
+                    final TranscriptData transData = geneReadData.getTranscripts().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+                    int calcFragmentLength = transData != null ? calcFragmentLength(transData, read, otherRead) : -1;
 
                     writer.write(String.format(",%s,%d,%d,%s,%d,%d",
                             read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(),

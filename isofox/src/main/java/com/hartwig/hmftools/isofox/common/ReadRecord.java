@@ -622,29 +622,6 @@ public class ReadRecord
         }
     }
 
-    public static int calcFragmentLength(final ReadRecord read1, final ReadRecord read2)
-    {
-        int insertSize = abs(read1.fragmentInsertSize());
-
-        if(!read1.containsSplit() && !read2.containsSplit())
-            return insertSize;
-
-        // find unique split lengths and remove them
-
-        List<Integer> splitLengths = read1.Cigar.getCigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.N).map(x -> x.getLength()).collect(Collectors.toList());
-
-        for(final CigarElement element : read2.Cigar.getCigarElements())
-        {
-            if(element.getOperator() == CigarOperator.N && !splitLengths.contains(element.getLength()))
-                splitLengths.add(element.getLength());
-        }
-
-        int totalSplitLength = splitLengths.stream().mapToInt(x -> x).sum();
-
-        return insertSize - totalSplitLength;
-    }
-
     public boolean containsSplit()
     {
         return Cigar.containsOperator(CigarOperator.N);
@@ -658,8 +635,8 @@ public class ReadRecord
         return Cigar.containsOperator(CigarOperator.S);
     }
 
-    private static int MIN_BASE_MATCH = 2;
-    private static int MAX_BASE_MATCH = 10;
+    private static int MIN_SC_BASE_MATCH = 2;
+    public static int MAX_SC_BASE_MATCH = 10;
 
     private void checkMissedJunctions(final RegionReadData region)
     {
@@ -693,7 +670,7 @@ public class ReadRecord
         extraBaseLength = max(extraBaseLength - deletedLength, 0);
 
         // allow a single base match if only 1 region matches
-        if(extraBaseLength >= 1 && extraBaseLength <= MAX_BASE_MATCH && scLength <= MAX_BASE_MATCH)
+        if(extraBaseLength >= 1 && extraBaseLength <= MAX_SC_BASE_MATCH && scLength <= MAX_SC_BASE_MATCH)
         {
             // first check for a match with the next exon on the lower side
             final String extraBases = ReadBases.substring(0, extraBaseLength);
@@ -706,7 +683,7 @@ public class ReadRecord
                 mSoftClipRegionsMatched[SE_START] = matchedRegions.size();
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
-                if (matchedRegions.size() > 1 && extraBaseLength < MIN_BASE_MATCH && region.start() > readStartPos)
+                if (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH && region.start() > readStartPos)
                 {
                     // treat the splice support as ambiguous and truncate the read positions
                     if (!mLowerInferredAdded)
@@ -714,7 +691,7 @@ public class ReadRecord
                         readSection[SE_START] += region.start() - readStartPos;
                     }
                 }
-                else if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_BASE_MATCH))
+                else if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
                 {
                     for (RegionReadData preRegion : matchedRegions)
                     {
@@ -747,7 +724,7 @@ public class ReadRecord
 
         extraBaseLength = max(extraBaseLength - deletedLength, 0);
 
-        if(extraBaseLength >= 1 && extraBaseLength <= MAX_BASE_MATCH && scLength <= MAX_BASE_MATCH)
+        if(extraBaseLength >= 1 && extraBaseLength <= MAX_SC_BASE_MATCH && scLength <= MAX_SC_BASE_MATCH)
         {
             // now check for a match to the next exon up
             final String extraBases = ReadBases.substring(Length - extraBaseLength, Length);
@@ -761,14 +738,14 @@ public class ReadRecord
 
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
-                if (matchedRegions.size() > 1 && extraBaseLength < MIN_BASE_MATCH && readEndPos > region.end())
+                if (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH && readEndPos > region.end())
                 {
                     if (!mUpperInferredAdded)
                     {
                         readSection[SE_END] -= readEndPos - region.end();
                     }
                 }
-                else if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_BASE_MATCH))
+                else if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
                 {
                     for (RegionReadData postRegion : matchedRegions)
                     {
