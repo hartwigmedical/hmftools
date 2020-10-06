@@ -578,5 +578,3 @@ Threads | Elapsed Time| CPU Time | Peak Mem
    - HG38 support
  - 2.0
    - Revamped small indel / SNV caller
- - 1.1 (Refer to old [README](./README_2.md) for detailed instructions)
-   - SageHotspotAnnotation - Merge all info header fields from hotspots vcf with source vcf   
