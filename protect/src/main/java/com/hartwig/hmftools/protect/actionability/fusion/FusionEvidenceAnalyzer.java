@@ -5,12 +5,12 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.protect.actionability.ActionabilitySource;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.actionability.EvidenceLevel;
 import com.hartwig.hmftools.protect.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +51,7 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForFusion(@NotNull ReportableGeneFusion geneFusion, @Nullable String primaryTumorLocation,
+    public List<EvidenceItem> evidenceForFusion(@NotNull LinxFusion geneFusion, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 

@@ -5,9 +5,9 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzerTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -57,20 +57,36 @@ public class FusionEvidenceAnalyzerTest {
 
         CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin", "4159");
 
-        ReportableGeneFusion reportableFusion = createTestFusionBuilder().geneStart("TMPRSS2").geneEnd("PNPLA7").build();
+        LinxFusion reportableFusion = createTestFusionBuilder().geneStart("TMPRSS2").geneEnd("PNPLA7").build();
 
         assertTrue(analyzer.evidenceForFusion(reportableFusion, "Skin", cancerTypeAnalyzer).isEmpty());
     }
 
     @NotNull
-    private static ImmutableReportableGeneFusion.Builder createTestFusionBuilder() {
-        return ImmutableReportableGeneFusion.builder()
+    private static ImmutableLinxFusion.Builder createTestFusionBuilder() {
+        return ImmutableLinxFusion.builder()
+                .fivePrimeBreakendId(1)
+                .threePrimeBreakendId(2)
+                .name(Strings.EMPTY)
+                .reported(true)
+                .reportedType(Strings.EMPTY)
+                .phased(FusionPhasedType.SKIPPED_EXONS)
+                .likelihood(FusionLikelihoodType.HIGH)
+                .chainLength(1)
+                .chainLinks(1)
+                .chainTerminated(true)
+                .domainsKept(Strings.EMPTY)
+                .domainsLost(Strings.EMPTY)
+                .skippedExonsUp(2)
+                .skippedExonsDown(4)
+                .fusedExonUp(6)
+                .fusedExonDown(7)
+                .geneStart(Strings.EMPTY)
                 .geneContextStart(Strings.EMPTY)
-                .geneContextEnd(Strings.EMPTY)
                 .geneTranscriptStart(Strings.EMPTY)
+                .geneEnd(Strings.EMPTY)
+                .geneContextEnd(Strings.EMPTY)
                 .geneTranscriptEnd(Strings.EMPTY)
-                .junctionCopyNumber(1D)
-                .phased(FusionPhasedType.OUT_OF_FRAME)
-                .likelihood(FusionLikelihoodType.LOW);
+                .junctionCopyNumber(1D);
     }
 }

@@ -18,8 +18,6 @@ import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
-import com.hartwig.hmftools.common.fusion.ReportableDisruption;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
@@ -228,14 +226,20 @@ class AnalysedPatientReporter {
     private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxDisruptionsTsv,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
-        List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
-        LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
+        List<LinxFusion> linxFusionsReported = linxFusions.stream()
+                .filter(x -> x.reported())
+                .collect(Collectors.toList());
+
+        LOGGER.info("Loaded {} fusions from {}", linxFusionsReported.size(), linxFusionTsv);
 
         List<LinxBreakend> linxBreakends = LinxBreakend.read(linxDisruptionsTsv);
-        List<ReportableDisruption> disruptions = ReportableDisruption.from(linxBreakends);
-        LOGGER.info("Loaded {} disruptions from {}", disruptions.size(), linxDisruptionsTsv);
+        List<LinxBreakend> linxBreakendsReported = linxBreakends.stream()
+                .filter(x -> x.reportedDisruption())
+                .collect(Collectors.toList());
 
-        return SvAnalyzer.run(fusions, disruptions, reportData.actionabilityAnalyzer(), patientTumorLocation);
+        LOGGER.info("Loaded {} disruptions from {}", linxBreakendsReported.size(), linxDisruptionsTsv);
+
+        return SvAnalyzer.run(linxFusionsReported, linxBreakendsReported, reportData.actionabilityAnalyzer(), patientTumorLocation);
     }
 
     @NotNull

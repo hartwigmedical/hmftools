@@ -23,7 +23,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
@@ -34,6 +33,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.protect.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.common.BachelorFile;
@@ -157,7 +157,7 @@ public class ProtectActionability {
         List<DriverCatalog> driverCatalog = readDriverCatalog(cmd.getOptionValue(PURPLE_DRIVER_CATALOG_TSV));
 
         // Gene Fusion reportable
-        List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
+        List<LinxFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
         // Copy Number all + reportable
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
@@ -294,7 +294,7 @@ public class ProtectActionability {
     @NotNull
     private static List<EvidenceItem> createEvidenceForAllFindings(@NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @NotNull String patientPrimaryTumorLocation, @NotNull List<? extends Variant> variants, double ploidy,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<ReportableGeneFusion> geneFusions) {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<LinxFusion> geneFusions) {
         LOGGER.info("Extracting all evidence");
 
         List<EvidenceItem> evidenceForVariants =

@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +15,7 @@ public final class GeneFusions {
     }
 
     @NotNull
-    public static List<ReportableGeneFusion> sort(@NotNull List<ReportableGeneFusion> fusions) {
+    public static List<LinxFusion> sort(@NotNull List<LinxFusion> fusions) {
         return fusions.stream().sorted((fusion1, fusion2) -> {
             if (fusion1.geneStart().equals(fusion2.geneStart())) {
                 return fusion1.geneEnd().compareTo(fusion2.geneEnd());
@@ -26,16 +26,16 @@ public final class GeneFusions {
     }
 
     @NotNull
-    public static Set<String> uniqueGeneFusions(@NotNull List<ReportableGeneFusion> fusions) {
+    public static Set<String> uniqueGeneFusions(@NotNull List<LinxFusion> fusions) {
         Set<String> genes = Sets.newHashSet();
-        for (ReportableGeneFusion fusion : fusions) {
+        for (LinxFusion fusion : fusions) {
             genes.add(name(fusion));
         }
         return genes;
     }
 
     @NotNull
-    public static String name(@NotNull ReportableGeneFusion fusion) {
+    public static String name(@NotNull LinxFusion fusion) {
         return fusion.geneStart() + " - " + fusion.geneEnd();
     }
 

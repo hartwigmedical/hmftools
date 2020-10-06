@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -42,13 +41,16 @@ public class GenomicData {
     }
 
     @NotNull
-    public static List<ReportableGeneFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
+    public static List<LinxFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
         LOGGER.info("Reading gene fusions from {}", linxFusionTsv);
         final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
-        List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
 
-        LOGGER.info(" Loaded {} fusions", fusions.size());
-        return fusions;
+        List<LinxFusion> linxFusionsReported = linxFusions.stream()
+                .filter(x -> x.reported())
+                .collect(Collectors.toList());
+
+        LOGGER.info(" Loaded {} fusions", linxFusionsReported.size());
+        return linxFusionsReported;
     }
 
     @NotNull
