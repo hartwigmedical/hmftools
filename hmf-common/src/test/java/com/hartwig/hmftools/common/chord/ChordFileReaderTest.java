@@ -52,7 +52,7 @@ public class ChordFileReaderTest {
     }
 
     @Test
-    public void canConvertHRDTOStatus() {
+    public void canConvertHRDToStatus() {
         assertEquals(ChordStatus.CANNOT_BE_DETERMINED, ChordFileReader.extractHrStatus("cannot_be_determined"));
         assertEquals(ChordStatus.HR_PROFICIENT, ChordFileReader.extractHrStatus("HR_proficient"));
         assertEquals(ChordStatus.HR_DEFICIENT, ChordFileReader.extractHrStatus("HR_deficient"));
