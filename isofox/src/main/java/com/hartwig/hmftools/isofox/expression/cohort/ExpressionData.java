@@ -62,7 +62,7 @@ public class ExpressionData
 
     public static ExpressionData fromIsofoxTranscript(
             final String data, int geneIdIndex, int geneNameIndex, int transIndex,
-            int fittedFragIndex, int rawFragsIndex, int tpmIndex, int effectiveLengthIndex)
+            int fittedFragIndex, int rawFragsIndex, int tpmIndex, int effectiveLengthIndex, int lowQualIndex)
     {
         final String[] items = data.split(",");
 
@@ -70,11 +70,11 @@ public class ExpressionData
                 SOURCE_ISOFOX, items[geneIdIndex], items[geneNameIndex], items[transIndex],
                 Double.parseDouble(items[fittedFragIndex]), Double.parseDouble(items[rawFragsIndex]),
                 0, Double.parseDouble(items[tpmIndex]), Integer.parseInt(items[effectiveLengthIndex]),
-                0, 0, 0);
+                0, 0, lowQualIndex >= 0 ? Double.parseDouble(items[lowQualIndex]) : 0);
     }
 
     public static ExpressionData fromIsofoxGene(
-            final String data, int geneIdIndex, int geneNameIndex, int tpmIndex, int splicedIndex, int unsplicedIndex, Integer lowQualIndex)
+            final String data, int geneIdIndex, int geneNameIndex, int tpmIndex, int splicedIndex, int unsplicedIndex, int lowQualIndex)
     {
         final String[] items = data.split(",");
 
@@ -82,7 +82,7 @@ public class ExpressionData
                 SOURCE_ISOFOX, items[geneIdIndex], items[geneNameIndex], "",
                 0, 0, 0, Double.parseDouble(items[tpmIndex]), 0,
                 Integer.parseInt(items[splicedIndex]), Integer.parseInt(items[unsplicedIndex]),
-                lowQualIndex != null ? Double.parseDouble(items[lowQualIndex]) : 0);
+                lowQualIndex >= 0 ? Double.parseDouble(items[lowQualIndex]) : 0);
     }
 
     public static String getExternalSourceFilename(final String source, final String sampleId, boolean transScope)

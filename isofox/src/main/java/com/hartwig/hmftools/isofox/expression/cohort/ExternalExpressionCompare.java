@@ -154,7 +154,8 @@ public class ExternalExpressionCompare
 
             if(mTransScope)
             {
-                mWriter.write(String.format(",TransName,ISOFOX_TPM,%s_TPM,RawFrags,FittedFrags,%s_Reads,EffectiveLength", sourceName, sourceName));
+                mWriter.write(String.format(",TransName,ISOFOX_TPM,%s_TPM,RawFrags,FittedFrags,%s_Reads,EffectiveLength,LowMapQualFrags",
+                        sourceName, sourceName));
             }
             else
             {
@@ -177,10 +178,10 @@ public class ExternalExpressionCompare
 
             if(mTransScope)
             {
-                mWriter.write(String.format(",%s,%.3g,%.3g,%.1f,%.1f,%d,%d",
+                mWriter.write(String.format(",%s,%.3g,%.3g,%.1f,%.1f,%d,%d,%.1f",
                         isofoxExpData.TransName, isofoxExpData.tpm(), externalExpData != null ? externalExpData.tpm() : -1,
                         isofoxExpData.rawFragment(), isofoxExpData.fittedFragments(),
-                        externalExpData != null ? externalExpData.readCount() : -1, isofoxExpData.EffectiveLength));
+                        externalExpData != null ? externalExpData.readCount() : -1, isofoxExpData.EffectiveLength, isofoxExpData.LowMapQualFrags));
             }
             else
             {
@@ -224,7 +225,8 @@ public class ExternalExpressionCompare
             {
                 ExpressionData expData = mTransScope ?
                         fromIsofoxTranscript(
-                                data, geneIdIndex, geneNameIndex, transNameIndex, fittedFragsIndex, rawFragsIndex, tpmIndex, effectiveLengthIndex) :
+                                data, geneIdIndex, geneNameIndex, transNameIndex, fittedFragsIndex, rawFragsIndex,
+                                tpmIndex, effectiveLengthIndex, lowQualIndex) :
                         fromIsofoxGene(data, geneIdIndex, geneNameIndex, tpmIndex, splicedIndex, unsplicedIndex, lowQualIndex);
 
                 if(expData == null)
