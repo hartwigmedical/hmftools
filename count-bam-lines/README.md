@@ -132,6 +132,8 @@ java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMi
 ```
 
 ## Version History and Download Links
+- [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.10)
+  - Re-added support for cancel panel integration test 
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.9)
   - Alert user that gc_profile should be un-compressed before use
   - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X

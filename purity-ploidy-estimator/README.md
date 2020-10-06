@@ -1029,6 +1029,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- [2.49](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.49) 
+  - Re-added support for cancel panel integration test 
 - [2.48](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.48) 
   - Do not produce somatic variant rainfall plot if >100000 variants
   - Refreshed DNDS values with larger cohort (4404 samples)
