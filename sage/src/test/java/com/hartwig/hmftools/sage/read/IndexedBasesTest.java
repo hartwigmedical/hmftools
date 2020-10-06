@@ -121,4 +121,38 @@ public class IndexedBasesTest {
         assertEquals("AG", victim.rightFlankString());
     }
 
+    @Test
+    public void testCreate() {
+        IndexedBases victimWithExtra = create(1000, 1, "AA", "TA", "ATG", "CG", "TT");
+        assertEquals("TA", victimWithExtra.leftFlankString());
+        assertEquals("ATG", victimWithExtra.centerString());
+        assertEquals("CG", victimWithExtra.rightFlankString());
+
+        IndexedBases victimWithoutExtra = create(1000, 1, Strings.EMPTY, "TA", "ATG", "CG", Strings.EMPTY);
+        assertEquals("TA", victimWithoutExtra.leftFlankString());
+        assertEquals("ATG", victimWithoutExtra.centerString());
+        assertEquals("CG", victimWithoutExtra.rightFlankString());
+    }
+
+
+    public static IndexedBases create(int position, int index, String leftExtra, String leftFlank, String core, String rightFlank, String rightExtra) {
+        assertTrue(index <= core.length());
+
+        int flankSize = Math.max(leftFlank.length(), rightFlank.length());
+        int totalLength = leftExtra.length() + leftFlank.length() + core.length() + rightFlank.length() + rightExtra.length();
+        byte[] bases = new byte[totalLength];
+
+        int destPos = 0;
+        System.arraycopy(leftExtra.getBytes(), 0, bases, destPos, leftExtra.length());
+        System.arraycopy(leftFlank.getBytes(), 0, bases, destPos += leftExtra.length(), leftFlank.length());
+        System.arraycopy(core.getBytes(), 0, bases, destPos += leftFlank.length(), core.length());
+        System.arraycopy(rightFlank.getBytes(), 0, bases, destPos += core.length(), rightFlank.length());
+        System.arraycopy(rightExtra.getBytes(), 0, bases, destPos += rightFlank.length(), rightExtra.length());
+
+
+        int leftCoreIndex = leftExtra.length() + leftFlank.length();
+        int rightCoreIndex = leftCoreIndex + core.length() - 1;
+        return new IndexedBases(position, index, leftCoreIndex, rightCoreIndex, flankSize, bases);
+    }
+
 }
