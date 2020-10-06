@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.serve.vicc;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,19 +40,25 @@ public class ViccTestApplication {
         LOGGER.debug("Running on '{}'", hostname);
 
         String viccJsonPath;
-        String rangesTsv = null;
-        String fusionTsv = null;
-        String featureTypeTsv;
+        String outputDir;
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
-            rangesTsv = System.getProperty("user.home") + "/tmp/rangesVicc.tsv";
-            fusionTsv = System.getProperty("user.home") + "/tmp/fusionVicc.tsv";
-            featureTypeTsv = System.getProperty("user.home") + "/tmp/featureTypesVicc.tsv";
+            outputDir = System.getProperty("user.home") + "/tmp";
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
-            featureTypeTsv = System.getProperty("user.home") + "/hmf/tmp/featureTypesVicc.tsv";
+            outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
         }
+
+        Path outputPath = new File(outputDir).toPath();
+        if (!Files.exists(outputPath)) {
+            LOGGER.debug("Creating {} directory for writing SERVE output", outputPath.toString());
+            Files.createDirectory(outputPath);
+        }
+
+        String rangesTsv = outputDir + "/ranges.tsv";
+        String fusionTsv = outputDir + "/fusions.tsv";
+        String featureTypeTsv = outputDir + "/featureTypesVicc.tsv";
 
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the ranges output TSV", rangesTsv);
@@ -58,7 +67,9 @@ public class ViccTestApplication {
 
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(ProteinResolverFactory.dummy());
+
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
+        ViccUtil.printResults(resultsPerEntry);
 
         ViccUtil.writeFeatureTypesToTsv(featureTypeTsv, resultsPerEntry);
 
@@ -67,17 +78,16 @@ public class ViccTestApplication {
         }
 
         if (fusionTsv != null) {
-            writeFusion(fusionTsv, resultsPerEntry);
+            writeFusions(fusionTsv, resultsPerEntry);
         }
     }
 
-    private static void writeFusion(@NotNull String fusionTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+    private static void writeFusions(@NotNull String fusionTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(fusionTsv));
-        writer.write("Fusion" + "\t" + "Fusion_event" + "\n");
+        writer.write("fusion" + "\t" + "fusionEvent" + "\n");
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-
             for (Map.Entry<Feature, FusionAnnotation> featureResult : entry.getValue().fusionsPerFeature().entrySet()) {
                 FusionAnnotation geneFusionForFeature = featureResult.getValue();
 
@@ -90,11 +100,10 @@ public class ViccTestApplication {
     private static void writeRanges(@NotNull String rangesTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(rangesTsv));
-        writer.write("Gene" + "\t" + "chromosome" + "\t" + "start" + "\t" + "end" + "\t" + "event" + "\n");
+        writer.write("gene" + "\t" + "chromosome" + "\t" + "start" + "\t" + "end" + "\t" + "event" + "\n");
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             for (Map.Entry<Feature, List<GeneRangeAnnotation>> featureResult : entry.getValue().geneRangesPerFeature().entrySet()) {
-
                 List<GeneRangeAnnotation> geneRangeForFeature = featureResult.getValue();
                 for (GeneRangeAnnotation geneRangeAnnotation : geneRangeForFeature) {
                     writer.write(
