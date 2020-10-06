@@ -6,9 +6,10 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
@@ -76,7 +77,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<ReportableGainLoss> gainsAndLosses();
 
     @NotNull
-    public abstract List<ReportableGeneFusion> geneFusions();
+    public abstract List<LinxFusion> geneFusions();
 
     @NotNull
     public abstract List<ReportableGeneDisruption> geneDisruptions();

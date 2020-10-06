@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.protect.actionability.cnv.CopyNumberEvidenceAnalyzer;
 import com.hartwig.hmftools.protect.actionability.cnv.CopyNumberEvidenceAnalyzerFactory;
@@ -18,7 +19,6 @@ import com.hartwig.hmftools.protect.actionability.variant.VariantEvidenceAnalyze
 import com.hartwig.hmftools.protect.actionability.variant.VariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -119,16 +119,16 @@ public class ActionabilityAnalyzer {
         }
 
         @NotNull
-        public Map<ReportableGeneFusion, List<EvidenceItem>> evidenceForFusions(@NotNull List<ReportableGeneFusion> fusions,
+        public Map<LinxFusion, List<EvidenceItem>> evidenceForFusions(@NotNull List<LinxFusion> fusions,
                 @Nullable String primaryTumorLocation) {
-            Map<ReportableGeneFusion, List<EvidenceItem>> evidencePerFusion = Maps.newHashMap();
+            Map<LinxFusion, List<EvidenceItem>> evidencePerFusion = Maps.newHashMap();
 
-            Set<ReportableGeneFusion> uniqueFusionsOnActionableGenes = fusions.stream()
+            Set<LinxFusion> uniqueFusionsOnActionableGenes = fusions.stream()
                     .filter(fusion -> fusionAnalyzer.actionableGenes().contains(fusion.geneStart()) || fusionAnalyzer.actionableGenes()
                             .contains(fusion.geneEnd()))
                     .collect(Collectors.toSet());
 
-            for (ReportableGeneFusion actionableFusion : uniqueFusionsOnActionableGenes) {
+            for (LinxFusion actionableFusion : uniqueFusionsOnActionableGenes) {
                 evidencePerFusion.put(actionableFusion,
                         fusionAnalyzer.evidenceForFusion(actionableFusion, primaryTumorLocation, cancerTypeAnalyzer));
             }

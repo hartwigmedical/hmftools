@@ -8,8 +8,8 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusion.ImmutableReportableDisruption;
-import com.hartwig.hmftools.common.fusion.ReportableDisruption;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 
 import org.junit.Test;
 
@@ -19,10 +19,10 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @Test
     public void canConvertPairedDisruption() {
-        ImmutableReportableDisruption.Builder pairedDisruptionBuilder =
+        ImmutableLinxBreakend.Builder pairedDisruptionBuilder =
                 createTestDisruptionBuilder().svId(1).gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").junctionCopyNumber(1.12);
 
-        List<ReportableDisruption> pairedDisruptions =
+        List<LinxBreakend> pairedDisruptions =
                 Lists.newArrayList(pairedDisruptionBuilder.exonUp(3).exonDown(4).undisruptedCopyNumber(4.3).build(),
                         pairedDisruptionBuilder.exonUp(8).exonDown(9).undisruptedCopyNumber(2.1).build());
 
@@ -45,9 +45,9 @@ public class ReportableGeneDisruptionFactoryTest {
 
     @Test
     public void doesNotPairDisruptionsOnDifferentGenes() {
-        ImmutableReportableDisruption.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
+        ImmutableLinxBreakend.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
 
-        List<ReportableDisruption> pairedDisruptions = Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B")
+        List<LinxBreakend> pairedDisruptions = Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B")
                         .svId(1)
                         .junctionCopyNumber(1.0)
                         .undisruptedCopyNumber(1.0)

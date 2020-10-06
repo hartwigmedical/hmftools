@@ -19,8 +19,6 @@ import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.fusion.ImmutableReportableGeneFusion;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
@@ -32,6 +30,8 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
@@ -79,7 +79,7 @@ public final class ExampleAnalysisTestFactory {
         List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(reportGermline);
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
-        List<ReportableGeneFusion> fusions = Lists.newArrayList();
+        List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
@@ -167,7 +167,7 @@ public final class ExampleAnalysisTestFactory {
         List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         List<ReportableVariant> reportableVariants = createAllSomaticVariants();
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
-        List<ReportableGeneFusion> fusions = createTestFusions();
+        List<LinxFusion> fusions = createTestFusions();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = createTestViralInsertions();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
@@ -676,30 +676,56 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableGeneFusion> createTestFusions() {
-        ReportableGeneFusion fusion1 = ImmutableReportableGeneFusion.builder()
-                .geneStart("TMPRSS2")
-                .geneTranscriptStart("ENST00000398585")
-                .geneContextStart("Intron 5")
-                .geneEnd("PNPLA7")
-                .geneTranscriptEnd("ENST00000406427")
-                .geneContextEnd("Intron 3")
-                .junctionCopyNumber(0.4)
-                .phased(FusionPhasedType.INFRAME)
-                .likelihood(FusionLikelihoodType.HIGH)
-                .build();
+    private static List<LinxFusion> createTestFusions() {
+        LinxFusion fusion1 = ImmutableLinxFusion.builder()
+                    .fivePrimeBreakendId(1)
+                    .threePrimeBreakendId(2)
+                    .name(Strings.EMPTY)
+                    .reported(true)
+                    .reportedType(Strings.EMPTY)
+                    .phased(FusionPhasedType.SKIPPED_EXONS)
+                    .likelihood(FusionLikelihoodType.HIGH)
+                    .chainLength(1)
+                    .chainLinks(1)
+                    .chainTerminated(true)
+                    .domainsKept(Strings.EMPTY)
+                    .domainsLost(Strings.EMPTY)
+                    .skippedExonsUp(2)
+                    .skippedExonsDown(4)
+                    .fusedExonUp(6)
+                    .fusedExonDown(7)
+                    .geneStart("TMPRSS2")
+                    .geneContextStart("Intron 5")
+                    .geneTranscriptStart("ENST00000398585")
+                    .geneEnd("PNPLA7")
+                    .geneContextEnd("Intron 3")
+                    .geneTranscriptEnd("ENST00000406427")
+                    .junctionCopyNumber(0.4).build();
 
-        ReportableGeneFusion fusion2 = ImmutableReportableGeneFusion.builder()
+        LinxFusion fusion2 = ImmutableLinxFusion.builder()
+                .fivePrimeBreakendId(1)
+                .threePrimeBreakendId(2)
+                .name(Strings.EMPTY)
+                .reported(true)
+                .reportedType(Strings.EMPTY)
+                .phased(FusionPhasedType.SKIPPED_EXONS)
+                .likelihood(FusionLikelihoodType.HIGH)
+                .chainLength(1)
+                .chainLinks(1)
+                .chainTerminated(true)
+                .domainsKept(Strings.EMPTY)
+                .domainsLost(Strings.EMPTY)
+                .skippedExonsUp(2)
+                .skippedExonsDown(4)
+                .fusedExonUp(6)
+                .fusedExonDown(7)
                 .geneStart("CLCN6")
-                .geneTranscriptStart("ENST00000346436")
                 .geneContextStart("Intron 1")
+                .geneTranscriptStart("ENST00000346436")
                 .geneEnd("BRAF")
-                .geneTranscriptEnd("ENST00000288602")
                 .geneContextEnd("Intron 8")
-                .junctionCopyNumber(1D)
-                .phased(FusionPhasedType.OUT_OF_FRAME)
-                .likelihood(FusionLikelihoodType.LOW)
-                .build();
+                .geneTranscriptEnd("ENST00000288602")
+                .junctionCopyNumber(1D).build();
 
         return Lists.newArrayList(fusion1, fusion2);
     }

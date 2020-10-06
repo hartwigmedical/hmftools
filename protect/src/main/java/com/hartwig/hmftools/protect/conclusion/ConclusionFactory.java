@@ -4,10 +4,10 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.protect.common.DriverInterpretation;
 import com.hartwig.hmftools.protect.common.ReportableHomozygousDisruption;
@@ -28,7 +28,7 @@ public class ConclusionFactory {
 
     @NotNull
     public static StringBuilder createConclusion(@NotNull String patientPrimaryTumorLocation, int tumorTML, double tumorTMB,
-            double tumorMSI, double chordScore, @NotNull List<ReportableGeneFusion> geneFusions,
+            double tumorMSI, double chordScore, @NotNull List<LinxFusion> geneFusions,
             @NotNull List<ReportableGainLoss> geneCopyNumbers, @NotNull ReportableVariantAnalysis reportableVariantAnalysis, double purity,
             @NotNull String cancerSubtype, @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
             @NotNull Map<String, TemplateConclusion> MapTemplateConclusion) {
@@ -111,7 +111,7 @@ public class ConclusionFactory {
         }
 
         if (geneFusions.size() >= 1) {
-            for (ReportableGeneFusion fusion : geneFusions) {
+            for (LinxFusion fusion : geneFusions) {
                 String startFusion = fusion.geneStart().toLowerCase() + " fusion";
                 String endFusion = fusion.geneEnd().toLowerCase() + " fusion";
                 for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
@@ -206,7 +206,7 @@ public class ConclusionFactory {
         return tumorLocation + " cancer sample showing:";
     }
 
-    private static String sentenceFusion(@NotNull ReportableGeneFusion fusion, @NotNull TemplateConclusion templateConclusion) {
+    private static String sentenceFusion(@NotNull LinxFusion fusion, @NotNull TemplateConclusion templateConclusion) {
         String sentence = templateConclusion.summaryTextStatement();
         sentence = sentence.replace("(XXXX)", "(" + fusion.geneStart() + " - " + fusion.geneEnd() + ")");
         return sentence;

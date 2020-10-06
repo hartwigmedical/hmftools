@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
@@ -19,7 +20,6 @@ import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -91,7 +91,7 @@ public class LoadEvidenceData {
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationTsv, sampleId);
         List<SomaticVariant> passSomaticVariants = readPassSomaticVariants(sampleId, somaticVariantVcf);
         List<ReportableGainLoss> reportableGainLosses = getReportableGainsAndLosses(purpleDriverCatalogTsv, purpleGeneCnvTsv);
-        List<ReportableGeneFusion> geneFusions = readGeneFusions(linxFusionTsv);
+        List<LinxFusion> geneFusions = readGeneFusions(linxFusionTsv);
 
         List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
                 patientPrimaryTumorLocation,
@@ -143,13 +143,16 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static List<ReportableGeneFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
+    private static List<LinxFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
         LOGGER.info("Reading gene fusions from {}", linxFusionTsv);
         final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
-        List<ReportableGeneFusion> fusions = ReportableGeneFusion.from(linxFusions);
 
-        LOGGER.info(" Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
-        return fusions;
+        List<LinxFusion> linxFusionsReported = linxFusions.stream()
+                .filter(x -> x.reported())
+                .collect(Collectors.toList());
+
+        LOGGER.info(" Loaded {} fusions from {}", linxFusionsReported.size(), linxFusionTsv);
+        return linxFusionsReported;
     }
 
     @NotNull
@@ -174,7 +177,7 @@ public class LoadEvidenceData {
     @NotNull
     private static List<EvidenceItem> createEvidenceForAllFindings(@NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @NotNull String patientPrimaryTumorLocation, @NotNull List<SomaticVariant> variants,
-            @NotNull List<ReportableGainLoss> reportableGainLosses, @NotNull List<ReportableGeneFusion> geneFusions) {
+            @NotNull List<ReportableGainLoss> reportableGainLosses, @NotNull List<LinxFusion> geneFusions) {
         LOGGER.info("Extracting all evidence");
 
         List<EvidenceItem> evidenceForVariants =

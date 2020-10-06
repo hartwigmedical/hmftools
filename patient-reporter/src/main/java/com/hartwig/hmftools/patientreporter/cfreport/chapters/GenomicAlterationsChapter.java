@@ -2,8 +2,9 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
@@ -172,7 +173,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createFusionsTable(@NotNull List<ReportableGeneFusion> fusions, boolean hasReliablePurity) {
+    private static Table createFusionsTable(@NotNull List<LinxFusion> fusions, boolean hasReliablePurity) {
         String title = "Tumor specific gene fusions";
         if (fusions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
@@ -185,7 +186,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Phased"),
                         TableUtil.createHeaderCell("Driver").setTextAlignment(TextAlignment.CENTER) });
 
-        for (ReportableGeneFusion fusion : GeneFusions.sort(fusions)) {
+        for (LinxFusion fusion : GeneFusions.sort(fusions)) {
             contentTable.addCell(TableUtil.createContentCell(GeneFusions.name(fusion)));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneTranscriptStart()))
                     .addStyle(ReportResources.dataHighlightLinksStyle())

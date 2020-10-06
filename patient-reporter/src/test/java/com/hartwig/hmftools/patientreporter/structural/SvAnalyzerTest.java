@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusion.ReportableDisruption;
-import com.hartwig.hmftools.common.fusion.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 
 import org.junit.Test;
 
@@ -21,8 +21,8 @@ public class SvAnalyzerTest {
 
     @Test
     public void canAnalyzeFusionsDisruptions() throws IOException {
-        List<ReportableGeneFusion> testFusions = Lists.newArrayList(createTestFusionBuilder().geneStart("X").geneEnd("Y").build());
-        List<ReportableDisruption> testDisruptions =
+        List<LinxFusion> testFusions = Lists.newArrayList(createTestFusionBuilder().geneStart("X").geneEnd("Y").build());
+        List<LinxBreakend> testDisruptions =
                 Lists.newArrayList(createTestDisruptionBuilder().gene(DISRUPTED_GENE).junctionCopyNumber(1.0).undisruptedCopyNumber(1.0).build());
 
         SvAnalysis analysis = SvAnalyzer.run(testFusions, testDisruptions, testActionabilityAnalyzer(), null);
