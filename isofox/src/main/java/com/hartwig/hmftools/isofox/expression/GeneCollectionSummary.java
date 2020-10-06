@@ -127,6 +127,13 @@ public class GeneCollectionSummary
         double splicedLowMqFrags = totalLowMqFragments * totalTranscriptAlloc / totalAlloc;
         double unsplicedLowMqFrags = totalLowMqFragments * totalUnsplicedAlloc / totalAlloc;
 
+        // divide amongst transcripts
+        for(final TranscriptResult transResult : TranscriptResults)
+        {
+            double transAlloc = totalTranscriptAlloc > 0 ? transResult.getFitAllocation() / totalTranscriptAlloc * splicedLowMqFrags : 0;
+            transResult.setLowMapQualsAllocation(transAlloc);
+        }
+
         // split amongst genes as per fragment allocation
         for(final GeneResult geneResult : GeneResults)
         {

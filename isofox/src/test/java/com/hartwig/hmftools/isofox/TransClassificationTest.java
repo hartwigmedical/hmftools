@@ -144,6 +144,28 @@ public class TransClassificationTest
         read.processOverlappingRegions(regions);
 
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(TRANS_1));
+
+        // any soft-clipped read which cannot be mapped is classified as ALT
+        readBases = REF_BASE_STR_1 + "AAAAA";
+        read = createReadRecord(1, CHR_1, 100, 119, readBases, createCigar(0, 20, 5));
+        read.setFragmentInsertSize(200);
+        read.processOverlappingRegions(Lists.newArrayList(region1));
+
+        assertEquals(ALT, read.getTranscriptClassification(TRANS_1));
+
+        readBases = "AAAAA" + REF_BASE_STR_1;
+        read = createReadRecord(1, CHR_1, 300, 319, readBases, createCigar(5, 20, 0));
+        read.setFragmentInsertSize(200);
+        read.processOverlappingRegions(Lists.newArrayList(region3));
+
+        assertEquals(ALT, read.getTranscriptClassification(TRANS_1));
+
+        // likely adapter sequences are permitted
+        read = createReadRecord(1, CHR_1, 300, 319, readBases, createCigar(5, 20, 0));
+        read.setFragmentInsertSize(20);
+        read.processOverlappingRegions(Lists.newArrayList(region3));
+
+        assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
     }
 
     @Test

@@ -64,7 +64,6 @@ public class GeneResult
     public double getUnsplicedAlloc() { return mUnsplicedAlloc; }
 
     public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
-    public double getLowMapQualsAllocation() { return mLowMapQualsAllocation; }
 
     public static final String FLD_SUPPORTING_TRANS = "SupportingTrans";
     public static final String FLD_SPLICED_FRAGS = "SplicedFragments";

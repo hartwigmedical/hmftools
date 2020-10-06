@@ -228,35 +228,6 @@ public class ChimericReadTracker
 
         addRealignCandidates();
 
-        /*
-        for(final ReadGroup readGroup : mCandidateRealignedReadMap.values())
-        {
-            boolean addRead = false;
-
-            for(ReadRecord read : readGroup.Reads)
-            {
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    final int seIndex = se;
-                    if(read.isSoftClipped(se))
-                    {
-                        if(mJunctionPositions.stream().anyMatch(x -> positionWithin(read.getCoordsBoundary(seIndex),
-                                x - SOFT_CLIP_JUNC_BUFFER, x + SOFT_CLIP_JUNC_BUFFER)))
-                        {
-                            addRead = true;
-                            mChimericReadMap.put(read.Id, readGroup);
-                            ++mChimericStats.CandidateRealignFrags;
-                            break;
-                        }
-                    }
-                }
-
-                if(addRead)
-                    break;
-            }
-        }
-        */
-
         // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
         // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
         for(final ReadGroup readGroup : mChimericReadMap.values())

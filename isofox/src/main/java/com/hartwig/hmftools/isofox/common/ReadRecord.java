@@ -449,8 +449,23 @@ public class ReadRecord
                 }
             }
 
+            // any read with soft-clipping which cannot be mapped to the next exon, other than for short likely adapter sequence reads,
+            // is classified as alt
+            if(validTranscriptType(transMatchType) && containsSoftClipping() && !likelyAdaperSoftClipping())
+            {
+                if(Cigar.isLeftClipped() && mSoftClipRegionsMatched[SE_START] == 0)
+                    transMatchType = ALT;
+                else if(Cigar.isRightClipped() && mSoftClipRegionsMatched[SE_END] == 0)
+                    transMatchType = ALT;
+            }
+
             mTranscriptClassification.put(transId, transMatchType);
         }
+    }
+
+    private boolean likelyAdaperSoftClipping()
+    {
+        return mFragmentInsertSize < Length;
     }
 
     public void captureGeneInfo(boolean purgeRegions)
