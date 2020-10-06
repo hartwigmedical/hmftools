@@ -41,7 +41,6 @@ public final class ViccUtil {
                 .add("type")
                 .add("biomarkerType")
                 .add("events")
-                .add("feature")
                 .toString();
         lines.add(header);
 
@@ -88,8 +87,7 @@ public final class ViccUtil {
                         .add(feature.geneSymbol())
                         .add(feature.type().toString())
                         .add(feature.biomarkerType())
-                        .add(events.toString())
-                        .add(feature.toString());
+                        .add(events.toString());
                 lines.add(featureString.toString());
             }
         }
