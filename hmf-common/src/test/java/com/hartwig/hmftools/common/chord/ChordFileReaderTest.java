@@ -50,4 +50,56 @@ public class ChordFileReaderTest {
         assertEquals(Strings.EMPTY, chordAnalysis.remarksHrStatus());
         assertEquals(Strings.EMPTY, chordAnalysis.remarksHrdType());
     }
+
+    @Test
+    public void canConvertHRDTOStatus() {
+        ChordAnalysis chordAnalysisCannotBeDetermined = ImmutableChordAnalysis.builder()
+                .BRCA1Value(0.10)
+                .BRCA2Value(0.20)
+                .hrdValue(0.30)
+                .hrStatus(ChordStatus.CANNOT_BE_DETERMINED)
+                .hrdType(Strings.EMPTY)
+                .remarksHrStatus(Strings.EMPTY)
+                .remarksHrdType(Strings.EMPTY)
+                .build();
+
+        assertEquals(ChordFileReader.extractHrStatus("cannot_be_determined"), chordAnalysisCannotBeDetermined.hrStatus());
+
+        ChordAnalysis chordAnalysisHRP = ImmutableChordAnalysis.builder()
+                .BRCA1Value(0.10)
+                .BRCA2Value(0.20)
+                .hrdValue(0.30)
+                .hrStatus(ChordStatus.HR_PROFICIENT)
+                .hrdType(Strings.EMPTY)
+                .remarksHrStatus(Strings.EMPTY)
+                .remarksHrdType(Strings.EMPTY)
+                .build();
+
+        assertEquals(ChordFileReader.extractHrStatus("HR_proficient"), chordAnalysisHRP.hrStatus());
+
+        ChordAnalysis chordAnalysisHRD = ImmutableChordAnalysis.builder()
+                .BRCA1Value(0.10)
+                .BRCA2Value(0.20)
+                .hrdValue(0.30)
+                .hrStatus(ChordStatus.HR_DEFICIENT)
+                .hrdType(Strings.EMPTY)
+                .remarksHrStatus(Strings.EMPTY)
+                .remarksHrdType(Strings.EMPTY)
+                .build();
+
+        assertEquals(ChordFileReader.extractHrStatus("HR_deficient"), chordAnalysisHRD.hrStatus());
+
+        ChordAnalysis chordAnalysisUnknown = ImmutableChordAnalysis.builder()
+                .BRCA1Value(0.10)
+                .BRCA2Value(0.20)
+                .hrdValue(0.30)
+                .hrStatus(ChordStatus.UNKNWON)
+                .hrdType(Strings.EMPTY)
+                .remarksHrStatus(Strings.EMPTY)
+                .remarksHrdType(Strings.EMPTY)
+                .build();
+
+        assertEquals(ChordFileReader.extractHrStatus("dgdfg"), chordAnalysisUnknown.hrStatus());
+
+    }
 }

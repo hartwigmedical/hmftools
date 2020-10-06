@@ -6,9 +6,10 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import org.jetbrains.annotations.NotNull;
 
 public enum ChordStatus {
-    HRD("Deficient"),
-    HRP("Proficient"),
-    UNKNOWN("Unknown");
+    CANNOT_BE_DETERMINED("Cannot be determined"),
+    HR_PROFICIENT("Proficient"),
+    HR_DEFICIENT("Deficient"),
+    UNKNWON("Unkown");
 
     public static final double HRD_THRESHOLD = 0.5;
 
@@ -17,15 +18,6 @@ public enum ChordStatus {
 
     ChordStatus(@NotNull final String display) {
         this.display = display;
-    }
-
-    @NotNull
-    public static ChordStatus fromHRD(double hrd) {
-        return Doubles.greaterOrEqual(hrd, HRD_THRESHOLD) ? HRD : HRP;
-    }
-
-    public static boolean reliableHRD(@NotNull MicrosatelliteStatus microsatelliteStatus) {
-        return microsatelliteStatus == MicrosatelliteStatus.MSS;
     }
 
     @NotNull
