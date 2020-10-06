@@ -36,12 +36,7 @@ public final class ViccUtil {
     public static void writeFeatureTypesToTsv(@NotNull String featureTypeTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner(FIELD_DELIMITER).add("gene")
-                .add("name")
-                .add("type")
-                .add("biomarkerType")
-                .add("events")
-                .toString();
+        String header = new StringJoiner(FIELD_DELIMITER).add("name").add("gene").add("type").add("biomarkerType").add("events").toString();
         lines.add(header);
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
