@@ -71,13 +71,13 @@ public final class ChordFileReader {
 
     @VisibleForTesting
     @NotNull
-    public static ChordStatus extractHrStatus(@NotNull String hrStatus) {
+    static ChordStatus extractHrStatus(@NotNull String hrStatus) {
         switch (hrStatus) {
             case "cannot_be_determined": return ChordStatus.CANNOT_BE_DETERMINED;
             case "HR_proficient": return ChordStatus.HR_PROFICIENT;
             case "HR_deficient": return ChordStatus.HR_DEFICIENT;
         }
-        LOGGER.warn("Unknown HR status of CHORD {}", hrStatus);
+        LOGGER.warn("Unknown CHORD HR status: '{}'", hrStatus);
         return ChordStatus.UNKNOWN;
     }
 

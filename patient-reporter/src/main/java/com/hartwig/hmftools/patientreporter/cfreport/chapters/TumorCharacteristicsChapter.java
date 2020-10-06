@@ -53,18 +53,18 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     private void renderHrdCharacteristic(@NotNull Document reportDocument) {
-        boolean hasReliablePurity = patientReport.hasReliablePurity();
-        boolean isHrdReliable =
-                patientReport.chordHrdStatus() == ChordStatus.HR_PROFICIENT || patientReport.chordHrdStatus() == ChordStatus.HR_DEFICIENT;
-
         double hrdValue = patientReport.chordHrdValue();
         ChordStatus hrdStatus = patientReport.chordHrdStatus();
+
+        boolean hasReliablePurity = patientReport.hasReliablePurity();
         String hrDeficiencyLabel =
                 hasReliablePurity ? hrdStatus.display() + " " + DOUBLE_DECIMAL_FORMAT.format(hrdValue) : DataUtil.NA_STRING;
 
-        String noHrdWhenMicrosatelliteUnstable = "* HRD score can not be determined reliably when a tumor is microsatellite unstable "
+        String hrdUnreliableFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable "
                 + "(MSI) or has insufficient number of mutations and is therefore not reported for this sample.";
         boolean displayFootNote = false;
+        boolean isHrdReliable =
+                patientReport.chordHrdStatus() == ChordStatus.HR_PROFICIENT || patientReport.chordHrdStatus() == ChordStatus.HR_DEFICIENT;
         if (!isHrdReliable) {
             displayFootNote = true;
             hrDeficiencyLabel = DataUtil.NA_STRING + "*";
@@ -83,7 +83,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                         + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation. \n"
                         + "Tumors with a score greater or equal than 0.5 are considered HR deficient by complete BRCA inactivation.",
                 hrChart,
-                noHrdWhenMicrosatelliteUnstable,
+                hrdUnreliableFootnote,
                 displayFootNote));
     }
 

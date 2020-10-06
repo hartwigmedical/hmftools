@@ -71,6 +71,7 @@ public final class ExampleAnalysisTestFactory {
         double tumorMutationalBurden = 13.7;
         double microsatelliteIndelsPerMb = 0.12;
         double chordHrdValue = 0D;
+        ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
 
         ReportData reportData = testReportData();
 
@@ -130,7 +131,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoadStatus(TumorMutationalStatus.fromLoad(tumorMutationalLoad))
                 .tumorMutationalBurden(tumorMutationalBurden)
                 .chordHrdValue(chordHrdValue)
-                .chordHrdStatus(ChordStatus.HR_PROFICIENT)
+                .chordHrdStatus(chordStatus)
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -159,6 +160,7 @@ public final class ExampleAnalysisTestFactory {
         double tumorMutationalBurden = 13.6;
         double microsatelliteIndelsPerMb = 0.1089;
         double chordHrdValue = 0.8;
+        ChordStatus chordStatus = ChordStatus.HR_DEFICIENT;
 
         ReportData reportData = testReportData();
 
@@ -193,7 +195,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoadStatus(TumorMutationalStatus.fromLoad(tumorMutationalLoad))
                 .tumorMutationalBurden(tumorMutationalBurden)
                 .chordHrdValue(chordHrdValue)
-                .chordHrdStatus(ChordStatus.HR_DEFICIENT)
+                .chordHrdStatus(chordStatus)
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)

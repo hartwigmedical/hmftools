@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.common.chord;
 
-import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-
 import org.jetbrains.annotations.NotNull;
 
 public enum ChordStatus {
