@@ -99,7 +99,7 @@ Argument | Description
 ---|---
 apply_calc_frag_lengths | Use the actual fragment length distribution to adjust  
 frag_length_min_count | Minimum number of fragments to observe for length distributon calcs, default = 1M 
-exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;550-0' 
+exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0' 
 apply_exp_rates 
 exp_counts_file | Pre-computed expected counts per transcript and gene
 apply_gc_bias_adjust | Adjusted transcript counts by actual vs expected GC ratio distribution
@@ -198,7 +198,7 @@ The fragment length distribution of the sample is measured by sampling the inser
 
 For each transcript in a group of overlapping genes, Isofox measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in Isofox, but generally referred to as an equivalence class in other tools such as Salmon). For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a independent transcript that could be expressed.  
 
-The proportion is calculated by determining which category or set of transcripts that fragments of length {50,75,100,125,150,200,250,300,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
+The proportion is calculated by determining which category or set of transcripts that fragments of length {50,75,100,125,150,200,250,300,400,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
 
 For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following expected rates:
 
@@ -223,14 +223,15 @@ For each of the sampled fragments in each transcript (including unspliced transc
 
 Similarly to the estimated rate calculation above we also use the same grouping of transcripts together across all genes which overlap each other to determine actual counts. We assume that any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
 
-Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to. We allow a fragment may belong to a transcript if:
-* Every base of the fragment is exonic in that transcript (allowing for homology with reads that marginally overlap exon boundaries) AND
+Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to. We allow a fragment to belong to a transcript if:
+* Every mapped base of the fragment is exonic in that transcript (allowing for homology with reads that marginally overlap exon boundaries) AND
 * Every splice junction called exists in that transcript AND
-* the distance between the paired reads in that transcript is not > maximum insert size distribution 
+* the distance between the paired reads in that transcript is not > maximum insert size distribution (currently fixed at 550 bases) AND
+* neither read is soft clipped except at a known exon boundary (except where fragment length < unclipped read length indicating likely adapter sequence)
 
 Any fragment which does not contain a splice junction, is wholly contained within the bounds of a gene, and with fragment size <= maximum insert size distribution is also allowed to map to an ‘UNSPLICED’ transcript of that gene.
 
-Note that reads which marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If it cannot be uniquely mapped or matches neither of those locations exactly, it is truncated at the exon boundary.
+Note that reads which are partially exonic, but marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters. If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If multiple mappings are possible or the fragment length < unclipped read length (indicating likely adapter sequence) it is truncated at the exon boundary.  If no mapping is possible then the fragment is treated as not supporting any known transcript.
 
 ### 5. Fit abundance estimate per transcript
 

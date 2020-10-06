@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.genome.chromosome;
 
-import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.MIN_RATIO_COUNT;
+import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.MIN_Y_COUNT;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.MOSIAC_X_CUTOFF;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.TRISOMY_CUTOFF;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.TWO_X_CUTOFF;
@@ -27,27 +27,53 @@ public class CobaltChromosomesTest {
     public static CobaltChromosomes female() {
         List<MedianRatio> ratios = Lists.newArrayList();
         for (int i = 0; i < 22; i++) {
-            ratios.add(create(String.valueOf(i), 1));
+            ratios.add(create(String.valueOf(i), 1, 1));
         }
 
-        ratios.add(create("X", 1));
+        ratios.add(create("X", 1, 1));
         return new CobaltChromosomes(ratios);
     }
 
     public static CobaltChromosomes male() {
         List<MedianRatio> ratios = Lists.newArrayList();
         for (int i = 0; i < 22; i++) {
-            ratios.add(create(String.valueOf(i), 1));
+            ratios.add(create(String.valueOf(i), 1, 1));
         }
 
-        ratios.add(create("X", 0.5));
-        ratios.add(create("Y", 0.5));
+        ratios.add(create("X", 0.5, 1));
+        ratios.add(create("Y", 0.5, MIN_Y_COUNT));
         return new CobaltChromosomes(ratios);
     }
 
     @Test
+    public void testDefault() {
+        final CobaltChromosomes male = male();
+        final CobaltChromosomes female = female();
+
+        assertEquals(Gender.MALE, male.gender());
+        assertEquals(Gender.FEMALE, female.gender());
+
+        for (int i = 0; i < 22; i++) {
+            assertTrue(male.contains(i + ""));
+            assertTrue(female.contains(i + ""));
+
+            assertEquals(1, male.get(i + "").typicalRatio(), 0.01);
+            assertEquals(1, female.get(i + "").typicalRatio(), 0.01);
+        }
+
+        assertTrue(male.contains("X"));
+        assertTrue(female.contains("X"));
+        assertEquals(0.5, male.get("X").typicalRatio(), 0.01);
+        assertEquals(1, female.get("X").typicalRatio(), 0.01);
+
+        assertTrue(male.contains("Y"));
+        assertFalse(female.contains("Y"));
+        assertEquals(0.5, male.get("Y").typicalRatio(), 0.01);
+    }
+
+    @Test
     public void testFemale() {
-        MedianRatio chrX = create("X", 1, MIN_RATIO_COUNT);
+        MedianRatio chrX = create("X", 1, MIN_Y_COUNT);
         MedianRatio chrY = create("Y", 0.05, 100);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
@@ -64,8 +90,8 @@ public class CobaltChromosomesTest {
 
     @Test
     public void testMale() {
-        MedianRatio chrX = create("X", 0.5, MIN_RATIO_COUNT);
-        MedianRatio chrY = create("Y", Y_CUTOFF, MIN_RATIO_COUNT);
+        MedianRatio chrX = create("X", 0.5, MIN_Y_COUNT);
+        MedianRatio chrY = create("Y", Y_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.MALE, victim.gender());
@@ -81,8 +107,8 @@ public class CobaltChromosomesTest {
 
     @Test
     public void testKleinfelter() {
-        MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_RATIO_COUNT);
-        MedianRatio chrY = create("Y", Y_CUTOFF, MIN_RATIO_COUNT);
+        MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_Y_COUNT);
+        MedianRatio chrY = create("Y", Y_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.MALE, victim.gender());
@@ -95,8 +121,8 @@ public class CobaltChromosomesTest {
 
     @Test
     public void testFemaleEvenWithSmallYCount() {
-        MedianRatio chrX = create("X", 1, MIN_RATIO_COUNT);
-        MedianRatio chrY = create("Y", Y_CUTOFF, MIN_RATIO_COUNT - 1);
+        MedianRatio chrX = create("X", 1, MIN_Y_COUNT);
+        MedianRatio chrY = create("Y", Y_CUTOFF, MIN_Y_COUNT - 1);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
@@ -105,8 +131,8 @@ public class CobaltChromosomesTest {
 
     @Test
     public void testFemaleEvenWithSmallYMedian() {
-        MedianRatio chrX = create("X", 1, MIN_RATIO_COUNT);
-        MedianRatio chrY = create("Y", Y_CUTOFF - Y_CUTOFF/10d, MIN_RATIO_COUNT);
+        MedianRatio chrX = create("X", 1, MIN_Y_COUNT);
+        MedianRatio chrY = create("Y", Y_CUTOFF - Y_CUTOFF / 10d, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
@@ -116,8 +142,8 @@ public class CobaltChromosomesTest {
     @Test
     public void testMosiacX() {
         assertTrue(Doubles.lessThan(TWO_X_CUTOFF, MOSIAC_X_CUTOFF));
-        MedianRatio chr1 = create("1", 1, MIN_RATIO_COUNT);
-        MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_RATIO_COUNT);
+        MedianRatio chr1 = create("1", 1, MIN_Y_COUNT);
+        MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chr1, chrX);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
@@ -131,8 +157,8 @@ public class CobaltChromosomesTest {
     @Test
     public void testGCBiasNotMosiacX() {
         assertTrue(Doubles.lessThan(TWO_X_CUTOFF, MOSIAC_X_CUTOFF));
-        MedianRatio chr1 = create("1", TWO_X_CUTOFF, MIN_RATIO_COUNT);
-        MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_RATIO_COUNT);
+        MedianRatio chr1 = create("1", TWO_X_CUTOFF, MIN_Y_COUNT);
+        MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chr1, chrX);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.FEMALE, victim.gender());
@@ -143,7 +169,7 @@ public class CobaltChromosomesTest {
     public void testXYY() {
         MedianRatio chr1 = create("1", 1);
         MedianRatio chrX = create("X", 0.5);
-        MedianRatio chrY = create("Y", TWO_Y_CUTOFF);
+        MedianRatio chrY = create("Y", TWO_Y_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chr1, chrX, chrY);
         CobaltChromosomes victim = new CobaltChromosomes(chromosomes);
         assertEquals(Gender.MALE, victim.gender());
@@ -182,9 +208,8 @@ public class CobaltChromosomesTest {
         assertEquals(1.5, victim.get("X").actualRatio(), 0.01);
     }
 
-
     private static MedianRatio create(String contig, double ratio) {
-        return create(contig, ratio, MIN_RATIO_COUNT);
+        return create(contig, ratio, MIN_Y_COUNT);
     }
 
     private static MedianRatio create(String contig, double ratio, int count) {
