@@ -55,7 +55,7 @@ public final class FilterGermlineVariants {
 
                     if (filterBiallelic || filterSomaticVariantInSameGene || filterGermlineVariantInSameGene) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
-                    } else if (filterMinCopyNumberTumor || chordStatus == ChordStatus.HRD) {
+                    } else if (filterMinCopyNumberTumor || chordStatus == ChordStatus.HR_DEFICIENT) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
                     }
                 }

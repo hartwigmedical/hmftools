@@ -11,6 +11,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +20,7 @@ public final class ChordFileReader {
 
     private static final String VALUE_SEPARATOR = "\t";
     @VisibleForTesting
-    static final String V1_NA = "N/A";
+    static final String V1_NA = "UNKNOWN";
 
     private static final int V1_BRCA1_COLUMN = 2;
     private static final int V1_BRCA2_COLUMN = 3;
@@ -31,6 +33,9 @@ public final class ChordFileReader {
     private static final int V2_HRD_TYPE_COLUMN = 5;
     private static final int V2_REMARKS_HR_STATUS_COLUMN = 6;
     private static final int V2_REMARKS_HRD_TYPE_COLUMN = 7;
+
+    private static final Logger LOGGER = LogManager.getLogger(ChordFileReader.class);
+
 
     private ChordFileReader() {
     }
@@ -71,8 +76,8 @@ public final class ChordFileReader {
             case "HR_proficient": return ChordStatus.HR_PROFICIENT;
             case "HR_deficient": return ChordStatus.HR_DEFICIENT;
         }
-
-        return ChordStatus.UNKNWON;
+        LOGGER.warn("Unknown HR status of CHORD");
+        return ChordStatus.UNKNOWN;
     }
 
     @NotNull

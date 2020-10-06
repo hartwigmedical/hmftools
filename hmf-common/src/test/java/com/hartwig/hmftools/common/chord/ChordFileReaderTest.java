@@ -32,7 +32,7 @@ public class ChordFileReaderTest {
         assertEquals(V1_BRCA1, chordAnalysis.BRCA1Value(), EPSILON);
         assertEquals(V1_BRCA2, chordAnalysis.BRCA2Value(), EPSILON);
         assertEquals(V1_HRD, chordAnalysis.hrdValue(), EPSILON);
-        assertEquals(ChordFileReader.V1_NA, chordAnalysis.hrStatus());
+        assertEquals(ChordFileReader.extractHrStatus(ChordFileReader.V1_NA), chordAnalysis.hrStatus());
         assertEquals(ChordFileReader.V1_NA, chordAnalysis.hrdType());
         assertEquals(ChordFileReader.V1_NA, chordAnalysis.remarksHrStatus());
         assertEquals(ChordFileReader.V1_NA, chordAnalysis.remarksHrdType());
@@ -45,7 +45,7 @@ public class ChordFileReaderTest {
         assertEquals(V2_BRCA1, chordAnalysis.BRCA1Value(), EPSILON);
         assertEquals(V2_BRCA2, chordAnalysis.BRCA2Value(), EPSILON);
         assertEquals(V2_HRD, chordAnalysis.hrdValue(), EPSILON);
-        assertEquals(V2_HR_STATUS, chordAnalysis.hrStatus());
+        assertEquals(ChordFileReader.extractHrStatus(V2_HR_STATUS), chordAnalysis.hrStatus());
         assertEquals(V2_HRD_TYPE, chordAnalysis.hrdType());
         assertEquals(Strings.EMPTY, chordAnalysis.remarksHrStatus());
         assertEquals(Strings.EMPTY, chordAnalysis.remarksHrdType());
@@ -93,7 +93,7 @@ public class ChordFileReaderTest {
                 .BRCA1Value(0.10)
                 .BRCA2Value(0.20)
                 .hrdValue(0.30)
-                .hrStatus(ChordStatus.UNKNWON)
+                .hrStatus(ChordStatus.UNKNOWN)
                 .hrdType(Strings.EMPTY)
                 .remarksHrStatus(Strings.EMPTY)
                 .remarksHrdType(Strings.EMPTY)
