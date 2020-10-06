@@ -119,10 +119,6 @@ public class ReadContext {
         return new ReadContext(this);
     }
 
-    public int position() {
-        return position;
-    }
-
     public boolean incompleteFlanks() {
         return !readBases.flanksComplete();
     }
@@ -249,4 +245,15 @@ public class ReadContext {
     public int coreLength() {
         return readBasesRightCentreIndex() - readBasesLeftCentreIndex() + 1;
     }
+
+    @NotNull
+    public String leftFlankString() {
+        return readBases.leftFlankString();
+    }
+
+    @NotNull
+    public String rightFlankString() {
+        return readBases.rightFlankString();
+    }
+
 }

@@ -195,6 +195,17 @@ public class IndexedBases {
         return bases.length == 0 ? Strings.EMPTY : new String(bases, leftCoreIndex, centreLength());
     }
 
+    @NotNull
+    public String leftFlankString() {
+        return bases.length == 0 ? Strings.EMPTY : new String(bases, leftFlankIndex, leftFlankLength());
+    }
+
+    @NotNull
+    public String rightFlankString() {
+        int rightFlankLength = rightFlankLength();
+        return rightFlankLength == 0 ? Strings.EMPTY : new String(bases, rightCoreIndex + 1, rightFlankLength);
+    }
+
     @Override
     public String toString() {
         return bases.length == 0 ? Strings.EMPTY : new String(bases, leftFlankIndex, length());
@@ -263,5 +274,7 @@ public class IndexedBases {
     public byte[] trinucleotideContext(int position) {
         return new byte[] { base(position - 1), base(position), base(position + 1) };
     }
+
+
 
 }

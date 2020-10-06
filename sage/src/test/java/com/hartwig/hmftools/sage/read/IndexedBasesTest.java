@@ -112,4 +112,13 @@ public class IndexedBasesTest {
         assertFalse(victim1.phased(-5, victim2));
         assertFalse(victim2.phased(5, victim1));
     }
+
+    @Test
+    public void testStrings() {
+        ReadContext victim = new ReadContext(Strings.EMPTY, 1000, 4, 3, 5, 2, "AACATGAGG".getBytes(), Strings.EMPTY);
+        assertEquals("ATG", victim.centerBases());
+        assertEquals("AC", victim.leftFlankString());
+        assertEquals("AG", victim.rightFlankString());
+    }
+
 }
