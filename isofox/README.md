@@ -224,13 +224,14 @@ For each of the sampled fragments in each transcript (including unspliced transc
 Similarly to the estimated rate calculation above we also use the same grouping of transcripts together across all genes which overlap each other to determine actual counts. We assume that any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
 
 Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to. We allow a fragment to belong to a transcript if:
-* Every base of the fragment is exonic in that transcript (allowing for homology with reads that marginally overlap exon boundaries) AND
+* Every mapped base of the fragment is exonic in that transcript (allowing for homology with reads that marginally overlap exon boundaries) AND
 * Every splice junction called exists in that transcript AND
-* the distance between the paired reads in that transcript is not > maximum insert size distribution (currently fixed at 550 bases)
+* the distance between the paired reads in that transcript is not > maximum insert size distribution (currently fixed at 550 bases) AND
+* neither read is soft clipped except at a known exon boundary (except where fragment length < unclipped read length indicating likely adapter sequence)
 
 Any fragment which does not contain a splice junction, is wholly contained within the bounds of a gene, and with fragment size <= maximum insert size distribution is also allowed to map to an ‘UNSPLICED’ transcript of that gene.
 
-Note that reads which marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If it cannot be uniquely mapped or matches neither of those locations exactly, it is truncated at the exon boundary.
+Note that reads which are partially exonic, but marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters. If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If multiple mappings are possible or the fragment length < unclipped read length (indicating likely adapter sequence) it is truncated at the exon boundary.  If no mapping is possible then the fragment is treated as not supporting any known transcript.
 
 ### 5. Fit abundance estimate per transcript
 
