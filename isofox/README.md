@@ -223,7 +223,7 @@ For each of the sampled fragments in each transcript (including unspliced transc
 
 Similarly to the estimated rate calculation above we also use the same grouping of transcripts together across all genes which overlap each other to determine actual counts. We assume that any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
 
-Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to. We allow a fragment may belong to a transcript if:
+Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to. We allow a fragment to belong to a transcript if:
 * Every base of the fragment is exonic in that transcript (allowing for homology with reads that marginally overlap exon boundaries) AND
 * Every splice junction called exists in that transcript AND
 * the distance between the paired reads in that transcript is not > maximum insert size distribution (currently fixed at 550 bases)
