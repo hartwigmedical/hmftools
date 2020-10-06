@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SignatureDataLoader
 {
-    public static SigMatrix loadSampleCountsFromCohortFile(final String filename, final Map<String,Integer> sampleCountsIndex)
+    public static SigMatrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
         if(filename.isEmpty())
             return null;
@@ -30,7 +30,7 @@ public class SignatureDataLoader
         return sampleCounts;
     }
 
-    public static SigMatrix loadSamplePosFreqFromCohortFile(final String filename, final Map<String,Integer> sampleCountsIndex)
+    public static SigMatrix loadSamplePosFreqFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
         if(filename.isEmpty())
             return null;

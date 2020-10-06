@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cup.sample;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
+import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -19,6 +20,9 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.purity.PurpleQCFile;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleData;
@@ -58,15 +62,32 @@ public class SampleTraits
 
     private boolean loadSampleTraitsData()
     {
-        if(!mConfig.SampleTraitsFile.isEmpty())
-        {
-            if(!loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData))
-                return false;
-        }
-        else if(mConfig.DbAccess != null)
+        if(mConfig.DbAccess != null)
         {
             if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleTraitsData))
                 return false;
+        }
+        else if(mConfig.UseCohortFiles)
+        {
+            if(mConfig.SampleTraitsFile.isEmpty() || !loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData))
+                return false;
+        }
+        else
+        {
+            final String sampleId = mSampleDataCache.SampleIds.get(0);
+
+            try
+            {
+                final PurityContext purityContext = PurityContextFile.read(mConfig.SampleDataDir, sampleId);
+                SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, 0);
+                mSampleTraitsData.put(traitsData.SampleId, traitsData);
+            }
+            catch(Exception e)
+            {
+                CUP_LOGGER.error("sample({}) failed to load purity file( from dir{}): {}",
+                        sampleId, mConfig.SampleDataDir, e.toString());
+                return false;
+            }
         }
 
         for(SampleData sample : mSampleDataCache.SampleDataList)

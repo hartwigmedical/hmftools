@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -20,8 +21,14 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -56,55 +63,86 @@ public class SvDataLoader
     public static boolean loadSvDataFromDatabase(
             final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,SvData> sampleSvData)
     {
-        if(dbAccess == null)
-            return false;
-
         for(final String sampleId : sampleIds)
         {
             final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantData(sampleId);
-
-            // final List<LinxSvAnnotation> svAnnotationList = dbAccess.readSvAnnotaions(sampleId);
-
             final List<LinxCluster> clusterList = dbAccess.readClusters(sampleId);
 
-            int lineCount = clusterList.stream().filter(x -> x.resolvedType().equals("LINE")).mapToInt(x -> x.clusterCount()).sum();
-
-            int telomericSgls = (int)svDataList.stream()
-                    .filter(x -> x.type() == SGL)
-                    .filter(x -> x.insertSequenceRepeatClass().equals("Simple_repeat"))
-                    .filter(x -> x.insertSequenceRepeatType().equals("(TTAGGG)n") || x.insertSequenceRepeatType().equals("(CCCTAA)n")).count();
-
-            int shortDels = (int)svDataList.stream()
-                    .filter(x -> x.type() == DEL)
-                    .mapToInt(x -> x.endPosition() - x.startPosition())
-                    .filter(x -> x >= 2e4 && x <= 1e6).count();
-
-            int shortDups = (int)svDataList.stream()
-                    .filter(x -> x.type() == DUP)
-                    .mapToInt(x -> x.endPosition() - x.startPosition())
-                    .filter(x -> x >= 32 && x <= 200).count();
-
-            int longDups = (int)svDataList.stream()
-                    .filter(x -> x.type() == DUP)
-                    .mapToInt(x -> x.endPosition() - x.startPosition())
-                    .filter(x -> x >= 1e5 && x <= 5e6).count();
-
-            int maxEventSize = clusterList.stream()
-                    .filter(x -> !x.resolvedType().equals("LINE"))
-                    .mapToInt(x -> x.clusterCount()).max().orElse(0);
-
-            SvData svData = new SvData(sampleId);
-            svData.setCount(LINE, lineCount);
-            svData.setCount(SIMPLE_DEL_20KB_1MB, shortDels);
-            svData.setCount(SIMPLE_DUP_32B_200B, shortDups);
-            svData.setCount(SIMPLE_DUP_100KB_5MB, longDups);
-            svData.setCount(MAX_COMPLEX_SIZE, maxEventSize);
-            svData.setCount(TELOMERIC_SGL, telomericSgls);
-
-            sampleSvData.put(sampleId, svData);
+            mapSvData(sampleId, sampleSvData, svDataList, clusterList);
         }
 
         return true;
+    }
+
+    public static boolean loadSvDataFromFile(
+            final String sampleId, final String svVcfFile, final String clusterFile,
+            final Map<String,SvData> sampleSvData)
+    {
+        try
+        {
+            final List<StructuralVariantData> svDataList = Lists.newArrayList();
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(svVcfFile, new AlwaysPassFilter());
+            final List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
+
+            int svId = 0;
+            for (EnrichedStructuralVariant var : enrichedVariants)
+            {
+                svDataList.add(convertSvData(var, svId++));
+            }
+
+            final List<LinxCluster> clusterList = LinxCluster.read(clusterFile);
+
+            mapSvData(sampleId, sampleSvData, svDataList, clusterList);
+        }
+        catch(Exception e)
+        {
+            CUP_LOGGER.error("sample({}) failed to load SV file({}) or cluster file({}): {}",
+                    sampleId, svVcfFile, clusterFile, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void mapSvData(
+            final String sampleId, final Map<String,SvData> sampleSvData,
+            final List<StructuralVariantData> svDataList, final List<LinxCluster> clusterList)
+    {
+        int lineCount = clusterList.stream().filter(x -> x.resolvedType().equals("LINE")).mapToInt(x -> x.clusterCount()).sum();
+
+        int telomericSgls = (int)svDataList.stream()
+                .filter(x -> x.type() == SGL)
+                .filter(x -> x.insertSequenceRepeatClass().equals("Simple_repeat"))
+                .filter(x -> x.insertSequenceRepeatType().equals("(TTAGGG)n") || x.insertSequenceRepeatType().equals("(CCCTAA)n")).count();
+
+        int shortDels = (int)svDataList.stream()
+                .filter(x -> x.type() == DEL)
+                .mapToInt(x -> x.endPosition() - x.startPosition())
+                .filter(x -> x >= 2e4 && x <= 1e6).count();
+
+        int shortDups = (int)svDataList.stream()
+                .filter(x -> x.type() == DUP)
+                .mapToInt(x -> x.endPosition() - x.startPosition())
+                .filter(x -> x >= 32 && x <= 200).count();
+
+        int longDups = (int)svDataList.stream()
+                .filter(x -> x.type() == DUP)
+                .mapToInt(x -> x.endPosition() - x.startPosition())
+                .filter(x -> x >= 1e5 && x <= 5e6).count();
+
+        int maxEventSize = clusterList.stream()
+                .filter(x -> !x.resolvedType().equals("LINE"))
+                .mapToInt(x -> x.clusterCount()).max().orElse(0);
+
+        SvData svData = new SvData(sampleId);
+        svData.setCount(LINE, lineCount);
+        svData.setCount(SIMPLE_DEL_20KB_1MB, shortDels);
+        svData.setCount(SIMPLE_DUP_32B_200B, shortDups);
+        svData.setCount(SIMPLE_DUP_100KB_5MB, longDups);
+        svData.setCount(MAX_COMPLEX_SIZE, maxEventSize);
+        svData.setCount(TELOMERIC_SGL, telomericSgls);
+
+        sampleSvData.put(sampleId, svData);
     }
 
     public static boolean loadRefPercentileData(final String filename, final Map<SvDataType,Map<String,double[]>> refSvTypePercentiles)

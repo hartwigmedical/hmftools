@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadRefPercentileData;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromCohortFile;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
+import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromFile;
 import static com.hartwig.hmftools.cup.svs.SvDataType.LINE;
 import static com.hartwig.hmftools.cup.svs.SvDataType.MAX_COMPLEX_SIZE;
 import static com.hartwig.hmftools.cup.svs.SvDataType.SIMPLE_DUP_32B_200B;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -110,16 +112,23 @@ public class SvAnnotation
 
     private boolean loadSampleSvData()
     {
-        if(!mConfig.SampleSvFile.isEmpty())
+        if(mConfig.DbAccess != null)
         {
-            if(!loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData))
+            return loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData);
+        }
+
+        if(mConfig.UseCohortFiles)
+        {
+            if(!mConfig.SampleSvFile.isEmpty())
+                return loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData);
+            else
                 return false;
         }
-        else if(mConfig.DbAccess != null)
-        {
-            if(!loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData))
-                return false;
-        }
+
+        final String sampleId = mSampleDataCache.SampleIds.get(0);
+
+        final String clusterFile = LinxCluster.generateFilename(mConfig.SampleDataDir, sampleId);
+        loadSvDataFromFile(sampleId, mConfig.SampleSvFile, clusterFile, mSampleSvData);
 
         return true;
     }

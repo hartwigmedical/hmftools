@@ -15,16 +15,21 @@ import static com.hartwig.hmftools.cup.feature.ViralInsertionType.fromVirusName;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
 public class FeatureDataLoader
 {
@@ -37,7 +42,6 @@ public class FeatureDataLoader
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
 
-            final String header = fileData.get(0);
             fileData.remove(0);
 
             for(final String line : fileData)
@@ -68,66 +72,102 @@ public class FeatureDataLoader
         return true;
     }
 
-    public static boolean loadDriversFromDatabase(
-            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,List<SampleFeatureData>> sampleDrivers)
+    public static boolean loadFeaturesFromFile(
+            final String sampleId, final String sampleDataDir, final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
+    {
+        try
+        {
+            String viralInsertFilename = LinxViralInsertion.generateFilename(sampleDataDir, sampleId);
+
+            final List<LinxViralInsertion> viralInserts = Files.exists(Paths.get(viralInsertFilename)) ?
+                    LinxViralInsertion.read(viralInsertFilename) : Lists.newArrayList();
+
+            final String fusionsFilename = LinxFusion.generateFilename(sampleDataDir, sampleId);
+
+            final List<LinxFusion> fusions = Files.exists(Paths.get(fusionsFilename)) ?
+                    LinxFusion.read(fusionsFilename) : Lists.newArrayList();
+
+            final String driverCatalogFilename = DriverCatalogFile.generateFilename(sampleDataDir, sampleId);
+
+            final List<DriverCatalog> drivers = Files.exists(Paths.get(driverCatalogFilename)) ?
+                    DriverCatalogFile.read(driverCatalogFilename) : Lists.newArrayList();
+
+            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts);
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to load drivers, fusion and virus data files: {}", e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean loadFeaturesFromDatabase(
+            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
         if(dbAccess == null)
             return false;
 
         for(final String sampleId : sampleIds)
         {
-            final List<SampleFeatureData> featuresList = Lists.newArrayList();
-
             final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
-            if(drivers != null)
-            {
-
-                for(final DriverCatalog driver : drivers)
-                {
-                    if(driver.driverLikelihood() == 0)
-                        continue;
-
-                    SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), DRIVER, driver.driverLikelihood());
-
-                    if(driver.driver() == DriverType.AMP)
-                        feature.ExtraInfo.put(DRIVER_TYPE, DRIVER_TYPE_AMP);
-                    else if(driver.driver() == DriverType.DEL)
-                        feature.ExtraInfo.put(DRIVER_TYPE, DRIVER_TYPE_DEL);
-
-                    feature.ExtraInfo.put(DRIVER_CHROMOSOME, driver.chromosome());
-
-                    featuresList.add(feature);
-                }
-            }
-
             final List<LinxFusion> fusions = dbAccess.readFusions(sampleId);
-
-            if(fusions != null)
-            {
-                final List<SampleFeatureData> fusionDataList = fusions.stream()
-                        .filter(x -> x.reported())
-                        .map(x -> new SampleFeatureData(sampleId, x.name(), FeatureType.FUSION, 1))
-                        .collect(Collectors.toList());
-
-                featuresList.addAll(fusionDataList);
-            }
-
             final List<LinxViralInsertion> viralInserts = dbAccess.readViralInsertions(sampleId);
 
-            if(viralInserts != null)
-            {
-                final List<SampleFeatureData> viralInsertDataList = viralInserts.stream()
-                        .map(x -> new SampleFeatureData(sampleId, fromVirusName(x.VirusName).toString(), FeatureType.VIRUS, 1))
-                        .filter(x -> !x.Name.equals(OTHER.toString()))
-                        .collect(Collectors.toList());
-
-                featuresList.addAll(viralInsertDataList);
-            }
-
-            sampleDrivers.put(sampleId, featuresList);
+            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts);
         }
 
         return true;
+    }
+
+    private static void mapFeatureData(
+            final String sampleId, final Map<String,List<SampleFeatureData>> sampleDrivers,
+            final List<DriverCatalog> drivers, final List<LinxFusion> fusions, final List<LinxViralInsertion> viralInserts)
+    {
+        final List<SampleFeatureData> featuresList = Lists.newArrayList();
+
+        if(drivers != null)
+        {
+            for(final DriverCatalog driver : drivers)
+            {
+                if(driver.driverLikelihood() == 0)
+                    continue;
+
+                SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), DRIVER, driver.driverLikelihood());
+
+                if(driver.driver() == DriverType.AMP)
+                    feature.ExtraInfo.put(DRIVER_TYPE, DRIVER_TYPE_AMP);
+                else if(driver.driver() == DriverType.DEL)
+                    feature.ExtraInfo.put(DRIVER_TYPE, DRIVER_TYPE_DEL);
+
+                feature.ExtraInfo.put(DRIVER_CHROMOSOME, driver.chromosome());
+
+                featuresList.add(feature);
+            }
+        }
+
+        if(fusions != null)
+        {
+            final List<SampleFeatureData> fusionDataList = fusions.stream()
+                    .filter(x -> x.reported())
+                    .map(x -> new SampleFeatureData(sampleId, x.name(), FeatureType.FUSION, 1))
+                    .collect(Collectors.toList());
+
+            featuresList.addAll(fusionDataList);
+        }
+
+        if(viralInserts != null)
+        {
+            final List<SampleFeatureData> viralInsertDataList = viralInserts.stream()
+                    .map(x -> new SampleFeatureData(sampleId, fromVirusName(x.VirusName).toString(), FeatureType.VIRUS, 1))
+                    .filter(x -> !x.Name.equals(OTHER.toString()))
+                    .collect(Collectors.toList());
+
+            featuresList.addAll(viralInsertDataList);
+        }
+
+        sampleDrivers.put(sampleId, featuresList);
     }
 
     public static boolean loadRefPrevalenceData(

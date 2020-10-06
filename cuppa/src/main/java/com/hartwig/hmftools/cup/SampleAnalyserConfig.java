@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Sample;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -33,6 +34,9 @@ public class SampleAnalyserConfig
     public final String RefRnaExpFile;
 
     // sample data, if not sourced from the database
+    public final boolean UseCohortFiles;
+    public final String SampleDataDir;
+
     public final String SampleDataFile;
     public final String SampleFeatureFile;
     public final String SampleTraitsFile;
@@ -49,6 +53,9 @@ public class SampleAnalyserConfig
     public final String OutputFileId;
 
     // config strings
+    public static final String USE_COHORT_FILES = "use_cohort_files";
+    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
+
     public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
     private static final String SAMPLE_FEAT_FILE = "sample_feature_file";
@@ -81,6 +88,9 @@ public class SampleAnalyserConfig
 
     public SampleAnalyserConfig(final CommandLine cmd)
     {
+        UseCohortFiles = cmd.hasOption(USE_COHORT_FILES);
+        SampleDataDir = cmd.getOptionValue(SAMPLE_DATA_DIR, "");
+
         SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
         SampleTraitsFile = cmd.getOptionValue(SAMPLE_TRAITS_FILE, "");
         SampleFeatureFile = cmd.getOptionValue(SAMPLE_FEAT_FILE, "");
@@ -125,13 +135,18 @@ public class SampleAnalyserConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SPECIFIC_SAMPLE_DATA, true, "Specific sample in form 'SampleId;CancerType;CancerSubtype' (last 2 optional)");
+        options.addOption(USE_COHORT_FILES, false, "Use cohort files rather than stanard pipeline sample files");
+        options.addOption(SAMPLE_DATA_DIR, true, "Directory containing standard sample files from pipeline");
+
         options.addOption(SAMPLE_DATA_FILE, true, "Sample data file");
+
         options.addOption(SAMPLE_SNV_COUNTS_FILE, true, "Sample SNV counts");
         options.addOption(SAMPLE_SNV_POS_FREQ_FILE, true, "Sample SNV position frequence counts");
-        options.addOption(SAMPLE_FEAT_FILE, true, "Sample drivers");
-        options.addOption(SAMPLE_TRAITS_FILE, true, "Sample traits");
-        options.addOption(SAMPLE_SV_FILE, true, "Sample SV data");
         options.addOption(SAMPLE_SIG_CONTRIB_FILE, true, "Sample signature contributions");
+
+        options.addOption(SAMPLE_FEAT_FILE, true, "Cohort features file (drivers, fusions and viruses)");
+        options.addOption(SAMPLE_TRAITS_FILE, true, "Cohort sample traits file");
+        options.addOption(SAMPLE_SV_FILE, true, "Cohort SV data");
         options.addOption(SAMPLE_RNA_EXP_FILE, true, "Sample RNA gene expression TPMs");
 
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Reference sample data");

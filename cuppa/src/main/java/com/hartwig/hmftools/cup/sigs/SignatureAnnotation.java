@@ -25,8 +25,8 @@ import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSignaturePercentileData;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSnvPosFrequences;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSampleCountsFromCohortFile;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSamplePosFreqFromCohortFile;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSampleCountsFromFile;
+import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSamplePosFreqFromFile;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromDatabase;
 
@@ -36,8 +36,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SignatureAllocation;
+import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
-import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -104,34 +105,67 @@ public class SignatureAnnotation
 
     private boolean loadSampleCounts()
     {
-        if(!mConfig.SampleSnvCountsFile.isEmpty())
-        {
-            mSampleCounts = loadSampleCountsFromCohortFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
-            mSamplePosFrequencies = loadSamplePosFreqFromCohortFile(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
-
-            if(mSampleCounts == null || mSamplePosFrequencies == null)
-                return false;
-        }
-        else if(mConfig.DbAccess != null)
+        if(mConfig.DbAccess != null)
         {
             CUP_LOGGER.error("retrieval of sample SNV counts unsupported at present");
             return false;
         }
 
-        return true;
+        if(mConfig.UseCohortFiles)
+        {
+            mSampleCounts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
+            mSamplePosFrequencies = loadSamplePosFreqFromFile(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
+
+            return mSampleCounts != null && mSamplePosFrequencies != null;
+        }
+
+        final String sampleId = mSampleDataCache.SampleIds.get(0);
+
+        final String snvCountsFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
+                mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.snv_counts.csv";
+
+        final String snvPosFreqFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
+                mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.pos_freq_counts.csv";
+
+        mSampleCounts = loadSampleCountsFromFile(snvCountsFile, mSampleCountsIndex);
+        mSamplePosFrequencies = loadSamplePosFreqFromFile(snvPosFreqFile, mSamplePosFreqIndex);
+
+        return mSampleCounts != null && mSamplePosFrequencies != null;
     }
 
     private boolean loadSigContributions()
     {
-        if(!mConfig.SampleSigContribFile.isEmpty())
+        if(mConfig.UseCohortFiles)
         {
-            if(!loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions))
+            if(mConfig.SampleSigContribFile.isEmpty())
                 return false;
+
+            return loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions);
         }
         else if(mConfig.DbAccess != null)
         {
-            if(!loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSigContributions))
-                return false;
+            return loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSigContributions);
+        }
+
+        final String sampleId = mSampleDataCache.SampleIds.get(0);
+        final String sigAllocFile = SignatureAllocationFile.generateFilename(mConfig.SampleDataDir, sampleId);
+
+        try
+        {
+            final List<SignatureAllocation> sigAllocations = SignatureAllocationFile.read(sigAllocFile);
+            Map<String,Double> sigContribs = Maps.newHashMap();
+            for(final SignatureAllocation sigAllocation : sigAllocations)
+            {
+                sigContribs.put(sigAllocation.signature(), sigAllocation.allocation());
+            }
+
+            mSampleSigContributions.put(sampleId, sigContribs);
+        }
+        catch(Exception e)
+        {
+            CUP_LOGGER.error("sample({}) failed to load sig allocations file({}): {}",
+                    sampleId, sigAllocFile, e.toString());
+            return false;
         }
 
         return true;

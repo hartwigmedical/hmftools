@@ -5,7 +5,6 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PAN;
@@ -14,7 +13,8 @@ import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVA
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadDriversFromCohortFile;
-import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadDriversFromDatabase;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefCancerFeatureAvg;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefPrevalenceData;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
@@ -275,18 +275,21 @@ public class FeatureAnnotation
 
     private boolean loadSampleFeatures()
     {
-        if(!mConfig.SampleFeatureFile.isEmpty())
+        if(mConfig.UseCohortFiles)
         {
-            if(!loadDriversFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures))
+            if(mConfig.SampleFeatureFile.isEmpty())
                 return false;
+
+            return loadDriversFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures);
         }
         else if(mConfig.DbAccess != null)
         {
-            if(!loadDriversFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures))
-                return false;
+            return loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures);
         }
 
-        return true;
+        final String sampleId = mSampleDataCache.SampleIds.get(0);
+
+        return loadFeaturesFromFile(sampleId, mConfig.SampleDataDir, mSampleFeatures);
     }
 
     private void formGenePrevalenceTotals()
