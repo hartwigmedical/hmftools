@@ -9,7 +9,7 @@ public enum ChordStatus {
     CANNOT_BE_DETERMINED("cannot_be_determined", "Cannot be determined"),
     HR_PROFICIENT("HR_proficient", "Proficient"),
     HR_DEFICIENT("HR_deficient", "Deficient"),
-    UNKNOWN("unkown", "UnkNown");
+    UNKNOWN("unknown", "Unknown");
 
     public static final double HRD_THRESHOLD = 0.5;
     @NotNull

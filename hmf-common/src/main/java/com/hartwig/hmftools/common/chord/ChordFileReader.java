@@ -69,6 +69,7 @@ public final class ChordFileReader {
         return builder.build();
     }
 
+    @VisibleForTesting
     @NotNull
     public static ChordStatus extractHrStatus(@NotNull String hrStatus) {
         switch (hrStatus) {
@@ -76,7 +77,7 @@ public final class ChordFileReader {
             case "HR_proficient": return ChordStatus.HR_PROFICIENT;
             case "HR_deficient": return ChordStatus.HR_DEFICIENT;
         }
-        LOGGER.warn("Unknown HR status of CHORD");
+        LOGGER.warn("Unknown HR status of CHORD {}", hrStatus);
         return ChordStatus.UNKNOWN;
     }
 

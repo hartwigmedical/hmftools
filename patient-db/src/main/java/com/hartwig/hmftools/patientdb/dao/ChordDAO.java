@@ -37,7 +37,7 @@ class ChordDAO {
                         DatabaseUtil.decimal(chordAnalysis.BRCA1Value()),
                         DatabaseUtil.decimal(chordAnalysis.BRCA2Value()),
                         DatabaseUtil.decimal(chordAnalysis.hrdValue()),
-                        chordAnalysis.hrStatus().status(),
+                        chordAnalysis.hrStatus().toString(),
                         chordAnalysis.hrdType(),
                         chordAnalysis.remarksHrStatus(),
                         chordAnalysis.remarksHrdType())
