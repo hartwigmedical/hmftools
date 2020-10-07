@@ -60,7 +60,7 @@ public class CandidateSerialization {
         final String mh = context.getAttributeAsString(READ_CONTEXT_MICRO_HOMOLOGY, Strings.EMPTY);
 
         final IndexedBases readBases = new IndexedBases(position,
-                readContextIndex,
+                readContextIndex + leftFlank.length(),
                 leftFlank.length(),
                 rightCoreIndex,
                 Math.max(leftFlank.length(), rightFlank.length()),
@@ -83,12 +83,13 @@ public class CandidateSerialization {
         final ReadContext readContext = candidate.readContext();
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(candidate.chromosome())
+                .source("SAGE")
                 .start(candidate.position())
                 .attribute(TIER, candidate.tier())
                 .attribute(READ_CONTEXT, candidate.readContext().toString())
                 .attribute(READ_CONTEXT_LEFT_FLANK, candidate.readContext().leftFlankString())
                 .attribute(READ_CONTEXT_RIGHT_FLANK, candidate.readContext().rightFlankString())
-                .attribute(READ_CONTEXT_INDEX, readContext.readBasesPositionIndex())
+                .attribute(READ_CONTEXT_INDEX, readContext.readBasesPositionIndex() - readContext.readBasesLeftCentreIndex())
                 .attribute(READ_CONTEXT_EVENTS, candidate.minNumberOfEvents())
                 .computeEndFromAlleles(alleles, (int) candidate.position())
                 .alleles(alleles);

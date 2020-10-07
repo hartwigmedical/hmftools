@@ -219,6 +219,10 @@ public class IndexedBases {
         return index;
     }
 
+    public int indexInCore() {
+        return index - leftCoreIndex;
+    }
+
     public int index(int position) {
         return position - this.position + index();
     }

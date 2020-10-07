@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.select.RegionSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
@@ -84,10 +85,12 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
             return false;
         }
 
-        final SageVariant realignedVariant =
-                new SageVariant(variant.tier(), rightAligned, variant.filters(), variant.normalAltContexts(), variant.tumorAltContexts());
-        realignedVariant.realigned(true);
+        final Candidate oldCandidate = variant.candidate();
+        final Candidate newCandidate = new Candidate(oldCandidate.tier(), rightAligned, oldCandidate.readContext(), oldCandidate.maxReadDepth(), oldCandidate.minNumberOfEvents());
 
+        final SageVariant realignedVariant =
+                new SageVariant(newCandidate, variant.filters(), variant.normalAltContexts(), variant.tumorAltContexts());
+        realignedVariant.realigned(true);
         rightAlignedList.add(realignedVariant);
 
         return true;

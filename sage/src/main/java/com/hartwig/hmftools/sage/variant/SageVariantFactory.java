@@ -8,6 +8,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
@@ -25,17 +26,16 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    public SageVariant create(@NotNull final List<ReadContextCounter> normal, @NotNull final List<ReadContextCounter> tumor) {
+    public SageVariant create(@NotNull final Candidate candidate, @NotNull final List<ReadContextCounter> normal, @NotNull final List<ReadContextCounter> tumor) {
         assert (!tumor.isEmpty());
         final Set<String> filters = Sets.newHashSet();
         final boolean isNormalEmpty = normal.isEmpty();
 
-        final ReadContextCounter variant = normal.isEmpty() ? tumor.get(0) : normal.get(0);
-        final SageVariantTier tier = variant.tier();
+        final SageVariantTier tier = candidate.tier();
         final SoftFilterConfig softConfig = config.softConfig(tier);
 
         if (!config.softFilter()) {
-            return new SageVariant(tier, variant, filters, normal, tumor);
+            return new SageVariant(candidate, filters, normal, tumor);
         }
 
         boolean passingTumor = false;
@@ -58,7 +58,7 @@ public class SageVariantFactory {
             filters.clear();
         }
 
-        return new SageVariant(tier, variant, filters, normal, tumor);
+        return new SageVariant(candidate, filters, normal, tumor);
     }
 
     @NotNull

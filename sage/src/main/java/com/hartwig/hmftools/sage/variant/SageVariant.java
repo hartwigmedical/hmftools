@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
@@ -12,9 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class SageVariant implements GenomePosition {
 
+    private final Candidate candidate;
     private final Set<String> filters;
-    private final SageVariantTier tier;
-    private final VariantHotspot variant;
     private final List<ReadContextCounter> normalAltContexts;
     private final List<ReadContextCounter> tumorAltContexts;
 
@@ -24,28 +24,27 @@ public class SageVariant implements GenomePosition {
     private int phasedInframeIndel;
     private boolean realigned;
 
-    public SageVariant(@NotNull final SageVariantTier tier, @NotNull final VariantHotspot variant, @NotNull final Set<String> filters,
+    public SageVariant(@NotNull final Candidate candidate,  @NotNull final Set<String> filters,
             final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts) {
         assert (!tumorAltContexts.isEmpty());
-        this.tier = tier;
+        this.candidate = candidate;
         this.normalAltContexts = normal;
         this.tumorAltContexts = tumorAltContexts;
         this.filters = filters;
-        this.variant = variant;
+    }
+
+    public Candidate candidate() {
+        return candidate;
     }
 
     @NotNull
     public String ref() {
-        return variant.ref();
+        return variant().ref();
     }
 
     @NotNull
     public String alt() {
-        return variant.alt();
-    }
-
-    public int minNumberOfEvents() {
-        return tumorAltContexts.get(0).minNumberOfEvents();
+        return variant().alt();
     }
 
     public boolean isRealigned() {
@@ -61,7 +60,7 @@ public class SageVariant implements GenomePosition {
     }
 
     public boolean isIndel() {
-        return variant.ref().length() != variant.alt().length();
+        return variant().ref().length() != variant().alt().length();
     }
 
     public int phasedInframeIndel() {
@@ -73,19 +72,19 @@ public class SageVariant implements GenomePosition {
     }
 
     public boolean isMnv() {
-        return variant.ref().length() >= 1 && variant.ref().length() == variant.alt().length();
+        return variant().ref().length() >= 1 && variant().ref().length() == variant().alt().length();
     }
 
     public boolean isSnv() {
-        return variant.ref().length() == 1 && variant.alt().length() == 1;
+        return variant().ref().length() == 1 && variant().alt().length() == 1;
     }
 
     public boolean isInsert() {
-        return variant.ref().length() < variant.alt().length();
+        return variant().ref().length() < variant().alt().length();
     }
 
     public boolean isDelete() {
-        return variant.ref().length() > variant.alt().length();
+        return variant().ref().length() > variant().alt().length();
     }
 
     public int localPhaseSet() {
@@ -126,12 +125,12 @@ public class SageVariant implements GenomePosition {
 
     @NotNull
     public VariantHotspot variant() {
-        return variant;
+        return candidate.variant();
     }
 
     @NotNull
     public SageVariantTier tier() {
-        return tier;
+        return candidate.tier();
     }
 
     @NotNull

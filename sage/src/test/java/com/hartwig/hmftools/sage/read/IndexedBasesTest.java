@@ -124,19 +124,22 @@ public class IndexedBasesTest {
     @Test
     public void testCreate() {
         IndexedBases victimWithExtra = create(1000, 1, "AA", "TA", "ATG", "CG", "TT");
+        assertEquals(1, victimWithExtra.indexInCore());
+        assertEquals(5, victimWithExtra.index());
         assertEquals("TA", victimWithExtra.leftFlankString());
         assertEquals("ATG", victimWithExtra.centerString());
         assertEquals("CG", victimWithExtra.rightFlankString());
 
         IndexedBases victimWithoutExtra = create(1000, 1, Strings.EMPTY, "TA", "ATG", "CG", Strings.EMPTY);
+        assertEquals(1, victimWithoutExtra.indexInCore());
         assertEquals("TA", victimWithoutExtra.leftFlankString());
         assertEquals("ATG", victimWithoutExtra.centerString());
         assertEquals("CG", victimWithoutExtra.rightFlankString());
     }
 
 
-    public static IndexedBases create(int position, int index, String leftExtra, String leftFlank, String core, String rightFlank, String rightExtra) {
-        assertTrue(index <= core.length());
+    public static IndexedBases create(int position, int indexInCore, String leftExtra, String leftFlank, String core, String rightFlank, String rightExtra) {
+        assertTrue(indexInCore <= core.length());
 
         int flankSize = Math.max(leftFlank.length(), rightFlank.length());
         int totalLength = leftExtra.length() + leftFlank.length() + core.length() + rightFlank.length() + rightExtra.length();
@@ -152,7 +155,7 @@ public class IndexedBasesTest {
 
         int leftCoreIndex = leftExtra.length() + leftFlank.length();
         int rightCoreIndex = leftCoreIndex + core.length() - 1;
-        return new IndexedBases(position, index, leftCoreIndex, rightCoreIndex, flankSize, bases);
+        return new IndexedBases(position, leftExtra.length() + leftFlank.length() + indexInCore, leftCoreIndex, rightCoreIndex, flankSize, bases);
     }
 
 }

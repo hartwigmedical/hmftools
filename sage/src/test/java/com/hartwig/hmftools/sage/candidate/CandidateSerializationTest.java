@@ -39,6 +39,8 @@ public class CandidateSerializationTest {
         final Candidate deserialized = CandidateSerialization.fromContext(serialized, refBases);
 
         assertEqual(candidate, deserialized);
+        assertEquals(5, candidate.readContext().readBasesPositionIndex());
+        assertEquals(3, deserialized.readContext().readBasesPositionIndex());
     }
 
     private static void assertEqual(Candidate expected, Candidate victim) {
@@ -53,8 +55,6 @@ public class CandidateSerializationTest {
         assertEquals(expected.readContext().leftFlankString(), victim.readContext().leftFlankString());
         assertEquals(expected.readContext().centerBases(), victim.readContext().centerBases());
         assertEquals(expected.readContext().rightFlankString(), victim.readContext().rightFlankString());
-        assertEquals(expected.readContext().readBasesPositionIndex(), victim.readContext().readBasesPositionIndex());
-
     }
 
     private static VariantContext toContext(Candidate candidate) {
