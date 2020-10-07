@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.actionability.range;
 
-public enum RangeMutationType {
+public enum MutationTypeFilter {
     INFRAME,
     MISSENSE,
     SPLICE,

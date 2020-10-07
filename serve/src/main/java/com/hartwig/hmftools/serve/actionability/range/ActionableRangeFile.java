@@ -73,7 +73,7 @@ public final class ActionableRangeFile {
                 .chromosome(values[1])
                 .start(Long.parseLong(values[2]))
                 .end(Long.parseLong(values[3]))
-                .mutationType(RangeMutationType.valueOf(values[4]))
+                .mutationType(MutationTypeFilter.valueOf(values[4]))
                 .source(ActionableEventFactory.sourceFromFileValue(values[5]))
                 .treatment(values[6])
                 .cancerType(values[7])

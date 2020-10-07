@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.serve.actionability.range.RangeMutationType;
+import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -39,7 +39,7 @@ public class GeneRangeExtractor {
                 .start(start)
                 .end(end)
                 .chromosome(chromosome)
-                .mutationType(RangeMutationType.ANY)
+                .mutationType(MutationTypeFilter.ANY)
                 .build();
     }
 
@@ -109,7 +109,7 @@ public class GeneRangeExtractor {
                                 .start(start)
                                 .end(end)
                                 .chromosome(chromosome)
-                                .mutationType(RangeMutationType.ANY)
+                                .mutationType(MutationTypeFilter.ANY)
                                 .build());
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     } else {
@@ -177,7 +177,7 @@ public class GeneRangeExtractor {
                             .start(0)
                             .end(0)
                             .chromosome(Strings.EMPTY)
-                            .mutationType(RangeMutationType.ANY)
+                            .mutationType(MutationTypeFilter.ANY)
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
@@ -196,7 +196,7 @@ public class GeneRangeExtractor {
                             .start(0)
                             .end(0)
                             .chromosome(Strings.EMPTY)
-                            .mutationType(RangeMutationType.ANY)
+                            .mutationType(MutationTypeFilter.ANY)
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
@@ -212,7 +212,7 @@ public class GeneRangeExtractor {
                             .start(0)
                             .end(0)
                             .chromosome(Strings.EMPTY)
-                            .mutationType(RangeMutationType.ANY)
+                            .mutationType(MutationTypeFilter.ANY)
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
