@@ -36,7 +36,7 @@ public class FilterGermlineVariantsTest {
                         germlineReportingModel,
                         geneCopyNumbers,
                         somaticVariants,
-                        ChordStatus.HRP);
+                        ChordStatus.HR_PROFICIENT);
         assertEquals(0, filteredGermlineVariantMatchNotPresentInTumor.size());
 
         List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsONCOGenePresentInTumor();
@@ -45,7 +45,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbers,
                 somaticVariants,
-                ChordStatus.HRP);
+                ChordStatus.HR_PROFICIENT);
         assertEquals(1, filteredGermlineVariantMatchPresentInTumor.size());
     }
 
@@ -67,7 +67,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersMatch,
                 variantsMatch,
-                ChordStatus.HRP);
+                ChordStatus.HR_PROFICIENT);
         assertEquals(1, filteredGermlineVariantAllMatch.size()); // all three options matched
 
         List<DriverGermlineVariant> filteredGermlineVariantNonMatchBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -75,7 +75,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersMatch,
                 variantsMatch,
-                ChordStatus.HRP);
+                ChordStatus.HR_PROFICIENT);
         assertEquals(1, filteredGermlineVariantNonMatchBiallelic.size()); // match copy number and variant
 
         List<DriverGermlineVariant> filteredGermlineVariantNonMatchVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -83,7 +83,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersMatch,
                 variantsNonMatch,
-                ChordStatus.HRP);
+                ChordStatus.HR_PROFICIENT);
         assertEquals(1, filteredGermlineVariantNonMatchVariant.size()); // match biallelic and copy number
 
         List<DriverGermlineVariant> filteredGermlineVariantNonMatchCopy = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -91,7 +91,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsMatch,
-                ChordStatus.HRP);
+                ChordStatus.HR_PROFICIENT);
         assertEquals(1, filteredGermlineVariantNonMatchCopy.size()); // match biallelic and variant
 
         List<DriverGermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -99,7 +99,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsNonMatch,
-                ChordStatus.HRP);
+                ChordStatus.HR_PROFICIENT);
         assertEquals(0, filteredGermlineVariantNonMatch.size()); // all option failed
 
         List<DriverGermlineVariant> filteredGermlineVariantOptionBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -107,7 +107,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsNonMatch,
-                ChordStatus.HRP);
+                ChordStatus.HR_PROFICIENT);
         assertEquals(1, filteredGermlineVariantOptionBiallelic.size()); // only match biallelic
 
         List<DriverGermlineVariant> filteredGermlineVariantOptionVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -115,7 +115,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsMatch,
-                ChordStatus.HRP);
+                ChordStatus.HR_PROFICIENT);
         assertEquals(1, filteredGermlineVariantOptionVariant.size()); // only match variant
 
         List<DriverGermlineVariant> filteredGermlineVariantOptionCopyNumberPartialLoss =
@@ -123,7 +123,7 @@ public class FilterGermlineVariantsTest {
                         germlineReportingModel,
                         geneCopyNumbersMatch,
                         variantsNonMatch,
-                        ChordStatus.HRP);
+                        ChordStatus.HR_PROFICIENT);
         assertEquals(1, filteredGermlineVariantOptionCopyNumberPartialLoss.size()); // only match copy number
 
         List<DriverGermlineVariant> filteredGermlineVariantOptionCopyNumberHRD = FilterGermlineVariants.filterGermlineVariantsForReporting(
@@ -131,7 +131,7 @@ public class FilterGermlineVariantsTest {
                 germlineReportingModel,
                 geneCopyNumbersNonMatch,
                 variantsNonMatch,
-                ChordStatus.HRD);
+                ChordStatus.HR_DEFICIENT);
         assertEquals(1, filteredGermlineVariantOptionCopyNumberHRD.size()); // only match HRD
     }
 

@@ -171,7 +171,8 @@ public class SummaryChapter implements ReportChapter {
         String hrdString;
         Style hrdStyle;
 
-        if (hasReliablePurity && ChordStatus.reliableHRD(patientReport.microsatelliteStatus())) {
+        if (hasReliablePurity && (ChordStatus.HR_DEFICIENT == patientReport.chordHrdStatus()
+                || ChordStatus.HR_PROFICIENT == patientReport.chordHrdStatus())) {
             hrdString = patientReport.chordHrdStatus().display();
             hrdStyle = ReportResources.dataHighlightStyle();
         } else {

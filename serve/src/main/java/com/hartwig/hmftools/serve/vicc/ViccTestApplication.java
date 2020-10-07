@@ -71,15 +71,10 @@ public class ViccTestApplication {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
         ViccUtil.printResults(resultsPerEntry);
 
-        ViccUtil.writeFeatureTypesToTsv(featureTypeTsv, resultsPerEntry);
-
-        if (rangesTsv != null) {
-            writeRanges(rangesTsv, resultsPerEntry);
-        }
-
-        if (fusionTsv != null) {
-            writeFusions(fusionTsv, resultsPerEntry);
-        }
+        ViccUtil.writeFeatureTypes(featureTypeTsv, resultsPerEntry);
+        ViccUtil.writeActionability(outputDir, resultsPerEntry);
+        writeRanges(rangesTsv, resultsPerEntry);
+        writeFusions(fusionTsv, resultsPerEntry);
     }
 
     private static void writeFusions(@NotNull String fusionTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)

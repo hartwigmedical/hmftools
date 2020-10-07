@@ -22,7 +22,7 @@ public class ChordFileReaderTest {
     private static final double V2_BRCA1 = 0.1;
     private static final double V2_BRCA2 = 0.2;
     private static final double V2_HRD = 0.3;
-    private static final String V2_HR_STATUS = "HR_proficient";
+    private static final ChordStatus V2_HR_STATUS = ChordStatus.HR_PROFICIENT;
     private static final String V2_HRD_TYPE = "none";
 
     @Test
@@ -32,7 +32,7 @@ public class ChordFileReaderTest {
         assertEquals(V1_BRCA1, chordAnalysis.BRCA1Value(), EPSILON);
         assertEquals(V1_BRCA2, chordAnalysis.BRCA2Value(), EPSILON);
         assertEquals(V1_HRD, chordAnalysis.hrdValue(), EPSILON);
-        assertEquals(ChordFileReader.V1_NA, chordAnalysis.hrStatus());
+        assertEquals(ChordStatus.UNKNOWN, chordAnalysis.hrStatus());
         assertEquals(ChordFileReader.V1_NA, chordAnalysis.hrdType());
         assertEquals(ChordFileReader.V1_NA, chordAnalysis.remarksHrStatus());
         assertEquals(ChordFileReader.V1_NA, chordAnalysis.remarksHrdType());
@@ -49,5 +49,13 @@ public class ChordFileReaderTest {
         assertEquals(V2_HRD_TYPE, chordAnalysis.hrdType());
         assertEquals(Strings.EMPTY, chordAnalysis.remarksHrStatus());
         assertEquals(Strings.EMPTY, chordAnalysis.remarksHrdType());
+    }
+
+    @Test
+    public void canConvertHRDToStatus() {
+        assertEquals(ChordStatus.CANNOT_BE_DETERMINED, ChordFileReader.extractHrStatus("cannot_be_determined"));
+        assertEquals(ChordStatus.HR_PROFICIENT, ChordFileReader.extractHrStatus("HR_proficient"));
+        assertEquals(ChordStatus.HR_DEFICIENT, ChordFileReader.extractHrStatus("HR_deficient"));
+        assertEquals(ChordStatus.UNKNOWN, ChordFileReader.extractHrStatus("dgdfg"));
     }
 }

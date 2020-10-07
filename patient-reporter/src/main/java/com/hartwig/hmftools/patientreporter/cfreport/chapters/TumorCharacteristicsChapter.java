@@ -53,17 +53,18 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     private void renderHrdCharacteristic(@NotNull Document reportDocument) {
-        boolean hasReliablePurity = patientReport.hasReliablePurity();
-        boolean isHrdReliable = ChordStatus.reliableHRD(patientReport.microsatelliteStatus());
-
         double hrdValue = patientReport.chordHrdValue();
         ChordStatus hrdStatus = patientReport.chordHrdStatus();
+
+        boolean hasReliablePurity = patientReport.hasReliablePurity();
         String hrDeficiencyLabel =
                 hasReliablePurity ? hrdStatus.display() + " " + DOUBLE_DECIMAL_FORMAT.format(hrdValue) : DataUtil.NA_STRING;
 
-        String noHrdWhenMicrosatelliteUnstable = "* HRD score can not be determined reliably when a tumor is microsatellite unstable (MSI) "
-                + "and is therefore not reported for this sample.";
+        String hrdUnreliableFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable "
+                + "(MSI) or has insufficient number of mutations and is therefore not reported for this sample.";
         boolean displayFootNote = false;
+        boolean isHrdReliable =
+                patientReport.chordHrdStatus() == ChordStatus.HR_PROFICIENT || patientReport.chordHrdStatus() == ChordStatus.HR_DEFICIENT;
         if (!isHrdReliable) {
             displayFootNote = true;
             hrDeficiencyLabel = DataUtil.NA_STRING + "*";
@@ -82,7 +83,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                         + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation. \n"
                         + "Tumors with a score greater or equal than 0.5 are considered HR deficient by complete BRCA inactivation.",
                 hrChart,
-                noHrdWhenMicrosatelliteUnstable,
+                hrdUnreliableFootnote,
                 displayFootNote));
     }
 
@@ -118,8 +119,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         int mutationalLoad = patientReport.tumorMutationalLoad();
         String tmlStatus = patientReport.tumorMutationalLoadStatus().display();
 
-        String mutationalLoadString =
-                hasReliablePurity ? tmlStatus + " " + NO_DECIMAL_FORMAT.format(mutationalLoad) : DataUtil.NA_STRING;
+        String mutationalLoadString = hasReliablePurity ? tmlStatus + " " + NO_DECIMAL_FORMAT.format(mutationalLoad) : DataUtil.NA_STRING;
         BarChart mutationalLoadChart =
                 new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High", false);
         mutationalLoadChart.enabled(hasReliablePurity);

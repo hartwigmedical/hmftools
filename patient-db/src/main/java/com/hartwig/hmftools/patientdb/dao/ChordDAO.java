@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CHORD;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 
 import org.apache.logging.log4j.util.Strings;
@@ -36,7 +37,7 @@ class ChordDAO {
                         DatabaseUtil.decimal(chordAnalysis.BRCA1Value()),
                         DatabaseUtil.decimal(chordAnalysis.BRCA2Value()),
                         DatabaseUtil.decimal(chordAnalysis.hrdValue()),
-                        chordAnalysis.hrStatus(),
+                        chordAnalysis.hrStatus().toString(),
                         chordAnalysis.hrdType(),
                         chordAnalysis.remarksHrStatus(),
                         chordAnalysis.remarksHrdType())
@@ -56,7 +57,7 @@ class ChordDAO {
                 .BRCA1Value(result.getValue(CHORD.BRCA1))
                 .BRCA2Value(result.getValue(CHORD.BRCA2))
                 .hrdValue(result.getValue(CHORD.HRD))
-                .hrStatus(Strings.EMPTY)
+                .hrStatus(ChordStatus.UNKNOWN)
                 .hrdType(Strings.EMPTY)
                 .remarksHrStatus(Strings.EMPTY)
                 .remarksHrdType(Strings.EMPTY)

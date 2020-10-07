@@ -11,6 +11,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +20,7 @@ public final class ChordFileReader {
 
     private static final String VALUE_SEPARATOR = "\t";
     @VisibleForTesting
-    static final String V1_NA = "N/A";
+    static final String V1_NA = "UNKNOWN";
 
     private static final int V1_BRCA1_COLUMN = 2;
     private static final int V1_BRCA2_COLUMN = 3;
@@ -32,6 +34,9 @@ public final class ChordFileReader {
     private static final int V2_REMARKS_HR_STATUS_COLUMN = 6;
     private static final int V2_REMARKS_HRD_TYPE_COLUMN = 7;
 
+    private static final Logger LOGGER = LogManager.getLogger(ChordFileReader.class);
+
+
     private ChordFileReader() {
     }
 
@@ -44,7 +49,7 @@ public final class ChordFileReader {
             builder.BRCA1Value(Double.parseDouble(values[V1_BRCA1_COLUMN]));
             builder.BRCA2Value(Double.parseDouble(values[V1_BRCA2_COLUMN]));
             builder.hrdValue(Double.parseDouble(values[V1_HRD_COLUMN]));
-            builder.hrStatus(V1_NA);
+            builder.hrStatus(extractHrStatus(V1_NA));
             builder.hrdType(V1_NA);
             builder.remarksHrStatus(V1_NA);
             builder.remarksHrdType(V1_NA);
@@ -55,13 +60,25 @@ public final class ChordFileReader {
             builder.BRCA1Value(Double.parseDouble(values[V2_BRCA1_COLUMN]));
             builder.BRCA2Value(Double.parseDouble(values[V2_BRCA2_COLUMN]));
             builder.hrdValue(Double.parseDouble(values[V2_HRD_COLUMN]));
-            builder.hrStatus(values[V2_HR_STATUS_COLUMN]);
+            builder.hrStatus(extractHrStatus(values[V2_HR_STATUS_COLUMN]));
             builder.hrdType(values[V2_HRD_TYPE_COLUMN]);
             builder.remarksHrStatus(remarksHrStatus);
             builder.remarksHrdType(remarksHrdType);
         }
 
         return builder.build();
+    }
+
+    @VisibleForTesting
+    @NotNull
+    static ChordStatus extractHrStatus(@NotNull String hrStatus) {
+        switch (hrStatus) {
+            case "cannot_be_determined": return ChordStatus.CANNOT_BE_DETERMINED;
+            case "HR_proficient": return ChordStatus.HR_PROFICIENT;
+            case "HR_deficient": return ChordStatus.HR_DEFICIENT;
+        }
+        LOGGER.warn("Unknown CHORD HR status: '{}'", hrStatus);
+        return ChordStatus.UNKNOWN;
     }
 
     @NotNull

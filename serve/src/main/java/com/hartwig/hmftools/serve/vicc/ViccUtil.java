@@ -12,11 +12,15 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
+import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
+import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
+import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
+import com.hartwig.hmftools.vicc.annotation.FusionEvent;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -33,7 +37,34 @@ public final class ViccUtil {
     private ViccUtil() {
     }
 
-    public static void writeFeatureTypesToTsv(@NotNull String featureTypeTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+    public static void writeActionability(@NotNull String outputDir, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+            throws IOException {
+        List<ActionableFusion> actionableFusions = Lists.newArrayList();
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+            ViccExtractionResult result = entry.getValue();
+            ActionableEvidence evidence = result.actionableEvidence();
+            if (evidence != null) {
+                for (FusionAnnotation fusion : result.fusionsPerFeature().values()) {
+                    if (fusion.fusionEvent() == FusionEvent.FUSION_PAIR) {
+                        actionableFusions.add(ImmutableActionableFusion.builder()
+                                .fusion(fusion.fusion())
+                                .source(entry.getKey().source().toString())
+                                .treatment(evidence.drugs())
+                                .cancerType(evidence.cancerType())
+                                .doid(evidence.doid())
+                                .direction(evidence.direction())
+                                .level(evidence.level())
+                                .build());
+                    }
+                }
+            }
+        }
+        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(outputDir);
+        LOGGER.info("Writing {} actionable fusions to {}", actionableFusions.size(), actionableFusionTsv);
+        ActionableFusionFile.write(actionableFusionTsv, actionableFusions);
+    }
+
+    public static void writeFeatureTypes(@NotNull String featureTypeTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
         List<String> lines = Lists.newArrayList();
         String header = new StringJoiner(FIELD_DELIMITER).add("name").add("gene").add("type").add("biomarkerType").add("events").toString();

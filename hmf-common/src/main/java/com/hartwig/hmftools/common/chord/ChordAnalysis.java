@@ -15,7 +15,7 @@ public abstract class ChordAnalysis {
     public abstract double hrdValue();
 
     @NotNull
-    public abstract String hrStatus();
+    public abstract ChordStatus hrStatus();
 
     @NotNull
     public abstract String hrdType();

@@ -274,7 +274,7 @@ The aim of the stage it to collect evidence of each candidate variant's read con
 SAGE examines every read overlapping the variant tallying matches of the read context. 
 A match can be:
   - `FULL` - Core and both flanks match read at same reference location.
-  - `PARTIAL` - Core and at least one flank match read fully at same position. Remaining flank matches but is truncated. 
+  - `PARTIAL` - Core and at least one flank match read fully at same position. Remaining flank matches but is truncated.  An 'N' cigar (representating a splice junction gap in RNA) may overlap both the flank and part of the core as long as the remaining flank and core match precisely.  
   - `CORE` - Core matches read but either flank doesn't.
   - `REALIGNED` - Core and both flanks match read exactly but offset from the expected position.
 
