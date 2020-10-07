@@ -1,2 +1,2 @@
 name	source	treatment	cancerType	doid	level	direction	url
-MICROSATELLITE_UNSTABLE	OncoKB	Nivolumab	All cancer types	X	A	Responsive	http
+MICROSATELLITE_UNSTABLE	CIViC	Nivolumab	All cancer types	X	A	Responsive	http
