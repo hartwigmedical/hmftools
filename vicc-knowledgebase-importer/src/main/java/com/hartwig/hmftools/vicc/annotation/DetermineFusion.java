@@ -32,17 +32,11 @@ final class DetermineFusion {
     private static FusionEvent extractKeyFusion(@NotNull String feature, @Nullable String biomarkerType, @Nullable String provenanceRule,
             @NotNull String proteinAnnotation) {
         if (!FeatureTypeExtractor.IGNORE.contains(feature)) { // Extract internal fusion
-            if (FeatureTypeExtractor.INTERNAL_FUSION.contains(proteinAnnotation)) {
+            if (FeatureTypeExtractor.INTERNAL_FUSION.contains(proteinAnnotation) && proteinAnnotation.contains("[a-zA-Z]+")) {
                 return FusionEvent.FUSION_PAIR;
             } else if (feature.contains("DELETION") && FeatureTypeExtractor.INTERNAL_FUSION.contains(biomarkerType)) {
                 return FusionEvent.FUSION_PAIR;
             } else if (feature.contains("DELETION") && FeatureTypeExtractor.INTERNAL_FUSION.contains(provenanceRule)) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.contains("Exon") && feature.contains("deletion")) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.contains("Exon") && feature.contains("deletion/insertion")) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.contains("Exon") && feature.contains("insertions/deletions")) {
                 return FusionEvent.FUSION_PAIR;
             } else if (FeatureTypeExtractor.SEARCH_FUSION_PAIRS.contains(proteinAnnotation)) {
                 return FusionEvent.FUSION_PAIR;
