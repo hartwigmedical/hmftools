@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -34,11 +36,15 @@ public class ViccTestApplication {
 
         String viccJsonPath;
         String outputDir;
+        ProteinResolver proteinResolver;
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
             outputDir = System.getProperty("user.home") + "/tmp";
+            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
+                    "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
         } else {
+            proteinResolver = ProteinResolverFactory.dummy();
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
         }
@@ -55,7 +61,7 @@ public class ViccTestApplication {
         LOGGER.debug("Configured '{}' as the feature type output TSV", featureTypeTsv);
 
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(ProteinResolverFactory.dummy());
+        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
 
         ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries);
         ViccUtil.printResults(viccExtractionOutput);
