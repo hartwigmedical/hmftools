@@ -43,9 +43,10 @@ public final class ActionableFusionFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER).add("fusion")
-                .add("fusedExonUp")
-                .add("fusedExonDown")
+        return new StringJoiner(DELIMITER).add("geneUp")
+                .add("exonUp")
+                .add("geneDown")
+                .add("exonDown")
                 .add("source")
                 .add("treatment")
                 .add("cancerType")
@@ -70,15 +71,16 @@ public final class ActionableFusionFile {
         String[] values = line.split(DELIMITER);
 
         return ImmutableActionableFusion.builder()
-                .fusion(values[0])
-                .fusedExonUp(optionalInteger(values[1]))
-                .fusedExonDown(optionalInteger(values[2]))
-                .source(ActionableEventFactory.sourceFromFileValue(values[3]))
-                .treatment(values[4])
-                .cancerType(values[5])
-                .doid(values[6])
-                .level(values[7])
-                .direction(ActionableEventFactory.directionFromFileValue(values[8]))
+                .geneUp(values[0])
+                .exonUp(optionalInteger(values[1]))
+                .geneDown(values[2])
+                .exonDown(optionalInteger(values[3]))
+                .source(ActionableEventFactory.sourceFromFileValue(values[4]))
+                .treatment(values[5])
+                .cancerType(values[6])
+                .doid(values[7])
+                .level(values[8])
+                .direction(ActionableEventFactory.directionFromFileValue(values[9]))
                 .build();
     }
 
@@ -103,9 +105,10 @@ public final class ActionableFusionFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableFusion fusion) {
-        return new StringJoiner(DELIMITER).add(fusion.fusion())
-                .add(fromOptionalInteger(fusion.fusedExonUp()))
-                .add(fromOptionalInteger(fusion.fusedExonDown()))
+        return new StringJoiner(DELIMITER).add(fusion.geneUp())
+                .add(fromOptionalInteger(fusion.exonUp()))
+                .add(fusion.geneDown())
+                .add(fromOptionalInteger(fusion.exonDown()))
                 .add(fusion.source().display())
                 .add(fusion.treatment())
                 .add(fusion.cancerType())

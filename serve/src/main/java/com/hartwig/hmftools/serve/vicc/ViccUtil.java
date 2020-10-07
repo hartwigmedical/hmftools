@@ -18,6 +18,7 @@ import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
+import com.hartwig.hmftools.serve.actionability.gene.GeneEvent;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
@@ -28,8 +29,10 @@ import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
 import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
+import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
+import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
@@ -130,7 +133,7 @@ public final class ViccUtil {
                         .chromosome(range.chromosome())
                         .start(range.start())
                         .end(range.end())
-                        .mutationType(range.event())
+                        .mutationType(range.mutationType())
                         .source(source)
                         .treatment(evidence.drugs())
                         .cancerType(evidence.cancerType())
@@ -151,7 +154,7 @@ public final class ViccUtil {
             if (fusion.fusionEvent() == FusionEvent.FUSION_PROMISCUOUS) {
                 actionableGenes.add(ImmutableActionableGene.builder()
                         .gene(fusion.fusion())
-                        .type("Fusion")
+                        .event(GeneEvent.FUSION)
                         .source(source)
                         .treatment(evidence.drugs())
                         .cancerType(evidence.cancerType())
@@ -170,8 +173,9 @@ public final class ViccUtil {
         List<ActionableGene> actionableGenes = Lists.newArrayList();
         for (KnownAmplificationDeletion ampDel : ampsDels) {
             actionableGenes.add(ImmutableActionableGene.builder()
+                    // TODO Improve event mapping
                     .gene(ampDel.gene())
-                    .type(ampDel.eventType())
+                    .event(ampDel.type() == CopyNumberType.AMPLIFICATION ? GeneEvent.AMPLIFICATION : GeneEvent.DELETION)
                     .source(source)
                     .treatment(evidence.drugs())
                     .cancerType(evidence.cancerType())
@@ -189,8 +193,9 @@ public final class ViccUtil {
         List<ActionableGene> actionableGenes = Lists.newArrayList();
         for (String geneLevelEvent : geneLevelEvents) {
             actionableGenes.add(ImmutableActionableGene.builder()
+                    // TODO Implement event
                     .gene(geneLevelEvent)
-                    .type("Gene")
+                    .event(GeneEvent.ACTIVATION)
                     .source(source)
                     .treatment(evidence.drugs())
                     .cancerType(evidence.cancerType())
@@ -209,9 +214,11 @@ public final class ViccUtil {
         for (FusionAnnotation fusion : fusionAnnotations) {
             if (fusion.fusionEvent() == FusionEvent.FUSION_PAIR) {
                 actionableFusions.add(ImmutableActionableFusion.builder()
-                        .fusion(fusion.fusion())
-                        .fusedExonUp(fusion.fusedExonUp())
-                        .fusedExonDown(fusion.fusedExonDown())
+                        // TODO Separate gene up from gene down.
+                        .geneUp(fusion.fusion())
+                        .exonUp(fusion.exonUp())
+                        .geneDown(fusion.fusion())
+                        .exonDown(fusion.exonDown())
                         .source(source)
                         .treatment(evidence.drugs())
                         .cancerType(evidence.cancerType())
@@ -226,11 +233,11 @@ public final class ViccUtil {
 
     @NotNull
     private static List<ActionableSignature> extractActionableSignatures(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<String> signatures) {
+            @NotNull Iterable<SignatureName> signatures) {
         List<ActionableSignature> actionableSignatures = Lists.newArrayList();
-        for (String signature : signatures) {
+        for (SignatureName signature : signatures) {
             actionableSignatures.add(ImmutableActionableSignature.builder()
-                    .signature(signature)
+                    .name(signature)
                     .source(source)
                     .treatment(evidence.drugs())
                     .cancerType(evidence.cancerType())
@@ -273,7 +280,7 @@ public final class ViccUtil {
                 FusionAnnotation fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
                 String geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
                 List<GeneRangeAnnotation> geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
-                String signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
+                SignatureName signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
 
                 StringJoiner events = new StringJoiner(EVENT_DELIMITER);
                 if (hotspotsForFeature != null) {
@@ -299,7 +306,7 @@ public final class ViccUtil {
                 }
 
                 if (signatureForFeature != null) {
-                    events.add(signatureForFeature);
+                    events.add(signatureForFeature.toString());
                 }
 
                 StringJoiner featureString = new StringJoiner(FIELD_DELIMITER);
@@ -363,7 +370,7 @@ public final class ViccUtil {
                 FusionAnnotation fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
                 String geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
                 List<GeneRangeAnnotation> geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
-                String signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
+                SignatureName signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
 
                 if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null && geneLevelEventForFeature == null
                         && geneRangeForFeature == null && signatureForFeature == null) {

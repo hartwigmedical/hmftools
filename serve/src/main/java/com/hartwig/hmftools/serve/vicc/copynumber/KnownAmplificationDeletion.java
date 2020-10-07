@@ -13,11 +13,5 @@ public abstract class KnownAmplificationDeletion {
     public abstract String gene();
 
     @NotNull
-    public abstract String eventType();
-
-    @NotNull
-    public abstract String source();
-
-    @NotNull
-    public abstract String sourceLink();
+    public abstract CopyNumberType type();
 }

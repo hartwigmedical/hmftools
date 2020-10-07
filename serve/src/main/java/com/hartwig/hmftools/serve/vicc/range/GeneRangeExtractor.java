@@ -5,20 +5,17 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.serve.actionability.range.RangeMutationType;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneRangeExtractor {
-    private static final Logger LOGGER = LogManager.getLogger(GeneRangeExtractor.class);
 
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
@@ -42,7 +39,7 @@ public class GeneRangeExtractor {
                 .start(start)
                 .end(end)
                 .chromosome(chromosome)
-                .event(feature.name())
+                .mutationType(RangeMutationType.ANY)
                 .build();
     }
 
@@ -65,7 +62,7 @@ public class GeneRangeExtractor {
                                 .replace("exon ", "")
                                 .split(",");
                         for (String exon : exons) {
-                            int exonNumberList = Integer.valueOf(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                            int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
                             geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
                         }
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
@@ -77,7 +74,7 @@ public class GeneRangeExtractor {
                                 .replace("exon ", "")
                                 .split(",");
                         for (String exon : exons) {
-                            int exonNumberList = Integer.valueOf(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                            int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
                             geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
 
                         }
@@ -96,9 +93,9 @@ public class GeneRangeExtractor {
                             exons = feature.name().split(" ")[2].split(" ")[0];
                         }
                         int startExon =
-                                Integer.valueOf(exons.split("-")[0]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                                Integer.parseInt(exons.split("-")[0]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
                         int endExon =
-                                Integer.valueOf(exons.split("-")[1]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                                Integer.parseInt(exons.split("-")[1]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
 
                         HmfExonRegion hmfExonRegionStart = exonRegions.get(startExon);
                         HmfExonRegion hmfExonRegionEnd = exonRegions.get(endExon);
@@ -112,7 +109,7 @@ public class GeneRangeExtractor {
                                 .start(start)
                                 .end(end)
                                 .chromosome(chromosome)
-                                .event(feature.name())
+                                .mutationType(RangeMutationType.ANY)
                                 .build());
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     } else {
@@ -132,7 +129,7 @@ public class GeneRangeExtractor {
                             //check what this means
                             exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
                         }
-                        int exonNumberList = Integer.valueOf(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                        int exonNumberList = Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
 
                         geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
 
@@ -180,7 +177,7 @@ public class GeneRangeExtractor {
                             .start(0)
                             .end(0)
                             .chromosome(Strings.EMPTY)
-                            .event(Strings.EMPTY)
+                            .mutationType(RangeMutationType.ANY)
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
@@ -199,14 +196,14 @@ public class GeneRangeExtractor {
                             .start(0)
                             .end(0)
                             .chromosome(Strings.EMPTY)
-                            .event(Strings.EMPTY)
+                            .mutationType(RangeMutationType.ANY)
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
             } else if (featureType == FeatureType.GENE_RANGE_CODON) {
                 String proteinAnnotation = feature.proteinAnnotation();
-                int start = Integer.valueOf(proteinAnnotation.split("_")[0].replaceAll("\\D+",""));
-                int end = Integer.valueOf(proteinAnnotation.split("_")[1].replaceAll("\\D+",""));
+                int start = Integer.parseInt(proteinAnnotation.split("_")[0].replaceAll("\\D+",""));
+                int end = Integer.parseInt(proteinAnnotation.split("_")[1].replaceAll("\\D+",""));
                 int  count = end -start;
 
                 if (count > 12) {
@@ -215,7 +212,7 @@ public class GeneRangeExtractor {
                             .start(0)
                             .end(0)
                             .chromosome(Strings.EMPTY)
-                            .event(Strings.EMPTY)
+                            .mutationType(RangeMutationType.ANY)
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }

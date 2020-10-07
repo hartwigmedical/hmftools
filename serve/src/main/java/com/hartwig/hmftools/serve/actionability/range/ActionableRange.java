@@ -22,5 +22,5 @@ public abstract class ActionableRange extends ActionableEvent {
     public abstract long end();
 
     @NotNull
-    public abstract String mutationType();
+    public abstract RangeMutationType mutationType();
 }

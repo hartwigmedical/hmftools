@@ -42,7 +42,7 @@ public final class ActionableSignatureFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER).add("signature")
+        return new StringJoiner(DELIMITER).add("name")
                 .add("source")
                 .add("treatment")
                 .add("cancerType")
@@ -66,7 +66,7 @@ public final class ActionableSignatureFile {
     private static ActionableSignature fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
         return ImmutableActionableSignature.builder()
-                .signature(values[0])
+                .name(SignatureName.valueOf(values[0]))
                 .source(ActionableEventFactory.sourceFromFileValue(values[1]))
                 .treatment(values[2])
                 .cancerType(values[3])
@@ -88,7 +88,7 @@ public final class ActionableSignatureFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableSignature signature) {
-        return new StringJoiner(DELIMITER).add(signature.signature())
+        return new StringJoiner(DELIMITER).add(signature.name().toString())
                 .add(signature.source().display())
                 .add(signature.treatment())
                 .add(signature.cancerType())

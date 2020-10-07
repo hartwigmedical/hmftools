@@ -1,2 +1,2 @@
-signature	source	treatment	cancerType	doid	level	direction
-MSI	OncoKB	Nivolumab	All cancer types	X	A	Responsive
+name	source	treatment	cancerType	doid	level	direction
+MICROSATELLITE_UNSTABLE	OncoKB	Nivolumab	All cancer types	X	A	Responsive

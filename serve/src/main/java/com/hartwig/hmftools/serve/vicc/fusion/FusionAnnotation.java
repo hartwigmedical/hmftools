@@ -18,8 +18,8 @@ public abstract class FusionAnnotation {
     public abstract FusionEvent fusionEvent();
 
     @Nullable
-    public abstract Integer fusedExonUp();
+    public abstract Integer exonUp();
 
     @Nullable
-    public abstract Integer fusedExonDown();
+    public abstract Integer exonDown();
 }

@@ -103,7 +103,7 @@ public class ViccTestApplication {
                 for (GeneRangeAnnotation geneRangeAnnotation : geneRangeForFeature) {
                     writer.write(
                             geneRangeAnnotation.gene() + "\t" + geneRangeAnnotation.chromosome() + "\t" + geneRangeAnnotation.start() + "\t"
-                                    + geneRangeAnnotation.end() + "\t" + geneRangeAnnotation.event() + "\n");
+                                    + geneRangeAnnotation.end() + "\t" + geneRangeAnnotation.mutationType() + "\n");
                 }
             }
         }

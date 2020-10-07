@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.vicc.range;
 
+import com.hartwig.hmftools.serve.actionability.range.RangeMutationType;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,6 +22,6 @@ public abstract class GeneRangeAnnotation {
     public abstract long end();
 
     @NotNull
-    public abstract String event();
+    public abstract RangeMutationType mutationType();
 
 }

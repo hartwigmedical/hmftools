@@ -14,7 +14,6 @@ import com.hartwig.hmftools.serve.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.serve.compassionateuse.CompassionateUseProgramFile;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
-import com.hartwig.hmftools.serve.vicc.copynumber.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.KnownFusions;
 import com.hartwig.hmftools.serve.vicc.signatures.Signatures;
@@ -82,9 +81,6 @@ public class ServeGeneratorApplication {
         List<KnownFusions> listKnownFusionPromiscuous = Lists.newArrayList();
         List<Signatures> listSignatures = Lists.newArrayList();
 
-        //Lists of actionable genomic events
-        List<ActionableAmplificationDeletion> listActionableDeletion = Lists.newArrayList();
-        List<ActionableAmplificationDeletion> listActionableAmplification = Lists.newArrayList();
     }
 
     private static void readIclusionTrials(@NotNull String iClusionTrialTsv) throws IOException {

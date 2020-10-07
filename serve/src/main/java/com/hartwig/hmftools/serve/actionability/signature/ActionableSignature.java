@@ -12,5 +12,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionableSignature extends ActionableEvent {
 
     @NotNull
-    public abstract String signature();
+    public abstract SignatureName name();
 }

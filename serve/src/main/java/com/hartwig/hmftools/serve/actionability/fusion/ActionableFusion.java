@@ -12,11 +12,14 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionableFusion extends ActionableEvent {
 
     @NotNull
-    public abstract String fusion();
+    public abstract String geneUp();
 
     @Nullable
-    public abstract Integer fusedExonUp();
+    public abstract Integer exonUp();
+
+    @NotNull
+    public abstract String geneDown();
 
     @Nullable
-    public abstract Integer fusedExonDown();
+    public abstract Integer exonDown();
 }

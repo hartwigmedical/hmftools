@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
@@ -34,7 +35,7 @@ public abstract class ViccExtractionResult {
     public abstract Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature();
 
     @NotNull
-    public abstract Map<Feature, String> signaturesPerFeature();
+    public abstract Map<Feature, SignatureName> signaturesPerFeature();
 
     @Nullable
     public abstract ActionableEvidence actionableEvidence();
