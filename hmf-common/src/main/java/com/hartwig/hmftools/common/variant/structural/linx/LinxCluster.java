@@ -2,10 +2,13 @@ package com.hartwig.hmftools.common.variant.structural.linx;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -56,7 +59,18 @@ public abstract class LinxCluster
     @NotNull
     static List<LinxCluster> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("clusterId")).map(LinxCluster::fromString).collect(toList());
+        final String header = lines.get(0);
+        lines.remove(0);
+
+        if(header.contains("subClonal"))
+        {
+            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(header,DELIMITER);
+            return lines.stream().map(x -> fromString_v1_10(x, fieldIndexMap)).collect(toList());
+        }
+        else
+        {
+            return lines.stream().map(LinxCluster::fromString).collect(toList());
+        }
     }
 
     @NotNull
@@ -99,6 +113,21 @@ public abstract class LinxCluster
                 .resolvedType(values[index++])
                 .clusterCount(Integer.parseInt(values[index++]))
                 .clusterDesc(values[index++])
+                .build();
+    }
+
+    @NotNull
+    private static LinxCluster fromString_v1_10(@NotNull final String clusterData, final Map<String,Integer> fieldIndexMap)
+    {
+        String[] values = clusterData.split(DELIMITER);
+
+        return ImmutableLinxCluster.builder()
+                .clusterId(Integer.parseInt(values[fieldIndexMap.get("clusterId")]))
+                .category(values[fieldIndexMap.get("resolvedType")])
+                .synthetic(Boolean.parseBoolean(values[fieldIndexMap.get("synthetic")]))
+                .resolvedType(values[fieldIndexMap.get("subType")])
+                .clusterCount(Integer.parseInt(values[fieldIndexMap.get("clusterCount")]))
+                .clusterDesc(values[fieldIndexMap.get("clusterDesc")])
                 .build();
     }
 

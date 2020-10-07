@@ -2,12 +2,17 @@ package com.hartwig.hmftools.common.variant.structural.linx;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType.NA;
+import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.INFRAME;
+import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.OUT_OF_FRAME;
 import static com.hartwig.hmftools.common.variant.structural.linx.LinxCluster.DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -76,7 +81,18 @@ public abstract class LinxFusion
     @NotNull
     private static List<LinxFusion> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("FivePrimeBreakendId")).map(LinxFusion::fromString).collect(toList());
+        final String header = lines.get(0);
+        lines.remove(0);
+
+        if(!header.contains("Likelihood"))
+        {
+            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(header,DELIMITER);
+            return lines.stream().map(x -> fromString_v1_10(x, fieldIndexMap)).collect(toList());
+        }
+        else
+        {
+            return lines.stream().map(LinxFusion::fromString).collect(toList());
+        }
     }
 
     @NotNull
@@ -171,6 +187,38 @@ public abstract class LinxFusion
                 .junctionCopyNumber(Double.parseDouble(values[index++]))
                 .build();
      }
+
+    @NotNull
+    private static LinxFusion fromString_v1_10(@NotNull final String fusion, final Map<String,Integer> fieldIndexMap)
+    {
+        String[] values = fusion.split(DELIMITER, -1);
+
+        return ImmutableLinxFusion.builder()
+                .fivePrimeBreakendId(Integer.parseInt(values[fieldIndexMap.get("FivePrimeBreakendId")]))
+                .threePrimeBreakendId(Integer.parseInt(values[fieldIndexMap.get("ThreePrimeBreakendId")]))
+                .name(values[fieldIndexMap.get("Name")])
+                .reported(Boolean.parseBoolean(values[fieldIndexMap.get("Reported")]))
+                .reportedType(values[fieldIndexMap.get("ReportedType")])
+                .phased(values[fieldIndexMap.get("Phased")].equals("1") ? INFRAME : OUT_OF_FRAME)
+                .likelihood(NA)
+                .chainLength(Integer.parseInt(values[fieldIndexMap.get("ChainLength")]))
+                .chainLinks(Integer.parseInt(values[fieldIndexMap.get("ChainLinks")]))
+                .chainTerminated(Boolean.parseBoolean(values[fieldIndexMap.get("ChainTerminated")]))
+                .domainsKept(values[fieldIndexMap.get("DomainsKept")])
+                .domainsLost(values[fieldIndexMap.get("DomainsLost")])
+                .skippedExonsUp(Integer.parseInt(values[fieldIndexMap.get("SkippedExonsUp")]))
+                .skippedExonsDown(Integer.parseInt(values[fieldIndexMap.get("SkippedExonsDown")]))
+                .fusedExonUp(Integer.parseInt(values[fieldIndexMap.get("FusedExonUp")]))
+                .fusedExonDown(Integer.parseInt(values[fieldIndexMap.get("FusedExonDown")]))
+                .geneStart(values[fieldIndexMap.get("GeneStart")])
+                .geneContextStart(values[fieldIndexMap.get("GeneContextStart")])
+                .geneTranscriptStart(values[fieldIndexMap.get("TranscriptStart")])
+                .geneEnd(values[fieldIndexMap.get("GeneEnd")])
+                .geneContextEnd(values[fieldIndexMap.get("GeneContextEnd")])
+                .geneTranscriptEnd(values[fieldIndexMap.get("TranscriptEnd")])
+                .junctionCopyNumber(Double.parseDouble(values[fieldIndexMap.get("JunctionCopyNumber")]))
+                .build();
+    }
 
     public static String context(@NotNull Transcript transcript, int fusedExon) {
         switch (transcript.regionType()) {
