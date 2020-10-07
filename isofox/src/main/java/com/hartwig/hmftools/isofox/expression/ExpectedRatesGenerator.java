@@ -534,6 +534,82 @@ public class ExpectedRatesGenerator
 
         if(requiredMatchType == SHORT)
         {
+            // region must lie within an exon
+            return transData.exons().stream().anyMatch(x -> positionsWithin(regionsStart, regionsEnd, x.ExonStart, x.ExonEnd));
+        }
+        else
+        {
+            // first check for matching splice junctions
+            int exonIndex = 0;
+            for(int[] spliceJunction : spliceJunctions)
+            {
+                int spliceStart = spliceJunction[SE_START];
+                int spliceEnd = spliceJunction[SE_END];
+                boolean matched = false;
+
+                for (; exonIndex < transData.exons().size() - 1; ++exonIndex)
+                {
+                    ExonData exon = transData.exons().get(exonIndex);
+                    ExonData nextExon = transData.exons().get(exonIndex + 1);
+
+                    if (exon.ExonEnd == spliceStart && nextExon.ExonStart == spliceEnd)
+                    {
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if(!matched)
+                    return false;
+            }
+
+            // now check the each of the read regions falls within an exon - exons can be skipped
+            exonIndex = 0;
+            for(int[] readRegion : readRegions)
+            {
+                int regionStart = readRegion[SE_START];
+                int regionEnd = readRegion[SE_END];
+                boolean matched = false;
+
+                for(; exonIndex < transData.exons().size(); ++exonIndex)
+                {
+                    final ExonData exon = transData.exons().get(exonIndex);
+
+                    if(regionStart > exon.ExonEnd) // keep searching
+                        continue;
+
+                    if(regionEnd < exon.ExonStart) // would be intronic for this transcript
+                        return false;
+
+                    if(positionsOverlap(regionStart, regionEnd, exon.ExonStart, exon.ExonEnd))
+                    {
+                        if(!positionsWithin(regionStart, regionEnd, exon.ExonStart, exon.ExonEnd))
+                            return false; // breaches the exon boundaries
+
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if(!matched)
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean readsSupportTranscriptOld(
+            final TranscriptData transData, List<int[]> readRegions, FragmentMatchType requiredMatchType, List<int[]> spliceJunctions)
+    {
+        int regionsStart = readRegions.get(0)[SE_START];
+        int regionsEnd = readRegions.get(readRegions.size() - 1)[SE_END];
+
+        if(!positionsOverlap(regionsStart, regionsEnd, transData.TransStart, transData.TransEnd))
+            return false;
+
+        if(requiredMatchType == SHORT)
+        {
             return (transData.exons().stream().anyMatch(x -> x.ExonStart <= regionsStart && x.ExonEnd >= regionsEnd));
         }
         else
