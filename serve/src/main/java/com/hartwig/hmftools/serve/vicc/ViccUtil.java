@@ -16,6 +16,14 @@ import com.hartwig.hmftools.serve.Source;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
+import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
+import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
+import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
+import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
+import com.hartwig.hmftools.serve.actionability.variant.ActionableVariant;
+import com.hartwig.hmftools.serve.actionability.variant.ActionableVariantFile;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
@@ -43,30 +51,107 @@ public final class ViccUtil {
 
     public static void writeActionability(@NotNull String outputDir, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
+        List<ActionableVariant> actionableVariants = Lists.newArrayList();
+        List<ActionableRange> actionableRanges = Lists.newArrayList();
+        List<ActionableGene> actionableGenes = Lists.newArrayList();
         List<ActionableFusion> actionableFusions = Lists.newArrayList();
+        List<ActionableSignature> actionableSignatures = Lists.newArrayList();
+
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             Source source = fromViccSource(entry.getKey().source());
             ViccExtractionResult result = entry.getValue();
             ActionableEvidence evidence = result.actionableEvidence();
             if (evidence != null && source != null) {
-                for (FusionAnnotation fusion : result.fusionsPerFeature().values()) {
-                    if (fusion.fusionEvent() == FusionEvent.FUSION_PAIR) {
-                        actionableFusions.add(ImmutableActionableFusion.builder()
-                                .fusion(fusion.fusion())
-                                .source(source)
-                                .treatment(evidence.drugs())
-                                .cancerType(evidence.cancerType())
-                                .doid(evidence.doid())
-                                .direction(evidence.direction())
-                                .level(evidence.level())
-                                .build());
-                    }
-                }
+                actionableVariants.addAll(extractActionableVariants(source, evidence, result.hotspotsPerFeature().values()));
+                actionableRanges.addAll(extractActionableRanges(source, evidence, result.geneRangesPerFeature().values()));
+                actionableGenes.addAll(extractActionablePromiscuousFusions(source, evidence, result.fusionsPerFeature().values()));
+                actionableGenes.addAll(extractActionableAmpsDels(source, evidence, result.ampsDelsPerFeature().values()));
+                actionableGenes.addAll(extractActionableGeneLevelEvents(source, evidence, result.geneLevelEventsPerFeature().values()));
+                actionableFusions.addAll(extractActionableFusions(source, evidence, result.fusionsPerFeature().values()));
+                actionableSignatures.addAll(extractActionableSignatures(source, evidence, result.signaturesPerFeature().values()));
             }
         }
+        String actionableVariantTsv = ActionableVariantFile.actionableVariantTsvPath(outputDir);
+        LOGGER.info("Writing {} actionable variants to {}", actionableVariants.size(), actionableVariantTsv);
+        ActionableVariantFile.write(actionableVariantTsv, actionableVariants);
+
+        String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(outputDir);
+        LOGGER.info("Writing {} actionable ranges to {}", actionableRanges.size(), actionableRangeTsv);
+        ActionableRangeFile.write(actionableRangeTsv, actionableRanges);
+
+        String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(outputDir);
+        LOGGER.info("Writing {} actionable genes to {}", actionableGenes.size(), actionableGeneTsv);
+        ActionableGeneFile.write(actionableGeneTsv, actionableGenes);
+
         String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(outputDir);
         LOGGER.info("Writing {} actionable fusions to {}", actionableFusions.size(), actionableFusionTsv);
         ActionableFusionFile.write(actionableFusionTsv, actionableFusions);
+
+        String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(outputDir);
+        LOGGER.info("Writing {} actionable signatures to {}", actionableSignatures.size(), actionableSignatureTsv);
+        ActionableSignatureFile.write(actionableSignatureTsv, actionableSignatures);
+    }
+
+    @NotNull
+    private static List<ActionableVariant> extractActionableVariants(@NotNull Source source, @NotNull ActionableEvidence evidence,
+            @NotNull Iterable<List<VariantHotspot>> hotspotLists) {
+        // TODO Implement
+        return Lists.newArrayList();
+    }
+
+    @NotNull
+    private static List<ActionableRange> extractActionableRanges(@NotNull Source source, @NotNull ActionableEvidence evidence,
+            @NotNull Iterable<List<GeneRangeAnnotation>> geneRangeAnnotationLists) {
+        // TODO Implement
+        return Lists.newArrayList();
+    }
+
+    @NotNull
+    private static List<ActionableGene> extractActionablePromiscuousFusions(@NotNull Source source, @NotNull ActionableEvidence evidence,
+            @NotNull Iterable<FusionAnnotation> fusionAnnotations) {
+        // TODO Implement
+        return Lists.newArrayList();
+    }
+
+    @NotNull
+    private static List<ActionableGene> extractActionableAmpsDels(@NotNull Source source, @NotNull ActionableEvidence evidence,
+            @NotNull Iterable<KnownAmplificationDeletion> ampsDels) {
+        // TODO Implement
+        return Lists.newArrayList();
+    }
+
+    @NotNull
+    private static List<ActionableGene> extractActionableGeneLevelEvents(@NotNull Source source, @NotNull ActionableEvidence evidence,
+            @NotNull Iterable<String> geneLevelEvents) {
+        // TODO Implement
+        return Lists.newArrayList();
+    }
+
+    @NotNull
+    private static List<ActionableFusion> extractActionableFusions(@NotNull Source source, @NotNull ActionableEvidence evidence,
+            @NotNull Iterable<FusionAnnotation> fusionAnnotations) {
+        List<ActionableFusion> actionableFusions = Lists.newArrayList();
+        for (FusionAnnotation fusion : fusionAnnotations) {
+            if (fusion.fusionEvent() == FusionEvent.FUSION_PAIR) {
+                actionableFusions.add(ImmutableActionableFusion.builder()
+                        .fusion(fusion.fusion())
+                        .source(source)
+                        .treatment(evidence.drugs())
+                        .cancerType(evidence.cancerType())
+                        .doid(evidence.doid())
+                        .direction(evidence.direction())
+                        .level(evidence.level())
+                        .build());
+            }
+        }
+        return actionableFusions;
+    }
+
+    @NotNull
+    private static List<ActionableSignature> extractActionableSignatures(@NotNull Source source, @NotNull ActionableEvidence evidence,
+            @NotNull Iterable<String> signatures) {
+        // TODO Implement
+        return Lists.newArrayList();
     }
 
     @Nullable
