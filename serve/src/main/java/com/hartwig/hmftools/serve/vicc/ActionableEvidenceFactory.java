@@ -12,6 +12,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,7 +38,7 @@ public final class ActionableEvidenceFactory {
             cancerType = phenotype.description();
             PhenotypeType type = phenotype.type();
             if (type != null) {
-                doid = type.id();
+                doid = extractDoid(type.id());
             }
         }
         String level = entry.association().evidenceLabel();
@@ -101,6 +102,26 @@ public final class ActionableEvidenceFactory {
             return direction.toUpperCase();
         } else {
             return direction.substring(0, 1).toUpperCase() + direction.substring(1).toLowerCase();
+        }
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static String extractDoid(@Nullable String doidString) {
+        if (doidString == null) {
+            return null;
+        }
+
+        String[] parts = doidString.split(":");
+        if (parts.length == 2) {
+            if (parts[0].equalsIgnoreCase("doid")) {
+                return parts[1];
+            } else {
+                return Strings.EMPTY;
+            }
+        } else {
+            LOGGER.warn("Unexpected DOID string: '{}'", doidString);
+            return Strings.EMPTY;
         }
     }
 }
