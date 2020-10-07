@@ -9,8 +9,8 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
-import com.hartwig.hmftools.serve.compassionateuse.CompassionateUseProgram;
-import com.hartwig.hmftools.serve.compassionateuse.CompassionateUseProgramFile;
+import com.hartwig.hmftools.serve.sources.compassionateuse.CompassionateUseProgram;
+import com.hartwig.hmftools.serve.sources.compassionateuse.CompassionateUseProgramFile;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 

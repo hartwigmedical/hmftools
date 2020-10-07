@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.actionability;
 
-import com.hartwig.hmftools.serve.Source;
+import com.hartwig.hmftools.serve.sources.Source;
 
 import org.jetbrains.annotations.NotNull;
 
