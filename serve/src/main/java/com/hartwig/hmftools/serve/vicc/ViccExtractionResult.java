@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
-import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberAnnotation;
-import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
+import com.hartwig.hmftools.serve.vicc.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.vicc.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.vicc.genelevel.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -24,10 +24,10 @@ public abstract class ViccExtractionResult {
     public abstract Map<Feature, List<VariantHotspot>> hotspotsPerFeature();
 
     @NotNull
-    public abstract Map<Feature, CopyNumberAnnotation> ampsDelsPerFeature();
+    public abstract Map<Feature, KnownCopyNumber> ampsDelsPerFeature();
 
     @NotNull
-    public abstract Map<Feature, FusionAnnotation> fusionsPerFeature();
+    public abstract Map<Feature, KnownFusionPair> fusionsPerFeature();
 
     @NotNull
     public abstract Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature();

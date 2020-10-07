@@ -14,14 +14,14 @@ public class FusionExtractor {
     public FusionExtractor() {
     }
 
-    public Map<Feature, FusionAnnotation> extractKnownFusions(@NotNull ViccEntry viccEntry) {
-        Map<Feature, FusionAnnotation> fusionsPerFeature = Maps.newHashMap();
+    public Map<Feature, KnownFusionPair> extractKnownFusions(@NotNull ViccEntry viccEntry) {
+        Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == FeatureType.FUSION_PAIR) {
                 // TODO Implement geneUp, exonUp, geneDown, exonDown
                 fusionsPerFeature.put(feature,
-                        ImmutableFusionAnnotation.builder().geneUp(feature.name()).geneDown(feature.name()).build());
+                        ImmutableKnownFusionPair.builder().geneUp(feature.name()).geneDown(feature.name()).build());
             }
         }
         return fusionsPerFeature;

@@ -10,8 +10,8 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
-import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberAnnotation;
-import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
+import com.hartwig.hmftools.serve.vicc.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.vicc.fusion.KnownFusionPair;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -28,11 +28,11 @@ public abstract class ViccExtractionOutput {
 
     // TODO This should be a VICC-independent data class
     @NotNull
-    public abstract List<CopyNumberAnnotation> knownAmpsDels();
+    public abstract List<KnownCopyNumber> knownAmpsDels();
 
     // TODO This should be a VICC-independent data class
     @NotNull
-    public abstract List<FusionAnnotation> knownFusions();
+    public abstract List<KnownFusionPair> knownFusions();
 
     @NotNull
     public abstract List<ActionableHotspot> actionableHotspots();

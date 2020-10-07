@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class FusionAnnotation {
+public abstract class KnownFusionPair {
 
     @NotNull
     public abstract String geneUp();

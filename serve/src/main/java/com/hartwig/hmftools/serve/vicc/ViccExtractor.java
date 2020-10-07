@@ -23,10 +23,10 @@ import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSig
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
-import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberAnnotation;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
-import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
+import com.hartwig.hmftools.serve.vicc.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
+import com.hartwig.hmftools.serve.vicc.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.vicc.genelevel.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.vicc.genelevel.GeneLevelEventExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
@@ -75,8 +75,8 @@ public final class ViccExtractor {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
         for (ViccEntry entry : viccEntries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
-            Map<Feature, CopyNumberAnnotation> ampsDelsPerFeature = copyNumberExtractor.extractKnownAmplificationsDeletions(entry);
-            Map<Feature, FusionAnnotation> fusionsPerFeature = fusionExtractor.extractKnownFusions(entry);
+            Map<Feature, KnownCopyNumber> ampsDelsPerFeature = copyNumberExtractor.extractKnownAmplificationsDeletions(entry);
+            Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractKnownFusions(entry);
             Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelEventExtractor.extractKnownGeneLevelEvents(entry);
             Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry);
             Map<Feature, SignatureName> signaturesPerFeature = signaturesExtractor.extractSignatures(entry);
@@ -133,8 +133,8 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<CopyNumberAnnotation> convertToKnownAmpsDels(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        List<CopyNumberAnnotation> copyNumbers = Lists.newArrayList();
+    private static List<KnownCopyNumber> convertToKnownAmpsDels(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        List<KnownCopyNumber> copyNumbers = Lists.newArrayList();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             copyNumbers.addAll(entry.getValue().ampsDelsPerFeature().values());
         }
@@ -142,8 +142,8 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<FusionAnnotation> convertToKnownFusions(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        List<FusionAnnotation> fusions = Lists.newArrayList();
+    private static List<KnownFusionPair> convertToKnownFusions(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        List<KnownFusionPair> fusions = Lists.newArrayList();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             fusions.addAll(entry.getValue().fusionsPerFeature().values());
         }
@@ -230,9 +230,9 @@ public final class ViccExtractor {
 
     @NotNull
     private static List<ActionableGene> extractActionableAmpsDels(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<CopyNumberAnnotation> ampsDels) {
+            @NotNull Iterable<KnownCopyNumber> ampsDels) {
         List<ActionableGene> actionableGenes = Lists.newArrayList();
-        for (CopyNumberAnnotation ampDel : ampsDels) {
+        for (KnownCopyNumber ampDel : ampsDels) {
             GeneLevelEvent event;
             switch (ampDel.type()) {
                 case AMPLIFICATION: {
@@ -284,9 +284,9 @@ public final class ViccExtractor {
 
     @NotNull
     private static List<ActionableFusion> extractActionableFusions(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<FusionAnnotation> fusionAnnotations) {
+            @NotNull Iterable<KnownFusionPair> fusionAnnotations) {
         List<ActionableFusion> actionableFusions = Lists.newArrayList();
-        for (FusionAnnotation fusion : fusionAnnotations) {
+        for (KnownFusionPair fusion : fusionAnnotations) {
             actionableFusions.add(ImmutableActionableFusion.builder()
                     .geneUp(fusion.geneUp())
                     .exonUp(fusion.exonUp())
@@ -355,8 +355,8 @@ public final class ViccExtractor {
             ViccExtractionResult viccExtractionResult = entry.getValue();
             for (Feature feature : viccEntry.features()) {
                 List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
-                CopyNumberAnnotation ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
-                FusionAnnotation fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
+                KnownCopyNumber ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
+                KnownFusionPair fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
                 GeneLevelAnnotation geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
                 List<GeneRangeAnnotation> geneRangesForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
                 SignatureName signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);

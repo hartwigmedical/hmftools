@@ -15,16 +15,16 @@ public class CopyNumberExtractor {
     }
 
     @NotNull
-    public Map<Feature, CopyNumberAnnotation> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
-        Map<Feature, CopyNumberAnnotation> ampsDelsPerFeature = Maps.newHashMap();
+    public Map<Feature, KnownCopyNumber> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
+        Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == FeatureType.AMPLIFICATION) {
                 ampsDelsPerFeature.put(feature,
-                        ImmutableCopyNumberAnnotation.builder().gene(feature.geneSymbol()).type(CopyNumberType.AMPLIFICATION).build());
+                        ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.AMPLIFICATION).build());
             } else if (feature.type() == FeatureType.DELETION) {
                 ampsDelsPerFeature.put(feature,
-                        ImmutableCopyNumberAnnotation.builder().gene(feature.geneSymbol()).type(CopyNumberType.DELETION).build());
+                        ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.DELETION).build());
             }
         } return ampsDelsPerFeature;
     }
