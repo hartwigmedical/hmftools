@@ -12,30 +12,30 @@ import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ActionableVariantFile {
+public final class ActionableHotspotFile {
 
     private static final String DELIMITER = "\t";
-    private static final String ACTIONABLE_VARIANT_TSV = "actionableVariants.tsv";
+    private static final String ACTIONABLE_HOTSPOT_TSV = "actionableHotspots.tsv";
 
-    private ActionableVariantFile() {
+    private ActionableHotspotFile() {
     }
 
     @NotNull
-    public static String actionableVariantTsvPath(@NotNull String serveActionabilityDir) {
-        return serveActionabilityDir + File.separator + ACTIONABLE_VARIANT_TSV;
+    public static String actionableHotspotTsvPath(@NotNull String serveActionabilityDir) {
+        return serveActionabilityDir + File.separator + ACTIONABLE_HOTSPOT_TSV;
     }
 
-    public static void write(@NotNull String actionableVariantsTsv, @NotNull List<ActionableVariant> actionableVariants)
+    public static void write(@NotNull String actionableHotspotTsv, @NotNull List<ActionableHotspot> actionableHotspots)
             throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
-        lines.addAll(toLines(actionableVariants));
-        Files.write(new File(actionableVariantsTsv).toPath(), lines);
+        lines.addAll(toLines(actionableHotspots));
+        Files.write(new File(actionableHotspotTsv).toPath(), lines);
     }
 
     @NotNull
-    public static List<ActionableVariant> loadFromActionableVariantTsv(@NotNull String actionableVariantTsv) throws IOException {
-        List<String> lines = Files.readAllLines(new File(actionableVariantTsv).toPath());
+    public static List<ActionableHotspot> read(@NotNull String actionableHotspotTsv) throws IOException {
+        List<String> lines = Files.readAllLines(new File(actionableHotspotTsv).toPath());
         // Skip header
         return fromLines(lines.subList(1, lines.size()));
     }
@@ -58,19 +58,19 @@ public final class ActionableVariantFile {
 
     @NotNull
     @VisibleForTesting
-    static List<ActionableVariant> fromLines(@NotNull List<String> lines) {
-        List<ActionableVariant> actionableVariants = Lists.newArrayList();
+    static List<ActionableHotspot> fromLines(@NotNull List<String> lines) {
+        List<ActionableHotspot> actionableHotspots = Lists.newArrayList();
         for (String line : lines) {
-            actionableVariants.add(fromLine(line));
+            actionableHotspots.add(fromLine(line));
         }
-        return actionableVariants;
+        return actionableHotspots;
     }
 
 
     @NotNull
-    private static ActionableVariant fromLine(@NotNull String line) {
+    private static ActionableHotspot fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
-        return ImmutableActionableVariant.builder()
+        return ImmutableActionableHotspot.builder()
                 .gene(values[0])
                 .chromosome(values[1])
                 .position(values[2])
@@ -87,16 +87,16 @@ public final class ActionableVariantFile {
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull List<ActionableVariant> actionableVariants) {
+    static List<String> toLines(@NotNull List<ActionableHotspot> actionableHotspots) {
         List<String> lines = Lists.newArrayList();
-        for (ActionableVariant actionableVariant : actionableVariants) {
-            lines.add(toLine(actionableVariant));
+        for (ActionableHotspot actionableHotspot : actionableHotspots) {
+            lines.add(toLine(actionableHotspot));
         }
         return lines;
     }
 
     @NotNull
-    private static String toLine(@NotNull ActionableVariant variant) {
+    private static String toLine(@NotNull ActionableHotspot variant) {
         return new StringJoiner(DELIMITER).add(variant.gene())
                 .add(variant.chromosome())
                 .add(variant.position())

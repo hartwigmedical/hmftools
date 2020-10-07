@@ -22,8 +22,8 @@ import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
-import com.hartwig.hmftools.serve.actionability.variant.ActionableVariant;
-import com.hartwig.hmftools.serve.actionability.variant.ActionableVariantFile;
+import com.hartwig.hmftools.serve.actionability.variant.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.variant.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
@@ -51,7 +51,7 @@ public final class ViccUtil {
 
     public static void writeActionability(@NotNull String outputDir, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
-        List<ActionableVariant> actionableVariants = Lists.newArrayList();
+        List<ActionableHotspot> actionableHotspots = Lists.newArrayList();
         List<ActionableRange> actionableRanges = Lists.newArrayList();
         List<ActionableGene> actionableGenes = Lists.newArrayList();
         List<ActionableFusion> actionableFusions = Lists.newArrayList();
@@ -62,7 +62,7 @@ public final class ViccUtil {
             ViccExtractionResult result = entry.getValue();
             ActionableEvidence evidence = result.actionableEvidence();
             if (evidence != null && source != null) {
-                actionableVariants.addAll(extractActionableVariants(source, evidence, result.hotspotsPerFeature().values()));
+                actionableHotspots.addAll(extractActionableVariants(source, evidence, result.hotspotsPerFeature().values()));
                 actionableRanges.addAll(extractActionableRanges(source, evidence, result.geneRangesPerFeature().values()));
                 actionableGenes.addAll(extractActionablePromiscuousFusions(source, evidence, result.fusionsPerFeature().values()));
                 actionableGenes.addAll(extractActionableAmpsDels(source, evidence, result.ampsDelsPerFeature().values()));
@@ -71,9 +71,9 @@ public final class ViccUtil {
                 actionableSignatures.addAll(extractActionableSignatures(source, evidence, result.signaturesPerFeature().values()));
             }
         }
-        String actionableVariantTsv = ActionableVariantFile.actionableVariantTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable variants to {}", actionableVariants.size(), actionableVariantTsv);
-        ActionableVariantFile.write(actionableVariantTsv, actionableVariants);
+        String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(outputDir);
+        LOGGER.info("Writing {} actionable hotspots to {}", actionableHotspots.size(), actionableHotspotTsv);
+        ActionableHotspotFile.write(actionableHotspotTsv, actionableHotspots);
 
         String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(outputDir);
         LOGGER.info("Writing {} actionable ranges to {}", actionableRanges.size(), actionableRangeTsv);
@@ -93,7 +93,7 @@ public final class ViccUtil {
     }
 
     @NotNull
-    private static List<ActionableVariant> extractActionableVariants(@NotNull Source source, @NotNull ActionableEvidence evidence,
+    private static List<ActionableHotspot> extractActionableVariants(@NotNull Source source, @NotNull ActionableEvidence evidence,
             @NotNull Iterable<List<VariantHotspot>> hotspotLists) {
         // TODO Implement
         return Lists.newArrayList();
