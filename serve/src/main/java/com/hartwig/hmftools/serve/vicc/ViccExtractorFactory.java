@@ -7,8 +7,8 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
+import com.hartwig.hmftools.serve.vicc.genelevel.GeneLevelEventExtractor;
 import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
-import com.hartwig.hmftools.serve.vicc.range.GeneLevelEventExtractor;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.vicc.signatures.SignaturesExtractor;
 

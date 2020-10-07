@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.serve.vicc.fusion;
 
-import com.hartwig.hmftools.vicc.annotation.FusionEvent;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,13 +10,13 @@ import org.jetbrains.annotations.Nullable;
 public abstract class FusionAnnotation {
 
     @NotNull
-    public abstract String fusion();
-
-    @NotNull
-    public abstract FusionEvent fusionEvent();
+    public abstract String geneUp();
 
     @Nullable
     public abstract Integer exonUp();
+
+    @NotNull
+    public abstract String geneDown();
 
     @Nullable
     public abstract Integer exonDown();

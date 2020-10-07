@@ -6,6 +6,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -44,17 +45,30 @@ public final class ActionableEvidenceFactory {
         String level = entry.association().evidenceLabel();
         EvidenceDirection direction = resolveDirection(entry.association().responseType());
 
-        if (drugs != null && cancerType != null && doid != null && level != null && direction != null) {
+        String url = null;
+        EvidenceInfo info = entry.association().evidence().info();
+        if (info != null && !info.publications().isEmpty()) {
+            url = info.publications().get(0);
+        }
+
+        // Consider CancerType, DOID and URL to be optional.
+        if (drugs != null && level != null && direction != null) {
             return ImmutableActionableEvidence.builder()
                     .drugs(drugs)
-                    .cancerType(cancerType)
-                    .doid(doid)
+                    .cancerType(nullToEmpty(cancerType))
+                    .doid(nullToEmpty(doid))
                     .level(level)
                     .direction(direction)
+                    .url(nullToEmpty(url))
                     .build();
         } else {
             return null;
         }
+    }
+
+    @NotNull
+    private static String nullToEmpty(@Nullable String string) {
+        return string != null ? string : Strings.EMPTY;
     }
 
     @Nullable

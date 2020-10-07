@@ -52,6 +52,7 @@ public final class ActionableRangeFile {
                 .add("doid")
                 .add("level")
                 .add("direction")
+                .add("url")
                 .toString();
     }
 
@@ -73,13 +74,14 @@ public final class ActionableRangeFile {
                 .chromosome(values[1])
                 .start(Long.parseLong(values[2]))
                 .end(Long.parseLong(values[3]))
-                .mutationType(RangeMutationType.valueOf(values[4]))
+                .mutationType(MutationTypeFilter.valueOf(values[4]))
                 .source(ActionableEventFactory.sourceFromFileValue(values[5]))
                 .treatment(values[6])
                 .cancerType(values[7])
                 .doid(values[8])
                 .level(values[9])
                 .direction(ActionableEventFactory.directionFromFileValue(values[10]))
+                .url(values[11])
                 .build();
     }
 
@@ -106,6 +108,7 @@ public final class ActionableRangeFile {
                 .add(range.doid())
                 .add(range.level())
                 .add(range.direction().display())
+                .add(range.url())
                 .toString();
     }
 }

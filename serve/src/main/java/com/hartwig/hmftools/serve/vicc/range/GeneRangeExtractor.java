@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.serve.actionability.range.RangeMutationType;
+import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -22,25 +22,6 @@ public class GeneRangeExtractor {
 
     public GeneRangeExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
-    }
-
-    @NotNull
-    private GeneRangeAnnotation extractExonGenomicPositions(@NotNull Feature feature, @NotNull HmfTranscriptRegion canonicalTranscript,
-            int exonNumberList) {
-
-        List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
-        HmfExonRegion hmfExonRegion = exonRegions.get(exonNumberList);
-        long start = hmfExonRegion.start();
-        long end = hmfExonRegion.end();
-        String chromosome = hmfExonRegion.chromosome();
-
-        return ImmutableGeneRangeAnnotation.builder()
-                .gene(feature.geneSymbol())
-                .start(start)
-                .end(end)
-                .chromosome(chromosome)
-                .mutationType(RangeMutationType.ANY)
-                .build();
     }
 
     @NotNull
@@ -109,7 +90,7 @@ public class GeneRangeExtractor {
                                 .start(start)
                                 .end(end)
                                 .chromosome(chromosome)
-                                .mutationType(RangeMutationType.ANY)
+                                .mutationType(MutationTypeFilter.ANY)
                                 .build());
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     } else {
@@ -129,7 +110,8 @@ public class GeneRangeExtractor {
                             //check what this means
                             exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
                         }
-                        int exonNumberList = Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                        int exonNumberList =
+                                Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
 
                         geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
 
@@ -177,7 +159,7 @@ public class GeneRangeExtractor {
                             .start(0)
                             .end(0)
                             .chromosome(Strings.EMPTY)
-                            .mutationType(RangeMutationType.ANY)
+                            .mutationType(MutationTypeFilter.ANY)
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
@@ -196,15 +178,15 @@ public class GeneRangeExtractor {
                             .start(0)
                             .end(0)
                             .chromosome(Strings.EMPTY)
-                            .mutationType(RangeMutationType.ANY)
+                            .mutationType(MutationTypeFilter.ANY)
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
             } else if (featureType == FeatureType.GENE_RANGE_CODON) {
                 String proteinAnnotation = feature.proteinAnnotation();
-                int start = Integer.parseInt(proteinAnnotation.split("_")[0].replaceAll("\\D+",""));
-                int end = Integer.parseInt(proteinAnnotation.split("_")[1].replaceAll("\\D+",""));
-                int  count = end -start;
+                int start = Integer.parseInt(proteinAnnotation.split("_")[0].replaceAll("\\D+", ""));
+                int end = Integer.parseInt(proteinAnnotation.split("_")[1].replaceAll("\\D+", ""));
+                int count = end - start;
 
                 if (count > 12) {
                     geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
@@ -212,7 +194,7 @@ public class GeneRangeExtractor {
                             .start(0)
                             .end(0)
                             .chromosome(Strings.EMPTY)
-                            .mutationType(RangeMutationType.ANY)
+                            .mutationType(MutationTypeFilter.ANY)
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
                 }
@@ -221,38 +203,56 @@ public class GeneRangeExtractor {
         return geneRangesPerFeature;
     }
 
+    @NotNull
+    private static GeneRangeAnnotation extractExonGenomicPositions(@NotNull Feature feature,
+            @NotNull HmfTranscriptRegion canonicalTranscript, int exonNumberList) {
+        List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
+        HmfExonRegion hmfExonRegion = exonRegions.get(exonNumberList);
+        long start = hmfExonRegion.start();
+        long end = hmfExonRegion.end();
+        String chromosome = hmfExonRegion.chromosome();
+
+        return ImmutableGeneRangeAnnotation.builder()
+                .gene(feature.geneSymbol())
+                .start(start)
+                .end(end)
+                .chromosome(chromosome)
+                .mutationType(MutationTypeFilter.ANY)
+                .build();
+    }
+
     private static Map<Feature, List<GeneRangeAnnotation>> determineRanges(@NotNull ViccEntry viccEntry, @NotNull Feature feature,
             @NotNull String proteinAnnotation, @NotNull List<GeneRangeAnnotation> geneRangeAnnotation,
             @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature, @NotNull HmfTranscriptRegion canonicalTranscript) {
         String transcriptIdVicc = viccEntry.transcriptId();
 
-//        if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-//            String geneSymbol = feature.geneSymbol();
-//            int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+", ""));
-//            List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
-//            if (genomeRegions.size() == 1) {
-//                long start = genomeRegions.get(0).start();
-//                long end = genomeRegions.get(0).end();
-//                String chromosome = genomeRegions.get(0).chromosome();
-//
-//                geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
-//                        .gene(geneSymbol)
-//                        .start(start)
-//                        .end(end)
-//                        .chromosome(chromosome)
-//                        .event(feature.name())
-//                        .build());
-//                geneRangesPerFeature.put(feature, geneRangeAnnotation);
-//
-//            } else {
-//                LOGGER.warn("Multiple genomic regions known for event {}", feature);
-//            }
-//        } else {
-//            //                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-//            //                            transcriptIdVicc,
-//            //                            canonicalTranscript.transcriptID(),
-//            //                            feature);
-//        }
+        //        if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+        //            String geneSymbol = feature.geneSymbol();
+        //            int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+", ""));
+        //            List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
+        //            if (genomeRegions.size() == 1) {
+        //                long start = genomeRegions.get(0).start();
+        //                long end = genomeRegions.get(0).end();
+        //                String chromosome = genomeRegions.get(0).chromosome();
+        //
+        //                geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+        //                        .gene(geneSymbol)
+        //                        .start(start)
+        //                        .end(end)
+        //                        .chromosome(chromosome)
+        //                        .event(feature.name())
+        //                        .build());
+        //                geneRangesPerFeature.put(feature, geneRangeAnnotation);
+        //
+        //            } else {
+        //                LOGGER.warn("Multiple genomic regions known for event {}", feature);
+        //            }
+        //        } else {
+        //            //                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+        //            //                            transcriptIdVicc,
+        //            //                            canonicalTranscript.transcriptID(),
+        //            //                            feature);
+        //        }
         return geneRangesPerFeature;
     }
 

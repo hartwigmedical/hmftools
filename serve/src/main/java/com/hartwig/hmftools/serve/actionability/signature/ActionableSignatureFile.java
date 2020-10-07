@@ -49,6 +49,7 @@ public final class ActionableSignatureFile {
                 .add("doid")
                 .add("level")
                 .add("direction")
+                .add("url")
                 .toString();
     }
 
@@ -73,6 +74,7 @@ public final class ActionableSignatureFile {
                 .doid(values[4])
                 .level(values[5])
                 .direction(ActionableEventFactory.directionFromFileValue(values[6]))
+                .url(values[7])
                 .build();
     }
 
@@ -95,6 +97,7 @@ public final class ActionableSignatureFile {
                 .add(signature.doid())
                 .add(signature.level())
                 .add(signature.direction().display())
+                .add(signature.url())
                 .toString();
     }
 }

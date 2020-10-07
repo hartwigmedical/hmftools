@@ -51,6 +51,7 @@ public final class ActionableHotspotFile {
                 .add("doid")
                 .add("level")
                 .add("direction")
+                .add("url")
                 .toString();
     }
 
@@ -78,6 +79,7 @@ public final class ActionableHotspotFile {
                 .doid(values[7])
                 .level(values[8])
                 .direction(ActionableEventFactory.directionFromFileValue(values[9]))
+                .url(values[10])
                 .build();
     }
 
@@ -103,6 +105,7 @@ public final class ActionableHotspotFile {
                 .add(variant.doid())
                 .add(variant.level())
                 .add(variant.direction().display())
+                .add(variant.url())
                 .toString();
     }
 }

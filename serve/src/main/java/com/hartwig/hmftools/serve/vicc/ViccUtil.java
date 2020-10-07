@@ -32,11 +32,10 @@ import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSig
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
-import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberType;
-import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
+import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberAnnotation;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
+import com.hartwig.hmftools.serve.vicc.genelevel.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
-import com.hartwig.hmftools.vicc.annotation.FusionEvent;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -71,7 +70,6 @@ public final class ViccUtil {
             if (evidence != null && source != null) {
                 actionableHotspots.addAll(extractActionableHotspots(source, evidence, result.hotspotsPerFeature().values()));
                 actionableRanges.addAll(extractActionableRanges(source, evidence, result.geneRangesPerFeature().values()));
-                actionableGenes.addAll(extractActionablePromiscuousFusions(source, evidence, result.fusionsPerFeature().values()));
                 actionableGenes.addAll(extractActionableAmpsDels(source, evidence, result.ampsDelsPerFeature().values()));
                 actionableGenes.addAll(extractActionableGeneLevelEvents(source, evidence, result.geneLevelEventsPerFeature().values()));
                 actionableFusions.addAll(extractActionableFusions(source, evidence, result.fusionsPerFeature().values()));
@@ -116,6 +114,7 @@ public final class ViccUtil {
                         .doid(evidence.doid())
                         .direction(evidence.direction())
                         .level(evidence.level())
+                        .url(evidence.url())
                         .build());
             }
         }
@@ -140,6 +139,7 @@ public final class ViccUtil {
                         .doid(evidence.doid())
                         .direction(evidence.direction())
                         .level(evidence.level())
+                        .url(evidence.url())
                         .build());
             }
         }
@@ -147,41 +147,32 @@ public final class ViccUtil {
     }
 
     @NotNull
-    private static List<ActionableGene> extractActionablePromiscuousFusions(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<FusionAnnotation> fusionAnnotations) {
-        List<ActionableGene> actionableGenes = Lists.newArrayList();
-        for (FusionAnnotation fusion : fusionAnnotations) {
-            if (fusion.fusionEvent() == FusionEvent.FUSION_PROMISCUOUS) {
-                actionableGenes.add(ImmutableActionableGene.builder()
-                        .gene(fusion.fusion())
-                        .event(GeneEvent.FUSION)
-                        .source(source)
-                        .treatment(evidence.drugs())
-                        .cancerType(evidence.cancerType())
-                        .doid(evidence.doid())
-                        .direction(evidence.direction())
-                        .level(evidence.level())
-                        .build());
-            }
-        }
-        return actionableGenes;
-    }
-
-    @NotNull
     private static List<ActionableGene> extractActionableAmpsDels(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<KnownAmplificationDeletion> ampsDels) {
+            @NotNull Iterable<CopyNumberAnnotation> ampsDels) {
         List<ActionableGene> actionableGenes = Lists.newArrayList();
-        for (KnownAmplificationDeletion ampDel : ampsDels) {
+        for (CopyNumberAnnotation ampDel : ampsDels) {
+            GeneEvent event;
+            switch (ampDel.type()) {
+                case AMPLIFICATION: {
+                    event = GeneEvent.AMPLIFICATION;
+                    break;
+                } case DELETION: {
+                    event = GeneEvent.DELETION;
+                    break;
+                }
+                default: throw new IllegalStateException("Invalid copy number type: " + ampDel.type());
+            }
+
             actionableGenes.add(ImmutableActionableGene.builder()
-                    // TODO Improve event mapping
                     .gene(ampDel.gene())
-                    .event(ampDel.type() == CopyNumberType.AMPLIFICATION ? GeneEvent.AMPLIFICATION : GeneEvent.DELETION)
+                    .event(event)
                     .source(source)
                     .treatment(evidence.drugs())
                     .cancerType(evidence.cancerType())
                     .doid(evidence.doid())
                     .direction(evidence.direction())
                     .level(evidence.level())
+                    .url(evidence.url())
                     .build());
         }
         return actionableGenes;
@@ -189,19 +180,19 @@ public final class ViccUtil {
 
     @NotNull
     private static List<ActionableGene> extractActionableGeneLevelEvents(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<String> geneLevelEvents) {
+            @NotNull Iterable<GeneLevelAnnotation> geneLevelEvents) {
         List<ActionableGene> actionableGenes = Lists.newArrayList();
-        for (String geneLevelEvent : geneLevelEvents) {
+        for (GeneLevelAnnotation geneLevelEvent : geneLevelEvents) {
             actionableGenes.add(ImmutableActionableGene.builder()
-                    // TODO Implement event
-                    .gene(geneLevelEvent)
-                    .event(GeneEvent.ACTIVATION)
+                    .gene(geneLevelEvent.gene())
+                    .event(geneLevelEvent.event())
                     .source(source)
                     .treatment(evidence.drugs())
                     .cancerType(evidence.cancerType())
                     .doid(evidence.doid())
                     .direction(evidence.direction())
                     .level(evidence.level())
+                    .url(evidence.url())
                     .build());
         }
         return actionableGenes;
@@ -212,21 +203,19 @@ public final class ViccUtil {
             @NotNull Iterable<FusionAnnotation> fusionAnnotations) {
         List<ActionableFusion> actionableFusions = Lists.newArrayList();
         for (FusionAnnotation fusion : fusionAnnotations) {
-            if (fusion.fusionEvent() == FusionEvent.FUSION_PAIR) {
-                actionableFusions.add(ImmutableActionableFusion.builder()
-                        // TODO Separate gene up from gene down.
-                        .geneUp(fusion.fusion())
-                        .exonUp(fusion.exonUp())
-                        .geneDown(fusion.fusion())
-                        .exonDown(fusion.exonDown())
-                        .source(source)
-                        .treatment(evidence.drugs())
-                        .cancerType(evidence.cancerType())
-                        .doid(evidence.doid())
-                        .direction(evidence.direction())
-                        .level(evidence.level())
-                        .build());
-            }
+            actionableFusions.add(ImmutableActionableFusion.builder()
+                    .geneUp(fusion.geneUp())
+                    .exonUp(fusion.exonUp())
+                    .geneDown(fusion.geneDown())
+                    .exonDown(fusion.exonDown())
+                    .source(source)
+                    .treatment(evidence.drugs())
+                    .cancerType(evidence.cancerType())
+                    .doid(evidence.doid())
+                    .direction(evidence.direction())
+                    .level(evidence.level())
+                    .url(evidence.url())
+                    .build());
         }
         return actionableFusions;
     }
@@ -276,9 +265,9 @@ public final class ViccUtil {
             ViccExtractionResult viccExtractionResult = entry.getValue();
             for (Feature feature : viccEntry.features()) {
                 List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
-                KnownAmplificationDeletion ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
+                CopyNumberAnnotation ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
                 FusionAnnotation fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
-                String geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
+                GeneLevelAnnotation geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
                 List<GeneRangeAnnotation> geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
                 SignatureName signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
 
@@ -298,7 +287,7 @@ public final class ViccUtil {
                 }
 
                 if (geneLevelEventForFeature != null) {
-                    events.add(geneLevelEventForFeature);
+                    events.add(geneLevelEventForFeature.toString());
                 }
 
                 if (geneRangeForFeature != null) {
@@ -366,9 +355,9 @@ public final class ViccUtil {
             ViccExtractionResult viccExtractionResult = entry.getValue();
             for (Feature feature : viccEntry.features()) {
                 List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
-                KnownAmplificationDeletion ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
+                CopyNumberAnnotation ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
                 FusionAnnotation fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
-                String geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
+                GeneLevelAnnotation geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
                 List<GeneRangeAnnotation> geneRangeForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
                 SignatureName signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
 
