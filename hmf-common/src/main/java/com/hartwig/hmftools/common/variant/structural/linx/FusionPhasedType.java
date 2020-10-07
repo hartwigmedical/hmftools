@@ -8,16 +8,16 @@ public enum FusionPhasedType
     SKIPPED_EXONS("Skipped exons"),
     OUT_OF_FRAME ("Out of frame");
 
-    @NotNull
-    private final String display;
+    private final String mDisplay;
 
-    FusionPhasedType(@NotNull final String display) {
-        this.display = display;
+    FusionPhasedType(@NotNull final String display)
+    {
+        mDisplay = display;
     }
 
-    @NotNull
-    public String display() {
-        return display;
+    public String display()
+    {
+        return mDisplay;
     }
 
 }

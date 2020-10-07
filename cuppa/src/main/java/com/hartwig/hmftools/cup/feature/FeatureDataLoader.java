@@ -24,6 +24,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -149,12 +151,29 @@ public class FeatureDataLoader
 
         if(fusions != null)
         {
-            final List<SampleFeatureData> fusionDataList = fusions.stream()
-                    .filter(x -> x.reported())
-                    .map(x -> new SampleFeatureData(sampleId, x.name(), FeatureType.FUSION, 1))
-                    .collect(Collectors.toList());
+            for(final LinxFusion fusion : fusions)
+            {
+                if(!fusion.reported())
+                    continue;
 
-            featuresList.addAll(fusionDataList);
+                if(fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_5.toString())
+                || fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_3.toString()))
+                {
+                    if(fusion.likelihood() != FusionLikelihoodType.HIGH)
+                        continue;
+
+                    final String[] genes = fusion.name().split("_");
+
+                    final String fusionName = fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_5.toString()) ?
+                            genes[0] + "_PROM5" : genes[1] + "_PROM3";
+
+                    featuresList.add(new SampleFeatureData(sampleId, fusionName, FeatureType.FUSION, 1));
+                }
+                else
+                {
+                    featuresList.add(new SampleFeatureData(sampleId, fusion.name(), FeatureType.FUSION, 1));
+                }
+            }
         }
 
         if(viralInserts != null)
@@ -196,7 +215,6 @@ public class FeatureDataLoader
                 {
                     genePrevTotals = new FeaturePrevCounts();
                     genePrevalenceTotals.put(prevData.Gene, genePrevTotals);
-                    // genePrevTotals.MinPrevalence = prevData.Type == DRIVER ? DRIVER_MIN_PREVALENCE : FUSION_MIN_PREVALENCE;
                 }
 
                 genePrevTotals.MaxPrevalence = max(genePrevTotals.MaxPrevalence, prevData.Prevalence);

@@ -13,6 +13,7 @@ import java.util.Map;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
@@ -189,6 +190,7 @@ public class StructuralVariantFusionDAO {
                     .name(record.getValue(SVFUSION.NAME))
                     .reported(record.getValue(SVFUSION.REPORTED) == 1)
                     .reportedType(record.getValue(SVFUSION.REPORTEDTYPE))
+                    .likelihood(FusionLikelihoodType.valueOf(record.getValue(SVFUSION.LIKELIHOOD)))
                     .phased(FusionPhasedType.valueOf(record.getValue(SVFUSION.PHASED)))
                     .chainLength(record.getValue(SVFUSION.CHAINLENGTH))
                     .chainLinks(record.getValue(SVFUSION.CHAINLINKS))
@@ -199,6 +201,13 @@ public class StructuralVariantFusionDAO {
                     .skippedExonsDown(record.getValue(SVFUSION.SKIPPEDEXONSDOWN))
                     .fusedExonUp(record.getValue(SVFUSION.FUSEDEXONUP))
                     .fusedExonDown(record.getValue(SVFUSION.FUSEDEXONDOWN))
+                    .geneStart("")
+                    .geneContextStart("")
+                    .geneTranscriptStart("")
+                    .geneEnd("")
+                    .geneContextEnd("")
+                    .geneTranscriptEnd("")
+                    .junctionCopyNumber(0.0)
                     .build();
 
             fusionList.add(fusion);

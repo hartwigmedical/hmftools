@@ -8,15 +8,13 @@ public enum FusionLikelihoodType
     LOW("Low"),
     NA("NA");
 
-    @NotNull
-    private final String display;
+    private final String mDisplay;
 
     FusionLikelihoodType(@NotNull final String display) {
-        this.display = display;
+        mDisplay = display;
     }
 
-    @NotNull
     public String display() {
-        return display;
+        return mDisplay;
     }
 }

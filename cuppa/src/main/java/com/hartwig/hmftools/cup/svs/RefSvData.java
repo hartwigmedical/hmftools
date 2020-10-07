@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -23,14 +24,14 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
-public class RefSvAnnotation
+public class RefSvData
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
     private final Map<String,List<SvData>> mCancerSvData;
 
-    public RefSvAnnotation(final RefDataConfig config, final SampleDataCache sampleDataCache)
+    public RefSvData(final RefDataConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -41,9 +42,18 @@ public class RefSvAnnotation
     public void buildRefDataSets()
     {
         if(mConfig.RefSampleSvDataFile.isEmpty())
-            return;
+        {
+            if(mConfig.DbAccess == null)
+                return;
 
-        loadRefSvData(mConfig.RefSampleSvDataFile);
+            final Map<String,SvData> sampleSvData = Maps.newHashMap();
+            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleSvData);
+            sampleSvData.values().forEach(x -> assignSampleData(x));
+        }
+        else
+        {
+            loadRefSvData(mConfig.RefSampleSvDataFile);
+        }
 
         try
         {
@@ -104,6 +114,26 @@ public class RefSvAnnotation
         return buildPercentiles(sortedValues);
     }
 
+    private void assignSampleData(final SvData svData)
+    {
+        final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(svData.SampleId);
+        if(cancerType == null)
+        {
+            CUP_LOGGER.error("sample({}) missing cancer type", svData.SampleId);
+            return;
+        }
+
+        List<SvData> svDataList = mCancerSvData.get(cancerType);
+        if(svDataList == null)
+        {
+            mCancerSvData.put(cancerType, Lists.newArrayList(svData));
+        }
+        else
+        {
+            svDataList.add(svData);
+        }
+    }
+
     private void loadRefSvData(final String filename)
     {
         try
@@ -118,23 +148,7 @@ public class RefSvAnnotation
             for(final String line : fileData)
             {
                 SvData svData = SvData.from(fieldsIndexMap, line);
-
-                final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(svData.SampleId);
-                if(cancerType == null)
-                {
-                    CUP_LOGGER.error("sample({}) missing cancer type", svData.SampleId);
-                    continue;
-                }
-
-                List<SvData> svDataList = mCancerSvData.get(cancerType);
-                if(svDataList == null)
-                {
-                    mCancerSvData.put(cancerType, Lists.newArrayList(svData));
-                }
-                else
-                {
-                    svDataList.add(svData);
-                }
+                assignSampleData(svData);
             }
         }
         catch (IOException e)

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -22,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class RefSampleTraits
 {
@@ -44,11 +46,21 @@ public class RefSampleTraits
     public void buildRefDataSets()
     {
         if(mConfig.RefSampleTraitsFile.isEmpty())
-            return;
+        {
+            if(mConfig.DbAccess == null)
+                return;
+
+            final Map<String,SampleTraitsData> sampleTraitsData = Maps.newHashMap();
+            loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleTraitsData);
+
+            sampleTraitsData. values().forEach(x -> assignSampleTraitsData(x));
+        }
+        else
+        {
+            loadRefPurityData(mConfig.RefSampleTraitsFile);
+        }
 
         initialiseRefDataWriter();
-
-        loadRefPurityData(mConfig.RefSampleTraitsFile);
 
         for(Map.Entry<String,List<SampleTraitsData>> entry : mCancerTraitsData.entrySet())
         {
@@ -126,6 +138,26 @@ public class RefSampleTraits
         return buildPercentiles(sortedValues);
     }
 
+    private void assignSampleTraitsData(final SampleTraitsData traitsData)
+    {
+        final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(traitsData.SampleId);
+        if(cancerType == null)
+        {
+            CUP_LOGGER.error("sample({}) missing cancer type", traitsData.SampleId);
+            return;
+        }
+
+        List<SampleTraitsData> traitsList = mCancerTraitsData.get(cancerType);
+        if(traitsList == null)
+        {
+            mCancerTraitsData.put(cancerType, Lists.newArrayList(traitsData));
+        }
+        else
+        {
+            traitsList.add(traitsData);
+        }
+    }
+
     private void loadRefPurityData(final String filename)
     {
         try
@@ -140,23 +172,7 @@ public class RefSampleTraits
             for(final String line : fileData)
             {
                 SampleTraitsData traitsData = SampleTraitsData.from(fieldsIndexMap, line);
-
-                final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(traitsData.SampleId);
-                if(cancerType == null)
-                {
-                    CUP_LOGGER.error("sample({}) missing cancer type", traitsData.SampleId);
-                    continue;
-                }
-
-                List<SampleTraitsData> traitsList = mCancerTraitsData.get(cancerType);
-                if(traitsList == null)
-                {
-                    mCancerTraitsData.put(cancerType, Lists.newArrayList(traitsData));
-                }
-                else
-                {
-                    traitsList.add(traitsData);
-                }
+                assignSampleTraitsData(traitsData);
             }
         }
         catch (IOException e)

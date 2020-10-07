@@ -63,12 +63,21 @@ public class SvDataLoader
     public static boolean loadSvDataFromDatabase(
             final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,SvData> sampleSvData)
     {
+        int i = 0;
+        int nextLog = 100;
         for(final String sampleId : sampleIds)
         {
             final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantData(sampleId);
             final List<LinxCluster> clusterList = dbAccess.readClusters(sampleId);
 
             mapSvData(sampleId, sampleSvData, svDataList, clusterList);
+
+            ++i;
+            if(i >= nextLog)
+            {
+                nextLog += 100;
+                CUP_LOGGER.info("loaded {} sample SV data sets", i);
+            }
         }
 
         return true;

@@ -5,8 +5,12 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDi
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SNV_COUNTS_FILE;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.File;
+
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -23,6 +27,8 @@ public class RefDataConfig
     public final String RefSnvPositionDataFile;
     public final String RefSnvCountsFile;
     public final String RefRnaGeneExpFile;
+
+    public final DatabaseAccess DbAccess;
 
     // config strings
     public static final String REF_SAMPLE_TRAITS_FILE = "ref_sample_traits_file";
@@ -43,6 +49,8 @@ public class RefDataConfig
         RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
         RefRnaGeneExpFile = cmd.getOptionValue(REF_RNA_GENE_EXP_DATA_FILE, "");
 
+        DbAccess = createDatabaseAccess(cmd);
+
         OutputDir = parseOutputDir(cmd);
     }
 
@@ -55,6 +63,8 @@ public class RefDataConfig
         options.addOption(REF_SNV_POS_DATA_FILE, true, "Ref sample SNV position bucket data file");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Ref sample SNV position bucket data file");
         options.addOption(REF_RNA_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
+
+        addDatabaseCmdLineArgs(options);
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");

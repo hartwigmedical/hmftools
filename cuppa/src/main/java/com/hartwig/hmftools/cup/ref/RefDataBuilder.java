@@ -5,10 +5,11 @@ import static com.hartwig.hmftools.cup.SampleAnalyserConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
 
 import com.hartwig.hmftools.cup.common.SampleDataCache;
+import com.hartwig.hmftools.cup.feature.RefFeatures;
 import com.hartwig.hmftools.cup.rna.RefRnaExpression;
 import com.hartwig.hmftools.cup.sample.RefSampleTraits;
 import com.hartwig.hmftools.cup.sigs.RefSignatures;
-import com.hartwig.hmftools.cup.svs.RefSvAnnotation;
+import com.hartwig.hmftools.cup.svs.RefSvData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -27,7 +28,8 @@ public class RefDataBuilder
 
     private final RefSampleTraits mSampleTraits;
     private final RefSignatures mSignatures;
-    private final RefSvAnnotation mSvAnnotation;
+    private final RefSvData mSvAnnotation;
+    private final RefFeatures mFeatures;
     private final RefRnaExpression mRnaExpression;
 
     public RefDataBuilder(final CommandLine cmd)
@@ -39,13 +41,14 @@ public class RefDataBuilder
         loadSampleData(cmd);
         mSampleTraits = new RefSampleTraits(mConfig, mSampleDataCache);
         mSignatures = new RefSignatures(mConfig, mSampleDataCache);
-        mSvAnnotation = new RefSvAnnotation(mConfig, mSampleDataCache);
+        mSvAnnotation = new RefSvData(mConfig, mSampleDataCache);
+        mFeatures = new RefFeatures(mConfig, mSampleDataCache);
         mRnaExpression = new RefRnaExpression(mConfig, mSampleDataCache);
     }
 
     private void loadSampleData(final CommandLine cmd)
     {
-        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
+        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE), false);
     }
 
     public void run()
@@ -55,6 +58,7 @@ public class RefDataBuilder
         mSampleTraits.buildRefDataSets();
         mSignatures.buildRefDataSets();
         mSvAnnotation.buildRefDataSets();
+        mFeatures.buildRefDataSets();
         mRnaExpression.buildRefDataSets();
 
         CUP_LOGGER.info("CUP ref data building complete");

@@ -68,7 +68,7 @@ public class SampleAnalyser
     private void loadSampleData(final CommandLine cmd)
     {
         mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), cmd.getOptionValue(SAMPLE_DATA_FILE));
-        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
+        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE), true);
 
         // mark any samples included in the ref data set so they can be excluded from self-comparison
         mSampleDataCache.SampleDataList.stream()

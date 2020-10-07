@@ -54,22 +54,20 @@ public class SampleTraitsDataLoader
         if(dbAccess == null)
             return false;
 
+        for(final String sampleId : sampleIds)
         {
-            for(final String sampleId : sampleIds)
+            final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
+            if(purityContext == null)
             {
-                final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
-                if(purityContext == null)
-                {
-                    CUP_LOGGER.warn("sample({}) missing purity data", sampleId);
-                    return false;
-                }
-
-                final ChordAnalysis chordAnalysis = dbAccess.readChordAnalysis(sampleId);
-                double chordHrd = chordAnalysis != null ? chordAnalysis.hrdValue() : 0;
-
-                SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, chordHrd);
-                sampleTraitsData.put(traitsData.SampleId, traitsData);
+                CUP_LOGGER.warn("sample({}) missing purity data", sampleId);
+                continue;
             }
+
+            final ChordAnalysis chordAnalysis = dbAccess.readChordAnalysis(sampleId);
+            double chordHrd = chordAnalysis != null ? chordAnalysis.hrdValue() : 0;
+
+            SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, chordHrd);
+            sampleTraitsData.put(traitsData.SampleId, traitsData);
         }
 
         return true;

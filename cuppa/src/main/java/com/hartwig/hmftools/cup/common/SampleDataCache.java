@@ -86,7 +86,7 @@ public class SampleDataCache
         SampleDataList.forEach(x -> SampleIds.add(x.Id));
     }
 
-    public void loadReferenceSampleData(final String refSampleDataFile)
+    public void loadReferenceSampleData(final String refSampleDataFile, boolean populateRefOnly)
     {
         if(refSampleDataFile == null)
             return;
@@ -112,12 +112,18 @@ public class SampleDataCache
                     cancerSampleData.add(sample);
 
                 RefSampleCancerTypeMap.put(sample.Id, sample.CancerType);
+
+                if(!populateRefOnly)
+                    SampleDataList.add(sample);
             }
         }
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sample data file({}): {}", refSampleDataFile, e.toString());
         }
+
+        if(!populateRefOnly)
+            SampleDataList.forEach(x -> SampleIds.add(x.Id));
     }
 
 }
