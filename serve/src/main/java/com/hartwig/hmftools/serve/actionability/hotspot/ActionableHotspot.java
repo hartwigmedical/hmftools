@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.actionability.variant;
+package com.hartwig.hmftools.serve.actionability.hotspot;
 
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 

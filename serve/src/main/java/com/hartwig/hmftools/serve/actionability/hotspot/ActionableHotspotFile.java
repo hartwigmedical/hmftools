@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.actionability.variant;
+package com.hartwig.hmftools.serve.actionability.hotspot;
 
 import java.io.File;
 import java.io.IOException;
