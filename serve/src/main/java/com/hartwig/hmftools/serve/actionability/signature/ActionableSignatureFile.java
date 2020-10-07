@@ -67,7 +67,7 @@ public final class ActionableSignatureFile {
         String[] values = line.split(DELIMITER);
         return ImmutableActionableSignature.builder()
                 .signature(values[0])
-                .source(values[1])
+                .source(ActionableEventFactory.sourceFromFileValue(values[1]))
                 .treatment(values[2])
                 .cancerType(values[3])
                 .doid(values[4])
@@ -89,7 +89,7 @@ public final class ActionableSignatureFile {
     @NotNull
     private static String toLine(@NotNull ActionableSignature signature) {
         return new StringJoiner(DELIMITER).add(signature.signature())
-                .add(signature.source())
+                .add(signature.source().display())
                 .add(signature.treatment())
                 .add(signature.cancerType())
                 .add(signature.doid())

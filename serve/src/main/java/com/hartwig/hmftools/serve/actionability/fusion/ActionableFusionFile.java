@@ -66,7 +66,7 @@ public final class ActionableFusionFile {
         String[] values = line.split(DELIMITER);
         return ImmutableActionableFusion.builder()
                 .fusion(values[0])
-                .source(values[1])
+                .source(ActionableEventFactory.sourceFromFileValue(values[1]))
                 .treatment(values[2])
                 .cancerType(values[3])
                 .doid(values[4])
@@ -88,7 +88,7 @@ public final class ActionableFusionFile {
     @NotNull
     private static String toLine(@NotNull ActionableFusion fusion) {
         return new StringJoiner(DELIMITER).add(fusion.fusion())
-                .add(fusion.source())
+                .add(fusion.source().display())
                 .add(fusion.treatment())
                 .add(fusion.cancerType())
                 .add(fusion.doid())

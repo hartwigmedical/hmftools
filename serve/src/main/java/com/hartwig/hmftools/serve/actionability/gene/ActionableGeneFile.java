@@ -68,7 +68,7 @@ public final class ActionableGeneFile {
         return ImmutableActionableGene.builder()
                 .gene(values[0])
                 .type(values[1])
-                .source(values[2])
+                .source(ActionableEventFactory.sourceFromFileValue(values[2]))
                 .treatment(values[3])
                 .cancerType(values[4])
                 .doid(values[5])
@@ -91,7 +91,7 @@ public final class ActionableGeneFile {
     private static String toLine(@NotNull ActionableGene gene) {
         return new StringJoiner(DELIMITER).add(gene.gene())
                 .add(gene.type())
-                .add(gene.source())
+                .add(gene.source().display())
                 .add(gene.treatment())
                 .add(gene.cancerType())
                 .add(gene.doid())

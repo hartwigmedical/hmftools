@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.serve.actionability;
 
+import com.hartwig.hmftools.serve.Source;
+
 import org.jetbrains.annotations.NotNull;
 
 public abstract class ActionableEvent {
 
     @NotNull
-    public abstract String source();
+    public abstract Source source();
 
     @NotNull
     public abstract String treatment();

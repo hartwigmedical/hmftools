@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
+import com.hartwig.hmftools.serve.Source;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
@@ -23,14 +24,17 @@ import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.annotation.FusionEvent;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViccUtil {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccUtil.class);
+
     private static final String FIELD_DELIMITER = "\t";
     private static final String EVENT_DELIMITER = "|";
 
@@ -41,14 +45,15 @@ public final class ViccUtil {
             throws IOException {
         List<ActionableFusion> actionableFusions = Lists.newArrayList();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+            Source source = fromViccSource(entry.getKey().source());
             ViccExtractionResult result = entry.getValue();
             ActionableEvidence evidence = result.actionableEvidence();
-            if (evidence != null) {
+            if (evidence != null && source != null) {
                 for (FusionAnnotation fusion : result.fusionsPerFeature().values()) {
                     if (fusion.fusionEvent() == FusionEvent.FUSION_PAIR) {
                         actionableFusions.add(ImmutableActionableFusion.builder()
                                 .fusion(fusion.fusion())
-                                .source(entry.getKey().source().toString())
+                                .source(source)
                                 .treatment(evidence.drugs())
                                 .cancerType(evidence.cancerType())
                                 .doid(evidence.doid())
@@ -62,6 +67,22 @@ public final class ViccUtil {
         String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(outputDir);
         LOGGER.info("Writing {} actionable fusions to {}", actionableFusions.size(), actionableFusionTsv);
         ActionableFusionFile.write(actionableFusionTsv, actionableFusions);
+    }
+
+    @Nullable
+    private static Source fromViccSource(@NotNull ViccSource source) {
+        switch (source) {
+            case CIVIC:
+                return Source.CIVIC;
+            case CGI:
+                return Source.CGI;
+            case JAX:
+                return Source.JAX;
+            case ONCOKB:
+                return Source.ONCOKB;
+            default:
+                return null;
+        }
     }
 
     public static void writeFeatureTypes(@NotNull String featureTypeTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
