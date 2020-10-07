@@ -25,7 +25,7 @@ public final class ProteinResolverFactory {
     @NotNull
     public static ProteinResolver transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion,
             @NotNull String refGenomeFastaFile) throws FileNotFoundException {
-        LOGGER.info("Creating protein to hotspot resolver with ref genome version '{}' and fasta path '{}'",
+        LOGGER.info("Creating protein resolver with ref genome version '{}' and fasta path '{}'",
                 refGenomeVersion,
                 refGenomeFastaFile);
         return Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
