@@ -4,14 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum Source {
-    CIVIC("CIViC"),
-    ONCOKB("OncoKB"),
-    DOCM("DoCM"),
     CGI("CGI"),
-    JAX("JAX"),
-    HARTWIG_CURATED("HartwigCurated"),
+    CIVIC("CIViC"),
+    DOCM("DoCM"),
     HARTWIG_COHORT("HartwigCohort"),
-    ICLUSION("iClusion");
+    HARTWIG_CURATED("HartwigCurated"),
+    ICLUSION("iClusion"),
+    JAX("JAX"),
+    ONCOKB("OncoKB");
 
     @Nullable
     public static Source fromDisplayString(@NotNull String display) {
