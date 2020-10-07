@@ -114,6 +114,7 @@ public final class ViccUtil {
                         .doid(evidence.doid())
                         .direction(evidence.direction())
                         .level(evidence.level())
+                        .url(evidence.url())
                         .build());
             }
         }
@@ -138,6 +139,7 @@ public final class ViccUtil {
                         .doid(evidence.doid())
                         .direction(evidence.direction())
                         .level(evidence.level())
+                        .url(evidence.url())
                         .build());
             }
         }
@@ -170,6 +172,7 @@ public final class ViccUtil {
                     .doid(evidence.doid())
                     .direction(evidence.direction())
                     .level(evidence.level())
+                    .url(evidence.url())
                     .build());
         }
         return actionableGenes;
@@ -189,6 +192,7 @@ public final class ViccUtil {
                     .doid(evidence.doid())
                     .direction(evidence.direction())
                     .level(evidence.level())
+                    .url(evidence.url())
                     .build());
         }
         return actionableGenes;
@@ -210,6 +214,7 @@ public final class ViccUtil {
                     .doid(evidence.doid())
                     .direction(evidence.direction())
                     .level(evidence.level())
+                    .url(evidence.url())
                     .build());
         }
         return actionableFusions;

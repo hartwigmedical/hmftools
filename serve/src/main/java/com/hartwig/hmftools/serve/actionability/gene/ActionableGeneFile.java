@@ -49,6 +49,7 @@ public final class ActionableGeneFile {
                 .add("doid")
                 .add("level")
                 .add("direction")
+                .add("url")
                 .toString();
     }
 
@@ -74,6 +75,7 @@ public final class ActionableGeneFile {
                 .doid(values[5])
                 .level(values[6])
                 .direction(ActionableEventFactory.directionFromFileValue(values[7]))
+                .url(values[8])
                 .build();
     }
 
@@ -97,6 +99,7 @@ public final class ActionableGeneFile {
                 .add(gene.doid())
                 .add(gene.level())
                 .add(gene.direction().display())
+                .add(gene.url())
                 .toString();
     }
 }

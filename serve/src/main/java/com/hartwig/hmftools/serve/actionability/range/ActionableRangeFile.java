@@ -52,6 +52,7 @@ public final class ActionableRangeFile {
                 .add("doid")
                 .add("level")
                 .add("direction")
+                .add("url")
                 .toString();
     }
 
@@ -80,6 +81,7 @@ public final class ActionableRangeFile {
                 .doid(values[8])
                 .level(values[9])
                 .direction(ActionableEventFactory.directionFromFileValue(values[10]))
+                .url(values[11])
                 .build();
     }
 
@@ -106,6 +108,7 @@ public final class ActionableRangeFile {
                 .add(range.doid())
                 .add(range.level())
                 .add(range.direction().display())
+                .add(range.url())
                 .toString();
     }
 }

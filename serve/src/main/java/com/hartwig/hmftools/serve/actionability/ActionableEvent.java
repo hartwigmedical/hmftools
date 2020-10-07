@@ -23,4 +23,7 @@ public abstract class ActionableEvent {
 
     @NotNull
     public abstract EvidenceDirection direction();
+
+    @NotNull
+    public abstract String url();
 }

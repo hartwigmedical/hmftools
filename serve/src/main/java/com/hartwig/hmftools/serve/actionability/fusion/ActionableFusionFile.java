@@ -53,6 +53,7 @@ public final class ActionableFusionFile {
                 .add("doid")
                 .add("level")
                 .add("direction")
+                .add("url")
                 .toString();
     }
 
@@ -81,6 +82,7 @@ public final class ActionableFusionFile {
                 .doid(values[7])
                 .level(values[8])
                 .direction(ActionableEventFactory.directionFromFileValue(values[9]))
+                .url(values[10])
                 .build();
     }
 
@@ -115,6 +117,7 @@ public final class ActionableFusionFile {
                 .add(fusion.doid())
                 .add(fusion.level())
                 .add(fusion.direction().display())
+                .add(fusion.url())
                 .toString();
     }
 

@@ -1,2 +1,2 @@
-chromosome	position	ref	alt	source	treatment	cancerType	doid	level	direction
-7	140453136	A	T	CGI	Vemurafenib	Skin Melanoma	X	A	Responsive
+chromosome	position	ref	alt	source	treatment	cancerType	doid	level	direction	url
+7	140453136	A	T	CGI	Vemurafenib	Skin Melanoma	X	A	Responsive	http
