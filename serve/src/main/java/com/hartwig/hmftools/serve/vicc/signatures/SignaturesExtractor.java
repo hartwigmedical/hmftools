@@ -17,8 +17,8 @@ public class SignaturesExtractor {
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == FeatureType.SIGNATURE) {
-                // TODO Map to SignatureName
-//                signaturesPerFeature.put(feature, feature.name());
+                // TODO Map Feature to SignatureName
+                signaturesPerFeature.put(feature, SignatureName.MICROSATELLITE_UNSTABLE);
             }
         }
         return signaturesPerFeature;

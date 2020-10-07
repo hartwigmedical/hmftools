@@ -29,8 +29,8 @@ public class CopyNumberExtractor {
     }
 
     @NotNull
-    public Map<Feature, KnownAmplificationDeletion> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
-        Map<Feature, KnownAmplificationDeletion> ampsDelsPerFeature = Maps.newHashMap();
+    public Map<Feature, CopyNumberAnnotation> extractKnownAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
+        Map<Feature, CopyNumberAnnotation> ampsDelsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == FeatureType.AMPLIFICATION) {
@@ -45,7 +45,7 @@ public class CopyNumberExtractor {
     }
 
     @NotNull
-    private static KnownAmplificationDeletion eventForGene(@NotNull String gene, @NotNull CopyNumberType type) {
-        return ImmutableKnownAmplificationDeletion.builder().gene(gene).type(type).build();
+    private static CopyNumberAnnotation eventForGene(@NotNull String gene, @NotNull CopyNumberType type) {
+        return ImmutableCopyNumberAnnotation.builder().gene(gene).type(type).build();
     }
 }

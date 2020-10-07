@@ -80,13 +80,13 @@ public class ViccTestApplication {
     private static void writeFusions(@NotNull String fusionTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(fusionTsv));
-        writer.write("fusion" + "\t" + "fusionEvent" + "\n");
+        writer.write("geneUp" + "\t" + "geneDown" + "\n");
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             for (Map.Entry<Feature, FusionAnnotation> featureResult : entry.getValue().fusionsPerFeature().entrySet()) {
                 FusionAnnotation geneFusionForFeature = featureResult.getValue();
 
-                writer.write(geneFusionForFeature.fusion() + "\t" + geneFusionForFeature.fusionEvent() + "\n");
+                writer.write(geneFusionForFeature.geneUp() + "\t" + geneFusionForFeature.geneDown() + "\n");
             }
         }
         writer.close();

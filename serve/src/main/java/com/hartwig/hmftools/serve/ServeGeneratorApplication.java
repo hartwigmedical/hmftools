@@ -6,17 +6,11 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.serve.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.serve.compassionateuse.CompassionateUseProgramFile;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
-import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
-import com.hartwig.hmftools.serve.vicc.fusion.KnownFusions;
-import com.hartwig.hmftools.serve.vicc.signatures.Signatures;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
@@ -68,18 +62,6 @@ public class ServeGeneratorApplication {
         assert PERMITTED_REF_GENOME_VERSIONS.contains(refVersionString);
         assert refVersionString.equals("hg19");
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
-
-        ProteinResolver proteinResolver =
-                ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
-
-        //Lists of known genomic events
-        List<KnownAmplificationDeletion> listKnownAmplification = Lists.newArrayList();
-        List<KnownAmplificationDeletion> listKnownDeletion = Lists.newArrayList();
-        List<String> listKnownVariants = Lists.newArrayList();
-        List<String> listKnownRange = Lists.newArrayList();
-        List<KnownFusions> listKnownFusionPairs = Lists.newArrayList();
-        List<KnownFusions> listKnownFusionPromiscuous = Lists.newArrayList();
-        List<Signatures> listSignatures = Lists.newArrayList();
 
     }
 
