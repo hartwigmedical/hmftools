@@ -705,94 +705,132 @@ Consecutive breakends with no more than 5kb between them or which are part of th
 * COMPLEX_OTHER - Any other cluster
 
 
-### Gene impact and fusion prediction
+### 4. Gene impact and fusion prediction
 
 #### Annotation of breakends with potential gene impact
-For each breakend we search for genes that could be potentially disrupted or fused by the structural variant. 
 
-To do this we find and annotate the breakend for any transcript that either:
-* Has an exon or intron overlapping the breakend
-* Has it’s 5’ end downstream of and facing the breakend and less than 100k bases where no other splice acceptor exists closer to the breakend. 
+For each breakend we search for genes that could be potentially disrupted or fused by the structural variant. To do this we find and annotate the breakend for any transcript that either:
+- Has an exon or intron overlapping the breakend
+- Has its 5’ end downstream of and facing the breakend and less than 100k bases where no other splice acceptor exists closer to the breakend. 
 
 Each breakend is additionally annotated for the transcript with the following information:
-* isDisruptive: disruptive for a particular transcript if the SV it belongs to is an inversion,single breakend or translocation or if the SV overlaps at least one exon in the transcript AND the variant is not part of a chain which does not disrupt the exon ordering in the transcript.
-* TranscriptCodingContext: UPSTREAM, 5_UTR, CODING, 3_UTR, DOWNSTREAM OR NON_CODING
-* geneOrientation: relative orientation of gene compared to breakend (UPSTREAM or DOWNSTREAM)
-* isExonic (TRUE/FALSE)
-* exactBasePhase: The exact base phasing of the current location
-* Next splice site information: The distance to, phasing of and exon rank of the 1st base of the next facing splice acceptor or donor (note: phasing will be different from exactBasePhase if the breakend is exonic in the transcript or the coding context is upstream. Null if there are no subsequent splice sites in the gene.
-* ExonTotalCount: The total number of exons in the transcript (for reference)
-* transcriptBiotype: The ensembl biotype of the transcript
+- disruptive: a breakend is disruptive for a particular transcript if the SV is an inversion, translocation or single breakend or a deletion/duplication that overlaps at least part of an exon in the transcript AND the variant is NOT part of a chain which does not disrupt the exon ordering in the transcript. A breakend which is resolved as type ‘LINE insertion’ is never marked as disruptive.
+- transcript coding context: UPSTREAM, 5_UTR, CODING, 3_UTR, DOWNSTREAM OR NON_CODING
+- gene orientation: relative orientation of gene compared to breakend (UPSTREAM or DOWNSTREAM)
+- exonic (TRUE/FALSE)
+- exact base phase: The exact base phasing of the current location
+- Next splice site information: The distance to, phasing of and exon rank of the 1st base of the next facing splice acceptor or donor (note: phasing will be different from exactBasePhase if the breakend is exonic in the transcript or the coding context is upstream. Null if there are no subsequent splice sites in the gene.
+- exon total count: The total number of exons in the transcript (for reference)
+- transcript biotype: The ensembl biotype of the transcript
 
-Fusions are predicted by looking for consecutive and novel splice donor-acceptor pairings that are joined together in derivative chromosomes by either a single structural variant or a continuous chain of structural variants.
+
+
+#### Known pathogenic fusions and promiscuous partners
+Configuration of pathogenic fusions impacts LINX in 2 ways:
+Some criteria for fusion calling are relaxed for known fusions due to the high prior likelihood of pathogenic fusions
+As well as attempting to predict all fusion events, LINX uses the configured list of fusions to determine a subset which are ‘reported’ as likely pathogenic.
+ 
+To produce the list of known fusions provided with LINX, a broad literature search was performed to find a comprehensive list of well-known fusions that are highly likely to be pathogenic. The criteria used for inclusion of a particular fusion in the curated list was either multiple independent reports of the fusion, or single case reports with either convincing demonstration of the pathogenicity in a model system or clear response to a therapy targeted to the specific fusion. 
+
+The curated fusions were classified into 3 categories:
+- Known fusions (n= 396) – these are transcript fusions which fuse either the coding regions of 2 genes to form a novel protein or the 5’ UTR regions of 2 genes which may lead to increased expression of the 3’ partner. A well-known example is TMPRSS2_ERG
+- Known IG enhancer rearrangements (n= 17) – these are structural rearrangements in B-Cell lymphomas and leukemias that relocate enhancers from one of the @IG regions (IGH,IGK,IGL) to increase expression of a 3’ partner. A well-known example is @IGH-MYC
+- Known exon deletions & duplications (n=11) – these are deletions or duplications of exons in specific exon ranges of a handful of genes which are known or highly likely to be pathogenic.  Common examples are EGFR vII and vIII
+
+A set of ‘promiscuous’ fusion partners was also determined from this list so that potential novel fusions with fusion partners that have been identified in multiple fusions previously can also be reported as potentially pathogenic. Any gene which was identified in 3 or more known fusions was marked as a promiscuous 5’ partner and likewise if it was identified in 3 or more known fusions in our curated list was marked as a promiscuous 3’ partner. MYC and CRLF4 were also marked as 3’ promiscuous since they feature in known fusions with both IG enhancer and known fusions. FGFR1 is also added as a 5’ promiscuous partner. 
+
+For 12 promiscuous fusion partners {FGFR1, FGFR2, FGFR3, TMPRSS2, SLC45A3, HMGA2,BRAF, RET, ALK, ROS1, ETV1, ETV4} a specific exon range has been identified as highly promiscuous and is identified in the knowledge base. Fusion reporting criteria are relaxed in these ranges.     10 promiscuous 3’ genes {BRAF ,RET ,ROS1 ,ALK ,MET ,NRG1 , NRTK1, NTRK2 & NTRK3) are marked as ‘high impact’ and also have special treatment in the fusion reporting logic.   
+
+A section of @IGH gene stretching from the diversity region to the end of the constant region was also marked as a ‘promiscuous IG partner’ as it features in many IG fusions.
 
 #### Fusion prediction
 
-##### Curate a list of known fusions
-A list of 390 curated known fusion pairs was sourced by taking the union of known fusions from the following external databases:
-* Cosmic curated fusions12 (v83)
-* OncoKb9 (download = 27-Nov-2018)
-* CGI8 (download = 27-Nov-2018)
-* CIViC7 (download = 27-Nov-2018)
+##### Identify fusion candidates
+Fusions are predicted in LINX by looking for consecutive and novel splice donor-acceptor pairings that are joined together in derivative chromosomes by either a single structural variant or a continuous chain of structural variants. 
 
-We then also created a list of promiscuous fusion partners using the following rules
-* 3’ promiscuous: Any gene which appears on the 3’ side in more than 3 of the curated fusion pairs OR appears at least once on the 3’ side and is marked as promiscuous in either OncoKb, CGI or CIVIC
-* 5’ promiscuous: Any gene which appears on the 5’ side in more than 3 of the curated fusion pairs OR appears at least once on the 5’ side and is marked as promiscuous in either OncoKb, CGI or CIVIC
-
-Identify Viable Fusions
-For each single SV and for every facing pair of SVs in the same chain identify all viable fusions which satisfy the following conditions:
-* 5’ and 3’ must be inframe and join appropriate contexts of the gene (see table below). 
-* Chain must be disruptive to the 5’ partner ( ie. the breakend must fall within the transcript bounds of the 5’ partner and not be a DEL or DUP or INS wholly contained within a single intron)
-* Require 5' gene to have specific biotypes: protein_coding, retained_intron, processed_transcript, nonsense_mediated_decay, lincRNA
-* Not disrupted by an intermediate splice acceptor / splice donor. Exceptions: 1. Traversal can be valid even if there are intermediate splice acceptors as long as upstream partner, downstream partner and all intermediaries are 5’ non-coding). 2. Splice donors/acceptors can be skipped within the same gene if there is no inframe valid fusion without skipping (this is to deal with alternative splicing).
-* Not terminated on the 5’ partner side by a chained breakend prior to the start of the 5’ gene
-* Not terminated on the 3’ partner side by a chained breakend prior to the last coding base of the 3’ gene.
-* For chained fusions, the total chain length must be less than 100kb
-* For upstream context, 10kb up from specific transcript start or 100kb for known fusion pairs
-
-The following table shows allowed contexts:
+For each single SV and for every facing pair of SVs in the same chain identify all viable splice acceptor and splice donor fusion combinations which satisfy the following conditions:
+- 3’ gene partner must have coding bases
+- 5’ gene partner transcript must have one of the following ensembl biotypes: ‘protein_coding’, ’retained_intron’, ’processed_transcript’, ’nonsense_mediated_decay’, ’lincRNA’
+- The upstream breakend must fall within the 5’ partner transcript and be disruptive to the transcript. 
+- The downstream breakend must fall either within the 5’ gene or within 100kb upstream. 
+- The chain must not be disrupted by an intermediate splice acceptor / splice donor. Exceptions:
+  - A traversal can be valid even if there are intermediate splice acceptors as long as upstream partner, downstream partner and all intermediaries are 5’ non-coding)
+  - To allow for alternative splicing, splice donors/acceptors can be skipped within the same gene if there is no in-frame valid fusion without skipping and if the fusion is intergenic. LINX reports the number of exons skipped on both the 5’ and 3’ transcript.
+- The SV or chain must join appropriate contexts of the 5’ and 3’ genes (see table below) and for coding regions must be inframe after allowing for any skipped exons. For exonic to exonic fusions exact base phasing is also checked as splice acceptor to splice donor phasing. The following table shows allowed contexts:
 
 ![Fusion Configurations](src/main/resources/readme/fusion_configurations.png)
 
 Notes:
-(1) for breakends in the upstream region of the 3’ partner, the 2nd exon (1st splice acceptor) is checked for phasing and assumed to be fused exon. 5’ partner coding to 3’ partner upstream is also possible if the 3’ partner coding region starts in the 1st exon and the 1st splice acceptor in the 2nd exon is in phase
-(2) If fusing intron to exon, will fuse with the next downstream exon, so check against frame of end of exon instead of exact base.
-(3) Exonic to Intronic could occur if alternative splicing causes exon with exonic breakend to be skipped
-(4) 5’ partner 5’UTR or non-coding to coding region of 3’ partner - could technically make a fusion, but would need to find 1st alternative start codon also in frame.
-(5) Coding Intronic to non-coding allowed only when transcript starts on 1st base of next downstream exon - in this case we fuse to the first base of the gene which is allowed.
+(1) for breakends in the upstream region of the 3’ partner, the 1st exon is not considered as it does not have a splice acceptor and so the 2nd exon is assumed to be the 3’ fusion partner. 5’ partner coding to 3’ partner upstream is also possible if the 3’ partner coding region starts in the 1st exon.
+(2) If fusing intron to exon, the fusion occurs with the next downstream exon, so check against the frame of the end of the exon instead of the exact base.
+(3) Exonic to Intronic can occur if alternative splicing causes exon with exonic breakend to be skipped
+(4) 5’ partner 5’UTR or non-coding to coding region of 3’ partner can technically make a fusion, but would need to find 1st alternative start codon also in-frame. These are called as out of frame and only reported for known fusions
+(5) Coding Intronic to non-coding allowed only when transcript starts on 1st base of the next downstream exon - in this case we fuse to the first base of the gene which is allowed.
 
-##### Prioritise Transcripts
-Prioritise transcripts and choose one fusion per cluster per fusion gene pair by the following rules in order
-* Viable non-disrupted fusion
-* Inframe
-* Chain not terminated for known fusions
-* 3’ partner biotype is protein_coding 
-* Fusion without skipped exons
-* Best 3’ partner, ranked by canonical and then longest (non NMD) protein coding
-* Best 5’ partner out of those ranked by canonical, then longest protein coding
 
-##### Determine reportability
-Mark as reportable based on the following rules
-* Matches an exact fusion from the curated list OR (is intergenic AND (matches 5’ promiscuous OR matches 3’ promiscuous gene) AND no exons are skipped)
-* Curated domains which are preserved - Ets domain, Protein kinase domain, Epidermal growth factor-like domain, Ankyrin repeat-containing domain, Basic-leucine zipper domain, High mobility group box domain, Bromodomain
-* Curated domains which must be disrupted if exist - Raf-like Ras-binding (mainly affects BRAF)
-* For intragenic fusions, must start and end in coding regions of the gene
-* 3’ partner must be a protein coding gene and the transcript does not result in nonsense mediated decay
+##### Special rules for single breakends which align to a site which forms a pathogenic fusion
+The post processing steps of GRIDSS annotate the best alignments for the insert sequence of single breakends which cannot be uniquely mapped. If any single breakend has an alignment which would create fusion matching a known fusion in our knowledge base then that fusion is called as if the single breakend was a translocation to that alignment. 
+
+##### Special rules for IG rearrangements
+In the special case of IG enhancer rearrangements, the rearrangement normally occurs either between the ‘D’ and ‘J’ region (due to RAG mediation D-J recombination failure – common in IGH-BCL2 fusions) or in the switch region just upstream of the constant regions (due to failure of isoform switching mechanisms – common in IGH-MYC rearrangements). In the former case, the Eµ enhancer is the likely driver of elevated expression whereas in the latter the driver is likely the alpha 1,2 & 3 regulatory region enhancer [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6199666/]. To predict a relevant rearrangement, LINX requires that the breakend in IG is oriented downstream towards the enhancer regions and is connected to the 5’ UTR of the 3’ gene partner. 
+
+##### Special gene specific cases
+LINX also has special rules to support unusual biology for a handful of known pathogenic fusions:
+- For CIC_DUX4 and IGH_DUX4, the DUX4 end may map to a number of different chromosomal regions, including the telomeric ends of both chromosomes 10q and 4q and the hg19 alt contig GL000228.1.
+- For RP11-356O9.1_ETV1 fusion (pathogenic in Prostate cancer) the breakend on the 5’ side breakend is permitted to be up to 20kb downstream of RP11-356O9.1.
+- In the case of IGH-BCL2, LINX also looks for fusions in the 3’UTR region and up to 40k bases downstream of BCL2 facing in the upstream orientation towards BCL2 (common in Folicular Lymphomas) [ref: http://atlasgeneticsoncology.org/Genes/BCL2ID49.html ].
+
+##### Prioritise genes and transcripts
+Each candidate chained splice acceptor and splice donor fusion pair may have multiple gene fusion transcripts on both the 5’ gene and 3’ gene that meet the above criteria. Occasionally genes may also share a splice acceptor or splice donor in which case the transcripts of that groups of genes are considered together. LINX prioritizes the potential transcript candidates and choose a single pair of 5’ and 3’ transcripts via the following criteria in order of priority:
+- Fusion is a KNOWN_PAIR or known EXON_DEL_DUP
+- A phased fusion is possible
+- Chain is not terminated early
+- 3’ partner biotype is ‘protein_coding’
+- 3’ partner region is INTRONIC or EXONIC
+- No exons are skipped
+- Best 3’ partner transcript, ranked by canonical and then longest (non NMD) protein coding
+- Best 5’ partner transcript ranked by canonical, then longest protein coding, then longest
+- If multiple chains link the same 2 genes then they are prioritised again according to the above logic.
+
+
+##### Reportable fusions
+In addition to predicting fusions, LINX also tries to identify likely viable pathogenic fusions and marks as reportable. To maximise precision whilst ensuring high impact fusions are always likely to be reported, the criteria vary by fusion type with more relaxed criteria for known pathogenic pairs due to high prior likelihood. High impact promiscuous fusion partners which may be clinically relevant (including NTRK1-3, BRAF, RET, ROS1, ALK) also have more relaxed criteria
+
+The criteria are summarised in the below table. 
+
+Criteria | KNOWN PAIR | IG KNOWN PAIR | EXON DEL DUP | HIGH IMPACT PROMISCUOUS | PROMISCUOUS OTHER
+---|---|---|---|---|---
+Knowledge-base match | GENE PAIR | GENE PAIR | Breakends within EXON RANGE | INTERGENIC ONLY | INTERGENIC ONLY
+‘Nonsense Mediated Decay’ biotype allowed for 3’ partner | FALSE | FALSE | FALSE | FALSE | FALSE
+Maximum chain links | 4 | 4 | 4 | 4 | 4
+Maximum upstream distance for 3’ partner | 100kb | 10kb | NA | 100kb | 10kb
+Phasing | INFRAME or SKIPPED EXONS* | NA  | INFRAME or SKIPPED EXONS**,# | INFRAME or SKIPPED EXONS | INFRAME##
+Allow chain disruption | TRUE | TRUE | TRUE | FALSE | FALSE
+
+'* 5’UTR to coding regions are also allowed for KNOWN_PAIR fusions (>1Mb length)
+'** The breakend and the fused exon must both be in the specified ranges on both 5’ and 3’ side
+'# Out of frame also reported for exonic to exonic EXON_DEL_DUP only (under assumption of possible phased indel)
+'## Skipped exons are allowed if a known exon range is configured, but only if the breakend and fused exon must be within the specified range on the promiscuous side, and any skipping is allowed on the non-promiscuous gene.
+
+Additionally, LINX checks that the protein domains retained in the 4’ partner may form a viable protein. Specifically The following domains must be preserved intact in the 3’ partner if they exist: Ets domain; Protein kinase domain; Epidermal growth factor-like domain; Ankyrin repeat-containing domain, Basic-leucine zipper domain,High mobility group box domain. The Raf-like Ras-binding domain must be disrupted if it exists (mainly affects BRAF). 
+
+Finally linx sets a likelihood for each reported fusion. KNOWN_PAIR, IG_KNOWN_PAIR and EXON_DEL_DUP are set to HIGH likelihood. PROMISCUOUS fusions are set to HIGH likelihood only if the fused exon matches the known exon range, or else LOW otherwise.
+
 
 
 #### Amplification, deletion and disruption drivers
 
 ##### Homozygous disruption drivers
-LINX can optionally take as input a catalog of point mutation, amplification and homozygous deletion drivers which is created by PURPLE based on the raw somatic variant data and determined copy number profile.    LINX leverages it’s chaining logic to extend the driver catalog by searching for 2 additional types of biallelic disruptions which disrupt all copies of the gene but do not cause a homozygous deletion in an exonic segment (which is PURPLE’s criteria for homozygous deletion).     Specifically LINX searches for 2 additional types of homozygous disruptions:
-* Disruptive Breakends - Any disruptive breakend which causes the intronic copy number to drop to <0.5 ploidy after allowing for the ploidy of any  overlapping deletion bridges.   
-* Disruptive Duplications -  Any duplication which has both breakends disruptive in the transcript and a ploidy >= flanking ploidy at both ends end.    
+LINX can optionally take as input a catalog of point mutation, amplification and homozygous deletion drivers which is created by PURPLE based on the raw somatic variant data and determined copy number profile. LINX leverages it’s chaining logic to extend the driver catalog by searching for 2 additional types of biallelic disruptions which disrupt all copies of the gene but do not cause a homozygous deletion in an exonic segment (which is PURPLE’s criteria for homozygous deletion). Specifically LINX searches for 2 additional types of homozygous disruptions:
+* Disruptive Breakends - Any pair of disruptive breakends that form a deletion bridge or are oriented away from each other and both cause the copy number to drop to <0.5 after allowing for the JCN of any overlapping deletion bridges.  
+* Disruptive Duplications -  Any duplication which has both breakends disruptive in the transcript and a JCN >= flanking copy number at both ends.     
 
 ##### Linkage of drivers to contributing structural variant clusters 
 We link each driver in the catalog that is affected by genomic rearrangements (ie. high level amplifications, homozygous deletions and biallelic point mutations in TSG with LOH and the homozygous disruptions found by LINX) to each structural variant cluster which contributed to the driver. 1 or more structural variant clusters may contribute to each event and/or the driver may be caused by a whole chromosome or whole arm event which cannot be mapped to a specific variant but which has caused significant copy number gain or loss
 
 Amplifications drivers are linked to either one or more clusters which explain the gain in copy number over the gene (marked as type 'GAIN'), a gain in copy number in the centromere (marked as type 'GAIN_ARM') or across the whole chromosome (marked as type 'GAIN_CHR'). More than 1 of these factors can be recorded as a cause of amplification if its copy number gain is at least 33% of the largest contributing factor. To determine whether a cluster contributes to gene amplification, the copy number change of all its breakends surrounding the gene are summed into a net cluster copy number gain, and the copy number loss of any opposing clusters are subtracted. If a net gain remains, then the cluster is considered as contributing to the gene amplification.
 
-Homozygous deletions drivers are linked to clusters that either directly bound by the homozygous deleted region (svDriverType = DEL) or a cluster that bounds the LOH (svDriverType = LOH). Biallelic point mutations drivers in TSG with LOH are linked only to the cluster that bounds the LOH (svDriverType = LOH). If the LOH bounds extend to the whole arm or whole chromosome, then a record is created with linked clusterId is set to NULL and the svDrivertype is marked as LOH_ARM or LOH_CHR respectively.
+Homozygous deletion drivers are linked to clusters that are either directly bound by the homozygous deleted region (svDriverType = DEL) or a cluster that bounds the LOH (svDriverType = LOH). Biallelic point mutations drivers in TSG with LOH are linked only to the cluster that bounds the LOH (svDriverType = LOH). If the LOH bounds extend to the whole arm or whole chromosome, then a record is created with linked clusterId is set to NULL and the svDrivertype is marked as LOH_ARM or LOH_CHR respectively.
 
 The supported linkages between drivers and SVs are summarised in the table below
 
