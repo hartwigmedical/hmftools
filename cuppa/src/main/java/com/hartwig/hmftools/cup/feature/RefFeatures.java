@@ -109,6 +109,7 @@ public class RefFeatures
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("CancerType,Feature,Type,SamplePerc");
+            writer.newLine();
 
             for(Map.Entry<String,Map<String,Double>> cancerEntry : cancerFeatureCounts.entrySet())
             {
@@ -142,6 +143,7 @@ public class RefFeatures
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("CancerType,SvDataType");
+            writer.newLine();
 
             for(Map.Entry<String,List<Double>> entry : driversPerSampleMap.entrySet())
             {
