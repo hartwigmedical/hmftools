@@ -26,13 +26,11 @@ public abstract class ViccExtractionOutput {
     @NotNull
     public abstract Map<VariantHotspot, HotspotAnnotation> hotspots();
 
-    // TODO This should be a VICC-independent data class
     @NotNull
-    public abstract List<KnownCopyNumber> knownAmpsDels();
+    public abstract List<KnownCopyNumber> knownCopyNumbers();
 
-    // TODO This should be a VICC-independent data class
     @NotNull
-    public abstract List<KnownFusionPair> knownFusions();
+    public abstract List<KnownFusionPair> knownFusionPairs();
 
     @NotNull
     public abstract List<ActionableHotspot> actionableHotspots();

@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.serve.vicc.range;
-
-import static org.junit.Assert.*;
+package com.hartwig.hmftools.serve.vicc.extractors;
 
 public class GeneRangeExtractorTest {
 

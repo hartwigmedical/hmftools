@@ -25,14 +25,14 @@ import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
-import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberExtractor;
-import com.hartwig.hmftools.serve.vicc.fusion.FusionExtractor;
-import com.hartwig.hmftools.serve.vicc.genelevel.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.vicc.genelevel.GeneLevelEventExtractor;
-import com.hartwig.hmftools.serve.vicc.hotspot.HotspotExtractor;
-import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
-import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
-import com.hartwig.hmftools.serve.vicc.signatures.SignaturesExtractor;
+import com.hartwig.hmftools.serve.vicc.annotation.GeneLevelAnnotation;
+import com.hartwig.hmftools.serve.vicc.annotation.GeneRangeAnnotation;
+import com.hartwig.hmftools.serve.vicc.extractor.CopyNumberExtractor;
+import com.hartwig.hmftools.serve.vicc.extractor.FusionExtractor;
+import com.hartwig.hmftools.serve.vicc.extractor.GeneLevelEventExtractor;
+import com.hartwig.hmftools.serve.vicc.extractor.GeneRangeExtractor;
+import com.hartwig.hmftools.serve.vicc.extractor.HotspotExtractor;
+import com.hartwig.hmftools.serve.vicc.extractor.SignaturesExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -98,8 +98,8 @@ public final class ViccExtractor {
 
         ImmutableViccExtractionOutput.Builder outputBuilder = ImmutableViccExtractionOutput.builder()
                 .hotspots(convertToHotspots(resultsPerEntry))
-                .knownAmpsDels(convertToKnownAmpsDels(resultsPerEntry))
-                .knownFusions(convertToKnownFusions(resultsPerEntry));
+                .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry))
+                .knownFusionPairs(convertToKnownFusions(resultsPerEntry));
 
         addActionability(outputBuilder, resultsPerEntry);
 

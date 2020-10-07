@@ -1,9 +1,11 @@
-package com.hartwig.hmftools.serve.vicc.genelevel;
+package com.hartwig.hmftools.serve.vicc.extractor;
 
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.vicc.annotation.GeneLevelAnnotation;
+import com.hartwig.hmftools.serve.vicc.annotation.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;

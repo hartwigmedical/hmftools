@@ -24,7 +24,6 @@ public final class ViccUtil {
     private static final Logger LOGGER = LogManager.getLogger(ViccUtil.class);
 
     private static final String FIELD_DELIMITER = "\t";
-    private static final String EVENT_DELIMITER = "|";
 
     private ViccUtil() {
     }

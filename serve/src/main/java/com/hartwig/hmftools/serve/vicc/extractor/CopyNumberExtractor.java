@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.vicc.copynumber;
+package com.hartwig.hmftools.serve.vicc.extractor;
 
 import java.util.Map;
 

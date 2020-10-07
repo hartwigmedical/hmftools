@@ -7,8 +7,8 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.vicc.genelevel.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
+import com.hartwig.hmftools.serve.vicc.annotation.GeneLevelAnnotation;
+import com.hartwig.hmftools.serve.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 
 import org.immutables.value.Value;
