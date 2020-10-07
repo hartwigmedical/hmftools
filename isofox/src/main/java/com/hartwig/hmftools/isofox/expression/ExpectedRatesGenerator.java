@@ -702,7 +702,7 @@ public class ExpectedRatesGenerator
 
                 for(FragmentSize fragLength : config.FragmentSizeData)
                 {
-                    writer.write(String.format(",%s_%d", EXP_COUNT_LENGTH_HEADER, fragLength.Length));
+                    writer.write(String.format(",%s%d", EXP_COUNT_LENGTH_HEADER, fragLength.Length));
                 }
             }
             else

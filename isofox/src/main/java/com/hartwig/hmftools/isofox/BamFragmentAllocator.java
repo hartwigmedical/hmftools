@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
+import static com.hartwig.hmftools.isofox.common.FragmentMatchType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
@@ -603,6 +604,7 @@ public class BamFragmentAllocator
                 }
                 else if(regionCount > 1)
                 {
+                    // the read pair span at least 2 exons within the same transcript
                     transMatchType = FragmentMatchType.LONG;
 
                     if(comboTransMatchType != FragmentMatchType.SPLICED)
@@ -614,6 +616,20 @@ public class BamFragmentAllocator
                 }
 
                 mCurrentGenes.addTranscriptReadMatch(transId, isUniqueTrans, transMatchType);
+
+                // separately record discordant reads spanning 2+ exons
+                if(!read1.containsSplit() && read2.containsSplit())
+                {
+                    final RegionReadData region1 =
+                            read1.getMappedRegions().keySet().stream().filter(x -> x.hasTransId(transId)).findFirst().orElse(null);
+                    final RegionReadData region2 =
+                            read2.getMappedRegions().keySet().stream().filter(x -> x.hasTransId(transId)).findFirst().orElse(null);
+
+                    if(region1 != region2 && region1.getExonRank(transId) != region2.getExonRank(transId))
+                    {
+                        mCurrentGenes.addTranscriptReadMatch(transId, DISCORDANT);
+                    }
+                }
 
                 // keep track of which regions have been allocated from this fragment as a whole, so not counting each read separately
                 final List<RegionReadData> processedRegions = Lists.newArrayList();

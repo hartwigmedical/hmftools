@@ -40,6 +40,7 @@ public class TranscriptExpression
     private final ResultsWriter mResultsWriter;
     private final ExpectedCountsCache mCache;
 
+    private final Map<String,ExpectedRatesData> mExpectedRatesDataMap; // cached computed results for this chromosome
     private ExpectedRatesData mCurrentExpRatesData;
 
     private final List<Double> mFragmentFrequencyRates;
@@ -50,6 +51,7 @@ public class TranscriptExpression
         mResultsWriter = resultsWriter;
 
         mCache = cache;
+        mExpectedRatesDataMap = Maps.newHashMap();
         mCurrentExpRatesData = null;
 
         // convert fragment distribution counts to rates
@@ -83,11 +85,14 @@ public class TranscriptExpression
         }
     }
 
-    public void runTranscriptEstimation(final GeneCollectionSummary geneSummaryData, final ExpectedRatesData expRatesData)
+    public void runTranscriptEstimation(final GeneCollectionSummary geneSummaryData, final ExpectedRatesData expRatesData, boolean checkCached)
     {
         if(expRatesData == null)
         {
-            loadGeneExpectedRatesData(geneSummaryData.ChrId, geneSummaryData.GeneIds);
+            if(checkCached)
+                mCurrentExpRatesData = mExpectedRatesDataMap.get(geneSummaryData.ChrId);
+            else
+                loadGeneExpectedRatesData(geneSummaryData.ChrId, geneSummaryData.GeneIds);
         }
         else
         {
@@ -99,6 +104,9 @@ public class TranscriptExpression
             ISF_LOGGER.debug("gene({}) invalid expected rates or actuals data", geneSummaryData.GeneNames);
             return;
         }
+
+        if (!checkCached) // cache the generated data since it will be used again in GC adjustment calcs
+            mExpectedRatesDataMap.put(geneSummaryData.ChrId, mCurrentExpRatesData);
 
         final double[] transComboCounts = generateReadCounts(geneSummaryData);
 
@@ -329,7 +337,6 @@ public class TranscriptExpression
         {
             double totalCounts = sumVector(categoryCounts) + skippedComboCounts;
             double skippedPerc = skippedComboCounts/totalCounts;
-
 
             Level logLevel = skippedPerc > 0.1 && skippedComboCounts > 100 ? WARN : DEBUG;
 

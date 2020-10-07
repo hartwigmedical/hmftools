@@ -6,6 +6,7 @@ public enum FragmentMatchType
     SHORT,
     LONG,
     UNSPLICED,
+    DISCORDANT,
     MAX;
 
     public static final int MAX_FRAG_TYPE = typeAsInt(FragmentMatchType.MAX);
@@ -18,20 +19,8 @@ public enum FragmentMatchType
             case SHORT: return 1;
             case LONG: return 2;
             case UNSPLICED: return 3;
-            default: return 4;
+            case DISCORDANT: return 4;
+            default: return 5;
         }
     }
-
-    public static FragmentMatchType intAsType(int type)
-    {
-        switch(type)
-        {
-            case 0: return SPLICED;
-            case 1: return SHORT;
-            case 2: return LONG;
-            case 3: return UNSPLICED;
-            default: return MAX;
-        }
-    }
-
 }

@@ -34,6 +34,7 @@ public class TranscriptResult
     public final int UniqueSpliceJunctionsSupported;
     public final int UniqueSpliceJunctionFragments;
     public final int UniqueNonSJFragments;
+    public final int DiscordantFragments;
     public final double EffectiveLength;
 
     private double mFitAllocation;
@@ -91,9 +92,10 @@ public class TranscriptResult
         SpliceJunctionsSupported = spliceJunctionsSupported;
         UniqueSpliceJunctionsSupported = uniqueSpliceJunctionsSupported;
 
-        int[][] supportingFragments = geneCollection.getTranscriptReadCount(transData.TransId);
+        final int[][] supportingFragments = geneCollection.getTranscriptReadCount(transData.TransId);
         UniqueSpliceJunctionFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.SPLICED)][UNIQUE_TRANS_COUNT];
         UniqueNonSJFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.LONG)][UNIQUE_TRANS_COUNT];
+        DiscordantFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.DISCORDANT)][TRANS_COUNT];
 
         EffectiveLength = calcEffectiveLength(exonicBases, expRateFragmentLengths);
 
@@ -189,6 +191,7 @@ public class TranscriptResult
                 .add("UniqueSJSupported")
                 .add("UniqueSJFragments")
                 .add("UniqueNonSJFragments")
+                .add("DiscordantFragments")
                 .add("LowMapQualFrags")
                 .toString();
     }
@@ -212,6 +215,7 @@ public class TranscriptResult
                 .add(String.valueOf(UniqueSpliceJunctionsSupported))
                 .add(String.valueOf(UniqueSpliceJunctionFragments))
                 .add(String.valueOf(UniqueNonSJFragments))
+                .add(String.valueOf(DiscordantFragments))
                 .add(String.format("%.1f", mLowMapQualsAllocation))
                 .toString();
     }
