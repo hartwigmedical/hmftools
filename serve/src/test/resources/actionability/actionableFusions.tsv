@@ -1,3 +1,4 @@
-fusion	source	treatment	cancerType	doid	level	direction
-EML4_ALK	CIViC	Crizotinib	Lung Cancer	X	A	Responsive
-PCM1_JAK2	OncoKB	Ruxolitinib	Leukemia	X	B	Responsive
+fusion	fusedExonUp	fusedExonDown	source	treatment	cancerType	doid	level	direction
+EML4_ALK			CIViC	Crizotinib	Lung Cancer	X	A	Responsive
+PCM1_JAK2			OncoKB	Ruxolitinib	Leukemia	X	B	Responsive
+EGFR_EGFR	1	8	CIViC	Osimertinib	Lung Cancer	X	A	Responsive

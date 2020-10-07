@@ -13,4 +13,10 @@ public abstract class ActionableFusion extends ActionableEvent {
 
     @NotNull
     public abstract String fusion();
+
+    @Nullable
+    public abstract Integer fusedExonUp();
+
+    @Nullable
+    public abstract Integer fusedExonDown();
 }

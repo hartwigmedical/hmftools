@@ -16,7 +16,7 @@ public class ActionableFusionFileTest {
         String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
         List<ActionableFusion> actionableFusions = ActionableFusionFile.read(actionableFusionTsv);
 
-        assertEquals(2, actionableFusions.size());
+        assertEquals(3, actionableFusions.size());
 
         List<String> lines = ActionableFusionFile.toLines(actionableFusions);
         List<ActionableFusion> regeneratedFusions = ActionableFusionFile.fromLines(lines);
