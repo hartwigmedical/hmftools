@@ -12,10 +12,10 @@ LINX is an annotation, interpretation and [visualisation](./README_VIS.md) tool 
   + [LINX terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
   + [Overview of event classification system in LINX](#overview-of-event-classification-system-in-linx)
 * [LINX ALGORITHM](#linx-algorithm)
-  + [Annotation of genomic properties and features](#annotation-of-genomic-properties-and-features)
-  + [Clustering of SVs into events](#clustering-of-svs-into-events)
-  + [Chaining of Derivative Chromosomes](#chaining-of-derivative-chromosomes)
-  + [Gene impact and fusion prediction](#gene-impact-and-fusion-prediction)
+  + [Annotation of genomic properties and features](#1.-annotation-of-genomic-properties-and-features)
+  + [Clustering of SVs into events](#2.-clustering-of-svs-into-events)
+  + [Chaining of Derivative Chromosomes](#3.-chaining-of-derivative-chromosomes)
+  + [Gene impact and fusion prediction](#4.-gene-impact-and-fusion-prediction)
 * [Visualisation](#visualisation)  
 * [Version History](#version-history)
 
@@ -386,7 +386,6 @@ A facing pair of foldback inversions (FB_INV_PAIR) is also classified as a recip
 </p>
 
 
-
 A facing pair of foldback inversions (FB_INV_PAIR) is also classified as a reciprocal, although the mechanism for forming this structure is unclear.   It is possible that many of these events are formed from a breakage fusion bridge event but have not been properly clustered with a resolving break junction which may be distant in a breakage fusion bridge scenario.
 
 #### Templated Insertions
@@ -537,7 +536,7 @@ The combined uncertainty is estimated as the square root of the weighted sum of 
 consolidatedUncertainty = SQRT( countObservations / (countObervations-1) * SUM[1/Uncertainty(i)^2*(MAX(Observation(i)-consolidatedJCN,Uncertainty(i)/2))^2] / Sum[1/Uncertainty(i)^2] )
 ```
 
-### Clustering of SVs into events 
+### 2. Clustering of SVs into events 
 LINX uses a clustering routine to classify events. All SVs within a sample are grouped into clusters in 7 steps:
 - Proximity clustering
 - Resolution of LINE clusters 
