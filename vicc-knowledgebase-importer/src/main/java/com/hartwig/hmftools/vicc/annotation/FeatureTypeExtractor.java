@@ -46,7 +46,7 @@ public final class FeatureTypeExtractor {
     public static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
 
     public static final Set<String> INTERNAL_FUSION =
-            Sets.newHashSet("(Partial", "Inframe Deletion", "is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "ITD");
+            Sets.newHashSet("(Partial", "is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "ITD");
 
     public static final Set<String> GENE_LEVEL = Sets.newHashSet("Gain-of-function Mutations",
             "Gain-of-Function",
@@ -141,7 +141,7 @@ public final class FeatureTypeExtractor {
         } else if (DetermineFusion.isFusion(featureName, biomarkerType, provenanceRule, proteinAnnotation) && !featureName.contains(
                 "p61BRAF")) {
             return FeatureType.FUSION_PAIR;
-        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && featureName.contains("-")) {
+        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && featureName.contains("-") && featureName.contains("DELETION")) {
             return FeatureType.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(featureName, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PROMISCUOUS;
