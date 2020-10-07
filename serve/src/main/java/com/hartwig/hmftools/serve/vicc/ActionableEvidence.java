@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.vicc;
 
+import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,5 +24,5 @@ public abstract class ActionableEvidence {
     public abstract String level();
 
     @NotNull
-    public abstract String direction();
+    public abstract EvidenceDirection direction();
 }

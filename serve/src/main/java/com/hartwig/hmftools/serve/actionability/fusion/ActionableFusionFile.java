@@ -8,6 +8,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -70,7 +71,7 @@ public final class ActionableFusionFile {
                 .cancerType(values[3])
                 .doid(values[4])
                 .level(values[5])
-                .direction(values[6])
+                .direction(ActionableEventFactory.directionFromFileValue(values[6]))
                 .build();
     }
 
@@ -92,7 +93,7 @@ public final class ActionableFusionFile {
                 .add(fusion.cancerType())
                 .add(fusion.doid())
                 .add(fusion.level())
-                .add(fusion.direction())
+                .add(fusion.direction().display())
                 .toString();
     }
 }

@@ -8,6 +8,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -78,7 +79,7 @@ public final class ActionableRangeFile {
                 .cancerType(values[7])
                 .doid(values[8])
                 .level(values[9])
-                .direction(values[10])
+                .direction(ActionableEventFactory.directionFromFileValue(values[10]))
                 .build();
     }
 
@@ -104,7 +105,7 @@ public final class ActionableRangeFile {
                 .add(range.cancerType())
                 .add(range.doid())
                 .add(range.level())
-                .add(range.direction())
+                .add(range.direction().display())
                 .toString();
     }
 }

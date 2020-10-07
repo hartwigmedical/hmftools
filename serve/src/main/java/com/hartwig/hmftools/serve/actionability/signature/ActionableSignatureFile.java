@@ -8,6 +8,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -71,7 +72,7 @@ public final class ActionableSignatureFile {
                 .cancerType(values[3])
                 .doid(values[4])
                 .level(values[5])
-                .direction(values[6])
+                .direction(ActionableEventFactory.directionFromFileValue(values[6]))
                 .build();
     }
 
@@ -93,7 +94,7 @@ public final class ActionableSignatureFile {
                 .add(signature.cancerType())
                 .add(signature.doid())
                 .add(signature.level())
-                .add(signature.direction())
+                .add(signature.direction().display())
                 .toString();
     }
 }

@@ -20,5 +20,5 @@ public abstract class ActionableEvent {
     public abstract String level();
 
     @NotNull
-    public abstract String direction();
+    public abstract EvidenceDirection direction();
 }

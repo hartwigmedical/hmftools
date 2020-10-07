@@ -15,14 +15,11 @@ import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.vicc.signatures.SignaturesExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.Phenotype;
-import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractor {
 
@@ -63,7 +60,7 @@ public final class ViccExtractor {
             Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry);
             Map<Feature, String> signaturesPerFeature = signaturesExtractor.extractSignatures(entry);
 
-            ActionableEvidence actionableEvidence = extractEvidence(entry);
+            ActionableEvidence actionableEvidence = ActionableEvidenceFactory.toActionableEvidence(entry);
 
             extractionResultsPerEntry.put(entry,
                     ImmutableViccExtractionResult.builder()
@@ -85,33 +82,5 @@ public final class ViccExtractor {
         return extractionResultsPerEntry;
     }
 
-    @Nullable
-    private static ActionableEvidence extractEvidence(@NotNull ViccEntry entry) {
-        String drugs = entry.association().drugLabels();
 
-        String cancerType = null;
-        String doid = null;
-        Phenotype phenotype = entry.association().phenotype();
-        if (phenotype != null) {
-            cancerType = phenotype.description();
-            PhenotypeType type = phenotype.type();
-            if (type != null) {
-                doid = type.id();
-            }
-        }
-        String level = entry.association().evidenceLabel();
-        String direction = entry.association().responseType();
-
-        if (drugs != null && cancerType != null && doid != null && level != null && direction != null) {
-            return ImmutableActionableEvidence.builder()
-                    .drugs(drugs)
-                    .cancerType(cancerType)
-                    .doid(doid)
-                    .level(level)
-                    .direction(direction)
-                    .build();
-        } else {
-            return null;
-        }
-    }
 }
