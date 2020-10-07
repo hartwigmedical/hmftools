@@ -3,7 +3,7 @@ package com.hartwig.hmftools.serve.vicc.genelevel;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.serve.actionability.gene.GeneEvent;
+import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -23,7 +23,7 @@ public class GeneLevelEventExtractor {
             if (feature.type() == FeatureType.GENE_LEVEL) {
                 // TODO Extract GeneEvent from Feature
                 geneLevelEventsPerFeature.put(feature,
-                        ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneEvent.ACTIVATION).build());
+                        ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.ACTIVATION).build());
 
             }
 

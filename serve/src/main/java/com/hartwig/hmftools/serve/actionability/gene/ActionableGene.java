@@ -15,5 +15,5 @@ public abstract class ActionableGene  extends ActionableEvent {
     public abstract String gene();
 
     @NotNull
-    public abstract GeneEvent event();
+    public abstract GeneLevelEvent event();
 }

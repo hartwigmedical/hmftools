@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.actionability.gene;
 
-public enum GeneEvent {
+public enum GeneLevelEvent {
     AMPLIFICATION,
     DELETION,
     ACTIVATION,

@@ -12,7 +12,7 @@ import com.hartwig.hmftools.serve.Source;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.GeneEvent;
+import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
@@ -37,10 +37,14 @@ import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractor {
+
+    private static final Logger LOGGER = LogManager.getLogger(ViccExtractor.class);
 
     @NotNull
     private final HotspotExtractor hotspotExtractor;
@@ -90,9 +94,9 @@ public final class ViccExtractor {
                             .actionableEvidence(actionableEvidence)
                             .build());
         }
+        printResults(resultsPerEntry);
 
         ImmutableViccExtractionOutput.Builder outputBuilder = ImmutableViccExtractionOutput.builder()
-                .resultsPerEntry(resultsPerEntry)
                 .hotspots(convertToHotspots(resultsPerEntry))
                 .knownAmpsDels(convertToKnownAmpsDels(resultsPerEntry))
                 .knownFusions(convertToKnownFusions(resultsPerEntry));
@@ -229,14 +233,14 @@ public final class ViccExtractor {
             @NotNull Iterable<CopyNumberAnnotation> ampsDels) {
         List<ActionableGene> actionableGenes = Lists.newArrayList();
         for (CopyNumberAnnotation ampDel : ampsDels) {
-            GeneEvent event;
+            GeneLevelEvent event;
             switch (ampDel.type()) {
                 case AMPLIFICATION: {
-                    event = GeneEvent.AMPLIFICATION;
+                    event = GeneLevelEvent.AMPLIFICATION;
                     break;
                 }
                 case DELETION: {
-                    event = GeneEvent.DELETION;
+                    event = GeneLevelEvent.DELETION;
                     break;
                 }
                 default:
@@ -332,5 +336,77 @@ public final class ViccExtractor {
             default:
                 return null;
         }
+    }
+
+    private static void printResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        List<Feature> featuresWithoutGenomicEvents = Lists.newArrayList();
+        int totalFeatureCount = 0;
+        int featuresWithHotspotsCount = 0;
+        int totalHotspotsCount = 0;
+        int featuresWithCopyNumberCount = 0;
+        int featuresWithFusionCount = 0;
+        int featuresWithGeneLevelEventCount = 0;
+        int featuresWithGeneRangeCount = 0;
+        int totalRangeCount = 0;
+        int featuresWithSignatureCount = 0;
+
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+            ViccEntry viccEntry = entry.getKey();
+            ViccExtractionResult viccExtractionResult = entry.getValue();
+            for (Feature feature : viccEntry.features()) {
+                List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
+                CopyNumberAnnotation ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
+                FusionAnnotation fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
+                GeneLevelAnnotation geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
+                List<GeneRangeAnnotation> geneRangesForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
+                SignatureName signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
+
+                if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null && geneLevelEventForFeature == null
+                        && geneRangesForFeature == null && signatureForFeature == null) {
+                    featuresWithoutGenomicEvents.add(feature);
+                } else {
+                    if (hotspotsForFeature != null) {
+                        featuresWithHotspotsCount++;
+                        totalHotspotsCount += hotspotsForFeature.size();
+                    }
+
+                    if (ampDelForFeature != null) {
+                        featuresWithCopyNumberCount++;
+                    }
+
+                    if (fusionForFeature != null) {
+                        featuresWithFusionCount++;
+                    }
+
+                    if (geneLevelEventForFeature != null) {
+                        featuresWithGeneLevelEventCount++;
+                    }
+
+                    if (geneRangesForFeature != null) {
+                        featuresWithGeneRangeCount++;
+                        totalRangeCount += geneRangesForFeature.size();
+                    }
+
+                    if (signatureForFeature != null) {
+                        featuresWithSignatureCount++;
+                    }
+                }
+
+                totalFeatureCount++;
+            }
+        }
+
+        LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
+        for (Feature feature : featuresWithoutGenomicEvents) {
+            LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+        }
+
+        LOGGER.info("Extraction performed on {} features from {} entries", totalFeatureCount, resultsPerEntry.size());
+        LOGGER.info(" Extracted {} hotspots for {} features", totalHotspotsCount, featuresWithHotspotsCount);
+        LOGGER.info(" Extracted {} known amps and dels", featuresWithCopyNumberCount);
+        LOGGER.info(" Extracted {} fusions", featuresWithFusionCount);
+        LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
+        LOGGER.info(" Extracted {} gene ranges for {} features", totalRangeCount, featuresWithGeneRangeCount);
+        LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
     }
 }

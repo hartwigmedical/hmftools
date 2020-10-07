@@ -12,7 +12,6 @@ import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberAnnotation;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -22,10 +21,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ViccExtractionOutput {
-
-    // TODO This parameter should (ideally) per internal to ViccExtractor.
-    @NotNull
-    public abstract Map<ViccEntry, ViccExtractionResult> resultsPerEntry();
 
     // TODO This should be a simple list with annotated variants.
     @NotNull

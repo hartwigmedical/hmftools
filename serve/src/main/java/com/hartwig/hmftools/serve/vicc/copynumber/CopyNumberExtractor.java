@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.serve.vicc.copynumber;
 
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -13,19 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberExtractor {
 
-    @NotNull
-    private final Set<String> uniqueAmps = Sets.newHashSet();
-    @NotNull
-    private final Set<String> uniqueDels = Sets.newHashSet();
-
-    @NotNull
-    public Set<String> uniqueAmps() {
-        return uniqueAmps;
-    }
-
-    @NotNull
-    public Set<String> uniqueDels() {
-        return uniqueDels;
+    public CopyNumberExtractor() {
     }
 
     @NotNull
@@ -34,18 +20,12 @@ public class CopyNumberExtractor {
 
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == FeatureType.AMPLIFICATION) {
-                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), CopyNumberType.AMPLIFICATION));
-                uniqueAmps.add(feature.geneSymbol());
+                ampsDelsPerFeature.put(feature,
+                        ImmutableCopyNumberAnnotation.builder().gene(feature.geneSymbol()).type(CopyNumberType.AMPLIFICATION).build());
             } else if (feature.type() == FeatureType.DELETION) {
-                ampsDelsPerFeature.put(feature, eventForGene(feature.geneSymbol(), CopyNumberType.DELETION));
-                uniqueDels.add(feature.geneSymbol());
+                ampsDelsPerFeature.put(feature,
+                        ImmutableCopyNumberAnnotation.builder().gene(feature.geneSymbol()).type(CopyNumberType.DELETION).build());
             }
-        }
-        return ampsDelsPerFeature;
-    }
-
-    @NotNull
-    private static CopyNumberAnnotation eventForGene(@NotNull String gene, @NotNull CopyNumberType type) {
-        return ImmutableCopyNumberAnnotation.builder().gene(gene).type(type).build();
+        } return ampsDelsPerFeature;
     }
 }

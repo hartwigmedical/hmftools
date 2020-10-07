@@ -64,9 +64,8 @@ public class ViccTestApplication {
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
 
         ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries);
-        ViccUtil.printResults(viccExtractionOutput);
 
-        ViccUtil.writeFeatureTypes(featureTypeTsv, viccExtractionOutput);
+        ViccUtil.writeFeatureTypes(featureTypeTsv, viccEntries);
         ViccUtil.writeActionability(outputDir, viccExtractionOutput);
     }
 }

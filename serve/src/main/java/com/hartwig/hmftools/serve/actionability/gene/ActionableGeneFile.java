@@ -68,7 +68,7 @@ public final class ActionableGeneFile {
          String[] values = line.split(DELIMITER);
         return ImmutableActionableGene.builder()
                 .gene(values[0])
-                .event(GeneEvent.valueOf(values[1]))
+                .event(GeneLevelEvent.valueOf(values[1]))
                 .source(ActionableEventFactory.sourceFromFileValue(values[2]))
                 .treatment(values[3])
                 .cancerType(values[4])

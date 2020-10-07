@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.vicc.genelevel;
 
-import com.hartwig.hmftools.serve.actionability.gene.GeneEvent;
+import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -15,5 +15,5 @@ public abstract class GeneLevelAnnotation {
     public abstract String gene();
 
     @NotNull
-    public abstract GeneEvent event();
+    public abstract GeneLevelEvent event();
 }

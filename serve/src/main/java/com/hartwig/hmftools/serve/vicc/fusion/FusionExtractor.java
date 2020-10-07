@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.serve.vicc.fusion;
 
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -13,12 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FusionExtractor {
 
-    @NotNull
-    private final Set<String> uniqueFusionsPair = Sets.newHashSet();
-
-    @NotNull
-    public Set<String> uniqueFusionsPair() {
-        return uniqueFusionsPair;
+    public FusionExtractor() {
     }
 
     public Map<Feature, FusionAnnotation> extractKnownFusions(@NotNull ViccEntry viccEntry) {
