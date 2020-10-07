@@ -8,6 +8,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -40,14 +41,15 @@ public final class ActionableGeneFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("gene")
-                .add("type")
+        return new StringJoiner(DELIMITER).add("gene")
+                .add("event")
                 .add("source")
                 .add("treatment")
                 .add("cancerType")
                 .add("doid")
                 .add("level")
                 .add("direction")
+                .add("url")
                 .toString();
     }
 
@@ -66,13 +68,14 @@ public final class ActionableGeneFile {
          String[] values = line.split(DELIMITER);
         return ImmutableActionableGene.builder()
                 .gene(values[0])
-                .type(values[1])
-                .source(values[2])
+                .event(GeneLevelEvent.valueOf(values[1]))
+                .source(ActionableEventFactory.sourceFromFileValue(values[2]))
                 .treatment(values[3])
                 .cancerType(values[4])
                 .doid(values[5])
                 .level(values[6])
-                .direction(values[7])
+                .direction(ActionableEventFactory.directionFromFileValue(values[7]))
+                .url(values[8])
                 .build();
     }
 
@@ -89,13 +92,14 @@ public final class ActionableGeneFile {
     @NotNull
     private static String toLine(@NotNull ActionableGene gene) {
         return new StringJoiner(DELIMITER).add(gene.gene())
-                .add(gene.type())
-                .add(gene.source())
+                .add(gene.event().toString())
+                .add(gene.source().display())
                 .add(gene.treatment())
                 .add(gene.cancerType())
                 .add(gene.doid())
                 .add(gene.level())
-                .add(gene.direction())
+                .add(gene.direction().display())
+                .add(gene.url())
                 .toString();
     }
 }

@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionableSignature extends ActionableEvent {
+public abstract class ActionableSignature implements ActionableEvent {
 
     @NotNull
-    public abstract String signature();
+    public abstract SignatureName name();
 }

@@ -8,8 +8,11 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ActionableFusionFile {
 
@@ -40,13 +43,17 @@ public final class ActionableFusionFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("fusion")
+        return new StringJoiner(DELIMITER).add("geneUp")
+                .add("exonUp")
+                .add("geneDown")
+                .add("exonDown")
                 .add("source")
                 .add("treatment")
                 .add("cancerType")
                 .add("doid")
                 .add("level")
                 .add("direction")
+                .add("url")
                 .toString();
     }
 
@@ -63,15 +70,29 @@ public final class ActionableFusionFile {
     @NotNull
     private static ActionableFusion fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
+
         return ImmutableActionableFusion.builder()
-                .fusion(values[0])
-                .source(values[1])
-                .treatment(values[2])
-                .cancerType(values[3])
-                .doid(values[4])
-                .level(values[5])
-                .direction(values[6])
+                .geneUp(values[0])
+                .exonUp(optionalInteger(values[1]))
+                .geneDown(values[2])
+                .exonDown(optionalInteger(values[3]))
+                .source(ActionableEventFactory.sourceFromFileValue(values[4]))
+                .treatment(values[5])
+                .cancerType(values[6])
+                .doid(values[7])
+                .level(values[8])
+                .direction(ActionableEventFactory.directionFromFileValue(values[9]))
+                .url(values[10])
                 .build();
+    }
+
+    @Nullable
+    private static Integer optionalInteger(@NotNull String value) {
+        if (value.isEmpty()) {
+            return null;
+        }
+
+        return Integer.parseInt(value);
     }
 
     @NotNull
@@ -86,13 +107,25 @@ public final class ActionableFusionFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableFusion fusion) {
-        return new StringJoiner(DELIMITER).add(fusion.fusion())
-                .add(fusion.source())
+        return new StringJoiner(DELIMITER).add(fusion.geneUp())
+                .add(fromOptionalInteger(fusion.exonUp()))
+                .add(fusion.geneDown())
+                .add(fromOptionalInteger(fusion.exonDown()))
+                .add(fusion.source().display())
                 .add(fusion.treatment())
                 .add(fusion.cancerType())
                 .add(fusion.doid())
                 .add(fusion.level())
-                .add(fusion.direction())
+                .add(fusion.direction().display())
+                .add(fusion.url())
                 .toString();
+    }
+
+    @NotNull
+    private static String fromOptionalInteger(@Nullable Integer value) {
+        if (value == null) {
+            return Strings.EMPTY;
+        }
+        return Integer.toString(value);
     }
 }

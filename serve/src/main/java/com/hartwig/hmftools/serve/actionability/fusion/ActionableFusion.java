@@ -9,8 +9,17 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionableFusion extends ActionableEvent {
+public abstract class ActionableFusion implements ActionableEvent {
 
     @NotNull
-    public abstract String fusion();
+    public abstract String geneUp();
+
+    @Nullable
+    public abstract Integer exonUp();
+
+    @NotNull
+    public abstract String geneDown();
+
+    @Nullable
+    public abstract Integer exonDown();
 }

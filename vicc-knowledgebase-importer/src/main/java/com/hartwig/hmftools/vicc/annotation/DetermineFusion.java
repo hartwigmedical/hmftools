@@ -32,17 +32,7 @@ final class DetermineFusion {
     private static FusionEvent extractKeyFusion(@NotNull String feature, @Nullable String biomarkerType, @Nullable String provenanceRule,
             @NotNull String proteinAnnotation) {
         if (!FeatureTypeExtractor.IGNORE.contains(feature)) { // Extract internal fusion
-            if (FeatureTypeExtractor.INTERNAL_FUSION.contains(proteinAnnotation)) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.contains("DELETION") && FeatureTypeExtractor.INTERNAL_FUSION.contains(biomarkerType)) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.contains("DELETION") && FeatureTypeExtractor.INTERNAL_FUSION.contains(provenanceRule)) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.contains("Exon") && feature.contains("deletion")) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.contains("Exon") && feature.contains("deletion/insertion")) {
-                return FusionEvent.FUSION_PAIR;
-            } else if (feature.contains("Exon") && feature.contains("insertions/deletions")) {
+            if (FeatureTypeExtractor.INTERNAL_FUSION.contains(proteinAnnotation) || proteinAnnotation.contains("[a-zA-Z]+")) {
                 return FusionEvent.FUSION_PAIR;
             } else if (FeatureTypeExtractor.SEARCH_FUSION_PAIRS.contains(proteinAnnotation)) {
                 return FusionEvent.FUSION_PAIR;
@@ -65,15 +55,9 @@ final class DetermineFusion {
                 if (FeatureTypeExtractor.SEARCH_FUSION_PAIRS.contains(biomarkerType)) {
                     return FusionEvent.FUSION_PAIR;
                 }
-            } else if (feature.toLowerCase().contains("exon") && feature.toLowerCase().contains("deletion") && feature.contains("-")
-                    || feature.contains("&")) {// Extract internal fusion
-                return FusionEvent.FUSION_PAIR;
             } else {
                 return FusionEvent.UNKNOWN;
             }
-        }
-
-        //TODO: check why this is needed??
-        return FusionEvent.UNKNOWN;
+        } return FusionEvent.UNKNOWN;
     }
 }

@@ -1,8 +1,8 @@
-gene	type	source	treatment	cancerType	doid	level	direction
-ERBB2	Amplification	CIViC	Trastuzumab	Breast Cancer	X	A	Responsive
-ERBB2	Amplification	CIViC	Panitumumab	Colorectal Cancer	X	B	Resistant
-MET	Amplification	iClusion	DRUP	Solid Tumors	X	B	Responsive
-NRAS	Activation	CGI	Cetuximab	Colorectal Cancer	X	A	Resistant
-BRCA1	Inactivation	iClusion	DRUP	Solid Tumors	X	B	Responsive
-FGFR2	Fusion Five	OncoKB	Erdafitinib	Bladder Cancer	X	B	Responsive
-ALK	Fusion Three	CGI	Crizotinib	Lung Adenocarcinoma	X	A	Responsive
+gene	event	source	treatment	cancerType	doid	level	direction	url
+ERBB2	AMPLIFICATION	CIViC	Trastuzumab	Breast Cancer	X	A	Responsive	http
+ERBB2	AMPLIFICATION	CIViC	Panitumumab	Colorectal Cancer	X	B	Resistant	http
+MET	AMPLIFICATION	iClusion	DRUP	Solid Tumors	X	B	Responsive	http
+NRAS	ACTIVATION	CGI	Cetuximab	Colorectal Cancer	X	A	Resistant	http
+BRCA1	INACTIVATION	iClusion	DRUP	Solid Tumors	X	B	Responsive	http
+FGFR2	FUSION	CGI	Erdafitinib	Bladder Cancer	X	B	Responsive	http
+ALK	FUSION	CGI	Crizotinib	Lung Adenocarcinoma	X	A	Responsive	http

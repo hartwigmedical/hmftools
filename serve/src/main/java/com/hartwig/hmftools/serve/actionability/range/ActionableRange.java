@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionableRange extends ActionableEvent {
+public abstract class ActionableRange implements ActionableEvent {
 
     @NotNull
     public abstract String gene();
@@ -17,12 +17,10 @@ public abstract class ActionableRange extends ActionableEvent {
     @NotNull
     public abstract String chromosome();
 
-    @NotNull
-    public abstract String start();
+    public abstract long start();
+
+    public abstract long end();
 
     @NotNull
-    public abstract String end();
-
-    @NotNull
-    public abstract String mutationType();
+    public abstract MutationTypeFilter mutationType();
 }

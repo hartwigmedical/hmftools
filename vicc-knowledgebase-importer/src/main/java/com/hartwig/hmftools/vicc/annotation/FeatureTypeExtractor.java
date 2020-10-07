@@ -46,7 +46,7 @@ public final class FeatureTypeExtractor {
     public static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
 
     public static final Set<String> INTERNAL_FUSION =
-            Sets.newHashSet("(Partial", "Exon Loss Variant", "Inframe Deletion", "is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "ITD");
+            Sets.newHashSet("(Partial", "is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "ITD");
 
     public static final Set<String> GENE_LEVEL = Sets.newHashSet("Gain-of-function Mutations",
             "Gain-of-Function",
@@ -77,9 +77,7 @@ public final class FeatureTypeExtractor {
             "AR-V7",
             "ARv567es");
 
-    public static final Set<String> GENE_EXON = Sets.newHashSet("exon", "Exon Variant");
-    public static final Set<String> GENE_MULTIPLE_CODONS =
-            Sets.newHashSet("(V600)", "splice_region_variant", "Splice Donor Variant", "Inframe Deletion");
+    public static final Set<String> GENE_EXON = Sets.newHashSet("exon");
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
@@ -97,18 +95,9 @@ public final class FeatureTypeExtractor {
     @NotNull
     public static FeatureType extractType(@NotNull String featureName, @Nullable String biomarkerType, @Nullable String provenanceRule,
             @NotNull String proteinAnnotation) {
-        String feature = featureName;
-        if (feature.contains(" ") && !feature.equals("Copy Number Loss")) {
-            feature = feature.split(" ", 2)[1];
-        }
-
         String event = Strings.EMPTY;
         if (featureName.toLowerCase().contains("exon")) {
             event = "exon";
-        } else if (biomarkerType != null) {
-            if (biomarkerType.equals("Exon Variant")) {
-                event = "exon";
-            }
         }
 
         if (biomarkerType != null && provenanceRule != null) {
@@ -149,12 +138,19 @@ public final class FeatureTypeExtractor {
             return FeatureType.AMPLIFICATION;
         } else if (DetermineCopyNumber.isDeletion(featureName, biomarkerType) && !featureName.toLowerCase().contains("exon")) {
             return FeatureType.DELETION;
-        } else if (DetermineFusion.isFusion(featureName, biomarkerType, provenanceRule, proteinAnnotation) && !featureName.contains("p61BRAF")) {
+        } else if (DetermineFusion.isFusion(featureName, biomarkerType, provenanceRule, proteinAnnotation) && !featureName.contains(
+                "p61BRAF")) {
+            return FeatureType.FUSION_PAIR;
+        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && featureName.contains("-") && featureName.contains("DELETION")) {
             return FeatureType.FUSION_PAIR;
         } else if (DetermineFusion.isFusionPromiscuous(featureName, biomarkerType, provenanceRule, proteinAnnotation)) {
             return FeatureType.FUSION_PROMISCUOUS;
-        } else if (FeatureTypeExtractor.GENE_EXON.contains(event) && !featureName.toLowerCase().contains("deletion")) {
-            return FeatureType.GENE_RANGE_EXON;
+        } else if (FeatureTypeExtractor.GENE_EXON.contains(event)) {
+            if (featureName.toLowerCase().contains("deletion") || featureName.toLowerCase().contains("insertion")
+                    || featureName.toLowerCase().contains("proximal") || featureName.toLowerCase().contains("mutation")
+                    || featureName.toLowerCase().contains("splice site insertion") || featureName.toLowerCase().contains("frameshift")) {
+                return FeatureType.GENE_RANGE_EXON;
+            }
         } else if (proteinAnnotation.length() > 1 && proteinAnnotation.substring(proteinAnnotation.length() - 1).equals("X")) {
             return FeatureType.GENE_RANGE_CODON;
         } else if (proteinAnnotation.length() >= 1 && isValidSingleCodonRange(proteinAnnotation)) {
@@ -165,8 +161,7 @@ public final class FeatureTypeExtractor {
                     proteinAnnotation)) {
                 return FeatureType.GENE_LEVEL;
             }
-        }
-        return FeatureType.UNKNOWN;
+        } return FeatureType.UNKNOWN;
     }
 
     private static boolean isValidSingleCodonRange(@NotNull String feature) {
