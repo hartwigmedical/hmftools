@@ -3,6 +3,8 @@ package com.hartwig.hmftools.serve.vicc.fusion;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
+import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;

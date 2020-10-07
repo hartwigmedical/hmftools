@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.vicc.fusion;
+package com.hartwig.hmftools.serve.fusion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

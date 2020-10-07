@@ -9,9 +9,9 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
+import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
-import com.hartwig.hmftools.serve.vicc.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.serve.vicc.fusion.KnownFusionPair;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
