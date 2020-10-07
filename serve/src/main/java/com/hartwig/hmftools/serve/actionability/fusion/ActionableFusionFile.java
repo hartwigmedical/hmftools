@@ -43,7 +43,7 @@ public final class ActionableFusionFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("fusion")
+        return new StringJoiner(DELIMITER).add("fusion")
                 .add("fusedExonUp")
                 .add("fusedExonDown")
                 .add("source")

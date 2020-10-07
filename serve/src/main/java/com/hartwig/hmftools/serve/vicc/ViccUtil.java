@@ -210,6 +210,8 @@ public final class ViccUtil {
             if (fusion.fusionEvent() == FusionEvent.FUSION_PAIR) {
                 actionableFusions.add(ImmutableActionableFusion.builder()
                         .fusion(fusion.fusion())
+                        .fusedExonUp(fusion.fusedExonUp())
+                        .fusedExonDown(fusion.fusedExonDown())
                         .source(source)
                         .treatment(evidence.drugs())
                         .cancerType(evidence.cancerType())

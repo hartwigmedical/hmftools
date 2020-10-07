@@ -41,7 +41,7 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("gene")
+        return new StringJoiner(DELIMITER).add("gene")
                 .add("chromosome")
                 .add("start")
                 .add("end")

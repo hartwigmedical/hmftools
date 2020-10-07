@@ -41,7 +41,7 @@ public final class ActionableGeneFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("gene")
+        return new StringJoiner(DELIMITER).add("gene")
                 .add("type")
                 .add("source")
                 .add("treatment")

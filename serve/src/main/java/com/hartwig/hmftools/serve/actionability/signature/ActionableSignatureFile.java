@@ -42,7 +42,7 @@ public final class ActionableSignatureFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("signature")
+        return new StringJoiner(DELIMITER).add("signature")
                 .add("source")
                 .add("treatment")
                 .add("cancerType")

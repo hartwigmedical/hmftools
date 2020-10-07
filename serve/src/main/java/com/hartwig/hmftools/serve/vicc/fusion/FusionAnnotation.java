@@ -16,4 +16,10 @@ public abstract class FusionAnnotation {
 
     @NotNull
     public abstract FusionEvent fusionEvent();
+
+    @Nullable
+    public abstract Integer fusedExonUp();
+
+    @Nullable
+    public abstract Integer fusedExonDown();
 }
