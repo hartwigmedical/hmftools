@@ -4,5 +4,5 @@ ERBB2	AMPLIFICATION	CIViC	Panitumumab	Colorectal Cancer	X	B	Resistant	http
 MET	AMPLIFICATION	iClusion	DRUP	Solid Tumors	X	B	Responsive	http
 NRAS	ACTIVATION	CGI	Cetuximab	Colorectal Cancer	X	A	Resistant	http
 BRCA1	INACTIVATION	iClusion	DRUP	Solid Tumors	X	B	Responsive	http
-FGFR2	FUSION	OncoKB	Erdafitinib	Bladder Cancer	X	B	Responsive	http
+FGFR2	FUSION	CGI	Erdafitinib	Bladder Cancer	X	B	Responsive	http
 ALK	FUSION	CGI	Crizotinib	Lung Adenocarcinoma	X	A	Responsive	http
