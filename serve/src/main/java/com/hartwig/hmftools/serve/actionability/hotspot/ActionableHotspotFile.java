@@ -25,8 +25,7 @@ public final class ActionableHotspotFile {
         return serveActionabilityDir + File.separator + ACTIONABLE_HOTSPOT_TSV;
     }
 
-    public static void write(@NotNull String actionableHotspotTsv, @NotNull List<ActionableHotspot> actionableHotspots)
-            throws IOException {
+    public static void write(@NotNull String actionableHotspotTsv, @NotNull List<ActionableHotspot> actionableHotspots) throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(actionableHotspots));
@@ -42,8 +41,7 @@ public final class ActionableHotspotFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("gene")
-                .add("chromosome")
+        return new StringJoiner(DELIMITER).add("chromosome")
                 .add("position")
                 .add("ref")
                 .add("alt")
@@ -66,22 +64,20 @@ public final class ActionableHotspotFile {
         return actionableHotspots;
     }
 
-
     @NotNull
     private static ActionableHotspot fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
         return ImmutableActionableHotspot.builder()
-                .gene(values[0])
-                .chromosome(values[1])
-                .position(values[2])
-                .ref(values[3])
-                .alt(values[4])
-                .source(ActionableEventFactory.sourceFromFileValue(values[5]))
-                .treatment(values[6])
-                .cancerType(values[7])
-                .doid(values[8])
-                .level(values[9])
-                .direction(ActionableEventFactory.directionFromFileValue(values[10]))
+                .chromosome(values[0])
+                .position(Long.parseLong(values[1]))
+                .ref(values[2])
+                .alt(values[3])
+                .source(ActionableEventFactory.sourceFromFileValue(values[4]))
+                .treatment(values[5])
+                .cancerType(values[6])
+                .doid(values[7])
+                .level(values[8])
+                .direction(ActionableEventFactory.directionFromFileValue(values[9]))
                 .build();
     }
 
@@ -97,9 +93,8 @@ public final class ActionableHotspotFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableHotspot variant) {
-        return new StringJoiner(DELIMITER).add(variant.gene())
-                .add(variant.chromosome())
-                .add(variant.position())
+        return new StringJoiner(DELIMITER).add(variant.chromosome())
+                .add(Long.toString(variant.position()))
                 .add(variant.ref())
                 .add(variant.alt())
                 .add(variant.source().display())

@@ -18,12 +18,16 @@ import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
+import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
+import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
+import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
+import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.vicc.copynumber.KnownAmplificationDeletion;
@@ -95,36 +99,107 @@ public final class ViccUtil {
     @NotNull
     private static List<ActionableHotspot> extractActionableHotspots(@NotNull Source source, @NotNull ActionableEvidence evidence,
             @NotNull Iterable<List<VariantHotspot>> hotspotLists) {
-        // TODO Implement
-        return Lists.newArrayList();
+        List<ActionableHotspot> actionableHotspots = Lists.newArrayList();
+        for (List<VariantHotspot> hotspotList : hotspotLists) {
+            for (VariantHotspot hotspot : hotspotList) {
+                actionableHotspots.add(ImmutableActionableHotspot.builder()
+                        .chromosome(hotspot.chromosome())
+                        .position(hotspot.position())
+                        .ref(hotspot.ref())
+                        .alt(hotspot.alt())
+                        .source(source)
+                        .treatment(evidence.drugs())
+                        .cancerType(evidence.cancerType())
+                        .doid(evidence.doid())
+                        .direction(evidence.direction())
+                        .level(evidence.level())
+                        .build());
+            }
+        }
+        return actionableHotspots;
     }
 
     @NotNull
     private static List<ActionableRange> extractActionableRanges(@NotNull Source source, @NotNull ActionableEvidence evidence,
             @NotNull Iterable<List<GeneRangeAnnotation>> geneRangeAnnotationLists) {
-        // TODO Implement
-        return Lists.newArrayList();
+        List<ActionableRange> actionableRanges = Lists.newArrayList();
+        for (List<GeneRangeAnnotation> rangeList : geneRangeAnnotationLists) {
+            for (GeneRangeAnnotation range : rangeList) {
+                actionableRanges.add(ImmutableActionableRange.builder()
+                        .gene(range.gene())
+                        .chromosome(range.chromosome())
+                        .start(range.start())
+                        .end(range.end())
+                        .mutationType(range.event())
+                        .source(source)
+                        .treatment(evidence.drugs())
+                        .cancerType(evidence.cancerType())
+                        .doid(evidence.doid())
+                        .direction(evidence.direction())
+                        .level(evidence.level())
+                        .build());
+            }
+        }
+        return actionableRanges;
     }
 
     @NotNull
     private static List<ActionableGene> extractActionablePromiscuousFusions(@NotNull Source source, @NotNull ActionableEvidence evidence,
             @NotNull Iterable<FusionAnnotation> fusionAnnotations) {
-        // TODO Implement
-        return Lists.newArrayList();
+        List<ActionableGene> actionableGenes = Lists.newArrayList();
+        for (FusionAnnotation fusion : fusionAnnotations) {
+            if (fusion.fusionEvent() == FusionEvent.FUSION_PROMISCUOUS) {
+                actionableGenes.add(ImmutableActionableGene.builder()
+                        .gene(fusion.fusion())
+                        .type("Fusion")
+                        .source(source)
+                        .treatment(evidence.drugs())
+                        .cancerType(evidence.cancerType())
+                        .doid(evidence.doid())
+                        .direction(evidence.direction())
+                        .level(evidence.level())
+                        .build());
+            }
+        }
+        return actionableGenes;
     }
 
     @NotNull
     private static List<ActionableGene> extractActionableAmpsDels(@NotNull Source source, @NotNull ActionableEvidence evidence,
             @NotNull Iterable<KnownAmplificationDeletion> ampsDels) {
-        // TODO Implement
-        return Lists.newArrayList();
+        List<ActionableGene> actionableGenes = Lists.newArrayList();
+        for (KnownAmplificationDeletion ampDel : ampsDels) {
+            actionableGenes.add(ImmutableActionableGene.builder()
+                    .gene(ampDel.gene())
+                    .type(ampDel.eventType())
+                    .source(source)
+                    .treatment(evidence.drugs())
+                    .cancerType(evidence.cancerType())
+                    .doid(evidence.doid())
+                    .direction(evidence.direction())
+                    .level(evidence.level())
+                    .build());
+        }
+        return actionableGenes;
     }
 
     @NotNull
     private static List<ActionableGene> extractActionableGeneLevelEvents(@NotNull Source source, @NotNull ActionableEvidence evidence,
             @NotNull Iterable<String> geneLevelEvents) {
-        // TODO Implement
-        return Lists.newArrayList();
+        List<ActionableGene> actionableGenes = Lists.newArrayList();
+        for (String geneLevelEvent : geneLevelEvents) {
+            actionableGenes.add(ImmutableActionableGene.builder()
+                    .gene(geneLevelEvent)
+                    .type("Gene")
+                    .source(source)
+                    .treatment(evidence.drugs())
+                    .cancerType(evidence.cancerType())
+                    .doid(evidence.doid())
+                    .direction(evidence.direction())
+                    .level(evidence.level())
+                    .build());
+        }
+        return actionableGenes;
     }
 
     @NotNull
@@ -150,8 +225,19 @@ public final class ViccUtil {
     @NotNull
     private static List<ActionableSignature> extractActionableSignatures(@NotNull Source source, @NotNull ActionableEvidence evidence,
             @NotNull Iterable<String> signatures) {
-        // TODO Implement
-        return Lists.newArrayList();
+        List<ActionableSignature> actionableSignatures = Lists.newArrayList();
+        for (String signature : signatures) {
+            actionableSignatures.add(ImmutableActionableSignature.builder()
+                    .signature(signature)
+                    .source(source)
+                    .treatment(evidence.drugs())
+                    .cancerType(evidence.cancerType())
+                    .doid(evidence.doid())
+                    .direction(evidence.direction())
+                    .level(evidence.level())
+                    .build());
+        }
+        return actionableSignatures;
     }
 
     @Nullable

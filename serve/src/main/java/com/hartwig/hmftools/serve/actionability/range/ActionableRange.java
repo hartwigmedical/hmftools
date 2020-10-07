@@ -17,11 +17,9 @@ public abstract class ActionableRange extends ActionableEvent {
     @NotNull
     public abstract String chromosome();
 
-    @NotNull
-    public abstract String start();
+    public abstract long start();
 
-    @NotNull
-    public abstract String end();
+    public abstract long end();
 
     @NotNull
     public abstract String mutationType();

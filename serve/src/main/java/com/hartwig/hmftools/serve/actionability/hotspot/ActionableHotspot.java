@@ -12,13 +12,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ActionableHotspot extends ActionableEvent {
 
     @NotNull
-    public abstract String gene();
-
-    @NotNull
     public abstract String chromosome();
 
-    @NotNull
-    public abstract String position();
+    public abstract long position();
 
     @NotNull
     public abstract String ref();

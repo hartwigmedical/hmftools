@@ -12,12 +12,14 @@ public abstract class GeneRangeAnnotation {
     @NotNull
     public abstract String gene();
 
+    @NotNull
+    public abstract String chromosome();
+
     public abstract long start();
 
     public abstract long end();
 
-    public abstract String chromosome();
-
+    @NotNull
     public abstract String event();
 
 }
