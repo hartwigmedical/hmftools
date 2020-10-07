@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.serve.actionability.range;
 
 public enum MutationTypeFilter {
-    INFRAME_DELETION,
-    INFRAME_INSERTION,
     NONSENSE_OR_FRAMESHIFT,
-    MISSENSE,
     SPLICE,
+    MISSENSE_INFRAME_ANY,
+    MISSENSE_INFRAME_DELETION,
+    MISSENSE_INFRAME_INSERTION,
+    MISSENSE_ANY,
     ANY
 }
