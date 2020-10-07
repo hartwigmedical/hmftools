@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
@@ -18,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ViccExtractionResult {
+abstract class ViccExtractionResult {
 
     @NotNull
     public abstract Map<Feature, List<VariantHotspot>> hotspotsPerFeature();
@@ -39,5 +40,5 @@ public abstract class ViccExtractionResult {
     public abstract Map<Feature, SignatureName> signaturesPerFeature();
 
     @Nullable
-    public abstract ActionableEvidence actionableEvidence();
+    public abstract ActionableEvent actionableEvent();
 }

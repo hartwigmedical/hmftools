@@ -4,26 +4,26 @@ import com.hartwig.hmftools.serve.Source;
 
 import org.jetbrains.annotations.NotNull;
 
-public abstract class ActionableEvent {
+public interface ActionableEvent {
 
     @NotNull
-    public abstract Source source();
+    Source source();
 
     @NotNull
-    public abstract String treatment();
+    String treatment();
 
     @NotNull
-    public abstract String cancerType();
+    String cancerType();
 
     @NotNull
-    public abstract String doid();
+    String doid();
 
     @NotNull
-    public abstract String level();
+    String level();
 
     @NotNull
-    public abstract EvidenceDirection direction();
+    EvidenceDirection direction();
 
     @NotNull
-    public abstract String url();
+    String url();
 }

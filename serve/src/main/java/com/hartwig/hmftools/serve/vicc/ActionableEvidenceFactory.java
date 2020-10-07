@@ -5,11 +5,14 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.serve.Source;
+import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,8 +32,8 @@ final class ActionableEvidenceFactory {
     }
 
     @Nullable
-    public static ActionableEvidence toActionableEvidence(@NotNull ViccEntry entry) {
-        String drugs = reformatDrugs(entry.association().drugLabels());
+    public static ActionableEvent toActionableEvent(@NotNull ViccEntry entry) {
+        String treatment = reformatDrugLabels(entry.association().drugLabels());
 
         String cancerType = null;
         String doid = null;
@@ -52,9 +55,10 @@ final class ActionableEvidenceFactory {
         }
 
         // Consider CancerType, DOID and URL to be optional.
-        if (drugs != null && level != null && direction != null) {
+        if (treatment != null && level != null && direction != null) {
             return ImmutableActionableEvidence.builder()
-                    .drugs(drugs)
+                    .source(fromViccSource(entry.source()))
+                    .treatment(treatment)
                     .cancerType(nullToEmpty(cancerType))
                     .doid(nullToEmpty(doid))
                     .level(level)
@@ -73,13 +77,13 @@ final class ActionableEvidenceFactory {
 
     @Nullable
     @VisibleForTesting
-    static String reformatDrugs(@Nullable String drugs) {
-        if (drugs == null) {
+    static String reformatDrugLabels(@Nullable String drugLabels) {
+        if (drugLabels == null) {
             return null;
         }
 
         String drugSeparator = ",";
-        String[] parts = drugs.split(drugSeparator);
+        String[] parts = drugLabels.split(drugSeparator);
         StringJoiner joiner = new StringJoiner(drugSeparator);
         for (String part : parts) {
             joiner.add(reformatField(part));
@@ -136,6 +140,22 @@ final class ActionableEvidenceFactory {
         } else {
             LOGGER.warn("Unexpected DOID string: '{}'", doidString);
             return Strings.EMPTY;
+        }
+    }
+
+    @NotNull
+    private static Source fromViccSource(@NotNull ViccSource source) {
+        switch (source) {
+            case CIVIC:
+                return Source.CIVIC;
+            case CGI:
+                return Source.CGI;
+            case JAX:
+                return Source.JAX;
+            case ONCOKB:
+                return Source.ONCOKB;
+            default:
+                throw new IllegalStateException("Source not supported by SERVE: " + source);
         }
     }
 }

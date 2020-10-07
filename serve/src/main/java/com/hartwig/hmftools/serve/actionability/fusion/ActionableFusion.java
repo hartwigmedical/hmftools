@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionableFusion extends ActionableEvent {
+public abstract class ActionableFusion implements ActionableEvent {
 
     @NotNull
     public abstract String geneUp();

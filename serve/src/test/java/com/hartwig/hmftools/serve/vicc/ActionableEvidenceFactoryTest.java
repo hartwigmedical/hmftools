@@ -12,9 +12,9 @@ public class ActionableEvidenceFactoryTest {
 
     @Test
     public void canReformatDrugs() {
-        assertEquals("Imatinib,Imatinib", ActionableEvidenceFactory.reformatDrugs("IMATINIB,IMATINIB"));
+        assertEquals("Imatinib,Imatinib", ActionableEvidenceFactory.reformatDrugLabels("IMATINIB,IMATINIB"));
 
-        assertNull(ActionableEvidenceFactory.reformatDrugs(null));
+        assertNull(ActionableEvidenceFactory.reformatDrugLabels(null));
     }
 
     @Test
