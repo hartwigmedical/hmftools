@@ -45,7 +45,7 @@ public final class ActionableEvidenceFactory {
 
         if (drugs != null && cancerType != null && doid != null && level != null && direction != null) {
             return ImmutableActionableEvidence.builder()
-                    .drugs(reformatDrugs(drugs))
+                    .drugs(drugs)
                     .cancerType(cancerType)
                     .doid(doid)
                     .level(level)
@@ -80,14 +80,14 @@ public final class ActionableEvidenceFactory {
             return null;
         }
 
-        if (RESPONSIVE_DIRECTIONS.contains(direction)) {
+        if (RESPONSIVE_DIRECTIONS.contains(effectiveDirection)) {
             return EvidenceDirection.RESPONSIVE;
-        } else if (RESISTANT_DIRECTIONS.contains(direction)) {
+        } else if (RESISTANT_DIRECTIONS.contains(effectiveDirection)) {
             return EvidenceDirection.RESISTANT;
         }
 
-        if (!DIRECTIONS_TO_IGNORE.contains(direction)) {
-            LOGGER.warn("Could not resolve VICC direction '{}'", direction);
+        if (!DIRECTIONS_TO_IGNORE.contains(effectiveDirection)) {
+            LOGGER.warn("Could not resolve VICC direction '{}'", effectiveDirection);
         }
         return null;
     }

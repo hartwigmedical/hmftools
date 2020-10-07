@@ -58,7 +58,7 @@ public class ViccTestApplication {
 
         String rangesTsv = outputDir + "/ranges.tsv";
         String fusionTsv = outputDir + "/fusions.tsv";
-        String featureTypeTsv = outputDir + "/featureTypesVicc.tsv";
+        String featureTypeTsv = outputDir + "/featureTypes.tsv";
 
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the ranges output TSV", rangesTsv);
