@@ -28,10 +28,12 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 public class SageVCF implements AutoCloseable {
 
     public static final String READ_CONTEXT = "RC";
+    public static final String READ_CONTEXT_LEFT_FLANK = "RC_LF";
+    public static final String READ_CONTEXT_RIGHT_FLANK = "RC_RF";
+    public static final String READ_CONTEXT_INDEX = "RC_IDX";
     public static final String PASS = "PASS";
     public static final String DEDUP_FILTER = "dedup";
 
-    private static final String READ_CONTEXT_DESCRIPTION = "Read context";
     public static final String READ_CONTEXT_JITTER = "RC_JIT";
     private static final String READ_CONTEXT_JITTER_DESCRIPTION = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
 
@@ -124,7 +126,10 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_QUALITY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_EVENTS, 1, VCFHeaderLineType.Integer, READ_CONTEXT_EVENTS_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, READ_CONTEXT_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "Read context core"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INDEX, 1, VCFHeaderLineType.Integer, "Read context index"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_LEFT_FLANK, 1, VCFHeaderLineType.String, "Read context left flank"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_RIGHT_FLANK, 1, VCFHeaderLineType.String, "Read context right flank"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_REPEAT_COUNT,
                 1,
                 VCFHeaderLineType.Integer,

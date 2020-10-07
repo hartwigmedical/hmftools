@@ -19,6 +19,14 @@ public class Candidate implements GenomePosition {
     private int readContextSupport;
     private ReadContext readContext;
 
+    Candidate(final SageVariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth,  int minNumberOfEvents) {
+        this.tier = tier;
+        this.variant = variant;
+        this.readContext = readContext;
+        this.maxDepth = maxDepth;
+        this.minNumberOfEvents = minNumberOfEvents;
+    }
+
     public Candidate(final SageVariantTier tier, final AltContext altContext) {
         this.tier = tier;
         this.variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
