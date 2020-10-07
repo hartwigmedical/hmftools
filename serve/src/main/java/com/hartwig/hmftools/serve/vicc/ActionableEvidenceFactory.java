@@ -17,7 +17,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ActionableEvidenceFactory {
+final class ActionableEvidenceFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
 

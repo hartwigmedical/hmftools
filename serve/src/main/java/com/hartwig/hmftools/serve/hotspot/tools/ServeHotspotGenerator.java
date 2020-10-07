@@ -27,11 +27,9 @@ import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
-import com.hartwig.hmftools.serve.vicc.ViccExtractionResult;
 import com.hartwig.hmftools.serve.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.vicc.ViccReader;
-import com.hartwig.hmftools.serve.vicc.ViccUtil;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
@@ -141,9 +139,7 @@ public class ServeHotspotGenerator {
             @NotNull ProteinResolver proteinResolver) throws IOException {
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
-        Map<ViccEntry, ViccExtractionResult> resultsPerEntry = viccExtractor.extractFromViccEntries(viccEntries);
-
-        return ViccUtil.convertToHotspotMap(resultsPerEntry);
+        return viccExtractor.extractFromViccEntries(viccEntries).hotspots();
     }
 
     @NotNull
