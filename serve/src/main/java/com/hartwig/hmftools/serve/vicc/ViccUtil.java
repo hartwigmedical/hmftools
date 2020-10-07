@@ -8,42 +8,23 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
-import com.hartwig.hmftools.serve.Source;
-import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
-import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
-import com.hartwig.hmftools.serve.actionability.gene.GeneEvent;
-import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
-import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
-import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
-import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
-import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
-import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.vicc.copynumber.CopyNumberAnnotation;
 import com.hartwig.hmftools.serve.vicc.fusion.FusionAnnotation;
 import com.hartwig.hmftools.serve.vicc.genelevel.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.vicc.range.GeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ViccUtil {
 
@@ -55,212 +36,36 @@ public final class ViccUtil {
     private ViccUtil() {
     }
 
-    public static void writeActionability(@NotNull String outputDir, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+    public static void writeActionability(@NotNull String outputDir, @NotNull ViccExtractionOutput viccExtractionOutput)
             throws IOException {
-        List<ActionableHotspot> actionableHotspots = Lists.newArrayList();
-        List<ActionableRange> actionableRanges = Lists.newArrayList();
-        List<ActionableGene> actionableGenes = Lists.newArrayList();
-        List<ActionableFusion> actionableFusions = Lists.newArrayList();
-        List<ActionableSignature> actionableSignatures = Lists.newArrayList();
-
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            Source source = fromViccSource(entry.getKey().source());
-            ViccExtractionResult result = entry.getValue();
-            ActionableEvidence evidence = result.actionableEvidence();
-            if (evidence != null && source != null) {
-                actionableHotspots.addAll(extractActionableHotspots(source, evidence, result.hotspotsPerFeature().values()));
-                actionableRanges.addAll(extractActionableRanges(source, evidence, result.geneRangesPerFeature().values()));
-                actionableGenes.addAll(extractActionableAmpsDels(source, evidence, result.ampsDelsPerFeature().values()));
-                actionableGenes.addAll(extractActionableGeneLevelEvents(source, evidence, result.geneLevelEventsPerFeature().values()));
-                actionableFusions.addAll(extractActionableFusions(source, evidence, result.fusionsPerFeature().values()));
-                actionableSignatures.addAll(extractActionableSignatures(source, evidence, result.signaturesPerFeature().values()));
-            }
-        }
         String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable hotspots to {}", actionableHotspots.size(), actionableHotspotTsv);
-        ActionableHotspotFile.write(actionableHotspotTsv, actionableHotspots);
+        LOGGER.info("Writing {} actionable hotspots to {}", viccExtractionOutput.actionableHotspots().size(), actionableHotspotTsv);
+        ActionableHotspotFile.write(actionableHotspotTsv, viccExtractionOutput.actionableHotspots());
 
         String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable ranges to {}", actionableRanges.size(), actionableRangeTsv);
-        ActionableRangeFile.write(actionableRangeTsv, actionableRanges);
+        LOGGER.info("Writing {} actionable ranges to {}", viccExtractionOutput.actionableRanges().size(), actionableRangeTsv);
+        ActionableRangeFile.write(actionableRangeTsv, viccExtractionOutput.actionableRanges());
 
         String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable genes to {}", actionableGenes.size(), actionableGeneTsv);
-        ActionableGeneFile.write(actionableGeneTsv, actionableGenes);
+        LOGGER.info("Writing {} actionable genes to {}", viccExtractionOutput.actionableGenes().size(), actionableGeneTsv);
+        ActionableGeneFile.write(actionableGeneTsv, viccExtractionOutput.actionableGenes());
 
         String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable fusions to {}", actionableFusions.size(), actionableFusionTsv);
-        ActionableFusionFile.write(actionableFusionTsv, actionableFusions);
+        LOGGER.info("Writing {} actionable fusions to {}", viccExtractionOutput.actionableFusions().size(), actionableFusionTsv);
+        ActionableFusionFile.write(actionableFusionTsv, viccExtractionOutput.actionableFusions());
 
         String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable signatures to {}", actionableSignatures.size(), actionableSignatureTsv);
-        ActionableSignatureFile.write(actionableSignatureTsv, actionableSignatures);
+        LOGGER.info("Writing {} actionable signatures to {}", viccExtractionOutput.actionableSignatures().size(), actionableSignatureTsv);
+        ActionableSignatureFile.write(actionableSignatureTsv, viccExtractionOutput.actionableSignatures());
     }
 
-    @NotNull
-    private static List<ActionableHotspot> extractActionableHotspots(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<List<VariantHotspot>> hotspotLists) {
-        List<ActionableHotspot> actionableHotspots = Lists.newArrayList();
-        for (List<VariantHotspot> hotspotList : hotspotLists) {
-            for (VariantHotspot hotspot : hotspotList) {
-                actionableHotspots.add(ImmutableActionableHotspot.builder()
-                        .chromosome(hotspot.chromosome())
-                        .position(hotspot.position())
-                        .ref(hotspot.ref())
-                        .alt(hotspot.alt())
-                        .source(source)
-                        .treatment(evidence.drugs())
-                        .cancerType(evidence.cancerType())
-                        .doid(evidence.doid())
-                        .direction(evidence.direction())
-                        .level(evidence.level())
-                        .url(evidence.url())
-                        .build());
-            }
-        }
-        return actionableHotspots;
-    }
-
-    @NotNull
-    private static List<ActionableRange> extractActionableRanges(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<List<GeneRangeAnnotation>> geneRangeAnnotationLists) {
-        List<ActionableRange> actionableRanges = Lists.newArrayList();
-        for (List<GeneRangeAnnotation> rangeList : geneRangeAnnotationLists) {
-            for (GeneRangeAnnotation range : rangeList) {
-                actionableRanges.add(ImmutableActionableRange.builder()
-                        .gene(range.gene())
-                        .chromosome(range.chromosome())
-                        .start(range.start())
-                        .end(range.end())
-                        .mutationType(range.mutationType())
-                        .source(source)
-                        .treatment(evidence.drugs())
-                        .cancerType(evidence.cancerType())
-                        .doid(evidence.doid())
-                        .direction(evidence.direction())
-                        .level(evidence.level())
-                        .url(evidence.url())
-                        .build());
-            }
-        }
-        return actionableRanges;
-    }
-
-    @NotNull
-    private static List<ActionableGene> extractActionableAmpsDels(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<CopyNumberAnnotation> ampsDels) {
-        List<ActionableGene> actionableGenes = Lists.newArrayList();
-        for (CopyNumberAnnotation ampDel : ampsDels) {
-            GeneEvent event;
-            switch (ampDel.type()) {
-                case AMPLIFICATION: {
-                    event = GeneEvent.AMPLIFICATION;
-                    break;
-                } case DELETION: {
-                    event = GeneEvent.DELETION;
-                    break;
-                }
-                default: throw new IllegalStateException("Invalid copy number type: " + ampDel.type());
-            }
-
-            actionableGenes.add(ImmutableActionableGene.builder()
-                    .gene(ampDel.gene())
-                    .event(event)
-                    .source(source)
-                    .treatment(evidence.drugs())
-                    .cancerType(evidence.cancerType())
-                    .doid(evidence.doid())
-                    .direction(evidence.direction())
-                    .level(evidence.level())
-                    .url(evidence.url())
-                    .build());
-        }
-        return actionableGenes;
-    }
-
-    @NotNull
-    private static List<ActionableGene> extractActionableGeneLevelEvents(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<GeneLevelAnnotation> geneLevelEvents) {
-        List<ActionableGene> actionableGenes = Lists.newArrayList();
-        for (GeneLevelAnnotation geneLevelEvent : geneLevelEvents) {
-            actionableGenes.add(ImmutableActionableGene.builder()
-                    .gene(geneLevelEvent.gene())
-                    .event(geneLevelEvent.event())
-                    .source(source)
-                    .treatment(evidence.drugs())
-                    .cancerType(evidence.cancerType())
-                    .doid(evidence.doid())
-                    .direction(evidence.direction())
-                    .level(evidence.level())
-                    .url(evidence.url())
-                    .build());
-        }
-        return actionableGenes;
-    }
-
-    @NotNull
-    private static List<ActionableFusion> extractActionableFusions(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<FusionAnnotation> fusionAnnotations) {
-        List<ActionableFusion> actionableFusions = Lists.newArrayList();
-        for (FusionAnnotation fusion : fusionAnnotations) {
-            actionableFusions.add(ImmutableActionableFusion.builder()
-                    .geneUp(fusion.geneUp())
-                    .exonUp(fusion.exonUp())
-                    .geneDown(fusion.geneDown())
-                    .exonDown(fusion.exonDown())
-                    .source(source)
-                    .treatment(evidence.drugs())
-                    .cancerType(evidence.cancerType())
-                    .doid(evidence.doid())
-                    .direction(evidence.direction())
-                    .level(evidence.level())
-                    .url(evidence.url())
-                    .build());
-        }
-        return actionableFusions;
-    }
-
-    @NotNull
-    private static List<ActionableSignature> extractActionableSignatures(@NotNull Source source, @NotNull ActionableEvidence evidence,
-            @NotNull Iterable<SignatureName> signatures) {
-        List<ActionableSignature> actionableSignatures = Lists.newArrayList();
-        for (SignatureName signature : signatures) {
-            actionableSignatures.add(ImmutableActionableSignature.builder()
-                    .name(signature)
-                    .source(source)
-                    .treatment(evidence.drugs())
-                    .cancerType(evidence.cancerType())
-                    .doid(evidence.doid())
-                    .direction(evidence.direction())
-                    .level(evidence.level())
-                    .build());
-        }
-        return actionableSignatures;
-    }
-
-    @Nullable
-    private static Source fromViccSource(@NotNull ViccSource source) {
-        switch (source) {
-            case CIVIC:
-                return Source.CIVIC;
-            case CGI:
-                return Source.CGI;
-            case JAX:
-                return Source.JAX;
-            case ONCOKB:
-                return Source.ONCOKB;
-            default:
-                return null;
-        }
-    }
-
-    public static void writeFeatureTypes(@NotNull String featureTypeTsv, @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry)
+    public static void writeFeatureTypes(@NotNull String featureTypeTsv, @NotNull ViccExtractionOutput viccExtractionOutput)
             throws IOException {
         List<String> lines = Lists.newArrayList();
         String header = new StringJoiner(FIELD_DELIMITER).add("name").add("gene").add("type").add("biomarkerType").add("events").toString();
         lines.add(header);
 
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : viccExtractionOutput.resultsPerEntry().entrySet()) {
             ViccEntry viccEntry = entry.getKey();
             ViccExtractionResult viccExtractionResult = entry.getValue();
             for (Feature feature : viccEntry.features()) {
@@ -312,34 +117,7 @@ public final class ViccUtil {
         Files.write(new File(featureTypeTsv).toPath(), lines);
     }
 
-    @NotNull
-    public static Map<VariantHotspot, HotspotAnnotation> convertToHotspotMap(
-            @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        Map<VariantHotspot, HotspotAnnotation> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
-            ViccEntry entry = entryResult.getKey();
-            for (Map.Entry<Feature, List<VariantHotspot>> featureResult : entryResult.getValue().hotspotsPerFeature().entrySet()) {
-                Feature feature = featureResult.getKey();
-                for (VariantHotspot hotspot : featureResult.getValue()) {
-                    HotspotAnnotation currentAnnotation = convertedMap.get(hotspot);
-                    HotspotAnnotation newAnnotation = new HotspotAnnotation(Sets.newHashSet(entry.source().display()),
-                            feature.geneSymbol(),
-                            entry.transcriptId(),
-                            feature.proteinAnnotation());
-                    if (currentAnnotation != null) {
-                        convertedMap.put(hotspot, HotspotFunctions.mergeHotspotAnnotations(currentAnnotation, newAnnotation));
-                    } else {
-                        convertedMap.put(hotspot, newAnnotation);
-                    }
-
-                }
-            }
-        }
-
-        return convertedMap;
-    }
-
-    public static void printResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+    public static void printResults(@NotNull ViccExtractionOutput viccExtractionOutput) {
         List<Feature> featuresWithoutGenomicEvents = Lists.newArrayList();
         int totalFeatureCount = 0;
         int featuresWithHotspotsCount = 0;
@@ -350,7 +128,7 @@ public final class ViccUtil {
         int featuresWithGeneRangeCount = 0;
         int featuresWithSignatureCount = 0;
 
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : viccExtractionOutput.resultsPerEntry().entrySet()) {
             ViccEntry viccEntry = entry.getKey();
             ViccExtractionResult viccExtractionResult = entry.getValue();
             for (Feature feature : viccEntry.features()) {
@@ -400,7 +178,9 @@ public final class ViccUtil {
             LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
         }
 
-        LOGGER.info("Extraction performed on {} features from {} entries", totalFeatureCount, resultsPerEntry.size());
+        LOGGER.info("Extraction performed on {} features from {} entries",
+                totalFeatureCount,
+                viccExtractionOutput.resultsPerEntry().size());
         LOGGER.info(" Extracted {} hotspots for {} features", totalHotspotsCount, featuresWithHotspotsCount);
         LOGGER.info(" Extracted {} known amps and dels", featuresWithCopyNumberCount);
         LOGGER.info(" Extracted {} fusions", featuresWithFusionCount);
