@@ -62,7 +62,7 @@ public final class ViccUtil {
             ViccExtractionResult result = entry.getValue();
             ActionableEvidence evidence = result.actionableEvidence();
             if (evidence != null && source != null) {
-                actionableHotspots.addAll(extractActionableVariants(source, evidence, result.hotspotsPerFeature().values()));
+                actionableHotspots.addAll(extractActionableHotspots(source, evidence, result.hotspotsPerFeature().values()));
                 actionableRanges.addAll(extractActionableRanges(source, evidence, result.geneRangesPerFeature().values()));
                 actionableGenes.addAll(extractActionablePromiscuousFusions(source, evidence, result.fusionsPerFeature().values()));
                 actionableGenes.addAll(extractActionableAmpsDels(source, evidence, result.ampsDelsPerFeature().values()));
@@ -93,7 +93,7 @@ public final class ViccUtil {
     }
 
     @NotNull
-    private static List<ActionableHotspot> extractActionableVariants(@NotNull Source source, @NotNull ActionableEvidence evidence,
+    private static List<ActionableHotspot> extractActionableHotspots(@NotNull Source source, @NotNull ActionableEvidence evidence,
             @NotNull Iterable<List<VariantHotspot>> hotspotLists) {
         // TODO Implement
         return Lists.newArrayList();
