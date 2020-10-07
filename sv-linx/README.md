@@ -12,10 +12,10 @@ LINX is an annotation, interpretation and [visualisation](./README_VIS.md) tool 
   + [LINX terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
   + [Overview of event classification system in LINX](#overview-of-event-classification-system-in-linx)
 * [LINX ALGORITHM](#linx-algorithm)
-  + [Annotation of genomic properties and features](#1.-annotation-of-genomic-properties-and-features)
-  + [Clustering of SVs into events](#2.-clustering-of-svs-into-events)
-  + [Chaining of Derivative Chromosomes](#3.-chaining-of-derivative-chromosomes)
-  + [Gene impact and fusion prediction](#4.-gene-impact-and-fusion-prediction)
+  + [Annotation of genomic properties and features](#annotation-of-genomic-properties-and-features)
+  + [Clustering of SVs into events](#clustering-of-svs-into-events)
+  + [Chaining of Derivative Chromosomes](#chaining-of-derivative-chromosomes)
+  + [Gene impact and fusion prediction](#gene-impact-and-fusion-prediction)
 * [Visualisation](#visualisation)  
 * [Version History](#version-history)
 
@@ -240,7 +240,6 @@ ResolvedType | Resolved classification of the cluster.
 clusterCount | The number of break juncitons in the cluster
 clusterDesc | String containing the types and counts of break junctions in the cluster.   eg. DEL=2_INV=2 
 
-
 ### Links
 
 Chromosomal segments joining break junction pairs predicted to be linked and phased in cis on the derivative chromosome
@@ -437,7 +436,7 @@ The following schematic outlines the overall workflow in the LINX algorithm. Eac
 ![LINX Routine](src/main/resources/readme/linx_routine_steps.png)
 
 
-### 1. Annotation of genomic properties and features
+### Annotation of genomic properties and features
 To help resolve and characterise events, LINX first annotates a number of genomic properties:
 
 #### Externally sourced genomic annotations
@@ -536,7 +535,7 @@ The combined uncertainty is estimated as the square root of the weighted sum of 
 consolidatedUncertainty = SQRT( countObservations / (countObervations-1) * SUM[1/Uncertainty(i)^2*(MAX(Observation(i)-consolidatedJCN,Uncertainty(i)/2))^2] / Sum[1/Uncertainty(i)^2] )
 ```
 
-### 2. Clustering of SVs into events 
+### Clustering of SVs into events 
 LINX uses a clustering routine to classify events. All SVs within a sample are grouped into clusters in 7 steps:
 - Proximity clustering
 - Resolution of LINE clusters 
@@ -633,7 +632,7 @@ Merge any non resolved breakend into a cluster which has 2 different foldbacks s
 ##### Extended chainable proximity for complex and incomplete events (EXT_PROXIMITY)
 Merge any neighbouring non resolved clusters that are within 5M bases and which have facing flanking breakends on each cluster which could form a templated insertion with matching JCN. In the case of a foldback the JCN of the facing breakend is also permitted to match 2x the JCN.
 
-### 3. Chaining of Derivative Chromosomes
+### Chaining of Derivative Chromosomes
 
 A chaining algorithm is used to predict the local structure of the derivative chromosome within each cluster. The chaining algorithm examines each cluster independently and considers all possible paths that could be made to connect facing breakends into a set of continuous derivative chromosomes.
 
@@ -713,7 +712,6 @@ LINX use the following algorithm to identify ecDNA
 
 If LINX determines that an ecDNA event has occurred using the above criteria, it will retain and annotate the ecDNA chaining. Other junctions in the cluster with both breakends fully contained within a closed ecDNA segment are then only allowed to link to other variants within the ecDNA OR to the ecDNA forming variants. These links are likely lower JCN disruptions which occurred after the ecDNA was first replicated are present on a subset of the ecDNA. 
 
-
 ##### Special considerations for clusters with 2 inversions or 2 translocations
 
 Chains consisting of 2 inversions or 2 translocations that do not meet the criteria for ecDNA are common. Where the breakends overlap they may have multiple plausible paths, in each case either forming a reciprocal inversion / translocations or a deletion / duplication with templated insertion. In cases where breakends cannot be phased, LINX can not uniquely distinguish between these 2 scenarios. LINX implements the following heuristics to attempt predict the event type:
@@ -761,7 +759,7 @@ Consecutive breakends with no more than 5kb between them or which are part of th
 - COMPLEX_OTHER - Any other cluster
 
 
-### 4. Gene impact and fusion prediction
+### Gene impact and fusion prediction
 
 #### Annotation of breakends with potential gene impact
 
