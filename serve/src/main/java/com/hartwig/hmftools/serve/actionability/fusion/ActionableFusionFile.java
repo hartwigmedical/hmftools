@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
+import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -81,7 +82,7 @@ public final class ActionableFusionFile {
                 .treatment(values[5])
                 .cancerType(values[6])
                 .doid(values[7])
-                .level(values[8])
+                .level(EvidenceLevel.valueOf(values[8]))
                 .direction(ActionableEventFactory.directionFromFileValue(values[9]))
                 .url(url)
                 .build();
@@ -116,7 +117,7 @@ public final class ActionableFusionFile {
                 .add(fusion.treatment())
                 .add(fusion.cancerType())
                 .add(fusion.doid())
-                .add(fusion.level())
+                .add(fusion.level().toString())
                 .add(fusion.direction().display())
                 .add(fusion.url())
                 .toString();

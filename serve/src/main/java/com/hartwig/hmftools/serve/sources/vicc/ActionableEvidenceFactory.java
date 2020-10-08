@@ -7,6 +7,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.sources.Source;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
@@ -17,6 +18,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
+import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +47,7 @@ final class ActionableEvidenceFactory {
                 doid = extractDoid(type.id());
             }
         }
-        String level = entry.association().evidenceLabel();
+        EvidenceLevel level = resolveLevel(entry.association().evidenceLabel());
         EvidenceDirection direction = resolveDirection(entry.association().responseType());
 
         String url = null;
@@ -68,6 +70,20 @@ final class ActionableEvidenceFactory {
         } else {
             return null;
         }
+    }
+
+    @Nullable
+    @$VisibleForTesting
+    static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
+        if (evidenceLabel == null) {
+            return null;
+        }
+
+        EvidenceLevel level = EvidenceLevel.fromString(evidenceLabel);
+        if (level == null) {
+            LOGGER.warn("Could not resolve evidence label '{}'", evidenceLabel);
+        }
+        return level;
     }
 
     @NotNull

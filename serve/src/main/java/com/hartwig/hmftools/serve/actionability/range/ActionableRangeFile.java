@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
+import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -82,7 +83,7 @@ public final class ActionableRangeFile {
                 .treatment(values[6])
                 .cancerType(values[7])
                 .doid(values[8])
-                .level(values[9])
+                .level(EvidenceLevel.valueOf(values[9]))
                 .direction(ActionableEventFactory.directionFromFileValue(values[10]))
                 .url(url)
                 .build();
@@ -109,7 +110,7 @@ public final class ActionableRangeFile {
                 .add(range.treatment())
                 .add(range.cancerType())
                 .add(range.doid())
-                .add(range.level())
+                .add(range.level().toString())
                 .add(range.direction().display())
                 .add(range.url())
                 .toString();

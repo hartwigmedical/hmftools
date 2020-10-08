@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
+import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -76,7 +77,7 @@ public final class ActionableGeneFile {
                 .treatment(values[3])
                 .cancerType(values[4])
                 .doid(values[5])
-                .level(values[6])
+                .level(EvidenceLevel.valueOf(values[6]))
                 .direction(ActionableEventFactory.directionFromFileValue(values[7]))
                 .url(url)
                 .build();
@@ -100,7 +101,7 @@ public final class ActionableGeneFile {
                 .add(gene.treatment())
                 .add(gene.cancerType())
                 .add(gene.doid())
-                .add(gene.level())
+                .add(gene.level().toString())
                 .add(gene.direction().display())
                 .add(gene.url())
                 .toString();
