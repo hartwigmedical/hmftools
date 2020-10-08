@@ -4,14 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum Source {
-    CGI("CGI"),
-    CIVIC("CIViC"),
-    DOCM("DoCM"),
-    HARTWIG_COHORT("HartwigCohort"),
-    HARTWIG_CURATED("HartwigCurated"),
-    ICLUSION("iClusion"),
-    JAX("JAX"),
-    ONCOKB("OncoKB");
+    CGI("CGI", false),
+    CIVIC("CIViC", false),
+    DOCM("DoCM", false),
+    HARTWIG_COHORT("HartwigCohort", false),
+    HARTWIG_CURATED("HartwigCurated", false),
+    ICLUSION("iClusion", true),
+    JAX("JAX", false),
+    ONCOKB("OncoKB", false);
 
     @Nullable
     public static Source fromDisplayString(@NotNull String display) {
@@ -26,13 +26,19 @@ public enum Source {
 
     @NotNull
     private final String display;
+    private final boolean trialSource;
 
-    Source(@NotNull final String display) {
+    Source(@NotNull final String display, final boolean trialSource) {
         this.display = display;
+        this.trialSource = trialSource;
     }
 
     @NotNull
     public String display() {
         return display;
+    }
+
+    public boolean isTrialSource() {
+        return trialSource;
     }
 }
