@@ -105,13 +105,7 @@ public class SignatureAnnotation
 
     private boolean loadSampleCounts()
     {
-        if(mConfig.DbAccess != null)
-        {
-            CUP_LOGGER.error("retrieval of sample SNV counts unsupported at present");
-            return false;
-        }
-
-        if(mConfig.UseCohortFiles)
+        if(!mConfig.SampleSnvCountsFile.isEmpty() && !mConfig.SampleSnvPosFreqFile.isEmpty())
         {
             mSampleCounts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
             mSamplePosFrequencies = loadSamplePosFreqFromFile(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
@@ -119,27 +113,37 @@ public class SignatureAnnotation
             return mSampleCounts != null && mSamplePosFrequencies != null;
         }
 
-        final String sampleId = mSampleDataCache.SampleIds.get(0);
+        if(mSampleDataCache.isSingleSample())
+        {
+            final String sampleId = mSampleDataCache.SampleIds.get(0);
 
-        final String snvCountsFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
-                mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.snv_counts.csv";
+            final String snvCountsFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
+                    mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.snv_counts.csv";
 
-        final String snvPosFreqFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
-                mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.pos_freq_counts.csv";
+            final String snvPosFreqFile = !mConfig.SampleSnvPosFreqFile.isEmpty() ?
+                    mConfig.SampleSnvPosFreqFile : mConfig.SampleDataDir + sampleId + ".sig.pos_freq_counts.csv";
 
-        mSampleCounts = loadSampleCountsFromFile(snvCountsFile, mSampleCountsIndex);
-        mSamplePosFrequencies = loadSamplePosFreqFromFile(snvPosFreqFile, mSamplePosFreqIndex);
+            mSampleCounts = loadSampleCountsFromFile(snvCountsFile, mSampleCountsIndex);
+            mSamplePosFrequencies = loadSamplePosFreqFromFile(snvPosFreqFile, mSamplePosFreqIndex);
 
-        return mSampleCounts != null && mSamplePosFrequencies != null;
+            return mSampleCounts != null && mSamplePosFrequencies != null;
+        }
+        else if(mConfig.DbAccess != null)
+        {
+            CUP_LOGGER.error("DB retrieval of sample SNV counts unsupported at present");
+            return false;
+        }
+        else
+        {
+            CUP_LOGGER.error("no sample SNV count source specified");
+            return false;
+        }
     }
 
     private boolean loadSigContributions()
     {
-        if(mConfig.UseCohortFiles)
+        if(!mConfig.SampleSigContribFile.isEmpty())
         {
-            if(mConfig.SampleSigContribFile.isEmpty())
-                return false;
-
             return loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions);
         }
         else if(mConfig.DbAccess != null)

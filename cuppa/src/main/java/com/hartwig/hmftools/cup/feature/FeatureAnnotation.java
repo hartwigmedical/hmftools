@@ -275,11 +275,8 @@ public class FeatureAnnotation
 
     private boolean loadSampleFeatures()
     {
-        if(mConfig.UseCohortFiles)
+        if(!mConfig.SampleFeatureFile.isEmpty())
         {
-            if(mConfig.SampleFeatureFile.isEmpty())
-                return false;
-
             return loadDriversFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures);
         }
         else if(mConfig.DbAccess != null)
@@ -288,7 +285,6 @@ public class FeatureAnnotation
         }
 
         final String sampleId = mSampleDataCache.SampleIds.get(0);
-
         return loadFeaturesFromFile(sampleId, mConfig.SampleDataDir, mSampleFeatures);
     }
 

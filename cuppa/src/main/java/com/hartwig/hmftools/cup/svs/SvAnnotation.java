@@ -112,24 +112,28 @@ public class SvAnnotation
 
     private boolean loadSampleSvData()
     {
+        if(!mConfig.SampleSvFile.isEmpty())
+        {
+            if(mSampleDataCache.isSingleSample())
+            {
+                final String sampleId = mSampleDataCache.SampleIds.get(0);
+
+                if(mConfig.SampleSvFile.contains(sampleId))
+                {
+                    final String clusterFile = LinxCluster.generateFilename(mConfig.SampleDataDir, sampleId);
+                    loadSvDataFromFile(sampleId, mConfig.SampleSvFile, clusterFile, mSampleSvData);
+                    return true;
+                }
+            }
+
+            return loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData);
+        }
+
         if(mConfig.DbAccess != null)
         {
             return loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData);
         }
 
-        if(mConfig.UseCohortFiles)
-        {
-            if(!mConfig.SampleSvFile.isEmpty())
-                return loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData);
-            else
-                return false;
-        }
-
-        final String sampleId = mSampleDataCache.SampleIds.get(0);
-
-        final String clusterFile = LinxCluster.generateFilename(mConfig.SampleDataDir, sampleId);
-        loadSvDataFromFile(sampleId, mConfig.SampleSvFile, clusterFile, mSampleSvData);
-
-        return true;
+        return false;
     }
 }

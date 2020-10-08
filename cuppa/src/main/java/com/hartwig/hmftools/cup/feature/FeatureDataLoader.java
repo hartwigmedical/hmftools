@@ -111,6 +111,9 @@ public class FeatureDataLoader
         if(dbAccess == null)
             return false;
 
+        int i = 0;
+        int nextLog = 100;
+
         for(final String sampleId : sampleIds)
         {
             final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
@@ -118,6 +121,13 @@ public class FeatureDataLoader
             final List<LinxViralInsertion> viralInserts = dbAccess.readViralInsertions(sampleId);
 
             mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts);
+
+            ++i;
+            if(i >= nextLog)
+            {
+                nextLog += 100;
+                CUP_LOGGER.info("loaded {} sample feature data sets", i);
+            }
         }
 
         return true;

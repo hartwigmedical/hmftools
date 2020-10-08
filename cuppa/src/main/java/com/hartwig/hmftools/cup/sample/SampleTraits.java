@@ -62,14 +62,14 @@ public class SampleTraits
 
     private boolean loadSampleTraitsData()
     {
-        if(mConfig.DbAccess != null)
+        if(!mConfig.SampleTraitsFile.isEmpty())
         {
-            if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleTraitsData))
+            if(!loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData))
                 return false;
         }
-        else if(mConfig.UseCohortFiles)
+        else if(mConfig.DbAccess != null)
         {
-            if(mConfig.SampleTraitsFile.isEmpty() || !loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData))
+            if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleTraitsData))
                 return false;
         }
         else
