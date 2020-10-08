@@ -7,13 +7,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleAnalysis;
-import com.hartwig.hmftools.patientreporter.purple.ImmutablePurpleSignatures;
-import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -70,45 +64,12 @@ public class AnalysedPatientReporterTest {
         double purityCorrect = 0.40;
         boolean hasReliablePurityCorrect = true;
 
-        PurpleAnalysis purpleAnalysisCorrect = ImmutablePurpleAnalysis.builder()
-                .purity(purityCorrect)
-                .hasReliablePurity(hasReliablePurityCorrect)
-                .hasReliableQuality(true)
-                .ploidy(1.00)
-                .exomeGeneCopyNumbers(Lists.newArrayList())
-                .reportableGainsAndLosses(Lists.newArrayList())
-                .purpleSignatures(ImmutablePurpleSignatures.builder()
-                        .microsatelliteIndelsPerMb(0.00)
-                        .microsatelliteStatus(MicrosatelliteStatus.MSS)
-                        .tumorMutationalBurdenPerMb(4.00)
-                        .tumorMutationalLoad(100)
-                        .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
-                        .build())
-                .evidenceItems(Lists.newArrayList())
-                .build();
-
-        assertEquals(QsFormNumber.FOR_080.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisCorrect));
+        assertEquals(QsFormNumber.FOR_080.display(), AnalysedPatientReporter.determineForNumber(hasReliablePurityCorrect, purityCorrect));
 
         double purityNotCorrect = 0.10;
         boolean hasReliablePurityNotCorrect = false;
 
-        PurpleAnalysis purpleAnalysisNotCorrect = ImmutablePurpleAnalysis.builder()
-                .purity(purityNotCorrect)
-                .hasReliablePurity(hasReliablePurityNotCorrect)
-                .hasReliableQuality(true)
-                .ploidy(1.00)
-                .exomeGeneCopyNumbers(Lists.newArrayList())
-                .reportableGainsAndLosses(Lists.newArrayList())
-                .purpleSignatures(ImmutablePurpleSignatures.builder()
-                        .microsatelliteIndelsPerMb(0.00)
-                        .microsatelliteStatus(MicrosatelliteStatus.MSS)
-                        .tumorMutationalBurdenPerMb(4.00)
-                        .tumorMutationalLoad(100)
-                        .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
-                        .build())
-                .evidenceItems(Lists.newArrayList())
-                .build();
-
-        assertEquals(QsFormNumber.FOR_209.display(), AnalysedPatientReporter.determineForNumber(purpleAnalysisNotCorrect));
+        assertEquals(QsFormNumber.FOR_209.display(),
+                AnalysedPatientReporter.determineForNumber(hasReliablePurityNotCorrect, purityNotCorrect));
     }
 }

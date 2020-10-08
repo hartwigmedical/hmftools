@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
@@ -28,10 +28,10 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
     private static final float COL_WIDTH_SOURCE = 40;
 
     @NotNull
-    private final AnalysedPatientReport patientReport;
+    private final GenomicAnalysis genomicAnalysis;
 
-    public TherapyDetailsChapterOnLabel(@NotNull final AnalysedPatientReport patientReport) {
-        this.patientReport = patientReport;
+    public TherapyDetailsChapterOnLabel(@NotNull final GenomicAnalysis patientReport) {
+        this.genomicAnalysis = patientReport;
     }
 
     @NotNull
@@ -45,9 +45,9 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
         Table chapterTable = new Table(1);
 
         chapterTable.addCell(new Cell().add(TherapyDetailsChapterFunctions.createEvidenceTable("Tumor type specific evidence",
-                patientReport.tumorSpecificEvidence())).setPadding(0).setBorder(Border.NO_BORDER));
+                genomicAnalysis.tumorSpecificEvidence())).setPadding(0).setBorder(Border.NO_BORDER));
 
-        chapterTable.addCell(new Cell().add(createClinicalTrialsTable(patientReport.clinicalTrials()))
+        chapterTable.addCell(new Cell().add(createClinicalTrialsTable(genomicAnalysis.clinicalTrials()))
                 .setPadding(0)
                 .setBorder(Border.NO_BORDER));
 

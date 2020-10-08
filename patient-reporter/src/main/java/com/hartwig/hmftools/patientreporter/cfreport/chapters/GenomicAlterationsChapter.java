@@ -3,9 +3,8 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
@@ -36,10 +35,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
     private static final boolean DISPLAY_CLONAL_COLUMN = false;
 
     @NotNull
-    private final AnalysedPatientReport patientReport;
+    private final GenomicAnalysis genomicAnalysis;
 
-    public GenomicAlterationsChapter(@NotNull final AnalysedPatientReport patientReport) {
-        this.patientReport = patientReport;
+    public GenomicAlterationsChapter(@NotNull final GenomicAnalysis genomicAnalysis) {
+        this.genomicAnalysis = genomicAnalysis;
     }
 
     @Override
@@ -50,14 +49,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        boolean hasReliablePurity = patientReport.hasReliablePurity();
+        boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
 
-        reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurity));
-        reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurity));
-        reportDocument.add(createFusionsTable(patientReport.geneFusions(), hasReliablePurity));
-        reportDocument.add(createHomozygousDisruptionsTable(patientReport.homozygousDisruptions()));
-        reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurity));
-        reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
+        reportDocument.add(createTumorVariantsTable(genomicAnalysis.reportableVariants(), hasReliablePurity));
+        reportDocument.add(createGainsAndLossesTable(genomicAnalysis.gainsAndLosses(), hasReliablePurity));
+        reportDocument.add(createFusionsTable(genomicAnalysis.geneFusions(), hasReliablePurity));
+        reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
+        reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
+        reportDocument.add(createViralInsertionTable(genomicAnalysis.viralInsertions()));
     }
 
     @NotNull

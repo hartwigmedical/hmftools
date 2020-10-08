@@ -65,7 +65,8 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildWithCOLO829Data(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
-            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary, boolean reportGermline) {
+            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary,
+            boolean reportGermline) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 190;
         double tumorMutationalBurden = 13.7;
@@ -113,14 +114,11 @@ public final class ExampleAnalysisTestFactory {
             clinicalSummary = Strings.EMPTY;
         }
 
-        return ImmutableAnalysedPatientReport.builder()
-                .sampleReport(sampleReport)
-                .qsFormNumber(qcForNumber)
+        GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
-                .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
                 .offLabelEvidence(offLabelEvidence)
@@ -137,6 +135,13 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
+                .build();
+
+        return ImmutableAnalysedPatientReport.builder()
+                .sampleReport(sampleReport)
+                .qsFormNumber(qcForNumber)
+                .clinicalSummary(clinicalSummary)
+                .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctionReport)
@@ -177,14 +182,11 @@ public final class ExampleAnalysisTestFactory {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         String clinicalSummary = Strings.EMPTY;
 
-        return ImmutableAnalysedPatientReport.builder()
-                .sampleReport(sampleReport)
-                .qsFormNumber(QsFormNumber.FOR_209.display())
+        GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
-                .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
                 .offLabelEvidence(offLabelEvidence)
@@ -201,6 +203,13 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
+                .build();
+
+        return ImmutableAnalysedPatientReport.builder()
+                .sampleReport(sampleReport)
+                .qsFormNumber(QsFormNumber.FOR_209.display())
+                .clinicalSummary(clinicalSummary)
+                .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(false)
@@ -680,29 +689,30 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<LinxFusion> createTestFusions() {
         LinxFusion fusion1 = ImmutableLinxFusion.builder()
-                    .fivePrimeBreakendId(1)
-                    .threePrimeBreakendId(2)
-                    .name(Strings.EMPTY)
-                    .reported(true)
-                    .reportedType(Strings.EMPTY)
-                    .phased(FusionPhasedType.SKIPPED_EXONS)
-                    .likelihood(FusionLikelihoodType.HIGH)
-                    .chainLength(1)
-                    .chainLinks(1)
-                    .chainTerminated(true)
-                    .domainsKept(Strings.EMPTY)
-                    .domainsLost(Strings.EMPTY)
-                    .skippedExonsUp(2)
-                    .skippedExonsDown(4)
-                    .fusedExonUp(6)
-                    .fusedExonDown(7)
-                    .geneStart("TMPRSS2")
-                    .geneContextStart("Intron 5")
-                    .geneTranscriptStart("ENST00000398585")
-                    .geneEnd("PNPLA7")
-                    .geneContextEnd("Intron 3")
-                    .geneTranscriptEnd("ENST00000406427")
-                    .junctionCopyNumber(0.4).build();
+                .fivePrimeBreakendId(1)
+                .threePrimeBreakendId(2)
+                .name(Strings.EMPTY)
+                .reported(true)
+                .reportedType(Strings.EMPTY)
+                .phased(FusionPhasedType.SKIPPED_EXONS)
+                .likelihood(FusionLikelihoodType.HIGH)
+                .chainLength(1)
+                .chainLinks(1)
+                .chainTerminated(true)
+                .domainsKept(Strings.EMPTY)
+                .domainsLost(Strings.EMPTY)
+                .skippedExonsUp(2)
+                .skippedExonsDown(4)
+                .fusedExonUp(6)
+                .fusedExonDown(7)
+                .geneStart("TMPRSS2")
+                .geneContextStart("Intron 5")
+                .geneTranscriptStart("ENST00000398585")
+                .geneEnd("PNPLA7")
+                .geneContextEnd("Intron 3")
+                .geneTranscriptEnd("ENST00000406427")
+                .junctionCopyNumber(0.4)
+                .build();
 
         LinxFusion fusion2 = ImmutableLinxFusion.builder()
                 .fivePrimeBreakendId(1)
@@ -727,7 +737,8 @@ public final class ExampleAnalysisTestFactory {
                 .geneEnd("BRAF")
                 .geneContextEnd("Intron 8")
                 .geneTranscriptEnd("ENST00000288602")
-                .junctionCopyNumber(1D).build();
+                .junctionCopyNumber(1D)
+                .build();
 
         return Lists.newArrayList(fusion1, fusion2);
     }

@@ -7,6 +7,7 @@ import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.CircosChapter;
@@ -50,9 +51,11 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
-        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
-                new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report), new TumorCharacteristicsChapter(report),
-                new CircosChapter(report), new ExplanationChapter(), new DetailsAndDisclaimerChapter(report) };
+        GenomicAnalysis analysis = report.genomicAnalysis();
+        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(analysis),
+                new TherapyDetailsChapterOffLabel(analysis), new GenomicAlterationsChapter(analysis),
+                new TumorCharacteristicsChapter(analysis), new CircosChapter(report), new ExplanationChapter(),
+                new DetailsAndDisclaimerChapter(report) };
 
         writeReport(report, chapters, outputFilePath);
     }

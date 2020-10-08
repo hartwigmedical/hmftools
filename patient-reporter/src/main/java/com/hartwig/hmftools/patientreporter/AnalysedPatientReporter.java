@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -9,46 +8,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordFileReader;
-import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
-import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariantFile;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
-import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
-import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisruptionAnalyzer;
-import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.patientreporter.purple.PurpleAnalysis;
-import com.hartwig.hmftools.patientreporter.purple.PurpleAnalyzer;
-import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
-import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
-import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalysis;
-import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
-import com.hartwig.hmftools.patientreporter.variants.germline.DriverGermlineVariant;
-import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
-import com.hartwig.hmftools.patientreporter.variants.somatic.DriverSomaticVariant;
-import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
-import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
-import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertionAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -78,67 +42,33 @@ class AnalysedPatientReporter {
                         sampleMetadata.tumorSampleId());
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
-
-        List<DriverCatalog> purpleDriverCatalog = readDriverCatalog(purpleDriverCatalogTsv);
-        PurpleAnalysis purpleAnalysis =
-                analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation, purpleDriverCatalog);
-        List<DriverSomaticVariant> driverSomaticVariants =
-                analyzeSomaticVariants(sampleMetadata.tumorSampleId(), somaticVariantVcf, purpleDriverCatalog);
-
-        ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
-        ChordStatus chordStatus = chordAnalysis.hrStatus();
-
         LimsGermlineReportingLevel germlineChoice = reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode());
-        List<DriverGermlineVariant> driverGermlineVariants =
-                analyzeGermlineVariants(bachelorTsv, purpleAnalysis, driverSomaticVariants, chordStatus, germlineChoice);
+        boolean reportViralInsertions = reportData.limsModel().reportViralInsertions(sampleMetadata.tumorSampleBarcode());
 
-        ReportableVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(
-                driverSomaticVariants,
-                driverGermlineVariants,
-                reportData.germlineReportingModel(),
+        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.actionabilityAnalyzer(), reportData.germlineReportingModel());
+        GenomicAnalysis genomicAnalysis = genomicAnalyzer.analyze(sampleMetadata.tumorSampleId(),
+                patientTumorLocation,
                 germlineChoice,
-                reportData.actionabilityAnalyzer(),
-                patientTumorLocation);
-
-        SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
-        List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv,
-                reportData.limsModel().reportViralInsertions(sampleMetadata.tumorSampleBarcode()));
+                reportViralInsertions,
+                purplePurityTsv,
+                purpleQCFile,
+                purpleGeneCnvTsv,
+                purpleDriverCatalogTsv,
+                somaticVariantVcf,
+                bachelorTsv,
+                linxFusionTsv,
+                linxDisruptionTsv,
+                linxViralInsertionTsv,
+                linxDriversTsv,
+                chordPredictionTxt);
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
 
-        List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
-        allEvidenceItems.addAll(reportableVariantsAnalysis.evidenceItems());
-        allEvidenceItems.addAll(purpleAnalysis.evidenceItems());
-        allEvidenceItems.addAll(svAnalysis.evidenceItems());
-
-        List<EvidenceItem> allEvidenceItemsFiltered = ReportableEvidenceItemFactory.filterBlacklistedEvidence(allEvidenceItems);
-        List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItemsFiltered);
-
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber(determineForNumber(purpleAnalysis))
-                .impliedPurity(purpleAnalysis.purity())
-                .hasReliablePurity(purpleAnalysis.hasReliablePurity())
-                .hasReliableQuality(purpleAnalysis.hasReliableQuality())
-                .averageTumorPloidy(purpleAnalysis.ploidy())
+                .qsFormNumber(determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity()))
                 .clinicalSummary(clinicalSummary)
-                .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
-                .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItemsFiltered))
-                .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
-                .reportableVariants(reportableVariantsAnalysis.variantsToReport())
-                .microsatelliteIndelsPerMb(purpleAnalysis.purpleSignatures().microsatelliteIndelsPerMb())
-                .microsatelliteStatus(purpleAnalysis.purpleSignatures().microsatelliteStatus())
-                .tumorMutationalLoad(purpleAnalysis.purpleSignatures().tumorMutationalLoad())
-                .tumorMutationalLoadStatus(purpleAnalysis.purpleSignatures().tumorMutationalLoadStatus())
-                .tumorMutationalBurden(purpleAnalysis.purpleSignatures().tumorMutationalBurdenPerMb())
-                .chordHrdValue(chordAnalysis.hrdValue())
-                .chordHrdStatus(chordStatus)
-                .gainsAndLosses(purpleAnalysis.reportableGainsAndLosses())
-                .geneFusions(svAnalysis.reportableFusions())
-                .geneDisruptions(svAnalysis.reportableDisruptions())
-                .homozygousDisruptions(reportableHomozygousDisruptions)
-                .viralInsertions(viralInsertions)
+                .genomicAnalysis(genomicAnalysis)
                 .circosPath(circosFile)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)
@@ -153,123 +83,11 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private static List<DriverCatalog> readDriverCatalog(@NotNull String purpleDriverCatalogTsv) throws IOException {
-        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(purpleDriverCatalogTsv);
-        LOGGER.info("Loaded {} purple driver catalog records from {}", driverCatalog.size(), purpleDriverCatalogTsv);
-        return driverCatalog;
-    }
-
-    @NotNull
     @VisibleForTesting
-    static String determineForNumber(@NotNull PurpleAnalysis purpleAnalysis) {
-        return purpleAnalysis.hasReliablePurity() && purpleAnalysis.purity() > ReportResources.PURITY_CUTOFF
+    static String determineForNumber(boolean hasReliablePurity, double purity) {
+        return hasReliablePurity && purity > ReportResources.PURITY_CUTOFF
                 ? QsFormNumber.FOR_080.display()
                 : QsFormNumber.FOR_209.display();
-    }
-
-    @NotNull
-    private PurpleAnalysis analyzePurple(@NotNull String purplePurityTsv, @NotNull String purpleQCFile, @NotNull String purpleGeneCnvTsv,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> purpleDriverCatalog) throws IOException {
-        PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
-        LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
-        LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
-        LOGGER.info(" Purple average tumor ploidy: {}", purityContext.bestFit().ploidy());
-        LOGGER.info(" Purple fit method: {}", purityContext.method());
-        LOGGER.info(" WGD happened: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
-
-        PurpleQC purpleQC = purityContext.qc();
-        LOGGER.info("Loaded purple QC data from {}", purpleQCFile);
-        LOGGER.info(" Purple QC status: {}", purpleQC.toString());
-
-        List<GeneCopyNumber> exomeGeneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
-        LOGGER.info("Loaded {} gene copy numbers from {}", exomeGeneCopyNumbers.size(), purpleGeneCnvTsv);
-
-        return PurpleAnalyzer.run(purityContext,
-                purpleQC,
-                exomeGeneCopyNumbers,
-                reportData.actionabilityAnalyzer(),
-                patientTumorLocation,
-                purpleDriverCatalog);
-    }
-
-    @NotNull
-    private static List<DriverSomaticVariant> analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
-            @NotNull List<DriverCatalog> purpleDriverCatalog) throws IOException {
-        List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
-        LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
-
-        return SomaticVariantAnalyzer.run(variants, purpleDriverCatalog);
-    }
-
-    @NotNull
-    private List<DriverGermlineVariant> analyzeGermlineVariants(@NotNull String bachelorTsv, @NotNull PurpleAnalysis purpleAnalysis,
-            @NotNull List<DriverSomaticVariant> driverSomaticVariants, @NotNull ChordStatus chordStatus,
-            @NotNull LimsGermlineReportingLevel germlineChoice) throws IOException {
-        List<ReportableGermlineVariant> variants = ReportableGermlineVariantFile.read(bachelorTsv);
-
-        LOGGER.info("Loaded {} reportable germline variants from {}", variants.size(), bachelorTsv);
-
-        if (germlineChoice != LimsGermlineReportingLevel.NO_REPORTING) {
-            LOGGER.info(" Patient has given the following germline consent: '{}'", germlineChoice);
-            return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
-                    reportData.germlineReportingModel(),
-                    purpleAnalysis.exomeGeneCopyNumbers(),
-                    driverSomaticVariants,
-                    chordStatus);
-        } else {
-            LOGGER.info(" No consent has been given for germline reporting. No germline variants will be reported!");
-            return Lists.newArrayList();
-        }
-    }
-
-    @NotNull
-    private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxDisruptionsTsv,
-            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
-        List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
-        List<LinxFusion> linxFusionsReported = linxFusions.stream()
-                .filter(x -> x.reported())
-                .collect(Collectors.toList());
-
-        LOGGER.info("Loaded {} fusions from {}", linxFusionsReported.size(), linxFusionTsv);
-
-        List<LinxBreakend> linxBreakends = LinxBreakend.read(linxDisruptionsTsv);
-        List<LinxBreakend> linxBreakendsReported = linxBreakends.stream()
-                .filter(x -> x.reportedDisruption())
-                .collect(Collectors.toList());
-
-        LOGGER.info("Loaded {} disruptions from {}", linxBreakendsReported.size(), linxDisruptionsTsv);
-
-        return SvAnalyzer.run(linxFusionsReported, linxBreakendsReported, reportData.actionabilityAnalyzer(), patientTumorLocation);
-    }
-
-    @NotNull
-    private static ChordAnalysis analyzeChord(@NotNull String chordPredictionTxt) throws IOException {
-        ChordAnalysis chord = ChordFileReader.read(chordPredictionTxt);
-        LOGGER.info("Loaded CHORD analysis from {}", chordPredictionTxt);
-        return chord;
-    }
-
-    @NotNull
-    private static List<ReportableHomozygousDisruption> extractHomozygousDisruptionsFromLinxDrivers(@NotNull String linxDriversTsv)
-            throws IOException {
-        return HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(linxDriversTsv);
-    }
-
-    @Nullable
-    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv, boolean reportViralInsertions)
-            throws IOException {
-        List<LinxViralInsertion> viralInsertionList = LinxViralInsertion.read(linxViralInsertionTsv);
-        LOGGER.info("Loaded {} viral insertions from {}", viralInsertionList.size(), linxViralInsertionTsv);
-
-        if (reportViralInsertions) {
-            List<ViralInsertion> reportableViralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(viralInsertionList);
-            LOGGER.info(" Patient has given consent for viral insertion reporting. Found {} reportable viral insertions.",
-                    reportableViralInsertions.size());
-            return reportableViralInsertions;
-        } else {
-            LOGGER.info(" No consent has been given for viral insertions. No viral insertions will be reported!");
-            return null;
-        }
     }
 
     private static void printReportState(@NotNull AnalysedPatientReport report) {
@@ -288,23 +106,24 @@ class AnalysedPatientReporter {
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
 
+        GenomicAnalysis analysis = report.genomicAnalysis();
         List<ReportableVariant> variantsWithNotify =
-                report.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
+                analysis.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
-        LOGGER.info(" Somatic variants to report: {}", report.reportableVariants().size());
+        LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
         LOGGER.info("  Variants for which to notify clinical geneticist: {}", variantsWithNotify.size());
-        LOGGER.info(" Microsatellite indels per Mb: {} ({})", report.microsatelliteIndelsPerMb(), report.microsatelliteStatus());
-        LOGGER.info(" Tumor mutational load: {} ({})", report.tumorMutationalLoad(), report.tumorMutationalLoadStatus());
-        LOGGER.info(" Tumor mutational burden: {}", report.tumorMutationalBurden());
-        LOGGER.info(" CHORD analysis HRD prediction: {} ({})", report.chordHrdValue(), report.chordHrdStatus());
-        LOGGER.info(" Number of gains and losses to report: {}", report.gainsAndLosses().size());
-        LOGGER.info(" Gene fusions to report: {}", report.geneFusions().size());
-        LOGGER.info(" Gene disruptions to report: {}", report.geneDisruptions().size());
-        LOGGER.info(" Viral insertions to report: {}", report.viralInsertions() != null ? report.viralInsertions().size() : "0");
+        LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
+        LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());
+        LOGGER.info(" Tumor mutational burden: {}", analysis.tumorMutationalBurden());
+        LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());
+        LOGGER.info(" Number of gains and losses to report: {}", analysis.gainsAndLosses().size());
+        LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
+        LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
+        LOGGER.info(" Viral insertions to report: {}", analysis.viralInsertions() != null ? analysis.viralInsertions().size() : "0");
 
         LOGGER.info("Printing actionability results for {}", report.sampleReport().tumorSampleId());
-        LOGGER.info(" Tumor-specific evidence items found: {}", report.tumorSpecificEvidence().size());
-        LOGGER.info(" Clinical trials matched to molecular profile: {}", report.clinicalTrials().size());
-        LOGGER.info(" Off-label evidence items found: {}", report.offLabelEvidence().size());
+        LOGGER.info(" Tumor-specific evidence items found: {}", analysis.tumorSpecificEvidence().size());
+        LOGGER.info(" Clinical trials matched to molecular profile: {}", analysis.clinicalTrials().size());
+        LOGGER.info(" Off-label evidence items found: {}", analysis.offLabelEvidence().size());
     }
 }

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
@@ -32,10 +32,10 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.##");
 
     @NotNull
-    private final AnalysedPatientReport patientReport;
+    private final GenomicAnalysis genomicAnalysis;
 
-    public TumorCharacteristicsChapter(@NotNull final AnalysedPatientReport patientReport) {
-        this.patientReport = patientReport;
+    public TumorCharacteristicsChapter(@NotNull final GenomicAnalysis genomicAnalysis) {
+        this.genomicAnalysis = genomicAnalysis;
     }
 
     @Override
@@ -53,10 +53,10 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     private void renderHrdCharacteristic(@NotNull Document reportDocument) {
-        double hrdValue = patientReport.chordHrdValue();
-        ChordStatus hrdStatus = patientReport.chordHrdStatus();
+        double hrdValue = genomicAnalysis.chordHrdValue();
+        ChordStatus hrdStatus = genomicAnalysis.chordHrdStatus();
 
-        boolean hasReliablePurity = patientReport.hasReliablePurity();
+        boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
         String hrDeficiencyLabel =
                 hasReliablePurity ? hrdStatus.display() + " " + DOUBLE_DECIMAL_FORMAT.format(hrdValue) : DataUtil.NA_STRING;
 
@@ -64,7 +64,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 + "(MSI) or has insufficient number of mutations and is therefore not reported for this sample.";
         boolean displayFootNote = false;
         boolean isHrdReliable =
-                patientReport.chordHrdStatus() == ChordStatus.HR_PROFICIENT || patientReport.chordHrdStatus() == ChordStatus.HR_DEFICIENT;
+                genomicAnalysis.chordHrdStatus() == ChordStatus.HR_PROFICIENT || genomicAnalysis.chordHrdStatus() == ChordStatus.HR_DEFICIENT;
         if (!isHrdReliable) {
             displayFootNote = true;
             hrDeficiencyLabel = DataUtil.NA_STRING + "*";
@@ -88,10 +88,10 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     private void renderMicrosatelliteStabilityCharacteristic(@NotNull Document reportDocument) {
-        boolean hasReliablePurity = patientReport.hasReliablePurity();
-        double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
-        String microSatelliteStabilityString = hasReliablePurity ? patientReport.microsatelliteStatus().display() + " "
-                + DOUBLE_DECIMAL_FORMAT.format(patientReport.microsatelliteIndelsPerMb()) : DataUtil.NA_STRING;
+        boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
+        double microSatelliteStability = genomicAnalysis.microsatelliteIndelsPerMb();
+        String microSatelliteStabilityString = hasReliablePurity ? genomicAnalysis.microsatelliteStatus().display() + " "
+                + DOUBLE_DECIMAL_FORMAT.format(genomicAnalysis.microsatelliteIndelsPerMb()) : DataUtil.NA_STRING;
 
         BarChart satelliteChart =
                 new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI", false);
@@ -115,9 +115,9 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     private void renderMutationalLoadCharacteristic(@NotNull Document reportDocument) {
-        boolean hasReliablePurity = patientReport.hasReliablePurity();
-        int mutationalLoad = patientReport.tumorMutationalLoad();
-        String tmlStatus = patientReport.tumorMutationalLoadStatus().display();
+        boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
+        int mutationalLoad = genomicAnalysis.tumorMutationalLoad();
+        String tmlStatus = genomicAnalysis.tumorMutationalLoadStatus().display();
 
         String mutationalLoadString = hasReliablePurity ? tmlStatus + " " + NO_DECIMAL_FORMAT.format(mutationalLoad) : DataUtil.NA_STRING;
         BarChart mutationalLoadChart =
@@ -141,8 +141,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     private void renderMutationalBurdenCharacteristic(@NotNull Document reportDocument) {
-        boolean hasReliablePurity = patientReport.hasReliablePurity();
-        double mutationalBurden = patientReport.tumorMutationalBurden();
+        boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
+        double mutationalBurden = genomicAnalysis.tumorMutationalBurden();
         String mutationalBurdenString =
                 hasReliablePurity ? SINGLE_DECIMAL_FORMAT.format(mutationalBurden) + " variants per Mb" : DataUtil.NA_STRING;
         BarChart mutationalBurdenChart =

@@ -63,7 +63,7 @@ public final class ReportResources {
 
     public static float maxPointSizeForWidth(@NotNull PdfFont font, float initialFontSize, float minFontSize, @NotNull String text,
             float maxWidth) {
-        final float fontIncrement = 0.1f;
+        float fontIncrement = 0.1f;
 
         float fontSize = initialFontSize;
         float width = font.getWidth(text, initialFontSize);
