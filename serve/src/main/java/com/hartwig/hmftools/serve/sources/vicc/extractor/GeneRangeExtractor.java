@@ -45,25 +45,28 @@ public class GeneRangeExtractor {
                 //  LOGGER.info(featureType);
                 //  LOGGER.info(feature);
             } else if (featureType == FeatureType.GENE_RANGE_CODON) {
-                LOGGER.info(featureType);
-                LOGGER.info(feature);
                 //TODO remove EX and T148HFSX9 from gene range codon featureType
-                if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("EX")
-                        && !feature.proteinAnnotation().contains("_")) {
-                    geneRangesPerFeature = determineRanges(viccEntry,
-                            feature,
-                            feature.proteinAnnotation(),
-                            geneRangeAnnotation,
-                            geneRangesPerFeature,
-                            canonicalTranscript);
-
-                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("EX")) {
+                    if (!feature.proteinAnnotation().contains("_")) {
+                        geneRangesPerFeature = determineRanges(viccEntry,
+                                feature,
+                                feature.proteinAnnotation(),
+                                geneRangeAnnotation,
+                                geneRangesPerFeature,
+                                canonicalTranscript);
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else if (feature.proteinAnnotation().contains("_")){ //example L485_P490 BRAF
+                        int startCodon = Integer.parseInt(feature.proteinAnnotation().split("_")[0].replaceAll("\\D+", ""));
+                        int endCodon = Integer.parseInt(feature.proteinAnnotation().split("_")[1].replaceAll("\\D+", ""));
+                        geneRangesPerFeature = determineRangesMulti(viccEntry,
+                                feature,
+                                startCodon, endCodon,
+                                geneRangeAnnotation,
+                                geneRangesPerFeature,
+                                canonicalTranscript);
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    }
                 }
-
-                //                int start = Integer.parseInt(proteinAnnotation.split("_")[0].replaceAll("\\D+", ""));
-                //                int end = Integer.parseInt(proteinAnnotation.split("_")[1].replaceAll("\\D+", ""));
-                //                int count = end - start;
-
             }
             //
             //                if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -155,6 +158,7 @@ public class GeneRangeExtractor {
             //                    //                            feature);
         }
         return geneRangesPerFeature;
+
     }
 
     @NotNull
@@ -202,13 +206,55 @@ public class GeneRangeExtractor {
                 LOGGER.warn("Multiple genomic regions known for event {}", feature);
             }
         } else {
-            //                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-            //                            transcriptIdVicc,
-            //                            canonicalTranscript.transcriptID(),
-            //                            feature);
+            LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                    transcriptIdVicc,
+                    canonicalTranscript.transcriptID(),
+                    feature);
         }
         return geneRangesPerFeature;
     }
+
+    private static Map<Feature, List<GeneRangeAnnotation>> determineRangesMulti(@NotNull ViccEntry viccEntry, @NotNull Feature feature,
+            int startCodon, int endCodon, @NotNull List<GeneRangeAnnotation> geneRangeAnnotation,
+            @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature, @NotNull HmfTranscriptRegion canonicalTranscript) {
+        String transcriptIdVicc = viccEntry.transcriptId();
+
+        if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+            String geneSymbol = feature.geneSymbol();
+            List<GenomeRegion> genomeRegionsStart = canonicalTranscript.codonByIndex(startCodon);
+            List<GenomeRegion> genomeRegionsEnd = canonicalTranscript.codonByIndex(endCodon);
+
+            if (genomeRegionsStart.size() == 1 && genomeRegionsEnd.size() == 1) {
+                long start = genomeRegionsStart.get(0).start();
+                long end = genomeRegionsEnd.get(0).end();
+                String chromosomeStart = genomeRegionsStart.get(0).chromosome();
+                String chromosomeEnd = genomeRegionsEnd.get(0).chromosome();
+
+                String chromosome = Strings.EMPTY;
+                if (chromosomeStart.equals(chromosomeEnd)) {
+                    chromosome = chromosomeStart;
+                }
+                geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                        .gene(geneSymbol)
+                        .start(start)
+                        .end(end)
+                        .chromosome(chromosome)
+                        .mutationType(MutationTypeFilter.ANY)
+                        .build());
+                geneRangesPerFeature.put(feature, geneRangeAnnotation);
+
+            } else {
+                LOGGER.warn("Multiple genomic regions known for event {}", feature);
+            }
+        } else {
+            LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                    transcriptIdVicc,
+                    canonicalTranscript.transcriptID(),
+                    feature);
+        }
+        return geneRangesPerFeature;
+    }
+
 
     private static boolean isValidSingleCodonRange(@NotNull String feature) {
 
