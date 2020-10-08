@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -42,8 +43,22 @@ public class GeneRangeExtractor {
 
             if (featureType == FeatureType.GENE_RANGE_EXON) {
                 String transcriptIdVicc = viccEntry.transcriptId();
-                //  LOGGER.info(featureType);
-                //  LOGGER.info(feature);
+                if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+                    if (feature.proteinAnnotation().matches("[0-9]+")) {
+                        int exonNumberList = Integer.parseInt(feature.proteinAnnotation())
+                                - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else {
+                        LOGGER.info(feature);
+                    }
+                } else {
+                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                            transcriptIdVicc,
+                            canonicalTranscript.transcriptID(),
+                            feature);
+                }
+
             } else if (featureType == FeatureType.GENE_RANGE_CODON) {
                 //TODO remove EX and T148HFSX9 from gene range codon featureType
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("EX")) {
@@ -55,12 +70,13 @@ public class GeneRangeExtractor {
                                 geneRangesPerFeature,
                                 canonicalTranscript);
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
-                    } else if (feature.proteinAnnotation().contains("_")){ //example L485_P490 BRAF
+                    } else if (feature.proteinAnnotation().contains("_")) { //example L485_P490 BRAF
                         int startCodon = Integer.parseInt(feature.proteinAnnotation().split("_")[0].replaceAll("\\D+", ""));
                         int endCodon = Integer.parseInt(feature.proteinAnnotation().split("_")[1].replaceAll("\\D+", ""));
                         geneRangesPerFeature = determineRangesMulti(viccEntry,
                                 feature,
-                                startCodon, endCodon,
+                                startCodon,
+                                endCodon,
                                 geneRangeAnnotation,
                                 geneRangesPerFeature,
                                 canonicalTranscript);
@@ -68,8 +84,6 @@ public class GeneRangeExtractor {
                     }
                 }
             }
-            //
-            //                if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
             //                    if (feature.name().contains(",")) {
             //                        String[] exons = feature.name()
             //                                .substring((feature.name().toLowerCase().indexOf("exon")))
@@ -151,11 +165,7 @@ public class GeneRangeExtractor {
             //
             //                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
             //                    }
-            //                } else {
-            //                    //                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-            //                    //                            transcriptIdVicc,
-            //                    //                            canonicalTranscript.transcriptID(),
-            //                    //                            feature);
+            //                }
         }
         return geneRangesPerFeature;
 
@@ -254,7 +264,6 @@ public class GeneRangeExtractor {
         }
         return geneRangesPerFeature;
     }
-
 
     private static boolean isValidSingleCodonRange(@NotNull String feature) {
 
