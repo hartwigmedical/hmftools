@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.protect.serve;
 
+import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.sources.Source;
 
 import org.immutables.value.Value;
@@ -11,25 +13,25 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ServeEvidenceItem {
 
-    // This should display the event which led to the evidence, eg "EGFR Amplification".
     @NotNull
-    public abstract String event();
+    public abstract String genomicEvent();
 
     @NotNull
     public abstract Source source();
 
+    public abstract boolean reported();
+
     @NotNull
     public abstract String treatment();
 
-    @NotNull
-    public abstract String level();
+    public abstract boolean onLabel();
 
     @NotNull
-    public abstract String response();
-
-    public abstract boolean isOnLabel();
+    public abstract EvidenceLevel level();
 
     @NotNull
-    public abstract String cancerType();
+    public abstract EvidenceDirection direction();
 
+    @NotNull
+    public abstract String url();
 }
