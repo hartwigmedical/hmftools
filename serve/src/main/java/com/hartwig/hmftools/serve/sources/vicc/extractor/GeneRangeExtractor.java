@@ -2,7 +2,6 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -10,7 +9,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
-import com.hartwig.hmftools.serve.sources.vicc.ViccTestApplication;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
