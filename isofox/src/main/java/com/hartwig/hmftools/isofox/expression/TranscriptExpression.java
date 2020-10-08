@@ -340,8 +340,10 @@ public class TranscriptExpression
 
             Level logLevel = skippedPerc > 0.1 && skippedComboCounts > 100 ? WARN : DEBUG;
 
-            ISF_LOGGER.log(logLevel, String.format("gene(%s) skippedCounts(%d perc=%.3f of total=%.0f)",
-                    geneSummaryData.GeneNames, skippedComboCounts, skippedPerc, totalCounts));
+            ISF_LOGGER.log(logLevel, String.format("gene(%d:%s) categories(act=%d exp=%d trans+genes=%d) skippedCounts(%d perc=%.3f of total=%.0f)",
+                    geneSummaryData.GeneIds.size(), geneSummaryData.GeneNames,
+                    geneSummaryData.TransCategoryCounts.size(), mCurrentExpRatesData.Categories.size(),
+                    mCurrentExpRatesData.TranscriptIds.size(), skippedComboCounts, skippedPerc, totalCounts));
         }
 
         return categoryCounts;

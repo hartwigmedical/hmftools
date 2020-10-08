@@ -59,6 +59,8 @@ public class RefSignatures
         if(mConfig.RefSigContribsFile.isEmpty() && mConfig.RefSnvCountsFile.isEmpty())
             return;
 
+        CUP_LOGGER.info("building SNV and signatures reference data");
+
         initialiseRefDataWriter();
 
         for(Map.Entry<String,Map<String,List<Double>>> entry : mCancerSigContribs.entrySet())
@@ -194,7 +196,7 @@ public class RefSignatures
 
                 if(cancerType == null)
                 {
-                    CUP_LOGGER.error("sample({}) missing cancer type", sampleId);
+                    CUP_LOGGER.error("sample({}) signatures missing cancer type", sampleId);
                     continue;
                 }
 

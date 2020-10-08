@@ -41,6 +41,8 @@ public class RefSvData
 
     public void buildRefDataSets()
     {
+        CUP_LOGGER.info("building SV reference data");
+
         if(mConfig.RefSampleSvDataFile.isEmpty())
         {
             if(mConfig.DbAccess == null)
@@ -119,7 +121,7 @@ public class RefSvData
         final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(svData.SampleId);
         if(cancerType == null)
         {
-            CUP_LOGGER.error("sample({}) missing cancer type", svData.SampleId);
+            CUP_LOGGER.error("sample({}) SV missing cancer type", svData.SampleId);
             return;
         }
 

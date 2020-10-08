@@ -55,6 +55,7 @@ public class IsofoxConfig
     public static final String FUNCTIONS = "functions";
 
     public static final String GENE_ID_FILE = "gene_id_file";
+    public static final String RESTRICTED_GENE_IDS = "restricted_gene_ids";
     public static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
     private static final String CANONICAL_ONLY = "canonical_only";
@@ -161,6 +162,10 @@ public class IsofoxConfig
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
             loadGeneIdsFile(inputFile, RestrictedGeneIds);
             ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
+        }
+        else if(cmd.hasOption(RESTRICTED_GENE_IDS))
+        {
+            RestrictedGeneIds.addAll(Arrays.stream(cmd.getOptionValue(RESTRICTED_GENE_IDS).split(ITEM_DELIM)).collect(Collectors.toList()));
         }
 
         if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
@@ -512,6 +517,7 @@ public class IsofoxConfig
         options.addOption(FUNCTIONS, true, "Optional: list of functional routines to run (see documentation)");
         options.addOption(CANONICAL_ONLY, false, "Check all transcripts, not just canonical");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
+        options.addOption(RESTRICTED_GENE_IDS, true, "Optional list of Ensmebl GeneIds separated by ';'");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(ENRICHED_GENE_IDS, true, "Optional list of geneIds to treat as enriched");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");

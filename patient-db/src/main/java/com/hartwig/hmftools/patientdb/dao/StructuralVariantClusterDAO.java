@@ -70,7 +70,7 @@ class StructuralVariantClusterDAO
                 cluster.clusterId(),
                 cluster.category(),
                 cluster.synthetic(),
-                cluster.category(),
+                cluster.resolvedType(),
                 cluster.clusterCount(),
                 DatabaseUtil.checkStringLength(cluster.clusterDesc(), SVCLUSTER.CLUSTERDESC));
     }

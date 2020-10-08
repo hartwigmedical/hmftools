@@ -39,6 +39,7 @@ public class RefDataBuilder
         mSampleDataCache = new SampleDataCache();
 
         loadSampleData(cmd);
+
         mSampleTraits = new RefSampleTraits(mConfig, mSampleDataCache);
         mSignatures = new RefSignatures(mConfig, mSampleDataCache);
         mSvAnnotation = new RefSvData(mConfig, mSampleDataCache);
@@ -49,6 +50,9 @@ public class RefDataBuilder
     private void loadSampleData(final CommandLine cmd)
     {
         mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE), false);
+
+        CUP_LOGGER.info("loaded {} reference samples, {} cancer types",
+                mSampleDataCache.SampleIds.size(), mSampleDataCache.RefCancerSampleData.size());
     }
 
     public void run()

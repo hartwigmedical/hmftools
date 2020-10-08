@@ -45,6 +45,8 @@ public class RefSampleTraits
 
     public void buildRefDataSets()
     {
+        CUP_LOGGER.info("building sample traits reference data");
+
         if(mConfig.RefSampleTraitsFile.isEmpty())
         {
             if(mConfig.DbAccess == null)
@@ -143,7 +145,7 @@ public class RefSampleTraits
         final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(traitsData.SampleId);
         if(cancerType == null)
         {
-            CUP_LOGGER.error("sample({}) missing cancer type", traitsData.SampleId);
+            CUP_LOGGER.error("sample({}) traits missing cancer type", traitsData.SampleId);
             return;
         }
 

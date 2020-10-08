@@ -37,6 +37,8 @@ public class RefFeatures
         if(mConfig.DbAccess == null)
             return;
 
+        CUP_LOGGER.info("building feature reference data");
+
         final Map<String,List<SampleFeatureData>> sampleFeaturesMap = Maps.newHashMap();
         loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleFeaturesMap);
 
