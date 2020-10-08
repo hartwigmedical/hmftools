@@ -175,18 +175,13 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>serve</artifactId>
-                <version>${serve.version}</version>
+                <artifactId>hmf-extensions-cli</artifactId>
+                <version>${hmf-extensions.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>sv-linx</artifactId>
-                <version>${sv-linx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>sig-analyser</artifactId>
-                <version>${sig-analyser.version}</version>
+                <artifactId>hmf-extensions-csv</artifactId>
+                <version>${hmf-extensions.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
@@ -205,13 +200,28 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>hmf-extensions-cli</artifactId>
-                <version>${hmf-extensions.version}</version>
+                <artifactId>count-bam-lines</artifactId>
+                <version>${cobalt.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>hmf-extensions-csv</artifactId>
-                <version>${hmf-extensions.version}</version>
+                <artifactId>amber</artifactId>
+                <version>${amber.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>sv-linx</artifactId>
+                <version>${sv-linx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>sig-analyser</artifactId>
+                <version>${sig-analyser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>paddle</artifactId>
+                <version>${paddle.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
@@ -225,18 +235,13 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>count-bam-lines</artifactId>
-                <version>${cobalt.version}</version>
+                <artifactId>serve</artifactId>
+                <version>${serve.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>amber</artifactId>
-                <version>${amber.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>paddle</artifactId>
-                <version>${paddle.version}</version>
+                <artifactId>protect</artifactId>
+                <version>${protect.version}</version>
             </dependency>
 
             <dependency>
