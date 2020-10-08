@@ -44,6 +44,7 @@ import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class SageAddReferenceApplication implements AutoCloseable {
     private static final Logger LOGGER = LogManager.getLogger(SageAddReferenceApplication.class);
@@ -142,9 +143,9 @@ public class SageAddReferenceApplication implements AutoCloseable {
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(fileName,
                 new VCFCodec(),
                 false)) {
-
+            VCFHeader header = (VCFHeader) reader.getHeader();
             for (VariantContext variantContext : reader.iterator()) {
-                result.add(variantContext);
+                result.add(variantContext.fullyDecode(header, false));
             }
         }
 
