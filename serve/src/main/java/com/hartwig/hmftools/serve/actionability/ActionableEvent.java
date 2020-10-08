@@ -19,7 +19,7 @@ public interface ActionableEvent {
     String doid();
 
     @NotNull
-    String level();
+    EvidenceLevel level();
 
     @NotNull
     EvidenceDirection direction();

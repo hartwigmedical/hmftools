@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -38,6 +39,14 @@ public class ActionableEvidenceFactoryTest {
         assertNull(ActionableEvidenceFactory.resolveDirection(null));
         assertNull(ActionableEvidenceFactory.resolveDirection("Conflicting"));
         assertNull(ActionableEvidenceFactory.resolveDirection("This is no direction"));
+    }
+
+    @Test
+    public void canResolveLevel() {
+        assertEquals(EvidenceLevel.A, ActionableEvidenceFactory.resolveLevel("A"));
+
+        assertNull(ActionableEvidenceFactory.resolveLevel(null));
+        assertNull(ActionableEvidenceFactory.resolveLevel("XXX"));
     }
 
     @Test

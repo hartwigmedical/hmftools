@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
-import com.hartwig.hmftools.serve.sources.vicc.ViccTestApplication;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneRangeAnnotation;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
@@ -42,30 +41,47 @@ public class GeneRangeExtractor {
 
             if (featureType == FeatureType.GENE_RANGE_EXON) {
                 String transcriptIdVicc = viccEntry.transcriptId();
-                //  LOGGER.info(featureType);
-                //  LOGGER.info(feature);
-            } else if (featureType == FeatureType.GENE_RANGE_CODON) {
-                LOGGER.info(featureType);
-                LOGGER.info(feature);
-                if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("EX")
-                        && !feature.proteinAnnotation().contains("_")) {
-                    geneRangesPerFeature = determineRanges(viccEntry,
-                            feature,
-                            feature.proteinAnnotation(),
-                            geneRangeAnnotation,
-                            geneRangesPerFeature,
-                            canonicalTranscript);
-
-                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+                    if (feature.proteinAnnotation().matches("[0-9]+")) {
+                        int exonNumberList = Integer.parseInt(feature.proteinAnnotation())
+                                - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else {
+                        LOGGER.info(feature);
+                    }
+                } else {
+                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                            transcriptIdVicc,
+                            canonicalTranscript.transcriptID(),
+                            feature);
                 }
 
-                //                int start = Integer.parseInt(proteinAnnotation.split("_")[0].replaceAll("\\D+", ""));
-                //                int end = Integer.parseInt(proteinAnnotation.split("_")[1].replaceAll("\\D+", ""));
-                //                int count = end - start;
-
+            } else if (featureType == FeatureType.GENE_RANGE_CODON) {
+                //TODO remove EX and T148HFSX9 from gene range codon featureType
+                if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("EX")) {
+                    if (!feature.proteinAnnotation().contains("_")) {
+                        geneRangesPerFeature = determineRanges(viccEntry,
+                                feature,
+                                feature.proteinAnnotation(),
+                                geneRangeAnnotation,
+                                geneRangesPerFeature,
+                                canonicalTranscript);
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else if (feature.proteinAnnotation().contains("_")) { //example L485_P490 BRAF
+                        int startCodon = Integer.parseInt(feature.proteinAnnotation().split("_")[0].replaceAll("\\D+", ""));
+                        int endCodon = Integer.parseInt(feature.proteinAnnotation().split("_")[1].replaceAll("\\D+", ""));
+                        geneRangesPerFeature = determineRangesMulti(viccEntry,
+                                feature,
+                                startCodon,
+                                endCodon,
+                                geneRangeAnnotation,
+                                geneRangesPerFeature,
+                                canonicalTranscript);
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    }
+                }
             }
-            //
-            //                if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
             //                    if (feature.name().contains(",")) {
             //                        String[] exons = feature.name()
             //                                .substring((feature.name().toLowerCase().indexOf("exon")))
@@ -147,13 +163,10 @@ public class GeneRangeExtractor {
             //
             //                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
             //                    }
-            //                } else {
-            //                    //                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-            //                    //                            transcriptIdVicc,
-            //                    //                            canonicalTranscript.transcriptID(),
-            //                    //                            feature);
+            //                }
         }
         return geneRangesPerFeature;
+
     }
 
     @NotNull
@@ -201,10 +214,51 @@ public class GeneRangeExtractor {
                 LOGGER.warn("Multiple genomic regions known for event {}", feature);
             }
         } else {
-            //                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-            //                            transcriptIdVicc,
-            //                            canonicalTranscript.transcriptID(),
-            //                            feature);
+            LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                    transcriptIdVicc,
+                    canonicalTranscript.transcriptID(),
+                    feature);
+        }
+        return geneRangesPerFeature;
+    }
+
+    private static Map<Feature, List<GeneRangeAnnotation>> determineRangesMulti(@NotNull ViccEntry viccEntry, @NotNull Feature feature,
+            int startCodon, int endCodon, @NotNull List<GeneRangeAnnotation> geneRangeAnnotation,
+            @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature, @NotNull HmfTranscriptRegion canonicalTranscript) {
+        String transcriptIdVicc = viccEntry.transcriptId();
+
+        if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+            String geneSymbol = feature.geneSymbol();
+            List<GenomeRegion> genomeRegionsStart = canonicalTranscript.codonByIndex(startCodon);
+            List<GenomeRegion> genomeRegionsEnd = canonicalTranscript.codonByIndex(endCodon);
+
+            if (genomeRegionsStart.size() == 1 && genomeRegionsEnd.size() == 1) {
+                long start = genomeRegionsStart.get(0).start();
+                long end = genomeRegionsEnd.get(0).end();
+                String chromosomeStart = genomeRegionsStart.get(0).chromosome();
+                String chromosomeEnd = genomeRegionsEnd.get(0).chromosome();
+
+                String chromosome = Strings.EMPTY;
+                if (chromosomeStart.equals(chromosomeEnd)) {
+                    chromosome = chromosomeStart;
+                }
+                geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                        .gene(geneSymbol)
+                        .start(start)
+                        .end(end)
+                        .chromosome(chromosome)
+                        .mutationType(MutationTypeFilter.ANY)
+                        .build());
+                geneRangesPerFeature.put(feature, geneRangeAnnotation);
+
+            } else {
+                LOGGER.warn("Multiple genomic regions known for event {}", feature);
+            }
+        } else {
+            LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                    transcriptIdVicc,
+                    canonicalTranscript.transcriptID(),
+                    feature);
         }
         return geneRangesPerFeature;
     }
