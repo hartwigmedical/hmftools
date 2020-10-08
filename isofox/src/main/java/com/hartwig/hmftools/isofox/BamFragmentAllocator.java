@@ -668,9 +668,14 @@ public class BamFragmentAllocator
 
     public static int calcFragmentLength(final TranscriptData transData, final ReadRecord read1, final ReadRecord read2)
     {
-        // calculate fragment length within this transcript assuming it has been spliced
         int minReadPos = min(read1.PosStart, read2.PosStart);
         int maxReadPos = max(read1.PosEnd, read2.PosEnd);
+        return calcFragmentLength(transData, minReadPos, maxReadPos);
+    }
+
+    public static int calcFragmentLength(final TranscriptData transData, final int minReadPos, final int maxReadPos)
+    {
+        // calculate fragment length within this transcript assuming it has been spliced
         int transcriptBases = 0;
         boolean startFound = false;
 

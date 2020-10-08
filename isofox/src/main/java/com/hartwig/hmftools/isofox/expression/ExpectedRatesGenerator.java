@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
+import static com.hartwig.hmftools.isofox.BamFragmentAllocator.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
@@ -564,6 +565,7 @@ public class ExpectedRatesGenerator
             }
 
             // now check the each of the read regions falls within an exon - exons can be skipped
+            // and whether the total implief fragment length from the POV of this transcript makes it too long
             exonIndex = 0;
             for(int[] readRegion : readRegions)
             {
@@ -594,96 +596,13 @@ public class ExpectedRatesGenerator
                 if(!matched)
                     return false;
             }
+
+            int impliedFragLength = calcFragmentLength(transData, regionsStart, regionsEnd);
+            if(impliedFragLength > mConfig.MaxFragmentLength)
+                return false;
         }
 
         return true;
-    }
-
-    public boolean readsSupportTranscriptOld(
-            final TranscriptData transData, List<int[]> readRegions, FragmentMatchType requiredMatchType, List<int[]> spliceJunctions)
-    {
-        int regionsStart = readRegions.get(0)[SE_START];
-        int regionsEnd = readRegions.get(readRegions.size() - 1)[SE_END];
-
-        if(!positionsOverlap(regionsStart, regionsEnd, transData.TransStart, transData.TransEnd))
-            return false;
-
-        if(requiredMatchType == SHORT)
-        {
-            return (transData.exons().stream().anyMatch(x -> x.ExonStart <= regionsStart && x.ExonEnd >= regionsEnd));
-        }
-        else
-        {
-            // first check for matching splice junctions
-            for(int[] spliceJunction : spliceJunctions)
-            {
-                int spliceStart = spliceJunction[SE_START];
-                int spliceEnd = spliceJunction[SE_END];
-                boolean matched = false;
-
-                for (int i = 0; i < transData.exons().size() - 1; ++i)
-                {
-                    ExonData exon = transData.exons().get(i);
-                    ExonData nextExon = transData.exons().get(i + 1);
-
-                    if (exon.ExonEnd == spliceStart && nextExon.ExonStart == spliceEnd)
-                    {
-                        matched = true;
-                        break;
-                    }
-                }
-
-                if(!matched)
-                    return false;
-            }
-
-            // none of the reads can breach an exon boundary or skip an exon
-            int readIndex = 0;
-            int regionStart = readRegions.get(readIndex)[SE_START];
-            int regionEnd = readRegions.get(readIndex)[SE_END];
-            int exonsMatched = 0;
-
-            for(int i = 0; i < transData.exons().size(); ++i)
-            {
-                ExonData exon = transData.exons().get(i);
-
-                // region before the next exon even starts
-                if(regionEnd < exon.ExonStart)
-                    return false;
-
-                // invalid if overlaps but not fully contained
-                if(regionsStart >= exon.ExonStart && regionsStart <= exon.ExonEnd && regionEnd > exon.ExonEnd)
-                    return false;
-                else if(regionsEnd >= exon.ExonStart && regionsEnd <= exon.ExonEnd && regionStart < exon.ExonStart)
-                    return false;
-
-                ++exonsMatched;
-
-                while(true)
-                {
-                    if (regionStart >= exon.ExonStart && regionEnd <= exon.ExonEnd)
-                    {
-                        ++readIndex;
-
-                        if(readIndex >= readRegions.size())
-                            break;
-
-                        regionStart = readRegions.get(readIndex)[SE_START];
-                        regionEnd = readRegions.get(readIndex)[SE_END];
-                    }
-                    else
-                    {
-                        // next region may match the next exon
-                        break;
-                    }
-                }
-
-                if(readIndex >= readRegions.size())
-                    break;
-            }
-
-            return exonsMatched > 1;
-        }
     }
 
     public static void formTranscriptDefinitions(final Map<String,List<CategoryCountsData>> transCategoryCounts, ExpectedRatesData expRatesData)
