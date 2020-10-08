@@ -26,6 +26,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
+import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
@@ -64,6 +65,10 @@ public class SummaryChapter implements ReportChapter {
         return true;
     }
 
+    private GenomicAnalysis analysis() {
+        return patientReport.genomicAnalysis();
+    }
+
     @Override
     public void render(@NotNull Document reportDocument) {
         reportDocument.add(new Paragraph("Summary").addStyle(ReportResources.chapterTitleStyle()));
@@ -73,23 +78,23 @@ public class SummaryChapter implements ReportChapter {
         reportDocument.add(new Paragraph("\nThe information regarding 'primary tumor location' and 'cancer subtype'  is based on "
                 + "information received \nfrom the originating hospital.").addStyle(ReportResources.subTextStyle()));
 
-        renderSummaryText(reportDocument, patientReport);
-        renderTreatmentIndications(reportDocument, patientReport.tumorSpecificEvidence(), patientReport.clinicalTrials());
-        renderTumorCharacteristics(reportDocument, patientReport);
-        renderGenomicAlterations(reportDocument, patientReport);
+        renderSummaryText(reportDocument);
+        renderTreatmentIndications(reportDocument);
+        renderTumorCharacteristics(reportDocument);
+        renderGenomicAlterations(reportDocument);
     }
 
-    private void renderSummaryText(@NotNull Document reportDocument, @NotNull AnalysedPatientReport report) {
-        String text = report.clinicalSummary();
+    private void renderSummaryText(@NotNull Document reportDocument) {
+        String text = patientReport.clinicalSummary();
         if (text.isEmpty()) {
-            if (!report.hasReliablePurity()) {
+            if (!analysis().hasReliablePurity()) {
                 text = "Of note, WGS analysis indicated a very low abundance of genomic aberrations, which can be caused "
                         + "by a low tumor percentage in the received tumor material or due to genomic very stable/normal tumor type. "
                         + "As a consequence no reliable tumor purity assessment is possible and no information regarding "
                         + "mutation copy number and tVAF can be provided.";
-            } else if (report.impliedPurity() < ReportResources.PURITY_CUTOFF) {
+            } else if (analysis().impliedPurity() < ReportResources.PURITY_CUTOFF) {
                 double impliedPurityPercentage =
-                        MathUtil.mapPercentage(report.impliedPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
+                        MathUtil.mapPercentage(analysis().impliedPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
                 text = "Due to the lower tumor purity (" + DataUtil.formatPercentage(impliedPurityPercentage) + ") "
                         + "potential (subclonal) DNA aberrations might not have been detected using this test. " + ""
                         + "This result should therefore be considered with caution.";
@@ -106,8 +111,7 @@ public class SummaryChapter implements ReportChapter {
         }
     }
 
-    private void renderTreatmentIndications(@NotNull Document reportDocument, @NotNull List<EvidenceItem> tumorSpecificEvidence,
-            @NotNull List<ClinicalTrial> trials) {
+    private void renderTreatmentIndications(@NotNull Document reportDocument) {
         Div div = createSectionStartDiv(contentWidth());
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
@@ -117,11 +121,13 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
+        List<EvidenceItem> tumorSpecificEvidence = analysis().tumorSpecificEvidence();
         int therapyEventCount = EvidenceItems.uniqueEventCount(tumorSpecificEvidence);
         int therapyCount = EvidenceItems.uniqueTherapyCount(tumorSpecificEvidence);
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with therapy indication").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createTreatmentIndicationCell(therapyEventCount, therapyCount, "treatment(s)"));
 
+        List<ClinicalTrial> trials = analysis().clinicalTrials();
         int trialEventCount = ClinicalTrials.uniqueEventCount(trials);
         int trialCount = ClinicalTrials.uniqueTrialCount(trials);
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with clinical trial eligibility").addStyle(
@@ -133,8 +139,8 @@ public class SummaryChapter implements ReportChapter {
         reportDocument.add(div);
     }
 
-    private void renderTumorCharacteristics(@NotNull Document reportDocument, @NotNull AnalysedPatientReport patientReport) {
-        boolean hasReliablePurity = patientReport.hasReliablePurity();
+    private void renderTumorCharacteristics(@NotNull Document reportDocument) {
+        boolean hasReliablePurity = analysis().hasReliablePurity();
 
         Div div = createSectionStartDiv(contentWidth());
 
@@ -144,7 +150,7 @@ public class SummaryChapter implements ReportChapter {
                 .add(new Paragraph("Tumor characteristics").addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
 
-        double impliedPurity = patientReport.impliedPurity();
+        double impliedPurity = analysis().impliedPurity();
         double impliedPurityPercentage = MathUtil.mapPercentage(impliedPurity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
         renderTumorPurity(hasReliablePurity,
                 DataUtil.formatPercentage(impliedPurityPercentage),
@@ -156,14 +162,14 @@ public class SummaryChapter implements ReportChapter {
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Average tumor ploidy").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(GeneUtil.copyNumberToString(patientReport.averageTumorPloidy(),
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(GeneUtil.copyNumberToString(analysis().averageTumorPloidy(),
                 hasReliablePurity)).addStyle(dataStyle)));
 
-        String mutationalLoadString = hasReliablePurity ? patientReport.tumorMutationalLoadStatus().display() : DataUtil.NA_STRING;
+        String mutationalLoadString = hasReliablePurity ? analysis().tumorMutationalLoadStatus().display() : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Tumor mutational load").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(mutationalLoadString).addStyle(dataStyle)));
 
-        String microSatelliteStabilityString = hasReliablePurity ? patientReport.microsatelliteStatus().display() : DataUtil.NA_STRING;
+        String microSatelliteStabilityString = hasReliablePurity ? analysis().microsatelliteStatus().display() : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
@@ -171,9 +177,9 @@ public class SummaryChapter implements ReportChapter {
         String hrdString;
         Style hrdStyle;
 
-        if (hasReliablePurity && (ChordStatus.HR_DEFICIENT == patientReport.chordHrdStatus()
-                || ChordStatus.HR_PROFICIENT == patientReport.chordHrdStatus())) {
-            hrdString = patientReport.chordHrdStatus().display();
+        if (hasReliablePurity && (ChordStatus.HR_DEFICIENT == analysis().chordHrdStatus()
+                || ChordStatus.HR_PROFICIENT == analysis().chordHrdStatus())) {
+            hrdString = analysis().chordHrdStatus().display();
             hrdStyle = ReportResources.dataHighlightStyle();
         } else {
             hrdString = DataUtil.NA_STRING;
@@ -199,7 +205,7 @@ public class SummaryChapter implements ReportChapter {
         }
     }
 
-    private void renderGenomicAlterations(@NotNull Document report, @NotNull AnalysedPatientReport patientReport) {
+    private void renderGenomicAlterations(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
@@ -207,25 +213,25 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(new Paragraph("Genomic alterations").addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
-        Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(patientReport.reportableVariants());
+        Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(analysis().reportableVariants());
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Driver genes with variant(s)").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(driverVariantGenes)));
 
-        int reportedVariants = SomaticVariants.countReportableVariants(patientReport.reportableVariants());
+        int reportedVariants = SomaticVariants.countReportableVariants(analysis().reportableVariants());
         Style reportedVariantsStyle =
                 (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported variants").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(String.valueOf(reportedVariants)).addStyle(
                 reportedVariantsStyle)));
 
-        Set<String> amplifiedGenes = GainsAndLosses.amplifiedGenes(patientReport.gainsAndLosses());
+        Set<String> amplifiedGenes = GainsAndLosses.amplifiedGenes(analysis().gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-gain").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(amplifiedGenes)));
 
-        Set<String> copyLossGenes = GainsAndLosses.lostGenes(patientReport.gainsAndLosses());
+        Set<String> copyLossGenes = GainsAndLosses.lostGenes(analysis().gainsAndLosses());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Genes with copy-loss").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(copyLossGenes)));
@@ -236,7 +242,7 @@ public class SummaryChapter implements ReportChapter {
         //                .add(new Paragraph("Disrupted genes").addStyle(ReportResources.bodyTextStyle())));
         //        table.addCell(createGeneListCell(sortGenes(disruptedGenes)));
 
-        Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(patientReport.geneFusions());
+        Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(analysis().geneFusions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Gene fusions").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(fusionGenes)));

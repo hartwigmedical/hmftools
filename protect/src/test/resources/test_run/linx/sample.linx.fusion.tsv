@@ -1,0 +1,2 @@
+FivePrimeBreakendId	ThreePrimeBreakendId	Name	Reported	ReportedType	Phased	ChainLength	ChainLinks	ChainTerminated	DomainsKept	DomainsLost	SkippedExonsUp	SkippedExonsDown	FusedExonUp	FusedExonDown	GeneStart	GeneContextStart	TranscriptStart	GeneEnd	GeneContextEnd	TranscriptEnd	JunctionCopyNumber
+1333	1336	AHR_AHR	true	NONE	INFRAME	NA	0	0	false			0	0	2	2	AHR	Exon 7	ENST00000242057	AHR	Exon 10	ENST00000242057	1.42

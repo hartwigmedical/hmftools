@@ -10,6 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableSignatureFile {
@@ -66,6 +67,8 @@ public final class ActionableSignatureFile {
     @NotNull
     private static ActionableSignature fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
+        String url = values.length > 7 ? values[7] : Strings.EMPTY;
+
         return ImmutableActionableSignature.builder()
                 .name(SignatureName.valueOf(values[0]))
                 .source(ActionableEventFactory.sourceFromFileValue(values[1]))
@@ -74,7 +77,7 @@ public final class ActionableSignatureFile {
                 .doid(values[4])
                 .level(values[5])
                 .direction(ActionableEventFactory.directionFromFileValue(values[6]))
-                .url(values[7])
+                .url(url)
                 .build();
     }
 

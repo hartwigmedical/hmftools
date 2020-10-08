@@ -10,6 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableGeneFile {
@@ -65,7 +66,9 @@ public final class ActionableGeneFile {
 
     @NotNull
     private static ActionableGene fromLine(@NotNull String line) {
-         String[] values = line.split(DELIMITER);
+        String[] values = line.split(DELIMITER);
+        String url = values.length > 8 ? values[8] : Strings.EMPTY;
+
         return ImmutableActionableGene.builder()
                 .gene(values[0])
                 .event(GeneLevelEvent.valueOf(values[1]))
@@ -75,7 +78,7 @@ public final class ActionableGeneFile {
                 .doid(values[5])
                 .level(values[6])
                 .direction(ActionableEventFactory.directionFromFileValue(values[7]))
-                .url(values[8])
+                .url(url)
                 .build();
     }
 

@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
 
 import org.jetbrains.annotations.NotNull;
 

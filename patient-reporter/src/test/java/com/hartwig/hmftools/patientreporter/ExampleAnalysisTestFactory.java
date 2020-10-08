@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testReportData;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -33,18 +31,20 @@ import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
-import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
-import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
-import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
-import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
-import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
+import com.hartwig.hmftools.protect.GenomicAnalysis;
+import com.hartwig.hmftools.protect.ImmutableGenomicAnalysis;
+import com.hartwig.hmftools.protect.homozygousdisruption.ImmutableReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.structural.ImmutableReportableGeneDisruption;
+import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
+import com.hartwig.hmftools.protect.variants.DriverInterpretation;
+import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
+import com.hartwig.hmftools.protect.variants.ReportableVariant;
+import com.hartwig.hmftools.protect.viralinsertion.ImmutableViralInsertion;
+import com.hartwig.hmftools.protect.viralinsertion.ViralInsertion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -65,7 +65,8 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildWithCOLO829Data(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
-            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary, boolean reportGermline) {
+            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary,
+            boolean reportGermline) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 190;
         double tumorMutationalBurden = 13.7;
@@ -73,7 +74,7 @@ public final class ExampleAnalysisTestFactory {
         double chordHrdValue = 0D;
         ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
 
-        ReportData reportData = testReportData();
+        ReportData reportData = PatientReporterTestFactory.loadTestReportData();
 
         List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
@@ -113,14 +114,11 @@ public final class ExampleAnalysisTestFactory {
             clinicalSummary = Strings.EMPTY;
         }
 
-        return ImmutableAnalysedPatientReport.builder()
-                .sampleReport(sampleReport)
-                .qsFormNumber(qcForNumber)
+        GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
-                .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
                 .offLabelEvidence(offLabelEvidence)
@@ -137,6 +135,13 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
+                .build();
+
+        return ImmutableAnalysedPatientReport.builder()
+                .sampleReport(sampleReport)
+                .qsFormNumber(qcForNumber)
+                .clinicalSummary(clinicalSummary)
+                .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctionReport)
@@ -162,7 +167,7 @@ public final class ExampleAnalysisTestFactory {
         double chordHrdValue = 0.8;
         ChordStatus chordStatus = ChordStatus.HR_DEFICIENT;
 
-        ReportData reportData = testReportData();
+        ReportData reportData = PatientReporterTestFactory.loadTestReportData();
 
         List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
@@ -177,14 +182,11 @@ public final class ExampleAnalysisTestFactory {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         String clinicalSummary = Strings.EMPTY;
 
-        return ImmutableAnalysedPatientReport.builder()
-                .sampleReport(sampleReport)
-                .qsFormNumber(QsFormNumber.FOR_209.display())
+        GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
                 .impliedPurity(impliedTumorPurity)
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
-                .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
                 .offLabelEvidence(offLabelEvidence)
@@ -201,6 +203,13 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .viralInsertions(viralInsertions)
+                .build();
+
+        return ImmutableAnalysedPatientReport.builder()
+                .sampleReport(sampleReport)
+                .qsFormNumber(QsFormNumber.FOR_209.display())
+                .clinicalSummary(clinicalSummary)
+                .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(false)
@@ -214,7 +223,7 @@ public final class ExampleAnalysisTestFactory {
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        ReportData reportData = testReportData();
+        ReportData reportData = PatientReporterTestFactory.loadTestReportData();
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
@@ -680,29 +689,30 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<LinxFusion> createTestFusions() {
         LinxFusion fusion1 = ImmutableLinxFusion.builder()
-                    .fivePrimeBreakendId(1)
-                    .threePrimeBreakendId(2)
-                    .name(Strings.EMPTY)
-                    .reported(true)
-                    .reportedType(Strings.EMPTY)
-                    .phased(FusionPhasedType.SKIPPED_EXONS)
-                    .likelihood(FusionLikelihoodType.HIGH)
-                    .chainLength(1)
-                    .chainLinks(1)
-                    .chainTerminated(true)
-                    .domainsKept(Strings.EMPTY)
-                    .domainsLost(Strings.EMPTY)
-                    .skippedExonsUp(2)
-                    .skippedExonsDown(4)
-                    .fusedExonUp(6)
-                    .fusedExonDown(7)
-                    .geneStart("TMPRSS2")
-                    .geneContextStart("Intron 5")
-                    .geneTranscriptStart("ENST00000398585")
-                    .geneEnd("PNPLA7")
-                    .geneContextEnd("Intron 3")
-                    .geneTranscriptEnd("ENST00000406427")
-                    .junctionCopyNumber(0.4).build();
+                .fivePrimeBreakendId(1)
+                .threePrimeBreakendId(2)
+                .name(Strings.EMPTY)
+                .reported(true)
+                .reportedType(Strings.EMPTY)
+                .phased(FusionPhasedType.SKIPPED_EXONS)
+                .likelihood(FusionLikelihoodType.HIGH)
+                .chainLength(1)
+                .chainLinks(1)
+                .chainTerminated(true)
+                .domainsKept(Strings.EMPTY)
+                .domainsLost(Strings.EMPTY)
+                .skippedExonsUp(2)
+                .skippedExonsDown(4)
+                .fusedExonUp(6)
+                .fusedExonDown(7)
+                .geneStart("TMPRSS2")
+                .geneContextStart("Intron 5")
+                .geneTranscriptStart("ENST00000398585")
+                .geneEnd("PNPLA7")
+                .geneContextEnd("Intron 3")
+                .geneTranscriptEnd("ENST00000406427")
+                .junctionCopyNumber(0.4)
+                .build();
 
         LinxFusion fusion2 = ImmutableLinxFusion.builder()
                 .fivePrimeBreakendId(1)
@@ -727,7 +737,8 @@ public final class ExampleAnalysisTestFactory {
                 .geneEnd("BRAF")
                 .geneContextEnd("Intron 8")
                 .geneTranscriptEnd("ENST00000288602")
-                .junctionCopyNumber(1D).build();
+                .junctionCopyNumber(1D)
+                .build();
 
         return Lists.newArrayList(fusion1, fusion2);
     }

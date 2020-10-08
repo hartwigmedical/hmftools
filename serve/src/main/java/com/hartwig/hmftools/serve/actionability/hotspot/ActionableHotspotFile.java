@@ -10,6 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableHotspotFile {
@@ -68,6 +69,8 @@ public final class ActionableHotspotFile {
     @NotNull
     private static ActionableHotspot fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
+        String url = values.length > 10 ? values[10] : Strings.EMPTY;
+
         return ImmutableActionableHotspot.builder()
                 .chromosome(values[0])
                 .position(Long.parseLong(values[1]))
@@ -79,7 +82,7 @@ public final class ActionableHotspotFile {
                 .doid(values[7])
                 .level(values[8])
                 .direction(ActionableEventFactory.directionFromFileValue(values[9]))
-                .url(values[10])
+                .url(url)
                 .build();
     }
 

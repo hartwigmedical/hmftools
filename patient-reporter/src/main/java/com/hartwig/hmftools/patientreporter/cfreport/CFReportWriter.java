@@ -20,6 +20,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChap
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOnLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -50,9 +51,11 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
-        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
-                new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report), new TumorCharacteristicsChapter(report),
-                new CircosChapter(report), new ExplanationChapter(), new DetailsAndDisclaimerChapter(report) };
+        GenomicAnalysis analysis = report.genomicAnalysis();
+        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(analysis),
+                new TherapyDetailsChapterOffLabel(analysis), new GenomicAlterationsChapter(analysis),
+                new TumorCharacteristicsChapter(analysis), new CircosChapter(report), new ExplanationChapter(),
+                new DetailsAndDisclaimerChapter(report) };
 
         writeReport(report, chapters, outputFilePath);
     }

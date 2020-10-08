@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testReportData;
-
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -18,7 +16,9 @@ import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.OutputFileUtil;
 import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
+import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
@@ -234,6 +234,7 @@ public class CFReportWriterTest {
                 .hospitalPathologySampleId("PA1")
                 .build();
 
+        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
         QCFailReport patientReport = ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(reason.qcFormNumber())
@@ -241,9 +242,9 @@ public class CFReportWriterTest {
                 .wgsPurityString(wgsPurityString)
                 .comments(comments)
                 .isCorrectedReport(correctedReport)
-                .signaturePath(testReportData().signaturePath())
-                .logoRVAPath(testReportData().logoRVAPath())
-                .logoCompanyPath(testReportData().logoCompanyPath())
+                .signaturePath(testReportData.signaturePath())
+                .logoRVAPath(testReportData.logoRVAPath())
+                .logoCompanyPath(testReportData.logoCompanyPath())
                 .build();
 
         String filename = testReportFilePath(patientReport);

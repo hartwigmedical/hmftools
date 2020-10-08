@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.protect.GenomicAnalysis;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,6 +34,7 @@ public final class ReportingDb {
     public static void addAnalysedReportToReportingDb(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
             throws IOException {
         String sampleId = report.sampleReport().tumorSampleId();
+        GenomicAnalysis analysis = report.genomicAnalysis();
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
@@ -42,13 +44,13 @@ public final class ReportingDb {
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
             String cohort = !report.sampleReport().cohort().isEmpty() ? report.sampleReport().cohort() : NA_STRING;
             String reportDate = ReportResources.REPORT_DATE;
-            String purity = new DecimalFormat("0.00").format(report.impliedPurity());
+            String purity = new DecimalFormat("0.00").format(analysis.impliedPurity());
 
-            boolean hasReliableQuality = report.hasReliableQuality();
-            boolean hasReliablePurity = report.hasReliablePurity();
+            boolean hasReliableQuality = analysis.hasReliableQuality();
+            boolean hasReliablePurity = analysis.hasReliablePurity();
 
             String reportType;
-            if (hasReliablePurity && report.impliedPurity() > ReportResources.PURITY_CUTOFF) {
+            if (hasReliablePurity && analysis.impliedPurity() > ReportResources.PURITY_CUTOFF) {
                 reportType = "dna_analysis_report";
             } else {
                 reportType = "dna_analysis_report_insufficient_tcp";

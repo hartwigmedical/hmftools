@@ -1,9 +1,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Can be removed after 1st of october 2020
-DROP TABLE IF EXISTS sampleMapping;
-DROP TABLE IF EXISTS patientMapping;
-DROP TABLE IF EXISTS amber;
+-- TODO Can be removed after 1st of november 2020
+DROP TABLE IF EXISTS clinicalEvidenceProtect;
 
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
@@ -791,23 +789,6 @@ CREATE TABLE clinicalEvidence
     sampleId varchar(255) NOT NULL,
     event varchar(255) NOT NULL,
     eventMatch varchar(255) NOT NULL,
-    name varchar(500) NOT NULL,
-    type varchar(255) NOT NULL,
-    response varchar(255) NOT NULL,
-    level varchar(50) NOT NULL,
-    source varchar(255) NOT NULL,
-    cancerType varchar(500) NOT NULL,
-    isOnLabel BOOLEAN NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
-);
-
-DROP TABLE IF EXISTS clinicalEvidenceProtect;
-CREATE TABLE clinicalEvidenceProtect
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    event varchar(255) NOT NULL,
     name varchar(500) NOT NULL,
     type varchar(255) NOT NULL,
     response varchar(255) NOT NULL,

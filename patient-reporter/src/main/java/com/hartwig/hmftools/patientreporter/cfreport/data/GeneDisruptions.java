@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
+import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
 
 import org.jetbrains.annotations.NotNull;
 
