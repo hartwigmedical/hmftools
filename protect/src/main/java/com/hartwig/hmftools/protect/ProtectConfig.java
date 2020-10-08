@@ -20,6 +20,7 @@ public interface ProtectConfig {
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String OUTPUT_DIRECTORY = "output_dir";
 
+    String DEPRECATED_ACTIONABILITY_DIRECTORY = "deprecated_actionability_dir";
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
 
     String TUMOR_LOCATION_TSV = "tumor_location_tsv";
@@ -48,6 +49,7 @@ public interface ProtectConfig {
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
 
+        options.addOption(DEPRECATED_ACTIONABILITY_DIRECTORY, true, "Path towards the deprecated pre-SERVE actionability directory.");
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
 
         options.addOption(TUMOR_LOCATION_TSV, true, "Path towards the (curated) tumor location TSV.");
@@ -75,6 +77,9 @@ public interface ProtectConfig {
 
     @NotNull
     String outputDir();
+
+    @NotNull
+    String deprecatedActionabilityDir();
 
     @NotNull
     String serveActionabilityDir();
@@ -127,6 +132,7 @@ public interface ProtectConfig {
         return ImmutableProtectConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
+                .deprecatedActionabilityDir(nonOptionalDir(cmd, DEPRECATED_ACTIONABILITY_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .tumorLocationTsv(nonOptionalFile(cmd, TUMOR_LOCATION_TSV))
                 .germlineGenesCsv(nonOptionalFile(cmd, GERMLINE_GENES_CSV))

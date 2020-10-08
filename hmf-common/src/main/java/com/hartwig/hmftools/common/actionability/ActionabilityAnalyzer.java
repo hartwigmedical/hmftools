@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 public class ActionabilityAnalyzer {
 
     private static final String ACTIONABLE_VARIANT_TSV = "actionableVariants.tsv";

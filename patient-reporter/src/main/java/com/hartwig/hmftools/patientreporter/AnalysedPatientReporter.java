@@ -48,7 +48,7 @@ class AnalysedPatientReporter {
         boolean reportViralInsertions = reportData.limsModel().reportViralInsertions(sampleMetadata.tumorSampleBarcode());
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.actionabilityAnalyzer(), reportData.germlineReportingModel());
-        GenomicAnalysis genomicAnalysis = genomicAnalyzer.analyze(sampleMetadata.tumorSampleId(),
+        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
                 patientTumorLocation,
                 germlineChoice,
                 reportViralInsertions,

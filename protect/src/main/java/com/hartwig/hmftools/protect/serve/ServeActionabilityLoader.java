@@ -22,27 +22,27 @@ public class ServeActionabilityLoader {
     private static final Logger LOGGER = LogManager.getLogger(ServeActionabilityLoader.class);
 
     public static void main(String[] args) throws IOException {
-        String serveDir = System.getProperty("user.home") + "/hmf/tmp/ds_serve";
+        String serveActionabilityDir = System.getProperty("user.home") + "/hmf/tmp/ds_serve";
 
-        LOGGER.info("Loading SERVE actionability files from {}", serveDir);
+        LOGGER.info("Loading SERVE actionability files from {}", serveActionabilityDir);
 
-        String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(serveDir);
+        String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(serveActionabilityDir);
         List<ActionableHotspot> hotspots = ActionableHotspotFile.read(actionableHotspotTsv);
         LOGGER.info(" Loaded {} actionable hotspots from {}", hotspots.size(), actionableHotspotTsv);
 
-        String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(serveDir);
+        String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(serveActionabilityDir);
         List<ActionableRange> ranges = ActionableRangeFile.read(actionableRangeTsv);
         LOGGER.info(" Loaded {} actionable ranges from {}", ranges.size(), actionableRangeTsv);
 
-        String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(serveDir);
+        String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(serveActionabilityDir);
         List<ActionableGene> genes = ActionableGeneFile.read(actionableGeneTsv);
         LOGGER.info(" Loaded {} actionable genes from {}", genes.size(), actionableGeneTsv);
 
-        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(serveDir);
+        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(serveActionabilityDir);
         List<ActionableFusion> fusions = ActionableFusionFile.read(actionableFusionTsv);
         LOGGER.info(" Loaded {} actionable fusions from {}", fusions.size(), actionableFusionTsv);
 
-        String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(serveDir);
+        String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(serveActionabilityDir);
         List<ActionableSignature> signatures = ActionableSignatureFile.read(actionableSignatureTsv);
         LOGGER.info(" Loaded {} actionable signatures from {}", signatures.size(), actionableSignatureTsv);
 

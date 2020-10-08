@@ -35,7 +35,7 @@ public class GenomicAnalyzerTest {
         PatientTumorLocation patientTumorLocation = null;
         boolean reportViralInsertions = true;
 
-        assertNotNull(analyzer.analyze("sample",
+        assertNotNull(analyzer.run("sample",
                 patientTumorLocation,
                 LimsGermlineReportingLevel.NO_REPORTING,
                 reportViralInsertions,

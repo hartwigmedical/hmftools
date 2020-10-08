@@ -66,7 +66,7 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis analyze(@NotNull String sampleId, @Nullable PatientTumorLocation patientTumorLocation,
+    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable PatientTumorLocation patientTumorLocation,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralInsertions, @NotNull String purplePurityTsv,
             @NotNull String purpleQCFile, @NotNull String purpleGeneCnvTsv, @NotNull String purpleDriverCatalogTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
@@ -75,7 +75,8 @@ public class GenomicAnalyzer {
         List<DriverCatalog> purpleDriverCatalog = readDriverCatalog(purpleDriverCatalogTsv);
         PurpleAnalysis purpleAnalysis =
                 analyzePurple(purplePurityTsv, purpleQCFile, purpleGeneCnvTsv, patientTumorLocation, purpleDriverCatalog);
-        List<DriverSomaticVariant> driverSomaticVariants = analyzeSomaticVariants(sampleId, purpleSomaticVariantVcf, purpleDriverCatalog);
+        List<DriverSomaticVariant> driverSomaticVariants =
+                analyzeSomaticVariants(tumorSampleId, purpleSomaticVariantVcf, purpleDriverCatalog);
 
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
         ChordStatus chordStatus = chordAnalysis.hrStatus();
