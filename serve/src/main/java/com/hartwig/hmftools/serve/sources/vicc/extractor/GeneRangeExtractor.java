@@ -47,6 +47,7 @@ public class GeneRangeExtractor {
             } else if (featureType == FeatureType.GENE_RANGE_CODON) {
                 LOGGER.info(featureType);
                 LOGGER.info(feature);
+                //TODO remove EX and T148HFSX9 from gene range codon featureType
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("EX")
                         && !feature.proteinAnnotation().contains("_")) {
                     geneRangesPerFeature = determineRanges(viccEntry,
