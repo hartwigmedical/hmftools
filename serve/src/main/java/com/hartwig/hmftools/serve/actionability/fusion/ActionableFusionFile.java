@@ -70,6 +70,7 @@ public final class ActionableFusionFile {
     @NotNull
     private static ActionableFusion fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
+        String url = values.length > 10 ? values[10] : Strings.EMPTY;
 
         return ImmutableActionableFusion.builder()
                 .geneUp(values[0])
@@ -82,7 +83,7 @@ public final class ActionableFusionFile {
                 .doid(values[7])
                 .level(values[8])
                 .direction(ActionableEventFactory.directionFromFileValue(values[9]))
-                .url(values[10])
+                .url(url)
                 .build();
     }
 

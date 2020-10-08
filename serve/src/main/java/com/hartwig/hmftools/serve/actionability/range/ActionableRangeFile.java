@@ -10,6 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableRangeFile {
@@ -69,6 +70,8 @@ public final class ActionableRangeFile {
     @NotNull
     private static ActionableRange fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
+        String url = values.length > 11 ? values[11] : Strings.EMPTY;
+
         return ImmutableActionableRange.builder()
                 .gene(values[0])
                 .chromosome(values[1])
@@ -81,7 +84,7 @@ public final class ActionableRangeFile {
                 .doid(values[8])
                 .level(values[9])
                 .direction(ActionableEventFactory.directionFromFileValue(values[10]))
-                .url(values[11])
+                .url(url)
                 .build();
     }
 
