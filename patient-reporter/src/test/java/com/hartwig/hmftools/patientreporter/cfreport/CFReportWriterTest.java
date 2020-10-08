@@ -234,7 +234,7 @@ public class CFReportWriterTest {
                 .hospitalPathologySampleId("PA1")
                 .build();
 
-        ReportData testReportData = PatientReporterTestFactory.testReportData();
+        ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
         QCFailReport patientReport = ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(reason.qcFormNumber())

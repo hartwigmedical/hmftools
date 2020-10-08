@@ -9,17 +9,12 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.protect.variants.DriverInterpretation;
-import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class PatientReporterTestFactory {
@@ -37,16 +32,16 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static ActionabilityAnalyzer testActionabilityAnalyzer() {
+    public static ActionabilityAnalyzer loadTestActionabilityAnalyzer() {
         try {
             return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_DIRECTORY);
         } catch (IOException exception) {
-            throw new IllegalStateException("Could not generate test actionability analyzer: " + exception.getMessage());
+            throw new IllegalStateException("Could not load test actionability analyzer: " + exception.getMessage());
         }
     }
 
     @NotNull
-    public static ReportData testReportData() {
+    public static ReportData loadTestReportData() {
         List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
         Lims lims = LimsFactory.empty();
 
@@ -54,43 +49,19 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static AnalysedReportData testAnalysedReportData() {
+    public static AnalysedReportData loadTestAnalysedReportData() {
         try {
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(GERMLINE_GENES_REPORTING_CSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
 
             return ImmutableAnalysedReportData.builder()
-                    .from(testReportData())
-                    .actionabilityAnalyzer(testActionabilityAnalyzer())
+                    .from(loadTestReportData())
+                    .actionabilityAnalyzer(loadTestActionabilityAnalyzer())
                     .germlineReportingModel(germlineReportingModel)
                     .summaryModel(summaryModel)
                     .build();
         } catch (IOException exception) {
-            throw new IllegalStateException("Could not generate test analysed report data: " + exception.getMessage());
+            throw new IllegalStateException("Could not load test analysed report data: " + exception.getMessage());
         }
-    }
-
-    @NotNull
-    public static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
-        return ImmutableReportableVariant.builder()
-                .gene(Strings.EMPTY)
-                .position(0)
-                .chromosome(Strings.EMPTY)
-                .ref(Strings.EMPTY)
-                .alt(Strings.EMPTY)
-                .canonicalCodingEffect(CodingEffect.UNDEFINED)
-                .canonicalHgvsCodingImpact(Strings.EMPTY)
-                .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .gDNA(Strings.EMPTY)
-                .hotspot(Hotspot.HOTSPOT)
-                .clonalLikelihood(1D)
-                .alleleReadCount(0)
-                .totalReadCount(0)
-                .alleleCopyNumber(0D)
-                .totalCopyNumber(0)
-                .biallelic(false)
-                .driverLikelihood(0D)
-                .driverLikelihoodInterpretation(DriverInterpretation.LOW)
-                .notifyClinicalGeneticist(false);
     }
 }

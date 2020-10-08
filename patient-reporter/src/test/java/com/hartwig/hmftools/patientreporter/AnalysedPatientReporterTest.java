@@ -31,7 +31,7 @@ public class AnalysedPatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
-        AnalysedPatientReporter reporter = new AnalysedPatientReporter(PatientReporterTestFactory.testAnalysedReportData());
+        AnalysedPatientReporter reporter = new AnalysedPatientReporter(PatientReporterTestFactory.loadTestAnalysedReportData());
 
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(REF_SAMPLE_ID)

@@ -74,7 +74,7 @@ public final class ExampleAnalysisTestFactory {
         double chordHrdValue = 0D;
         ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
 
-        ReportData reportData = PatientReporterTestFactory.testReportData();
+        ReportData reportData = PatientReporterTestFactory.loadTestReportData();
 
         List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
@@ -167,7 +167,7 @@ public final class ExampleAnalysisTestFactory {
         double chordHrdValue = 0.8;
         ChordStatus chordStatus = ChordStatus.HR_DEFICIENT;
 
-        ReportData reportData = PatientReporterTestFactory.testReportData();
+        ReportData reportData = PatientReporterTestFactory.loadTestReportData();
 
         List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
@@ -223,7 +223,7 @@ public final class ExampleAnalysisTestFactory {
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        ReportData reportData = PatientReporterTestFactory.testReportData();
+        ReportData reportData = PatientReporterTestFactory.loadTestReportData();
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)
