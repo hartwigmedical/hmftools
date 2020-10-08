@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testReportData;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -76,7 +74,7 @@ public final class ExampleAnalysisTestFactory {
         double chordHrdValue = 0D;
         ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
 
-        ReportData reportData = testReportData();
+        ReportData reportData = PatientReporterTestFactory.testReportData();
 
         List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
@@ -169,7 +167,7 @@ public final class ExampleAnalysisTestFactory {
         double chordHrdValue = 0.8;
         ChordStatus chordStatus = ChordStatus.HR_DEFICIENT;
 
-        ReportData reportData = testReportData();
+        ReportData reportData = PatientReporterTestFactory.testReportData();
 
         List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
@@ -225,7 +223,7 @@ public final class ExampleAnalysisTestFactory {
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        ReportData reportData = testReportData();
+        ReportData reportData = PatientReporterTestFactory.testReportData();
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .reason(reason)

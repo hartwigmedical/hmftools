@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testAnalysedReportData;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -33,7 +31,7 @@ public class AnalysedPatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
-        AnalysedPatientReporter reporter = new AnalysedPatientReporter(testAnalysedReportData());
+        AnalysedPatientReporter reporter = new AnalysedPatientReporter(PatientReporterTestFactory.testAnalysedReportData());
 
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(REF_SAMPLE_ID)
