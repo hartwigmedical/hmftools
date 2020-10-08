@@ -24,7 +24,7 @@ public class SvAnalyzerTest {
         List<LinxBreakend> testDisruptions =
                 Lists.newArrayList(createTestDisruptionBuilder().gene(DISRUPTED_GENE).junctionCopyNumber(1.0).undisruptedCopyNumber(1.0).build());
 
-        SvAnalysis analysis = SvAnalyzer.run(testFusions, testDisruptions, ProtectTestFactory.testActionabilityAnalyzer(), null);
+        SvAnalysis analysis = SvAnalyzer.run(testFusions, testDisruptions, ProtectTestFactory.loadTestActionabilityAnalyzer(), null);
 
         assertEquals(1, analysis.reportableFusions().size());
         assertEquals(1, analysis.reportableDisruptions().size());

@@ -42,7 +42,7 @@ public final class ProtectTestFactory {
     }
 
     @NotNull
-    public static ActionabilityAnalyzer testActionabilityAnalyzer() {
+    public static ActionabilityAnalyzer loadTestActionabilityAnalyzer() {
         try {
             return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_DIRECTORY);
         } catch (IOException e) {

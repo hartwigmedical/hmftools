@@ -44,7 +44,7 @@ public class ReportableVariantAnalyzerTest {
                         germlineVariantsToReport,
                         ProtectTestFactory.createTestEmptyGermlineGenesReporting(),
                         LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
-                        ProtectTestFactory.testActionabilityAnalyzer(),
+                        ProtectTestFactory.loadTestActionabilityAnalyzer(),
                         null);
 
         List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
@@ -71,7 +71,7 @@ public class ReportableVariantAnalyzerTest {
                         germlineVariantsToReport,
                         germlineReportingModel,
                         LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
-                        ProtectTestFactory.testActionabilityAnalyzer(),
+                        ProtectTestFactory.loadTestActionabilityAnalyzer(),
                         null);
 
         List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
@@ -104,7 +104,7 @@ public class ReportableVariantAnalyzerTest {
                         germlineVariantsToReport,
                         germlineReportingModel,
                         LimsGermlineReportingLevel.NO_REPORTING,
-                        ProtectTestFactory.testActionabilityAnalyzer(),
+                        ProtectTestFactory.loadTestActionabilityAnalyzer(),
                         null);
 
         List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
