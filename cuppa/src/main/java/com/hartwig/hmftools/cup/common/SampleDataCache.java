@@ -35,7 +35,7 @@ public class SampleDataCache
     }
 
     public boolean isSingleSample() { return SpecificSample != null; }
-    public boolean isMultiSample() { return isSingleSample(); }
+    public boolean isMultiSample() { return !isSingleSample(); }
 
     public void loadSampleData(final String specificSampleData, final String sampleDataFile)
     {

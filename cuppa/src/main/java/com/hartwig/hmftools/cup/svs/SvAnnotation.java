@@ -17,14 +17,13 @@ import static com.hartwig.hmftools.cup.svs.SvDataType.TELOMERIC_SGL;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class SvAnnotation
 {
@@ -61,6 +60,14 @@ public class SvAnnotation
     {
         final List<SampleResult> results = Lists.newArrayList();
 
+        boolean loadDbData = false;
+        if(mSampleSvData.isEmpty() && mConfig.DbAccess != null)
+        {
+            loadDbData = true;
+            if(!loadSvDataFromDatabase(mConfig.DbAccess, Lists.newArrayList(sample.Id), mSampleSvData))
+                return results;
+        }
+
         final SvData svData = mSampleSvData.get(sample.Id);
 
         if(svData == null)
@@ -94,6 +101,9 @@ public class SvAnnotation
         results.add(calcPrevalenceResult(sample, svData, TELOMERIC_SGL, false));
         results.add(calcPrevalenceResult(sample, svData, SIMPLE_DUP_32B_200B, false));
         results.add(calcPrevalenceResult(sample, svData, MAX_COMPLEX_SIZE, false));
+
+        if(loadDbData)
+            mSampleSvData.clear();
 
         return results;
     }
@@ -129,11 +139,15 @@ public class SvAnnotation
             return loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData);
         }
 
+        return true;
+
+        /* will load DB data for each sample
         if(mConfig.DbAccess != null)
         {
             return loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData);
         }
 
         return false;
+        */
     }
 }
