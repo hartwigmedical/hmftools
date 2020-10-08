@@ -43,6 +43,7 @@ public class ChromosomePipeline implements AutoCloseable {
     private final IndexedFastaSequenceFile refGenome;
     private final SageVariantPipeline sageVariantPipeline;
     private final Consumer<VariantContext> consumer;
+    private final ChromosomePartition partition;
 
     public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config, @NotNull final Executor executor,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
@@ -55,6 +56,7 @@ public class ChromosomePipeline implements AutoCloseable {
         this.consumer = consumer;
         this.sageVariantPipeline =
                 new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions, qualityRecalibrationMap);
+        this.partition = new ChromosomePartition(config, refGenome);
     }
 
     @NotNull
@@ -63,22 +65,20 @@ public class ChromosomePipeline implements AutoCloseable {
     }
 
     public void process() throws ExecutionException, InterruptedException {
-        process(1, refGenome.getSequence(chromosome).length());
+        for (GenomeRegion region : partition.partition(chromosome)) {
+            final CompletableFuture<List<SageVariant>> future = sageVariantPipeline.variants(region);
+            final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
+            regions.add(regionFuture);
+        }
+
+        submit().get();
     }
 
     public void process(int minPosition, int maxPosition) throws ExecutionException, InterruptedException {
-        // This is for the benefit of MT
-        int dynamicSliceSize = maxPosition / Math.min(config.threads(), 4) + 1;
-
-        final int regionSliceSize = Math.min(dynamicSliceSize, config.regionSliceSize());
-        for (int i = 0; ; i++) {
-            int start = minPosition + i * regionSliceSize;
-            int end = Math.min(start + regionSliceSize - 1, maxPosition);
-            addRegion(start, end);
-
-            if (end >= maxPosition) {
-                break;
-            }
+        for (GenomeRegion region : partition.partition(chromosome, minPosition, maxPosition)) {
+            final CompletableFuture<List<SageVariant>> future = sageVariantPipeline.variants(region);
+            final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
+            regions.add(regionFuture);
         }
 
         submit().get();
