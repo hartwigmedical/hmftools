@@ -21,9 +21,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class RefSampleTraits
 {
@@ -32,7 +32,8 @@ public class RefSampleTraits
 
     private final Map<String,List<SampleTraitsData>> mCancerTraitsData;
 
-    private BufferedWriter mRefDataWriter;
+    private BufferedWriter mPercentilesWriter;
+    private BufferedWriter mRatesWriter;
 
     public RefSampleTraits(final RefDataConfig config, final SampleDataCache sampleDataCache)
     {
@@ -40,7 +41,8 @@ public class RefSampleTraits
         mSampleDataCache = sampleDataCache;
 
         mCancerTraitsData = Maps.newHashMap();
-        mRefDataWriter = null;
+        mPercentilesWriter = null;
+        mRatesWriter = null;
     }
 
     public void buildRefDataSets()
@@ -62,7 +64,7 @@ public class RefSampleTraits
             loadRefPurityData(mConfig.RefSampleTraitsFile);
         }
 
-        initialiseRefDataWriter();
+        initialiseRefDataWriters();
 
         for(Map.Entry<String,List<SampleTraitsData>> entry : mCancerTraitsData.entrySet())
         {
@@ -70,36 +72,49 @@ public class RefSampleTraits
             final List<SampleTraitsData> traitsData = entry.getValue();
 
             final List<Double> purityValues = traitsData.stream().map(x -> x.Purity).collect(Collectors.toList());
-            writeRefDataType(cancerType, SampleTraitType.PURITY, createPercentileData(purityValues));
+            writePercentilesData(cancerType, SampleTraitType.PURITY, createPercentileData(purityValues));
 
             final List<Double> ploidyValues = traitsData.stream().map(x -> x.Ploidy).collect(Collectors.toList());
-            writeRefDataType(cancerType, SampleTraitType.PLOIDY, createPercentileData(ploidyValues));
+            writePercentilesData(cancerType, SampleTraitType.PLOIDY, createPercentileData(ploidyValues));
 
             final List<Double> msIndelTmbValues = traitsData.stream().map(x -> x.IndelsMbPerMb).collect(Collectors.toList());
-            writeRefDataType(cancerType, SampleTraitType.MS_INDELS_TMB, createPercentileData(msIndelTmbValues));
+            writePercentilesData(cancerType, SampleTraitType.MS_INDELS_TMB, createPercentileData(msIndelTmbValues));
 
             final List<Double> chordHrdValues = traitsData.stream().map(x -> x.ChordHrd).collect(Collectors.toList());
-            writeRefDataType(cancerType, SampleTraitType.CHORD_HRD, createPercentileData(chordHrdValues));
+            writePercentilesData(cancerType, SampleTraitType.CHORD_HRD, createPercentileData(chordHrdValues));
+
+            double cancerSamples = mSampleDataCache.RefCancerSampleData.get(cancerType).size();
+            int wgdCount = (int)traitsData.stream().filter(x -> x.HasWGD).count();
+            int femaleCount = (int)traitsData.stream().filter(x -> x.GenderType == Gender.FEMALE).count();
+
+            writeRatesData(cancerType, wgdCount/cancerSamples, femaleCount/cancerSamples);
         }
 
-        closeBufferedWriter(mRefDataWriter);
+        closeBufferedWriter(mPercentilesWriter);
+        closeBufferedWriter(mRatesWriter);
     }
     
-    private void initialiseRefDataWriter()
+    private void initialiseRefDataWriters()
     {
         try
         {
-            final String filename = mConfig.OutputDir + "cup_ref_sample_trait_percentiles.csv";
-            mRefDataWriter = createBufferedWriter(filename, false);
+            final String percFilename = mConfig.OutputDir + "cup_ref_sample_trait_percentiles.csv";
+            mPercentilesWriter = createBufferedWriter(percFilename, false);
 
-            mRefDataWriter.write("CancerType,TraitType");
+            mPercentilesWriter.write("CancerType,TraitType");
 
             for(int i = 0; i < PERCENTILE_COUNT; ++i)
             {
-                mRefDataWriter.write(String.format(",Pct_%.2f", i * 0.01));
+                mPercentilesWriter.write(String.format(",Pct_%.2f", i * 0.01));
             }
 
-            mRefDataWriter.newLine();
+            mPercentilesWriter.newLine();
+
+            final String ratesFilename = mConfig.OutputDir + "cup_ref_sample_trait_rates.csv";
+            mRatesWriter = createBufferedWriter(ratesFilename, false);
+
+            mRatesWriter.write("CancerType,WGDPerc,GenderFemalePerc");
+            mRatesWriter.newLine();
         }
         catch(IOException e)
         {
@@ -107,18 +122,31 @@ public class RefSampleTraits
         }
     }
 
-    private void writeRefDataType(final String cancerType, final SampleTraitType traitType, final double[] percentileValues)
+    private void writeRatesData(final String cancerType, double wgdRate, double femaleRate)
     {
         try
         {
-            mRefDataWriter.write(String.format("%s,%s", cancerType, traitType));
+            mRatesWriter.write(String.format("%s,%.4f,%.4f", cancerType, wgdRate, femaleRate));
+            mRatesWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write ref sample traits rates ref data output: {}", e.toString());
+        }
+    }
+
+    private void writePercentilesData(final String cancerType, final SampleTraitType traitType, final double[] percentileValues)
+    {
+        try
+        {
+            mPercentilesWriter.write(String.format("%s,%s", cancerType, traitType));
 
             for(int i = 0; i < percentileValues.length; ++i)
             {
-                mRefDataWriter.write(String.format(",%.6f", percentileValues[i]));
+                mPercentilesWriter.write(String.format(",%.6f", percentileValues[i]));
             }
 
-            mRefDataWriter.newLine();
+            mPercentilesWriter.newLine();
         }
         catch(IOException e)
         {

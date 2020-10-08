@@ -83,8 +83,20 @@ public class SampleAnalyser
             return;
         }
 
+        if(mSampleDataCache.SampleIds.isEmpty())
+        {
+            CUP_LOGGER.error("no samples specified");
+            return;
+        }
+
         if(!checkAnnotators())
             return;
+
+        if(mSampleDataCache.isMultiSample())
+        {
+            CUP_LOGGER.info("loaded {} samples and {} cancer types",
+                    mSampleDataCache.SampleIds.size(), mSampleDataCache.RefCancerSampleData.size());
+        }
 
         initialiseOutputFiles();
 
@@ -100,7 +112,7 @@ public class SampleAnalyser
             int sampleCount = 0;
             for(SampleData sample : mSampleDataCache.SampleDataList)
             {
-                // CUP_LOGGER.debug("sample({}) running CUP analysis", sample.Id);
+                CUP_LOGGER.debug("sample({}) running CUP analysis", sample.Id);
 
                 processSample(sample);
 

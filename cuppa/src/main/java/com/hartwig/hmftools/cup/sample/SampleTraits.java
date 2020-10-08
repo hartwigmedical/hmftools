@@ -53,9 +53,25 @@ public class SampleTraits
         mRefTraitRates = Maps.newHashMap();
         mIsValid = true;
 
-        mIsValid &= loadRefPercentileData(mConfig.RefTraitPercFile, mRefTraitPercentiles);
-        mIsValid &= loadRefRateData(mConfig.RefTraitRateFile, mRefTraitRates);
-        mIsValid &= loadSampleTraitsData();
+        if(!loadRefPercentileData(mConfig.RefTraitPercFile, mRefTraitPercentiles))
+        {
+            CUP_LOGGER.error("invalid ref sample trait percentile data");
+            mIsValid = false;
+            return;
+        }
+        if(!loadRefRateData(mConfig.RefTraitRateFile, mRefTraitRates))
+        {
+            CUP_LOGGER.error("invalid ref sample trait rate data");
+            mIsValid = false;
+            return;
+        }
+
+        if(!loadSampleTraitsData())
+        {
+            CUP_LOGGER.error("invalid sample trait percentile data");
+            mIsValid = false;
+            return;
+        }
     }
 
     public boolean isValid() { return mIsValid; }
