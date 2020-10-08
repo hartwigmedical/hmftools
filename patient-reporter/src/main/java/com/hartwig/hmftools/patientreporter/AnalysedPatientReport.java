@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.Optional;
 
+import com.hartwig.hmftools.protect.GenomicAnalysis;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

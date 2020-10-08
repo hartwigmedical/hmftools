@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
 

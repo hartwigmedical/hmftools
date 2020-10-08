@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.patientreporter.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
@@ -14,6 +13,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalBurden;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalLoad;
+import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;

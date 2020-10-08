@@ -12,7 +12,9 @@ import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
+import com.hartwig.hmftools.protect.GenomicAnalysis;
+import com.hartwig.hmftools.protect.GenomicAnalyzer;
+import com.hartwig.hmftools.protect.variants.ReportableVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

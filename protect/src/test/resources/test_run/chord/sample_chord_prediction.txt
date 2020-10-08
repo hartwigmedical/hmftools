@@ -1,0 +1,2 @@
+sample	p_none	p_BRCA1	p_BRCA2	p_hrd	is_hrd
+sample	0.370	0.230	0.400	0.630	TRUE

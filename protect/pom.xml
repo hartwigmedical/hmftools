@@ -23,8 +23,8 @@
             <artifactId>serve</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>patient-db</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
             <groupId>org.immutables</groupId>
