@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.sage.vcf;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sage.SageMetaData;
@@ -12,10 +15,13 @@ import com.hartwig.hmftools.sage.config.SoftFilter;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
@@ -67,7 +73,7 @@ public class SageVCF implements AutoCloseable {
     public static final String RIGHT_ALIGNED_MICROHOMOLOGY_DESCRIPTION = "Right aligned microhomology";
 
     private final VariantContextWriter writer;
-    private final SomaticRefContextEnrichment refContextEnrichment;
+    private final Consumer<VariantContext> consumer;
 
     public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
@@ -75,19 +81,53 @@ public class SageVCF implements AutoCloseable {
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(reference.getSequenceDictionary())
                 .build();
-        refContextEnrichment = new SomaticRefContextEnrichment(reference, this::writeToFile);
+        SomaticRefContextEnrichment enrichment = new SomaticRefContextEnrichment(reference, writer::add);
+        this.consumer = enrichment;
 
-        final VCFHeader header = refContextEnrichment.enrichHeader(header(config));
+        final VCFHeader header = enrichment.enrichHeader(header(config));
         header.setSequenceDictionary(reference.getSequenceDictionary());
         writer.writeHeader(header);
     }
 
-    public void write(@NotNull final VariantContext context) {
-        refContextEnrichment.accept(context);
+    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config, @NotNull final String template)
+            throws IOException {
+
+        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(template,
+                new VCFCodec(),
+                false);
+
+        final VCFHeader templateHeader = (VCFHeader) reader.getHeader();
+        reader.close();
+        Set<VCFHeaderLine>  headerLines = templateHeader.getMetaDataInInputOrder();
+//        List<String> samples = Lists.newArrayList(templateHeader.getGenotypeSamples());
+        List<String> samples = Lists.newArrayList(config.reference());
+
+        //TODO: CHECK SAMPLES DOESN"T EXIST
+//        samples.addAll(config.reference());
+        samples.addAll(templateHeader.getGenotypeSamples());
+        final VCFHeader header = new VCFHeader(headerLines, samples);
+
+        writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
+                .modifyOption(Options.INDEX_ON_THE_FLY, true)
+                .modifyOption(Options.USE_ASYNC_IO, false)
+                .setReferenceDictionary(reference.getSequenceDictionary())
+                .build();
+        this.consumer =  writer::add;
+        writer.writeHeader(header);
     }
 
-    private void writeToFile(@NotNull final VariantContext context) {
-        writer.add(context);
+    public void write(@NotNull final VariantContext context) {
+//        System.out.println(context);
+
+        try {
+            consumer.accept(context);
+        } catch (Exception e) {
+
+
+            System.out.println("UH OH");
+            System.out.println(context);
+            System.out.println(e);
+        }
     }
 
     @NotNull

@@ -15,7 +15,6 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.phase.Phase;
@@ -82,13 +81,6 @@ public class ChromosomePipeline implements AutoCloseable {
         }
 
         submit().get();
-    }
-
-    private void addRegion(int start, int end) {
-        final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
-        final CompletableFuture<List<SageVariant>> future = sageVariantPipeline.variants(region);
-        final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
-        regions.add(regionFuture);
     }
 
     @NotNull

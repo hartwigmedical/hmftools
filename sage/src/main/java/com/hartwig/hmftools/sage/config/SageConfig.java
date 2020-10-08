@@ -93,6 +93,30 @@ public interface SageConfig {
     }
 
     @NotNull
+    static Options createAddReferenceOptions() {
+        final Options options = new Options();
+        options.addOption(ASSEMBLY, true, "Assembly, must be one of [hg19, hg38]");
+        options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
+        options.addOption(REFERENCE, true, "Name of reference sample");
+        options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
+        options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
+        options.addOption(OUTPUT_VCF, true, "Path to output vcf");
+        options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
+        options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
+
+        options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
+        options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
+        options.addOption(MAX_REALIGNMENT_DEPTH, true, "Max depth to check for realignment [" + DEFAULT_MAX_REALIGNMENT_DEPTH + "]");
+        options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
+        FilterConfig.createOptions().getOptions().forEach(options::addOption);
+        QualityConfig.createOptions().getOptions().forEach(options::addOption);
+        BaseQualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
+
+        return options;
+    }
+
+
+    @NotNull
     String version();
 
     int threads();
@@ -170,7 +194,7 @@ public interface SageConfig {
     int readContextFlankSize();
 
     @NotNull
-    static SageConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
+    static SageConfig createConfig(boolean addReference, @NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final String assembly = cmd.getOptionValue(ASSEMBLY, "UNKNOWN");
         if (!assembly.equals("hg19") && !assembly.equals("hg38")) {
@@ -225,7 +249,7 @@ public interface SageConfig {
             }
         }
 
-        if (tumorList.isEmpty()) {
+        if (!addReference && tumorList.isEmpty()) {
             throw new ParseException("At least one tumor must be supplied");
         }
 

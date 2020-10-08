@@ -38,7 +38,18 @@ public class CandidateSerialization {
         this.refGenome = refGenome;
     }
 
-    public Candidate fromContext(@NotNull final VariantContext context) {
+    @NotNull
+    public static VariantHotspot toVariantHotspot(@NotNull final VariantContext context) {
+        return ImmutableVariantHotspotImpl.builder()
+                .chromosome(context.getContig())
+                .position(context.getStart())
+                .ref(context.getReference().getBaseString())
+                .alt(context.getAlternateAllele(0).getBaseString())
+                .build();
+    }
+
+    public Candidate toCandidate(@NotNull final VariantContext context) {
+
         final int sequenceEnd = refGenome.getSequenceDictionary().getSequence(context.getContig()).getSequenceLength();
         final IndexedBases readBases = readBases(context);
 
@@ -49,7 +60,7 @@ public class CandidateSerialization {
         final ReferenceSequence referenceSequence = refGenome.getSubsequenceAt(context.getContig(), startPosition, endPosition);
         final IndexedBases refBases = new IndexedBases(startPosition, 0, referenceSequence.getBases());
 
-        return fromContext(context, readBases, refBases);
+        return toCandidate(context, readBases, refBases);
     }
 
     @NotNull
@@ -78,16 +89,9 @@ public class CandidateSerialization {
     }
 
     @NotNull
-    static Candidate fromContext(@NotNull final VariantContext context, @NotNull final IndexedBases readBases,
+    static Candidate toCandidate(@NotNull final VariantContext context, @NotNull final IndexedBases readBases,
             @NotNull final IndexedBases refBases) {
-        final int position = context.getStart();
-
-        final VariantHotspot variant = ImmutableVariantHotspotImpl.builder()
-                .chromosome(context.getContig())
-                .position(position)
-                .ref(context.getReference().getDisplayString())
-                .alt(context.getAlternateAllele(0).getDisplayString())
-                .build();
+        final VariantHotspot variant = toVariantHotspot(context);
 
         final SageVariantTier tier = SageVariantTier.valueOf(context.getAttributeAsString(TIER, "LOW_CONFIDENCE"));
         final int repeatCount = context.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
@@ -97,9 +101,9 @@ public class CandidateSerialization {
         final ReadContext readContext = new ReadContext(refBases, readBases, repeatCount, repeat, mh);
 
         int maxDepth = 0;
-        for (Genotype genotype : context.getGenotypes()) {
+        for (Genotype genotype : context.getGenotypes().immutable()) {
             maxDepth = Math.max(maxDepth, genotype.getDP());
-            maxDepth = Math.max(maxDepth, Integer.parseInt((String) genotype.getExtendedAttribute(RAW_DEPTH, 0)));
+            maxDepth = Math.max(maxDepth, genotype.getAttributeAsInt(RAW_DEPTH, 0));
         }
 
         return new Candidate(tier, variant, readContext, maxDepth, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0));

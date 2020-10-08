@@ -52,11 +52,11 @@ public class SomaticPipeline implements SageVariantPipeline {
 
         final CompletableFuture<List<Candidate>> initialCandidates = candidateState.candidates(region, refSequenceFuture);
         final CompletableFuture<ReadContextCounters> tumorEvidence =
-                evidenceStage.evidence(region, config.tumor(), config.tumorBam(), initialCandidates);
+                evidenceStage.evidence(config.tumor(), config.tumorBam(), initialCandidates);
 
         final CompletableFuture<List<Candidate>> finalCandidates = filteredCandidates(tumorEvidence);
         final CompletableFuture<ReadContextCounters> normalEvidence =
-                evidenceStage.evidence(region, config.reference(), config.referenceBam(), finalCandidates);
+                evidenceStage.evidence(config.reference(), config.referenceBam(), finalCandidates);
 
         return combine(region, finalCandidates, tumorEvidence, normalEvidence);
     }

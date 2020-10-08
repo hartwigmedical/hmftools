@@ -20,7 +20,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.CandidateSerialization;
-import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +36,18 @@ public class SageVariantContextFactory {
     private static final double HET_CUTOFF = 0.1;
 
     @NotNull
+    public static VariantContext addGenotype(@NotNull final VariantContext parent, @NotNull final List<ReadContextCounter> counters) {
+        final VariantContextBuilder builder = new VariantContextBuilder(parent);
+        final List<Genotype> genotypes = Lists.newArrayList(parent.getGenotypes());
+
+        for (ReadContextCounter counter : counters) {
+            Genotype genotype = createGenotype(true, counter); //TODO: FIX
+            genotypes.add(genotype);
+        }
+        return builder.genotypes(genotypes).make();
+    }
+
+    @NotNull
     public static VariantContext create(@NotNull final SageVariant entry) {
         final List<Genotype> genotypes = Lists.newArrayList();
         for (int i = 0; i < entry.normalAltContexts().size(); i++) {
@@ -45,11 +56,11 @@ public class SageVariantContextFactory {
         }
 
         entry.tumorAltContexts().stream().map(x -> createGenotype(false, entry.variant(), x)).forEach(genotypes::add);
-        return createContext(entry, genotypes, entry.readContext());
+        return createContext(entry, genotypes);
     }
 
     @NotNull
-    private static VariantContext createContext(@NotNull final SageVariant variant, @NotNull final List<Genotype> genotypes, @NotNull final ReadContext counter) {
+    private static VariantContext createContext(@NotNull final SageVariant variant, @NotNull final List<Genotype> genotypes) {
         final VariantContextBuilder builder = CandidateSerialization.toContext(variant.candidate())
                 .log10PError(variant.totalQuality() / -10d)
                 .genotypes(genotypes)
@@ -81,6 +92,11 @@ public class SageVariantContextFactory {
         }
 
         return context;
+    }
+
+    @NotNull
+    private static Genotype createGenotype(boolean germline, @NotNull final ReadContextCounter counter) {
+        return createGenotype(germline, counter.variant(), counter);
     }
 
     @NotNull

@@ -37,7 +37,7 @@ public class CandidateSerializationTest {
 
         final VariantContext serialized = toContext(candidate);
         final IndexedBases deserializedReadBases = CandidateSerialization.readBases(serialized);
-        final Candidate deserialized = CandidateSerialization.fromContext(serialized, deserializedReadBases, refBases);
+        final Candidate deserialized = CandidateSerialization.toCandidate(serialized, deserializedReadBases, refBases);
 
         assertEqual(candidate, deserialized);
         assertEquals(5, candidate.readContext().readBasesPositionIndex());
