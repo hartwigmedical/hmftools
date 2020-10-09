@@ -123,7 +123,7 @@ From SAGE 2.4 onwards it is possible to append additional reference samples to a
 A typical use case would be to append RNA without having to rerun all of SAGE.
 
 In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#4-normal-counts-and-quality) steps.
-The supplied SAGE VCF is used to determine the [candidate Variants](#2-candidate-variants) and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
+The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
 
 ## Usage
 
@@ -153,7 +153,7 @@ The optional [base quality recalibration](#optional-base-quality-recalibration-a
 
 ## Example Usage
 
-Minimum set of arguments (running in tumor only mode):
+Minimum set of arguments:
 
 ```
 java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageAppendApplication \
