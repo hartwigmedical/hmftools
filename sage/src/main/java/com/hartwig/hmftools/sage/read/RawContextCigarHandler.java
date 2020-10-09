@@ -72,7 +72,7 @@ public class RawContextCigarHandler implements CigarHandler {
             int baseQuality = record.getBaseQualities()[variantReadIndex];
             boolean altSupport = isSNV && refPositionEnd >= variant.end() && matchesString(record, variantReadIndex, variant.alt());
             boolean refSupport = !altSupport && matchesFirstBase(record, variantReadIndex, variant.ref());
-            result = RawContext.snv(variantReadIndex, altSupport, refSupport, baseQuality);
+            result = RawContext.alignment(variantReadIndex, altSupport, refSupport, baseQuality);
         }
     }
 
