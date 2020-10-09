@@ -107,9 +107,12 @@ public final class HealthChecksApplication {
             checkers = Lists.newArrayList(new MetricsChecker(refSample, null, metricsDirectory));
         } else {
             LOGGER.info("Running in Somatic mode");
-            checkers = Lists.newArrayList(new MetricsChecker(refSample, tumorSample, metricsDirectory),
-                    new AmberChecker(tumorSample, amberDirectory),
-                    new PurpleChecker(tumorSample, purpleDirectory));
+            checkers = Lists.newArrayList(
+                    new MetricsChecker(refSample, tumorSample, metricsDirectory),
+                    // TODO remove once all amber related code is gone
+                    // new AmberChecker(tumorSample, amberDirectory),
+                    new PurpleChecker(tumorSample, purpleDirectory)
+            );
         }
 
         List<QCValue> qcValues = Lists.newArrayList();
