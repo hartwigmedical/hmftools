@@ -23,6 +23,7 @@ final class HealthCheckEvaluation {
 
     private static final String PURPLE_QC_PASS = "PASS";
     private static final String PURPLE_QC_FAIL = "FAIL";
+    private static final double MAX_PURPLE_CONTAMINATION = 0.1;
 
     private HealthCheckEvaluation() {
     }
@@ -53,6 +54,8 @@ final class HealthCheckEvaluation {
                 return checkAmberContamination(qcValue.value());
             case PURPLE_QC_STATUS:
                 return checkPurpleQCStatus(qcValue.value());
+            case PURPLE_CONTAMINATION:
+                return checkPurpleContamination(qcValue.value());
             default: {
                 LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.type());
                 return false;
@@ -111,6 +114,20 @@ final class HealthCheckEvaluation {
         } else {
             LOGGER.warn("WARN - Purple QC value is {}", value);
             return true;
+        }
+    }
+
+    private static boolean checkPurpleContamination(@NotNull String value) {
+        double contamination = Double.parseDouble(value);
+        if (contamination <= MAX_PURPLE_CONTAMINATION) {
+            LOGGER.info("PASS - Contamination of {} is below {}", value, MAX_PURPLE_CONTAMINATION);
+            if (contamination > 0) {
+                LOGGER.warn("  Contamination found in sample!");
+            }
+            return true;
+        } else {
+            LOGGER.info("FAIL - Contamination of {} is above {}", value, MAX_PURPLE_CONTAMINATION);
+            return false;
         }
     }
 }

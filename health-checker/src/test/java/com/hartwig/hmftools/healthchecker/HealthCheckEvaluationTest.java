@@ -70,4 +70,15 @@ public class HealthCheckEvaluationTest {
         assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(purpleQCCheckCorrect)));
         assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(purpleQCCheckFail)));
     }
+
+    @Test
+    public void purpleContaminationCheckWorks() {
+        QCValue purpleContaminationCorrect = ImmutableQCValue.of(QCValueType.PURPLE_CONTAMINATION, "0");
+        QCValue purpleContaminationCorrectButNonZero = ImmutableQCValue.of(QCValueType.PURPLE_CONTAMINATION, "0.01");
+        QCValue purpleContaminationTooHigh = ImmutableQCValue.of(QCValueType.PURPLE_CONTAMINATION, "0.2");
+
+        assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(purpleContaminationCorrect)));
+        assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(purpleContaminationCorrectButNonZero)));
+        assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(purpleContaminationTooHigh)));
+    }
 }
