@@ -48,6 +48,7 @@ public class SageConfigTest {
         return ImmutableSageConfig.builder()
                 .panelOnly(false)
                 .version("2.2")
+                .inputFile("in.vcf")
                 .outputFile("out.vcf")
                 .transcriptRegions(HmfGenePanelSupplier.allGeneList37())
                 .reference(Lists.newArrayList("reference"))

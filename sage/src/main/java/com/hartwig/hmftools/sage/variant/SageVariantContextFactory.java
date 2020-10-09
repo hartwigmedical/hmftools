@@ -41,7 +41,7 @@ public class SageVariantContextFactory {
         final List<Genotype> genotypes = Lists.newArrayList(parent.getGenotypes());
 
         for (ReadContextCounter counter : counters) {
-            Genotype genotype = createGenotype(true, counter); //TODO: FIX
+            Genotype genotype = createGenotype(false, counter);
             genotypes.add(genotype);
         }
         return builder.genotypes(genotypes).make();

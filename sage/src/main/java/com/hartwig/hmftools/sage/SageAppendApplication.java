@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,10 +15,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.AdditionalReferencePipeline;
@@ -45,18 +48,20 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 
-public class SageAddReferenceApplication implements AutoCloseable {
-    private static final Logger LOGGER = LogManager.getLogger(SageAddReferenceApplication.class);
+public class SageAppendApplication implements AutoCloseable {
+    private static final Logger LOGGER = LogManager.getLogger(SageAppendApplication.class);
+    private static final double MIN_PRIOR_VERSION = 2.4;
 
     public static void main(String[] args) {
         final Options options = SageConfig.createAddReferenceOptions();
-        try (final SageAddReferenceApplication application = new SageAddReferenceApplication(options, args)) {
+        try (final SageAppendApplication application = new SageAppendApplication(options, args)) {
             application.run();
         } catch (ParseException e) {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SageReferenceApplication", options);
+            formatter.printHelp("SageAppendApplication", options);
             System.exit(1);
         } catch (Exception e) {
             LOGGER.warn(e);
@@ -64,15 +69,15 @@ public class SageAddReferenceApplication implements AutoCloseable {
         }
     }
 
-    private final SageVCF vcf;
+    private final SageVCF outputVCF;
     private final SageConfig config;
     private final ExecutorService executorService;
     private final IndexedFastaSequenceFile refGenome;
     private final QualityRecalibrationSupplier qualityRecalibrationSupplier;
-
+    private final AbstractFeatureReader<VariantContext, LineIterator> inputReader;
     private final long timeStamp = System.currentTimeMillis();
 
-    public SageAddReferenceApplication(final Options options, final String... args) throws ParseException, IOException {
+    public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException {
         final VersionInfo version = new VersionInfo("sage.version");
         LOGGER.info("SAGE version: {}", version.version());
 
@@ -84,26 +89,28 @@ public class SageAddReferenceApplication implements AutoCloseable {
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         qualityRecalibrationSupplier = new QualityRecalibrationSupplier(executorService, refGenome, config);
 
-        vcf = new SageVCF(refGenome, config, "/Users/jon/hmf/tmp/colo829.sage.candidates.2.vcf"); // TODO: FIX
+        final String inputVcf = config.inputFile();
+        inputReader = AbstractFeatureReader.getFeatureReader(inputVcf, new VCFCodec(), false);
+
+        VCFHeader inputHeader = (VCFHeader) inputReader.getHeader();
+        LOGGER.info("Reading and validating file: {}", inputVcf);
+        validateInputHeader(inputHeader);
+
+        outputVCF = new SageVCF(refGenome, config, inputHeader);
         LOGGER.info("Writing to file: {}", config.outputFile());
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException {
-        final String inputVcf = "/Users/jon/hmf/tmp/colo829.sage.candidates.2.vcf"; // TODO: FIX
         final ChromosomePartition chromosomePartition = new ChromosomePartition(config, refGenome);
+        final List<VariantContext> existing = verifyAndReadExisting();
 
-        LOGGER.info("Reading existing vcf: {}", inputVcf);
-        List<VariantContext> existing = readExisting(inputVcf);
-
-
+        final SAMSequenceDictionary dictionary = dictionary();
         final List<Future<List<VariantContext>>> futures = Lists.newArrayList();
         final Map<String, QualityRecalibrationMap> recalibrationMap = qualityRecalibrationSupplier.get();
-        final SAMSequenceDictionary dictionary = dictionary();
+        final AdditionalReferencePipeline pipeline = new AdditionalReferencePipeline(config, executorService, refGenome, recalibrationMap);
+
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
-
-            final AdditionalReferencePipeline pipeline = new AdditionalReferencePipeline(contig, config, executorService, recalibrationMap);
-
             if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
                 final List<VariantContext> chromosomeVariants =
                         existing.stream().filter(x -> x.getContig().equals(contig)).collect(Collectors.toList());
@@ -116,20 +123,18 @@ public class SageAddReferenceApplication implements AutoCloseable {
                     futures.add(pipeline.appendReference(region, regionVariants));
                 }
             }
-
-            pipeline.close();
         }
 
         for (Future<List<VariantContext>> updatedVariantsFuture : futures) {
             final List<VariantContext> updatedVariants = updatedVariantsFuture.get();
-            updatedVariants.forEach(vcf::write);
+            updatedVariants.forEach(outputVCF::write);
         }
-
     }
 
     @Override
     public void close() throws IOException {
-        vcf.close();
+        inputReader.close();
+        outputVCF.close();
         refGenome.close();
         executorService.shutdown();
         long timeTaken = System.currentTimeMillis() - timeStamp;
@@ -137,19 +142,48 @@ public class SageAddReferenceApplication implements AutoCloseable {
     }
 
     @NotNull
-    public static List<VariantContext> readExisting(@NotNull final String fileName) throws IOException {
-        List<VariantContext> result = Lists.newArrayList();
+    public List<VariantContext> verifyAndReadExisting() throws IOException, IllegalArgumentException {
+        VCFHeader header = (VCFHeader) inputReader.getHeader();
 
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(fileName,
-                new VCFCodec(),
-                false)) {
-            VCFHeader header = (VCFHeader) reader.getHeader();
-            for (VariantContext variantContext : reader.iterator()) {
-                result.add(variantContext.fullyDecode(header, false));
-            }
+        List<VariantContext> result = Lists.newArrayList();
+        for (VariantContext variantContext : inputReader.iterator()) {
+            result.add(variantContext.fullyDecode(header, false));
         }
 
         return result;
+    }
+
+    public void validateInputHeader(VCFHeader header) throws IllegalArgumentException {
+        double oldVersion = sageVersion(header);
+        if (Doubles.lessThan(oldVersion, MIN_PRIOR_VERSION)) {
+            throw new IllegalArgumentException("Input VCF must be from SAGE version " + MIN_PRIOR_VERSION + " onwards");
+        }
+
+        final Set<String> samplesInExistingVcf = existingSamples(header);
+        for (String refSample : config.reference()) {
+            if (samplesInExistingVcf.contains(refSample)) {
+                throw new IllegalArgumentException("Sample " + refSample + " already exits in input VCF");
+            }
+        }
+    }
+
+    private static double sageVersion(@NotNull final VCFHeader header) {
+        VCFHeaderLine oldVersion = header.getMetaDataLine(SageVCF.VERSION_META_DATA);
+        if (oldVersion == null) {
+            return 0;
+        }
+
+        String oldVersionString = oldVersion.getValue();
+        try {
+            return Double.parseDouble(oldVersionString);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    @NotNull
+    private static Set<String> existingSamples(@NotNull final VCFHeader header) {
+        return Sets.newHashSet(header.getGenotypeSamples());
     }
 
     private SAMSequenceDictionary dictionary() throws IOException {

@@ -18,25 +18,18 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class CandidateSerialization {
-
-    private final ReferenceSequenceFile refGenome;
-
-    public CandidateSerialization(final ReferenceSequenceFile refGenome) {
-        this.refGenome = refGenome;
-    }
 
     @NotNull
     public static VariantHotspot toVariantHotspot(@NotNull final VariantContext context) {
@@ -48,19 +41,10 @@ public class CandidateSerialization {
                 .build();
     }
 
-    public Candidate toCandidate(@NotNull final VariantContext context) {
-
-        final int sequenceEnd = refGenome.getSequenceDictionary().getSequence(context.getContig()).getSequenceLength();
+    @NotNull
+    public static Candidate toCandidate(@NotNull final VariantContext context, @NotNull final RefSequence refGenome) {
         final IndexedBases readBases = readBases(context);
-
-        final int position = context.getStart();
-        final int startPosition = Math.max(1, position - readBases.bases().length);
-        final int endPosition = Math.min(sequenceEnd, position + readBases.bases().length);
-
-        final ReferenceSequence referenceSequence = refGenome.getSubsequenceAt(context.getContig(), startPosition, endPosition);
-        final IndexedBases refBases = new IndexedBases(startPosition, 0, referenceSequence.getBases());
-
-        return toCandidate(context, readBases, refBases);
+        return toCandidate(context, readBases, refGenome.alignment());
     }
 
     @NotNull

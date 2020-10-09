@@ -2,9 +2,6 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -20,71 +17,66 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounters;
+import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class AdditionalReferencePipeline implements AutoCloseable {
+public class AdditionalReferencePipeline {
 
     private static final Logger LOGGER = LogManager.getLogger(AdditionalReferencePipeline.class);
 
-    private final String contig;
     private final SageConfig config;
     private final EvidenceStage evidenceStage;
-    private final IndexedFastaSequenceFile refGenome;
+    private final ReferenceSequenceFile refGenome;
     private final Executor executor;
-    private final CandidateSerialization serialization;
 
-    public AdditionalReferencePipeline(@NotNull final String contig, @NotNull final SageConfig config, @NotNull final Executor executor,
-            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) throws FileNotFoundException {
-        this.contig = contig;
+    public AdditionalReferencePipeline(@NotNull final SageConfig config, @NotNull final Executor executor, ReferenceSequenceFile refGenome,
+            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
         this.config = config;
-        this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
+        this.refGenome = refGenome;
         this.evidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
         this.executor = executor;
-        this.serialization = new CandidateSerialization(refGenome);
+
     }
 
     @NotNull
     public CompletableFuture<List<VariantContext>> appendReference(@NotNull final GenomeRegion region,
             @NotNull final List<VariantContext> variants) {
+        if (variants.isEmpty()) {
+            return CompletableFuture.completedFuture(Lists.newArrayList());
+        }
 
-
-        final CompletableFuture<List<Candidate>> candidateFutures =
-                CompletableFuture.completedFuture(variants.stream().map(serialization::toCandidate).collect(Collectors.toList()));
-
-        final CompletableFuture<List<VariantContext>> existingFuture = supplyAsync(() -> {
+        final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> {
             if (region.start() == 1) {
-                LOGGER.info("Processing chromosome {}", contig);
+                LOGGER.info("Processing chromosome {}", region.chromosome());
             }
-            return variants;
+            return new RefSequence(region, refGenome);
         }, executor);
+
+        final CompletableFuture<List<Candidate>> candidateFutures = refSequenceFuture.thenApply(x -> variants.stream()
+                .map(y -> CandidateSerialization.toCandidate(y, x))
+                .collect(Collectors.toList()));
 
         final CompletableFuture<ReadContextCounters> evidenceFutures =
                 evidenceStage.evidence(config.reference(), config.referenceBam(), candidateFutures);
 
-        return evidenceFutures.thenCombine(existingFuture, this::update);
-
+        return evidenceFutures.thenApply(x -> update(x, variants));
     }
 
     public List<VariantContext> update(final ReadContextCounters readContextCounters, final List<VariantContext> variantContexts) {
         final List<VariantContext> result = Lists.newArrayList();
-                for (VariantContext old : variantContexts) {
-                    VariantHotspot variant = CandidateSerialization.toVariantHotspot(old);
-                    List<ReadContextCounter> counters = readContextCounters.readContextCounters(variant);
-                    result.add(SageVariantContextFactory.addGenotype(old, counters));
-                }
+        for (VariantContext old : variantContexts) {
+            VariantHotspot variant = CandidateSerialization.toVariantHotspot(old);
+            List<ReadContextCounter> counters = readContextCounters.readContextCounters(variant);
+            result.add(SageVariantContextFactory.addGenotype(old, counters));
+        }
 
         return result;
-    }
-
-    @Override
-    public void close() throws IOException {
-        refGenome.close();
     }
 }

@@ -19,7 +19,8 @@ public class Candidate implements GenomePosition {
     private int readContextSupport;
     private ReadContext readContext;
 
-    public Candidate(final SageVariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth,  int minNumberOfEvents) {
+    public Candidate(final SageVariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth,
+            int minNumberOfEvents) {
         this.tier = tier;
         this.variant = variant;
         this.readContext = readContext;

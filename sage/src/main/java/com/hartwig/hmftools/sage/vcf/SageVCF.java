@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.vcf;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -15,13 +14,10 @@ import com.hartwig.hmftools.sage.config.SoftFilter;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
@@ -33,6 +29,7 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class SageVCF implements AutoCloseable {
 
+    public static final String VERSION_META_DATA = "sageVersion";
     public static final String READ_CONTEXT = "RC";
     public static final String READ_CONTEXT_LEFT_FLANK = "RC_LF";
     public static final String READ_CONTEXT_RIGHT_FLANK = "RC_RF";
@@ -89,45 +86,26 @@ public class SageVCF implements AutoCloseable {
         writer.writeHeader(header);
     }
 
-    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config, @NotNull final String template)
-            throws IOException {
+    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config,
+            @NotNull final VCFHeader existingHeader) {
 
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(template,
-                new VCFCodec(),
-                false);
+        Set<VCFHeaderLine> headerLines = existingHeader.getMetaDataInInputOrder();
+        List<String> samples = Lists.newArrayList(existingHeader.getGenotypeSamples());
+        samples.addAll(config.reference());
 
-        final VCFHeader templateHeader = (VCFHeader) reader.getHeader();
-        reader.close();
-        Set<VCFHeaderLine>  headerLines = templateHeader.getMetaDataInInputOrder();
-//        List<String> samples = Lists.newArrayList(templateHeader.getGenotypeSamples());
-        List<String> samples = Lists.newArrayList(config.reference());
-
-        //TODO: CHECK SAMPLES DOESN"T EXIST
-//        samples.addAll(config.reference());
-        samples.addAll(templateHeader.getGenotypeSamples());
-        final VCFHeader header = new VCFHeader(headerLines, samples);
+        final VCFHeader newHeader = new VCFHeader(headerLines, samples);
 
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(reference.getSequenceDictionary())
                 .build();
-        this.consumer =  writer::add;
-        writer.writeHeader(header);
+        this.consumer = writer::add;
+        writer.writeHeader(newHeader);
     }
 
     public void write(@NotNull final VariantContext context) {
-//        System.out.println(context);
-
-        try {
-            consumer.accept(context);
-        } catch (Exception e) {
-
-
-            System.out.println("UH OH");
-            System.out.println(context);
-            System.out.println(e);
-        }
+        consumer.accept(context);
     }
 
     @NotNull
@@ -142,7 +120,7 @@ public class SageVCF implements AutoCloseable {
     private static VCFHeader header(@NotNull final String version, @NotNull final List<String> allSamples) {
         VCFHeader header = SageMetaData.addSageMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
-        header.addMetaDataLine(new VCFHeaderLine("sageVersion", version));
+        header.addMetaDataLine(new VCFHeaderLine(VERSION_META_DATA, version));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
