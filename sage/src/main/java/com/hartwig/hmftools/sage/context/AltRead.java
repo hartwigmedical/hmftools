@@ -12,17 +12,19 @@ class AltRead {
     private final RefContext refContext;
     private final String ref;
     private final String alt;
-    private final int quality;
+    private final int baseQuality;
     private final int numberOfEvents;
+    private final boolean sufficientMapQuality;
 
-    AltRead(final RefContext refContext, final String ref, final String alt, final int quality, final int numberOfEvents,
+    AltRead(final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents, final boolean sufficientMapQuality,
             @Nullable final ReadContext readContext) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
-        this.quality = quality;
+        this.baseQuality = baseQuality;
         this.readContext = readContext;
         this.numberOfEvents = numberOfEvents;
+        this.sufficientMapQuality = sufficientMapQuality;
     }
 
     public boolean containsReadContext() {
@@ -60,7 +62,7 @@ class AltRead {
     }
 
     public void updateRefContext() {
-        refContext.altRead(ref, alt, quality, numberOfEvents, readContext);
+        refContext.altRead(ref, alt, baseQuality, sufficientMapQuality, numberOfEvents, readContext);
     }
 
 }
