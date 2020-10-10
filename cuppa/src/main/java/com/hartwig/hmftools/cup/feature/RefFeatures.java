@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup.feature;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.sigs.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
@@ -8,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
+import static com.hartwig.hmftools.cup.feature.FeatureType.VIRUS;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -68,6 +71,7 @@ public class RefFeatures
                 featureTypes.put(feature.Name, feature.Type);
 
                 double likelihoodTotal = sampleEntry.getValue().stream().filter(x -> x.Name.equals(feature.Name)).mapToDouble(x -> x.Likelihood).sum();
+                likelihoodTotal = min(likelihoodTotal, 1);
 
                 Map<String,Double> featureCounts = cancerFeatureCounts.get(cancerType);
                 if(featureCounts == null)
@@ -178,41 +182,4 @@ public class RefFeatures
             CUP_LOGGER.error("failed to write ref driver averages file: {}", e.toString());
         }
     }
-
-    private double[] createPercentileData(final List<Double> values)
-    {
-        // sort the data into an array
-        final List<Integer> sortedIndices = getSortedVectorIndices(convertList(values), true);
-        final double[] sortedValues = new double[values.size()];
-
-        for(int i = 0; i < values.size(); ++i)
-        {
-            sortedValues[i] = values.get(sortedIndices.get(i));
-        }
-
-        return buildPercentiles(sortedValues);
-    }
-
-    /*
-    private void assignSampleData(final SvData svData)
-    {
-        final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(svData.SampleId);
-        if(cancerType == null)
-        {
-            CUP_LOGGER.error("sample({}) missing cancer type", svData.SampleId);
-            return;
-        }
-
-        List<SvData> svDataList = mCancerSvData.get(cancerType);
-        if(svDataList == null)
-        {
-            mCancerSvData.put(cancerType, Lists.newArrayList(svData));
-        }
-        else
-        {
-            svDataList.add(svData);
-        }
-    }
-
-     */
 }
