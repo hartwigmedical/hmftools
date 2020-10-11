@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.form
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.writeExpectedRates;
 
 import static org.apache.logging.log4j.Level.DEBUG;
+import static org.apache.logging.log4j.Level.TRACE;
 import static org.apache.logging.log4j.Level.WARN;
 
 import java.io.BufferedWriter;
@@ -309,6 +310,7 @@ public class TranscriptExpression
         double[] categoryCounts = new double[mCurrentExpRatesData.Categories.size()];
 
         int skippedComboCounts = 0;
+        double totalCounts = geneSummaryData.TransCategoryCounts.stream().mapToDouble(x -> x.fragmentCount()).sum();
 
         for(CategoryCountsData tcData : geneSummaryData.TransCategoryCounts)
         {
@@ -322,7 +324,8 @@ public class TranscriptExpression
                 // for now if a category isn't found just log and then ignore the count in it
                 if(categoryId < 0)
                 {
-                    ISF_LOGGER.trace("category({}) {} fragCount({}) skipped",
+                    Level logLevel = fragmentCount/totalCounts > 0.20 && fragmentCount > 50 ? WARN : TRACE;
+                    ISF_LOGGER.log(logLevel,"category({}) {} fragCount({}) skipped",
                             categoryKey, tcData.impliedType(), String.format("%.2f", fragmentCount));
                     skippedComboCounts += fragmentCount;
                 }
@@ -335,7 +338,6 @@ public class TranscriptExpression
 
         if(skippedComboCounts > 0)
         {
-            double totalCounts = sumVector(categoryCounts) + skippedComboCounts;
             double skippedPerc = skippedComboCounts/totalCounts;
 
             Level logLevel = skippedPerc > 0.1 && skippedComboCounts > 100 ? WARN : DEBUG;

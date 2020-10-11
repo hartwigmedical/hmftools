@@ -735,9 +735,9 @@ public class ExpectedRatesGenerator
 
                 for(CategoryCountsData tcData : countsList)
                 {
-                    final int[] lengthCounts = tcData.fragmentCountsByLength();
+                    final double[] lengthCounts = tcData.fragmentCountsByLength();
 
-                    writer.write(String.format("%s,%s,%s,%d", collectionId, transId, tcData.combinedKey(), lengthCounts[0]));
+                    writer.write(String.format("%s,%s,%s,%.1f", collectionId, transId, tcData.combinedKey(), lengthCounts[0]));
 
                     for (int i = 1; i < lengthCounts.length; ++i)
                     {

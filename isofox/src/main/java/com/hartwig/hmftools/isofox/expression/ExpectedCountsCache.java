@@ -23,14 +23,12 @@ public class ExpectedCountsCache
 {
     private final IsofoxConfig mConfig;
     private final Map<String,Map<String,List<CategoryCountsData>>> mGeneSetCategoryDataMap;
-    private final Map<String,ExpectedRatesData> mGeneSetExpectedRatesDataMap;
     private boolean mValidData;
 
     public ExpectedCountsCache(final IsofoxConfig config)
     {
         mConfig = config;
         mGeneSetCategoryDataMap = Maps.newHashMap();
-        mGeneSetExpectedRatesDataMap = Maps.newHashMap();
         mValidData = true;
 
         if(config.ExpCountsFile != null && Files.exists(Paths.get(mConfig.ExpCountsFile)))

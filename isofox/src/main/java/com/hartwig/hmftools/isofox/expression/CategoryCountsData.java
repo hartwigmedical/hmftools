@@ -17,7 +17,7 @@ public class CategoryCountsData
     private double[] mFragmentCountsByGcRatio;
 
     // counts by length is only used for expected not actual counts, and is then adjusted by the observed fragment length distribution
-    private int[] mFragmentCountsByLength;
+    private double[] mFragmentCountsByLength;
 
     private final String mCombinedKey;
 
@@ -126,7 +126,7 @@ public class CategoryCountsData
         mTranscripts = Lists.newArrayList();
         mUnsplicedGenes = Lists.newArrayList();
         mFragmentCount = 0;
-        mFragmentCountsByLength = new int[fragLengths];
+        mFragmentCountsByLength = new double[fragLengths];
 
         parseCombinedKey();
     }
@@ -134,10 +134,10 @@ public class CategoryCountsData
     public void initialiseLengthCounts(int fragLengths)
     {
         if(fragLengths > 0)
-            mFragmentCountsByLength = new int[fragLengths];
+            mFragmentCountsByLength = new double[fragLengths];
     }
 
-    public final int[] fragmentCountsByLength() { return mFragmentCountsByLength; }
+    public final double[] fragmentCountsByLength() { return mFragmentCountsByLength; }
 
     public void addFragLengthCounts(int count, int lengthIndex)
     {
