@@ -381,7 +381,7 @@ public class ExpectedRatesGenerator
 
         FragmentMatchType matchType = SHORT;
 
-        int remainingReadBases = mReadLength;
+        int remainingReadBases = min(mReadLength, mCurrentFragSize);
         boolean overlappingReads = (mCurrentFragSize - 2 * mReadLength) < 1;
         int remainingInterimBases = !overlappingReads ? mCurrentFragSize - 2 * mReadLength + 1 : 0;
         int nextRegionStart = startPos;
@@ -422,7 +422,7 @@ public class ExpectedRatesGenerator
             }
 
             int regionEnd = min(nextRegionStart + remainingReadBases - 1, exon.ExonEnd);
-            int regionLength = (int)(regionEnd - nextRegionStart + 1);
+            int regionLength = regionEnd - nextRegionStart + 1;
             remainingReadBases -= regionLength;
             readRegions.add(new int[] {nextRegionStart, regionEnd});
             boolean spansExonEnd = remainingReadBases > 0;
@@ -527,6 +527,9 @@ public class ExpectedRatesGenerator
     public boolean readsSupportTranscript(
             final TranscriptData transData, List<int[]> readRegions, FragmentMatchType requiredMatchType, List<int[]> spliceJunctions)
     {
+        if(readRegions.isEmpty())
+            return false;
+
         int regionsStart = readRegions.get(0)[SE_START];
         int regionsEnd = readRegions.get(readRegions.size() - 1)[SE_END];
 
@@ -669,7 +672,7 @@ public class ExpectedRatesGenerator
     {
         mCurrentFragSize = length;
         mCurrentFragFrequency = frequency;
-        mReadLength = min(mConfig.ReadLength, mCurrentFragSize);
+        mReadLength = mConfig.ReadLength;
     }
 
     public static final String EXP_COUNT_LENGTH_HEADER = "Length_";

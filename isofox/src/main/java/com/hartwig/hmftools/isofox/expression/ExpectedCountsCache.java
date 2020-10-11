@@ -22,7 +22,10 @@ import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 public class ExpectedCountsCache
 {
     private final IsofoxConfig mConfig;
+
+    // map of chrGeneSetId to gene or transcript Id, then category counts data
     private final Map<String,Map<String,List<CategoryCountsData>>> mGeneSetCategoryDataMap;
+
     private boolean mValidData;
 
     public ExpectedCountsCache(final IsofoxConfig config)
@@ -36,6 +39,8 @@ public class ExpectedCountsCache
             mValidData = loadExpCountsFile();
         }
     }
+
+    public boolean isValid() { return mValidData; }
 
     public Map<String,List<CategoryCountsData>> getGeneExpectedRatesData(final String chrId, final List<String> geneIds)
     {
@@ -57,6 +62,7 @@ public class ExpectedCountsCache
 
     private final Map<String,List<CategoryCountsData>> findGeneSetCountsData(final List<String> geneIds)
     {
+        // manually find the gene set by looking for a match of all geneIds
         for(final Map<String,List<CategoryCountsData>> geneCounts : mGeneSetCategoryDataMap.values())
         {
             if(geneSetCountsDataMatches(geneIds, geneCounts.keySet()))

@@ -324,9 +324,11 @@ public class TranscriptExpression
                 // for now if a category isn't found just log and then ignore the count in it
                 if(categoryId < 0)
                 {
-                    Level logLevel = fragmentCount/totalCounts > 0.20 && fragmentCount > 50 ? WARN : TRACE;
-                    ISF_LOGGER.log(logLevel,"category({}) {} fragCount({}) skipped",
-                            categoryKey, tcData.impliedType(), String.format("%.2f", fragmentCount));
+                    if(fragmentCount/totalCounts > 0.20 && fragmentCount > 50)
+                    {
+                        ISF_LOGGER.debug("category({}) {} fragCount({}) skipped",
+                                categoryKey, tcData.impliedType(), String.format("%.2f", fragmentCount));
+                    }
                     skippedComboCounts += fragmentCount;
                 }
                 else

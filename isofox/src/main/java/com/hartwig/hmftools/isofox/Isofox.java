@@ -150,6 +150,12 @@ public class Isofox
     {
         ISF_LOGGER.info("sample({}) running RNA analysis", mConfig.SampleId);
 
+        if(mExpectedCountsCache != null && !mExpectedCountsCache.isValid())
+        {
+            ISF_LOGGER.warn("invalid expected counts cache");
+            return false;
+        }
+
         if(mConfig.requireFragmentLengthCalcs())
         {
             calcFragmentLengths(chrGeneMap);

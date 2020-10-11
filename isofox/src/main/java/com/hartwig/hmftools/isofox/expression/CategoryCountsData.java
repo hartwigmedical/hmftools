@@ -213,7 +213,7 @@ public class CategoryCountsData
 
     public String toString()
     {
-        return String.format("trans(%d) genes(%d)  key(%s) count(%.0f)",
+        return String.format("trans(%d) genes(%d)  key(%s) count(%.1f)",
                 mTranscripts.size(), mUnsplicedGenes.size(), mCombinedKey, mFragmentCount);
     }
 
