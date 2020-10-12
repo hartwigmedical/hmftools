@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.expression.CategoryCountsData.hasGeneIdentifier;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.formTranscriptDefinitions;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.writeExpectedRates;
 
@@ -24,6 +25,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -78,12 +80,9 @@ public class TranscriptExpression
         return mCurrentExpRatesData != null && mCurrentExpRatesData.validData();
     }
 
-    private void applyFragmentLengthDistributionToExpectedCounts(final Map<String,List<CategoryCountsData>> geneSetCountsData)
+    private void applyFragmentLengthDistributionToExpectedCounts(final List<CategoryCountsData> geneSetCountsData)
     {
-        for(List<CategoryCountsData> categoryCountsData : geneSetCountsData.values())
-        {
-            categoryCountsData.forEach(x -> x.applyFrequencies(mFragmentFrequencyRates));
-        }
+        geneSetCountsData.forEach(x -> x.applyFrequencies(mFragmentFrequencyRates));
     }
 
     public void runTranscriptEstimation(final GeneCollectionSummary geneSummaryData, final ExpectedRatesData expRatesData, boolean checkCached)
@@ -116,7 +115,7 @@ public class TranscriptExpression
         if(totalCounts == 0)
             return;
 
-        final List<String> transcriptNames = mCurrentExpRatesData.TranscriptIds;
+        final List<String> transcriptIds = mCurrentExpRatesData.TranscriptIds;
 
         final double[] fitAllocations = ExpectationMaxFit.performFit(transComboCounts, mCurrentExpRatesData.getTranscriptDefinitions());
         final double[] fittedCounts = calculateFittedCounts(mCurrentExpRatesData.getTranscriptDefinitions(), fitAllocations);
@@ -131,14 +130,29 @@ public class TranscriptExpression
 
         final Map<String,Double> transAllocations = geneSummaryData.getFitAllocations();
 
-        for(int transIndex = 0; transIndex < transcriptNames.size(); ++transIndex)
+        for(int transIndex = 0; transIndex < transcriptIds.size(); ++transIndex)
         {
             double transAllocation = fitAllocations[transIndex];
-            final String transName = transcriptNames.get(transIndex);
+            final String transGeneId = transcriptIds.get(transIndex);
+
+            String transName = "";
+            if(hasGeneIdentifier(transGeneId))
+            {
+                transName = transGeneId;
+            }
+            else
+            {
+                final int transId = Integer.parseInt(transGeneId);
+                final TranscriptResult transData = geneSummaryData.TranscriptResults.stream().filter(x -> x.Trans.TransId == transId).findFirst().orElse(null);
+                if(transData == null)
+                    continue;
+
+                transName = transData.Trans.TransName;
+            }
 
             if(transAllocation > 0)
             {
-                ISF_LOGGER.trace("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
+                ISF_LOGGER.debug("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
             }
 
             transAllocations.put(transName, transAllocation);
@@ -283,7 +297,7 @@ public class TranscriptExpression
     {
         mCurrentExpRatesData = null;
 
-        final Map<String,List<CategoryCountsData>> geneSetCountsData = mCache.getGeneExpectedRatesData(chrId, geneIds);
+        final List<CategoryCountsData> geneSetCountsData = mCache.getGeneExpectedRatesData(chrId, geneIds);
 
         if(geneSetCountsData == null)
         {

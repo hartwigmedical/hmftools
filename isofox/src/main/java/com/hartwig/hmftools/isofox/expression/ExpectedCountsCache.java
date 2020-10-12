@@ -16,6 +16,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 
@@ -23,8 +24,8 @@ public class ExpectedCountsCache
 {
     private final IsofoxConfig mConfig;
 
-    // map of chrGeneSetId to gene or transcript Id, then category counts data
-    private final Map<String,Map<String,List<CategoryCountsData>>> mGeneSetCategoryDataMap;
+    // map of chrGeneSetId to category counts data
+    private final Map<String,List<CategoryCountsData>> mGeneSetCategoryDataMap;
 
     private boolean mValidData;
 
@@ -42,11 +43,11 @@ public class ExpectedCountsCache
 
     public boolean isValid() { return mValidData; }
 
-    public Map<String,List<CategoryCountsData>> getGeneExpectedRatesData(final String chrId, final List<String> geneIds)
+    public List<CategoryCountsData> getGeneExpectedRatesData(final String chrId, final List<String> geneIds)
     {
-        Map<String,List<CategoryCountsData>> geneSetCountsData = mGeneSetCategoryDataMap.get(chrId);
+        List<CategoryCountsData> geneSetCountsData = mGeneSetCategoryDataMap.get(chrId);
 
-        if (geneSetCountsData == null || !geneSetCountsDataMatches(geneIds, geneSetCountsData.keySet()))
+        if (geneSetCountsData == null || !geneSetCountsDataMatches(geneIds, geneSetCountsData))
         {
             geneSetCountsData = findGeneSetCountsData(geneIds);
         }
@@ -54,18 +55,21 @@ public class ExpectedCountsCache
         return geneSetCountsData;
     }
 
-    private boolean geneSetCountsDataMatches(final List<String> geneIds, final Set<String> geneTransSet)
+    private boolean geneSetCountsDataMatches(final List<String> geneIds, final List<CategoryCountsData> geneSetCountsData)
     {
+        final Set<String> geneTransSet = Sets.newHashSet();
+        geneSetCountsData.forEach(x -> x.unsplicedGeneIds().forEach(y -> geneTransSet.add(y)));
+
         // confirm that the genes in the collection match
         return !geneIds.stream().anyMatch(x -> !geneTransSet.contains(x));
     }
 
-    private final Map<String,List<CategoryCountsData>> findGeneSetCountsData(final List<String> geneIds)
+    private final List<CategoryCountsData> findGeneSetCountsData(final List<String> geneIds)
     {
         // manually find the gene set by looking for a match of all geneIds
-        for(final Map<String,List<CategoryCountsData>> geneCounts : mGeneSetCategoryDataMap.values())
+        for(final List<CategoryCountsData> geneCounts : mGeneSetCategoryDataMap.values())
         {
-            if(geneSetCountsDataMatches(geneIds, geneCounts.keySet()))
+            if(geneSetCountsDataMatches(geneIds, geneCounts))
                 return geneCounts;
         }
 
@@ -97,7 +101,7 @@ public class ExpectedCountsCache
             String[] headerItems = line.split(DELIMITER, -1);
 
             // extract the fragment lengths from the header if not already populated (in which case they must match)
-            int fileFragmentLengthCount = headerItems.length - 3;
+            int fileFragmentLengthCount = headerItems.length - 2;
 
             if(mConfig.FragmentSizeData.size() == 0)
             {
@@ -118,12 +122,9 @@ public class ExpectedCountsCache
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
             int geneSetIdIndex = fieldsIndexMap.get("GeneSetId");
-            int transNameIndex = fieldsIndexMap.get("TransId");
             int categoryIndex = fieldsIndexMap.get("Category");
 
             String currentGeneSetId = "";
-            String currentTransGeneName = "";
-            Map<String, List<CategoryCountsData>> transGeneCategoryData = null;
             List<CategoryCountsData> categoryDataList = null;
 
             while ((line = fileReader.readLine()) != null)
@@ -131,22 +132,13 @@ public class ExpectedCountsCache
                 String[] items = line.split(DELIMITER, -1);
 
                 String geneSetId = items[geneSetIdIndex];
-                String transGeneName = items[transNameIndex];
                 String categoryStr = items[categoryIndex];
 
                 if(!geneSetId.equals(currentGeneSetId))
                 {
                     currentGeneSetId = geneSetId;
-                    transGeneCategoryData = Maps.newHashMap();
-                    mGeneSetCategoryDataMap.put(geneSetId, transGeneCategoryData);
-                    currentTransGeneName = "";
-                }
-
-                if(!transGeneName.equals(currentTransGeneName))
-                {
-                    currentTransGeneName = transGeneName;
                     categoryDataList = Lists.newArrayList();
-                    transGeneCategoryData.put(transGeneName, categoryDataList);
+                    mGeneSetCategoryDataMap.put(geneSetId, categoryDataList);
                 }
 
                 CategoryCountsData catCounts = new CategoryCountsData(categoryStr, fragLengths);

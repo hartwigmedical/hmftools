@@ -194,6 +194,8 @@ public class CategoryCountsData
 
     private static final String GENE_INDENTIFIER = "ENSG";
 
+    public static boolean hasGeneIdentifier(final String transName) { return transName.startsWith(GENE_INDENTIFIER); }
+
     private void parseCombinedKey()
     {
         String[] items = mCombinedKey.split(String.valueOf(DELIM));

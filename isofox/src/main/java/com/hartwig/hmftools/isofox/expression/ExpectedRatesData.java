@@ -12,7 +12,7 @@ public class ExpectedRatesData
     // equivalent of buckets - 0-N transcripts and the fragment type (eg SHORT, SPLICED etc)
     public final List<String> Categories;
 
-    // equivalent of signature names - all transcript names (ie StableId) and a GeneId for each gene's unspliced region
+    // akin to signature names - all transcriptIds and a GeneId for each gene's unspliced region
     public final List<String> TranscriptIds;
 
     private SigMatrix mTranscriptDefinitions;
@@ -76,5 +76,4 @@ public class ExpectedRatesData
         if(!Categories.contains(category))
             Categories.add(category);
     }
-
 }
