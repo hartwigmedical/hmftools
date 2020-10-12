@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.expression;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 
 import java.util.List;
@@ -119,7 +121,7 @@ public class CategoryCountsData
         }
     }
 
-    // methods for expected counts routine and fragment lenth distribution adjustments
+    // methods for expected counts routine and fragment length distribution adjustments
     public CategoryCountsData(final String categoryStr, int fragLengths)
     {
         mCombinedKey = categoryStr;
@@ -156,6 +158,19 @@ public class CategoryCountsData
         {
             mFragmentCountsByLength[i] *= lengthFrequencyRates.get(i);
             mFragmentCount += mFragmentCountsByLength[i];
+        }
+    }
+
+    public void mergeCounts(final CategoryCountsData other)
+    {
+        mFragmentCount = max(mFragmentCount, other.fragmentCount());
+
+        if(mFragmentCountsByLength != null && other.fragmentCountsByLength() != null)
+        {
+            for(int i = 0; i < mFragmentCountsByLength.length; ++i)
+            {
+                mFragmentCountsByLength[i] = max(mFragmentCountsByLength[i], other.fragmentCountsByLength()[i]);
+            }
         }
     }
 

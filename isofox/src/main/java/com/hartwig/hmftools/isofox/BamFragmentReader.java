@@ -415,7 +415,9 @@ public class BamFragmentReader implements Callable
                 expRatesData = mExpRatesGenerator.getExpectedRatesData();
             }
 
-            mExpTransRates.runTranscriptEstimation(geneCollectionSummary, expRatesData, false);
+            final Map<Integer,String> transIdMap = Maps.newHashMap();
+            geneCollection.getTranscripts().forEach(x -> transIdMap.put(x.TransId, x.TransName));
+            mExpTransRates.runTranscriptEstimation(transIdMap, geneCollectionSummary, expRatesData, false);
 
             mPerfCounters[PERF_FIT].stop();
         }
@@ -510,7 +512,9 @@ public class BamFragmentReader implements Callable
             final double[] gcAdjustments = mTranscriptGcRatios.getGcRatioAdjustments();
             geneSummaryData.applyGcAdjustments(gcAdjustments);
 
-            mExpTransRates.runTranscriptEstimation(geneSummaryData, null, true);
+            final Map<Integer,String> transIdMap = Maps.newHashMap();
+            geneSummaryData.TranscriptResults.forEach(x -> transIdMap.put(x.Trans.TransId, x.Trans.TransName));
+            mExpTransRates.runTranscriptEstimation(transIdMap, geneSummaryData, null, true);
 
             geneSummaryData.setFitAllocations();
             geneSummaryData.allocateResidualsToGenes();

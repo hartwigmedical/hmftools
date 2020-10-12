@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -40,7 +41,10 @@ public class ExpectedRatesGenerator
 {
     private final IsofoxConfig mConfig;
 
-    // map of transcript (or unspliced) to all expected category counts covering it (and others)
+    // map of transcript or unspliced gene to all expected category counts covering it (and others)
+    private final Map<String,List<CategoryCountsData>> mTransCategoryCountsMap;
+
+    // consolidated list of expected category counts
     private final List<CategoryCountsData> mTransCategoryCounts;
 
     private GeneCollection mGeneCollection;
@@ -64,6 +68,7 @@ public class ExpectedRatesGenerator
         mCurrentFragFrequency = 0;
         mReadLength = mConfig.ReadLength;
 
+        mTransCategoryCountsMap = Maps.newHashMap();
         mTransCategoryCounts = Lists.newArrayList();
         mCurrentExpRatesData = null;
         mGeneCollection = null;
@@ -82,6 +87,7 @@ public class ExpectedRatesGenerator
     public void generateExpectedRates(final GeneCollection geneCollection)
     {
         mGeneCollection = geneCollection;
+        mTransCategoryCountsMap.clear();
         mTransCategoryCounts.clear();
         mCurrentExpRatesData = new ExpectedRatesData(mGeneCollection.chrId());
 
@@ -176,15 +182,12 @@ public class ExpectedRatesGenerator
                 List<String> allGeneIds = mGeneCollection.genes().stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
                 CategoryCountsData genesWithoutCounts = new CategoryCountsData(emptyTrans, allGeneIds);
                 genesWithoutCounts.initialiseLengthCounts(mConfig.FragmentSizeData.size());
-                addCountsData(genesWithoutCounts);
 
-                /*
                 List<CategoryCountsData> emptyList = Lists.newArrayList(genesWithoutCounts);
                 for(GeneReadData gene : mGeneCollection.genes())
                 {
                     mTransCategoryCountsMap.put(gene.GeneData.GeneId, emptyList);
                 }
-                */
             }
         }
 
@@ -193,14 +196,17 @@ public class ExpectedRatesGenerator
         {
             final String geneId = gene.GeneData.GeneId;
 
-            if(mTransCategoryCounts.stream().anyMatch(x -> x.combinedKey().equals(geneId)))
+            if(mTransCategoryCountsMap.containsKey(geneId))
                 continue;
 
             CategoryCountsData genesWithoutCounts = new CategoryCountsData(Lists.newArrayList(), Lists.newArrayList(geneId));
             genesWithoutCounts.initialiseLengthCounts(mConfig.FragmentSizeData.size());
+            List<CategoryCountsData> emptyList = Lists.newArrayList(genesWithoutCounts);
 
-            addCountsData(genesWithoutCounts);
+            mTransCategoryCountsMap.put(geneId, emptyList);
         }
+
+        buildUniqueCategoryCounts();
 
         if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
         {
@@ -216,6 +222,30 @@ public class ExpectedRatesGenerator
             if(mConfig.WriteExpectedRates)
             {
                 writeExpectedRates(mExpRateWriter, mCurrentExpRatesData);
+            }
+        }
+    }
+
+    private void buildUniqueCategoryCounts()
+    {
+        // take the category data across all transcripts and genes and convert it into a unique list
+        for(List<CategoryCountsData> categoryCounts : mTransCategoryCountsMap.values())
+        {
+            for(CategoryCountsData catCountsData : categoryCounts)
+            {
+                CategoryCountsData matchedData = mTransCategoryCounts.stream()
+                        .filter(x -> x.combinedKey().equals(catCountsData.combinedKey())
+                                || x.matches(catCountsData.transcriptIds(), catCountsData.unsplicedGeneIds()))
+                        .findFirst().orElse(null);
+
+                if(matchedData == null)
+                {
+                    mTransCategoryCounts.add(catCountsData);
+                }
+                else
+                {
+                    matchedData.mergeCounts(catCountsData);
+                }
             }
         }
     }
@@ -285,14 +315,12 @@ public class ExpectedRatesGenerator
 
         if(!longAndSplicedTrans.isEmpty())
         {
-            addCountsData(longAndSplicedTrans, Lists.newArrayList());
-            // addCountsData(transData.TransName, longAndSplicedTrans, Lists.newArrayList());
+            addCountsData(transData.TransName, longAndSplicedTrans, Lists.newArrayList());
         }
         else
         {
             List<String> unsplicedGenes = findUnsplicedGenes(startPos);
-            addCountsData(shortTrans, unsplicedGenes);
-            // addCountsData(transData.TransName, shortTrans, unsplicedGenes);
+            addCountsData(transData.TransName, shortTrans, unsplicedGenes);
         }
 
         return true;
@@ -335,23 +363,20 @@ public class ExpectedRatesGenerator
 
     private void addUnsplicedCountsData(final List<Integer> transcripts, final List<String> unsplicedGenes)
     {
-        addCountsData(transcripts, unsplicedGenes);
+        unsplicedGenes.forEach(x -> addCountsData(x, transcripts, unsplicedGenes));
     }
 
-    private void addCountsData(final CategoryCountsData countsData)
+    private void addCountsData(final String transName, final List<Integer> transcripts, final List<String> unsplicedGenes)
     {
-        if(mTransCategoryCounts.stream().anyMatch(x -> x.combinedKey().equals(countsData.combinedKey())
-                || x.matches(countsData.transcriptIds(), countsData.unsplicedGeneIds())))
+        List<CategoryCountsData> transComboDataList = mTransCategoryCountsMap.get(transName);
+
+        if(transComboDataList == null)
         {
-            return;
+            transComboDataList = Lists.newArrayList();
+            mTransCategoryCountsMap.put(transName, transComboDataList);
         }
 
-        mTransCategoryCounts.add(countsData);
-    }
-
-    private void addCountsData(final List<Integer> transcripts, final List<String> unsplicedGenes)
-    {
-        CategoryCountsData matchingCounts = mTransCategoryCounts.stream()
+        CategoryCountsData matchingCounts = transComboDataList.stream()
                 .filter(x -> x.matches(transcripts, unsplicedGenes)).findFirst().orElse(null);
 
         if(matchingCounts == null)
@@ -361,7 +386,7 @@ public class ExpectedRatesGenerator
             if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
                 matchingCounts.initialiseLengthCounts(mConfig.FragmentSizeData.size());
 
-            mTransCategoryCounts.add(matchingCounts);
+            transComboDataList.add(matchingCounts);
         }
 
         if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
@@ -818,5 +843,7 @@ public class ExpectedRatesGenerator
         }
     }
 
+    @VisibleForTesting
+    public Map<String,List<CategoryCountsData>> getTransComboDataMap() { return mTransCategoryCountsMap; }
 
 }

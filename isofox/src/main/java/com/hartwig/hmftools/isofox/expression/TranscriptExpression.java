@@ -85,7 +85,9 @@ public class TranscriptExpression
         geneSetCountsData.forEach(x -> x.applyFrequencies(mFragmentFrequencyRates));
     }
 
-    public void runTranscriptEstimation(final GeneCollectionSummary geneSummaryData, final ExpectedRatesData expRatesData, boolean checkCached)
+    public void runTranscriptEstimation(
+            final Map<Integer,String> transIdMap, final GeneCollectionSummary geneSummaryData,
+            final ExpectedRatesData expRatesData, boolean checkCached)
     {
         if(expRatesData == null)
         {
@@ -132,27 +134,14 @@ public class TranscriptExpression
 
         for(int transIndex = 0; transIndex < transcriptIds.size(); ++transIndex)
         {
-            double transAllocation = fitAllocations[transIndex];
             final String transGeneId = transcriptIds.get(transIndex);
+            final String transName = hasGeneIdentifier(transGeneId) ? transGeneId : transIdMap.get(Integer.parseInt(transGeneId));
 
-            String transName = "";
-            if(hasGeneIdentifier(transGeneId))
-            {
-                transName = transGeneId;
-            }
-            else
-            {
-                final int transId = Integer.parseInt(transGeneId);
-                final TranscriptResult transData = geneSummaryData.TranscriptResults.stream().filter(x -> x.Trans.TransId == transId).findFirst().orElse(null);
-                if(transData == null)
-                    continue;
-
-                transName = transData.Trans.TransName;
-            }
+            double transAllocation = fitAllocations[transIndex];
 
             if(transAllocation > 0)
             {
-                ISF_LOGGER.debug("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
+                ISF_LOGGER.trace("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
             }
 
             transAllocations.put(transName, transAllocation);
