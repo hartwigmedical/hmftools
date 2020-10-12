@@ -13,14 +13,6 @@ final class HealthCheckEvaluation {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthCheckEvaluation.class);
 
-    // Complete sample swap  =>  <0.4
-    // 10%+ contamination in tumor =>  < 0.486
-    // Potential Tumor contamination in Ref  => >0.5
-    private static final double MIN_AMBER_MEAN_BAF = 0.48;
-    private static final double MAX_AMBER_MEAN_BAF = 0.6;
-
-    private static final double MAX_AMBER_CONTAMINATION = 0.1;
-
     private static final String PURPLE_QC_PASS = "PASS";
     private static final String PURPLE_QC_FAIL = "FAIL";
     private static final double MAX_PURPLE_CONTAMINATION = 0.1;
@@ -48,10 +40,6 @@ final class HealthCheckEvaluation {
                 return checkCoverage(qcValue.value(), "Tumor 30x", WGSMetricQC.MIN_TUMOR_30X_COVERAGE);
             case TUMOR_COVERAGE_60X:
                 return checkCoverage(qcValue.value(), "Tumor 60x", WGSMetricQC.MIN_TUMOR_60X_COVERAGE);
-            case AMBER_MEAN_BAF:
-                return checkAmberMeanBAF(qcValue.value());
-            case AMBER_CONTAMINATION:
-                return checkAmberContamination(qcValue.value());
             case PURPLE_QC_STATUS:
                 return checkPurpleQCStatus(qcValue.value());
             case PURPLE_CONTAMINATION:
@@ -70,36 +58,6 @@ final class HealthCheckEvaluation {
             return true;
         } else {
             LOGGER.info("FAIL - {} coverage percentage of {} is lower than min value {}", name, value, minPercentage);
-            return false;
-        }
-    }
-
-    private static boolean checkAmberMeanBAF(@NotNull String value) {
-        double meanBaf = Double.parseDouble(value);
-
-        if (meanBaf >= MIN_AMBER_MEAN_BAF && meanBaf <= MAX_AMBER_MEAN_BAF) {
-            LOGGER.info("PASS - Mean BAF of {} is between {} and {}", value, MIN_AMBER_MEAN_BAF, MAX_AMBER_MEAN_BAF);
-            return true;
-        } else if (meanBaf < MIN_AMBER_MEAN_BAF) {
-            LOGGER.info("FAIL - Mean BAF of {} is below {}", value, MIN_AMBER_MEAN_BAF);
-            return false;
-        } else {
-            LOGGER.info("FAIL - Mean BAF of {} is above {}", value, MAX_AMBER_MEAN_BAF);
-            return false;
-        }
-    }
-
-    private static boolean checkAmberContamination(@NotNull String value) {
-        double contamination = Double.parseDouble(value);
-
-        if (contamination <= MAX_AMBER_CONTAMINATION) {
-            LOGGER.info("PASS - Contamination of {} is below {}", value, MAX_AMBER_CONTAMINATION);
-            if (contamination > 0) {
-                LOGGER.warn("  Contamination found in sample!");
-            }
-            return true;
-        } else {
-            LOGGER.info("FAIL - Contamination of {} is above {}", value, MAX_AMBER_CONTAMINATION);
             return false;
         }
     }

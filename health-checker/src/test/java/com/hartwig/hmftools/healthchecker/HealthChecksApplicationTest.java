@@ -19,7 +19,6 @@ public class HealthChecksApplicationTest {
         HealthChecksApplication app = new HealthChecksApplication("reference",
                 "tumor",
                 BASE_DIR + "metrics",
-                BASE_DIR + "amber",
                 BASE_DIR + "purple",
                 OUTPUT_DIR);
 
@@ -28,7 +27,7 @@ public class HealthChecksApplicationTest {
 
     @Test
     public void runHealthCheckerInSingleSampleMode() throws IOException {
-        HealthChecksApplication app = new HealthChecksApplication("reference", null, BASE_DIR + "metrics", null, null, OUTPUT_DIR);
+        HealthChecksApplication app = new HealthChecksApplication("reference", null, BASE_DIR + "metrics", null, OUTPUT_DIR);
 
         app.run(WRITE_OUTPUT);
     }

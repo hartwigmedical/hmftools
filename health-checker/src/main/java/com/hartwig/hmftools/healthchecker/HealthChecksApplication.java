@@ -8,7 +8,6 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
-import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
 import com.hartwig.hmftools.healthchecker.runners.MetricsChecker;
 import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
@@ -31,7 +30,6 @@ public final class HealthChecksApplication {
     private static final String REF_SAMPLE = "reference";
     private static final String TUMOR_SAMPLE = "tumor";
     private static final String METRICS_DIR = "metrics_dir";
-    private static final String AMBER_DIR = "amber_dir";
     private static final String PURPLE_DIR = "purple_dir";
     private static final String OUTPUT_DIR = "output_dir";
 
@@ -42,19 +40,16 @@ public final class HealthChecksApplication {
     @NotNull
     private final String metricsDirectory;
     @Nullable
-    private final String amberDirectory;
-    @Nullable
     private final String purpleDirectory;
     @NotNull
     private final String outputDir;
 
     @VisibleForTesting
     HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample, @NotNull String metricsDirectory,
-            @Nullable String amberDirectory, @Nullable String purpleDirectory, @NotNull String outputDir) {
+            @Nullable String purpleDirectory, @NotNull String outputDir) {
         this.refSample = refSample;
         this.tumorSample = tumorSample;
         this.metricsDirectory = metricsDirectory;
-        this.amberDirectory = amberDirectory;
         this.purpleDirectory = purpleDirectory;
         this.outputDir = outputDir;
     }
@@ -74,10 +69,9 @@ public final class HealthChecksApplication {
         }
 
         String tumorSample = cmd.hasOption(TUMOR_SAMPLE) ? cmd.getOptionValue(TUMOR_SAMPLE) : null;
-        String amberDir = cmd.hasOption(AMBER_DIR) ? cmd.getOptionValue(AMBER_DIR) : null;
         String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
 
-        new HealthChecksApplication(refSample, tumorSample, metricsDir, amberDir, purpleDir, outputDir).run(true);
+        new HealthChecksApplication(refSample, tumorSample, metricsDir, purpleDir, outputDir).run(true);
     }
 
     @NotNull
@@ -86,7 +80,6 @@ public final class HealthChecksApplication {
         options.addOption(REF_SAMPLE, true, "The name of the reference sample");
         options.addOption(TUMOR_SAMPLE, true, "The name of the tumor sample");
         options.addOption(PURPLE_DIR, true, "The directory holding the purple output");
-        options.addOption(AMBER_DIR, true, "The directory holding the amber output");
         options.addOption(METRICS_DIR, true, "The directory holding the metrics output");
 
         options.addOption(OUTPUT_DIR, true, "The directory where health checker will write output to");
@@ -102,15 +95,13 @@ public final class HealthChecksApplication {
     @VisibleForTesting
     void run(boolean writeOutput) throws IOException {
         List<HealthChecker> checkers;
-        if (tumorSample == null || amberDirectory == null || purpleDirectory == null) {
+        if (tumorSample == null || purpleDirectory == null) {
             LOGGER.info("Running in SingleSample mode");
             checkers = Lists.newArrayList(new MetricsChecker(refSample, null, metricsDirectory));
         } else {
             LOGGER.info("Running in Somatic mode");
             checkers = Lists.newArrayList(
                     new MetricsChecker(refSample, tumorSample, metricsDirectory),
-                    // TODO remove once all amber related code is gone
-                    // new AmberChecker(tumorSample, amberDirectory),
                     new PurpleChecker(tumorSample, purpleDirectory)
             );
         }

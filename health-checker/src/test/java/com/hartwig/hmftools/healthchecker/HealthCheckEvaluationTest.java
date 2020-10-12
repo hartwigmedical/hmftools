@@ -41,28 +41,6 @@ public class HealthCheckEvaluationTest {
     }
 
     @Test
-    public void amberMeanBafChecksWork() {
-        QCValue amberMeanBafCorrect = ImmutableQCValue.of(QCValueType.AMBER_MEAN_BAF, "0.498");
-        QCValue amberMeanBafTooLow = ImmutableQCValue.of(QCValueType.AMBER_MEAN_BAF, "0.4");
-        QCValue amberMeanBafTooHigh = ImmutableQCValue.of(QCValueType.AMBER_MEAN_BAF, "0.7");
-
-        assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(amberMeanBafCorrect)));
-        assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(amberMeanBafTooLow)));
-        assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(amberMeanBafTooHigh)));
-    }
-
-    @Test
-    public void amberContaminationCheckWorks() {
-        QCValue amberContaminationCorrect = ImmutableQCValue.of(QCValueType.AMBER_CONTAMINATION, "0");
-        QCValue amberContaminationCorrectButNonZero = ImmutableQCValue.of(QCValueType.AMBER_CONTAMINATION, "0.01");
-        QCValue amberContaminationTooHigh = ImmutableQCValue.of(QCValueType.AMBER_CONTAMINATION, "0.2");
-
-        assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(amberContaminationCorrect)));
-        assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(amberContaminationCorrectButNonZero)));
-        assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(amberContaminationTooHigh)));
-    }
-
-    @Test
     public void purpleQCCheckWorks() {
         QCValue purpleQCCheckCorrect = ImmutableQCValue.of(QCValueType.PURPLE_QC_STATUS, "PASS");
         QCValue purpleQCCheckFail = ImmutableQCValue.of(QCValueType.PURPLE_QC_STATUS, "FAIL");
