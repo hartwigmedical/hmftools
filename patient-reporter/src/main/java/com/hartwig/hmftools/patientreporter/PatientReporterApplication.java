@@ -34,7 +34,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //                public static final String VERSION = "7.15";
+    //                public static final String VERSION = "7.16";
 
     public static void main(@NotNull String[] args) throws IOException {
         Options options = PatientReporterConfig.createOptions();
@@ -84,7 +84,7 @@ public class PatientReporterApplication {
                     config.purpleQcFile(),
                     config.purpleGeneCnvTsv(),
                     config.purpleDriverCatalogTsv(),
-                    config.somaticVariantVcf(),
+                    config.purpleSomaticVariantVcf(),
                     config.bachelorTsv(),
                     config.linxFusionTsv(),
                     config.linxDisruptionTsv(),
