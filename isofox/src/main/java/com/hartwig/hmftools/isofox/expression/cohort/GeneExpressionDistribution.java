@@ -71,7 +71,10 @@ public class GeneExpressionDistribution
 
         ISF_LOGGER.info("loaded {} samples gene files", mConfig.SampleData.SampleIds.size());
 
-        writeGeneRatePercentiles();
+        if(mConfig.Expression.DistributionByCancerType)
+            writeCancerGeneRatePercentiles();
+        else
+            writeGeneRatePercentiles();
 
         closeBufferedWriter(mWriter);
     }
@@ -83,7 +86,10 @@ public class GeneExpressionDistribution
             final String outputFileName = mConfig.formCohortFilename("gene_distribution.csv");
             mWriter = createBufferedWriter(outputFileName, false);
 
-            mWriter.write("GeneId,GeneName");
+            if(mConfig.Expression.DistributionByCancerType)
+                mWriter.write("CancerType,GeneId,GeneName");
+            else
+                mWriter.write("GeneId,GeneName");
 
             for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
             {
@@ -121,6 +127,58 @@ public class GeneExpressionDistribution
                 }
 
                 mWriter.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write gene data file: {}", e.toString());
+        }
+    }
+
+    private void writeCancerGeneRatePercentiles()
+    {
+        try
+        {
+            for(Map.Entry<String,List<String>> entry : mConfig.SampleData.CancerTypeSamples.entrySet())
+            {
+                final String cancerType = entry.getKey();
+                final List<String> sampleIds = entry.getValue();
+                int sampleCount = sampleIds.size();
+
+                ISF_LOGGER.info("cancer({}) samples({}) writing gene distribution", cancerType, sampleCount);
+
+                final double[] geneTpmValues = new double[sampleCount];
+
+                for(final GeneCohortData geneData : mGeneCohortDataMap.values())
+                {
+                    int cancerSampleIndex = 0;
+
+                    for(int i = 0; i < geneData.SampleIds.size(); ++i)
+                    {
+                        if(!sampleIds.contains(geneData.SampleIds.get(i)))
+                            continue;
+
+                        if(cancerSampleIndex >= geneTpmValues.length)
+                        {
+                            ISF_LOGGER.error("inconsistent sample cancer count({}) and gene data", sampleCount);
+                            return;
+                        }
+
+                        geneTpmValues[cancerSampleIndex++] = geneData.GeneTPMs.get(i);
+                    }
+
+                    final double[] percentileValues = new double[DISTRIBUTION_SIZE];
+                    calcPercentileValues(geneTpmValues, percentileValues);
+
+                    mWriter.write(String.format("%s,%s,%s", cancerType, geneData.GeneId, geneData.GeneName));
+
+                    for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
+                    {
+                        mWriter.write(String.format(",%6.3e", percentileValues[i]));
+                    }
+
+                    mWriter.newLine();
+                }
             }
         }
         catch(IOException e)
@@ -179,7 +237,14 @@ public class GeneExpressionDistribution
                 else if (geneData != null)
                 {
                     double tpm = Double.parseDouble(items[tpmIndex]);
-                    geneData.addSampleData(sampleId, roundValues ? roundTPM(tpm, mConfig.Expression.TpmRounding) : tpm);
+
+                    if(roundValues)
+                        tpm = roundTPM(tpm, mConfig.Expression.TpmRounding);
+
+                    if(mConfig.Expression.DistributionByCancerType)
+                        geneData.addSampleTpmData(sampleId, tpm);
+                    else
+                        geneData.addSampleData(sampleId, tpm);
                 }
             }
 

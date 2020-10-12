@@ -20,6 +20,7 @@ public class GeneCohortData
 
     public final List<String> SampleIds;
     public final List<double[]> GeneRates;
+    public final List<Double> GeneTPMs;
 
     public GeneCohortData(final String geneId, final String geneName, final String chromosome)
     {
@@ -29,6 +30,7 @@ public class GeneCohortData
 
         SampleIds = Lists.newArrayList();
         GeneRates = Lists.newArrayList();
+        GeneTPMs = Lists.newArrayList();
     }
 
     public void addSampleData(final String sampleId, double geneRate)
@@ -52,6 +54,21 @@ public class GeneCohortData
 
         SampleIds.add(index, sampleId);
         GeneRates.add(index, new double[] {geneRate, 1});
+    }
+
+    public void addSampleTpmData(final String sampleId, double tpm)
+    {
+        int index = 0;
+        while(index < GeneTPMs.size())
+        {
+            if(tpm < GeneTPMs.get(index))
+                break;
+
+            ++index;
+        }
+
+        SampleIds.add(index, sampleId);
+        GeneTPMs.add(index, tpm);
     }
 
     public static GeneCohortData fromCsv(final String[] items, final Map<String,Integer> fieldIndexMap)
