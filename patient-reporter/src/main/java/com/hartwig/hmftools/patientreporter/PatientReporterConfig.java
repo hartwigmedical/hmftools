@@ -50,7 +50,7 @@ public interface PatientReporterConfig {
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String BACHELOR_TSV = "bachelor_tsv";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
-    String LINX_DISRUPTION_TSV = "linx_disruption_tsv";
+    String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_VIRAL_INSERTION_TSV = "linx_viral_insertion_tsv";
     String LINX_DRIVERS_TSV = "linx_drivers_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
@@ -98,7 +98,7 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
-        options.addOption(LINX_DISRUPTION_TSV, true, "Path towards the linx disruption TSV.");
+        options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
         options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
         options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
@@ -179,7 +179,7 @@ public interface PatientReporterConfig {
     String linxFusionTsv();
 
     @NotNull
-    String linxDisruptionTsv();
+    String linxBreakendTsv();
 
     @NotNull
     String linxViralInsertionTsv();
@@ -232,7 +232,7 @@ public interface PatientReporterConfig {
         String purpleSomaticVariantVcf = Strings.EMPTY;
         String bachelorTsv = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
-        String linxDisruptionTsv = Strings.EMPTY;
+        String linxBreakendTsv = Strings.EMPTY;
         String linxViralInsertionTsv = Strings.EMPTY;
         String linxDriversTsv = Strings.EMPTY;
         String chordPredictionTxt = Strings.EMPTY;
@@ -251,7 +251,7 @@ public interface PatientReporterConfig {
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             bachelorTsv = nonOptionalFile(cmd, BACHELOR_TSV);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
-            linxDisruptionTsv = nonOptionalFile(cmd, LINX_DISRUPTION_TSV);
+            linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
             linxViralInsertionTsv = nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV);
             linxDriversTsv = nonOptionalFile(cmd, LINX_DRIVERS_TSV);
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
@@ -283,7 +283,7 @@ public interface PatientReporterConfig {
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .bachelorTsv(bachelorTsv)
                 .linxFusionTsv(linxFusionTsv)
-                .linxDisruptionTsv(linxDisruptionTsv)
+                .linxBreakendTsv(linxBreakendTsv)
                 .linxViralInsertionTsv(linxViralInsertionTsv)
                 .linxDriversTsv(linxDriversTsv)
                 .chordPredictionTxt(chordPredictionTxt)
