@@ -243,9 +243,10 @@ public interface PatientReporterConfig {
 
         if (qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
-        } else if (!isQCFail) {
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
+        } else if (!isQCFail) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
+            purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             purpleGeneCnvTsv = nonOptionalFile(cmd, PURPLE_GENE_CNV_TSV);
             purpleDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_TSV);
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
