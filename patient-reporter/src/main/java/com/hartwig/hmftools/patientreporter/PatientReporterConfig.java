@@ -47,10 +47,10 @@ public interface PatientReporterConfig {
     String PURPLE_QC_FILE = "purple_qc_file";
     String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
-    String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
+    String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String BACHELOR_TSV = "bachelor_tsv";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
-    String LINX_DISRUPTION_TSV = "linx_disruption_tsv";
+    String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_VIRAL_INSERTION_TSV = "linx_viral_insertion_tsv";
     String LINX_DRIVERS_TSV = "linx_drivers_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
@@ -95,10 +95,10 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");
-        options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
+        options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
-        options.addOption(LINX_DISRUPTION_TSV, true, "Path towards the linx disruption TSV.");
+        options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
         options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
         options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
@@ -170,7 +170,7 @@ public interface PatientReporterConfig {
     String purpleDriverCatalogTsv();
 
     @NotNull
-    String somaticVariantVcf();
+    String purpleSomaticVariantVcf();
 
     @NotNull
     String bachelorTsv();
@@ -179,7 +179,7 @@ public interface PatientReporterConfig {
     String linxFusionTsv();
 
     @NotNull
-    String linxDisruptionTsv();
+    String linxBreakendTsv();
 
     @NotNull
     String linxViralInsertionTsv();
@@ -229,10 +229,10 @@ public interface PatientReporterConfig {
         String purpleQCFile = Strings.EMPTY;
         String purpleGeneCnvTsv = Strings.EMPTY;
         String purpleDriverCatalogTsv = Strings.EMPTY;
-        String somaticVariantVcf = Strings.EMPTY;
+        String purpleSomaticVariantVcf = Strings.EMPTY;
         String bachelorTsv = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
-        String linxDisruptionTsv = Strings.EMPTY;
+        String linxBreakendTsv = Strings.EMPTY;
         String linxViralInsertionTsv = Strings.EMPTY;
         String linxDriversTsv = Strings.EMPTY;
         String chordPredictionTxt = Strings.EMPTY;
@@ -243,15 +243,16 @@ public interface PatientReporterConfig {
 
         if (qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
-        } else if (!isQCFail) {
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
+        } else if (!isQCFail) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
+            purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             purpleGeneCnvTsv = nonOptionalFile(cmd, PURPLE_GENE_CNV_TSV);
             purpleDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_TSV);
-            somaticVariantVcf = nonOptionalFile(cmd, SOMATIC_VARIANT_VCF);
+            purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             bachelorTsv = nonOptionalFile(cmd, BACHELOR_TSV);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
-            linxDisruptionTsv = nonOptionalFile(cmd, LINX_DISRUPTION_TSV);
+            linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
             linxViralInsertionTsv = nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV);
             linxDriversTsv = nonOptionalFile(cmd, LINX_DRIVERS_TSV);
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
@@ -280,10 +281,10 @@ public interface PatientReporterConfig {
                 .purpleQcFile(purpleQCFile)
                 .purpleGeneCnvTsv(purpleGeneCnvTsv)
                 .purpleDriverCatalogTsv(purpleDriverCatalogTsv)
-                .somaticVariantVcf(somaticVariantVcf)
+                .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .bachelorTsv(bachelorTsv)
                 .linxFusionTsv(linxFusionTsv)
-                .linxDisruptionTsv(linxDisruptionTsv)
+                .linxBreakendTsv(linxBreakendTsv)
                 .linxViralInsertionTsv(linxViralInsertionTsv)
                 .linxDriversTsv(linxDriversTsv)
                 .chordPredictionTxt(chordPredictionTxt)

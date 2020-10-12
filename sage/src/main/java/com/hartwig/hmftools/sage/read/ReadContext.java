@@ -35,6 +35,21 @@ public class ReadContext {
         this.refBases = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases);
     }
 
+    public ReadContext(final IndexedBases refBases, final IndexedBases readBases, final int repeatCount, final String repeat,
+            final String microhomology) {
+        if (refBases.bases().length < readBases.bases().length) {
+            throw new IllegalArgumentException();
+        }
+
+        this.readBases = readBases;
+        this.refBases = refBases;
+        this.position = refBases.position();
+        this.incompleteCore = false;
+        this.repeatCount = repeatCount;
+        this.repeat = repeat;
+        this.microhomology = microhomology;
+    }
+
     ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
             final int leftCentreIndex, final int rightCentreIndex, final int flankSize, @NotNull final IndexedBases refSequence,
             @NotNull final SAMRecord record) {
@@ -119,10 +134,6 @@ public class ReadContext {
         return new ReadContext(this);
     }
 
-    public int position() {
-        return position;
-    }
-
     public boolean incompleteFlanks() {
         return !readBases.flanksComplete();
     }
@@ -204,7 +215,7 @@ public class ReadContext {
 
     @VisibleForTesting
     @NotNull
-    String centerBases() {
+    public String centerBases() {
         return readBases.centerString();
     }
 
@@ -249,4 +260,15 @@ public class ReadContext {
     public int coreLength() {
         return readBasesRightCentreIndex() - readBasesLeftCentreIndex() + 1;
     }
+
+    @NotNull
+    public String leftFlankString() {
+        return readBases.leftFlankString();
+    }
+
+    @NotNull
+    public String rightFlankString() {
+        return readBases.rightFlankString();
+    }
+
 }

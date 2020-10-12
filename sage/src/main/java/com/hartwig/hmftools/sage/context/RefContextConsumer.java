@@ -117,6 +117,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private AltRead processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases, int numberOfEvents) {
         int refIndex = refBases.index(refPosition);
+        boolean sufficientMapQuality = record.getMappingQuality() >= config.minMapQuality();
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
             final String ref = new String(refBases.bases(), refIndex, 1);
@@ -128,7 +129,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 final int baseQuality = baseQuality(readIndex, record, alt.length());
                 final ReadContext readContext =
                         findReadContext ? readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases) : null;
-                return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, readContext);
+                return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
             }
         }
 
@@ -139,6 +140,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private AltRead processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases, int numberOfEvents) {
         int refIndex = refBases.index(refPosition);
+        boolean sufficientMapQuality = record.getMappingQuality() >= config.minMapQuality();
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
             final String ref = new String(refBases.bases(), refIndex, e.getLength() + 1);
@@ -150,7 +152,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 final int baseQuality = baseQuality(readIndex, record, 2);
                 final ReadContext readContext =
                         findReadContext ? readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases) : null;
-                return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, readContext);
+                return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
             }
         }
 
@@ -161,6 +163,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private List<AltRead> processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart,
             int alignmentLength, final IndexedBases refBases, int numberOfEvents) {
         final List<AltRead> result = Lists.newArrayList();
+        boolean sufficientMapQuality = record.getMappingQuality() >= config.minMapQuality();
 
         int refIndex = refBases.index(refPositionStart);
 
@@ -186,7 +189,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     final ReadContext readContext =
                             findReadContext ? readContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
 
-                    result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, readContext));
+                    result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
 
                     if (config.mnvEnabled()) {
                         int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.bases());
@@ -209,12 +212,13 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                                         mnvAlt,
                                         baseQuality,
                                         NumberEvents.numberOfEventsWithMNV(numberOfEvents, mnvRef, mnvAlt),
+                                        sufficientMapQuality,
                                         mnvReadContext));
                             }
                         }
                     }
                 } else {
-                    refContext.refRead();
+                    refContext.refRead(sufficientMapQuality);
                 }
             }
         }

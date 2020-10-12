@@ -35,8 +35,8 @@ class AnalysedPatientReporter {
 
     @NotNull
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @NotNull String purpleGeneCnvTsv, @NotNull String purpleDriverCatalogTsv, @NotNull String somaticVariantVcf,
-            @NotNull String bachelorTsv, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
+            @NotNull String purpleGeneCnvTsv, @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf,
+            @NotNull String bachelorTsv, @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
             @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt,
             @NotNull String circosFile, @Nullable String comments, boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
@@ -56,10 +56,10 @@ class AnalysedPatientReporter {
                 purpleQCFile,
                 purpleGeneCnvTsv,
                 purpleDriverCatalogTsv,
-                somaticVariantVcf,
+                purpleSomaticVariantVcf,
                 bachelorTsv,
                 linxFusionTsv,
-                linxDisruptionTsv,
+                linxBreakendTsv,
                 linxViralInsertionTsv,
                 linxDriversTsv,
                 chordPredictionTxt);

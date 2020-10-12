@@ -36,7 +36,7 @@ public class RawContext {
     }
 
     @NotNull
-    static RawContext snv(final int readIndex, final boolean altSupport, final boolean refSupport, final int quality) {
+    static RawContext alignment(final int readIndex, final boolean altSupport, final boolean refSupport, final int quality) {
         return new RawContext(readIndex,
                 false,
                 false,

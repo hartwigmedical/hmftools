@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfigTest;
 import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
@@ -96,7 +97,8 @@ public class MixedGermlineTest {
     private static SageVariant create(String chromosome, long position, @NotNull String ref, @NotNull String alt) {
         VariantHotspot variant = ImmutableVariantHotspotImpl.builder().chromosome(chromosome).ref(ref).alt(alt).position(position).build();
         ReadContextCounter counter = dummyCounter(variant, Strings.EMPTY);
-        return new SageVariant(SageVariantTier.PANEL, variant, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
+        final Candidate candidate = new Candidate(SageVariantTier.PANEL, variant, counter.readContext(), 0, 0);
+        return new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
     }
 
     @NotNull

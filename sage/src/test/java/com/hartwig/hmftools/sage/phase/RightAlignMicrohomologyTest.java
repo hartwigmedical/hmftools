@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
@@ -47,8 +48,10 @@ public class RightAlignMicrohomologyTest {
                 .build();
 
         ReadContextCounter counter = MixedGermlineTest.dummyCounter(leftAligned, "AG");
+        Candidate candidate = new Candidate(SageVariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
+
         SageVariant variant =
-                new SageVariant(SageVariantTier.PANEL, leftAligned, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
+                new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
 
         assertTrue(victim.realign(variant));
     }

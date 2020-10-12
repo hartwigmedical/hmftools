@@ -919,7 +919,7 @@ Shown below is an example of a SS18-SSX1 fusion:
     - mark some 3’ promiscuous as high-impact
     - report promiscuous fusion in known exon ranges
     - replace phased column with INFRAME, SKIPPED_EXONS or OUT_OF_FRAME
-    - write a likelihood column: HIGH if known, IG known, exon del-dup or promiscuous exon, othereise LOW or NA is not reported
+    - write a likelihood column: HIGH if known, IG known, exon del-dup or promiscuous exon, otherwise LOW or NA is not reported
     - set exons skipped to zero for exonic breakends
     - allow chain terminated for IG known pair and exon del-dups
     - allow SGL to use alt mappings without QualScore specified

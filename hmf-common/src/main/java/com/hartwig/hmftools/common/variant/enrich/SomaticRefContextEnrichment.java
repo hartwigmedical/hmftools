@@ -87,7 +87,6 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
 
         Optional<RepeatContext> repeatContext = getRepeatContext(variant, relativePosition, sequence);
         if (repeatContext.isPresent()) {
-
             variant.getCommonInfo().putAttribute(REPEAT_SEQUENCE_FLAG, repeatContext.get().sequence(), true);
             variant.getCommonInfo().putAttribute(REPEAT_COUNT_FLAG, repeatContext.get().count(), true);
         }
@@ -100,12 +99,12 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
             final String ref = variant.getReference().getBaseString();
             final String alt = variant.getAlternateAllele(0).getBaseString();
 
-            if (ref.length() > alt.length()) {
-                variant.getCommonInfo()
-                        .putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtDelete(relativePosition, sequence, ref), true);
-            } else if (ref.length() == 1) {
-                variant.getCommonInfo()
-                        .putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtInsert(relativePosition, sequence, alt), true);
+            final String microhomology = ref.length() > alt.length()
+                    ? Microhomology.microhomologyAtDelete(relativePosition, sequence, ref)
+                    : Microhomology.microhomologyAtInsert(relativePosition, sequence, alt);
+
+            if (!microhomology.isEmpty()) {
+                variant.getCommonInfo().putAttribute(MICROHOMOLOGY_FLAG, microhomology);
             }
         }
     }

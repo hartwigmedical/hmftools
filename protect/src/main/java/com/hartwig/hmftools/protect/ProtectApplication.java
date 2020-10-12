@@ -60,7 +60,7 @@ public class ProtectApplication {
                 config.purpleSomaticVariantVcf(),
                 config.bachelorTsv(),
                 config.linxFusionTsv(),
-                config.linxDisruptionTsv(),
+                config.linxBreakendTsv(),
                 config.linxViralInsertionTsv(),
                 config.linxDriversTsv(),
                 config.chordPredictionTxt());

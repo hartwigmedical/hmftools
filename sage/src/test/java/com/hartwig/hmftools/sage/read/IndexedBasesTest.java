@@ -112,4 +112,50 @@ public class IndexedBasesTest {
         assertFalse(victim1.phased(-5, victim2));
         assertFalse(victim2.phased(5, victim1));
     }
+
+    @Test
+    public void testStrings() {
+        ReadContext victim = new ReadContext(Strings.EMPTY, 1000, 4, 3, 5, 2, "AACATGAGG".getBytes(), Strings.EMPTY);
+        assertEquals("ATG", victim.centerBases());
+        assertEquals("AC", victim.leftFlankString());
+        assertEquals("AG", victim.rightFlankString());
+    }
+
+    @Test
+    public void testCreate() {
+        IndexedBases victimWithExtra = create(1000, 1, "AA", "TA", "ATG", "CG", "TT");
+        assertEquals(1, victimWithExtra.indexInCore());
+        assertEquals(5, victimWithExtra.index());
+        assertEquals("TA", victimWithExtra.leftFlankString());
+        assertEquals("ATG", victimWithExtra.centerString());
+        assertEquals("CG", victimWithExtra.rightFlankString());
+
+        IndexedBases victimWithoutExtra = create(1000, 1, Strings.EMPTY, "TA", "ATG", "CG", Strings.EMPTY);
+        assertEquals(1, victimWithoutExtra.indexInCore());
+        assertEquals("TA", victimWithoutExtra.leftFlankString());
+        assertEquals("ATG", victimWithoutExtra.centerString());
+        assertEquals("CG", victimWithoutExtra.rightFlankString());
+    }
+
+
+    public static IndexedBases create(int position, int indexInCore, String leftExtra, String leftFlank, String core, String rightFlank, String rightExtra) {
+        assertTrue(indexInCore <= core.length());
+
+        int flankSize = Math.max(leftFlank.length(), rightFlank.length());
+        int totalLength = leftExtra.length() + leftFlank.length() + core.length() + rightFlank.length() + rightExtra.length();
+        byte[] bases = new byte[totalLength];
+
+        int destPos = 0;
+        System.arraycopy(leftExtra.getBytes(), 0, bases, destPos, leftExtra.length());
+        System.arraycopy(leftFlank.getBytes(), 0, bases, destPos += leftExtra.length(), leftFlank.length());
+        System.arraycopy(core.getBytes(), 0, bases, destPos += leftFlank.length(), core.length());
+        System.arraycopy(rightFlank.getBytes(), 0, bases, destPos += core.length(), rightFlank.length());
+        System.arraycopy(rightExtra.getBytes(), 0, bases, destPos += rightFlank.length(), rightExtra.length());
+
+
+        int leftCoreIndex = leftExtra.length() + leftFlank.length();
+        int rightCoreIndex = leftCoreIndex + core.length() - 1;
+        return new IndexedBases(position, leftExtra.length() + leftFlank.length() + indexInCore, leftCoreIndex, rightCoreIndex, flankSize, bases);
+    }
+
 }

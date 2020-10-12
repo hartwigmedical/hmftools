@@ -67,9 +67,9 @@
         <amber.version>3.5</amber.version>
         <cobalt.version>1.10</cobalt.version>
         <purple.version>2.49</purple.version>
-        <sage.version>2.3</sage.version>
-        <health-checker.version>3.1</health-checker.version>
-        <patient-reporter.version>7.15</patient-reporter.version>
+        <sage.version>2.4</sage.version>
+        <health-checker.version>3.2</health-checker.version>
+        <patient-reporter.version>7.16</patient-reporter.version>
         <patient-db.version>3.48</patient-db.version>
         <gripss.version>1.8</gripss.version>
         <paddle.version>0.1</paddle.version>

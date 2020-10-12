@@ -38,6 +38,7 @@ public interface SageConfig {
     String TUMOR_BAM = "tumor_bam";
     String REF_GENOME = "ref_genome";
     String OUTPUT_VCF = "out";
+    String INPUT_VCF = "input_vcf";
     String MIN_MAP_QUALITY = "min_map_quality";
     String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     String PANEL_BED = "panel_bed";
@@ -66,29 +67,43 @@ public interface SageConfig {
         final Options options = new Options();
         options.addOption(MNV, true, "Enable MNVs [" + DEFAULT_MNV + "]");
         options.addOption(ASSEMBLY, true, "Assembly, must be one of [hg19, hg38]");
+        options.addOption(TUMOR, true, "Name of tumor sample");
+        options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
+        options.addOption(READ_CONTEXT_FLANK_SIZE, true, "Size of read context flank [" + DEFAULT_READ_CONTEXT_FLANK_SIZE + "]");
+
+        options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
+        options.addOption(PANEL_BED, true, "Panel regions bed file");
+        options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
+        options.addOption(HOTSPOTS, true, "Hotspots");
+        commonOptions().getOptions().forEach(options::addOption);
+        FilterConfig.createOptions().getOptions().forEach(options::addOption);
+        return options;
+    }
+
+    static Options commonOptions() {
+        final Options options = new Options();
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
-        options.addOption(TUMOR, true, "Name of tumor sample");
-        options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(CHR, true, "Run for single chromosome");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
-        options.addOption(READ_CONTEXT_FLANK_SIZE, true, "Size of read context flank [" + DEFAULT_READ_CONTEXT_FLANK_SIZE + "]");
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
-        options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
+        options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
         options.addOption(MAX_REALIGNMENT_DEPTH, true, "Max depth to check for realignment [" + DEFAULT_MAX_REALIGNMENT_DEPTH + "]");
-        options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
-        options.addOption(PANEL_BED, true, "Panel regions bed file");
-        options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
-        options.addOption(HOTSPOTS, true, "Hotspots");
-        FilterConfig.createOptions().getOptions().forEach(options::addOption);
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
         BaseQualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
+        return options;
+    }
 
+    @NotNull
+    static Options createAddReferenceOptions() {
+        final Options options = new Options();
+        options.addOption(INPUT_VCF, true, "Path to input vcf");
+        commonOptions().getOptions().forEach(options::addOption);
         return options;
     }
 
@@ -114,6 +129,9 @@ public interface SageConfig {
 
     @NotNull
     List<String> tumorBam();
+
+    @NotNull
+    String inputFile();
 
     @NotNull
     String outputFile();
@@ -170,12 +188,10 @@ public interface SageConfig {
     int readContextFlankSize();
 
     @NotNull
-    static SageConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
+    static SageConfig createConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
+            throws ParseException {
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final String assembly = cmd.getOptionValue(ASSEMBLY, "UNKNOWN");
-        if (!assembly.equals("hg19") && !assembly.equals("hg38")) {
-            throw new ParseException("Assembly must be one of hg19 or hg38");
-        }
 
         final List<String> referenceList = Lists.newArrayList();
         if (cmd.hasOption(REFERENCE)) {
@@ -225,23 +241,47 @@ public interface SageConfig {
             }
         }
 
-        if (tumorList.isEmpty()) {
-            throw new ParseException("At least one tumor must be supplied");
-        }
-
-        final List<HmfTranscriptRegion> transcripts =
-                assembly.equals("hg19") ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
-
         final Set<String> chromosomes = Sets.newHashSet();
         final String chromosomeList = defaultStringValue(cmd, CHR, Strings.EMPTY);
         if (!chromosomeList.isEmpty()) {
             chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
         }
 
+        final List<HmfTranscriptRegion> transcripts;
+        final String outputVcf = cmd.getOptionValue(OUTPUT_VCF);
+        final String inputVcf = cmd.getOptionValue(INPUT_VCF, Strings.EMPTY);
+        if (appendMode) {
+            transcripts = Lists.newArrayList();
+            if (!cmd.hasOption(INPUT_VCF)) {
+                throw new ParseException(INPUT_VCF + " is a mandatory argument");
+            }
+
+            if (outputVcf.equals(inputVcf)) {
+                throw new ParseException("Input and output VCFs must be different");
+            }
+
+            if (referenceList.isEmpty()) {
+                throw new ParseException("At least one reference must be supplied");
+            }
+
+        } else {
+
+            if (tumorList.isEmpty()) {
+                throw new ParseException("At least one tumor must be supplied");
+            }
+
+            if (!assembly.equals("hg19") && !assembly.equals("hg38")) {
+                throw new ParseException("Assembly must be one of hg19 or hg38");
+            }
+
+            transcripts = assembly.equals("hg19") ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
+        }
+
         return ImmutableSageConfig.builder()
                 .version(version)
                 .transcriptRegions(transcripts)
-                .outputFile(cmd.getOptionValue(OUTPUT_VCF))
+                .inputFile(inputVcf)
+                .outputFile(outputVcf)
                 .threads(threads)
                 .chromosomes(chromosomes)
                 .reference(referenceList)

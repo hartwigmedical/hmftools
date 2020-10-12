@@ -14,7 +14,6 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounterFactory;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
-import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.samtools.NumberEvents;
 import com.hartwig.hmftools.sage.select.SamRecordSelector;
 
@@ -29,14 +28,12 @@ public class ReadContextEvidence {
 
     private final int typicalReadLength;
     private final SageConfig sageConfig;
-    private final SamSlicerFactory samSlicerFactory;
     private final ReferenceSequenceFile refGenome;
     private final ReadContextCounterFactory factory;
 
-    public ReadContextEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
-            @NotNull final ReferenceSequenceFile refGenome, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
+    public ReadContextEvidence(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
+            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
         this.sageConfig = config;
-        this.samSlicerFactory = samSlicerFactory;
         this.refGenome = refGenome;
         this.factory = new ReadContextCounterFactory(config, qualityRecalibrationMap);
         this.typicalReadLength = config.typicalReadLength();
@@ -56,7 +53,8 @@ public class ReadContextEvidence {
         final GenomeRegion bounds = GenomeRegions.create(firstCandidate.chromosome(),
                 Math.max(firstCandidate.position() - typicalReadLength, 1),
                 lastCandidate.position() + typicalReadLength);
-        final SamSlicer slicer = samSlicerFactory.create(bounds);
+
+        final SamSlicer slicer = new SamSlicer(0, bounds);
 
         final SamRecordSelector<ReadContextCounter> consumerSelector = new SamRecordSelector<>(counters);
 

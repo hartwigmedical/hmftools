@@ -182,6 +182,8 @@ To annotate SVs with gene information and to support fusion detection, ISOFOX us
 To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time ISOFOX runs.
 
 These files can be downloaded from the Hartwig resources page, or generated using the Hartwig LINX application (see https://github.com/hartwigmedical/hmftools/blob/master/sv-linx/README.md for instructions).
+
+Note that the ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
  
 ## Algorithm
 

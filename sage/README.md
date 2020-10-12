@@ -118,6 +118,51 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
 
+# Append Reference Samples
+From SAGE 2.4 onwards it is possible to append additional reference samples to an existing SAGE 2.4+ VCF file. 
+A typical use case would be to append RNA without having to rerun all of SAGE.
+
+In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#4-normal-counts-and-quality) steps.
+The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
+
+## Usage
+
+## Mandatory Arguments
+
+Argument | Description 
+---|---
+reference | Comma separated names of the reference sample
+reference_bam | Comma separated paths to indexed reference BAM file
+input_vcf | Name of the existing SAGE 2.4+ VCF
+out | Name of the output VCF
+ref_genome | Path to reference genome fasta file
+
+The cardinality of `reference` must match `reference_bam` and must not already exist in the input VCF.
+
+## Optional Arguments
+Argument | Default | Description 
+---|---|---
+threads | 2 | Number of threads to use
+chr | NA | Limit sage to comma separated list of chromosomes
+max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
+max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
+max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
+min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
+
+The optional [base quality recalibration](#optional-base-quality-recalibration-arguments) and [quality](#optional-quality-arguments) arguments also apply.  
+
+## Example Usage
+
+Minimum set of arguments:
+
+```
+java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageAppendApplication \
+    -reference COLO829v003RNA -reference_bam /path/to/COLO829v003RNA.bam \
+    -ref_genome /path/to/refGenome.fasta \
+    -input_vcf /path/to/COLO829v003.sage.vcf.gz
+    -out /path/to/COLO829v003.sage.rna.vcf.gz
+```
+
  # Read context 
  The read context of a variant is the region surrounding it in the read where it was found.
  It must be sufficiently large to uniquely identify the variant from both the reference and other possible variants at that location regardless of local alignment.
@@ -552,6 +597,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
+- Upcoming
+  - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
  - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.3)
    - Extend local phase set detection to maximum of 60 bases
    - Favour reads with variants closer to the centre when determining read context
@@ -578,5 +625,3 @@ Threads | Elapsed Time| CPU Time | Peak Mem
    - HG38 support
  - 2.0
    - Revamped small indel / SNV caller
- - 1.1 (Refer to old [README](./README_2.md) for detailed instructions)
-   - SageHotspotAnnotation - Merge all info header fields from hotspots vcf with source vcf   

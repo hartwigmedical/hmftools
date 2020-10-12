@@ -70,7 +70,7 @@ public class GenomicAnalyzer {
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralInsertions, @NotNull String purplePurityTsv,
             @NotNull String purpleQCFile, @NotNull String purpleGeneCnvTsv, @NotNull String purpleDriverCatalogTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
-            @NotNull String linxDisruptionTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
+            @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
             @NotNull String chordPredictionTxt) throws IOException {
         List<DriverCatalog> purpleDriverCatalog = readDriverCatalog(purpleDriverCatalogTsv);
         PurpleAnalysis purpleAnalysis =
@@ -92,7 +92,7 @@ public class GenomicAnalyzer {
                 actionabilityAnalyzer,
                 patientTumorLocation);
 
-        SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
+        SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxBreakendTsv, patientTumorLocation);
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv, reportViralInsertions);
 
@@ -191,19 +191,19 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxDisruptionsTsv,
+    private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
             @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
         List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
-        List<LinxFusion> linxFusionsReported = linxFusions.stream().filter(x -> x.reported()).collect(Collectors.toList());
+        List<LinxFusion> linxReportedFusions = linxFusions.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
-        LOGGER.info("Loaded {} fusions from {}", linxFusionsReported.size(), linxFusionTsv);
+        LOGGER.info("Loaded {} fusions from {}", linxReportedFusions.size(), linxFusionTsv);
 
-        List<LinxBreakend> linxBreakends = LinxBreakend.read(linxDisruptionsTsv);
-        List<LinxBreakend> linxBreakendsReported = linxBreakends.stream().filter(x -> x.reportedDisruption()).collect(Collectors.toList());
+        List<LinxBreakend> linxBreakends = LinxBreakend.read(linxBreakendTsv);
+        List<LinxBreakend> linxReportedBreakends = linxBreakends.stream().filter(x -> x.reportedDisruption()).collect(Collectors.toList());
 
-        LOGGER.info("Loaded {} disruptions from {}", linxBreakendsReported.size(), linxDisruptionsTsv);
+        LOGGER.info("Loaded {} disruptions from {}", linxReportedBreakends.size(), linxBreakendTsv);
 
-        return SvAnalyzer.run(linxFusionsReported, linxBreakendsReported, actionabilityAnalyzer, patientTumorLocation);
+        return SvAnalyzer.run(linxReportedFusions, linxReportedBreakends, actionabilityAnalyzer, patientTumorLocation);
     }
 
     @NotNull

@@ -29,12 +29,20 @@ public class PurpleChecker implements HealthChecker {
     @Override
     public List<QCValue> run() throws IOException {
         String path = PurpleQCFile.generateFilename(purpleDirectory, tumorSample);
-        List<String> lines = LineReader.build().readLines(new File(path).toPath(), x -> x.contains("QCStatus"));
+        List<QCValue> qcValues = Lists.newArrayList();
 
-        assert lines.size() == 1;
+        List<String> qc_lines = LineReader.build().readLines(new File(path).toPath(), x -> x.contains("QCStatus"));
+        assert qc_lines.size() == 1;
+        String qcStatus = qc_lines.get(0).split("\t")[1];
 
-        String[] parts = lines.get(0).split("\t");
+        List<String> contamination_lines = LineReader.build().readLines(new File(path).toPath(), x -> x.contains("Contamination"));
+        assert contamination_lines.size() == 1;
+        String contamination = contamination_lines.get(0).split("\t")[1];
 
-        return Lists.newArrayList(ImmutableQCValue.of(QCValueType.PURPLE_QC_STATUS, parts[1]));
+        return Lists.newArrayList(
+            ImmutableQCValue.of(QCValueType.PURPLE_QC_STATUS, qcStatus),
+            ImmutableQCValue.of(QCValueType.PURPLE_CONTAMINATION, contamination)
+        );
+
     }
 }
