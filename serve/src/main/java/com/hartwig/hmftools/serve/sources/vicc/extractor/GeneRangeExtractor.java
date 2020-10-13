@@ -106,10 +106,6 @@ public class GeneRangeExtractor {
             //
             //                        }
             //                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
-            //                    } else if (feature.description().equals("NPM1 EXON 12 MUTATION")) {
-            //                        //Skipping because transcript has 11 exons and not 12 on the canonical transcript
-            //                        //TODO how to solve this event?
-            //                        //  LOGGER.warn("Skipped future for determine genomic positions of exon range '{}'", feature);
             //                    } else if (feature.name().contains("-")) {
             //                        String exons = feature.proteinAnnotation();
             //                        List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
