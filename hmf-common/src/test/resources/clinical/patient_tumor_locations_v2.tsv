@@ -1,0 +1,4 @@
+patientIdentifier	primaryTumorLocation	primaryTumorSubLocation	primaryTumorType	primaryTumorSubType	doids	overridden
+patient1	Bile duct	Extrahepatic	Carcinoma	Adenocarcinoma	4947	false
+patient2	Bone marrow		Multiple myeloma		9538	false
+patient2						false

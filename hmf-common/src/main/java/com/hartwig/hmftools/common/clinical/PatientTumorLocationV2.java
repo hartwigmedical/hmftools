@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.clinical;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +27,7 @@ public abstract class PatientTumorLocationV2 {
     public abstract String primaryTumorSubType();
 
     @NotNull
-    public abstract String doid();
+    public abstract List<String> doids();
 
     public abstract boolean isOverridden();
 
