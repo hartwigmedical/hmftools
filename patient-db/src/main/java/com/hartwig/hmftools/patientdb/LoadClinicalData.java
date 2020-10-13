@@ -106,6 +106,11 @@ public final class LoadClinicalData {
             System.exit(1);
         }
 
+        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
+        TumorLocationCuratorV2 tumorLocationCuratorV2 = new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV));
+        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
+        TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
+
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
         List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
         Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
@@ -126,10 +131,6 @@ public final class LoadClinicalData {
 
         EcrfModels ecrfModels = loadEcrfModels(cmd);
 
-        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
-        TumorLocationCuratorV2 tumorLocationCuratorV2 = new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
-        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
-        TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
         Map<String, Patient> patients = loadAndInterpretPatients(sampleDataPerPatient,
                 ecrfModels,
                 tumorLocationCurator,
