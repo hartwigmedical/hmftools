@@ -27,6 +27,15 @@ public final class FileWriterUtils
         return checkOutputDir(outputDir);
     }
 
+    public static boolean checkCreateOutputDir(final String outputDirPath)
+    {
+        if (Files.exists(Paths.get(outputDirPath)))
+            return true;
+
+        final File outputDir = new File(outputDirPath);
+        return outputDir.mkdirs();
+    }
+
     public static String checkOutputDir(@NotNull final String outputDir)
     {
         if(outputDir.endsWith(File.separator))
