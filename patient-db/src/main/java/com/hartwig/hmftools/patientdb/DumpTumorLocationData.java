@@ -28,19 +28,19 @@ final class DumpTumorLocationData {
     static void writeCuratedTumorLocationsToCSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
         List<PatientTumorLocation> tumorLocations = toPatientTumorLocations(patients);
         PatientTumorLocationFile.writeRecordsCSV(outputFile, tumorLocations);
-        LOGGER.info(" Written {} tumor locations to {}.", tumorLocations.size(), outputFile);
+        LOGGER.info(" Written {} tumor locations to {}", tumorLocations.size(), outputFile);
     }
 
     static void writeCuratedTumorLocationsToTSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
         List<PatientTumorLocation> tumorLocations = toPatientTumorLocations(patients);
         PatientTumorLocationFile.writeRecordsTSV(outputFile, tumorLocations);
-        LOGGER.info(" Written {} tumor locations to {}.", tumorLocations.size(), outputFile);
+        LOGGER.info(" Written {} tumor locations to {}", tumorLocations.size(), outputFile);
     }
 
     static void writeCuratedTumorLocationsV2ToTSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
         List<PatientTumorLocationV2> tumorLocations = toPatientTumorLocationsV2(patients);
         PatientTumorLocationV2File.write(outputFile, tumorLocations);
-        LOGGER.info(" Written {} v2 tumor locations to {}.", tumorLocations.size(), outputFile);
+        LOGGER.info(" Written {} v2 tumor locations to {}", tumorLocations.size(), outputFile);
     }
 
     @NotNull
