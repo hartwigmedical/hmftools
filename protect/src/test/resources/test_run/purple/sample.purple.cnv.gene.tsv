@@ -1,4 +1,4 @@
-Chromosome	Start	End	Gene	MinCopyNumber	MaxCopyNumber	Unused	SomaticRegions	GermlineHomRegions	GermlineHet2HomRegions	TranscriptId	TranscriptVersion	ChromosomeBand	MinRegions	MinRegionStart	MinRegionEnd	MinRegionStartSupport	MinRegionEndSupport	MinRegionMethod	MinMinorAllelePloidy
+chromosome	start	end	gene	minCopyNumber	maxCopyNumber	unused	somaticRegions	germlineHomDeletionRegions	germlineHetToHomDeletionRegions	transcriptId	transcriptVersion	chromosomeBand	minRegions	minRegionStart	minRegionEnd	minRegionStartSupport	minRegionEndSupport	minRegionMethod	minMinorAlleleCopyNumber
 12	12870058	12875305	CDKN1B	-0.005	0.91	0	2	0	0	ENST00000228872	4	p13.1	1	11585222	12874974	INV	DEL	BAF_WEIGHTED	0.00
 12	50382945	50419307	RACGAP1	1.8	2.89	0	3	0	0	ENST00000434422	1	q13.12	1	49464334	50398083	DEL	DUP	BAF_WEIGHTED	0.81
 14	68286525	69062713	RAD51B	-0.02	1.96	0	2	0	0	ENST00000487270	1	q24.1	1	68309298	69309759	DEL	DEL	BAF_WEIGHTED	0.00
