@@ -137,9 +137,13 @@ public class GeneExpressionDistribution
 
     private void writeCancerGeneRatePercentiles()
     {
-        try
+        final Map<String, List<String>> cancerTypeSamples = mConfig.SampleData.CancerTypeSamples;
+
+        for(final GeneCohortData geneData : mGeneCohortDataMap.values())
         {
-            for(Map.Entry<String,List<String>> entry : mConfig.SampleData.CancerTypeSamples.entrySet())
+            final Map<String,double[]> cancerPercentiles = Maps.newHashMap();
+
+            for(Map.Entry<String,List<String>> entry : cancerTypeSamples.entrySet())
             {
                 final String cancerType = entry.getKey();
                 final List<String> sampleIds = entry.getValue();
@@ -149,37 +153,55 @@ public class GeneExpressionDistribution
 
                 final double[] geneTpmValues = new double[sampleCount];
 
-                for(final GeneCohortData geneData : mGeneCohortDataMap.values())
+                int cancerSampleIndex = 0;
+
+                for(int i = 0; i < geneData.SampleIds.size(); ++i)
                 {
-                    int cancerSampleIndex = 0;
+                    if(!sampleIds.contains(geneData.SampleIds.get(i)))
+                        continue;
 
-                    for(int i = 0; i < geneData.SampleIds.size(); ++i)
+                    if(cancerSampleIndex >= geneTpmValues.length)
                     {
-                        if(!sampleIds.contains(geneData.SampleIds.get(i)))
-                            continue;
-
-                        if(cancerSampleIndex >= geneTpmValues.length)
-                        {
-                            ISF_LOGGER.error("inconsistent sample cancer count({}) and gene data", sampleCount);
-                            return;
-                        }
-
-                        geneTpmValues[cancerSampleIndex++] = geneData.GeneTPMs.get(i);
+                        ISF_LOGGER.error("inconsistent sample cancer count({}) and gene data", sampleCount);
+                        return;
                     }
 
-                    final double[] percentileValues = new double[DISTRIBUTION_SIZE];
-                    calcPercentileValues(geneTpmValues, percentileValues);
+                    geneTpmValues[cancerSampleIndex++] = geneData.GeneTPMs.get(i);
+                }
 
-                    mWriter.write(String.format("%s,%s,%s", cancerType, geneData.GeneId, geneData.GeneName));
+                final double[] percentileValues = new double[DISTRIBUTION_SIZE];
+                calcPercentileValues(geneTpmValues, percentileValues);
+                cancerPercentiles.put(cancerType, percentileValues);
+            }
 
-                    for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
-                    {
-                        mWriter.write(String.format(",%6.3e", percentileValues[i]));
-                    }
+            if(mConfig.Expression.LogElevatedDistributions)
+            {
 
-                    mWriter.newLine();
+            }
+            else
+            {
+                for(Map.Entry<String, double[]> entry : cancerPercentiles.entrySet())
+                {
+                    final String cancerType = entry.getKey();
+                    final double[] percentiles = entry.getValue();
+                    writeCancerGenePercentiles(geneData.GeneId, geneData.GeneName, cancerType, percentiles);
                 }
             }
+        }
+    }
+
+    private void writeCancerGenePercentiles(final String geneId, final String geneName, final String cancerType, final double[] percentiles)
+    {
+        try
+        {
+            mWriter.write(String.format("%s,%s,%s", cancerType, geneId, geneName));
+
+            for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
+            {
+                mWriter.write(String.format(",%6.3e", percentiles[i]));
+            }
+
+            mWriter.newLine();
         }
         catch(IOException e)
         {

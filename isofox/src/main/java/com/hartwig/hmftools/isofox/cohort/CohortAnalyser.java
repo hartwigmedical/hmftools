@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortCompare;
-import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.expression.cohort.ExternalExpressionCompare;
 import com.hartwig.hmftools.isofox.expression.cohort.GeneExpressionDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
