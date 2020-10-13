@@ -21,6 +21,7 @@ import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -44,15 +45,17 @@ public class LoadClinicalDataTest {
 
     @Test
     public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
-        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(TestCuratorFactory.TUMOR_LOCATION_MAPPING_CSV);
-        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(TestCuratorFactory.BIOPSY_SITE_MAPPING_CSV);
-        TreatmentCurator treatmentCurator = new TreatmentCurator(TestCuratorFactory.TREATMENT_MAPPING_CSV);
+        TumorLocationCurator tumorLocationCurator = TestCuratorFactory.tumorLocationCurator();
+        TumorLocationCuratorV2 tumorLocationCuratorV2 = TestCuratorFactory.tumorLocationV2Curator();
+        BiopsySiteCurator biopsySiteCurator = TestCuratorFactory.biopsySiteCurator();
+        TreatmentCurator treatmentCurator = TestCuratorFactory.treatmentCurator();
 
         EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLNoFormStates(TEST_ECRF);
         assertEquals(1, cpctEcrfModel.patientCount());
         assertEquals(1298, Lists.newArrayList(cpctEcrfModel.fields()).size());
 
         EcrfPatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
+                tumorLocationCuratorV2,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
                 biopsySiteCurator,
                 treatmentCurator);

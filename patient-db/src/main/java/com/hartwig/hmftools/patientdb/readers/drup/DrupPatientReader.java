@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
@@ -26,8 +27,9 @@ public class DrupPatientReader implements EcrfPatientReader {
     @NotNull
     private final BiopsyReader biopsyReader;
 
-    public DrupPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull BiopsySiteCurator biopsySiteCurator) {
-        this.baselineReader = new BaselineReader(tumorLocationCurator);
+    public DrupPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull TumorLocationCuratorV2 tumorLocationCuratorV2,
+            @NotNull BiopsySiteCurator biopsySiteCurator) {
+        this.baselineReader = new BaselineReader(tumorLocationCurator, tumorLocationCuratorV2);
         this.biopsyReader = new BiopsyReader(biopsySiteCurator);
     }
 

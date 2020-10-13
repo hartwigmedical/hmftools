@@ -19,8 +19,9 @@ public class DrupPatientReaderTest {
 
     @Test
     public void canReadEmptyPatient() {
-        DrupPatientReader patientReader =
-                new DrupPatientReader(TestCuratorFactory.tumorLocationCurator(), TestCuratorFactory.biopsySiteCurator());
+        DrupPatientReader patientReader = new DrupPatientReader(TestCuratorFactory.tumorLocationCurator(),
+                TestCuratorFactory.tumorLocationV2Curator(),
+                TestCuratorFactory.biopsySiteCurator());
 
         EcrfPatient ecrfPatient = new EcrfPatient("empty", Maps.newHashMap(), Lists.newArrayList());
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();

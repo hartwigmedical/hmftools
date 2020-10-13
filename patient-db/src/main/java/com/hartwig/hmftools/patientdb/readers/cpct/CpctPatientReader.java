@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -37,9 +38,10 @@ public class CpctPatientReader implements EcrfPatientReader {
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public CpctPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals,
-            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
-        this.baselineReader = new BaselineReader(tumorLocationCurator, hospitals);
+    public CpctPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull TumorLocationCuratorV2 tumorLocationCuratorV2,
+            @NotNull Map<Integer, String> hospitals, @NotNull BiopsySiteCurator biopsySiteCurator,
+            @NotNull TreatmentCurator treatmentCurator) {
+        this.baselineReader = new BaselineReader(tumorLocationCurator, tumorLocationCuratorV2, hospitals);
         this.preTreatmentReader = new PreTreatmentReader(treatmentCurator);
         this.biopsyReader = new BiopsyReader(biopsySiteCurator);
         this.biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentCurator);
