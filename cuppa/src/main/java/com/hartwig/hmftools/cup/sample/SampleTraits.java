@@ -53,6 +53,9 @@ public class SampleTraits
         mRefTraitRates = Maps.newHashMap();
         mIsValid = true;
 
+        if(mConfig.RefTraitPercFile.isEmpty() && mConfig.RefTraitRateFile.isEmpty())
+            return;
+
         if(!loadRefPercentileData(mConfig.RefTraitPercFile, mRefTraitPercentiles))
         {
             CUP_LOGGER.error("invalid ref sample trait percentile data");
@@ -120,6 +123,9 @@ public class SampleTraits
     public List<SampleResult> processSample(final SampleData sample)
     {
         final List<SampleResult> results = Lists.newArrayList();
+
+        if(!mIsValid || mRefTraitRates.isEmpty())
+            return results;
 
         final SampleTraitsData sampleTraits = mSampleTraitsData.get(sample.Id);
 

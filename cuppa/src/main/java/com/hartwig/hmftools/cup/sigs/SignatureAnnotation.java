@@ -83,15 +83,18 @@ public class SignatureAnnotation
         mRefSampleNames = Lists.newArrayList();
         mRefCancerSigContribPercentiles = Maps.newHashMap();
         mRefCancerSnvCountPercentiles = Maps.newHashMap();
+        mRefSnvPosFreqCancerTypes = Lists.newArrayList();
 
         mIsValid = true;
 
+        if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvPosFreqFile.isEmpty())
+            return;
+
         populateReportableSignatures();
 
-        loadRefSignaturePercentileData(mConfig.RefSigContribData, mRefCancerSigContribPercentiles, mRefCancerSnvCountPercentiles);
+        loadRefSignaturePercentileData(mConfig.RefSigContributionFile, mRefCancerSigContribPercentiles, mRefCancerSnvCountPercentiles);
         mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames);
 
-        mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSnvPosFrequencies = loadRefSnvPosFrequences(mConfig.RefSnvPosFreqFile, mRefSnvPosFreqCancerTypes);
 
         if(mRefSampleCounts == null || mRefSnvPosFrequencies == null)
@@ -178,6 +181,9 @@ public class SignatureAnnotation
     public List<SampleResult> processSample(final SampleData sample)
     {
         final List<SampleResult> results = Lists.newArrayList();
+
+        if(!mIsValid || mRefSampleCounts == null)
+            return results;
 
         Integer sampleCountsIndex = mSampleCountsIndex.get(sample.Id);
 

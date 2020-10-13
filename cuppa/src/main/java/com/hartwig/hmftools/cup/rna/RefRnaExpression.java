@@ -17,6 +17,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
@@ -25,20 +26,24 @@ public class RefRnaExpression
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
-    private final Map<String,Map<String,Double>> mGeneCancerExpressionData;
-    private final Map<String,Map<String,Double>> mGeneSampleExpressionData;
-    private final Map<String,String> mGeneIdNameMap;
+    private SigMatrix mGeneCancerExpressionData;
+    private SigMatrix mGeneSampleExpressionData;
+    private final List<String> mGeneIds;
+    private final List<String> mGeneNames;
     private final List<String> mSampleIds;
+    private final List<String> mCancerTypes;
 
     public RefRnaExpression(final RefDataConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mGeneCancerExpressionData = Maps.newHashMap();
-        mGeneSampleExpressionData = Maps.newHashMap();
-        mGeneIdNameMap = Maps.newHashMap();
+        mGeneCancerExpressionData = null;
+        mGeneSampleExpressionData = null;
+        mGeneIds = Lists.newArrayList();
+        mGeneNames = Lists.newArrayList();
         mSampleIds = Lists.newArrayList();
+        mCancerTypes = Lists.newArrayList();
     }
 
     public void buildRefDataSets()
@@ -50,9 +55,29 @@ public class RefRnaExpression
 
         loadRefRnaGeneExpression(mConfig.RefRnaGeneExpFile);
 
+        if(mGeneSampleExpressionData == null || mGeneCancerExpressionData == null)
+        {
+            CUP_LOGGER.warn("RNA gene expression data load failed");
+            return;
+        }
+
         CUP_LOGGER.debug("writing RNA gene expression reference data");
 
-        writeGeneData();
+        writeMatrixData(mGeneCancerExpressionData, mCancerTypes, "cup_ref_ct_rna_gene_exp.csv");
+        writeMatrixData(mGeneSampleExpressionData, mSampleIds, "cup_ref_rna_gene_exp.csv");
+    }
+
+    private int getCancerTypeIndex(final String cancerType)
+    {
+        int index = 0;
+        for(; index < mCancerTypes.size(); ++index)
+        {
+            if(mCancerTypes.get(index).equals(cancerType))
+                return index;
+        }
+
+        mCancerTypes.add(index, cancerType);
+        return index;
     }
 
     private void loadRefRnaGeneExpression(final String filename)
@@ -63,79 +88,122 @@ public class RefRnaExpression
 
             String line = fileReader.readLine();
 
-            // SampleId,CancerType,GeneId,GeneName,TPM,CohortMedianTPM,CancerMedianTPM,CohortPercentile,CancerPercentile
-
-            // SampleId,Chromosome,Position,Count
+            // SampleId,CancerType,GeneId,GeneName,TPM
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ",");
 
-            int sampleIndex = fieldsIndexMap.get("SampleId");
-            int geneIdIndex = fieldsIndexMap.get("GeneId");
-            int geneNameIndex = fieldsIndexMap.get("GeneName");
-            int tpmIndex = fieldsIndexMap.get("TPM");
+            int sampleIdCol = fieldsIndexMap.get("SampleId");
+            int geneIdCol = fieldsIndexMap.get("GeneId");
+            int geneNameCol = fieldsIndexMap.get("GeneName");
+            int tpmCol = fieldsIndexMap.get("TPM");
 
             line = fileReader.readLine(); // skip header
 
-            int samplesProcessed = 0;
+            int sampleIndex = 0;
+            int cancerTypeIndex = 0;
+            int geneIndex = 0;
             String currentSample = "";
+            String cancerType = "";
+            final List<Double> tpmList = Lists.newArrayList(); // only for the initial sample
+            long manualLookupCount = 0;
+
+            double[][] sampleMatrixData = null;
+            double[][] cancerMatrixData = null;
 
             while (line != null)
             {
                 final String[] items = line.split(",", -1);
-                String sampleId = items[sampleIndex];
+                String sampleId = items[sampleIdCol];
 
                 if(!currentSample.equals(sampleId))
                 {
-                    currentSample = sampleId;
-                    mSampleIds.add(sampleId);
-                    ++samplesProcessed;
-
-                    if(samplesProcessed > 0 && (samplesProcessed % 100) == 0)
+                    if(!mSampleDataCache.SampleIds.contains(sampleId))
                     {
-                        CUP_LOGGER.info("processed {} RNA samples", samplesProcessed);
+                        line = fileReader.readLine();
+                        continue;
+                    }
+
+                    if(!currentSample.isEmpty())
+                        ++sampleIndex;
+
+                    currentSample = sampleId;
+                    cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
+                    cancerTypeIndex = getCancerTypeIndex(cancerType);
+                    mSampleIds.add(sampleId);
+                    geneIndex = 0;
+
+                    if(sampleIndex == 1)
+                    {
+                        // build the matrix that all genes have been seen
+                        mGeneSampleExpressionData = new SigMatrix(mGeneIds.size(), mSampleDataCache.SampleIds.size());
+                        sampleMatrixData = mGeneSampleExpressionData.getData();
+
+                        mGeneCancerExpressionData = new SigMatrix(mGeneIds.size(), mSampleDataCache.RefCancerSampleData.size());
+                        cancerMatrixData = mGeneCancerExpressionData.getData();
+
+                        // add in the first sample's data
+                        for(int i = 0; i < tpmList.size(); ++i)
+                        {
+                            sampleMatrixData[i][0] = tpmList.get(i);
+                            cancerMatrixData[i][0] = tpmList.get(i);
+                        }
+
+                        tpmList.clear();
+                    }
+
+                    if(sampleIndex > 0 && (sampleIndex % 100) == 0)
+                    {
+                        CUP_LOGGER.info("processed {} RNA samples", sampleIndex);
                     }
                 }
 
-                final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
+                String geneId = items[geneIdCol];
+                String geneName = items[geneNameCol];
 
-                if(cancerType == null)
-                {
-                    line = fileReader.readLine();
-                    continue;
-                }
-
-                String geneId = items[geneIdIndex];
-                String geneName = items[geneNameIndex];
-                double tpm = Double.parseDouble(items[tpmIndex]);
-
-                Map<String,Double> cancerTpmTotals = mGeneCancerExpressionData.get(geneId);
-
-                if(cancerTpmTotals == null)
-                {
-                    cancerTpmTotals = Maps.newHashMap();
-                    mGeneCancerExpressionData.put(geneId, cancerTpmTotals);
-                    mGeneIdNameMap.put(geneId, geneName);
-                }
-
+                double tpm = Double.parseDouble(items[tpmCol]);
                 double scaledTpm = scaleTpm(tpm);
-                Double tpmTotal = cancerTpmTotals.get(cancerType);
 
-                if(tpmTotal == null)
-                    cancerTpmTotals.put(cancerType, scaledTpm);
-                else
-                    cancerTpmTotals.put(cancerType, tpmTotal + scaledTpm);
-
-                // stored by sampleId
-                Map<String,Double> sampleTpms = mGeneSampleExpressionData.get(geneId);
-
-                if(sampleTpms == null)
+                if(sampleIndex == 0)
                 {
-                    sampleTpms = Maps.newHashMap();
-                    mGeneSampleExpressionData.put(geneId, sampleTpms);
-                }
+                    mGeneIds.add(geneId);
+                    mGeneNames.add(geneName);
 
-                sampleTpms.put(sampleId, scaledTpm);
+                    tpmList.add(scaledTpm);
+                }
+                else
+                {
+                    if(!mGeneIds.get(geneIndex).equals(geneId))
+                    {
+                        ++manualLookupCount;
+
+                        // locate manually
+                        boolean found = false;
+                        for(geneIndex = 0; geneIndex < mGeneIds.size(); ++geneIndex)
+                        {
+                            if(mGeneIds.get(geneIndex).equals(geneId))
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if(!found)
+                        {
+                            CUP_LOGGER.error("gene({}:{}) not present in initial samples", geneId, geneName);
+                            return;
+                        }
+                    }
+
+                    sampleMatrixData[geneIndex][sampleIndex] = scaledTpm;
+                    cancerMatrixData[geneIndex][cancerTypeIndex] += scaledTpm;
+                    ++geneIndex;
+                }
 
                 line = fileReader.readLine();
+            }
+
+            if(manualLookupCount > 0)
+            {
+                CUP_LOGGER.info("manual geneId lookup({})", manualLookupCount);
             }
         }
         catch (IOException e)
@@ -152,68 +220,37 @@ public class RefRnaExpression
         return log(tpm);
     }
 
-    private void writeGeneData()
+    private void writeMatrixData(final SigMatrix tpmMatrix, final List<String> headers, final String fileId)
     {
         try
         {
-            final String filename = mConfig.OutputDir + "cup_ref_ct_rna_gene_exp.csv";
-            BufferedWriter cancerWriter = createBufferedWriter(filename, false);
+            final String filename = mConfig.OutputDir + fileId;
+            BufferedWriter writer = createBufferedWriter(filename, false);
 
-            final String sampleDataFilename = mConfig.OutputDir + "cup_ref_rna_gene_exp.csv";
-            BufferedWriter sampleWriter = createBufferedWriter(sampleDataFilename, false);
+            writer.write("GeneId,GeneName");
 
-            final Set<String> cancerTypes = mSampleDataCache.RefCancerSampleData.keySet();
-
-            cancerWriter.write("GeneId,GeneName");
-
-            for(final String cancerType : cancerTypes)
+            for(final String header : headers)
             {
-                cancerWriter.write(String.format(",%s", cancerType));
+                writer.write(String.format(",%s", header));
             }
 
-            cancerWriter.newLine();
+            writer.newLine();
 
-            sampleWriter.write("GeneId,GeneName");
+            final double[][] matrixData = tpmMatrix.getData();
 
-            for(final String sampleId : mSampleIds)
+            for(int i = 0; i < tpmMatrix.Rows; ++i)
             {
-                sampleWriter.write(String.format(",%s", sampleId));
-            }
+                writer.write(String.format("%s,%s", mGeneIds.get(i), mGeneNames.get(i)));
 
-            sampleWriter.newLine();
-
-            for(Map.Entry<String,Map<String,Double>> geneEntry : mGeneCancerExpressionData.entrySet())
-            {
-                final String geneId = geneEntry.getKey();
-                final String geneName = mGeneIdNameMap.get(geneId);
-
-                cancerWriter.write(String.format("%s,%s", geneId, geneName));
-
-                final Map<String,Double> cancerTpmTotals = geneEntry.getValue();
-
-                for(final String cancerType : cancerTypes)
+                for(int j = 0; j < tpmMatrix.Cols; ++j)
                 {
-                    Double tpmTotal = cancerTpmTotals.get(cancerType);
-                    cancerWriter.write(String.format(",%.1f", tpmTotal != null ? tpmTotal : 0));
+                    writer.write(String.format(",%.2f", matrixData[i][j]));
                 }
 
-                cancerWriter.newLine();
-
-                sampleWriter.write(String.format("%s,%s", geneId, geneName));
-
-                final Map<String,Double> sampleTpms = mGeneSampleExpressionData.get(geneId);
-
-                for(final String sampleId : mSampleIds)
-                {
-                    Double tpm = sampleTpms.get(sampleId);
-                    sampleWriter.write(String.format(",%.1f", tpm != null ? tpm : 0));
-                }
-
-                sampleWriter.newLine();
+                writer.newLine();
             }
 
-            closeBufferedWriter(cancerWriter);
-            closeBufferedWriter(sampleWriter);
+            closeBufferedWriter(writer);
         }
         catch(IOException e)
         {

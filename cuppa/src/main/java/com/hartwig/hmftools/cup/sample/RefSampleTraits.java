@@ -47,13 +47,13 @@ public class RefSampleTraits
 
     public void buildRefDataSets()
     {
+        if(mConfig.RefSampleTraitsFile.isEmpty() && mConfig.DbAccess == null)
+            return;
+
         CUP_LOGGER.info("building sample traits reference data");
 
         if(mConfig.RefSampleTraitsFile.isEmpty())
         {
-            if(mConfig.DbAccess == null)
-                return;
-
             final Map<String,SampleTraitsData> sampleTraitsData = Maps.newHashMap();
             loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleTraitsData);
 

@@ -43,7 +43,11 @@ public class SvAnnotation
 
         mSampleSvData = Maps.newHashMap();
         mRefSvTypePercentiles = Maps.newHashMap();
+
         mIsValid = true;
+
+        if(mConfig.RefSvPercFile.isEmpty())
+            return;
 
         mIsValid &= loadRefPercentileData(mConfig.RefSvPercFile, mRefSvTypePercentiles);
         mIsValid &= loadSampleSvData();
@@ -59,6 +63,9 @@ public class SvAnnotation
     public List<SampleResult> processSample(final SampleData sample)
     {
         final List<SampleResult> results = Lists.newArrayList();
+
+        if(!mIsValid || mRefSvTypePercentiles.isEmpty())
+            return results;
 
         boolean loadDbData = false;
         if(mSampleSvData.isEmpty() && mConfig.DbAccess != null)

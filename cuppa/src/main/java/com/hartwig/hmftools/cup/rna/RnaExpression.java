@@ -5,7 +5,6 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.ClassifierType.RNA_GENE_EXPRESSION;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
@@ -105,7 +104,7 @@ public class RnaExpression
             boolean matchesCancerType = sample.CancerType.equals(refCancerType);
 
             final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
-                    adjustRefPosFreqCounts(mRefCancerTypeGeneExpression.getCol(i), sampleGeneTPMs) : mRefCancerTypeGeneExpression.getCol(i);
+                    adjustRefTpmTotals(mRefCancerTypeGeneExpression.getCol(i), sampleGeneTPMs) : mRefCancerTypeGeneExpression.getCol(i);
 
             double css = calcCosineSim(sampleGeneTPMs, refPosFreqs);
 
@@ -135,7 +134,7 @@ public class RnaExpression
                 sample.Id, CLASSIFIER, LIKELIHOOD, RNA_GENE_EXPRESSION.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
-    private double[] adjustRefPosFreqCounts(final double[] refGeneTpmTotals, final double[] sampleGeneTPMs)
+    private double[] adjustRefTpmTotals(final double[] refGeneTpmTotals, final double[] sampleGeneTPMs)
     {
         double[] adjustedTPMs = new double[refGeneTpmTotals.length];
 

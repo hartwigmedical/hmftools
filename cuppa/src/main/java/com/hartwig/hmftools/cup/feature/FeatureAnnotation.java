@@ -57,10 +57,8 @@ public class FeatureAnnotation
         mSampleDataCache = sampleDataCache;
         mIsValid = true;
 
-        if(config.RefFeaturePrevFile.isEmpty())
+        if(config.RefFeaturePrevFile.isEmpty() && config.RefFeatureAvgFile.isEmpty())
             return;
-
-        mIsValid = true;
 
         mIsValid &= loadRefPrevalenceData(config.RefFeaturePrevFile, mGenePrevalenceTotals, mCancerFeaturePrevalence);
         mIsValid &= loadRefCancerFeatureAvg(config.RefFeatureAvgFile, mCancerFeatureAvg);
@@ -74,7 +72,7 @@ public class FeatureAnnotation
     {
         final List<SampleResult> results = Lists.newArrayList();
 
-        if(!mIsValid)
+        if(!mIsValid || mGenePrevalenceTotals.isEmpty())
             return results;
 
         final List<SampleFeatureData> sampleFeatures = mSampleFeatures.get(sample.Id);

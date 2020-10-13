@@ -135,10 +135,10 @@ public class SampleAnalyser
 
     private boolean checkAnnotators()
     {
-        if(!mSvAnnotation.isValid() || !mFeatures.isValid() || !mSnvSignatures.isValid() || !mSampleTraits.isValid())
+        if(!mSvAnnotation.isValid() || !mFeatures.isValid() || !mSnvSignatures.isValid() || !mSampleTraits.isValid() || !mRnaExpression.isValid())
         {
-            CUP_LOGGER.error("invalid init: traits({}) sigs({}) SVs({}) features({})",
-                    mSampleTraits.isValid(), mSnvSignatures.isValid(), mSvAnnotation.isValid(), mFeatures.isValid());
+            CUP_LOGGER.error("invalid init: traits({}) sigs({}) SVs({}) features({}) rna({{}})",
+                    mSampleTraits.isValid(), mSnvSignatures.isValid(), mSvAnnotation.isValid(), mFeatures.isValid(), mRnaExpression.isValid());
             return false;
         }
 

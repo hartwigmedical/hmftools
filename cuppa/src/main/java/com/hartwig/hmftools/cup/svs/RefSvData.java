@@ -41,13 +41,13 @@ public class RefSvData
 
     public void buildRefDataSets()
     {
+        if(mConfig.RefSampleSvDataFile.isEmpty() && mConfig.DbAccess == null)
+            return;
+
         CUP_LOGGER.info("building SV reference data");
 
         if(mConfig.RefSampleSvDataFile.isEmpty())
         {
-            if(mConfig.DbAccess == null)
-                return;
-
             final Map<String,SvData> sampleSvData = Maps.newHashMap();
             loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleSvData);
             sampleSvData.values().forEach(x -> assignSampleData(x));

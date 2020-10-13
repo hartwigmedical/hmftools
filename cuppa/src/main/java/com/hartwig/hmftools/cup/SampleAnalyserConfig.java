@@ -5,14 +5,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDi
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Sample;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -25,7 +18,7 @@ public class SampleAnalyserConfig
     public final String RefSampleDataFile;
     public final String RefSnvCountsFile;
     public final String RefSvPercFile;
-    public final String RefSigContribData;
+    public final String RefSigContributionFile;
     public final String RefFeaturePrevFile;
     public final String RefTraitPercFile;
     public final String RefTraitRateFile;
@@ -99,7 +92,7 @@ public class SampleAnalyserConfig
 
         RefSampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
         RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
-        RefSigContribData = cmd.getOptionValue(REF_SIG_CONTRIB_FILE, "");
+        RefSigContributionFile = cmd.getOptionValue(REF_SIG_CONTRIB_FILE, "");
         RefFeaturePrevFile = cmd.getOptionValue(REF_FEAT_PREV_FILE, "");
         RefTraitPercFile = cmd.getOptionValue(REF_TRAIT_PERC_FILE, "");
         RefSvPercFile = cmd.getOptionValue(REF_SV_PERC_FILE, "");
