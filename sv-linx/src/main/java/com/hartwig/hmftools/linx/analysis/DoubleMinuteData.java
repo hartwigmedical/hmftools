@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.classifySinglePairResolvedType;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.JCN_UPPER_THRESHOLD;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.getAdjacentMajorAPRatio;
 import static com.hartwig.hmftools.linx.types.LinxConstants.ADJACENT_JCN_RATIO;
@@ -29,6 +30,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.LinkedPair;
+import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -304,6 +306,18 @@ public class DoubleMinuteData
             }
             else
             {
+                // ignore SGLs in a pair
+                if(svType == SGL && index < endIndex - 1)
+                {
+                    final SvBreakend nextBreakend = breakendList.get(index + 1);
+                    if(inSglPairCluster(breakend, nextBreakend))
+                    {
+                        observedBreakends.add(nextBreakend);
+                        observedSVs.add(nextBreakend.getSV());
+                        continue;
+                    }
+                }
+
                 Map<Integer,double[]> chainMap = svType == SGL ? ChainSglInternalData : ChainInfInternalData;
                 segmentData = getOrAddSegmentData(chain, chainMap);
             }
@@ -312,6 +326,15 @@ public class DoubleMinuteData
             segmentData[SEG_DATA_SUM] += breakend.jcn();
             segmentData[SEG_DATA_MAX] = max(segmentData[SEG_DATA_MAX], breakend.jcn());
         }
+    }
+
+    private static boolean inSglPairCluster(final SvBreakend breakend, final SvBreakend nextBreakend)
+    {
+        if(nextBreakend.type() != SGL || nextBreakend.getCluster() != breakend.getCluster())
+            return false;
+
+        return breakend.getCluster().getResolvedType().isSimple()
+                || classifySinglePairResolvedType(breakend.getSV(), nextBreakend.getSV()).isSimple();
     }
 
     private double[] getOrAddSegmentData(final SvChain chain, Map<Integer,double[]> segmentMap)
@@ -472,7 +495,7 @@ public class DoubleMinuteData
             double maxJcn = maxChainFoldbackJcn > 0 ? maxChainFoldbackJcn : maxChainJcn;
 
             final double[] sglInternalValues = ChainSglInternalData.get(chainId);
-            final double[] infInternalValues = ChainSglInternalData.get(chainId);
+            final double[] infInternalValues = ChainInfInternalData.get(chainId);
             final double[] intExtValues = ChainIntExtData.get(chainId);
 
             double sglInfMaxJcn = max(

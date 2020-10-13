@@ -192,7 +192,7 @@ public class ClusterClassification
             {
                 final SvVarData sgl1 = cluster.getSV(0);
                 final SvVarData sgl2 = cluster.getSV(1);
-                ResolvedType resolvedType = markSinglePairResolvedType(sgl1, sgl2);
+                ResolvedType resolvedType = classifySinglePairResolvedType(sgl1, sgl2);
 
                 if(resolvedType != NONE)
                 {
@@ -364,7 +364,7 @@ public class ClusterClassification
         cluster.setResolved(false, resolvedType);
     }
 
-    public static ResolvedType markSinglePairResolvedType(final SvVarData sgl1, final SvVarData sgl2)
+    public static ResolvedType classifySinglePairResolvedType(final SvVarData sgl1, final SvVarData sgl2)
     {
         if(sgl1.sglToCentromereOrTelomere() || sgl2.sglToCentromereOrTelomere())
             return NONE;
