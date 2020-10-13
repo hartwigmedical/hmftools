@@ -79,6 +79,7 @@ public final class LoadClinicalData {
 
     private static final String CURATED_TUMOR_LOCATION_CSV = "curated_tumor_location_csv";
     private static final String CURATED_TUMOR_LOCATION_TSV = "curated_tumor_location_tsv";
+    private static final String CURATED_TUMOR_LOCATION_V2_TSV = "curated_tumor_location_v2_tsv";
 
     private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
     private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
@@ -139,6 +140,7 @@ public final class LoadClinicalData {
         LOGGER.info("Writing curated tumor locations");
         DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_CSV), patients.values());
         DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
+        DumpTumorLocationData.writeCuratedTumorLocationsV2ToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_V2_TSV), patients.values());
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
             LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
@@ -148,7 +150,11 @@ public final class LoadClinicalData {
                 writeRawEcrf(dbWriter, sequencedPatientIds, ecrfModels);
             }
 
-            writeClinicalData(dbWriter, lims, sequencedPatientIds, sampleDataPerPatient, patients, treatmentCurator, tumorLocationCurator);
+            writeClinicalData(dbWriter, lims, sequencedPatientIds, sampleDataPerPatient, patients);
+
+            dbWriter.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
+            dbWriter.writeValidationFindings(CurationValidator.validateTumorLocationCuratorV2(tumorLocationCuratorV2));
+            dbWriter.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
         }
 
         LOGGER.info("Complete");
@@ -346,8 +352,7 @@ public final class LoadClinicalData {
     }
 
     private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Lims lims, @NotNull Set<String> sequencedPatientIds,
-            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull Map<String, Patient> patients,
-            @NotNull TreatmentCurator treatmentCurator, @NotNull TumorLocationCurator tumorLocationCurator) {
+            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull Map<String, Patient> patients) {
         LOGGER.info("Clearing interpreted clinical tables in database");
         dbAccess.clearClinicalTables();
 
@@ -376,8 +381,6 @@ public final class LoadClinicalData {
         if (missingPatients > 0) {
             LOGGER.warn("Could not load {} patients ({} samples)!", missingPatients, missingSamples);
         }
-        dbAccess.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
-        dbAccess.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
     }
 
     @NotNull
@@ -596,6 +599,7 @@ public final class LoadClinicalData {
         options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, curated tumor locations will be written to csv file");
         options.addOption(CURATED_TUMOR_LOCATION_CSV, true, "Path towards to the CSV of curated tumor locations.");
         options.addOption(CURATED_TUMOR_LOCATION_TSV, true, "Path towards to the TSV of curated tumor locations.");
+        options.addOption(CURATED_TUMOR_LOCATION_V2_TSV, true, "Path towards to the TSV of curated tumor locations v2.");
 
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,
