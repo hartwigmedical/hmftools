@@ -11,10 +11,10 @@ public class TumorLocationCuratorV2Test {
     @Test
     public void canDetermineUnusedTerms() {
         TumorLocationCuratorV2 curator = TestCuratorFactory.tumorLocationV2Curator();
-        assertEquals(3, curator.unusedSearchTerms().size());
+        assertEquals(4, curator.unusedSearchTerms().size());
 
         curator.search("Morbus Kahler");
-        assertEquals(2, curator.unusedSearchTerms().size());
+        assertEquals(3, curator.unusedSearchTerms().size());
     }
 
     @Test
