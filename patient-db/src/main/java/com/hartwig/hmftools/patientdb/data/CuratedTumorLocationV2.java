@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CuratedTumorLocationV2 {
 
-    @NotNull
+    @Nullable
     public abstract String searchTerm();
 
     @Nullable
