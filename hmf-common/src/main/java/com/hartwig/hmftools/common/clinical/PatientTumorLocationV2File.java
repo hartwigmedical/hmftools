@@ -37,8 +37,9 @@ public class PatientTumorLocationV2File {
                     .primaryTumorSubLocation(parts[2])
                     .primaryTumorType(parts[3])
                     .primaryTumorSubType(parts[4])
-                    .doids(toDOIDs(parts[5]))
-                    .isOverridden(Boolean.parseBoolean(parts[6]))
+                    .primaryTumorExtraDetails(parts[5])
+                    .doids(toDOIDs(parts[6]))
+                    .isOverridden(Boolean.parseBoolean(parts[7]))
                     .build());
         }
 
@@ -67,6 +68,7 @@ public class PatientTumorLocationV2File {
                 .add("primaryTumorSubLocation")
                 .add("primaryTumorType")
                 .add("primaryTumorSubType")
+                .add("primaryTumorExtraDetails")
                 .add("doids")
                 .add("overridden")
                 .toString();
@@ -79,6 +81,7 @@ public class PatientTumorLocationV2File {
                 .add(patientTumorLocation.primaryTumorSubLocation())
                 .add(patientTumorLocation.primaryTumorType())
                 .add(patientTumorLocation.primaryTumorSubType())
+                .add(patientTumorLocation.primaryTumorExtraDetails())
                 .add(fromDOIDs(patientTumorLocation.doids()))
                 .add(String.valueOf(patientTumorLocation.isOverridden()))
                 .toString();
