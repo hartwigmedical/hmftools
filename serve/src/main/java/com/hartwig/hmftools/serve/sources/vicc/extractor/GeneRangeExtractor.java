@@ -47,8 +47,93 @@ public class GeneRangeExtractor {
                                 - 1; // HmfExonRegion start with count 0 so exonNumber is one below
                         geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else if (feature.name().contains(",")) {
+                        String[] exons = feature.name()
+                                .substring((feature.name().toLowerCase().indexOf("exon")))
+                                .replace(" or ", ",")
+                                .replace("exon ", "")
+                                .split(",");
+                        for (String exon : exons) {
+                            int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                            geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
+                        }
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else if (feature.name().contains("or")) {
+                        String[] exons = feature.name()
+                                .substring((feature.name().toLowerCase().indexOf("exon")))
+                                .replace(" or ", ",")
+                                .replace("exon ", "")
+                                .split(",");
+                        for (String exon : exons) {
+                            int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                            geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
+                        }
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else if (feature.name().contains("-")) {
+                        String exons = feature.proteinAnnotation();
+                        List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
+
+                        if (exons.equals("mutation")) {
+                            exons = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
+                        }
+                        int startExon =
+                                Integer.parseInt(exons.split("-")[0]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                        int endExon =
+                                Integer.parseInt(exons.split("-")[1]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                        HmfExonRegion hmfExonRegionStart = exonRegions.get(startExon);
+                        HmfExonRegion hmfExonRegionEnd = exonRegions.get(endExon);
+                        long start = hmfExonRegionStart.start();
+                        long end = hmfExonRegionEnd.end();
+                        String chromosome = hmfExonRegionStart.chromosome();
+
+                        geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                                .gene(feature.geneSymbol())
+                                .start(start)
+                                .end(end)
+                                .chromosome(chromosome)
+                                .mutationType(MutationTypeFilter.ANY)
+                                .build());
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else if (feature.proteinAnnotation().equals("mutation") && !feature.name().contains("-")) {
+                        String exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
+
+                        int exonNumberList =
+                                Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+
+                        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else if (feature.proteinAnnotation().equals("exon")) {
+                        String exonNumber = feature.name()
+                                .substring((feature.name().toLowerCase().indexOf("exon")))
+                                .replace("exon ", "")
+                                .replace(" deletions", "")
+                                .replace(" insertions", "");
+                        int exonNumberList =
+                                Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+
+                        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else if (feature.proteinAnnotation().equals("proximal")) {
+                        String exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
+                        int exonNumberList =
+                                Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+
+                        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
+                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    } else if (feature.proteinAnnotation().equals("(Partial")) {
+                        String[] exonNumber = feature.name()
+                                .substring((feature.name().toLowerCase().indexOf("exons")))
+                                .replace("exons ", "")
+                                .replace(")", "")
+                                .replace("Exons ", "")
+                                .replace(" ", "")
+                                .split("&");
+                        for (String exon : exonNumber) {
+                            int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                            geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
+                        }
                     } else {
-                        LOGGER.info(feature);
+                        LOGGER.warn("Could not determine range of feature {}", feature);
                     }
                 } else {
                     LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
@@ -56,7 +141,6 @@ public class GeneRangeExtractor {
                             canonicalTranscript.transcriptID(),
                             feature);
                 }
-
             } else if (featureType == FeatureType.GENE_RANGE_CODON) {
                 //TODO remove EX and T148HFSX9 from gene range codon featureType
                 if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("EX")) {
@@ -82,84 +166,6 @@ public class GeneRangeExtractor {
                     }
                 }
             }
-            //                    if (feature.name().contains(",")) {
-            //                        String[] exons = feature.name()
-            //                                .substring((feature.name().toLowerCase().indexOf("exon")))
-            //                                .replace(" or ", ",")
-            //                                .replace("exon ", "")
-            //                                .split(",");
-            //                        for (String exon : exons) {
-            //                            int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-            //                            geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
-            //                        }
-            //                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
-            //
-            //                    } else if (feature.name().contains("or")) {
-            //                        String[] exons = feature.name()
-            //                                .substring((feature.name().toLowerCase().indexOf("exon")))
-            //                                .replace(" or ", ",")
-            //                                .replace("exon ", "")
-            //                                .split(",");
-            //                        for (String exon : exons) {
-            //                            int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-            //                            geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
-            //
-            //                        }
-            //                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
-            //                    } else if (feature.name().contains("-")) {
-            //                        String exons = feature.proteinAnnotation();
-            //                        List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
-            //
-            //                        if (exons.equals("mutation")) {
-            //                            exons = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
-            //                        } else if (exons.equals("EX")) {
-            //                            exons = feature.name().split(" ")[2].split(" ")[0];
-            //                        }
-            //                        int startExon =
-            //                                Integer.parseInt(exons.split("-")[0]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-            //                        int endExon =
-            //                                Integer.parseInt(exons.split("-")[1]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-            //
-            //                        HmfExonRegion hmfExonRegionStart = exonRegions.get(startExon);
-            //                        HmfExonRegion hmfExonRegionEnd = exonRegions.get(endExon);
-            //
-            //                        long start = hmfExonRegionStart.start();
-            //                        long end = hmfExonRegionEnd.end();
-            //                        String chromosome = hmfExonRegionStart.chromosome();
-            //
-            //                        geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
-            //                                .gene(feature.geneSymbol())
-            //                                .start(start)
-            //                                .end(end)
-            //                                .chromosome(chromosome)
-            //                                .mutationType(MutationTypeFilter.ANY)
-            //                                .build());
-            //                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
-            //                    } else {
-            //
-            //                        String exonNumber = feature.proteinAnnotation();
-            //
-            //                        if (exonNumber.equals("mutation")) {
-            //                            exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
-            //                        } else if (exonNumber.equals("exon")) {
-            //                            //exon ...insertions/deletions. Determine of this is a range
-            //                            exonNumber = feature.name()
-            //                                    .substring((feature.name().toLowerCase().indexOf("exon")))
-            //                                    .replace("exon ", "")
-            //                                    .replace(" deletions", "")
-            //                                    .replace(" insertions", "");
-            //                        } else if (exonNumber.equals("proximal")) {
-            //                            //check what this means
-            //                            exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
-            //                        }
-            //                        int exonNumberList =
-            //                                Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-            //
-            //                        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList));
-            //
-            //                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
-            //                    }
-            //                }
         }
         return geneRangesPerFeature;
 
