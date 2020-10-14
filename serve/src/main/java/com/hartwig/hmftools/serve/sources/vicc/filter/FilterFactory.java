@@ -47,9 +47,6 @@ final class FilterFactory {
         FEATURE_KEYWORDS_TO_FILTER.add("FGFR2 (V565I,M536I,M538I,I548V,N550,E566G,L618M,K660E)");
         FEATURE_KEYWORDS_TO_FILTER.add("FLT3 (F691,D835,N676,Y842)");
 
-        // exon number not exist in the using transcript //TODO move to vicc curation
-        FEATURE_KEYWORDS_TO_FILTER.add("NPM1 EXON 12 MUTATION");
-
         // TODO All of below needs some further investigation & explanation
         FEATURE_KEYWORDS_TO_FILTER.add("EXPRESSION");
         FEATURE_KEYWORDS_TO_FILTER.add("expression");
@@ -140,6 +137,9 @@ final class FilterFactory {
         // The unaligned delete is fine but the left-aligned insert lies outside of exon range (TODO DEV-1475)
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_K558del"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_W557del"));
+
+        // exon are not exist in transcript
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NPM1", "EXON 12 MUTATION"));
     }
 
     private FilterFactory() {

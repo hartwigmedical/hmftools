@@ -31,6 +31,9 @@ public abstract class BaselineData {
     @NotNull
     public abstract CuratedTumorLocation curatedTumorLocation();
 
+    @NotNull
+    public abstract CuratedTumorLocationV2 curatedTumorLocationV2();
+
     @Nullable
     public abstract LocalDate deathDate();
 

@@ -10,12 +10,14 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
@@ -48,12 +50,15 @@ public class WidePatientReader {
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
     @NotNull
+    private final TumorLocationCuratorV2 tumorLocationCuratorV2;
+    @NotNull
     private final TreatmentCurator treatmentCurator;
 
     public WidePatientReader(@NotNull final WideEcrfModel wideEcrfModel, @NotNull final TumorLocationCurator tumorLocationCurator,
-            @NotNull final TreatmentCurator treatmentCurator) {
+            @NotNull final TumorLocationCuratorV2 tumorLocationCuratorV2, @NotNull final TreatmentCurator treatmentCurator) {
         this.wideEcrfModel = wideEcrfModel;
         this.tumorLocationCurator = tumorLocationCurator;
+        this.tumorLocationCuratorV2 = tumorLocationCuratorV2;
         this.treatmentCurator = treatmentCurator;
     }
 
@@ -89,7 +94,13 @@ public class WidePatientReader {
         CuratedTumorLocation curatedTumorLocation = tumorLocationCurator.search(limsPrimaryTumorLocation);
         if (curatedTumorLocation.primaryTumorLocation() == null && limsPrimaryTumorLocation != null
                 && !limsPrimaryTumorLocation.isEmpty()) {
-            LOGGER.warn("Could not curate WIDE primary tumor location '{}'", limsPrimaryTumorLocation);
+            LOGGER.warn("Could not curate WIDE primary tumor location v1 '{}'", limsPrimaryTumorLocation);
+        }
+
+        CuratedTumorLocationV2 curatedTumorLocationV2 = tumorLocationCuratorV2.search(limsPrimaryTumorLocation);
+        if (curatedTumorLocationV2.primaryTumorLocation() == null && limsPrimaryTumorLocation != null
+                && !limsPrimaryTumorLocation.isEmpty()) {
+            LOGGER.warn("Could not curate WIDE primary tumor location v2 '{}'", limsPrimaryTumorLocation);
         }
 
         return ImmutableBaselineData.builder()
@@ -99,6 +110,7 @@ public class WidePatientReader {
                 .hospital(null)
                 .birthYear(birthYear)
                 .curatedTumorLocation(curatedTumorLocation)
+                .curatedTumorLocationV2(curatedTumorLocationV2)
                 .deathDate(null)
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())

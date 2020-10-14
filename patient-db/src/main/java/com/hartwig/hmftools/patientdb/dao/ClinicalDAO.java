@@ -117,6 +117,7 @@ class ClinicalDAO {
             LOGGER.warn(String.format("Truncating pre-treatment type: %s", preTreatmentMechanism));
             preTreatmentMechanism = preTreatmentMechanism.substring(0, BASELINE.PRETREATMENTSMECHANISM.getDataType().length());
         }
+        byte primaryTumorOverridden = 0;
 
         context.insertInto(BASELINE,
                 BASELINE.PATIENTID,
@@ -126,7 +127,11 @@ class ClinicalDAO {
                 BASELINE.HOSPITAL,
                 BASELINE.BIRTHYEAR,
                 BASELINE.PRIMARYTUMORLOCATION,
-                BASELINE.CANCERSUBTYPE,
+                BASELINE.PRIMARYTUMORSUBLOCATION,
+                BASELINE.PRIMARYTUMORTYPE,
+                BASELINE.PRIMARYTUMORSUBTYPE,
+                BASELINE.PRIMARYTUMOREXTRADETAILS,
+                BASELINE.PRIMARYTUMOROVERRIDDEN,
                 BASELINE.DEATHDATE,
                 BASELINE.HASSYSTEMICPRETREATMENT,
                 BASELINE.HASRADIOTHERAPYPRETREATMENT,
@@ -139,8 +144,12 @@ class ClinicalDAO {
                         patient.gender(),
                         patient.hospital(),
                         patient.birthYear(),
-                        patient.curatedTumorLocation().primaryTumorLocation(),
-                        patient.curatedTumorLocation().subType(),
+                        patient.curatedTumorLocationV2().primaryTumorLocation(),
+                        patient.curatedTumorLocationV2().primaryTumorSubLocation(),
+                        patient.curatedTumorLocationV2().primaryTumorType(),
+                        patient.curatedTumorLocationV2().primaryTumorSubType(),
+                        patient.curatedTumorLocationV2().primaryTumorExtraDetails(),
+                        primaryTumorOverridden,
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),

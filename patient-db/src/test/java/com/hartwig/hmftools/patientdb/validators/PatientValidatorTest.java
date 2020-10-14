@@ -24,6 +24,7 @@ import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedDrug;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 
@@ -43,6 +44,7 @@ public class PatientValidatorTest {
     private static final BaselineData EMPTY_BASELINE = baselineBuilder().build();
     private static final BaselineData BASELINE_DATA_MISSING_LOCATION_MAPPING = baselineBuilder().hospital(HOSPITAL)
             .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, "some_location"))
+            .curatedTumorLocationV2(ImmutableCuratedTumorLocationV2.builder().searchTerm("some_location").build())
             .build();
 
     private static final BiopsyData BIOPSY_NULL = biopsyBuilder().sampleId("sample-1").date(null).build();
@@ -128,8 +130,9 @@ public class PatientValidatorTest {
     public void reportsFailureToCuratePrimaryTumorLocation() {
         List<ValidationFinding> findings =
                 PatientValidator.validateTumorLocationCuration(PATIENT_IDENTIFIER, BASELINE_DATA_MISSING_LOCATION_MAPPING);
-        assertEquals(1, findings.size());
+        assertEquals(2, findings.size());
         assertEquals("tumorLocationCuration", findings.get(0).level());
+        assertEquals("tumorLocationCurationV2", findings.get(1).level());
     }
 
     @Test

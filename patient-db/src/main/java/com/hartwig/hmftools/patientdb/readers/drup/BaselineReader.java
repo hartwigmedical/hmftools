@@ -6,10 +6,13 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocationV2;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 class BaselineReader {
@@ -38,15 +41,20 @@ class BaselineReader {
 
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
+    @NotNull
+    private final TumorLocationCuratorV2 tumorLocationCuratorV2;
 
-    BaselineReader(@NotNull final TumorLocationCurator tumorLocationCurator) {
+    public BaselineReader(@NotNull final TumorLocationCurator tumorLocationCurator,
+            @NotNull final TumorLocationCuratorV2 tumorLocationCuratorV2) {
         this.tumorLocationCurator = tumorLocationCurator;
+        this.tumorLocationCuratorV2 = tumorLocationCuratorV2;
     }
 
     @NotNull
     BaselineData read(@NotNull EcrfPatient patient) {
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
+                .curatedTumorLocationV2(ImmutableCuratedTumorLocationV2.builder().searchTerm(Strings.EMPTY).build())
                 .demographyStatus(FormStatus.undefined())
                 .deathStatus(FormStatus.undefined())
                 .eligibilityStatus(FormStatus.undefined())
@@ -79,6 +87,8 @@ class BaselineReader {
                     primaryTumorLocation = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 }
                 builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
+                builder.curatedTumorLocationV2(tumorLocationCuratorV2.search(primaryTumorLocation));
+
                 // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.informedConsentStatus(baselineForm.status());
                 builder.primaryTumorStatus(baselineForm.status());

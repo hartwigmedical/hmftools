@@ -7,8 +7,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocationV2;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2File;
 import com.hartwig.hmftools.patientdb.data.Patient;
 
 import org.apache.logging.log4j.LogManager;
@@ -25,13 +28,38 @@ final class DumpTumorLocationData {
     static void writeCuratedTumorLocationsToCSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
         List<PatientTumorLocation> tumorLocations = toPatientTumorLocations(patients);
         PatientTumorLocationFile.writeRecordsCSV(outputFile, tumorLocations);
-        LOGGER.info(" Written {} tumor locations to {}.", tumorLocations.size(), outputFile);
+        LOGGER.info(" Written {} tumor locations to {}", tumorLocations.size(), outputFile);
     }
 
     static void writeCuratedTumorLocationsToTSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
         List<PatientTumorLocation> tumorLocations = toPatientTumorLocations(patients);
         PatientTumorLocationFile.writeRecordsTSV(outputFile, tumorLocations);
-        LOGGER.info(" Written {} tumor locations to {}.", tumorLocations.size(), outputFile);
+        LOGGER.info(" Written {} tumor locations to {}", tumorLocations.size(), outputFile);
+    }
+
+    static void writeCuratedTumorLocationsV2ToTSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
+        List<PatientTumorLocationV2> tumorLocations = toPatientTumorLocationsV2(patients);
+        PatientTumorLocationV2File.write(outputFile, tumorLocations);
+        LOGGER.info(" Written {} v2 tumor locations to {}", tumorLocations.size(), outputFile);
+    }
+
+    @NotNull
+    private static List<PatientTumorLocationV2> toPatientTumorLocationsV2(@NotNull Collection<Patient> patients) {
+        return patients.stream()
+                .map(patient -> ImmutablePatientTumorLocationV2.builder()
+                        .patientIdentifier(patient.patientIdentifier())
+                        .primaryTumorLocation(Strings.nullToEmpty(patient.baselineData().curatedTumorLocationV2().primaryTumorLocation()))
+                        .primaryTumorSubLocation(Strings.nullToEmpty(patient.baselineData()
+                                .curatedTumorLocationV2()
+                                .primaryTumorSubLocation()))
+                        .primaryTumorType(Strings.nullToEmpty(patient.baselineData().curatedTumorLocationV2().primaryTumorType()))
+                        .primaryTumorSubType(Strings.nullToEmpty(patient.baselineData().curatedTumorLocationV2().primaryTumorSubType()))
+                        .primaryTumorExtraDetails(Strings.nullToEmpty(patient.baselineData()
+                                .curatedTumorLocationV2()
+                                .primaryTumorExtraDetails()))
+                        .isOverridden(false)
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @NotNull

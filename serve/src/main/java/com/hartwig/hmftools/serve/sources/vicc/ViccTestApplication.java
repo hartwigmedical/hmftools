@@ -65,6 +65,7 @@ public class ViccTestApplication {
 
         ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries);
 
+        //TODO: add file for gene range event with genomic positions
         ViccUtil.writeFeatureTypes(featureTypeTsv, viccEntries);
         ViccUtil.writeActionability(outputDir, viccExtractionOutput);
     }

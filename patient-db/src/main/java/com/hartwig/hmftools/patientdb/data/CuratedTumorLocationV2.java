@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.clinical;
+package com.hartwig.hmftools.patientdb.data;
 
 import java.util.List;
 
@@ -9,29 +9,27 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PatientTumorLocationV2 {
+public abstract class CuratedTumorLocationV2 {
 
-    @NotNull
-    public abstract String patientIdentifier();
+    @Nullable
+    public abstract String searchTerm();
 
-    @NotNull
+    @Nullable
     public abstract String primaryTumorLocation();
 
-    @NotNull
+    @Nullable
     public abstract String primaryTumorSubLocation();
 
-    @NotNull
+    @Nullable
     public abstract String primaryTumorType();
 
-    @NotNull
+    @Nullable
     public abstract String primaryTumorSubType();
 
-    @NotNull
+    @Nullable
     public abstract String primaryTumorExtraDetails();
 
-    @NotNull
+    @Nullable
     public abstract List<String> doids();
-
-    public abstract boolean isOverridden();
 
 }

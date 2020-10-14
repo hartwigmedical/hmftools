@@ -295,13 +295,22 @@ public final class PatientValidator {
     @VisibleForTesting
     static List<ValidationFinding> validateTumorLocationCuration(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         List<ValidationFinding> findings = Lists.newArrayList();
-        String searchTerm = baselineData.curatedTumorLocation().searchTerm();
-        if (searchTerm != null && !searchTerm.isEmpty() && baselineData.curatedTumorLocation().primaryTumorLocation() == null) {
+        String searchTermV1 = baselineData.curatedTumorLocation().searchTerm();
+        if (searchTermV1 != null && !searchTermV1.isEmpty() && baselineData.curatedTumorLocation().primaryTumorLocation() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientIdentifier,
                     "Failed to curate primary tumor location",
                     baselineData.primaryTumorStatus(),
-                    searchTerm));
+                    searchTermV1));
+        }
+
+        String searchTermV2 = baselineData.curatedTumorLocationV2().searchTerm();
+        if (searchTermV2 != null && !searchTermV2.isEmpty() && baselineData.curatedTumorLocationV2().primaryTumorLocation() == null) {
+            findings.add(ValidationFinding.of("tumorLocationCurationV2",
+                    patientIdentifier,
+                    "Failed to curate primary tumor location V2",
+                    baselineData.primaryTumorStatus(),
+                    searchTermV2));
         }
         return findings;
     }

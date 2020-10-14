@@ -109,7 +109,7 @@
         <itext.version>7.1.5</itext.version>
 
         <kotlintest.version>2.0.7</kotlintest.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <jmockit.version>1.38</jmockit.version>
 
         <ensembl.version>89</ensembl.version>
