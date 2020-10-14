@@ -21,6 +21,10 @@ public abstract class GeneRangeAnnotation {
 
     public abstract long end();
 
+    //TODO: can be removed when range positions are verified
+    @NotNull
+    public abstract String rangeInfo();
+
     @NotNull
     public abstract MutationTypeFilter mutationType();
 

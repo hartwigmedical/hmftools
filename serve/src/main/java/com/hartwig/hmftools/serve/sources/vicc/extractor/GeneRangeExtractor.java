@@ -55,7 +55,7 @@ public class GeneRangeExtractor {
             @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature) {
         int exonNumberList = Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
 
-        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList, driverGenes));
+        geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList, driverGenes, exonNumber));
         geneRangesPerFeature.put(feature, geneRangeAnnotation);
     }
 
@@ -64,7 +64,7 @@ public class GeneRangeExtractor {
             @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature) {
         for (String exon : exonNumbers) {
             int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-            geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList, driverGenes));
+            geneRangeAnnotation.add(extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList, driverGenes, exon));
         }
         geneRangesPerFeature.put(feature, geneRangeAnnotation);
     }
@@ -134,6 +134,7 @@ public class GeneRangeExtractor {
                                 .start(start)
                                 .end(end)
                                 .chromosome(chromosome)
+                                .rangeInfo(exons)
                                 .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol()))
                                 .build());
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
@@ -222,7 +223,7 @@ public class GeneRangeExtractor {
 
     @NotNull
     private static GeneRangeAnnotation extractExonGenomicPositions(@NotNull Feature feature,
-            @NotNull HmfTranscriptRegion canonicalTranscript, int exonNumberList, @NotNull List<DriverGene> driverGenes) {
+            @NotNull HmfTranscriptRegion canonicalTranscript, int exonNumberList, @NotNull List<DriverGene> driverGenes, @NotNull String exonNumber) {
         List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
         HmfExonRegion hmfExonRegion = exonRegions.get(exonNumberList);
         long start = hmfExonRegion.start();
@@ -234,6 +235,7 @@ public class GeneRangeExtractor {
                 .start(start)
                 .end(end)
                 .chromosome(chromosome)
+                .rangeInfo(exonNumber)
                 .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol()))
                 .build();
     }
@@ -258,6 +260,7 @@ public class GeneRangeExtractor {
                         .start(start)
                         .end(end)
                         .chromosome(chromosome)
+                        .rangeInfo(proteinAnnotation)
                         .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol()))
                         .build());
                 geneRangesPerFeature.put(feature, geneRangeAnnotation);
@@ -300,6 +303,7 @@ public class GeneRangeExtractor {
                         .start(start)
                         .end(end)
                         .chromosome(chromosome)
+                        .rangeInfo(startCodon + "-" + endCodon)
                         .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol()))
                         .build());
                 geneRangesPerFeature.put(feature, geneRangeAnnotation);
