@@ -36,7 +36,7 @@ public class GeneRangeExtractor {
     @NotNull
     public static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
         for (DriverGene driverGene : driverGenes) {
-            if (driverGene.equals(gene)) {
+            if (driverGene.gene().equals(gene)) {
                 if (driverGene.likelihoodType() == DriverCategory.ONCO) {
                     return MutationTypeFilter.MISSENSE_ANY;
                     //TODO: when specific use specific value
