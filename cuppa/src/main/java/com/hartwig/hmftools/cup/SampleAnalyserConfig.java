@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDi
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
+import com.hartwig.hmftools.cup.rna.RnaExpression;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -24,7 +25,8 @@ public class SampleAnalyserConfig
     public final String RefTraitRateFile;
     public final String RefSnvPosFreqFile;
     public final String RefFeatureAvgFile;
-    public final String RefRnaExpFile;
+    public final String RefRnaCancerExpFile;
+    public final String RefRnaGeneCancerPercFile;
 
     // sample data, if not sourced from the database
     public final String SampleDataDir;
@@ -66,7 +68,8 @@ public class SampleAnalyserConfig
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
     private static final String REF_SNV_POS_FREQ_FILE = "ref_snv_pos_freq_file";
     private static final String REF_FEAT_AVG_FILE = "ref_feature_avg_file";
-    private static final String REF_RNA_EXP_FILE = "ref_rna_exp_file";
+    private static final String REF_RNA_CANCER_EXP_FILE = "ref_rna_cancer_exp_file";
+    private static final String REF_RNA_GENE_CANCER_PERC_FILE = "ref_rna_gene_cancer_file";
 
     public static final String OUTPUT_FILE_ID = "output_file_id";
     public static final String LOG_DEBUG = "log_debug";
@@ -99,7 +102,8 @@ public class SampleAnalyserConfig
         RefTraitRateFile = cmd.getOptionValue(REF_TRAIT_RATE_FILE, "");
         RefSnvPosFreqFile = cmd.getOptionValue(REF_SNV_POS_FREQ_FILE, "");
         RefFeatureAvgFile = cmd.getOptionValue(REF_FEAT_AVG_FILE, "");
-        RefRnaExpFile = cmd.getOptionValue(REF_RNA_EXP_FILE, "");
+        RefRnaCancerExpFile = cmd.getOptionValue(REF_RNA_CANCER_EXP_FILE, "");
+        RefRnaGeneCancerPercFile = cmd.getOptionValue(REF_RNA_GENE_CANCER_PERC_FILE, "");
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
@@ -147,9 +151,11 @@ public class SampleAnalyserConfig
         options.addOption(REF_TRAIT_RATE_FILE, true, "Reference traits rates file");
         options.addOption(REF_SNV_POS_FREQ_FILE, true, "Reference SNV position frequency file");
         options.addOption(REF_FEAT_AVG_FILE, true, "Reference features per sample file");
-        options.addOption(REF_RNA_EXP_FILE, true, "Reference RNA gene expression file");
+        options.addOption(REF_RNA_CANCER_EXP_FILE, true, "Reference RNA gene expression file");
+        options.addOption(REF_RNA_GENE_CANCER_PERC_FILE, true, "Reference RNA gene cancer percentiles file");
 
         addDatabaseCmdLineArgs(options);
+        RnaExpression.addCmdLineArgs(options);
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");

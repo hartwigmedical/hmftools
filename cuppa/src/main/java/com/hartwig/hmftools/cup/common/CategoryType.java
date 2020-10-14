@@ -5,7 +5,7 @@ public enum CategoryType
     SNV_SIG,
     SV,
     SAMPLE_TRAIT,
-    GENDER,
+    GENE_EXP,
     FEATURE,
     CLASSIFIER
 }

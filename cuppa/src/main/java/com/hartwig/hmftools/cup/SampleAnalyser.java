@@ -60,7 +60,7 @@ public class SampleAnalyser
         mFeatures = new FeatureAnnotation(mConfig, mSampleDataCache);
         mSampleTraits = new SampleTraits(mConfig, mSampleDataCache);
         mSvAnnotation = new SvAnnotation(mConfig, mSampleDataCache);
-        mRnaExpression = new RnaExpression(mConfig, mSampleDataCache);
+        mRnaExpression = new RnaExpression(mConfig, mSampleDataCache, cmd);
 
         mSampleDataWriter = null;
     }

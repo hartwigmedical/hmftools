@@ -27,8 +27,8 @@ public class CupCalcs
             final Map<String,double[]> cancerPercentiles, double value, int cancerTypeCount, boolean useLowThreshold)
     {
         /*
-        Low Test = % of samples below the max(observed value + 25%,min 5th percentile value in any cancerType)
-        High Test = % of samples above the min(observed value - 33%,max 95th percentile value in any cancer type)
+        Low Test = % of samples below the max(observed value + 25%, min 5th percentile value in any cancerType)
+        High Test = % of samples above the min(observed value - 25%, max 95th percentile value in any cancer type)
         Floor each % at 0.15/ # tumor types as for drivers
          */
 

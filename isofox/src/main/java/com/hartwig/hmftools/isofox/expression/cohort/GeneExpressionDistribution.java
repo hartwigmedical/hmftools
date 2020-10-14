@@ -87,7 +87,7 @@ public class GeneExpressionDistribution
             mWriter = createBufferedWriter(outputFileName, false);
 
             if(mConfig.Expression.DistributionByCancerType)
-                mWriter.write("CancerType,GeneId,GeneName");
+                mWriter.write("GeneId,GeneName,CancerType");
             else
                 mWriter.write("GeneId,GeneName");
 
@@ -149,8 +149,6 @@ public class GeneExpressionDistribution
                 final List<String> sampleIds = entry.getValue();
                 int sampleCount = sampleIds.size();
 
-                ISF_LOGGER.info("cancer({}) samples({}) writing gene distribution", cancerType, sampleCount);
-
                 final double[] geneTpmValues = new double[sampleCount];
 
                 int cancerSampleIndex = 0;
@@ -194,7 +192,7 @@ public class GeneExpressionDistribution
     {
         try
         {
-            mWriter.write(String.format("%s,%s,%s", cancerType, geneId, geneName));
+            mWriter.write(String.format("%s,%s,%s", geneId, geneName, cancerType));
 
             for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
             {
