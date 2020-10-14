@@ -48,7 +48,7 @@ public class CandidateSerialization {
     }
 
     @NotNull
-    static IndexedBases readBases(@NotNull final VariantContext context) {
+    public static IndexedBases readBases(@NotNull final VariantContext context) {
         final int position = context.getStart();
 
         final String leftFlank = context.getAttributeAsString(READ_CONTEXT_LEFT_FLANK, Strings.EMPTY);

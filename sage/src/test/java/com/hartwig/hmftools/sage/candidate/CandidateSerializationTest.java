@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.candidate;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.IndexedBases;
@@ -9,14 +10,35 @@ import com.hartwig.hmftools.sage.read.IndexedBasesTest;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderVersion;
 
 public class CandidateSerializationTest {
+
+    private static final VCFCodec CODEC = createTestCodec();
+
+    @NotNull
+    private static VCFCodec createTestCodec() {
+        VCFCodec codec = new VCFCodec();
+        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet("normal", "tumor"));
+        codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
+        return codec;
+    }
+
+    @NotNull
+    public static Candidate decode(String line) {
+        VariantContext context = CODEC.decode(line);
+        IndexedBases cheatRefBases = CandidateSerialization.readBases(context);
+        return CandidateSerialization.toCandidate(context, cheatRefBases, cheatRefBases);
+    }
 
     @Test
     public void testSerialization() {
