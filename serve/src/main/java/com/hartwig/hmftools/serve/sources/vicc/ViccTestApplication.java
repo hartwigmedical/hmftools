@@ -73,7 +73,7 @@ public class ViccTestApplication {
             proteinResolver = ProteinResolverFactory.dummy();
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
-            driverGenes = DriverGeneFile.read(System.getProperty("user.home") + "/hmf/projects/DriverGenePanel.hg19.tsv");
+            driverGenes = DriverGeneFile.read(System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv");
         }
 
         Path outputPath = new File(outputDir).toPath();
