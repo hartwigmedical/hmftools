@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.serve.sources.vicc;
 
+import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -18,10 +21,15 @@ import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.jetbrains.annotations.NotNull;
 
 public class ViccTestApplication {
 
@@ -31,8 +39,19 @@ public class ViccTestApplication {
             Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
     private static final Integer MAX_VICC_ENTRIES = null;
 
-    public static void main(String[] args) throws IOException {
+    @NotNull
+    static Options createOptions() {
+        Options options = new Options();
+        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
+
+        return options;
+    }
+
+    public static void main(String[] args) throws IOException, ParseException {
         Configurator.setRootLevel(Level.DEBUG);
+
+        Options options = ViccTestApplication.createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
@@ -47,9 +66,7 @@ public class ViccTestApplication {
             outputDir = System.getProperty("user.home") + "/tmp";
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
                     "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
-            //TODO
-           // List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes("/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv");
-            driverGenes = Lists.newArrayList();
+            driverGenes = DriverGenePanelConfig.driverGenes(cmd);
 
         } else {
             proteinResolver = ProteinResolverFactory.dummy();
