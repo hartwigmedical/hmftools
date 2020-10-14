@@ -34,7 +34,7 @@ public class GeneRangeExtractor {
     }
 
     @NotNull
-    public static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
+    private static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
                 if (driverGene.likelihoodType() == DriverCategory.ONCO) {
@@ -50,7 +50,7 @@ public class GeneRangeExtractor {
         return MutationTypeFilter.UNKNOWN;
     }
 
-    public void extractGeneRangesPerFeature(@NotNull String exonNumber, @NotNull Feature feature,
+    private void extractGeneRangesPerFeature(@NotNull String exonNumber, @NotNull Feature feature,
             @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
             @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature) {
         int exonNumberList = Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
@@ -59,7 +59,7 @@ public class GeneRangeExtractor {
         geneRangesPerFeature.put(feature, geneRangeAnnotation);
     }
 
-    public void extractGeneRangesPerFeatureMultipleExons(@NotNull String [] exonNumbers, @NotNull Feature feature,
+    private void extractGeneRangesPerFeatureMultipleExons(@NotNull String [] exonNumbers, @NotNull Feature feature,
             @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
             @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature) {
         for (String exon : exonNumbers) {
