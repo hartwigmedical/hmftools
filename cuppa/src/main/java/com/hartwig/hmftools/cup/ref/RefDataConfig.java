@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 
 import java.io.File;
 
+import com.hartwig.hmftools.cup.rna.RefRnaExpression;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -36,8 +37,6 @@ public class RefDataConfig
     public static final String REF_SV_DATA_FILE = "ref_sv_data_file";
     public static final String REF_SNV_POS_DATA_FILE = "ref_snv_pos_file";
     public static final String REF_RNA_GENE_EXP_DATA_FILE = "ref_rna_gene_exp_file";
-
-    public static final String DB_FILE_DELIM = "\t";
 
     public RefDataConfig(final CommandLine cmd)
     {
@@ -68,6 +67,8 @@ public class RefDataConfig
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+
+        RefRnaExpression.addCmdLineArgs(options);
     }
 
 }

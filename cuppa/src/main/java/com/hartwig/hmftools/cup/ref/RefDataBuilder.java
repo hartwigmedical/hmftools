@@ -44,7 +44,7 @@ public class RefDataBuilder
         mSignatures = new RefSignatures(mConfig, mSampleDataCache);
         mSvAnnotation = new RefSvData(mConfig, mSampleDataCache);
         mFeatures = new RefFeatures(mConfig, mSampleDataCache);
-        mRnaExpression = new RefRnaExpression(mConfig, mSampleDataCache);
+        mRnaExpression = new RefRnaExpression(mConfig, mSampleDataCache, cmd);
     }
 
     private void loadSampleData(final CommandLine cmd)

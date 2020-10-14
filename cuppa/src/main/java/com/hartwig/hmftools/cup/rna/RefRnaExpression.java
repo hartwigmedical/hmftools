@@ -21,6 +21,10 @@ import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.jetbrains.annotations.NotNull;
+
 public class RefRnaExpression
 {
     private final RefDataConfig mConfig;
@@ -32,8 +36,11 @@ public class RefRnaExpression
     private final List<String> mGeneNames;
     private final List<String> mSampleIds;
     private final List<String> mCancerTypes;
+    private final double mTpmLogCutoff;
 
-    public RefRnaExpression(final RefDataConfig config, final SampleDataCache sampleDataCache)
+    public static final String TPM_LOG_CUTOFF = "rna_tpm_log_cutoff";
+
+    public RefRnaExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -44,6 +51,13 @@ public class RefRnaExpression
         mGeneNames = Lists.newArrayList();
         mSampleIds = Lists.newArrayList();
         mCancerTypes = Lists.newArrayList();
+
+        mTpmLogCutoff = Double.parseDouble(cmd.getOptionValue(TPM_LOG_CUTOFF, "1"));
+    }
+
+    public static void addCmdLineArgs(@NotNull Options options)
+    {
+        options.addOption(TPM_LOG_CUTOFF, true, "RNA TPM cut-off in log scale");
     }
 
     public void buildRefDataSets()
@@ -214,7 +228,10 @@ public class RefRnaExpression
 
     private double scaleTpm(double tpm)
     {
-        if(tpm <= 1)
+        if(mTpmLogCutoff == 0)
+            return log(tpm+1);
+
+        if(tpm <= mTpmLogCutoff)
             return 0;
 
         return log(tpm);
