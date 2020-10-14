@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
@@ -72,6 +73,9 @@ public class ServeHotspotGenerator {
         boolean generateHotspots;
         String hotspotVcf = null;
 
+        // Could be empty because driverGenes are not used for determine hotspots
+        List<DriverGene> driverGenes = Lists.newArrayList();
+
         if (hostname.toLowerCase().contains("datastore")) {
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
             serveSourceDir = "/data/common/dbs/serve";
@@ -103,7 +107,7 @@ public class ServeHotspotGenerator {
                 ? ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
                 : ProteinResolverFactory.dummy();
 
-        Map<VariantHotspot, HotspotAnnotation> viccHotspotMap = viccHotspotMap(viccJson, proteinResolver);
+        Map<VariantHotspot, HotspotAnnotation> viccHotspotMap = viccHotspotMap(viccJson, proteinResolver, driverGenes);
         Map<VariantHotspot, HotspotAnnotation> docmHotspotMap = docmHotspotMap(docmTsv, proteinResolver);
         Map<VariantHotspot, HotspotAnnotation> hartwigCohortMap =
                 hartwigCohortMap(hartwigCohortTsv, proteinResolver, generateHotspots);
@@ -136,10 +140,10 @@ public class ServeHotspotGenerator {
 
     @NotNull
     private static Map<VariantHotspot, HotspotAnnotation> viccHotspotMap(@NotNull String viccJson,
-            @NotNull ProteinResolver proteinResolver) throws IOException {
+            @NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes) throws IOException {
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
-        return viccExtractor.extractFromViccEntries(viccEntries).hotspots();
+        return viccExtractor.extractFromViccEntries(viccEntries, driverGenes).hotspots();
     }
 
     @NotNull

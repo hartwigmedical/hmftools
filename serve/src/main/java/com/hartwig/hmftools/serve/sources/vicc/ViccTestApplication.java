@@ -8,7 +8,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.cli.DriverGenePanelConfig;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
@@ -37,16 +40,24 @@ public class ViccTestApplication {
         String viccJsonPath;
         String outputDir;
         ProteinResolver proteinResolver;
+        List<DriverGene> driverGenes = Lists.newArrayList();
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
             outputDir = System.getProperty("user.home") + "/tmp";
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
                     "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
+            //TODO
+           // List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes("/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv");
+            driverGenes = Lists.newArrayList();
+
         } else {
             proteinResolver = ProteinResolverFactory.dummy();
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
+            //TODO
+            // List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes("/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv");
+            driverGenes = Lists.newArrayList();
         }
 
         Path outputPath = new File(outputDir).toPath();
@@ -63,7 +74,7 @@ public class ViccTestApplication {
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
 
-        ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries);
+        ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries, driverGenes);
 
         //TODO: add file for gene range event with genomic positions
         ViccUtil.writeFeatureTypes(featureTypeTsv, viccEntries);
