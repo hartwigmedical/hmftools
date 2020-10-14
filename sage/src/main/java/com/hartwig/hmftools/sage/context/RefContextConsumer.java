@@ -55,21 +55,21 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final CigarHandler handler = new CigarHandler() {
                 @Override
-                public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                public void handleAlignment(@NotNull final SAMRecord record, final int cigarIndex, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
                     altReads.addAll(processAlignment(record, readIndex, refPosition, element.getLength(), refBases, numberOfEvents));
 
                 }
 
                 @Override
-                public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                public void handleInsert(@NotNull final SAMRecord record, final int cigarIndex, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
                     Optional.ofNullable(processInsert(element, record, readIndex, refPosition, refBases, numberOfEvents))
                             .ifPresent(altReads::add);
                 }
 
                 @Override
-                public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                public void handleDelete(@NotNull final SAMRecord record, final int cigarIndex, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
                     Optional.ofNullable(processDel(element, record, readIndex, refPosition, refBases, numberOfEvents))
                             .ifPresent(altReads::add);
