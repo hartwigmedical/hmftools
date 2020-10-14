@@ -315,34 +315,4 @@ public class GeneRangeExtractor {
         }
         return geneRangesPerFeature;
     }
-
-    private static boolean isValidSingleCodonRange(@NotNull String feature) {
-
-        // Features are expected to look something like V600 (1 char - N digits)
-        if (feature.length() < 3) {
-            return false;
-        }
-
-        if (!Character.isLetter(feature.charAt(0))) {
-            return false;
-        }
-
-        if (!Character.isDigit(feature.charAt(1))) {
-            return false;
-        }
-
-        if (feature.contains("*")) {
-            return false;
-        }
-
-        if (feature.contains("/")) {
-            return false;
-        }
-
-        if (feature.contains("fs")) {
-            return false;
-        }
-
-        return Character.isDigit(feature.substring(feature.length() - 1).charAt(0));
-    }
 }
