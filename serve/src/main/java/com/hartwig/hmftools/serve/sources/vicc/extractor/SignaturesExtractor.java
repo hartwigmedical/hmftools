@@ -13,12 +13,21 @@ import org.jetbrains.annotations.NotNull;
 public class SignaturesExtractor {
 
     @NotNull
+    private SignatureName extractSignatureName(@NotNull Feature feature) {
+        if (feature.name().equals("Microsatellite Instability-High")) {
+            return SignatureName.MICROSATELLITE_UNSTABLE;
+        } else {
+            return SignatureName.UNKNOWN;
+        }
+    }
+
+    @NotNull
     public Map<Feature, SignatureName> extractSignatures(@NotNull ViccEntry viccEntry) {
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == FeatureType.SIGNATURE) {
-                // TODO Map Feature to SignatureName
-                signaturesPerFeature.put(feature, SignatureName.MICROSATELLITE_UNSTABLE);
+                SignatureName signatureName = extractSignatureName(feature);
+                signaturesPerFeature.put(feature, signatureName);
             }
         }
         return signaturesPerFeature;
