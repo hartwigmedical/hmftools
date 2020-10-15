@@ -193,14 +193,17 @@ public class SampleTraits
         }
 
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.RefCancerSampleData.get(sample.CancerType).size() : 0;
 
         final Map<String,double[]> indelPercentiles = mRefTraitPercentiles.get(MS_INDELS_TMB);
         double indelMb = sampleTraits.IndelsMbPerMb;
 
-        final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, true);
+        final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
+                sample.CancerType, cancerSampleCount, cancerTypeCount, indelPercentiles, indelMb,  true);
         results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_LOW", indelMb, cancerPrevsLow));
 
-        final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(indelPercentiles, indelMb, cancerTypeCount, false);
+        final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(
+                sample.CancerType, cancerSampleCount, cancerTypeCount, indelPercentiles, indelMb, false);
         results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_HIGH", indelMb, cancerPrevsHigh));
 
         return results;

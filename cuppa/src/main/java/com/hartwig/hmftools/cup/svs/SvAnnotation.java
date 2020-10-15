@@ -103,11 +103,14 @@ public class SvAnnotation
         }
 
         // calculate prevalence for specific SV values
-        results.add(calcPrevalenceResult(sample, svData, LINE, true));
-        results.add(calcPrevalenceResult(sample, svData, LINE, false));
-        results.add(calcPrevalenceResult(sample, svData, TELOMERIC_SGL, false));
-        results.add(calcPrevalenceResult(sample, svData, SIMPLE_DUP_32B_200B, false));
-        results.add(calcPrevalenceResult(sample, svData, MAX_COMPLEX_SIZE, false));
+        int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.RefCancerSampleData.get(sample.CancerType).size() : 0;
+
+        results.add(calcPrevalenceResult(sample, cancerTypeCount, cancerSampleCount, svData, LINE, true));
+        results.add(calcPrevalenceResult(sample, cancerTypeCount, cancerSampleCount, svData, LINE, false));
+        results.add(calcPrevalenceResult(sample, cancerTypeCount, cancerSampleCount, svData, TELOMERIC_SGL, false));
+        results.add(calcPrevalenceResult(sample, cancerTypeCount, cancerSampleCount, svData, SIMPLE_DUP_32B_200B, false));
+        results.add(calcPrevalenceResult(sample, cancerTypeCount, cancerSampleCount, svData, MAX_COMPLEX_SIZE, false));
 
         if(loadDbData)
             mSampleSvData.clear();
@@ -115,13 +118,14 @@ public class SvAnnotation
         return results;
     }
 
-    private SampleResult calcPrevalenceResult(final SampleData sample, final SvData svData, final SvDataType type, boolean useLowThreshold)
+    private SampleResult calcPrevalenceResult(
+            final SampleData sample, int cancerTypeCount, int cancerSampleCount,
+            final SvData svData, final SvDataType type, boolean useLowThreshold)
     {
         double svValue = svData.getCount(type);
-        int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
 
         final Map<String,Double> cancerPrevs = calcPercentilePrevalence(
-                mRefSvTypePercentiles.get(type), svValue, cancerTypeCount, useLowThreshold);
+                sample.CancerType, cancerSampleCount, cancerTypeCount, mRefSvTypePercentiles.get(type), svValue, useLowThreshold);
 
         final String dataType = String.format("%s_%s", type, useLowThreshold ? "LOW" : "HIGH");
         return new SampleResult(sample.Id, SV, LIKELIHOOD, dataType, svValue, cancerPrevs);

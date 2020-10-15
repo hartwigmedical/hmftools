@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.ClassifierType.RNA_GENE_EXPRESSION;
 import static com.hartwig.hmftools.cup.common.ClassifierType.RNA_GENE_EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
+import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -247,11 +248,15 @@ public class RnaExpression
         return adjustedTPMs;
     }
 
-    private static final double MAX_PERC_THRESHOLD = 0.90;
+    private static final double MAX_PERC_THRESHOLD = 0.50;
+    private static final double MIN_TPM_THRESHOLD = 0.1;
 
     private void addPrevalenceResults(final SampleData sample, final double[] sampleGeneTPMs, final List<SampleResult> results)
     {
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.RefCancerSampleData.get(sample.CancerType).size() : 0;
+
+        final Map<String,Double> summaryCancerPrevs = Maps.newHashMap();
 
         for(int i = 0; i < mGeneIdList.size(); ++i)
         {
@@ -261,20 +266,53 @@ public class RnaExpression
             if(geneName == null)
                 continue;
 
-            final Map<String,double[]> cancerPercentiles = mRefGeneCancerPercentiles.get(geneId);
             double sampleLogTpm = sampleGeneTPMs[i];
             double sampleTpm = exp(sampleLogTpm) - 1; // revert to TPM from log(TPM+1)
 
-            final Map<String,Double> cancerPrevs = calcPercentilePrevalence(
-                    cancerPercentiles, sampleTpm, cancerTypeCount, false);
+            if(sampleTpm < MIN_TPM_THRESHOLD)
+                continue;
 
+            final Map<String,double[]> cancerPercentiles = mRefGeneCancerPercentiles.get(geneId);
+
+            final Map<String,Double> cancerPrevs = calcPercentilePrevalence(
+                    sample.CancerType, cancerSampleCount,  cancerTypeCount, cancerPercentiles, sampleTpm, false);
+
+
+            /*
             double maxPercentage = cancerPrevs.values().stream().mapToDouble(x -> x).max().orElse(0);
+            final String dataType = String.format("%s:%s", geneId, geneName);
 
             if(maxPercentage >= MAX_PERC_THRESHOLD)
             {
-                final String dataType = String.format("%s:%s", geneId, geneName);
                 results.add(new SampleResult(sample.Id, GENE_EXP, PERCENTILE, dataType, String.format("%.3g", sampleTpm), cancerPrevs));
             }
+            */
+
+            for(Map.Entry<String,Double> entry : cancerPrevs.entrySet())
+            {
+                Double prev = summaryCancerPrevs.get(entry.getKey());
+                if(prev == null)
+                    summaryCancerPrevs.put(entry.getKey(), entry.getValue());
+                else
+                    summaryCancerPrevs.put(entry.getKey(), prev * entry.getValue());
+            }
+
+            double maxProbability = summaryCancerPrevs.values().stream().mapToDouble(x -> x).max().orElse(0);
+
+            if(maxProbability <= 0)
+                break;
+
+            if(maxProbability < 1e-20)
+                convertToPercentages(summaryCancerPrevs); // prevent values getting too small and dropping out
+        }
+
+        // form a likelihood value from all gene entries
+        double totalPrevalence = summaryCancerPrevs.values().stream().mapToDouble(x -> x).sum();
+
+        if(totalPrevalence > 0)
+        {
+            convertToPercentages(summaryCancerPrevs);
+            results.add(new SampleResult(sample.Id, GENE_EXP, LIKELIHOOD, "GENE_EXP_LIKELIHOOD", "", summaryCancerPrevs));
         }
     }
 }

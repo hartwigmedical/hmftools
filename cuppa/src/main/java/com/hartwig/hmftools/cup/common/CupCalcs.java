@@ -24,7 +24,8 @@ public class CupCalcs
     private static final int PERCENTILE_HIGH = 95;
 
     public static Map<String,Double> calcPercentilePrevalence(
-            final Map<String,double[]> cancerPercentiles, double value, int cancerTypeCount, boolean useLowThreshold)
+            final String sampleCancerType, int sampleCancerCount, int cancerTypeCount,
+            final Map<String,double[]> cancerPercentiles, double value,  boolean useLowThreshold)
     {
         /*
         Low Test = % of samples below the max(observed value + 25%, min 5th percentile value in any cancerType)
@@ -41,7 +42,6 @@ public class CupCalcs
         threshold = useLowThreshold ?
                 max((1 + PERCENTILE_THRESHOLD_PERC) * value, threshold) : min((1 - PERCENTILE_THRESHOLD_PERC) * value, threshold);
 
-        double prevTotal = 0;
         final Map<String,Double> cancerPrevalences = Maps.newHashMap();
 
         for(Map.Entry<String,double[]> entry : cancerPercentiles.entrySet())
@@ -51,16 +51,26 @@ public class CupCalcs
 
             double percentile = getPercentile(percentiles, threshold);
 
-            percentile = useLowThreshold ? max(percentile, prevFloor) :  max(1 - percentile, prevFloor);
+            if(sampleCancerCount > 0 && cancerType.equals(sampleCancerType))
+            {
+                // adjust percentile value to remove this sample
+                if(useLowThreshold && value < threshold)
+                {
+                    double countBelowThreshold = percentile * sampleCancerCount;
+                    percentile = max((countBelowThreshold - 1) / (sampleCancerCount - 1), 0);
+                }
+                else if(!useLowThreshold && value > threshold)
+                {
+                    double countAboveThreshold = (1 - percentile) * sampleCancerCount;
+                    percentile = min(1 - (countAboveThreshold - 1) / (sampleCancerCount - 1), 1.00);
+                }
+            }
 
-            prevTotal += percentile;
+            percentile = useLowThreshold ? max(percentile, prevFloor) :  max(1 - percentile, prevFloor);
             cancerPrevalences.put(cancerType, percentile);
         }
 
-        for(Map.Entry<String,Double> entry : cancerPrevalences.entrySet())
-        {
-            cancerPrevalences.put(entry.getKey(), entry.getValue() / prevTotal);
-        }
+        convertToPercentages(cancerPrevalences);
 
         return cancerPrevalences;
     }
@@ -109,6 +119,20 @@ public class CupCalcs
         return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, FEATURE_PREVALENCE.toString(), "", cancerTypeValues);
     }
 
+    public static void convertToPercentages(final Map<String,Double> dataMap)
+    {
+        double totalPrevalence = dataMap.values().stream().mapToDouble(x -> x).sum();
+
+        if(totalPrevalence == 0)
+            return;
+
+        for(Map.Entry<String,Double> entry : dataMap.entrySet())
+        {
+            double percentage = entry.getValue() / totalPrevalence;
+            dataMap.put(entry.getKey(), percentage);
+        }
+    }
+
     public static SampleResult calcClassifierScoreResult(final SampleData sample, final List<SampleResult> results)
     {
         final List<SampleResult> classifierResults = results.stream()
@@ -133,16 +157,7 @@ public class CupCalcs
             }
         }
 
-        double totalProbability = cancerTypeValues.values().stream().mapToDouble(x -> x).sum();
-
-        if(totalProbability == 0)
-            return null;
-
-        for(Map.Entry<String,Double> entry : cancerTypeValues.entrySet())
-        {
-            double probability = entry.getValue() / totalProbability;
-            cancerTypeValues.put(entry.getKey(), probability);
-        }
+        convertToPercentages(cancerTypeValues);
 
         return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, COMBINED.toString(), "", cancerTypeValues);
     }

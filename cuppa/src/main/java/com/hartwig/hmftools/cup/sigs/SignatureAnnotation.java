@@ -218,11 +218,16 @@ public class SignatureAnnotation
         results.add(result);
 
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.RefCancerSampleData.get(sample.CancerType).size() : 0;
 
-        final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvTotal, cancerTypeCount, true);
+        final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
+                sample.CancerType, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal,  true);
+
         results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_LOW", snvTotal, cancerPrevsLow));
 
-        final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(mRefCancerSnvCountPercentiles, snvTotal, cancerTypeCount, false);
+        final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(
+                sample.CancerType, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal, false);
+
         results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_HIGH", snvTotal, cancerPrevsHigh));
 
         return results;
