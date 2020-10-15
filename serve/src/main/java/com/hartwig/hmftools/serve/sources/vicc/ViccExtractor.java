@@ -2,10 +2,12 @@ package com.hartwig.hmftools.serve.sources.vicc;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
@@ -69,14 +71,14 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    public ViccExtractionOutput extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) {
+    public ViccExtractionOutput extractFromViccEntries(@NotNull List<ViccEntry> viccEntries, @NotNull List<DriverGene> driverGenes) {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
         for (ViccEntry entry : viccEntries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
             Map<Feature, KnownCopyNumber> ampsDelsPerFeature = copyNumberExtractor.extractKnownAmplificationsDeletions(entry);
             Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractKnownFusions(entry);
             Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelEventExtractor.extractKnownGeneLevelEvents(entry);
-            Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry);
+            Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry, driverGenes);
             Map<Feature, SignatureName> signaturesPerFeature = signaturesExtractor.extractSignatures(entry);
 
             ActionableEvent actionableEvidence = ActionableEvidenceFactory.toActionableEvent(entry);
@@ -161,7 +163,7 @@ public final class ViccExtractor {
             ActionableEvent event = result.actionableEvent();
             if (event != null) {
                 actionableHotspots.addAll(extractActionableHotspots(event, result.hotspotsPerFeature().values()));
-                actionableRanges.addAll(extractActionableRanges(event, result.geneRangesPerFeature().values()));
+                actionableRanges.addAll(extractActionableRanges(event, result.geneRangesPerFeature().values(), result.geneRangesPerFeature().keySet()));
                 actionableGenes.addAll(extractActionableAmpsDels(event, result.ampsDelsPerFeature().values()));
                 actionableGenes.addAll(extractActionableGeneLevelEvents(event, result.geneLevelEventsPerFeature().values()));
                 actionableFusions.addAll(extractActionableFusions(event, result.fusionsPerFeature().values()));
@@ -196,10 +198,11 @@ public final class ViccExtractor {
 
     @NotNull
     private static List<ActionableRange> extractActionableRanges(@NotNull ActionableEvent actionableEvent,
-            @NotNull Iterable<List<GeneRangeAnnotation>> geneRangeAnnotationLists) {
+            @NotNull Iterable<List<GeneRangeAnnotation>> geneRangeAnnotationLists, @NotNull Set<Feature> features) {
         List<ActionableRange> actionableRanges = Lists.newArrayList();
         for (List<GeneRangeAnnotation> rangeList : geneRangeAnnotationLists) {
             for (GeneRangeAnnotation range : rangeList) {
+                //TODO: rangeInfo and feature can be removed when range positions are verified
                 actionableRanges.add(ImmutableActionableRange.builder()
                         .from(actionableEvent)
                         .gene(range.gene())
@@ -207,6 +210,8 @@ public final class ViccExtractor {
                         .start(range.start())
                         .end(range.end())
                         .mutationType(range.mutationType())
+                        .rangeInfo(range.rangeInfo())
+                        .feature(features)
                         .build());
             }
         }

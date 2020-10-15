@@ -53,13 +53,13 @@ public final class ViccUtil {
 
     public static void writeFeatureTypes(@NotNull String featureTypeTsv, @NotNull List<ViccEntry> entries) throws IOException {
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner(FIELD_DELIMITER).add("gene").add("feature").add("type").toString();
+        String header = new StringJoiner(FIELD_DELIMITER).add("gene").add("featureName").add("type").add("feature").toString();
         lines.add(header);
 
         for (ViccEntry entry : entries) {
             for (Feature feature : entry.features()) {
                 StringJoiner featureString = new StringJoiner(FIELD_DELIMITER);
-                featureString.add(feature.geneSymbol()).add(feature.name()).add(feature.type().toString());
+                featureString.add(feature.geneSymbol()).add(feature.name()).add(feature.type().toString()).add(feature.toString());
                 lines.add(featureString.toString());
             }
         }

@@ -43,10 +43,12 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static String header() {
+        //TODO: rangeInfo and feature can be removed when range positions are verified
         return new StringJoiner(DELIMITER).add("gene")
                 .add("chromosome")
                 .add("start")
                 .add("end")
+                .add("range")
                 .add("mutationType")
                 .add("source")
                 .add("treatment")
@@ -55,6 +57,7 @@ public final class ActionableRangeFile {
                 .add("level")
                 .add("direction")
                 .add("url")
+                .add("feature")
                 .toString();
     }
 
@@ -101,10 +104,12 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableRange range) {
+        //TODO: rangeInfo and feature can be removed when range positions are verified
         return new StringJoiner(DELIMITER).add(range.gene())
                 .add(range.chromosome())
                 .add(Long.toString(range.start()))
                 .add(Long.toString(range.end()))
+                .add(range.rangeInfo())
                 .add(range.mutationType().toString())
                 .add(range.source().display())
                 .add(range.treatment())
@@ -113,6 +118,7 @@ public final class ActionableRangeFile {
                 .add(range.level().toString())
                 .add(range.direction().display())
                 .add(range.url())
+                .add(range.feature().toString())
                 .toString();
     }
 }
