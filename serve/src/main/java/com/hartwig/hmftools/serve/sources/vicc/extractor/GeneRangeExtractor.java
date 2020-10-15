@@ -92,7 +92,6 @@ public class GeneRangeExtractor {
     private MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull Feature feature) {
         String featureEvent = feature.name().toLowerCase();
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
-        //TODO: extract more specific mutationTypeFilter
         if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
             LOGGER.info("mutation filter");
             return MutationTypeFilter.SPLICE;
@@ -100,7 +99,10 @@ public class GeneRangeExtractor {
             return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
         } else if (extractSpecificInfoOfEvent.equals("insertions")) {
             return MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
-
+        } else if (extractSpecificInfoOfEvent.equals("deletion/insertion") || extractSpecificInfoOfEvent.equals("insertions/deletions")) {
+            return MutationTypeFilter.MISSENSE_INFRAME_ANY;
+        } else if (extractSpecificInfoOfEvent.equals("frameshift")) {
+            return MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
         } else {
             return MutationTypeFilter.UNKNOWN;
         }
