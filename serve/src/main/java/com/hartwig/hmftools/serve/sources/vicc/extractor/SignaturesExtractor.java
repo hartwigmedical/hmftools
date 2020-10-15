@@ -14,6 +14,7 @@ public class SignaturesExtractor {
 
     @NotNull
     private SignatureName extractSignatureName(@NotNull Feature feature) {
+        //TODO: extent with more signatures
         if (feature.name().equals("Microsatellite Instability-High")) {
             return SignatureName.MICROSATELLITE_UNSTABLE;
         } else {
