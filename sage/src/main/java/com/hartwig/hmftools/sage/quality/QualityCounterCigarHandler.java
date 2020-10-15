@@ -64,20 +64,20 @@ class QualityCounterCigarHandler implements CigarHandler {
     }
 
     @Override
-    public void handleInsert(@NotNull final SAMRecord record, final int cigarIndex, @NotNull final CigarElement e, final int readIndex, final int refPos) {
+    public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos) {
         // Need to add one because indel is actually AFTER this by convention
         indelPositions.add(refPos + 1);
-        handleAlignment(record, cigarIndex, SINGLE, readIndex, refPos);
+        handleAlignment(record, SINGLE, readIndex, refPos);
     }
 
     @Override
-    public void handleDelete(@NotNull final SAMRecord record, final int cigarIndex, @NotNull final CigarElement e, final int readIndex, final int refPos) {
+    public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos) {
         indelPositions.add(refPos + 1);
-        handleAlignment(record, cigarIndex, SINGLE, readIndex, refPos);
+        handleAlignment(record, SINGLE, readIndex, refPos);
     }
 
     @Override
-    public void handleAlignment(@NotNull final SAMRecord r, final int cigarIndex, @NotNull final CigarElement e, final int startReadIndex, final int refPos) {
+    public void handleAlignment(@NotNull final SAMRecord r, @NotNull final CigarElement e, final int startReadIndex, final int refPos) {
         for (int i = 0; i < e.getLength(); i++) {
             int readIndex = startReadIndex + i;
             int position = refPos + i;

@@ -23,25 +23,25 @@ public class CigarTraversal {
                     break; // ignore pads
                 case S:
                     if (i == 0) {
-                        handler.handleLeftSoftClip(record, i, e);
+                        handler.handleLeftSoftClip(record, e);
                     } else if (i == cigar.numCigarElements() - 1) {
-                        handler.handleRightSoftClip(record, i, e, readIndex, refBase);
+                        handler.handleRightSoftClip(record, e, readIndex, refBase);
                     }
                     readIndex += e.getLength();
                     break; // soft clip read bases
                 case N:
-                    handler.handleSkippedReference(record, i, e, readIndex - 1, refBase - 1);
+                    handler.handleSkippedReference(record, e, readIndex - 1, refBase - 1);
                     refBase += e.getLength();
                     break;  // reference skip
                 case D:
-                    handler.handleDelete(record, i, e, readIndex - 1, refBase - 1);
+                    handler.handleDelete(record, e, readIndex - 1, refBase - 1);
                     refBase += e.getLength();
                     break;
                 case I:
                     // TODO: Handle 1I150M
                     int refIndex = refBase - 1 - record.getAlignmentStart();
                     if (refIndex >= 0) {
-                        handler.handleInsert(record, i, e, readIndex - 1, refBase - 1);
+                        handler.handleInsert(record, e, readIndex - 1, refBase - 1);
                     }
                     readIndex += e.getLength();
                     break;
@@ -50,7 +50,7 @@ public class CigarTraversal {
                 case X:
                     boolean isFollowedByIndel = i < cigar.numCigarElements() - 1 && cigar.getCigarElement(i + 1).getOperator().isIndel();
                     final CigarElement element = isFollowedByIndel ? new CigarElement(e.getLength() - 1, e.getOperator()) : e;
-                    handler.handleAlignment(record, i, element, readIndex, refBase);
+                    handler.handleAlignment(record, element, readIndex, refBase);
                     readIndex += e.getLength();
                     refBase += e.getLength();
                     break;
