@@ -210,13 +210,13 @@ public abstract class LinxFusion
                 .skippedExonsDown(Integer.parseInt(values[fieldIndexMap.get("SkippedExonsDown")]))
                 .fusedExonUp(Integer.parseInt(values[fieldIndexMap.get("FusedExonUp")]))
                 .fusedExonDown(Integer.parseInt(values[fieldIndexMap.get("FusedExonDown")]))
-                .geneStart(values[fieldIndexMap.get("GeneStart")])
-                .geneContextStart(values[fieldIndexMap.get("GeneContextStart")])
-                .geneTranscriptStart(values[fieldIndexMap.get("TranscriptStart")])
-                .geneEnd(values[fieldIndexMap.get("GeneEnd")])
-                .geneContextEnd(values[fieldIndexMap.get("GeneContextEnd")])
-                .geneTranscriptEnd(values[fieldIndexMap.get("TranscriptEnd")])
-                .junctionCopyNumber(Double.parseDouble(values[fieldIndexMap.get("JunctionCopyNumber")]))
+                .geneStart("")
+                .geneContextStart("")
+                .geneTranscriptStart("")
+                .geneEnd("")
+                .geneContextEnd("")
+                .geneTranscriptEnd("")
+                .junctionCopyNumber(0.0)
                 .build();
     }
 
