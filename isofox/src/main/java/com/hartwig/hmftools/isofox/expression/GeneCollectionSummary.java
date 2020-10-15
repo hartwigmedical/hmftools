@@ -18,6 +18,7 @@ public class GeneCollectionSummary
     public final List<GeneResult> GeneResults;
     public final List<TranscriptResult> TranscriptResults;
 
+    private final int mTotalLowMqFragments;
     private final Map<String,Double> mFitAllocations; // results from the expected rate vs counts fit routine, stored per transcript
     private double mFitResiduals;
 
@@ -30,6 +31,8 @@ public class GeneCollectionSummary
         TransCategoryCounts = Lists.newArrayList(transCategoryCounts);
         GeneResults = Lists.newArrayList();
         TranscriptResults = Lists.newArrayList();
+
+        mTotalLowMqFragments = TransCategoryCounts.stream().mapToInt(x -> x.lowMapQualFragments()).sum();
 
         mFitAllocations = Maps.newHashMap();
         mFitResiduals = 0;
@@ -112,9 +115,7 @@ public class GeneCollectionSummary
 
     public void assignLowMapQualityFragments()
     {
-        int totalLowMqFragments = TransCategoryCounts.stream().mapToInt(x -> x.lowMapQualFragments()).sum();
-
-        if(totalLowMqFragments == 0)
+        if(mTotalLowMqFragments == 0)
             return;
 
         double totalTranscriptAlloc = TranscriptResults.stream().mapToDouble(x -> x.getFitAllocation()).sum();
@@ -124,8 +125,8 @@ public class GeneCollectionSummary
         if(totalAlloc == 0)
             return;
 
-        double splicedLowMqFrags = totalLowMqFragments * totalTranscriptAlloc / totalAlloc;
-        double unsplicedLowMqFrags = totalLowMqFragments * totalUnsplicedAlloc / totalAlloc;
+        double splicedLowMqFrags = mTotalLowMqFragments * totalTranscriptAlloc / totalAlloc;
+        double unsplicedLowMqFrags = mTotalLowMqFragments * totalUnsplicedAlloc / totalAlloc;
 
         // divide amongst transcripts
         for(final TranscriptResult transResult : TranscriptResults)

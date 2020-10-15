@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.isofox;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -191,6 +190,7 @@ public class BamFragmentAllocator
             mRetainedIntronFinder.setGeneData(null);
 
         mDuplicateTracker.clear();
+        mCurrentGenes = null;
     }
 
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
@@ -657,7 +657,7 @@ public class BamFragmentAllocator
         }
     }
 
-    public int calcFragmentLength(int transId, final ReadRecord read1, final ReadRecord read2)
+    private int calcFragmentLength(int transId, final ReadRecord read1, final ReadRecord read2)
     {
         final TranscriptData transData = mCurrentGenes.getTranscripts().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
         if(transData == null)

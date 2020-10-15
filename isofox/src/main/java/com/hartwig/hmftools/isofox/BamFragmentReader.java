@@ -195,6 +195,10 @@ public class BamFragmentReader implements Callable
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
             mCurrentGeneIndex = findNextOverlappingGenes(mGeneDataList, mCurrentGeneIndex, overlappingGenes);
+
+            if(!mConfig.ExcludedGeneIds.isEmpty() && overlappingGenes.stream().anyMatch(x -> mConfig.ExcludedGeneIds.contains(x.GeneId)))
+                continue;
+
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes, mGeneTransCache);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
@@ -461,6 +465,9 @@ public class BamFragmentReader implements Callable
 
         geneCollectionSummary.allocateResidualsToGenes();
         mResultsWriter.writeGeneCollectionData(geneCollection);
+
+        if(!mConfig.ApplyGcBiasAdjust)
+            geneCollectionSummary.TransCategoryCounts.clear();
     }
 
     private void postBamReadNovelLocations()

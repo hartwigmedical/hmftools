@@ -9,7 +9,7 @@ public class ExpectedRatesData
 {
     public final String Id;
 
-    // equivalent of buckets - 0-N transcripts and the fragment type (eg SHORT, SPLICED etc)
+    // equivalent of buckets - 0-N transcripts and unspliced genes
     public final List<String> Categories;
 
     // akin to signature names - all transcriptIds and a GeneId for each gene's unspliced region

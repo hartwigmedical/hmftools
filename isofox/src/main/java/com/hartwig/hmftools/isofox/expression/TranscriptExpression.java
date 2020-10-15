@@ -107,7 +107,7 @@ public class TranscriptExpression
             return;
         }
 
-        if (!checkCached) // cache the generated data since it will be used again in GC adjustment calcs
+        if (!checkCached && mConfig.ApplyGcBiasAdjust) // cache the generated data since it will be used again in GC adjustment calcs
             mExpectedRatesDataMap.put(geneSummaryData.ChrId, mCurrentExpRatesData);
 
         final double[] transComboCounts = generateReadCounts(geneSummaryData);

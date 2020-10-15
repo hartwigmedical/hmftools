@@ -233,6 +233,4 @@ public class CategoryCountsData
         return String.format("trans(%d) genes(%d)  key(%s) count(%.1f)",
                 mTranscripts.size(), mUnsplicedGenes.size(), mCombinedKey, mFragmentCount);
     }
-
-
 }

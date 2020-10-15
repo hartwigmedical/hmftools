@@ -47,7 +47,6 @@ public class BamReadCounter implements Callable
     private String mChromosome;
     private final List<EnsemblGeneData> mGeneDataList;
     private String mCurrentGenes;
-    private final FragmentTracker mFragmentTracker;
     private final int[] mMaqQualFrequencies;
 
     public BamReadCounter(final IsofoxConfig config)
@@ -67,7 +66,6 @@ public class BamReadCounter implements Callable
         mCurrentGenes = "";
         mSecondaryReads = 0;
         mReadTypeCounts = new int[typeAsInt(FragmentType.MAX)];
-        mFragmentTracker = new FragmentTracker();
         mMaqQualFrequencies = new int[4];
     }
 
@@ -104,7 +102,6 @@ public class BamReadCounter implements Callable
             if(overlappingGenes.stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneId)))
                 continue;
 
-            mFragmentTracker.clear();
             mCurrentGenesRange[SE_START] = 0;
             mCurrentGenesRange[SE_END] = 0;
 
