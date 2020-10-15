@@ -128,6 +128,8 @@ public final class FeatureTypeExtractor {
                 if (countSplice > 1) {
                     return FeatureType.COMBINED;
                 }
+            } else if (proteinAnnotation.equals("p61BRAF-V600E")) {
+                return FeatureType.COMBINED;
             }
         }
         if (DetermineHotspot.isHotspot(proteinAnnotation)) {
