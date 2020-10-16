@@ -38,8 +38,7 @@ public final class FeatureTypeExtractor {
             "fusion",
             "EGFR-KDD",
             "Transcript Regulatory Region Fusion",
-            "FGFR3 - BAIAP2L1 Fusion",
-            "nonsense");
+            "FGFR3 - BAIAP2L1 Fusion");
     public static final Set<String> SEARCH_FUSION_PROMISCUOUS =
             Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "FUSIONS");
 
