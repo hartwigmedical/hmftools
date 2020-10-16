@@ -24,8 +24,10 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 public class GeneCollection
 {
@@ -43,6 +45,7 @@ public class GeneCollection
     private final List<int[]> mCommonExonicRegions; // merge any overlapping exons, to form a set of exonic regions for the gene
     private final List<TranscriptData> mTranscripts;
 
+    private boolean mContainsExcludedGene;
     private List<TranscriptData> mEnrichedTranscripts;
     private int[] mEnrichedRegion; // special regions of high read density
 
@@ -77,6 +80,7 @@ public class GeneCollection
 
         mEnrichedTranscripts = null;
         mEnrichedRegion = null;
+        mContainsExcludedGene = false;
     }
 
     public int id() { return mId; }
@@ -118,6 +122,8 @@ public class GeneCollection
         return geneNames.toString();
     }
 
+    public boolean containsExcludedGene() { return mContainsExcludedGene; }
+    public boolean containsEnrichedRegion() { return mEnrichedRegion != null; }
     public List<TranscriptData> getEnrichedTranscripts() { return mEnrichedTranscripts; }
     public int[] getEnrichedRegion() { return mEnrichedRegion; }
 
@@ -129,6 +135,36 @@ public class GeneCollection
         return positionsOverlap(posStart, posEnd, mEnrichedRegion[SE_START], mEnrichedRegion[SE_END]);
     }
 
+    public void markEnrichedAndExcludedGenes(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
+    {
+        if(!config.ExcludedGeneIds.isEmpty() && mGeneIds.stream().anyMatch(x -> config.ExcludedGeneIds.contains(x)))
+        {
+            mContainsExcludedGene = true;
+        }
+
+        if(config.EnrichedGeneIds.isEmpty())
+            return;
+
+        for(GeneReadData geneReadData : mGenes)
+        {
+            if(config.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
+            {
+                mEnrichedTranscripts = Lists.newArrayList(geneTransCache.getTranscripts(geneReadData.GeneData.GeneId));
+                mEnrichedRegion = new int[SE_PAIR];
+
+                for(TranscriptData transData : mEnrichedTranscripts)
+                {
+                    for(ExonData exonData : transData.exons())
+                    {
+                        mEnrichedRegion[SE_START] = mEnrichedRegion[SE_START] > 0
+                                ? min(mEnrichedRegion[SE_START], exonData.ExonStart) : exonData.ExonStart;
+
+                        mEnrichedRegion[SE_END] = max(mEnrichedRegion[SE_END], exonData.ExonEnd);
+                    }
+                }
+            }
+        }
+    }
 
     public void setEnrichedTranscripts(final List<TranscriptData> transDataList)
     {

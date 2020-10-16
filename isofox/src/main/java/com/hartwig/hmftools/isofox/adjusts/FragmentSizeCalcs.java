@@ -151,7 +151,7 @@ public class FragmentSizeCalcs implements Callable
         {
             currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
 
-            if(overlappingGenes.stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneId)))
+            if(overlappingGenes.stream().anyMatch(x -> mConfig.containsExcludedEnrichedGene(x.GeneId)))
                 continue;
 
             mCurrentTransDataList.clear();

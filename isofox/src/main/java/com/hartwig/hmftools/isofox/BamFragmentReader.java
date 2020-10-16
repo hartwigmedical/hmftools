@@ -202,6 +202,7 @@ public class BamFragmentReader implements Callable
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes, mGeneTransCache);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
+            geneCollection.markEnrichedAndExcludedGenes(mConfig, mGeneTransCache);
 
             if(!genesFiltered) // reads will be taken from the previous gene collection's end
             {
@@ -225,18 +226,11 @@ public class BamFragmentReader implements Callable
                 geneCollection.setNonGenicPosition(SE_END, geneCollection.regionBounds()[SE_END] + 10000);
             }
 
-            if(mConfig.runFusionsOnly() && geneReadDataList.stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneData.GeneId)))
+            if(geneCollection.containsExcludedGene() || (mConfig.runFusionsOnly() && geneCollection.containsEnrichedRegion()))
             {
+                // skip past this gene collection - enriched regions are not used for fusion calling
                 lastGeneCollectionEndPosition = geneCollection.regionBounds()[SE_END] + 1;
                 continue;
-            }
-
-            for(GeneReadData geneReadData : geneReadDataList)
-            {
-                if(mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
-                {
-                    geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.GeneData.GeneId));
-                }
             }
 
             mPerfCounters[PERF_TOTAL].start();

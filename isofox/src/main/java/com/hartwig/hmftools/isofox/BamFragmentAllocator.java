@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
@@ -112,6 +113,7 @@ public class BamFragmentAllocator
     private int mEnrichedGeneFragments;
     private final DuplicateReadTracker mDuplicateTracker;
     private final List<String[]> mKnownPairGeneIds;
+    private SvRegion mExcludedRegion;
 
     public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
@@ -129,6 +131,7 @@ public class BamFragmentAllocator
         mTotalBamReadCount = 0;
         mNextGeneCountLog = 0;
         mEnrichedGeneFragments = 0;
+        mExcludedRegion = null;
         mValidReadStartRegion = new int[SE_PAIR];
 
         mSamReader = mConfig.BamFile != null ?
@@ -191,6 +194,7 @@ public class BamFragmentAllocator
 
         mDuplicateTracker.clear();
         mCurrentGenes = null;
+        mExcludedRegion = null;
     }
 
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
@@ -223,7 +227,19 @@ public class BamFragmentAllocator
         mValidReadStartRegion[SE_START] = geneRegion.start();
         mValidReadStartRegion[SE_END] = geneRegion.end();
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(geneRegion), this::processSamRecord);
+        if(mConfig.ExcludedRegion != null && geneRegion.overlaps(mConfig.ExcludedRegion))
+        {
+            // special handling to avoid any specified enriched region (in this case LINC00486's poly-G sequence)
+            mExcludedRegion = mConfig.ExcludedRegion;
+            final SvRegion preRegion = new SvRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
+            final SvRegion postRegion = new SvRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
+            mBamSlicer.slice(mSamReader, Lists.newArrayList(preRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, Lists.newArrayList(postRegion), this::processSamRecord);
+        }
+        else
+        {
+            mBamSlicer.slice(mSamReader, Lists.newArrayList(geneRegion), this::processSamRecord);
+        }
 
         if(mEnrichedGeneFragments > 0)
             processEnrichedGeneFragments();
@@ -275,6 +291,9 @@ public class BamFragmentAllocator
         // to avoid double-processing of reads overlapping 2 (or more) gene collections, only process them if they start in this
         // gene collection or its preceding non-genic region
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
+            return;
+
+        if(excludeRegion(record))
             return;
 
         if(mDuplicateTracker.checkDuplicates(record))
@@ -717,6 +736,15 @@ public class BamFragmentAllocator
         }
 
         return transcriptBases;
+    }
+
+    private boolean excludeRegion(final SAMRecord record)
+    {
+        if(mExcludedRegion == null)
+            return false;
+
+        return (mExcludedRegion.containsPosition(record.getStart()) || mExcludedRegion.containsPosition(record.getEnd())
+                || mExcludedRegion.containsPosition(record.getMateAlignmentStart()));
     }
 
     private boolean checkDuplicateEnrichedReads(final SAMRecord record)

@@ -6,13 +6,20 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_1;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_2;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_3;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_4;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_5;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_6;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_HG19;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_HG38;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
@@ -99,6 +106,9 @@ public class IsofoxConfig
     public final String SampleId;
     public final List<String> RestrictedGeneIds; // specific set of genes to process
     public final List<String> ExcludedGeneIds; // genes to ignore
+    public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
+    public final SvRegion ExcludedRegion;
+
     public final String OutputDir;
     public final String OutputIdentifier; // optionally include extra identifier in output files
 
@@ -135,10 +145,9 @@ public class IsofoxConfig
     public final boolean WriteGcData;
     public static double GC_RATIO_BUCKET = DEFAULT_GC_RATIO_BUCKET;
 
-    public final List<String> EnrichedGeneIds;
-
     public final FusionConfig Fusions;
 
+    // debugging and performance options
     public final List<String> SpecificChromosomes;
     public final List<SvRegion> SpecificRegions;
     public final boolean RunValidations;
@@ -150,35 +159,6 @@ public class IsofoxConfig
     public IsofoxConfig(final CommandLine cmd)
     {
         SampleId = cmd.getOptionValue(SAMPLE);
-
-        RestrictedGeneIds = Lists.newArrayList();
-        ExcludedGeneIds = Lists.newArrayList();
-
-        EnrichedGeneIds = cmd.hasOption(ENRICHED_GENE_IDS) ?
-                Arrays.stream(cmd.getOptionValue(ENRICHED_GENE_IDS).split(ITEM_DELIM)).collect(Collectors.toList()) : Lists.newArrayList();
-
-        if(cmd.hasOption(GENE_ID_FILE))
-        {
-            final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, RestrictedGeneIds);
-            ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
-        }
-        else if(cmd.hasOption(RESTRICTED_GENE_IDS))
-        {
-            RestrictedGeneIds.addAll(Arrays.stream(cmd.getOptionValue(RESTRICTED_GENE_IDS).split(ITEM_DELIM)).collect(Collectors.toList()));
-        }
-
-        if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
-        {
-            final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, ExcludedGeneIds);
-            ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
-        }
-        else
-        {
-            // explicitly ignore POLY-G region LINC00486
-            ExcludedGeneIds.add("ENSG00000230876");
-        }
 
         Functions = Lists.newArrayList();
 
@@ -240,6 +220,44 @@ public class IsofoxConfig
             RefGenomeVersion refGenVersionOverride = checkRefGenomeVersion();
             RefGenVersion = refGenVersionOverride != null ? refGenVersionOverride : HG19;
         }
+
+        RestrictedGeneIds = Lists.newArrayList();
+        ExcludedGeneIds = Lists.newArrayList();
+        EnrichedGeneIds = Lists.newArrayList();
+
+        if(cmd.hasOption(ENRICHED_GENE_IDS))
+        {
+            Arrays.stream(cmd.getOptionValue(ENRICHED_GENE_IDS).split(ITEM_DELIM)).forEach(x -> EnrichedGeneIds.add(x));
+        }
+        else
+        {
+            EnrichedGeneIds.add(ENRICHED_GENE_1);
+            EnrichedGeneIds.add(ENRICHED_GENE_2);
+            EnrichedGeneIds.add(ENRICHED_GENE_3);
+            EnrichedGeneIds.add(ENRICHED_GENE_4);
+            EnrichedGeneIds.add(ENRICHED_GENE_5);
+            EnrichedGeneIds.add(ENRICHED_GENE_6);
+        }
+
+        if(cmd.hasOption(GENE_ID_FILE))
+        {
+            final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
+            loadGeneIdsFile(inputFile, RestrictedGeneIds);
+            ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
+        }
+        else if(cmd.hasOption(RESTRICTED_GENE_IDS))
+        {
+            RestrictedGeneIds.addAll(Arrays.stream(cmd.getOptionValue(RESTRICTED_GENE_IDS).split(ITEM_DELIM)).collect(Collectors.toList()));
+        }
+
+        if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
+        {
+            final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
+            loadGeneIdsFile(inputFile, ExcludedGeneIds);
+            ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
+        }
+
+        ExcludedRegion = RefGenVersion == HG19 ? EXCLUDED_REGION_1_HG19 : EXCLUDED_REGION_1_HG38;
 
         GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
@@ -432,7 +450,15 @@ public class IsofoxConfig
     {
         return WriteFragmentLengths || FragmentLengthSamplingCount > 0;
     }
+
     public boolean requireGcRatioCalcs() { return WriteGcData || ApplyGcBiasAdjust; }
+
+    public boolean hasExcludedEnrichedGenes() { return !EnrichedGeneIds.isEmpty() || !ExcludedGeneIds.isEmpty(); }
+
+    public boolean containsExcludedEnrichedGene(final String geneId)
+    {
+        return ExcludedGeneIds.contains(geneId) || EnrichedGeneIds.contains(geneId);
+    }
 
     public String formOutputFile(final String fileId)
     {
@@ -469,6 +495,7 @@ public class IsofoxConfig
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
         EnrichedGeneIds = Lists.newArrayList();
+        ExcludedRegion = EXCLUDED_REGION_1_HG19;
         OutputDir = null;
         BamFile = null;
         RefGenomeFile = null;
