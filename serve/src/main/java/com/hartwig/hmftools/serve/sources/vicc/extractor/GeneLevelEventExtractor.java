@@ -23,7 +23,7 @@ public class GeneLevelEventExtractor {
     }
 
     @NotNull
-    public GeneLevelEvent extractGeneLevelEvent(@NotNull String event, @NotNull Feature feature) {
+    public static GeneLevelEvent extractGeneLevelEvent(@NotNull String event, @NotNull Feature feature) {
         if (event.equals("promiscuousFusion")) {
             return GeneLevelEvent.FUSION;
         } else if (event.equals("geneLevel")) {
