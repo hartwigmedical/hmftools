@@ -27,6 +27,14 @@ public class GeneLevelEventExtractor {
                 geneLevelEventsPerFeature.put(feature,
                         ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.ACTIVATION).build());
 
+            } else if (feature.type() == FeatureType.FUSION_PROMISCUOUS) {
+                //TODO: check if this is needed
+               // if (function.equals("Likely Loss-of-function")) {
+                    //            gene = Strings.EMPTY;
+                    //            typeEvent = Strings.EMPTY;
+                    //        }
+                geneLevelEventsPerFeature.put(feature,
+                        ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
             }
 
             //             else if (isValidSingleCodonRange(feature.proteinAnnotation())) {

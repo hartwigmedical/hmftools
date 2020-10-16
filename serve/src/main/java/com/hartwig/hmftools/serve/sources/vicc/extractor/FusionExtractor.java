@@ -78,23 +78,6 @@ public class FusionExtractor {
         return fusionsPerFeature;
     }
 
-    // TODO Move PROMISCUOUS fusions to Gene level event extractor.
-    //    @NotNull
-    //    public static KnownFusions determinePromiscuousFusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene,
-    //            @NotNull String function) {
-    //        if (function.equals("Likely Loss-of-function")) {
-    //            gene = Strings.EMPTY;
-    //            typeEvent = Strings.EMPTY;
-    //        }
-    //
-    //        return ImmutableKnownFusions.builder()
-    //                .gene(gene)
-    //                .eventType(typeEvent)
-    //                .source(source.toString())
-    //                .sourceLink(source.toString())
-    //                .build();
-    //    }
-    //
     @NotNull
     public static String curatedFusions(@NotNull String fusion) {
         if (fusion.equals("ZNF198-FGFR1")) {
