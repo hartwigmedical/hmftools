@@ -39,7 +39,7 @@ public final class FeatureTypeExtractor {
             "EGFR-KDD",
             "Transcript Regulatory Region Fusion",
             "FGFR3 - BAIAP2L1 Fusion",
-            "p61BRAF-V600E");
+            "nonsense");
     public static final Set<String> SEARCH_FUSION_PROMISCUOUS =
             Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "FUSIONS");
 
@@ -128,6 +128,8 @@ public final class FeatureTypeExtractor {
                 if (countSplice > 1) {
                     return FeatureType.COMBINED;
                 }
+            } else if (proteinAnnotation.equals("p61BRAF-V600E")) {
+                return FeatureType.COMBINED;
             }
         }
         if (DetermineHotspot.isHotspot(proteinAnnotation)) {
