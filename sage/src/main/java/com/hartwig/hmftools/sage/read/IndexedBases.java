@@ -12,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class IndexedBases {
 
+    public static byte ALWAYS_MATCH = (byte) '.';
+
     @NotNull
     public static IndexedBases resize(final int position, final int recordIndex, final int recordLeftCoreIndex,
             final int recordRightCoreIndex, final int flankSize, final int additionalFlank, final byte[] recordBases) {
@@ -146,7 +148,8 @@ public class IndexedBases {
         }
 
         for (int i = 0; i < centreLength(); i++) {
-            if (bases[leftCoreIndex + i] != otherBases[otherLeftCentreIndex + i]) {
+            byte otherByte = otherBases[otherLeftCentreIndex + i];
+            if (bases[leftCoreIndex + i] != otherByte && otherByte != ALWAYS_MATCH) {
                 return false;
             }
         }
@@ -160,7 +163,8 @@ public class IndexedBases {
         int maxLength = Math.min(rightFlankLength(), otherRightFlankLength);
 
         for (int i = 1; i <= maxLength; i++) {
-            if (bases[rightCoreIndex + i] != otherBases[otherRightCentreIndex + i]) {
+            byte otherByte = otherBases[otherRightCentreIndex + i];
+            if (bases[rightCoreIndex + i] != otherByte && otherByte != ALWAYS_MATCH) {
                 return -1;
             }
         }
@@ -174,7 +178,8 @@ public class IndexedBases {
         int totalLength = Math.min(leftFlankLength(), otherLeftFlankLength);
 
         for (int i = 1; i <= totalLength; i++) {
-            if (bases[leftCoreIndex - i] != otherBases[otherLeftCentreIndex - i]) {
+            byte otherByte = otherBases[otherLeftCentreIndex - i];
+            if (bases[leftCoreIndex - i] != otherByte && otherByte != ALWAYS_MATCH) {
                 return -1;
             }
         }
@@ -278,7 +283,5 @@ public class IndexedBases {
     public byte[] trinucleotideContext(int position) {
         return new byte[] { base(position - 1), base(position), base(position + 1) };
     }
-
-
 
 }

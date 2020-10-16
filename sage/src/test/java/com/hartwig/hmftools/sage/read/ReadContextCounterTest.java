@@ -143,7 +143,7 @@ public class ReadContextCounterTest {
     }
 
     @NotNull
-    private static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
+    static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
             @NotNull final String qualities) {
         final SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(alignmentStart);
