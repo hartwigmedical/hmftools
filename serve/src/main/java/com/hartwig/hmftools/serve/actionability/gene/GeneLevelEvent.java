@@ -5,5 +5,6 @@ public enum GeneLevelEvent {
     DELETION,
     ACTIVATION,
     INACTIVATION,
-    FUSION
+    FUSION,
+    UNKONWN
 }
