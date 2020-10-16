@@ -46,14 +46,16 @@ public class GeneLevelEventExtractor {
                         ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(extractGeneLevelEvent("geneLevel", feature)).build());
 
             } else if (feature.type() == FeatureType.FUSION_PROMISCUOUS) {
-                String curatedFusion = FusionCuration.curatedFusions(feature.name());
+
+                String curatedPromiscuousFusion = FusionCuration.curatedFusions(feature.geneSymbol());
                 //TODO: check if this is needed
                // if (function.equals("Likely Loss-of-function")) {
                     //            gene = Strings.EMPTY;
                     //            typeEvent = Strings.EMPTY;
                     //        }
+                LOGGER.info(feature);
                 geneLevelEventsPerFeature.put(feature,
-                        ImmutableGeneLevelAnnotation.builder().gene(curatedFusion).event(extractGeneLevelEvent("promiscuousFusion", feature)).build());
+                        ImmutableGeneLevelAnnotation.builder().gene(curatedPromiscuousFusion).event(extractGeneLevelEvent("promiscuousFusion", feature)).build());
             }
 
         }
