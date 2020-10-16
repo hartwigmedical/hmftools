@@ -21,6 +21,7 @@ public class GeneLevelEventExtractorTest {
 //    @Ignore
 //    @Test
 //    public void canExtractGeneLevelEvent() {
+    // TODO fix test
 //        Feature feature = ImmutableFeature.builder().geneSymbol("a").name("a").build();
 //
 //        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent("promiscuousFusion", feature, createDriverGene("Gene1")), GeneLevelEvent.FUSION);
