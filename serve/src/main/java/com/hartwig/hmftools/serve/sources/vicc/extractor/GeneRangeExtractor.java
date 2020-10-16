@@ -93,7 +93,6 @@ public class GeneRangeExtractor {
         String featureEvent = feature.name().toLowerCase();
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
         if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
-            LOGGER.info("mutation filter");
             return MutationTypeFilter.SPLICE;
         } else if (extractSpecificInfoOfEvent.equals("deletions")) {
             return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
