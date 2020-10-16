@@ -5,7 +5,8 @@ import org.jetbrains.annotations.Nullable;
 
 public enum EvidenceDirection {
     RESPONSIVE("Responsive"),
-    RESISTANT("Resistant");
+    RESISTANT("Resistant"),
+    NA("NA");
 
     @Nullable
     public static EvidenceDirection fromDisplayString(@NotNull String display) {
