@@ -53,14 +53,14 @@ public class MixedGermlineTest {
         assertEquals(1, germlineSnv.mixedGermlineImpact());
 
         assertFalse(germlineSnv.isPassing());
-        assertFalse( somaticSnv.isPassing());
-        assertTrue( mixedMnv.isPassing());
+        assertFalse(somaticSnv.isPassing());
+        assertTrue(mixedMnv.isPassing());
     }
 
     private void testMixed(int germlinePosition, boolean mvnPass) {
         final SageVariant germlineSnv = createGermline("1", germlinePosition, "A", "G");
         final SageVariant somaticSnv = create("1", germlinePosition + 2, "A", "G");
-        final SageVariant mixedMnv = create("1",  germlinePosition, "ACA", "GCG");
+        final SageVariant mixedMnv = create("1", germlinePosition, "ACA", "GCG");
 
         process("1", germlineSnv, somaticSnv, mixedMnv);
 
@@ -109,6 +109,9 @@ public class MixedGermlineTest {
                 dummyReadContext,
                 new QualityRecalibrationMap(Collections.emptyList()),
                 SageVariantTier.PANEL,
-                1000, 0, false);
+                1000,
+                0,
+                50,
+                false);
     }
 }

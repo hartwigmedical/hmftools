@@ -61,7 +61,7 @@ public class ExpandedBasesFactory {
 
             // Create skpped reference substitute
             for (int j = 0; j < referenceRegionReplacementLength; j++) {
-                dest[destPos++] = IndexedBases.ALWAYS_MATCH;
+                dest[destPos++] = IndexedBases.MATCH_WILDCARD;
             }
         }
 

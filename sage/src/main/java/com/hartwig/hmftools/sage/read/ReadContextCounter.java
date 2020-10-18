@@ -30,6 +30,7 @@ public class ReadContextCounter implements VariantHotspot {
     private final boolean realign;
     private final int maxCoverage;
     private final int minNumberOfEvents;
+    private final ExpandedBasesFactory expandedBasesFactory;
 
     private int full;
     private int partial;
@@ -59,7 +60,7 @@ public class ReadContextCounter implements VariantHotspot {
 
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
             final QualityRecalibrationMap recalibrationMap, final SageVariantTier tier, final int maxCoverage, final int minNumberOfEvents,
-            boolean realign) {
+            final int maxSkippedReferenceRegions, boolean realign) {
         this.sample = sample;
         this.tier = tier;
         this.variant = variant;
@@ -69,6 +70,7 @@ public class ReadContextCounter implements VariantHotspot {
         this.maxCoverage = maxCoverage;
         this.qualityRecalibrationMap = recalibrationMap;
         this.minNumberOfEvents = minNumberOfEvents;
+        this.expandedBasesFactory = new ExpandedBasesFactory(maxSkippedReferenceRegions, maxSkippedReferenceRegions);
     }
 
     @NotNull
@@ -231,7 +233,11 @@ public class ReadContextCounter implements VariantHotspot {
 
             // Check if FULL, PARTIAL, OR CORE
             if (!baseDeleted) {
-                final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
+                final boolean wildcardMatchInCore = variant.isSNV() && readContext().microhomology().isEmpty();
+                final IndexedBases expandedBases = expandedBasesFactory.expand((int) position(), readIndex, record);
+                final ReadContextMatch match =
+                        readContext.matchAtPosition(wildcardMatchInCore, expandedBases.index(), expandedBases.bases());
+
                 if (!match.equals(ReadContextMatch.NONE)) {
                     switch (match) {
                         case FULL:
