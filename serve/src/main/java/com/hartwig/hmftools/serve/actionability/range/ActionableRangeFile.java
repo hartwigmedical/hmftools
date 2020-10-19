@@ -88,6 +88,7 @@ public final class ActionableRangeFile {
                 .doid(values[8])
                 .level(EvidenceLevel.valueOf(values[9]))
                 .direction(ActionableEventFactory.directionFromFileValue(values[10]))
+                .rangeInfo("UNKNOWN") //TODO: @Lieke, currently your to and from lines are inconsistent and files on datastore do not contain rangeInfo
                 .url(url)
                 .build();
     }
