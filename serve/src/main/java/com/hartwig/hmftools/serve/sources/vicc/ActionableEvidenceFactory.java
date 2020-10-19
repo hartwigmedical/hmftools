@@ -75,7 +75,7 @@ final class ActionableEvidenceFactory {
 
     @NotNull
     private static EvidenceDirection nullToEmpty(@Nullable EvidenceDirection evidenceDirection) {
-        return evidenceDirection != null ? evidenceDirection.NA : EvidenceDirection.NA;
+        return evidenceDirection != null ? evidenceDirection : EvidenceDirection.NA;
     }
 
     @Nullable
