@@ -31,10 +31,8 @@ public class GeneLevelEventExtractor {
         GeneLevelEvent geneLevelEvent = GeneLevelEvent.UNKONWN;
 
         if (event.equals("promiscuousFusion")) {
-            LOGGER.info("extractGeneLevelEvent promiscuousFusion");
             geneLevelEvent = GeneLevelEvent.FUSION;
         } else if (event.equals("geneLevel")) {
-            LOGGER.info("extractGeneLevelEvent geneLevel");
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.likelihoodType() == DriverCategory.TSG) {
                     geneLevelEvent = GeneLevelEvent.ACTIVATION;
@@ -51,7 +49,6 @@ public class GeneLevelEventExtractor {
             LOGGER.warn("No gene level event could be extracted from event {}", feature);
             geneLevelEvent = GeneLevelEvent.UNKONWN;
         }
-        LOGGER.info("geneLevelEvent {}", geneLevelEvent);
         return geneLevelEvent;
     }
 
