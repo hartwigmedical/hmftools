@@ -2,9 +2,11 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
@@ -23,88 +25,70 @@ public class GeneLevelEventExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
+    //TODO
+//     "SPLICE VARIANT 7",
+//             "Splice",
+//             "DNMT3B7",
+//             "LCS6-variant",
+//             "AR-V7",
+//             "ARv567es");
+
+    private static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO = Sets.newHashSet("MUTATION",
+            "mutant",
+            "mut",
+            "TRUNCATING MUTATION",
+            "Truncating Mutations",
+            "feature_truncation",
+            "FRAMESHIFT TRUNCATION", "FRAMESHIFT MUTATION");
+    private static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_TSG = Sets.newHashSet("inact mut",
+            "biallelic inactivation",
+            "Loss Of Function Variant",
+            "Loss Of Heterozygosity",
+            "DELETERIOUS MUTATION",
+            "negative");
+    private static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_ONCO = Sets.newHashSet("Gain-of-function Mutations",
+            "Gain-of-Function",
+            "act mut",
+            "ACTIVATING MUTATION",
+            "Oncogenic Mutations",
+            "pos",
+            "positive");
+
     public GeneLevelEventExtractor() {
     }
 
     @VisibleForTesting
     @NotNull
     public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
-        //TODO description or gene only field
-        //                        "Oncogenic Mutations",
-        //                        "TRUNCATING MUTATION",
-        //                        "Truncating Mutations",
-        //                        "DELETERIOUS MUTATION",
-        //                        "feature_truncation",
-        //                        "FRAMESHIFT TRUNCATION",
-        //                        "FRAMESHIFT MUTATION",
-        //                        "SPLICE VARIANT 7",
-        //                        "Splice",
-        //                        "DNMT3B7",
-        //                        "LCS6-variant",
-        //                        "AR-V7",
-        //                        "ARv567es"
-        if (feature.biomarkerType() != null) {
-            if (feature.biomarkerType().equals("act mut")) {
-                return GeneLevelEvent.ACTIVATION;
-            } else if (feature.biomarkerType().equals("pos")) {
-                return GeneLevelEvent.ACTIVATION;
-            } else if (feature.biomarkerType().equals("positive")) {
-                return GeneLevelEvent.ACTIVATION;
-            } else if (feature.biomarkerType().equals("ACTIVATING MUTATION")) {
-                return GeneLevelEvent.ACTIVATION;
-            } else if (feature.biomarkerType().equals("Gain-of-function Mutations")) {
-                return GeneLevelEvent.ACTIVATION;
-            } else if (feature.biomarkerType().equals("Gain-of-Function")) {
-                return GeneLevelEvent.ACTIVATION;
-            } else if (feature.biomarkerType().equals("inact mut")) {
-                return GeneLevelEvent.INACTIVATION;
-            } else if (feature.biomarkerType().equals("biallelic inactivation")) {
-                return GeneLevelEvent.INACTIVATION;
-            } else if (feature.biomarkerType().equals("negative")) {
-                return GeneLevelEvent.INACTIVATION;
-            } else if (feature.biomarkerType().equals("Loss Of Function Variant")) {
-                return GeneLevelEvent.INACTIVATION;
-            } else if (feature.biomarkerType().equals("Loss Of Heterozygosity")) {
-                return GeneLevelEvent.INACTIVATION;
-            } else {
-                for (DriverGene driverGene : driverGenes) {
-                    if (driverGene.gene().equals(feature.geneSymbol())) {
-                        if (driverGene.likelihoodType() == DriverCategory.ONCO) {
-                            if (feature.provenanceRule() != null) {
-                                if (feature.provenanceRule().equals("gene_only")) {
-                                    return GeneLevelEvent.ACTIVATION;
-                                }
-                            } else if (feature.biomarkerType() != null) {
-
-                                if (feature.biomarkerType().equals("MUTATION")) {
-                                    return GeneLevelEvent.ACTIVATION;
-                                } else if (feature.biomarkerType().equals("mutant")) {
-                                    return GeneLevelEvent.ACTIVATION;
-                                } else if (feature.biomarkerType().equals("mut")) {
-                                    return GeneLevelEvent.ACTIVATION;
-                                }
+        if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(feature.description()) || feature.provenanceRule() != null) {
+            for (DriverGene driverGene : driverGenes) {
+                if (driverGene.gene().equals(feature.geneSymbol())) {
+                    if (driverGene.likelihoodType() == DriverCategory.ONCO) {
+                        if (feature.provenanceRule() != null) {
+                            if (feature.provenanceRule().equals("gene_only")) {
+                                return GeneLevelEvent.ACTIVATION;
                             }
-                        } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
-                            if (feature.provenanceRule() != null) {
-                                if (feature.provenanceRule().equals("gene_only")) {
-                                    return GeneLevelEvent.INACTIVATION;
-                                }
-                            } else if (feature.biomarkerType() != null) {
-
-                                if (feature.biomarkerType().equals("MUTATION")) {
-                                    return GeneLevelEvent.ACTIVATION;
-                                } else if (feature.biomarkerType().equals("mutant")) {
-                                    return GeneLevelEvent.ACTIVATION;
-                                } else if (feature.biomarkerType().equals("mut")) {
-                                    return GeneLevelEvent.ACTIVATION;
-                                }
+                        } else if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(feature.description())) {
+                            return GeneLevelEvent.ACTIVATION;
+                        }
+                    } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
+                        if (feature.provenanceRule() != null) {
+                            if (feature.provenanceRule().equals("gene_only")) {
+                                return GeneLevelEvent.INACTIVATION;
                             }
+                        } else if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(feature.description())) {
+                            return GeneLevelEvent.ACTIVATION;
                         }
                     }
                 }
-                LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
             }
+            LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
+        } else if (DETAILLED_GENE_LEVEL_INFO_WITH_TSG.contains(feature.description())) {
+            return GeneLevelEvent.INACTIVATION;
+        } else if (DETAILLED_GENE_LEVEL_INFO_WITH_ONCO.contains(feature.description())) {
+            return GeneLevelEvent.ACTIVATION;
         }
+
         return GeneLevelEvent.UNKONWN;
     }
 
