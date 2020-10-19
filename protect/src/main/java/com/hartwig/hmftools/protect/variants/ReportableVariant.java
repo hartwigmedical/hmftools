@@ -64,7 +64,10 @@ public abstract class ReportableVariant implements Variant {
 
     public abstract double driverLikelihood();
 
-    public abstract DriverInterpretation driverLikelihoodInterpretation();
+    @NotNull
+    public DriverInterpretation driverLikelihoodInterpretation() {
+        return DriverInterpretation.interpret(driverLikelihood());
+    }
 
     public abstract boolean biallelic();
 
