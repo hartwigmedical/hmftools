@@ -43,7 +43,7 @@ public class GeneLevelEventExtractor {
                     }
                 } else {
                     //TODO why is this true for values which are present in driver catalog
-                    LOGGER.warn("Gene {} is not present in driver catalog and could not determine driver category", feature.geneSymbol());
+                   // LOGGER.warn("Gene {} is not present in driver catalog and could not determine driver category", feature.geneSymbol());
                 }
             }
             return geneLevelEvent;

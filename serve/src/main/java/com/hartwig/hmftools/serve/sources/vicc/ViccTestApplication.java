@@ -40,7 +40,7 @@ public class ViccTestApplication {
     private static final Integer MAX_VICC_ENTRIES = null;
 
     @NotNull
-    static Options createOptions() {
+    private static Options createOptions() {
         Options options = new Options();
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
 

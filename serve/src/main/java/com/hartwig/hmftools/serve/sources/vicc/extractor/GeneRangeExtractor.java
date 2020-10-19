@@ -115,6 +115,28 @@ public class GeneRangeExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
             FeatureType featureType = feature.type();
 
+            if (featureType == FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
+                String transcriptIdVicc = viccEntry.transcriptId();
+                if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+                    if (feature.proteinAnnotation().matches("[0-9]+")) {
+                        String exonNumber = feature.proteinAnnotation();
+                        extractGeneRangesPerFeature(exonNumber,
+                                feature,
+                                canonicalTranscript,
+                                driverGenes,
+                                geneRangeAnnotation,
+                                geneRangesPerFeature,
+                                extractSpecificMutationTypeFilter(feature));
+                    } else {
+                        LOGGER.warn("Could not determine range of feature {}", feature);
+                    }
+                } else {
+                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                            transcriptIdVicc,
+                            canonicalTranscript.transcriptID(),
+                            feature);
+                }
+            }
             if (featureType == FeatureType.GENE_RANGE_EXON) {
                 String transcriptIdVicc = viccEntry.transcriptId();
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -176,7 +198,9 @@ public class GeneRangeExtractor {
                                 .end(end)
                                 .chromosome(chromosome)
                                 .rangeInfo(exons)
-                                .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), extractSpecificMutationTypeFilter(feature)))
+                                .mutationType(extractMutationFilter(driverGenes,
+                                        feature.geneSymbol(),
+                                        extractSpecificMutationTypeFilter(feature)))
                                 .build());
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     } else if (feature.proteinAnnotation().equals("mutation") && !feature.name().contains("-")) {
