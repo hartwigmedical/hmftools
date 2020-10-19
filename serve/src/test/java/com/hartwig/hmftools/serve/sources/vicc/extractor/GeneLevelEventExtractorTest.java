@@ -23,9 +23,9 @@ public class GeneLevelEventExtractorTest {
         Feature feature = ImmutableFeature.builder().geneSymbol("a").name("a").build();
 
         assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent("promiscuousFusion", feature, createDriverGene("Gene1")), GeneLevelEvent.FUSION);
-        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent("geneLevel", feature, createDriverGene("Gene1")), GeneLevelEvent.ACTIVATION);
-        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent("ccc", feature, createDriverGene("Gene1")), GeneLevelEvent.UNKONWN);
-        assertNotEquals(GeneLevelEventExtractor.extractGeneLevelEvent("aa", feature, createDriverGene("Gene1")), GeneLevelEvent.INACTIVATION);
+        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent("geneLevel", feature, createDriverGene("Gene2")), GeneLevelEvent.ACTIVATION);
+        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent("ccc", feature, createDriverGene("Gene3")), GeneLevelEvent.UNKONWN);
+        assertNotEquals(GeneLevelEventExtractor.extractGeneLevelEvent("aa", feature, createDriverGene("Gene4")), GeneLevelEvent.INACTIVATION);
     }
 
     private static List<DriverGene> createDriverGene(final String name)
