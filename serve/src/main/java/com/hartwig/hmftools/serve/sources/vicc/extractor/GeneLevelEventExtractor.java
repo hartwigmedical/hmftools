@@ -29,26 +29,81 @@ public class GeneLevelEventExtractor {
     @VisibleForTesting
     @NotNull
     public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
-        LOGGER.info(feature);
-        for (DriverGene driverGene : driverGenes) {
-            if (driverGene.gene().equals(feature.geneSymbol())) {
-                if (driverGene.likelihoodType() == DriverCategory.ONCO) { // TODO extend
-                    if (feature.provenanceRule() != null) {
-                        if (feature.provenanceRule().equals("gene_only")) {
-                            return GeneLevelEvent.ACTIVATION;
+        //                        "Oncogenic Mutations",
+        //                        "TRUNCATING MUTATION",
+        //                        "Truncating Mutations",
+        //                        "DELETERIOUS MUTATION",
+        //                        "feature_truncation",
+        //                        "FRAMESHIFT TRUNCATION",
+        //                        "FRAMESHIFT MUTATION",
+        //                        "SPLICE VARIANT 7",
+        //                        "Splice",
+        //                        "DNMT3B7",
+        //                        "LCS6-variant",
+        //                        "AR-V7",
+        //                        "ARv567es"
+        if (feature.biomarkerType() != null) {
+            if (feature.biomarkerType().equals("act mut")) {
+                return GeneLevelEvent.ACTIVATION;
+            } else if (feature.biomarkerType().equals("pos")) {
+                return GeneLevelEvent.ACTIVATION;
+            } else if (feature.biomarkerType().equals("positive")) {
+                return GeneLevelEvent.ACTIVATION;
+            } else if (feature.biomarkerType().equals("ACTIVATING MUTATION")) {
+                return GeneLevelEvent.ACTIVATION;
+            } else if (feature.biomarkerType().equals("Gain-of-function Mutations")) {
+                return GeneLevelEvent.ACTIVATION;
+            } else if (feature.biomarkerType().equals("Gain-of-Function")) {
+                return GeneLevelEvent.ACTIVATION;
+            } else if (feature.biomarkerType().equals("inact mut")) {
+                return GeneLevelEvent.INACTIVATION;
+            } else if (feature.biomarkerType().equals("biallelic inactivation")) {
+                return GeneLevelEvent.INACTIVATION;
+            } else if (feature.biomarkerType().equals("negative")) {
+                return GeneLevelEvent.INACTIVATION;
+            } else if (feature.biomarkerType().equals("Loss Of Function Variant")) {
+                return GeneLevelEvent.INACTIVATION;
+            } else if (feature.biomarkerType().equals("Loss Of Heterozygosity")) {
+                return GeneLevelEvent.INACTIVATION;
+            } else {
+                for (DriverGene driverGene : driverGenes) {
+                    if (driverGene.gene().equals(feature.geneSymbol())) {
+                        if (driverGene.likelihoodType() == DriverCategory.ONCO) {
+                            if (feature.provenanceRule() != null) {
+                                if (feature.provenanceRule().equals("gene_only")) {
+                                    return GeneLevelEvent.ACTIVATION;
+                                }
+                            } else if (feature.biomarkerType() != null) {
+
+                                if (feature.biomarkerType().equals("MUTATION")) {
+                                    return GeneLevelEvent.ACTIVATION;
+                                } else if (feature.biomarkerType().equals("mutant")) {
+                                    return GeneLevelEvent.ACTIVATION;
+                                } else if (feature.biomarkerType().equals("mut")) {
+                                    return GeneLevelEvent.ACTIVATION;
+                                }
+                            }
+                        } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
+                            if (feature.provenanceRule() != null) {
+                                if (feature.provenanceRule().equals("gene_only")) {
+                                    return GeneLevelEvent.INACTIVATION;
+                                }
+                            } else if (feature.biomarkerType() != null) {
+
+                                if (feature.biomarkerType().equals("MUTATION")) {
+                                    return GeneLevelEvent.ACTIVATION;
+                                } else if (feature.biomarkerType().equals("mutant")) {
+                                    return GeneLevelEvent.ACTIVATION;
+                                } else if (feature.biomarkerType().equals("mut")) {
+                                    return GeneLevelEvent.ACTIVATION;
+                                }
+                            }
                         }
                     }
-                } else if (driverGene.likelihoodType() == DriverCategory.TSG) { //TODO extend
-                    if (feature.provenanceRule() != null) {
-                        if (feature.provenanceRule().equals("gene_only")) {
-                            return GeneLevelEvent.INACTIVATION;
-                        }
-                    }
-                    ;
                 }
+                LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
             }
         }
-        LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
         return GeneLevelEvent.UNKONWN;
     }
 
