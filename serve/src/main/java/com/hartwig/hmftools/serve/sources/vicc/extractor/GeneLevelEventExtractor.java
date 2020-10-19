@@ -60,7 +60,8 @@ public class GeneLevelEventExtractor {
     @VisibleForTesting
     @NotNull
     public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
-        if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(feature.description()) || feature.provenanceRule() != null) {
+        String eventDescription = feature.description(); // TODO extract only event without gene
+        if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription) || feature.provenanceRule() != null) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
@@ -68,7 +69,7 @@ public class GeneLevelEventExtractor {
                             if (feature.provenanceRule().equals("gene_only")) {
                                 return GeneLevelEvent.ACTIVATION;
                             }
-                        } else if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(feature.description())) {
+                        } else if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
                             return GeneLevelEvent.ACTIVATION;
                         }
                     } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
@@ -76,16 +77,16 @@ public class GeneLevelEventExtractor {
                             if (feature.provenanceRule().equals("gene_only")) {
                                 return GeneLevelEvent.INACTIVATION;
                             }
-                        } else if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(feature.description())) {
+                        } else if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
                             return GeneLevelEvent.ACTIVATION;
                         }
                     }
                 }
             }
             LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
-        } else if (DETAILLED_GENE_LEVEL_INFO_WITH_TSG.contains(feature.description())) {
+        } else if (DETAILLED_GENE_LEVEL_INFO_WITH_TSG.contains(eventDescription)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (DETAILLED_GENE_LEVEL_INFO_WITH_ONCO.contains(feature.description())) {
+        } else if (DETAILLED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription)) {
             return GeneLevelEvent.ACTIVATION;
         }
 
