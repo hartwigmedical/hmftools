@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 
 import static org.junit.Assert.*;
@@ -13,33 +14,44 @@ import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class GeneLevelEventExtractorTest {
 
     @Test
     public void canExtractGeneLevelEvent() {
-        Feature feature = ImmutableFeature.builder().geneSymbol("a").name("a").build();
+        //TODO improve test
+        Feature feature = ImmutableFeature.builder().geneSymbol("a").name("a").provenanceRule("gene_only").build();
 
-        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent("promiscuousFusion", feature, createDriverGene("Gene1")), GeneLevelEvent.FUSION);
-        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent("geneLevel", feature, createDriverGene("Gene2")), GeneLevelEvent.ACTIVATION);
-        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent("ccc", feature, createDriverGene("Gene3")), GeneLevelEvent.UNKONWN);
-        assertNotEquals(GeneLevelEventExtractor.extractGeneLevelEvent("aa", feature, createDriverGene("Gene4")), GeneLevelEvent.INACTIVATION);
+        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent(feature, createDriverGeneONCO()), GeneLevelEvent.ACTIVATION);
+        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent(feature, createDriverGeneTSG()), GeneLevelEvent.INACTIVATION);
     }
 
-    private static List<DriverGene> createDriverGene(final String name)
-    {
+    private static List<DriverGene> createDriverGeneTSG() {
         return Lists.newArrayList(ImmutableDriverGene.builder()
-                .gene(name)
-                .reportMissenseAndInframe(false)
-                .reportNonsenseAndFrameshift(false)
-                .reportSplice(false)
-                .reportDeletion(false)
+                .gene("a")
+                .reportMissenseAndInframe(true)
+                .reportNonsenseAndFrameshift(true)
+                .reportSplice(true)
+                .reportDeletion(true)
                 .reportDisruption(true)
-                .reportAmplification(false)
-                .reportHotspot(false)
+                .reportAmplification(true)
+                .reportHotspot(true)
                 .likelihoodType(TSG)
+                .build());
+    }
+
+    private static List<DriverGene> createDriverGeneONCO() {
+        return Lists.newArrayList(ImmutableDriverGene.builder()
+                .gene("a")
+                .reportMissenseAndInframe(true)
+                .reportNonsenseAndFrameshift(true)
+                .reportSplice(true)
+                .reportDeletion(true)
+                .reportDisruption(true)
+                .reportAmplification(true)
+                .reportHotspot(true)
+                .likelihoodType(ONCO)
                 .build());
     }
 

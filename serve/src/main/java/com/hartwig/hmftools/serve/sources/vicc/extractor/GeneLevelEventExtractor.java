@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -25,31 +26,30 @@ public class GeneLevelEventExtractor {
     public GeneLevelEventExtractor() {
     }
 
+    @VisibleForTesting
     @NotNull
-    public static GeneLevelEvent extractGeneLevelEvent(@NotNull String event, @NotNull Feature feature,
-            @NotNull List<DriverGene> driverGenes) {
-        GeneLevelEvent geneLevelEvent = GeneLevelEvent.UNKONWN;
-
-        if (event.equals("promiscuousFusion")) {
-            geneLevelEvent = GeneLevelEvent.FUSION;
-        } else if (event.equals("geneLevel")) {
-            for (DriverGene driverGene : driverGenes) {
-                if (driverGene.likelihoodType() == DriverCategory.TSG) {
-                    geneLevelEvent = GeneLevelEvent.ACTIVATION;
-                    // TODO Determine ACTIVATION/INACTIVATION for TSG
-                } else if (driverGene.likelihoodType() == DriverCategory.ONCO) {
-                    // TODO Determine ACTIVATION/INACTIVATION for ONCO
-                    geneLevelEvent = GeneLevelEvent.ACTIVATION;
-                } else {
-                    LOGGER.warn("Gene {} is not present in driver catalog and could not determine driver category", feature.geneSymbol());
-                    geneLevelEvent = GeneLevelEvent.UNKONWN;
+    public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
+        LOGGER.info(feature);
+        for (DriverGene driverGene : driverGenes) {
+            if (driverGene.gene().equals(feature.geneSymbol())) {
+                if (driverGene.likelihoodType() == DriverCategory.ONCO) { // TODO extend
+                    if (feature.provenanceRule() != null) {
+                        if (feature.provenanceRule().equals("gene_only")) {
+                            return GeneLevelEvent.ACTIVATION;
+                        }
+                    }
+                } else if (driverGene.likelihoodType() == DriverCategory.TSG) { //TODO extend
+                    if (feature.provenanceRule() != null) {
+                        if (feature.provenanceRule().equals("gene_only")) {
+                            return GeneLevelEvent.INACTIVATION;
+                        }
+                    }
+                    ;
                 }
             }
-        } else {
-            LOGGER.warn("No gene level event could be extracted from event {}", feature);
-            geneLevelEvent = GeneLevelEvent.UNKONWN;
         }
-        return geneLevelEvent;
+        LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
+        return GeneLevelEvent.UNKONWN;
     }
 
     @NotNull
@@ -62,7 +62,7 @@ public class GeneLevelEventExtractor {
                 geneLevelEventsPerFeature.put(feature,
                         ImmutableGeneLevelAnnotation.builder()
                                 .gene(feature.geneSymbol())
-                                .event(extractGeneLevelEvent("geneLevel", feature, driverGenes))
+                                .event(extractGeneLevelEvent(feature, driverGenes))
                                 .build());
 
             } else if (feature.type() == FeatureType.FUSION_PROMISCUOUS) {
@@ -74,10 +74,7 @@ public class GeneLevelEventExtractor {
                 //            typeEvent = Strings.EMPTY;
                 //        }
                 geneLevelEventsPerFeature.put(feature,
-                        ImmutableGeneLevelAnnotation.builder()
-                                .gene(curatedPromiscuousFusion)
-                                .event(extractGeneLevelEvent("promiscuousFusion", feature, driverGenes))
-                                .build());
+                        ImmutableGeneLevelAnnotation.builder().gene(curatedPromiscuousFusion).event(GeneLevelEvent.FUSION).build());
             }
 
         }
