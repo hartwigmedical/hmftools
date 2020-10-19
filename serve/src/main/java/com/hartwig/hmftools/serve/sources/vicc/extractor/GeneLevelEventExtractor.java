@@ -29,6 +29,7 @@ public class GeneLevelEventExtractor {
     @VisibleForTesting
     @NotNull
     public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
+        //TODO description or gene only field
         //                        "Oncogenic Mutations",
         //                        "TRUNCATING MUTATION",
         //                        "Truncating Mutations",
