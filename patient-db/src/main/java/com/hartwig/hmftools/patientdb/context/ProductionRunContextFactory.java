@@ -10,8 +10,8 @@ public final class ProductionRunContextFactory {
     }
 
     @NotNull
-    public static RunContext fromRunDirectory(@NotNull String runDirectory) throws IOException {
-        RunContext runContextFromMetaData = MetaDataResolver.fromMetaDataFile(runDirectory);
+    public static RunContext fromRunDirectory(@NotNull String runDirectory, @NotNull String pipelineVersionFile) throws IOException {
+        RunContext runContextFromMetaData = MetaDataResolver.fromMetaDataFile(runDirectory, pipelineVersionFile);
         if (runContextFromMetaData == null) {
             throw new IOException("Could not resolve run context from meta data for " + runDirectory);
         }

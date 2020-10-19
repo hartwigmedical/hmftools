@@ -54,7 +54,7 @@ public class CreateShallowSeqDB {
         }
 
         LOGGER.info("Loading shallow seq runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
-        List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
+        List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY), cmd.getOptionValue(PIPELINE_VERSION));
 
         List<LimsShallowSeqData> newShallowSeqEntries = extractNewEntriesForShallowDbFromRunContexts(runContexts,
                 cmd.getOptionValue(SHALLOW_SEQ_TSV),
@@ -139,8 +139,8 @@ public class CreateShallowSeqDB {
     }
 
     @NotNull
-    private static List<RunContext> loadRunContexts(@NotNull String runsDirectory) throws IOException {
-        List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory));
+    private static List<RunContext> loadRunContexts(@NotNull String runsDirectory, @NotNull String pipelineVersionFile) throws IOException {
+        List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), pipelineVersionFile);
         LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
         return runContexts;

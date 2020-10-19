@@ -67,6 +67,7 @@ public final class LoadClinicalData {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
+    private static final String PIPELINE_VERSION = "pipeline_version_file";
 
     private static final String RUNS_DIRECTORY = "runs_dir";
 
@@ -112,7 +113,7 @@ public final class LoadClinicalData {
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
 
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
-        List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
+        List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY), cmd.getOptionValue(PIPELINE_VERSION));
         Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
         Map<String, String> sampleToSetNameMap = extractSampleToSetNameMap(runContexts);
         Set<String> sequencedPatientIds = sequencedSamplesPerPatient.keySet();
@@ -162,8 +163,8 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static List<RunContext> loadRunContexts(@NotNull String runsDirectory) throws IOException {
-        List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory));
+    private static List<RunContext> loadRunContexts(@NotNull String runsDirectory, @NotNull String pipelineVersion) throws IOException {
+        List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), pipelineVersion);
         LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
         return runContexts;
@@ -617,6 +618,8 @@ public final class LoadClinicalData {
         options.addOption(TUMOR_LOCATION_MAPPING_CSV, true, "Path towards to the CSV of mapping the tumor location.");
         options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the CSV of mapping the treatments.");
         options.addOption(BIOPSY_MAPPING_CSV, true, "Path towards to the CSV of mapping of biopsies.");
+
+        options.addOption(PIPELINE_VERSION, true, "Path towards the pipeline version");
 
         addDatabaseCmdLineArgs(options);
         return options;

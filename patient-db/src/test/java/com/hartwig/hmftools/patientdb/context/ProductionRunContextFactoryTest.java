@@ -16,12 +16,12 @@ public class ProductionRunContextFactoryTest {
     @Test
     public void picksMetadataWhenAvailable() throws IOException {
         String runDirectory = RESOURCE_DIR + File.separator + "RunDirSomatic";
-        assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory));
+        assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory, ""));
     }
 
     @Test(expected = IOException.class)
     public void throwExceptionWhenNoMetaData() throws IOException {
         String runDirectory = RESOURCE_DIR + File.separator + "DoesNotExist";
-        assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory));
+        assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory, ""));
     }
 }

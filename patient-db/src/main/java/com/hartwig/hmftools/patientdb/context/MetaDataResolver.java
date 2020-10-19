@@ -3,12 +3,16 @@ package com.hartwig.hmftools.patientdb.context;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +33,7 @@ final class MetaDataResolver {
     private static final String REF_SAMPLE_OBJECT_P5 = "reference";
     private static final String TUMOR_SAMPLE_OBJECT_P5 = "tumor";
     private static final String SET_NAME_FIELD_P5 = "runName";
+    private static final String SET_NAME_FIELD_POST_P5_15 = "set";
 
     private static final String BARCODE_START = "FR";
     private static final String BARCODE_START_OLD = "HMF";
@@ -39,7 +44,7 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    static RunContext fromMetaDataFile(@NotNull String runDirectory) {
+    static RunContext fromMetaDataFile(@NotNull String runDirectory, @NotNull String pipelineVersionFile) throws IOException {
         File metaDataFileP4 = new File(runDirectory + File.separator + METADATA_FILE_P4);
         File metaDataFileP5 = new File(runDirectory + File.separator + METADATA_FILE_P5);
 
@@ -52,7 +57,7 @@ final class MetaDataResolver {
             }
         } else if (metaDataFileP5.exists()) {
             try {
-                return fromPv5MetaData(runDirectory, metaDataFileP5);
+                return fromPv5MetaData(runDirectory, metaDataFileP5, new File(runDirectory + File.separator + pipelineVersionFile));
             } catch (FileNotFoundException exception) {
                 LOGGER.warn("Could not find meta data file '{}' for run dir '{}'.", METADATA_FILE_P5, runDirectory);
                 return null;
@@ -100,13 +105,23 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    private static RunContext fromPv5MetaData(@NotNull String runDirectory, @NotNull File pv5MetadataFile) throws FileNotFoundException {
+    private static RunContext fromPv5MetaData(@NotNull String runDirectory, @NotNull File pv5MetadataFile,
+            @NotNull File pipelineVersionFile) throws IOException {
         JsonObject json = GSON.fromJson(new FileReader(pv5MetadataFile), JsonObject.class);
+
+        String pipelineVersion = readPipelineVersion(pipelineVersionFile);
 
         String refSample = sampleIdP5(json, REF_SAMPLE_OBJECT_P5);
         String tumorSample = sampleIdP5(json, TUMOR_SAMPLE_OBJECT_P5);
-        String tumorBarcodeSample = sampleBarcodeP5(json, TUMOR_SAMPLE_OBJECT_P5);
-        String setName = fieldValue(json, SET_NAME_FIELD_P5);
+        String tumorBarcodeSample = sampleBarcodeP5(json, TUMOR_SAMPLE_OBJECT_P5, pipelineVersion);
+
+        String setName;
+        if (pipelineVersion.substring(2, 4).matches("[0-9]+") && Integer.valueOf(pipelineVersion.substring(2, 4)) >= 15) {
+            setName = fieldValue(json, SET_NAME_FIELD_POST_P5_15);
+        } else {
+            // this is pre 5.15 pipelines
+            setName = fieldValue(json, SET_NAME_FIELD_P5);
+        }
 
         if (refSample == null) {
             LOGGER.warn("Could not find ref sample id in metadata object '{}'!", REF_SAMPLE_OBJECT_P5);
@@ -142,12 +157,35 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    private static String sampleBarcodeP5(@NotNull JsonObject metadata, @NotNull String objectName) {
+    private static String sampleBarcodeP5(@NotNull JsonObject metadata, @NotNull String objectName, @NotNull String pipelineVersion) {
         JsonObject object = metadata.getAsJsonObject(objectName);
         if (object == null) {
             return null;
         }
-        JsonElement sampleBarcodeId = object.get("sampleId");
+        JsonElement sampleBarcodeId;
+        if (pipelineVersion.substring(2, 4).matches("[0-9]+") && Integer.valueOf(pipelineVersion.substring(2, 4)) >= 15) {
+            sampleBarcodeId = object.get("barcode");
+        } else {
+            // this is pre 5.15 pipelines
+            sampleBarcodeId = object.get("sampleId");
+        }
         return sampleBarcodeId != null && !(sampleBarcodeId instanceof JsonNull) ? sampleBarcodeId.getAsString() : null;
     }
+
+    @NotNull
+    private static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
+        List<String> lines = Files.readAllLines(pipelineVersionFile.toPath());
+        if (lines.isEmpty()) {
+            throw new EmptyFileException(pipelineVersionFile.toString());
+        } else {
+            if (lines.size() == 1) {
+                return lines.get(0);
+            } else {
+                LOGGER.warn("File of size is to big!");
+                return Strings.EMPTY;
+            }
+        }
+
+    }
+
 }
