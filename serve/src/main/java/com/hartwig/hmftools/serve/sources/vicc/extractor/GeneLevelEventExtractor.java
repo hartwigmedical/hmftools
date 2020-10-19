@@ -28,29 +28,31 @@ public class GeneLevelEventExtractor {
     @NotNull
     public static GeneLevelEvent extractGeneLevelEvent(@NotNull String event, @NotNull Feature feature,
             @NotNull List<DriverGene> driverGenes) {
+        GeneLevelEvent geneLevelEvent = GeneLevelEvent.UNKONWN;
+
         if (event.equals("promiscuousFusion")) {
-            return GeneLevelEvent.FUSION;
+            LOGGER.info("extractGeneLevelEvent promiscuousFusion");
+            geneLevelEvent = GeneLevelEvent.FUSION;
         } else if (event.equals("geneLevel")) {
-            GeneLevelEvent geneLevelEvent = GeneLevelEvent.UNKONWN;
+            LOGGER.info("extractGeneLevelEvent geneLevel");
             for (DriverGene driverGene : driverGenes) {
-                if (driverGene.gene().equals(feature.geneSymbol())) {
-                    if (driverGene.likelihoodType() == DriverCategory.TSG) {
-                        geneLevelEvent = GeneLevelEvent.ACTIVATION;
-                        // TODO Determine ACTIVATION/INACTIVATION for TSG
-                    } else if (driverGene.likelihoodType() == DriverCategory.ONCO) {
-                        // TODO Determine ACTIVATION/INACTIVATION for ONCO
-                        geneLevelEvent = GeneLevelEvent.ACTIVATION;
-                    }
+                if (driverGene.likelihoodType() == DriverCategory.TSG) {
+                    geneLevelEvent = GeneLevelEvent.ACTIVATION;
+                    // TODO Determine ACTIVATION/INACTIVATION for TSG
+                } else if (driverGene.likelihoodType() == DriverCategory.ONCO) {
+                    // TODO Determine ACTIVATION/INACTIVATION for ONCO
+                    geneLevelEvent = GeneLevelEvent.ACTIVATION;
                 } else {
-                    //TODO why is this true for values which are present in driver catalog
-                   // LOGGER.warn("Gene {} is not present in driver catalog and could not determine driver category", feature.geneSymbol());
+                    LOGGER.warn("Gene {} is not present in driver catalog and could not determine driver category", feature.geneSymbol());
+                    geneLevelEvent = GeneLevelEvent.UNKONWN;
                 }
             }
-            return geneLevelEvent;
         } else {
             LOGGER.warn("No gene level event could be extracted from event {}", feature);
-            return GeneLevelEvent.UNKONWN;
+            geneLevelEvent = GeneLevelEvent.UNKONWN;
         }
+        LOGGER.info("geneLevelEvent {}", geneLevelEvent);
+        return geneLevelEvent;
     }
 
     @NotNull
@@ -74,7 +76,6 @@ public class GeneLevelEventExtractor {
                 //            gene = Strings.EMPTY;
                 //            typeEvent = Strings.EMPTY;
                 //        }
-                LOGGER.info(feature);
                 geneLevelEventsPerFeature.put(feature,
                         ImmutableGeneLevelAnnotation.builder()
                                 .gene(curatedPromiscuousFusion)
