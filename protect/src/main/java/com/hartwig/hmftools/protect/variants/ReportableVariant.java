@@ -71,5 +71,8 @@ public abstract class ReportableVariant implements Variant {
 
     public abstract boolean biallelic();
 
+    @Deprecated
     public abstract boolean notifyClinicalGeneticist();
+
+    public abstract ReportableVariantSource source();
 }
