@@ -65,8 +65,8 @@ public final class ReportableVariantFactory {
             }
 
             allReportableVariants.add(fromGermlineVariant(driverGermlineVariant.variant()).driverLikelihood(adjustedDriverLikelihood)
-                    .notifyClinicalGeneticist(germlineReportingChoice == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
-                            && germlineReportingModel.notifyAboutGene(driverGermlineVariant.variant().gene()))
+                    .notifyClinicalGeneticist(germlineReportingModel.notifyAboutGene(germlineReportingChoice,
+                            driverGermlineVariant.variant().gene()))
                     .build());
         }
 

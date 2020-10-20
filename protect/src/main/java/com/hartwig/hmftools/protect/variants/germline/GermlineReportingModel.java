@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.protect.variants.germline;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,23 +16,38 @@ public class GermlineReportingModel {
     private static final Logger LOGGER = LogManager.getLogger(GermlineReportingModel.class);
 
     @NotNull
-    private final Map<String, Boolean> germlineGenesAndNotificationMap;
+    private final Set<String> reportableGenes = Sets.newHashSet();
+    private final Set<String> notifiableGenes = Sets.newHashSet();;
 
     public GermlineReportingModel(@NotNull final Map<String, Boolean> germlineGenesAndNotificationMap) {
-        this.germlineGenesAndNotificationMap = germlineGenesAndNotificationMap;
+        for (Map.Entry<String, Boolean> entry : germlineGenesAndNotificationMap.entrySet()) {
+            reportableGenes.add(entry.getKey());
+            if (entry.getValue()) {
+                notifiableGenes.add(entry.getKey());
+            }
+        }
     }
 
     @NotNull
     Set<String> reportableGermlineGenes() {
-        return germlineGenesAndNotificationMap.keySet();
+        return reportableGenes;
     }
 
-    public boolean notifyAboutGene(@NotNull String germlineGene) {
-        Boolean notify = germlineGenesAndNotificationMap.get(germlineGene);
-        if (notify == null) {
+    @NotNull
+    Set<String> notifiableGenes(@NotNull LimsGermlineReportingLevel reportingLevel) {
+        if (reportingLevel.equals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)) {
+            return notifiableGenes;
+        }
+
+        return Collections.emptySet();
+    }
+
+    public boolean notifyAboutGene(@NotNull LimsGermlineReportingLevel reportingLevel, @NotNull String germlineGene) {
+        boolean reportableContains = reportableGenes.contains(germlineGene);
+        if (!reportableContains) {
             LOGGER.warn("Requested notification status for a gene that is not amongst set of reportable germline genes: {}", germlineGene);
         }
 
-        return notify != null ? notify : false;
+        return reportingLevel.equals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) &&  notifiableGenes.contains(germlineGene);
     }
 }
