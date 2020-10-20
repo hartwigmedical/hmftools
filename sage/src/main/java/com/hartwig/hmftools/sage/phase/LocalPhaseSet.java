@@ -3,8 +3,10 @@ package com.hartwig.hmftools.sage.phase;
 import static com.hartwig.hmftools.sage.phase.Phase.PHASE_BUFFER;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.function.Consumer;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.variant.SageVariant;
@@ -14,9 +16,25 @@ import org.jetbrains.annotations.NotNull;
 class LocalPhaseSet extends BufferedPostProcessor {
 
     private int phase;
+    private final Set<Integer> passingPhaseSets  = Sets.newHashSet();
 
     LocalPhaseSet(@NotNull final Consumer<SageVariant> consumer) {
         super(PHASE_BUFFER, consumer);
+    }
+
+    @NotNull
+    public Set<Integer> passingPhaseSets() {
+        return passingPhaseSets;
+    }
+
+    @Override
+    protected void preFlush(@NotNull final Collection<SageVariant> variants) {
+        super.preFlush(variants);
+        for (SageVariant variant : variants) {
+            if (variant.isPassing() && variant.localPhaseSet() > 0) {
+                passingPhaseSets.add(variant.localPhaseSet());
+            }
+        }
     }
 
     @Override

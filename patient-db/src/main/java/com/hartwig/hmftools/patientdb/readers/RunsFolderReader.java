@@ -20,7 +20,7 @@ public final class RunsFolderReader {
     }
 
     @NotNull
-    public static List<RunContext> extractRunContexts(@NotNull File dir) throws IOException {
+    public static List<RunContext> extractRunContexts(@NotNull File dir, @NotNull String pipelineVersionFile) throws IOException {
         List<RunContext> runContexts = Lists.newArrayList();
         File[] folders = dir.listFiles(File::isDirectory);
         if (folders == null) {
@@ -29,7 +29,7 @@ public final class RunsFolderReader {
 
         for (File folder : folders) {
             if (folder.exists() && folder.isDirectory()) {
-                runContexts.add(ProductionRunContextFactory.fromRunDirectory(folder.getPath()));
+                runContexts.add(ProductionRunContextFactory.fromRunDirectory(folder.getPath(), pipelineVersionFile));
             } else {
                 LOGGER.warn("Could not process run since file '{}' doesn't seem to be a folder", folder.getPath());
             }

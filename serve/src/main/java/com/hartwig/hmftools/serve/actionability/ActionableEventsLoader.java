@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.serve;
+package com.hartwig.hmftools.serve.actionability;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,14 +16,13 @@ import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFil
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
-public class ServeActionabilityLoader {
+public class ActionableEventsLoader {
+    private static final Logger LOGGER = LogManager.getLogger(ActionableEventsLoader.class);
 
-    private static final Logger LOGGER = LogManager.getLogger(ServeActionabilityLoader.class);
-
-    public static void main(String[] args) throws IOException {
-        String serveActionabilityDir = System.getProperty("user.home") + "/hmf/tmp/ds_serve";
-
+    @NotNull
+    public static ActionableEvents readFromDir(String serveActionabilityDir) throws IOException {
         LOGGER.info("Loading SERVE actionability files from {}", serveActionabilityDir);
 
         String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(serveActionabilityDir);
@@ -46,6 +45,13 @@ public class ServeActionabilityLoader {
         List<ActionableSignature> signatures = ActionableSignatureFile.read(actionableSignatureTsv);
         LOGGER.info(" Loaded {} actionable signatures from {}", signatures.size(), actionableSignatureTsv);
 
-        LOGGER.info("Complete");
+        return ImmutableActionableEvents.builder()
+                .addAllHotspots(hotspots)
+                .addAllRanges(ranges)
+                .addAllGenes(genes)
+                .addAllFusions(fusions)
+                .addAllSignatures(signatures)
+                .build();
+
     }
 }

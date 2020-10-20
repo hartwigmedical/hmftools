@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 import static com.hartwig.hmftools.common.cli.Configs.defaultStringValue;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -189,7 +190,7 @@ public interface SageConfig {
 
     @NotNull
     static SageConfig createConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
-            throws ParseException {
+            throws ParseException, IOException {
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final String assembly = cmd.getOptionValue(ASSEMBLY, "UNKNOWN");
 
@@ -275,6 +276,11 @@ public interface SageConfig {
             }
 
             transcripts = assembly.equals("hg19") ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
+        }
+
+        final File outputDir = new File(outputVcf).getParentFile();
+        if (outputDir != null && !outputDir.exists() && !outputDir.mkdirs()) {
+            throw new IOException("Unable to write directory " + outputDir.toString());
         }
 
         return ImmutableSageConfig.builder()

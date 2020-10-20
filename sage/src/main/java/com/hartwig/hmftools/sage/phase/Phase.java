@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -37,6 +38,11 @@ public class Phase implements Consumer<SageVariant> {
         rightAlignMicrohomology = new RightAlignMicrohomology(phasedInframeIndel, transcripts);
         localRealignSet = new LocalRealignSet(rightAlignMicrohomology);
         localPhaseSet = new LocalPhaseSet(localRealignSet);
+    }
+
+    @NotNull
+    public Set<Integer> passingPhaseSets() {
+        return localPhaseSet.passingPhaseSets();
     }
 
     @Override

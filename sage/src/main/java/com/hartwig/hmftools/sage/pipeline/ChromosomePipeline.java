@@ -7,6 +7,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -43,12 +44,12 @@ public class ChromosomePipeline implements AutoCloseable {
     private final SageVariantPipeline sageVariantPipeline;
     private final Consumer<VariantContext> consumer;
     private final ChromosomePartition partition;
+    private final Phase phase;
 
     public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config, @NotNull final Executor executor,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
             @NotNull final List<GenomeRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            final Consumer<VariantContext> consumer)
-            throws IOException {
+            final Consumer<VariantContext> consumer) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
@@ -56,6 +57,7 @@ public class ChromosomePipeline implements AutoCloseable {
         this.sageVariantPipeline =
                 new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions, qualityRecalibrationMap);
         this.partition = new ChromosomePartition(config, refGenome);
+        this.phase = new Phase(config, chromosome, this::write);
     }
 
     @NotNull
@@ -91,7 +93,6 @@ public class ChromosomePipeline implements AutoCloseable {
         // Phasing must be done in order but we can do it eagerly as each new region comes in.
         // It is not necessary to wait for the entire chromosome to be finished to start.
         CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-        final Phase phase = new Phase(config, chromosome, this::write);
         final Iterator<RegionFuture<List<SageVariant>>> regionsIterator = regions.iterator();
         while (regionsIterator.hasNext()) {
             CompletableFuture<List<SageVariant>> region = regionsIterator.next().future();
@@ -112,12 +113,12 @@ public class ChromosomePipeline implements AutoCloseable {
     }
 
     private void write(@NotNull final SageVariant entry) {
-        if (include(entry)) {
+        if (include(entry, this.phase.passingPhaseSets())) {
             consumer.accept(SageVariantContextFactory.create(entry));
         }
     }
 
-    private boolean include(@NotNull final SageVariant entry) {
+    private boolean include(@NotNull final SageVariant entry, @NotNull final Set<Integer> passingPhaseSets) {
         if (config.panelOnly() && !PANEL_ONLY_TIERS.contains(entry.tier())) {
             return false;
         }
@@ -139,7 +140,8 @@ public class ChromosomePipeline implements AutoCloseable {
             return true;
         }
 
-        if (!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())) {
+        if (!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())
+                && !passingPhaseSets.contains(entry.localPhaseSet())) {
             final ReadContextCounter normal = entry.normalAltContexts().get(0);
             if (normal.altSupport() > config.filter().filteredMaxNormalAltSupport()) {
                 return false;

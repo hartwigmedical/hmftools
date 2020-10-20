@@ -93,7 +93,6 @@ public class GeneRangeExtractor {
         String featureEvent = feature.name().toLowerCase();
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
         if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
-            LOGGER.info("mutation filter");
             return MutationTypeFilter.SPLICE;
         } else if (extractSpecificInfoOfEvent.equals("deletions")) {
             return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
@@ -116,6 +115,28 @@ public class GeneRangeExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
             FeatureType featureType = feature.type();
 
+            if (featureType == FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
+                String transcriptIdVicc = viccEntry.transcriptId();
+                if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+                    if (feature.proteinAnnotation().matches("[0-9]+")) {
+                        String exonNumber = feature.proteinAnnotation();
+                        extractGeneRangesPerFeature(exonNumber,
+                                feature,
+                                canonicalTranscript,
+                                driverGenes,
+                                geneRangeAnnotation,
+                                geneRangesPerFeature,
+                                extractSpecificMutationTypeFilter(feature));
+                    } else {
+                        LOGGER.warn("Could not determine range of feature {}", feature);
+                    }
+                } else {
+                    LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                            transcriptIdVicc,
+                            canonicalTranscript.transcriptID(),
+                            feature);
+                }
+            }
             if (featureType == FeatureType.GENE_RANGE_EXON) {
                 String transcriptIdVicc = viccEntry.transcriptId();
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -177,7 +198,9 @@ public class GeneRangeExtractor {
                                 .end(end)
                                 .chromosome(chromosome)
                                 .rangeInfo(exons)
-                                .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), extractSpecificMutationTypeFilter(feature)))
+                                .mutationType(extractMutationFilter(driverGenes,
+                                        feature.geneSymbol(),
+                                        extractSpecificMutationTypeFilter(feature)))
                                 .build());
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     } else if (feature.proteinAnnotation().equals("mutation") && !feature.name().contains("-")) {

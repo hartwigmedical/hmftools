@@ -38,15 +38,13 @@ public final class FeatureTypeExtractor {
             "fusion",
             "EGFR-KDD",
             "Transcript Regulatory Region Fusion",
-            "FGFR3 - BAIAP2L1 Fusion",
-            "nonsense");
+            "FGFR3 - BAIAP2L1 Fusion");
     public static final Set<String> SEARCH_FUSION_PROMISCUOUS =
             Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "FUSIONS");
 
     public static final Set<String> IGNORE = Sets.newHashSet("3' EXON DELETION");
 
-    public static final Set<String> INTERNAL_FUSION =
-            Sets.newHashSet("is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "ITD");
+    public static final Set<String> INTERNAL_FUSION = Sets.newHashSet("is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "ITD");
 
     public static final Set<String> GENE_LEVEL = Sets.newHashSet("Gain-of-function Mutations",
             "Gain-of-Function",
@@ -81,6 +79,10 @@ public final class FeatureTypeExtractor {
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
+    //TODO: check if more EXON_DEL_DUP fusies but be added
+    public static final Set<String> FUSION_PAIR_AND_EXON_RANGE =
+            Sets.newHashSet("KIT EXON 11 MUTATION", "KIT Exon 11 mutations", "KIT Exon 11 deletions", "MET EXON 14 SKIPPING MUTATION");
+
     private FeatureTypeExtractor() {
     }
 
@@ -89,12 +91,12 @@ public final class FeatureTypeExtractor {
         return extractType(feature.name(),
                 feature.biomarkerType(),
                 feature.provenanceRule(),
-                ProteinAnnotationExtractor.extractProteinAnnotation(feature));
+                ProteinAnnotationExtractor.extractProteinAnnotation(feature), feature.description());
     }
 
     @NotNull
     public static FeatureType extractType(@NotNull String featureName, @Nullable String biomarkerType, @Nullable String provenanceRule,
-            @NotNull String proteinAnnotation) {
+            @NotNull String proteinAnnotation, @Nullable String featureDescription) {
         String event = Strings.EMPTY;
         if (featureName.toLowerCase().contains("exon")) {
             event = "exon";
@@ -134,6 +136,8 @@ public final class FeatureTypeExtractor {
         }
         if (DetermineHotspot.isHotspot(proteinAnnotation)) {
             return FeatureType.HOTSPOT;
+        } else if (FeatureTypeExtractor.FUSION_PAIR_AND_EXON_RANGE.contains(featureDescription)) {
+            return FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON;
         } else if (FeatureTypeExtractor.SIGNATURES.contains(featureName)) {
             return FeatureType.SIGNATURE;
         } else if (DetermineCopyNumber.isAmplification(featureName, biomarkerType)) {
@@ -161,7 +165,8 @@ public final class FeatureTypeExtractor {
                     proteinAnnotation)) {
                 return FeatureType.GENE_LEVEL;
             }
-        } return FeatureType.UNKNOWN;
+        }
+        return FeatureType.UNKNOWN;
     }
 
     private static boolean isValidSingleCodonRange(@NotNull String feature) {

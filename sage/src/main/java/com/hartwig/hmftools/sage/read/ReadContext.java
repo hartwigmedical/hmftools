@@ -179,14 +179,15 @@ public class ReadContext {
     }
 
     @NotNull
-    public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
-        return readBases.matchAtPosition(otherReadIndex, otherBases);
+    public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCoreMatch, int otherReadIndex, byte[] otherBases) {
+        return readBases.matchAtPosition(wildcardAllowedInCoreMatch, otherReadIndex, otherBases);
     }
 
     @NotNull
     public ReadContextMatch matchAtPosition(@NotNull final ReadContext other) {
-        return readBases.matchAtPosition(other.readBases);
+        return readBases.matchAtPosition(false, other.readBases);
     }
+
 
     public int readBasesPositionIndex() {
         return readBases.index();

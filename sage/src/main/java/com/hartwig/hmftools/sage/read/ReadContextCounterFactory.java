@@ -34,6 +34,7 @@ public class ReadContextCounterFactory {
                         x.tier(),
                         maxCoverage(x),
                         x.minNumberOfEvents(),
+                        config.maxSkippedReferenceRegions(),
                         x.maxReadDepth() < config.maxRealignmentDepth()))
                 .collect(Collectors.toList());
     }

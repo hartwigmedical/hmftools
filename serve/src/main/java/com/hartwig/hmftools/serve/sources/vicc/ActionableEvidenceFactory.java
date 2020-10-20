@@ -57,19 +57,25 @@ final class ActionableEvidenceFactory {
         }
 
         // Consider CancerType, DOID and URL to be optional.
-        if (treatment != null && level != null && direction != null) {
+        //TODO: what todo when direction is not correct filled in?
+        if (treatment != null && level != null) {
             return ImmutableActionableEvidence.builder()
                     .source(fromViccSource(entry.source()))
                     .treatment(treatment)
                     .cancerType(nullToEmpty(cancerType))
                     .doid(nullToEmpty(doid))
                     .level(level)
-                    .direction(direction)
+                    .direction(nullToEmpty(direction))
                     .url(nullToEmpty(url))
                     .build();
         } else {
             return null;
         }
+    }
+
+    @NotNull
+    private static EvidenceDirection nullToEmpty(@Nullable EvidenceDirection evidenceDirection) {
+        return evidenceDirection != null ? evidenceDirection : EvidenceDirection.NA;
     }
 
     @Nullable
