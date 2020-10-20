@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +15,7 @@ import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.curation.FusionCuration;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
+import com.hartwig.hmftools.vicc.annotation.FeatureTypeExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -25,71 +27,50 @@ public class GeneLevelEventExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
-    //TODO
-//     "SPLICE VARIANT 7",
-//             "Splice",
-//             "DNMT3B7",
-//             "LCS6-variant",
-//             "AR-V7",
-//             "ARv567es");
-
-    private static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO = Sets.newHashSet("MUTATION",
-            "mutant",
-            "mut",
-            "TRUNCATING MUTATION",
-            "Truncating Mutations",
-            "feature_truncation",
-            "FRAMESHIFT TRUNCATION", "FRAMESHIFT MUTATION");
-    private static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_TSG = Sets.newHashSet("inact mut",
-            "biallelic inactivation",
-            "Loss Of Function Variant",
-            "Loss Of Heterozygosity",
-            "DELETERIOUS MUTATION",
-            "negative");
-    private static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_ONCO = Sets.newHashSet("Gain-of-function Mutations",
-            "Gain-of-Function",
-            "act mut",
-            "ACTIVATING MUTATION",
-            "Oncogenic Mutations",
-            "pos",
-            "positive");
-
     public GeneLevelEventExtractor() {
     }
 
     @VisibleForTesting
     @NotNull
     public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
-        String eventDescription = feature.description(); // TODO extract only event without gene
-        if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription) || feature.provenanceRule() != null) {
+        String eventDescription = feature.description().split(" ", 2)[1].trim();
+        if (FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription) || feature.provenanceRule() != null) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
+
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals("gene_only")) {
+                            if (feature.provenanceRule().equals(FeatureTypeExtractor.GENE_LEVEL)) {
+                                return GeneLevelEvent.ACTIVATION;
+                            } else {
                                 return GeneLevelEvent.ACTIVATION;
                             }
-                        } else if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
+                        } else if (FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
                             return GeneLevelEvent.ACTIVATION;
                         }
                     } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals("gene_only")) {
+                            if (feature.provenanceRule().equals(FeatureTypeExtractor.GENE_LEVEL)) {
+                                return GeneLevelEvent.INACTIVATION;
+                            } else {
                                 return GeneLevelEvent.INACTIVATION;
                             }
-                        } else if (DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
-                            return GeneLevelEvent.ACTIVATION;
+                        } else if (FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
+                            return GeneLevelEvent.INACTIVATION;
                         }
                     }
                 }
             }
             LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
-        } else if (DETAILLED_GENE_LEVEL_INFO_WITH_TSG.contains(eventDescription)) {
+        } else if (FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITH_TSG.contains(eventDescription)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (DETAILLED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription)) {
+        } else if (FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription)) {
             return GeneLevelEvent.ACTIVATION;
+        } else {
+            LOGGER.warn("Unknown event {}", feature);
+            return GeneLevelEvent.UNKONWN;
         }
-
+        LOGGER.warn("Unknown event {}", feature);
         return GeneLevelEvent.UNKONWN;
     }
 
