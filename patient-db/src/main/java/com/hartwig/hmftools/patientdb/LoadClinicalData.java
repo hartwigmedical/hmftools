@@ -78,7 +78,6 @@ public final class LoadClinicalData {
     private static final String DO_LOAD_CLINICAL_DATA = "do_load_clinical_data";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
-    private static final String CURATED_TUMOR_LOCATION_CSV = "curated_tumor_location_csv";
     private static final String CURATED_TUMOR_LOCATION_TSV = "curated_tumor_location_tsv";
     private static final String CURATED_TUMOR_LOCATION_V2_TSV = "curated_tumor_location_v2_tsv";
 
@@ -140,7 +139,6 @@ public final class LoadClinicalData {
                 treatmentCurator);
 
         LOGGER.info("Writing curated tumor locations");
-        DumpTumorLocationData.writeCuratedTumorLocationsToCSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_CSV), patients.values());
         DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
         DumpTumorLocationData.writeCuratedTumorLocationsV2ToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_V2_TSV), patients.values());
 
@@ -599,7 +597,6 @@ public final class LoadClinicalData {
         options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database");
 
         options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, curated tumor locations will be written to csv file");
-        options.addOption(CURATED_TUMOR_LOCATION_CSV, true, "Path towards to the CSV of curated tumor locations.");
         options.addOption(CURATED_TUMOR_LOCATION_TSV, true, "Path towards to the TSV of curated tumor locations.");
         options.addOption(CURATED_TUMOR_LOCATION_V2_TSV, true, "Path towards to the TSV of curated tumor locations v2.");
 

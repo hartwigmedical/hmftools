@@ -14,7 +14,6 @@ import org.jetbrains.annotations.NotNull;
 public final class PatientTumorLocationFile {
 
     private static final String TAB_DELIMITER = "\t";
-    private static final String COMMA_DELIMITER = ",";
 
     private PatientTumorLocationFile() {
     }
@@ -37,12 +36,6 @@ public final class PatientTumorLocationFile {
         }
 
         return patientTumorLocations;
-    }
-
-    // TODO Can be removed once patient reporter in on v7.16
-    public static void writeRecordsCSV(@NotNull String outputPath, @NotNull List<PatientTumorLocation> patientTumorLocations)
-            throws IOException {
-        Files.write(new File(outputPath).toPath(), toLines(patientTumorLocations, COMMA_DELIMITER));
     }
 
     public static void writeRecordsTSV(@NotNull String outputPath, @NotNull List<PatientTumorLocation> patientTumorLocations)
