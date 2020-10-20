@@ -142,7 +142,7 @@ public class SvVarData
         if(isSglBreakend())
         {
             mSglMappings = Lists.newArrayList();
-            convertFromInsertSequenceAlignments(mSglMappings, svData.insertSequenceAlignments());
+            convertFromInsertSequenceAlignments(mSglMappings, svData.insertSequenceAlignments(), orientation(true));
         }
         else
         {

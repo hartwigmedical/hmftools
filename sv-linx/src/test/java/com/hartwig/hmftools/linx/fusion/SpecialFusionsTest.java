@@ -343,7 +343,8 @@ public class SpecialFusionsTest
 
         SvVarData sgl1 = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
 
-        sgl1.getSglMappings().add(new SglMapping(CHR_1, 10150, NEG_ORIENT, "", 1));
+        final String altMapping = CHR_1 + ":" + String.valueOf(10150) + "|" + String.valueOf(NEG_ORIENT) + "|" + "10M" + "|19";
+        sgl1.getSglMappings().add(SglMapping.from(altMapping, POS_ORIENT));
 
         tester.AllVariants.add(sgl1);
 
@@ -361,6 +362,7 @@ public class SpecialFusionsTest
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
         assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
         assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(10150 + 10, fusion.downstreamTrans().gene().position());
 
         tester.clearClustersAndSVs();
 

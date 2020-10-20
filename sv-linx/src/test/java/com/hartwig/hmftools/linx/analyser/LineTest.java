@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLinePolyA
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_T_MOTIF;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
+import static com.hartwig.hmftools.linx.types.SglMapping.calcCigarLength;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.NEG_STRAND;
@@ -402,6 +403,18 @@ public class LineTest
     }
 
     @Test
+    public void testSglCigarLength()
+    {
+        assertEquals(100, calcCigarLength("100M"));
+        assertEquals(100, calcCigarLength("10M10D80M"));
+        assertEquals(100, calcCigarLength("10M1I1000N10D2I80M"));
+
+        // error handling
+        assertEquals(0, calcCigarLength("12345"));
+        assertEquals(0, calcCigarLength("G10Z2QR100"));
+    }
+
+    @Test
     public void testLineSglChaining()
     {
         LinxTester tester = new LinxTester();
@@ -413,8 +426,8 @@ public class LineTest
         String insertPolyTMotif = shortBases + POLY_T_MOTIF + randomBases;
 
         // scenario 1: 2 SGLs with mappings to the same location
-        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0,  1, 0, SGL, insertPolyTMotif);
-        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "", 120, 0,  -1, 0, SGL, "");
+        SvVarData sgl1 = createSv(tester.nextVarId(), "1", "", 100, 0, POS_ORIENT, 0, SGL, insertPolyTMotif);
+        SvVarData sgl2 = createSv(tester.nextVarId(), "1", "", 120, 0, NEG_ORIENT, 0, SGL, "");
 
         // both have additional mappings which are ignored
         sgl1.getSglMappings().add(new SglMapping(CHR_2, 1000, NEG_ORIENT, "", 1));

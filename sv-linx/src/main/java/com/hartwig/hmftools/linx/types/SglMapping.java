@@ -7,6 +7,12 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERT
 
 import java.util.List;
 
+import org.apache.commons.compress.utils.Lists;
+
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+
 public class SglMapping
 {
     public final String Chromosome;
@@ -29,7 +35,7 @@ public class SglMapping
 
     // expected format: 4:9973661|-|26S37M11S|19,1:184636186|+|37M37S|
 
-    private static SglMapping from(final String mappingStr)
+    public static SglMapping from(final String mappingStr, byte breakendOrientation)
     {
         final String[] items = mappingStr.split(INS_SEQ_DATA_DELIM, -1);
 
@@ -47,13 +53,49 @@ public class SglMapping
         String chromosome = location[0];
         int position = Integer.parseInt(location[1]);
         byte orientation = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
-        String cigar = items[2];
+        final String cigar = items[2];
+
+        if(orientation != breakendOrientation)
+            position += calcCigarLength(cigar);
+
         int qualScore = !items[3].isEmpty() ? Integer.parseInt(items[3]) : 0;
 
         return new SglMapping(chromosome, position, orientation, cigar, qualScore);
     }
 
-    public static void convertFromInsertSequenceAlignments(final List<SglMapping> mappings, final String alignments)
+    public static int calcCigarLength(final String cigarStr)
+    {
+        int index = 0;
+        int baseLength = 0;
+        String basesStr = "";
+        while(index < cigarStr.length())
+        {
+            char c = cigarStr.charAt(index);
+            boolean isAddItem = (c == 'D' || c == 'M');
+            boolean isIgnoreItem = (c == 'I' || c == 'N' || c == 'S' || c == 'H' || c == 'P' || c == '=' || c == 'X');
+
+            if(isAddItem)
+            {
+                try { baseLength += Integer.parseInt(basesStr); } catch (Exception e) {}
+                basesStr = "";
+            }
+            else if(isIgnoreItem)
+            {
+                basesStr = "";
+            }
+            else
+            {
+                basesStr += c;
+            }
+
+            ++index;
+        }
+
+        return baseLength;
+    }
+
+    public static void convertFromInsertSequenceAlignments(
+            final List<SglMapping> mappings, final String alignments, byte breakendOrientation)
     {
         if(alignments.isEmpty())
             return;
@@ -62,7 +104,7 @@ public class SglMapping
 
         for(final String mappingData : mappingStrings)
         {
-            final SglMapping mapping = from(mappingData);
+            final SglMapping mapping = from(mappingData, breakendOrientation);
 
             if(mapping != null)
                 mappings.add(mapping);
