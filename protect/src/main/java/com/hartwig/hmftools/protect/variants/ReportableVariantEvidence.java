@@ -65,7 +65,7 @@ public class ReportableVariantEvidence {
     @NotNull
     private static ServeEvidenceItem evidence(@NotNull Set<String> doid, @NotNull ReportableVariant reportable,
             @NotNull ActionableEvent actionable) {
-        return ServeEvidenceItemFactory.builder(doid, actionable).genomicEvent(eventString(reportable)).reported(true).build();
+        return ServeEvidenceItemFactory.create(eventString(reportable), doid, actionable);
     }
 
     @NotNull
