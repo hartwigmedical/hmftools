@@ -35,7 +35,7 @@ public class GeneRangeExtractor {
 
     @NotNull
     private static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene,
-            @NotNull MutationTypeFilter specificMutationType) {
+            @NotNull MutationTypeFilter specificMutationType, @NotNull Feature feature) {
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
                 if (driverGene.likelihoodType() == DriverCategory.ONCO) {
@@ -46,7 +46,12 @@ public class GeneRangeExtractor {
                     }
                 } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                     if (specificMutationType == MutationTypeFilter.UNKNOWN) {
-                        return MutationTypeFilter.ANY;
+                        //TODO which inactivation event for TSG?
+                        if (feature.biomarkerType() != null && feature.biomarkerType().contains("inactivation") ) {
+                            return MutationTypeFilter.MISSENSE_ANY;
+                        } else {
+                            return MutationTypeFilter.ANY;
+                        }
                     } else {
                         return specificMutationType;
                     }
@@ -200,7 +205,7 @@ public class GeneRangeExtractor {
                                 .rangeInfo(exons)
                                 .mutationType(extractMutationFilter(driverGenes,
                                         feature.geneSymbol(),
-                                        extractSpecificMutationTypeFilter(feature)))
+                                        extractSpecificMutationTypeFilter(feature), feature))
                                 .build());
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     } else if (feature.proteinAnnotation().equals("mutation") && !feature.name().contains("-")) {
@@ -308,7 +313,7 @@ public class GeneRangeExtractor {
                 .end(end)
                 .chromosome(chromosome)
                 .rangeInfo(exonNumber)
-                .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType))
+                .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
                 .build();
     }
 
@@ -333,7 +338,7 @@ public class GeneRangeExtractor {
                         .end(end)
                         .chromosome(chromosome)
                         .rangeInfo(proteinAnnotation)
-                        .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType))
+                        .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
                         .build());
                 geneRangesPerFeature.put(feature, geneRangeAnnotation);
 
@@ -376,7 +381,7 @@ public class GeneRangeExtractor {
                         .end(end)
                         .chromosome(chromosome)
                         .rangeInfo(startCodon + "-" + endCodon)
-                        .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType))
+                        .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
                         .build());
                 geneRangesPerFeature.put(feature, geneRangeAnnotation);
 
