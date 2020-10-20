@@ -2,6 +2,7 @@ package com.hartwig.hmftools.protect.variants.germline;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordStatus;
@@ -17,13 +18,25 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    public static List<DriverGermlineVariant> filterGermlineVariantsForReporting(
-            @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<DriverSomaticVariant> somaticDriverVariantsToReport,
-            @NotNull ChordStatus chordStatus) {
+    public static List<DriverGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<ReportableGermlineVariant> germlineVariants,
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull List<GeneCopyNumber> allGeneCopyNumbers,
+            @NotNull List<DriverSomaticVariant> somaticDriverVariantsToReport, @NotNull ChordStatus chordStatus) {
+        final Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
+        final Set<String> genesWithSomaticDrivers =
+                somaticDriverVariantsToReport.stream().map(x -> x.variant().gene()).collect(Collectors.toSet());
+        return filterGermlineVariantsForReporting(germlineVariants,
+                reportableGermlineGenes,
+                allGeneCopyNumbers,
+                genesWithSomaticDrivers,
+                chordStatus);
+    }
+
+    @NotNull
+    public static List<DriverGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<ReportableGermlineVariant> germlineVariants,
+            @NotNull Set<String> reportableGermlineGenes, @NotNull List<GeneCopyNumber> allGeneCopyNumbers,
+            @NotNull Set<String> genesWithSomaticDrivers, @NotNull ChordStatus chordStatus) {
         List<DriverGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
 
-        Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
         for (ReportableGermlineVariant germlineVariant : presentInTumorOnly(germlineVariants)) {
             if (reportableGermlineGenes.contains(germlineVariant.gene())) {
                 // TODO: This will be cleaned up in upcoming germline variant reporting logic
@@ -40,10 +53,8 @@ public final class FilterGermlineVariants {
                     }
 
                     boolean filterSomaticVariantInSameGene = false;
-                    for (DriverSomaticVariant driverVariant : somaticDriverVariantsToReport) {
-                        if (driverVariant.variant().gene().equals(germlineVariant.gene())) {
-                            filterSomaticVariantInSameGene = true;
-                        }
+                    if (genesWithSomaticDrivers.contains(germlineVariant.gene())) {
+                        filterSomaticVariantInSameGene = true;
                     }
 
                     boolean filterGermlineVariantInSameGene = false;
@@ -81,8 +92,8 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    private static DriverGermlineVariant reportableGermlineVariantWithDriverLikelihood(
-            @NotNull ReportableGermlineVariant germlineVariant, double driverLikelihood) {
+    private static DriverGermlineVariant reportableGermlineVariantWithDriverLikelihood(@NotNull ReportableGermlineVariant germlineVariant,
+            double driverLikelihood) {
         return ImmutableDriverGermlineVariant.builder().variant(germlineVariant).driverLikelihood(driverLikelihood).build();
     }
 

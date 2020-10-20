@@ -29,7 +29,7 @@ public class GermlineReportingModel {
     }
 
     @NotNull
-    Set<String> reportableGermlineGenes() {
+    public Set<String> reportableGermlineGenes() {
         return reportableGenes;
     }
 
