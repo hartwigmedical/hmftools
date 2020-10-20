@@ -38,7 +38,8 @@ public final class FeatureTypeExtractor {
             "fusion",
             "EGFR-KDD",
             "Transcript Regulatory Region Fusion",
-            "FGFR3 - BAIAP2L1 Fusion");
+            "FGFR3 - BAIAP2L1 Fusion",
+            "FLT3-ITD");
     public static final Set<String> SEARCH_FUSION_PROMISCUOUS =
             Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "FUSIONS");
 
@@ -46,34 +47,29 @@ public final class FeatureTypeExtractor {
 
     public static final Set<String> INTERNAL_FUSION = Sets.newHashSet("is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "ITD");
 
-    public static final Set<String> GENE_LEVEL = Sets.newHashSet("Gain-of-function Mutations",
-            "Gain-of-Function",
-            "Oncogenic Mutations",
-            "MUTATION",
-            "act mut",
-            "pos",
-            "positive",
-            "inact mut",
-            "biallelic inactivation",
-            "negative",
-            "Loss Of Function Variant",
-            "Loss Of Heterozygosity",
-            "TRUNCATING MUTATION",
-            "Truncating Mutations",
+    public static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO = Sets.newHashSet("MUTATION",
             "mutant",
             "mut",
-            "gene_only",
-            "ACTIVATING MUTATION",
-            "DELETERIOUS MUTATION",
+            "TRUNCATING MUTATION",
+            "Truncating Mutations",
             "feature_truncation",
             "FRAMESHIFT TRUNCATION",
-            "FRAMESHIFT MUTATION",
-            "SPLICE VARIANT 7",
-            "Splice",
-            "DNMT3B7",
-            "LCS6-variant",
-            "AR-V7",
-            "ARv567es");
+            "FRAMESHIFT MUTATION");
+    public static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_TSG = Sets.newHashSet("inact mut",
+            "biallelic inactivation",
+            "Loss Of Function Variant",
+            "Loss Of Heterozygosity",
+            "DELETERIOUS MUTATION",
+            "negative");
+    public static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_ONCO = Sets.newHashSet("Gain-of-function Mutations",
+            "Gain-of-Function",
+            "act mut",
+            "ACTIVATING MUTATION",
+            "Oncogenic Mutations",
+            "pos",
+            "positive");
+
+    public static final Set<String> GENE_LEVEL = Sets.newHashSet("gene_only");
 
     public static final Set<String> GENE_EXON = Sets.newHashSet("exon");
 
@@ -91,7 +87,8 @@ public final class FeatureTypeExtractor {
         return extractType(feature.name(),
                 feature.biomarkerType(),
                 feature.provenanceRule(),
-                ProteinAnnotationExtractor.extractProteinAnnotation(feature), feature.description());
+                ProteinAnnotationExtractor.extractProteinAnnotation(feature),
+                feature.description());
     }
 
     @NotNull
@@ -160,9 +157,11 @@ public final class FeatureTypeExtractor {
         } else if (proteinAnnotation.length() >= 1 && isValidSingleCodonRange(proteinAnnotation)) {
             return FeatureType.GENE_RANGE_CODON;
         } else if (!DetermineHotspot.isHotspot(proteinAnnotation)) {
-            if (FeatureTypeExtractor.GENE_LEVEL.contains(biomarkerType) || FeatureTypeExtractor.GENE_LEVEL.contains(featureName)
-                    || FeatureTypeExtractor.GENE_LEVEL.contains(provenanceRule) || FeatureTypeExtractor.GENE_LEVEL.contains(
-                    proteinAnnotation)) {
+            String eventDescription = featureDescription.split(" ", 2)[1].trim();
+            if (FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)
+                    || FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITH_TSG.contains(eventDescription)
+                    || FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription)
+                    || FeatureTypeExtractor.GENE_LEVEL.contains(provenanceRule)) {
                 return FeatureType.GENE_LEVEL;
             }
         }
