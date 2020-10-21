@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.protect.variants;
+package com.hartwig.hmftools.protect.concent;
 
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.protect.variants.ReportableVariant;
+import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +26,5 @@ public class ReportableVariantConsent {
     public boolean notifyClinicalGeneticist(@NotNull ReportableVariant reportable) {
         return reportable.source().equals(ReportableVariantSource.PURPLE) || germlineReportingModel.notifyAboutGene(reportingLevel,
                 reportable.gene());
-
     }
 }

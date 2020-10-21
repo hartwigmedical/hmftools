@@ -6,7 +6,6 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -17,10 +16,10 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.purple.purity.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.protect.ProtectConfig;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantFactory;
 
@@ -32,26 +31,24 @@ public class PurpleDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
 
-    private final PatientTumorLocation patientTumorLocation;
-
-    public PurpleDataLoader(final PatientTumorLocation patientTumorLocation) {
-        this.patientTumorLocation = patientTumorLocation;
+    private PurpleDataLoader() {
     }
 
-    public PurpleData load(String purpleDirectory, String sample, String somaticVcf) throws IOException {
-        final String qcFile = PurpleQCFile.generateFilename(purpleDirectory, sample);
-        final String purityContextFile = PurityContextFile.generateFilenameForReading(purpleDirectory, sample);
-        final String geneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(purpleDirectory, sample);
-        final String driverCatalogFile = DriverCatalogFile.generateFilename(purpleDirectory, sample);
-
-        return load(sample, qcFile, purityContextFile, geneCopyNumberFile, driverCatalogFile, somaticVcf);
+    @NotNull
+    public static PurpleData load(@NotNull ProtectConfig config) throws IOException {
+        return load(config.tumorSampleId(),
+                config.purpleQcFile(),
+                config.purplePurityTsv(),
+                config.purpleGeneCnvTsv(),
+                config.purpleDriverCatalogTsv(),
+                config.purpleSomaticVariantVcf());
     }
 
     @NotNull
     public static PurpleData load(String sample, String qcFile, String purityFile, String geneCopyNumberFile, String driverCatalogFile,
             String somaticVcf) throws IOException {
         final PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityFile);
-        LOGGER.info("Loaded purple sample data from {}", new File(purityFile).getParent());
+        LOGGER.info("Loaded PURPLE data from {}", new File(purityFile).getParent());
         LOGGER.info(" Purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
         LOGGER.info(" Average tumor ploidy: {}", purityContext.bestFit().ploidy());
         LOGGER.info(" Fit method: {}", purityContext.method());

@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-final class ReportableGeneDisruptionFactory {
+public final class ReportableGeneDisruptionFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(ReportableGeneDisruptionFactory.class);
 
@@ -22,7 +22,7 @@ final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    static List<ReportableGeneDisruption> convert(@NotNull List<LinxBreakend> disruptions) {
+    public static List<ReportableGeneDisruption> convert(@NotNull List<LinxBreakend> disruptions) {
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
         Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 
