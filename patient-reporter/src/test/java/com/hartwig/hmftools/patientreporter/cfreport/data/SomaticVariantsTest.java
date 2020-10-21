@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
+import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -60,6 +61,7 @@ public class SomaticVariantsTest {
                 .totalCopyNumber(0)
                 .biallelic(false)
                 .driverLikelihood(0D)
+                .source(ReportableVariantSource.PURPLE)
                 .notifyClinicalGeneticist(false);
     }
 }
