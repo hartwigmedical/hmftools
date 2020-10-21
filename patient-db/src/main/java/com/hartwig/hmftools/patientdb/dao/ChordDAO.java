@@ -6,7 +6,6 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
@@ -52,15 +51,14 @@ class ChordDAO {
             return null;
         }
 
-        // TODO: Read all fields once every database is patched to CHORD v2
         return ImmutableChordAnalysis.builder()
                 .BRCA1Value(result.getValue(CHORD.BRCA1))
                 .BRCA2Value(result.getValue(CHORD.BRCA2))
                 .hrdValue(result.getValue(CHORD.HRD))
-                .hrStatus(ChordStatus.UNKNOWN)
-                .hrdType(Strings.EMPTY)
-                .remarksHrStatus(Strings.EMPTY)
-                .remarksHrdType(Strings.EMPTY)
+                .hrStatus(ChordStatus.valueOf(result.getValue(CHORD.HRSTATUS)))
+                .hrdType(result.getValue(CHORD.HRDTYPE))
+                .remarksHrStatus(result.getValue(CHORD.REMARKSHRSTATUS))
+                .remarksHrdType(result.getValue(CHORD.REMARKSHRDTYPE))
                 .build();
     }
 
