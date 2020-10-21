@@ -161,12 +161,18 @@ public class SampleAnalyser
     {
         clearState();
 
-        if (variants.isEmpty())
-            return;
-
         mSampleId = sampleId;
-        mAllVariants.addAll(variants);
         mCohortDataWriter.getVisWriter().setSampleId(sampleId);
+
+        if (variants.isEmpty())
+        {
+            if(mConfig.isSingleSample())
+                writeSampleWithNoSVs(sampleId);
+
+            return;
+        }
+
+        mAllVariants.addAll(variants);
 
         if(!mConfig.IsGermline)
         {

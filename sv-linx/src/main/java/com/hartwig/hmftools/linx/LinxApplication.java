@@ -225,15 +225,11 @@ public class LinxApplication
 
             final List<SvVarData> svDataList = createSvData(svRecords);
 
+            sampleAnalyser.setSampleSVs(sampleId, svDataList);
+
             if(svDataList.isEmpty())
             {
                 LNX_LOGGER.info("sample({}) has no passing SVs", sampleId);
-
-                if(config.isSingleSample())
-                {
-                    sampleAnalyser.writeSampleWithNoSVs(sampleId);
-                }
-
                 continue;
             }
 
@@ -244,8 +240,6 @@ public class LinxApplication
 
             if(!config.IsGermline)
                 cnDataLoader.loadSampleData(sampleId, svRecords);
-
-            sampleAnalyser.setSampleSVs(sampleId, svDataList);
 
             if(ensemblDataCache != null)
             {
