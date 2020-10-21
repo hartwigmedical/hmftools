@@ -42,7 +42,6 @@ public class FusionExtractor {
                     fusionGeneStart = fusionArray[0];
                     fusionGeneEnd = fusionArray[1];
                 } else if (fusionArray.length == 1) {
-                    LOGGER.info(feature);
                     if (curatedFusion.equals("EGFRvII")) { //TODO implement correct genes and exons
                         fusionGeneStart = feature.geneSymbol();
                         exonUp = 0;
