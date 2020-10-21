@@ -4,10 +4,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.protect.serve.ServeEvidenceItem;
 import com.hartwig.hmftools.protect.serve.ServeEvidenceItemFactory;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
@@ -18,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ReportableVariantEvidence {
 
-    private static final Set<CodingEffect> CODING_EFFECTS =
+    private static final Set<CodingEffect> RANGE_CODING_EFFECTS =
             Sets.newHashSet(CodingEffect.SPLICE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE);
 
     private final List<ActionableRange> ranges;
@@ -30,31 +28,36 @@ public class ReportableVariantEvidence {
     }
 
     @NotNull
-    public List<ServeEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<ReportableVariant> germline, @NotNull List<ReportableVariant> somatic) {
+    public List<ServeEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<ReportableVariant> germline,
+            @NotNull List<ReportableVariant> somatic) {
         List<ReportableVariant> variants = ReportableVariantFactory.mergeSomaticAndGermlineVariants(germline, somatic);
         return variants.stream().flatMap(x -> evidence(doid, x).stream()).collect(Collectors.toList());
     }
 
     @NotNull
-    public List<ServeEvidenceItem> evidence(@NotNull Set<String> doid, ReportableVariant reportable) {
+    public List<ServeEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull ReportableVariant reportable) {
+        boolean report = reportable.driverLikelihoodInterpretation().equals(DriverInterpretation.HIGH);
 
         List<ServeEvidenceItem> hotspotEvidence = hotspots.stream()
                 .filter(x -> hotspotMatch(x, reportable))
-                .map(x -> evidence(doid, reportable, x))
+                .map(x -> evidence(report, doid, reportable, x))
                 .collect(Collectors.toList());
 
-        List<ServeEvidenceItem> rangeEvidence =
-                ranges.stream().filter(x -> rangeMatch(x, reportable)).map(x -> evidence(doid, reportable, x)).collect(Collectors.toList());
+        List<ServeEvidenceItem> rangeEvidence = ranges.stream()
+                .filter(x -> rangeMatch(x, reportable))
+                .map(x -> evidence(report, doid, reportable, x))
+                .collect(Collectors.toList());
 
-        List<ServeEvidenceItem> result = Lists.newArrayList();
+        Set<ServeEvidenceItem> result = Sets.newHashSet();
         result.addAll(hotspotEvidence);
         result.addAll(rangeEvidence);
-        return result;
+
+        return ServeEvidenceItemFactory.doNotReportInsignificantEvidence(result);
     }
 
     private static boolean rangeMatch(ActionableRange range, ReportableVariant variant) {
-        return CODING_EFFECTS.contains(variant.canonicalCodingEffect()) && variant.chromosome().equals(range.chromosome()) && range.gene()
-                .equals(range.gene()) && variant.position() >= range.start() && variant.position() <= range.end();
+        return RANGE_CODING_EFFECTS.contains(variant.canonicalCodingEffect()) && variant.chromosome().equals(range.chromosome())
+                && range.gene().equals(range.gene()) && variant.position() >= range.start() && variant.position() <= range.end();
     }
 
     private static boolean hotspotMatch(ActionableHotspot hotspot, ReportableVariant variant) {
@@ -63,17 +66,9 @@ public class ReportableVariantEvidence {
     }
 
     @NotNull
-    private static ServeEvidenceItem evidence(@NotNull Set<String> doid, @NotNull ReportableVariant reportable,
+    private static ServeEvidenceItem evidence(boolean report, @NotNull Set<String> doid, @NotNull ReportableVariant reportable,
             @NotNull ActionableEvent actionable) {
-        return ServeEvidenceItemFactory.create(eventString(reportable), doid, actionable);
-    }
-
-    @NotNull
-    private static String eventString(@NotNull Variant variant) {
-        String description = variant.canonicalCodingEffect() == CodingEffect.SPLICE
-                ? variant.canonicalHgvsCodingImpact()
-                : variant.canonicalHgvsProteinImpact();
-        return variant.gene() + " " + description;
+        return ServeEvidenceItemFactory.builder(doid, actionable).genomicEvent(reportable.genomicEvent()).reported(report).build();
     }
 
 }

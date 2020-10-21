@@ -38,7 +38,7 @@ public class CopyNumberEvidence {
                 result.add(evidence);
             }
         }
-        return result;
+        return ServeEvidenceItemFactory.doNotReportInsignificantEvidence(result);
     }
 
     private boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull ReportableGainLoss reportable) {

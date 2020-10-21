@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ServeEvidenceItem {
+public abstract class ServeEvidenceItem implements Comparable<ServeEvidenceItem> {
 
     @NotNull
     public abstract String genomicEvent();
@@ -34,4 +34,13 @@ public abstract class ServeEvidenceItem {
 
     @NotNull
     public abstract String url();
+
+    @Override
+    public int compareTo(@NotNull final ServeEvidenceItem o) {
+
+
+
+
+        return 0;
+    }
 }

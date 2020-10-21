@@ -14,6 +14,12 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ReportableVariant implements Variant {
 
     @NotNull
+    public String genomicEvent() {
+        String description = canonicalCodingEffect() == CodingEffect.SPLICE ? canonicalHgvsCodingImpact() : canonicalHgvsProteinImpact();
+        return this.gene() + " " + description;
+    }
+
+    @NotNull
     @Override
     public abstract String gene();
 
