@@ -31,7 +31,7 @@ plot_legend <- function(nonUTRProteinDomain) {
 plot_fusion <- function(fusedExons, fusedProteinDomains) {
   
   gene = fusedExons %>% group_by(transcript, color) %>% summarise()
-  utrRegions = fusedProteinDomains %>% filter(name == "UTR/Non-coding") %>% select(-color) %>% left_join(gene %>% select(transcript, color), by = "transcript")
+  utrRegions = fusedProteinDomains %>% filter(name == "UTR/Non-coding")
   otherRegions = fusedProteinDomains %>% filter(name != "UTR/Non-coding") %>% arrange(name)
   
   fusion = fusedExons %>% group_by(fusion) %>% summarise(start = min(geneStart), end = max(geneEnd))

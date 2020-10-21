@@ -120,11 +120,11 @@ public class FusedProteinDomains
         return new StringJoiner(DELIMITER)
                 .add(domain.sampleId())
                 .add(String.valueOf(domain.clusterId()))
-                .add(String.valueOf(domain.chromosome()))
+                .add(domain.chromosome())
                 .add(String.valueOf(domain.start()))
                 .add(String.valueOf(domain.end()))
-                .add(String.valueOf(domain.name()))
-                .add(ColorPicker.hexColor(colors.color(domain.name())))
+                .add(domain.name())
+                .add(ColorPicker.hexColor(colors.color(domain)))
                 .add(domain.transcript())
                 .toString();
     }
