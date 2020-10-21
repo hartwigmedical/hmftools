@@ -119,7 +119,6 @@ class ClinicalDAO {
             preTreatmentMechanism = preTreatmentMechanism.substring(0, BASELINE.PRETREATMENTSMECHANISM.getDataType().length());
         }
         byte primaryTumorOverridden = 0;
-        String doids = patient.curatedTumorLocationV2().doids().toString().replace("[", "").replace("]", "");
 
         context.insertInto(BASELINE,
                 BASELINE.PATIENTID,
@@ -154,8 +153,8 @@ class ClinicalDAO {
                         patient.curatedTumorLocationV2().primaryTumorSubType(),
                         patient.curatedTumorLocationV2().primaryTumorExtraDetails(),
                         primaryTumorOverridden,
-                        patient.curatedTumorLocationV2().doids() == null ? Strings.EMPTY : doids,
-                        Strings.EMPTY, //TODO add doid term
+                        patient.curatedTumorLocationV2().doids() == null ? Strings.EMPTY : patient.curatedTumorLocationV2().doids().toString().replace("[", "").replace("]", ""),
+                        patient.curatedTumorLocationV2().doidTerms() == null ? Strings.EMPTY : patient.curatedTumorLocationV2().doidTerms().toString().replace("[", "").replace("]", ""),
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),

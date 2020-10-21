@@ -27,7 +27,16 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     @NotNull
     private final Set<String> unusedSearchTerms;
 
-    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTSV) throws IOException {
+    private List<String> extractDoidTerms(@NotNull String doidFile, @Nullable List<String> doids) {
+        if (doids == null) {
+            return null;
+        } else {
+            // TODO: implement logica for extract doidTerms
+            return Lists.newArrayList("doidTerms");
+        }
+    }
+
+    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTSV, @NotNull String doidFile) throws IOException {
         List<String> lines = Files.readAllLines(new File(tumorLocationV2MappingTSV).toPath());
 
         // Skip header
@@ -48,6 +57,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
                             .primaryTumorSubType(primaryTumorSubType)
                             .primaryTumorExtraDetails(primaryTumorExtraDetails)
                             .doids(doids)
+                            .doidTerms(extractDoidTerms(doidFile, doids))
                             .searchTerm(searchTerm)
                             .build());
         }
