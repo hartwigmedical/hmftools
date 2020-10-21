@@ -25,6 +25,8 @@ CREATE TABLE baseline
     primaryTumorSubType varchar(255),
     primaryTumorExtraDetails varchar(255),
     primaryTumorOverridden BOOLEAN,
+    doid varchar(255),
+    doidTerm varchar(255),
     deathDate DATE,
     hasSystemicPreTreatment varchar(3),
     hasRadiotherapyPreTreatment varchar(3),

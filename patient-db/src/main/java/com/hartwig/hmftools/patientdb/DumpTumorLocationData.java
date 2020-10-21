@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocationV2;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
@@ -51,6 +52,7 @@ final class DumpTumorLocationData {
                         .primaryTumorExtraDetails(Strings.nullToEmpty(patient.baselineData()
                                 .curatedTumorLocationV2()
                                 .primaryTumorExtraDetails()))
+                        .doids(patient.baselineData().curatedTumorLocationV2().doids())
                         .isOverridden(false)
                         .build())
                 .collect(Collectors.toList());
