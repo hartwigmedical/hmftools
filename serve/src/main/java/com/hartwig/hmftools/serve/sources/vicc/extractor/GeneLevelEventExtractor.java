@@ -65,10 +65,10 @@ public class GeneLevelEventExtractor {
             return GeneLevelEvent.ACTIVATION;
         } else {
             LOGGER.warn("Unknown event {}", feature);
-            return GeneLevelEvent.UNKONWN;
+            return GeneLevelEvent.UNKNOWN;
         }
         LOGGER.warn("Unknown event {}", feature);
-        return GeneLevelEvent.UNKONWN;
+        return GeneLevelEvent.UNKNOWN;
     }
 
     @NotNull

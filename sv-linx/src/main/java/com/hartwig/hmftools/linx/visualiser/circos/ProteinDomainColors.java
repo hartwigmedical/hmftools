@@ -19,6 +19,8 @@ public class ProteinDomainColors
     private static final float SAT = 0.5f;
     private static final float BRIGHT = 0.8392f;
     private static final Color UTR = new Color(128, 128, 128);
+    private static final Color UTR_DOWN = new Color(107, 174, 214);
+    private static final Color UTR_UP = new Color(214, 144, 107);
 
     private final Map<String, Color> proteinColorMap = Maps.newLinkedHashMap();
 
@@ -32,7 +34,7 @@ public class ProteinDomainColors
         proteinColorMap.put(ProteinDomains.UTR, UTR);
 
         final List<String> newProteinDomains =
-                proteinDomains.stream().filter(x -> !proteinColorMap.keySet().contains(x)).collect(Collectors.toList());
+                proteinDomains.stream().filter(x -> !proteinColorMap.containsKey(x)).collect(Collectors.toList());
 
         for (int i = 0; i < newProteinDomains.size(); i++)
         {
@@ -42,16 +44,14 @@ public class ProteinDomainColors
     }
 
     @NotNull
-    public String rgb(@NotNull final String proteinDomain)
+    public Color color(@NotNull final ProteinDomain proteinDomain)
     {
-        final Color color = color(proteinDomain);
-        return "(" + color.getRed() + "," + color.getGreen() + "," + color.getBlue() + ",0.8)";
-    }
+        if (proteinDomain.name().equals(ProteinDomains.UTR))
+        {
+            return proteinDomain.start() == 1 ? UTR_DOWN : UTR_UP;
+        }
 
-    @NotNull
-    public Color color(@NotNull final String proteinDomain)
-    {
-        return proteinColorMap.get(proteinDomain);
+        return proteinColorMap.get(proteinDomain.name());
     }
 
     private static Color getFloatingColor(int i, int maxDomains)

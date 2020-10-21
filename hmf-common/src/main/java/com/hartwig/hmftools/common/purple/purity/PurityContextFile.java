@@ -30,7 +30,7 @@ public final class PurityContextFile {
     }
 
     @NotNull
-    private static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
         String filename = basePath + File.separator + sample + EXTENSION;
         return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
     }

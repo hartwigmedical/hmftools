@@ -52,8 +52,7 @@ public class VariantEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForVariant(@NotNull Variant variant, @Nullable String primaryTumorLocation,
-            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
+    public List<EvidenceItem> evidenceForVariant(@NotNull Variant variant, @Nullable String primaryTumorLocation,  @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         for (ActionableVariant actionableVariant : actionableVariants) {
             if (variant.gene().equals(actionableVariant.gene()) && variant.chromosome().equals(actionableVariant.chromosome())

@@ -14,6 +14,12 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ReportableVariant implements Variant {
 
     @NotNull
+    public String genomicEvent() {
+        String description = canonicalCodingEffect() == CodingEffect.SPLICE ? canonicalHgvsCodingImpact() : canonicalHgvsProteinImpact();
+        return this.gene() + " " + description;
+    }
+
+    @NotNull
     @Override
     public abstract String gene();
 
@@ -64,9 +70,15 @@ public abstract class ReportableVariant implements Variant {
 
     public abstract double driverLikelihood();
 
-    public abstract DriverInterpretation driverLikelihoodInterpretation();
+    @NotNull
+    public DriverInterpretation driverLikelihoodInterpretation() {
+        return DriverInterpretation.interpret(driverLikelihood());
+    }
 
     public abstract boolean biallelic();
 
+    @Deprecated
     public abstract boolean notifyClinicalGeneticist();
+
+    public abstract ReportableVariantSource source();
 }

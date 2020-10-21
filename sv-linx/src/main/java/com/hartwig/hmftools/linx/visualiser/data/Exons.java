@@ -8,12 +8,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,10 @@ public class Exons
         final List<Exon> result = Lists.newArrayList();
 
         result.addAll(transcriptExons(fusion.transcriptUp(), exons));
-        result.addAll(transcriptExons(fusion.transcriptDown(), exons));
+        if (!fusion.transcriptUp().equals(fusion.transcriptDown()))
+        {
+            result.addAll(transcriptExons(fusion.transcriptDown(), exons));
+        }
 
         return result;
     }

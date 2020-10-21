@@ -16,4 +16,11 @@ public abstract class ActionableGene implements ActionableEvent {
 
     @NotNull
     public abstract GeneLevelEvent event();
+
+    @NotNull
+    public String genomicEvent() {
+        String eventString = event().toString().toLowerCase();
+        return gene() + " " + eventString.substring(0, 1).toUpperCase() + eventString.substring(1);
+    }
+
 }

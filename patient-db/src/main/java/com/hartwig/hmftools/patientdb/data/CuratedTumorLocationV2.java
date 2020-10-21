@@ -32,4 +32,7 @@ public abstract class CuratedTumorLocationV2 {
     @Nullable
     public abstract List<String> doids();
 
+    @Nullable
+    public abstract List<String> doidTerms();
+
 }

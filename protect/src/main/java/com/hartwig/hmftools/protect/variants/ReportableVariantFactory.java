@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.protect.variants;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -13,9 +17,64 @@ import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-final class ReportableVariantFactory {
+public final class ReportableVariantFactory {
 
     private ReportableVariantFactory() {
+    }
+
+    @NotNull
+    public static List<ReportableVariant> reportableGermlineVariants(List<DriverGermlineVariant> variants) {
+        final List<ReportableVariant> result = Lists.newArrayList();
+        for (DriverGermlineVariant variant : variants) {
+            ReportableVariant reportable = fromGermlineVariant(variant.variant()).driverLikelihood(variant.driverLikelihood())
+                    .notifyClinicalGeneticist(false)
+                    .build();
+            result.add(reportable);
+        }
+
+        return result;
+    }
+
+    @NotNull
+    public static List<ReportableVariant> reportableSomaticVariants(List<DriverCatalog> driverCatalog, List<SomaticVariant> variants) {
+        final Map<String, DriverCatalog> driverCatalogMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
+
+        final List<ReportableVariant> result = Lists.newArrayList();
+        for (SomaticVariant variant : variants) {
+            if (variant.reported()) {
+                DriverCatalog geneDriver = driverCatalogMap.get(variant.gene());
+                ReportableVariant reportable =
+                        fromSomaticVariant(variant).driverLikelihood(geneDriver.driverLikelihood()).notifyClinicalGeneticist(false).build();
+                result.add(reportable);
+            }
+        }
+
+        return result;
+    }
+
+    @NotNull
+    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<ReportableVariant> germline,
+            @NotNull List<ReportableVariant> somatic) {
+        List<ReportableVariant> result = Lists.newArrayList();
+
+        Map<String, Double> maxLikelihood = Maps.newHashMap();
+        for (ReportableVariant variant : germline) {
+            maxLikelihood.merge(variant.gene(), variant.driverLikelihood(), Math::max);
+        }
+
+        for (ReportableVariant variant : somatic) {
+            maxLikelihood.merge(variant.gene(), variant.driverLikelihood(), Math::max);
+        }
+
+        for (ReportableVariant variant : germline) {
+            result.add(ImmutableReportableVariant.builder().from(variant).driverLikelihood(maxLikelihood.get(variant.gene())).build());
+        }
+
+        for (ReportableVariant variant : somatic) {
+            result.add(ImmutableReportableVariant.builder().from(variant).driverLikelihood(maxLikelihood.get(variant.gene())).build());
+        }
+
+        return result;
     }
 
     @NotNull
@@ -32,7 +91,6 @@ final class ReportableVariantFactory {
             }
 
             allReportableVariants.add(fromSomaticVariant(somaticDriverVariant.variant()).driverLikelihood(adjustedDriverLikelihood)
-                    .driverLikelihoodInterpretation(DriverInterpretation.interpret(adjustedDriverLikelihood))
                     .notifyClinicalGeneticist(false)
                     .build());
         }
@@ -46,9 +104,8 @@ final class ReportableVariantFactory {
             }
 
             allReportableVariants.add(fromGermlineVariant(driverGermlineVariant.variant()).driverLikelihood(adjustedDriverLikelihood)
-                    .driverLikelihoodInterpretation(DriverInterpretation.interpret(adjustedDriverLikelihood))
-                    .notifyClinicalGeneticist(germlineReportingChoice == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
-                            && germlineReportingModel.notifyAboutGene(driverGermlineVariant.variant().gene()))
+                    .notifyClinicalGeneticist(germlineReportingModel.notifyAboutGene(germlineReportingChoice,
+                            driverGermlineVariant.variant().gene()))
                     .build());
         }
 
@@ -73,6 +130,7 @@ final class ReportableVariantFactory {
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
+                .source(ReportableVariantSource.BACHELOR)
                 .biallelic(variant.biallelic());
     }
 
@@ -93,6 +151,7 @@ final class ReportableVariantFactory {
                 .totalCopyNumber(variant.adjustedCopyNumber())
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
+                .source(ReportableVariantSource.PURPLE)
                 .clonalLikelihood(variant.clonalLikelihood())
                 .biallelic(variant.biallelic());
     }

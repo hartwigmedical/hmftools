@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
-import com.hartwig.hmftools.protect.variants.DriverInterpretation;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
@@ -150,7 +149,6 @@ public final class ProtectTestFactory {
                 .totalCopyNumber(0)
                 .biallelic(false)
                 .driverLikelihood(0D)
-                .driverLikelihoodInterpretation(DriverInterpretation.LOW)
                 .notifyClinicalGeneticist(false);
     }
 

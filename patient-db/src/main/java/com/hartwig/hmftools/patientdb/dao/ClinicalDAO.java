@@ -29,6 +29,7 @@ import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
@@ -132,6 +133,8 @@ class ClinicalDAO {
                 BASELINE.PRIMARYTUMORSUBTYPE,
                 BASELINE.PRIMARYTUMOREXTRADETAILS,
                 BASELINE.PRIMARYTUMOROVERRIDDEN,
+                BASELINE.DOID,
+                BASELINE.DOIDTERM,
                 BASELINE.DEATHDATE,
                 BASELINE.HASSYSTEMICPRETREATMENT,
                 BASELINE.HASRADIOTHERAPYPRETREATMENT,
@@ -150,6 +153,8 @@ class ClinicalDAO {
                         patient.curatedTumorLocationV2().primaryTumorSubType(),
                         patient.curatedTumorLocationV2().primaryTumorExtraDetails(),
                         primaryTumorOverridden,
+                        patient.curatedTumorLocationV2().doids() == null ? Strings.EMPTY : patient.curatedTumorLocationV2().doids().toString().replace("[", "").replace("]", ""),
+                        patient.curatedTumorLocationV2().doidTerms() == null ? Strings.EMPTY : patient.curatedTumorLocationV2().doidTerms().toString().replace("[", "").replace("]", ""),
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),

@@ -90,6 +90,7 @@ public final class LoadClinicalData {
 
     private static final String LIMS_DIRECTORY = "lims_dir";
 
+    private static final String DOID_FILE = "doid_file";
     private static final String TUMOR_LOCATION_V2_MAPPING_TSV = "tumor_location_v2_mapping_tsv";
     private static final String TUMOR_LOCATION_MAPPING_CSV = "tumor_location_mapping_csv";
     private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
@@ -107,7 +108,8 @@ public final class LoadClinicalData {
         }
 
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
-        TumorLocationCuratorV2 tumorLocationCuratorV2 = new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV));
+        TumorLocationCuratorV2 tumorLocationCuratorV2 =
+                new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), cmd.getOptionValue(DOID_FILE));
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
 
@@ -611,6 +613,7 @@ public final class LoadClinicalData {
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
 
+        options.addOption(DOID_FILE, true, "Path towards to the file of the doid ID of tumor locations.");
         options.addOption(TUMOR_LOCATION_V2_MAPPING_TSV, true, "Path towards to the TSV of mapping the tumor location.");
         options.addOption(TUMOR_LOCATION_MAPPING_CSV, true, "Path towards to the CSV of mapping the tumor location.");
         options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the CSV of mapping the treatments.");
