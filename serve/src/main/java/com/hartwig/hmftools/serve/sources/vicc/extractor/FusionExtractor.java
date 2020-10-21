@@ -42,20 +42,21 @@ public class FusionExtractor {
                     fusionGeneStart = fusionArray[0];
                     fusionGeneEnd = fusionArray[1];
                 } else if (fusionArray.length == 1) {
+                    LOGGER.info(feature);
                     if (curatedFusion.equals("EGFRvII")) { //TODO implement correct genes and exons
-                        fusionGeneStart = "EGFR";
+                        fusionGeneStart = feature.geneSymbol();
                         exonUp = 0;
-                        fusionGeneEnd = "EGFR";
+                        fusionGeneEnd = feature.geneSymbol();
                         exonDown = 0;
                     } else if (curatedFusion.equals("EGFRvV")) { //TODO implement correct genes and exons
-                        fusionGeneStart = "EGFR";
+                        fusionGeneStart = feature.geneSymbol();
                         exonUp = 0;
-                        fusionGeneEnd = "EGFR";
+                        fusionGeneEnd = feature.geneSymbol();
                         exonDown = 0;
                     } else if (curatedFusion.equals("EGFRvIII") || curatedFusion.equals("VIII")) {
-                        fusionGeneStart = "EGFR";
+                        fusionGeneStart = feature.geneSymbol();
                         exonUp = 1;
-                        fusionGeneEnd = "EGFR";
+                        fusionGeneEnd = feature.geneSymbol();
                         exonDown = 8;
                     } else if (curatedFusion.equals("ITD")) { //TODO implement correct genes and exons
                         fusionGeneStart = "ITD";
@@ -78,15 +79,15 @@ public class FusionExtractor {
                 if (feature.description().equals("KIT EXON 11 MUTATION") || feature.description().equals("KIT Exon 11 mutations") || feature
                         .description()
                         .equals("KIT Exon 11 deletions")) {
-                    fusionGeneStart = "KIT";
-                    exonUp = 11;
-                    fusionGeneEnd = "KIT";
-                    exonDown = 11;
+                    fusionGeneStart = feature.geneSymbol();
+                    exonUp = Integer.valueOf(feature.proteinAnnotation());
+                    fusionGeneEnd = feature.geneSymbol();
+                    exonDown = Integer.valueOf(feature.proteinAnnotation());
                 } else if (feature.description().equals("MET EXON 14 SKIPPING MUTATION")) {
-                    fusionGeneStart = "MET";
-                    exonUp = 13;
-                    fusionGeneEnd = "MET";
-                    exonDown = 15;
+                    fusionGeneStart = feature.geneSymbol();
+                    exonUp = Integer.valueOf(feature.proteinAnnotation())-1;
+                    fusionGeneEnd = feature.geneSymbol();
+                    exonDown = Integer.valueOf(feature.proteinAnnotation())+1;
                 }
                 fusionsPerFeature.put(feature,
                         ImmutableKnownFusionPair.builder()
