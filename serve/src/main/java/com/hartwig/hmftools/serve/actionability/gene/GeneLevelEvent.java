@@ -6,5 +6,5 @@ public enum GeneLevelEvent {
     ACTIVATION,
     INACTIVATION,
     FUSION,
-    UNKONWN
+    UNKNOWN
 }
