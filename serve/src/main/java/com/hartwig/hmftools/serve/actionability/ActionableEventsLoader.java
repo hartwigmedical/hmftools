@@ -27,23 +27,23 @@ public class ActionableEventsLoader {
 
         String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(serveActionabilityDir);
         List<ActionableHotspot> hotspots = ActionableHotspotFile.read(actionableHotspotTsv);
-        LOGGER.info(" Loaded {} actionable hotspots from {}", hotspots.size(), actionableHotspotTsv);
+        LOGGER.info(" Actionable hotspots: {}", hotspots.size());
 
         String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(serveActionabilityDir);
         List<ActionableRange> ranges = ActionableRangeFile.read(actionableRangeTsv);
-        LOGGER.info(" Loaded {} actionable ranges from {}", ranges.size(), actionableRangeTsv);
+        LOGGER.info(" Actionable ranges: {}", ranges.size());
 
         String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(serveActionabilityDir);
         List<ActionableGene> genes = ActionableGeneFile.read(actionableGeneTsv);
-        LOGGER.info(" Loaded {} actionable genes from {}", genes.size(), actionableGeneTsv);
+        LOGGER.info(" Actionable genes: {}", genes.size());
 
         String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(serveActionabilityDir);
         List<ActionableFusion> fusions = ActionableFusionFile.read(actionableFusionTsv);
-        LOGGER.info(" Loaded {} actionable fusions from {}", fusions.size(), actionableFusionTsv);
+        LOGGER.info(" Actionable fusions: {}", fusions.size());
 
         String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(serveActionabilityDir);
         List<ActionableSignature> signatures = ActionableSignatureFile.read(actionableSignatureTsv);
-        LOGGER.info(" Loaded {} actionable signatures from {}", signatures.size(), actionableSignatureTsv);
+        LOGGER.info(" Actionable signatures: {}", signatures.size());
 
         return ImmutableActionableEvents.builder()
                 .addAllHotspots(hotspots)
