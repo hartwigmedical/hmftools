@@ -21,7 +21,7 @@ public class ProteinDomains
             throws IOException
     {
         final List<ProteinDomain> all =
-                VisProteinDomainFile.read(fileName).stream().map(ProteinDomains::fromFile).distinct().collect(Collectors.toList());
+                VisProteinDomainFile.read(fileName).stream().map(ProteinDomains::fromFile).collect(Collectors.toList());
         return proteinDomainsInFusionGenes(fusions, all);
     }
 

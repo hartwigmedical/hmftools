@@ -233,12 +233,11 @@ public class SvVisualiser implements AutoCloseable
         final String sample = config.sample() + ".cluster" + clusterIdsStr + "." + resolvedTypeString + ".sv" + clusterLinks.size()
                 + (config.debug() ? ".debug" : "");
 
-        final List<Exon> clusterExons = config.exons().stream()
-                .filter(x -> clusterIds.contains(x.clusterId()))
-                .distinct().collect(toList());
+        final List<Exon> clusterExons =
+                config.exons().stream().filter(x -> clusterIds.contains(x.clusterId())).distinct().collect(toList());
 
         final List<ProteinDomain> clusterProteinDomains =
-                config.proteinDomain().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+                config.proteinDomain().stream().filter(x -> clusterIds.contains(x.clusterId())).distinct().collect(toList());
 
         final List<Fusion> clusterFusions = config.fusions().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
 
