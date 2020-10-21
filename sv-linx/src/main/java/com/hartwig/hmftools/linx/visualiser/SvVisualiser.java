@@ -23,9 +23,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.visualiser.circos.ChromosomeRangeExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
@@ -235,7 +233,9 @@ public class SvVisualiser implements AutoCloseable
         final String sample = config.sample() + ".cluster" + clusterIdsStr + "." + resolvedTypeString + ".sv" + clusterLinks.size()
                 + (config.debug() ? ".debug" : "");
 
-        final List<Exon> clusterExons = config.exons().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<Exon> clusterExons = config.exons().stream()
+                .filter(x -> clusterIds.contains(x.clusterId()))
+                .distinct().collect(toList());
 
         final List<ProteinDomain> clusterProteinDomains =
                 config.proteinDomain().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
