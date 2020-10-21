@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
@@ -20,12 +21,15 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -136,11 +140,15 @@ public class VisualiserWriter
     public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
             final String chromosome, final String annotationType)
     {
-        mGeneData.add(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType));
+        addGeneExonData(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType));
     }
 
     public void addGeneExonData(final VisGeneData geneData)
     {
+        // no duplicates for the same clusterId
+        if(mGeneData.stream().anyMatch(x -> x.GeneId.equals(geneData.GeneId) && x.ClusterId == geneData.ClusterId))
+            return;
+
         mGeneData.add(geneData);
     }
 
@@ -375,12 +383,15 @@ public class VisualiserWriter
         if(!mEnabled)
             return;
 
-        List<VisGeneExonFile> geneExonList = Lists.newArrayList();
-        List<VisProteinDomainFile> proteinList = Lists.newArrayList();
+        final List<VisGeneExonFile> geneExonList = Lists.newArrayList();
+        final List<VisProteinDomainFile> proteinList = Lists.newArrayList();
 
         for(final VisGeneData geneData : mGeneData)
         {
             if(geneData.ClusterId < 0) // skip genes not linked to a cluster
+                continue;
+
+            if(checkAddIgExonRegions(geneData, geneExonList))
                 continue;
 
             final TranscriptData transData = mGeneTranscriptCollection.getTranscriptData(geneData.GeneId, geneData.TransName);
@@ -487,6 +498,51 @@ public class VisualiserWriter
         {
             LNX_LOGGER.error("error writing to visualiser gene-exons file: {}", e.toString());
         }
+    }
+
+    private boolean checkAddIgExonRegions(final VisGeneData geneData, final List<VisGeneExonFile> geneExonList)
+    {
+        if(!geneData.AnnotationType.equals(GENE_TYPE_FUSION))
+            return false;
+
+        if(!geneData.TransName.contains("@IG"))
+            return false;
+
+        /*
+            hg19
+            @IGH:    1;14;106032614;107288051
+            @IGK:   -1;2;89890568;90274235
+            @IGL:	1;22;22380474;23265085
+
+            hg38
+            @IGH:    1;14;105586437;106879844
+            @IGK:   -1;2;88857361;90235368
+            @IGL:	1;22;22026076;22922913
+        */
+
+        int posStart = 0;
+        int posEnd = 0;
+
+        if(geneData.TransName.equals("@IGH"))
+        {
+            posStart = RG_VERSION == RefGenomeVersion.HG19 ? 106032614 : 105586437;
+            posEnd = RG_VERSION == RefGenomeVersion.HG19 ? 107288051 : 106879844;
+        }
+        else if(geneData.TransName.equals("@IGK"))
+        {
+            posStart = RG_VERSION == RefGenomeVersion.HG19 ? 89890568 : 88857361;
+            posEnd = RG_VERSION == RefGenomeVersion.HG19 ? 90274235 : 90235368;
+        }
+        else if(geneData.TransName.equals("@IGL"))
+        {
+            posStart = RG_VERSION == RefGenomeVersion.HG19 ? 22380474 : 22026076;
+            posEnd = RG_VERSION == RefGenomeVersion.HG19 ? 23265085 : 22922913;
+        }
+
+        geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,
+                geneData.Chromosome, geneData.AnnotationType, 1, posStart, posEnd));
+
+        return true;
     }
 
     private void writeCopyNumberData(final Map<String,List<SvCNData>> chrCNDataMap)

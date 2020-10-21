@@ -37,7 +37,9 @@ import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
+import com.hartwig.hmftools.linx.visualiser.data.ExonType;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableExon;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
@@ -56,7 +58,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class SvVisualiser implements AutoCloseable
 {
-
     private static final Logger LOGGER = LogManager.getLogger(SvVisualiser.class);
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException
@@ -67,7 +68,8 @@ public class SvVisualiser implements AutoCloseable
         try (final SvVisualiser application = new SvVisualiser(options, args))
         {
             application.run();
-        } catch (ParseException e)
+        }
+        catch (ParseException e)
         {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
