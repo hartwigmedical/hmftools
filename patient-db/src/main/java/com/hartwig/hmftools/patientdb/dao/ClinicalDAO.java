@@ -155,7 +155,7 @@ class ClinicalDAO {
                         patient.curatedTumorLocationV2().primaryTumorExtraDetails(),
                         primaryTumorOverridden,
                         patient.curatedTumorLocationV2().doids() == null ? Strings.EMPTY : doids,
-                        Strings.EMPTY,
+                        Strings.EMPTY, //TODO add doid term
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),
