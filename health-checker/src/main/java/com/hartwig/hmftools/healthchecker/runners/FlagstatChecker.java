@@ -1,23 +1,23 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.utils.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
 public class FlagstatChecker implements HealthChecker {
 
-    private static final Logger LOGGER = LogManager.getLogger(FlagstatFile.class);
+    private static final Logger LOGGER = LogManager.getLogger(FlagstatChecker.class);
 
     @NotNull
     private final String refSample;
