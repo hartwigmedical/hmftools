@@ -37,7 +37,6 @@ final class FilterFactory {
         // Copy number variation is too vague.
         FEATURE_KEYWORDS_TO_FILTER.add("COPY NUMBER VARIATION");
 
-
         // to specific
         FEATURE_KEYWORDS_TO_FILTER.add("EGFR (L858R,L861,G719,S768I)");
         FEATURE_KEYWORDS_TO_FILTER.add("ESR1 (E380Q,537,538,L536,P535H)");
@@ -46,6 +45,30 @@ final class FilterFactory {
         FEATURE_KEYWORDS_TO_FILTER.add("PDGFRA (552-596,631-668,814-854)");
         FEATURE_KEYWORDS_TO_FILTER.add("FGFR2 (V565I,M536I,M538I,I548V,N550,E566G,L618M,K660E)");
         FEATURE_KEYWORDS_TO_FILTER.add("FLT3 (F691,D835,N676,Y842)");
+        FEATURE_KEYWORDS_TO_FILTER.add("KIT (V559I,H697Y,T670,V654A,A829P,D816,N822,Y823D)");
+        FEATURE_KEYWORDS_TO_FILTER.add("MAP2K1 (F129L,L215P,I103N,P124)");
+        FEATURE_KEYWORDS_TO_FILTER.add("MAP2K1 (I99T,L115,G128D,F129L,V211D,L215P,I103N,K104N,I111N,H119P,E120D,F133L,P124,D67N)");
+        FEATURE_KEYWORDS_TO_FILTER.add("JAK1 (S646F;R683)");
+        FEATURE_KEYWORDS_TO_FILTER.add("FGFR2 (M536I,M538I,I548V,N550,E566G,L618M,K660E)");
+        FEATURE_KEYWORDS_TO_FILTER.add("ERBB2 (S310,L755,V777)");
+        FEATURE_KEYWORDS_TO_FILTER.add("RET (618,620,634,768,791,891,918,C634W,M918T)");
+
+        // Determine not a specific mutation in a domein
+        FEATURE_KEYWORDS_TO_FILTER.add("NOTCH1 activating mutation in Cterm-PEST domain");
+        FEATURE_KEYWORDS_TO_FILTER.add("NOTCH2 activating mutation (missense in TAD or truncating in Cterm-PEST domain)");
+        FEATURE_KEYWORDS_TO_FILTER.add("MET kinase domain mutation");
+        FEATURE_KEYWORDS_TO_FILTER.add("Truncating Mutations Upstream of Transactivation Domain");
+        FEATURE_KEYWORDS_TO_FILTER.add("Truncating Mutations in the PEST Domain");
+
+        // 2 seperate hotspots in one event
+        FEATURE_KEYWORDS_TO_FILTER.add("BRAF V600E/K");
+        FEATURE_KEYWORDS_TO_FILTER.add("D835H/Y");
+        FEATURE_KEYWORDS_TO_FILTER.add("G12/G13");
+        FEATURE_KEYWORDS_TO_FILTER.add("Q157P/R");
+        FEATURE_KEYWORDS_TO_FILTER.add("S310F/Y");
+        FEATURE_KEYWORDS_TO_FILTER.add("S893A/T");
+        FEATURE_KEYWORDS_TO_FILTER.add("S34Y/F");
+
 
         // TODO All of below needs some further investigation & explanation
         FEATURE_KEYWORDS_TO_FILTER.add("EXPRESSION");
@@ -88,16 +111,9 @@ final class FilterFactory {
         FEATURE_KEYWORDS_TO_FILTER.add("TA83del");
         FEATURE_KEYWORDS_TO_FILTER.add("V1790_A1996del");
         FEATURE_KEYWORDS_TO_FILTER.add("V555_L576del");
-        FEATURE_KEYWORDS_TO_FILTER.add("BRAF V600E/K");
-        FEATURE_KEYWORDS_TO_FILTER.add("D835H/Y");
-        FEATURE_KEYWORDS_TO_FILTER.add("G12/G13");
-        FEATURE_KEYWORDS_TO_FILTER.add("Q157P/R");
-        FEATURE_KEYWORDS_TO_FILTER.add("S310F/Y");
-        FEATURE_KEYWORDS_TO_FILTER.add("S893A/T");
         FEATURE_KEYWORDS_TO_FILTER.add("CASP8L");
         FEATURE_KEYWORDS_TO_FILTER.add("INTRON 6 MUTATION");
         FEATURE_KEYWORDS_TO_FILTER.add("SNP309");
-        FEATURE_KEYWORDS_TO_FILTER.add("S34Y/F");
         FEATURE_KEYWORDS_TO_FILTER.add("Alu insertion");
 
         FEATURE_KEYWORDS_TO_FILTER.add("RS11623866");

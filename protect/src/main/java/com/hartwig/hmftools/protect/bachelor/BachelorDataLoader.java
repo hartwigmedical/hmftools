@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.protect.bachelor;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,8 @@ public class BachelorDataLoader {
         List<ReportableVariant> result = Lists.newArrayList();
 
         List<ReportableGermlineVariant> variants = ReportableGermlineVariantFile.read(bachelorTsv);
+
+        // Every gene is allowed at this stage.
         Set<String> allowedGenes = variants.stream().map(ReportableGermlineVariant::gene).collect(Collectors.toSet());
 
         List<DriverGermlineVariant> driverGermlineVariants = FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
@@ -38,7 +41,8 @@ public class BachelorDataLoader {
 
         result.addAll(ReportableVariantFactory.reportableGermlineVariants(driverGermlineVariants));
 
-        LOGGER.info("Loaded {} germline variants from {}", result.size(), bachelorTsv);
+        LOGGER.info("Loaded BACHELOR data from {}", new File(bachelorTsv).getParent());
+        LOGGER.info(" Reportable germline variants: {}", result.size());
         return ImmutableBachelorData.builder().addAllGermlineVariants(result).build();
 
     }

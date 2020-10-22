@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc.curation;
 
+import com.hartwig.hmftools.vicc.datamodel.Feature;
+
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -9,7 +11,7 @@ public class FusionCuration {
     }
 
     @NotNull
-    public static String curatedFusions(@NotNull String fusion) {
+    public static String curatedFusions(@NotNull String fusion, @NotNull Feature feature) {
         if (fusion.equals("ZNF198-FGFR1")) {
             fusion = "ZMYM2-FGFR1";
         } else if (fusion.equals("NPM-ALK")) {
@@ -68,6 +70,9 @@ public class FusionCuration {
             fusion = "FGFR3-BAIAP2L1";
         } else if (fusion.equals("PAX8-PPAR?")) {
             fusion = "PAX8-PPARA";
+        } else if (feature.name().equals("ITD") && feature.geneSymbol().equals("FLT3")) {
+            //removed the FLT3-ITD fusion
+            fusion = Strings.EMPTY;
         }
         //TODO determine if below is needed for removing fusions from knowledgebase
         else if (fusion.contains("IGH") || fusion.contains("IGK") || fusion.contains("TRB") || fusion.contains("Delta") || fusion.equals(

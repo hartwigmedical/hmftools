@@ -11,7 +11,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ViralInsertionAnalyzer {
 
@@ -21,7 +20,7 @@ public final class ViralInsertionAnalyzer {
     private ViralInsertionAnalyzer() {
     }
 
-    @Nullable
+    @NotNull
     public static List<ViralInsertion> analyzeViralInsertions(@NotNull List<LinxViralInsertion> linxViralInsertions) {
         Map<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertion>> itemsPerKey = Maps.newHashMap();
         for (LinxViralInsertion viralInsertion : linxViralInsertions) {

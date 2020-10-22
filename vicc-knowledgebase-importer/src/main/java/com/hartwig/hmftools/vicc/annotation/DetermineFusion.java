@@ -34,7 +34,7 @@ final class DetermineFusion {
         if (!FeatureTypeExtractor.IGNORE.contains(feature)) { // Extract internal fusion
             if (FeatureTypeExtractor.INTERNAL_FUSION.contains(proteinAnnotation) || proteinAnnotation.contains("[a-zA-Z]+")) {
                 return FusionEvent.FUSION_PAIR;
-            } else if (FeatureTypeExtractor.SEARCH_FUSION_PAIRS.contains(proteinAnnotation) && proteinAnnotation.contains("-")) {
+            } else if (FeatureTypeExtractor.SEARCH_FUSION_PAIRS.contains(proteinAnnotation) || proteinAnnotation.contains("-") && !feature.equals("LOSS-OF-FUNCTION")) {
                 return FusionEvent.FUSION_PAIR;
             } else if (FeatureTypeExtractor.SEARCH_FUSION_PAIRS.contains(feature)) {
                 return FusionEvent.FUSION_PAIR;

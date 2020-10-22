@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.serve;
+package com.hartwig.hmftools.protect.evidence;
 
 import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ServeEvidenceItem implements Comparable<ServeEvidenceItem> {
+public abstract class ProtectEvidenceItem {
 
     @NotNull
     public abstract String genomicEvent();
@@ -35,12 +35,4 @@ public abstract class ServeEvidenceItem implements Comparable<ServeEvidenceItem>
     @NotNull
     public abstract String url();
 
-    @Override
-    public int compareTo(@NotNull final ServeEvidenceItem o) {
-
-
-
-
-        return 0;
-    }
 }

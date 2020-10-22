@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.protect.actionability.ReportableEvidenceItemFactory;
+import com.hartwig.hmftools.protect.linx.LinxData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,14 +20,29 @@ public final class SvAnalyzer {
     }
 
     @NotNull
+    public static SvAnalysis run(@NotNull LinxData linxData, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @Nullable PatientTumorLocation patientTumorLocation) {
+        String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
+        Map<LinxFusion, List<EvidenceItem>> evidencePerFusion =
+                actionabilityAnalyzer.evidenceForFusions(linxData.fusions(), primaryTumorLocation);
+
+        List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.toReportableFlatList(evidencePerFusion);
+
+        return ImmutableSvAnalysis.builder()
+                .reportableFusions(linxData.fusions())
+                .reportableDisruptions(linxData.geneDisruptions())
+                .evidenceItems(filteredEvidence)
+                .build();
+    }
+
+    @NotNull
     public static SvAnalysis run(@NotNull List<LinxFusion> fusions, @NotNull List<LinxBreakend> disruptions,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
         List<ReportableGeneDisruption> reportableGeneDisruptions = ReportableGeneDisruptionFactory.convert(disruptions);
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
 
-        Map<LinxFusion, List<EvidenceItem>> evidencePerFusion =
-                actionabilityAnalyzer.evidenceForFusions(fusions, primaryTumorLocation);
+        Map<LinxFusion, List<EvidenceItem>> evidencePerFusion = actionabilityAnalyzer.evidenceForFusions(fusions, primaryTumorLocation);
 
         List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.toReportableFlatList(evidencePerFusion);
 

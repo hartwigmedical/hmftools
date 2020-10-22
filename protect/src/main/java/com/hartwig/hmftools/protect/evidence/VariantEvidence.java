@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.variants;
+package com.hartwig.hmftools.protect.evidence;
 
 import java.util.List;
 import java.util.Set;
@@ -6,15 +6,16 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.protect.serve.ServeEvidenceItem;
-import com.hartwig.hmftools.protect.serve.ServeEvidenceItemFactory;
+import com.hartwig.hmftools.protect.variants.DriverInterpretation;
+import com.hartwig.hmftools.protect.variants.ReportableVariant;
+import com.hartwig.hmftools.protect.variants.ReportableVariantFactory;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReportableVariantEvidence {
+public class VariantEvidence {
 
     private static final Set<CodingEffect> RANGE_CODING_EFFECTS =
             Sets.newHashSet(CodingEffect.SPLICE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE);
@@ -22,37 +23,37 @@ public class ReportableVariantEvidence {
     private final List<ActionableRange> ranges;
     private final List<ActionableHotspot> hotspots;
 
-    public ReportableVariantEvidence(@NotNull final List<ActionableHotspot> hotspots, @NotNull final List<ActionableRange> ranges) {
+    public VariantEvidence(@NotNull final List<ActionableHotspot> hotspots, @NotNull final List<ActionableRange> ranges) {
         this.hotspots = hotspots;
         this.ranges = ranges;
     }
 
     @NotNull
-    public List<ServeEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<ReportableVariant> germline,
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<ReportableVariant> germline,
             @NotNull List<ReportableVariant> somatic) {
         List<ReportableVariant> variants = ReportableVariantFactory.mergeSomaticAndGermlineVariants(germline, somatic);
         return variants.stream().flatMap(x -> evidence(doid, x).stream()).collect(Collectors.toList());
     }
 
     @NotNull
-    public List<ServeEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull ReportableVariant reportable) {
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull ReportableVariant reportable) {
         boolean report = reportable.driverLikelihoodInterpretation().equals(DriverInterpretation.HIGH);
 
-        List<ServeEvidenceItem> hotspotEvidence = hotspots.stream()
+        List<ProtectEvidenceItem> hotspotEvidence = hotspots.stream()
                 .filter(x -> hotspotMatch(x, reportable))
                 .map(x -> evidence(report, doid, reportable, x))
                 .collect(Collectors.toList());
 
-        List<ServeEvidenceItem> rangeEvidence = ranges.stream()
+        List<ProtectEvidenceItem> rangeEvidence = ranges.stream()
                 .filter(x -> rangeMatch(x, reportable))
                 .map(x -> evidence(report, doid, reportable, x))
                 .collect(Collectors.toList());
 
-        Set<ServeEvidenceItem> result = Sets.newHashSet();
+        Set<ProtectEvidenceItem> result = Sets.newHashSet();
         result.addAll(hotspotEvidence);
         result.addAll(rangeEvidence);
 
-        return ServeEvidenceItemFactory.doNotReportInsignificantEvidence(result);
+        return ProtectEvidenceItems.doNotReportInsignificantEvidence(result);
     }
 
     private static boolean rangeMatch(ActionableRange range, ReportableVariant variant) {
@@ -66,9 +67,9 @@ public class ReportableVariantEvidence {
     }
 
     @NotNull
-    private static ServeEvidenceItem evidence(boolean report, @NotNull Set<String> doid, @NotNull ReportableVariant reportable,
+    private static ProtectEvidenceItem evidence(boolean report, @NotNull Set<String> doid, @NotNull ReportableVariant reportable,
             @NotNull ActionableEvent actionable) {
-        return ServeEvidenceItemFactory.builder(doid, actionable).genomicEvent(reportable.genomicEvent()).reported(report).build();
+        return ProtectEvidenceItems.builder(doid, actionable).genomicEvent(reportable.genomicEvent()).reported(report).build();
     }
 
 }

@@ -60,14 +60,14 @@ public final class FeatureTypeExtractor {
             "Loss Of Function Variant",
             "Loss Of Heterozygosity",
             "DELETERIOUS MUTATION",
-            "negative");
+            "negative", "BIALLELIC INACTIVATION", "LOSS-OF-FUNCTION");
     public static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_ONCO = Sets.newHashSet("Gain-of-function Mutations",
             "Gain-of-Function",
             "act mut",
             "ACTIVATING MUTATION",
             "Oncogenic Mutations",
             "pos",
-            "positive");
+            "positive", "oncogenic mutation");
 
     public static final Set<String> GENE_LEVEL = Sets.newHashSet("gene_only");
 
