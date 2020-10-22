@@ -20,8 +20,8 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
-public final class DiseaseOntology {
-    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
+public final class diseaseOntology {
+    private static final Logger LOGGER = LogManager.getLogger(diseaseOntology.class);
 
     private static final IRI DISEASE_IRI = IRI.create("http://purl.obolibrary.org/obo/DOID_4");
 
@@ -50,6 +50,7 @@ public final class DiseaseOntology {
     private static OWLClass createDiseaseMapping(@NotNull OWLOntology ontology, @NotNull OWLReasoner reasoner) {
 
         OWLClass diseaseClass = ontology.getOWLOntologyManager().getOWLDataFactory().getOWLClass(DISEASE_IRI);
+        LOGGER.info(diseaseClass);
         return diseaseClass;
         //        val diseases = setOf(diseaseClass) + subClasses(diseaseClass, reasoner)
         //        val synonyms = diseases.flatMap { disease -> getSynonyms(disease, ontology).map { Pair(it, disease) } }
