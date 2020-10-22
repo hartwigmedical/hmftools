@@ -1029,6 +1029,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- [2.50](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.50) 
+  - Fixed HG38 regression
 - [2.49](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.49) 
   - Re-added support for cancel panel integration test 
 - [2.48](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.48) 
