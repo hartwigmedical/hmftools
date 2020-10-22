@@ -16,7 +16,7 @@ final class HealthCheckEvaluation {
     private static final String PURPLE_QC_PASS = "PASS";
     private static final String PURPLE_QC_FAIL = "FAIL";
     private static final double MAX_PURPLE_CONTAMINATION = 0.1;
-    private static final double MIN_MAPPED_PROPORTION = 0.5;
+    private static final double MIN_MAPPED_PROPORTION = 0.95;
 
     private HealthCheckEvaluation() {
     }
@@ -46,9 +46,9 @@ final class HealthCheckEvaluation {
             case PURPLE_CONTAMINATION:
                 return checkPurpleContamination(qcValue.value());
             case REF_PROPORTION_MAPPED:
-                return checkFlagstatMappingProportion(qcValue.value(), "Ref", MIN_MAPPED_PROPORTION);
+                return checkFlagstatMappingProportion(qcValue.value(), "Ref");
             case TUM_PROPORTION_MAPPED:
-                return checkFlagstatMappingProportion(qcValue.value(), "Tum", MIN_MAPPED_PROPORTION);
+                return checkFlagstatMappingProportion(qcValue.value(), "Tum");
             default: {
                 LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.type());
                 return false;
@@ -94,13 +94,13 @@ final class HealthCheckEvaluation {
         }
     }
 
-    private static boolean checkFlagstatMappingProportion(@NotNull String value, @NotNull String name, double minProportion) {
+    private static boolean checkFlagstatMappingProportion(@NotNull String value, @NotNull String name) {
         double proportion = Double.parseDouble(value);
-        if (proportion >= minProportion) {
-            LOGGER.info("PASS - {} proportion of reads mapped {} is higher than min value {}", name, value, minProportion);
+        if (proportion >= MIN_MAPPED_PROPORTION) {
+            LOGGER.info("PASS - {} proportion of reads mapped {} is higher than min value {}", name, value, MIN_MAPPED_PROPORTION);
             return true;
         } else {
-            LOGGER.info("FAIL - {} proportion of reads mapped {} is lower than min value {}", name, value, minProportion);
+            LOGGER.info("FAIL - {} proportion of reads mapped {} is lower than min value {}", name, value, MIN_MAPPED_PROPORTION);
             return false;
         }
     }

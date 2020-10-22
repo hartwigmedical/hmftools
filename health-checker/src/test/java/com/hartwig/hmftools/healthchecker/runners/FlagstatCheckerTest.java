@@ -24,7 +24,7 @@ public class FlagstatCheckerTest {
         for (QCValue value : values) {
             if (value.type() == QCValueType.REF_PROPORTION_MAPPED) {
                 assertEquals("0.9932958382082092", value.value());
-            } else if (value.type() == QCValueType.REF_PROPORTION_MAPPED) {
+            } else if (value.type() == QCValueType.TUM_PROPORTION_MAPPED) {
                 assertEquals("0.9968295130748326", value.value());
             }
         }
