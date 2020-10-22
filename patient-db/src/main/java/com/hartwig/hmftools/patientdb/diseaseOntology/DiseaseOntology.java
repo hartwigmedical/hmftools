@@ -1,17 +1,22 @@
 package com.hartwig.hmftools.patientdb.diseaseOntology;
 
 import java.io.File;
+import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.io.FileDocumentSource;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.MissingImportHandlingStrategy;
+import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyLoaderConfiguration;
@@ -50,10 +55,37 @@ public class DiseaseOntology {
     private static OWLClass createDiseaseMapping(@NotNull OWLOntology ontology, @NotNull OWLReasoner reasoner) {
 
         OWLClass diseaseClass = ontology.getOWLOntologyManager().getOWLDataFactory().getOWLClass(DISEASE_IRI);
+       // Set<OWLClass> diseases = subClasses(diseaseClass, reasoner);
+
+
+        // val diseases = setOf(diseaseClass) + subClasses(diseaseClass, reasoner)
+       // val synonyms = diseases.flatMap { disease -> getSynonyms(disease, ontology).map { Pair(it, disease) } }
+       // return diseases.associateBy { getLabel(it, ontology) } + synonyms.toMap()
+
         LOGGER.info(diseaseClass);
+        String disease = getLabel(diseaseClass, ontology);
+        LOGGER.info(disease);
+
         return diseaseClass;
-        //        val diseases = setOf(diseaseClass) + subClasses(diseaseClass, reasoner)
-        //        val synonyms = diseases.flatMap { disease -> getSynonyms(disease, ontology).map { Pair(it, disease) } }
-        //        return diseases.associateBy { getLabel(it, ontology) } + synonyms.toMap()
+
     }
+    private static Set<OWLClass> subClasses(@NotNull OWLClass diseaseClass, @NotNull OWLReasoner reasoner) {
+        return reasoner.getSubClasses(diseaseClass, false).getFlattened();
+    }
+
+//    private static Set<String> getSynonyms(@NotNull OWLClass diseaseClass, @NotNull OWLOntology ontology) {
+//        return diseaseClass.getAnnotations(ontology).stream().filter( x -> x.toString().contains("hasExactSynonym")).collect(Collectors.toSet());
+//
+//    }
+
+    private static String getLabel(@NotNull OWLClass diseaseClass, @NotNull OWLOntology ontology) {
+        OWLDataFactory dataFactory = ontology.getOWLOntologyManager().getOWLDataFactory();
+        Set<OWLAnnotation> diseaseAnnotation =  diseaseClass.getAnnotations(ontology, dataFactory.getRDFSLabel());
+        String disease = Strings.EMPTY;
+        for (OWLAnnotation annotation: diseaseAnnotation) {
+            disease = annotation.toString().toLowerCase().trim();
+        }
+        return disease;
+    }
+
 }
