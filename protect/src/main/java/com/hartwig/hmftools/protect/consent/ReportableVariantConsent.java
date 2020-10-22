@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.concent;
+package com.hartwig.hmftools.protect.consent;
 
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;

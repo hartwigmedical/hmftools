@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.cna;
+package com.hartwig.hmftools.protect.evidence;
 
 import java.util.List;
 import java.util.Set;
@@ -6,8 +6,6 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.protect.serve.ServeEvidenceItem;
-import com.hartwig.hmftools.protect.serve.ServeEvidenceItemFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,8 +19,8 @@ public class CopyNumberEvidence {
     }
 
     @NotNull
-    public List<ServeEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<ReportableGainLoss> reportables) {
-        List<ServeEvidenceItem> result = Lists.newArrayList();
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<ReportableGainLoss> reportables) {
+        List<ProtectEvidenceItem> result = Lists.newArrayList();
         for (ReportableGainLoss reportable : reportables) {
             result.addAll(evidence(doid, reportable));
         }
@@ -30,15 +28,15 @@ public class CopyNumberEvidence {
     }
 
     @NotNull
-    public List<ServeEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull ReportableGainLoss reportable) {
-        List<ServeEvidenceItem> result = Lists.newArrayList();
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull ReportableGainLoss reportable) {
+        List<ProtectEvidenceItem> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(reportable.gene()) && isTypeMatch(actionable, reportable)) {
-                ServeEvidenceItem evidence = ServeEvidenceItemFactory.create(actionable.genomicEvent(), doid, actionable);
+                ProtectEvidenceItem evidence = ProtectEvidenceItems.create(actionable.genomicEvent(), doid, actionable);
                 result.add(evidence);
             }
         }
-        return ServeEvidenceItemFactory.doNotReportInsignificantEvidence(result);
+        return ProtectEvidenceItems.doNotReportInsignificantEvidence(result);
     }
 
     private boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull ReportableGainLoss reportable) {

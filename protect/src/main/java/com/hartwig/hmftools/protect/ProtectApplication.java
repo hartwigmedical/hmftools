@@ -1,17 +1,36 @@
 package com.hartwig.hmftools.protect;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.EvidenceItemFile;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.protect.bachelor.BachelorData;
+import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
+import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
+import com.hartwig.hmftools.protect.evidence.FusionEvidence;
+import com.hartwig.hmftools.protect.evidence.ProtectEvidenceItem;
+import com.hartwig.hmftools.protect.evidence.ProtectEvidenceItemFile;
+import com.hartwig.hmftools.protect.evidence.VariantEvidence;
+import com.hartwig.hmftools.protect.linx.LinxData;
+import com.hartwig.hmftools.protect.linx.LinxDataLoader;
+import com.hartwig.hmftools.protect.purple.PurpleData;
+import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.serve.actionability.ActionableEvents;
+import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -67,7 +86,43 @@ public class ProtectApplication {
 
         printResults(tumorSampleId, analysis);
 
+        EvidenceItemFile.write(config.outputDir() + File.separator + "evidence.off.tsv", analysis.offLabelEvidence());
+        EvidenceItemFile.write(config.outputDir() + File.separator + "evidence.tumor.tsv", analysis.tumorSpecificEvidence());
+
+        List<ProtectEvidenceItem> protectEvidence = protectEvidence(config).stream().filter(ProtectEvidenceItem::reported).collect(Collectors.toList());
+        ProtectEvidenceItemFile.write(config.outputDir() + File.separator + "evidence.protect.tsv", protectEvidence);
+
         LOGGER.info("Complete");
+    }
+
+    @NotNull
+    private static List<ProtectEvidenceItem> protectEvidence(ProtectConfig config) throws IOException {
+
+        // Serve Data
+        final String serveActionabilityDir = config.serveActionabilityDir();
+        final ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(serveActionabilityDir);
+        final VariantEvidence variantEvidenceFactory = new VariantEvidence(actionableEvents.hotspots(), actionableEvents.ranges());
+        final CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(actionableEvents.genes());
+        final FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());
+
+        // External Data
+        final ChordAnalysis chordAnalysis = ChordFileReader.read(config.chordPredictionTxt());
+        final LinxData linxData = LinxDataLoader.load(config);
+        final PurpleData purpleData = PurpleDataLoader.load(config);
+        final BachelorData bachelorData = BachelorDataLoader.load(purpleData, config.bachelorTsv(), chordAnalysis.hrStatus());
+
+        // Evidence
+        final List<ProtectEvidenceItem> variantEvidence =
+                variantEvidenceFactory.evidence(Sets.newHashSet(), bachelorData.germlineVariants(), purpleData.somaticVariants());
+        final List<ProtectEvidenceItem> copyNumberEvidence =
+                copyNumberEvidenceFactory.evidence(Sets.newHashSet(), purpleData.copyNumberAlterations());
+        final List<ProtectEvidenceItem> fusionEvidence = fusionEvidenceFactory.evidence(Sets.newHashSet(), linxData.fusions());
+
+        final List<ProtectEvidenceItem> result = Lists.newArrayList();
+        result.addAll(variantEvidence);
+        result.addAll(copyNumberEvidence);
+        result.addAll(fusionEvidence);
+        return result;
     }
 
     @Nullable
@@ -100,5 +155,6 @@ public class ProtectApplication {
         LOGGER.info(" Tumor-specific evidence items found: {}", analysis.tumorSpecificEvidence().size());
         LOGGER.info(" Clinical trials matched to molecular profile: {}", analysis.clinicalTrials().size());
         LOGGER.info(" Off-label evidence items found: {}", analysis.offLabelEvidence().size());
+
     }
 }

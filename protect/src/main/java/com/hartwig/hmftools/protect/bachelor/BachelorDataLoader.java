@@ -29,6 +29,8 @@ public class BachelorDataLoader {
         List<ReportableVariant> result = Lists.newArrayList();
 
         List<ReportableGermlineVariant> variants = ReportableGermlineVariantFile.read(bachelorTsv);
+
+        // Every gene is allowed at this stage.
         Set<String> allowedGenes = variants.stream().map(ReportableGermlineVariant::gene).collect(Collectors.toSet());
 
         List<DriverGermlineVariant> driverGermlineVariants = FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
