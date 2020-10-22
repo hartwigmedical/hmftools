@@ -16,6 +16,7 @@ final class HealthCheckEvaluation {
     private static final String PURPLE_QC_PASS = "PASS";
     private static final String PURPLE_QC_FAIL = "FAIL";
     private static final double MAX_PURPLE_CONTAMINATION = 0.1;
+    private static final double MIN_MAPPED_PROPORTION = 0.5;
 
     private HealthCheckEvaluation() {
     }
@@ -44,6 +45,10 @@ final class HealthCheckEvaluation {
                 return checkPurpleQCStatus(qcValue.value());
             case PURPLE_CONTAMINATION:
                 return checkPurpleContamination(qcValue.value());
+            case REF_PROPORTION_MAPPED:
+                return checkFlagstatMappingProportion(qcValue.value(), "Ref", MIN_MAPPED_PROPORTION);
+            case TUM_PROPORTION_MAPPED:
+                return checkFlagstatMappingProportion(qcValue.value(), "Tum", MIN_MAPPED_PROPORTION);
             default: {
                 LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.type());
                 return false;
@@ -85,6 +90,17 @@ final class HealthCheckEvaluation {
             return true;
         } else {
             LOGGER.info("FAIL - Contamination of {} is above {}", value, MAX_PURPLE_CONTAMINATION);
+            return false;
+        }
+    }
+
+    private static boolean checkFlagstatMappingProportion(@NotNull String value, @NotNull String name, double minProportion) {
+        double proportion = Double.parseDouble(value);
+        if (proportion >= minProportion) {
+            LOGGER.info("PASS - {} proportion of reads mapped {} is higher than min value {}", name, value, minProportion);
+            return true;
+        } else {
+            LOGGER.info("FAIL - {} proportion of reads mapped {} is lower than min value {}", name, value, minProportion);
             return false;
         }
     }

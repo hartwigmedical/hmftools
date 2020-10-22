@@ -59,4 +59,22 @@ public class HealthCheckEvaluationTest {
         assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(purpleContaminationCorrectButNonZero)));
         assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(purpleContaminationTooHigh)));
     }
+
+    @Test
+    public void refFlagstatProportionMappedCheckWorks() {
+        QCValue proportionMappedCorrect = ImmutableQCValue.of(QCValueType.REF_PROPORTION_MAPPED, "0.97");
+        QCValue proportionMappedTooLow = ImmutableQCValue.of(QCValueType.REF_PROPORTION_MAPPED, "0.4");
+
+        assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(proportionMappedCorrect)));
+        assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(proportionMappedTooLow)));
+    }
+
+    @Test
+    public void tumFlagstatProportionMappedCheckWorks() {
+        QCValue proportionMappedCorrect = ImmutableQCValue.of(QCValueType.TUM_PROPORTION_MAPPED, "0.97");
+        QCValue proportionMappedTooLow = ImmutableQCValue.of(QCValueType.TUM_PROPORTION_MAPPED, "0.4");
+
+        assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(proportionMappedCorrect)));
+        assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(proportionMappedTooLow)));
+    }
 }
