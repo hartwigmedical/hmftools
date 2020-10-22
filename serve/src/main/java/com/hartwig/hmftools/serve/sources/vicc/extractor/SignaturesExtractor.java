@@ -19,7 +19,7 @@ public class SignaturesExtractor {
         if (featureName.equals("Microsatellite Instability-High")) {
             return SignatureName.MICROSATELLITE_UNSTABLE;
         } else if (featureName.equals("High mutational load")) { // TODO: check for right string
-            return SignatureName.HIGH_TUMOR_MUTATIONAL_BURDEN;
+            return SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD;
         } else if (featureName.equals("HRD")) {
             return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENY; // TODO: check for right string
         } else {
