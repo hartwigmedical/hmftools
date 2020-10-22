@@ -36,6 +36,7 @@ import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public class LoadClinicalDataTest {
 
@@ -44,7 +45,7 @@ public class LoadClinicalDataTest {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Test
-    public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
+    public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException, OWLOntologyCreationException {
         TumorLocationCurator tumorLocationCurator = TestCuratorFactory.tumorLocationCurator();
         TumorLocationCuratorV2 tumorLocationCuratorV2 = TestCuratorFactory.tumorLocationV2Curator();
         BiopsySiteCurator biopsySiteCurator = TestCuratorFactory.biopsySiteCurator();
