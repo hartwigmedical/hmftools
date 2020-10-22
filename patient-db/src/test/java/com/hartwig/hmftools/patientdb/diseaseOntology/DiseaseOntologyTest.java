@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.patientdb.diseaseOntology;
 
-import static org.junit.Assert.*;
-
 import com.google.common.io.Resources;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
-public class diseaseOntologyTest {
+public class DiseaseOntologyTest {
 
     public static final String DOID_FILE = Resources.getResource("diseaseOntology/doid.owl").getPath();
 
@@ -16,7 +14,7 @@ public class diseaseOntologyTest {
     @Ignore
     public void canLoadTest() throws OWLOntologyCreationException {
         try {
-            diseaseOntology.readDoid(DOID_FILE);
+            DiseaseOntology.readDoid(DOID_FILE);
         } catch (OWLOntologyCreationException e) {
             throw new OWLOntologyCreationException("Could not load doid file!");
         }

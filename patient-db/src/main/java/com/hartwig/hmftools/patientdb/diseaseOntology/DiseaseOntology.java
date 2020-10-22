@@ -20,8 +20,8 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
-public final class diseaseOntology {
-    private static final Logger LOGGER = LogManager.getLogger(diseaseOntology.class);
+public final class DiseaseOntology {
+    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
 
     private static final IRI DISEASE_IRI = IRI.create("http://purl.obolibrary.org/obo/DOID_4");
 
