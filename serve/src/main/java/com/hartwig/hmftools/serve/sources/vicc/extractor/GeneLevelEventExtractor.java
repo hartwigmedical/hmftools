@@ -86,7 +86,7 @@ public class GeneLevelEventExtractor {
 
             } else if (feature.type() == FeatureType.FUSION_PROMISCUOUS) {
 
-                String curatedPromiscuousFusion = FusionCuration.curatedFusions(feature.geneSymbol());
+                String curatedPromiscuousFusion = FusionCuration.curatedFusions(feature.geneSymbol(), feature);
                 //TODO: check if this is needed
                 // if (function.equals("Likely Loss-of-function")) {
                 //            gene = Strings.EMPTY;

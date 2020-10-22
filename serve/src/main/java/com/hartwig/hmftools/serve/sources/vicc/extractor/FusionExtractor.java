@@ -35,7 +35,7 @@ public class FusionExtractor {
                 if (fusion.contains("fusion")) {
                     fusion = fusion.substring(0, fusion.lastIndexOf(" "));
                 }
-                String curatedFusion = FusionCuration.curatedFusions(fusion);
+                String curatedFusion = FusionCuration.curatedFusions(fusion, feature);
                 String[] fusionArray = curatedFusion.split("-");
 
                 if (fusionArray.length == 2) {
