@@ -53,6 +53,13 @@ final class FilterFactory {
         FEATURE_KEYWORDS_TO_FILTER.add("ERBB2 (S310,L755,V777)");
         FEATURE_KEYWORDS_TO_FILTER.add("RET (618,620,634,768,791,891,918,C634W,M918T)");
 
+        // Determine not a specific mutation in a domein
+        FEATURE_KEYWORDS_TO_FILTER.add("NOTCH1 activating mutation in Cterm-PEST domain");
+        FEATURE_KEYWORDS_TO_FILTER.add("NOTCH2 activating mutation (missense in TAD or truncating in Cterm-PEST domain)");
+        FEATURE_KEYWORDS_TO_FILTER.add("MET kinase domain mutation");
+        FEATURE_KEYWORDS_TO_FILTER.add("Truncating Mutations Upstream of Transactivation Domain");
+        FEATURE_KEYWORDS_TO_FILTER.add("Truncating Mutations in the PEST Domain");
+
         // 2 seperate hotspots in one event
         FEATURE_KEYWORDS_TO_FILTER.add("BRAF V600E/K");
         FEATURE_KEYWORDS_TO_FILTER.add("D835H/Y");
