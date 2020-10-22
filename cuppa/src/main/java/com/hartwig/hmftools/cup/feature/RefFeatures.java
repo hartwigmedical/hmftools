@@ -120,7 +120,7 @@ public class RefFeatures
             for(Map.Entry<String,Map<String,Double>> cancerEntry : cancerFeatureCounts.entrySet())
             {
                 final String cancerType = cancerEntry.getKey();
-                int cancerSamples = mSampleDataCache.RefCancerSampleData.get(cancerType).size();
+                int cancerSamples = mSampleDataCache.getCancerSampleCount(cancerType);
 
                 for(Map.Entry<String,Double> featureEntry : cancerEntry.getValue().entrySet())
                 {
@@ -159,7 +159,7 @@ public class RefFeatures
                 final List<Double> drivers = entry.getValue();
 
                 double driverTotal = drivers.stream().mapToDouble(x -> x).sum();
-                int cancerSamples = mSampleDataCache.RefCancerSampleData.get(cancerType).size();
+                int cancerSamples = mSampleDataCache.getCancerSampleCount(cancerType);
                 double avgDrivers = driverTotal / cancerSamples;
 
                 CUP_LOGGER.debug("cancerType({}) samples({}) driverTotal({}) avgPerSample({})",

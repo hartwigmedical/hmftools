@@ -213,7 +213,7 @@ public class RnaExpression
 
             double cssWeight = pow(RNA_GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
 
-            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
+            int cancerTypeCount = mSampleDataCache.getCancerSampleCount(refCancerType);
             double weightedCss = css * cssWeight / sqrt(cancerTypeCount);
 
             Double total = cancerCssTotals.get(refCancerType);
@@ -254,7 +254,7 @@ public class RnaExpression
     private void addPrevalenceResults(final SampleData sample, final double[] sampleGeneTPMs, final List<SampleResult> results)
     {
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.RefCancerSampleData.get(sample.CancerType).size() : 0;
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.CancerType) : 0;
 
         final Map<String,Double> summaryCancerPrevs = Maps.newHashMap();
 

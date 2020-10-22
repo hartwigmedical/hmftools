@@ -218,7 +218,7 @@ public class SignatureAnnotation
         results.add(result);
 
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.RefCancerSampleData.get(sample.CancerType).size() : 0;
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.CancerType) : 0;
 
         final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
                 sample.CancerType, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal,  true);
@@ -266,7 +266,7 @@ public class SignatureAnnotation
             double otherSnvTotal = sumVector(otherSampleCounts);
             double mutLoadWeight = min(otherSnvTotal, snvTotal) / max(otherSnvTotal, snvTotal);
 
-            int cancerTypeCount = mSampleDataCache.RefCancerSampleData.get(refCancerType).size();
+            int cancerTypeCount = mSampleDataCache.getCancerSampleCount(refCancerType);
             double weightedCss = css * cssWeight * mutLoadWeight / sqrt(cancerTypeCount);
 
             Double total = cancerCssTotals.get(refCancerType);

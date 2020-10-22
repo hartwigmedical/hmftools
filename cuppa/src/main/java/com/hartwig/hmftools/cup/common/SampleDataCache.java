@@ -37,6 +37,12 @@ public class SampleDataCache
     public boolean isSingleSample() { return SpecificSample != null; }
     public boolean isMultiSample() { return !isSingleSample(); }
 
+    public int getCancerSampleCount(final String cancerType)
+    {
+        final List<SampleData> samples = RefCancerSampleData.get(cancerType);
+        return samples != null ? samples.size() : 0;
+    }
+
     public void loadSampleData(final String specificSampleData, final String sampleDataFile)
     {
         if(specificSampleData != null)
@@ -51,6 +57,12 @@ public class SampleDataCache
 
             if(sampleItems.length == 3)
                 cancerSubtype = sampleItems[2];
+
+            if(RefSampleCancerTypeMap.containsKey(sampleId))
+            {
+                // override if known
+                cancerType = RefSampleCancerTypeMap.get(sampleId);
+            }
 
             SpecificSample = new SampleData(sampleId, cancerType, cancerSubtype, cancerType);
             SampleDataList.add(SpecificSample);

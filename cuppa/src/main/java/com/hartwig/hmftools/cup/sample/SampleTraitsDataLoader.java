@@ -63,8 +63,9 @@ public class SampleTraitsDataLoader
                 continue;
             }
 
-            final ChordAnalysis chordAnalysis = dbAccess.readChordAnalysis(sampleId);
-            double chordHrd = chordAnalysis != null ? chordAnalysis.hrdValue() : 0;
+            // ignored for now
+            //final ChordAnalysis chordAnalysis = dbAccess.readChordAnalysis(sampleId);
+            double chordHrd = 0; // chordAnalysis != null ? chordAnalysis.hrdValue() : 0;
 
             SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, chordHrd);
             sampleTraitsData.put(traitsData.SampleId, traitsData);

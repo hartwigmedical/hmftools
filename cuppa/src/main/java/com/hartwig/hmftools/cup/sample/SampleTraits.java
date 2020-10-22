@@ -193,7 +193,7 @@ public class SampleTraits
         }
 
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.RefCancerSampleData.get(sample.CancerType).size() : 0;
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.CancerType) : 0;
 
         final Map<String,double[]> indelPercentiles = mRefTraitPercentiles.get(MS_INDELS_TMB);
         double indelMb = sampleTraits.IndelsMbPerMb;

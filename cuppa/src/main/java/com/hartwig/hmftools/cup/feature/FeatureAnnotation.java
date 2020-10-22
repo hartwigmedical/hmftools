@@ -245,7 +245,7 @@ public class FeatureAnnotation
 
                     if(adjustMatchingCancerPrev)
                     {
-                        int cohortSize = mSampleDataCache.RefCancerSampleData.get(cancerType).size();
+                        int cohortSize = mSampleDataCache.getCancerSampleCount(cancerType);
                         double adjustedIncidence = driverPrevValue * cohortSize - maxLikelihood;
                         double adjustedDriverPrevValue = cohortSize > 1 ? adjustedIncidence / (cohortSize - 1) : 0;
                         genePrevTotal -= driverPrevValue - adjustedDriverPrevValue;

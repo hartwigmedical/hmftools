@@ -80,10 +80,12 @@ public class RefSampleTraits
             final List<Double> msIndelTmbValues = traitsData.stream().map(x -> x.IndelsMbPerMb).collect(Collectors.toList());
             writePercentilesData(cancerType, SampleTraitType.MS_INDELS_TMB, createPercentileData(msIndelTmbValues));
 
+            /*
             final List<Double> chordHrdValues = traitsData.stream().map(x -> x.ChordHrd).collect(Collectors.toList());
             writePercentilesData(cancerType, SampleTraitType.CHORD_HRD, createPercentileData(chordHrdValues));
+            */
 
-            double cancerSamples = mSampleDataCache.RefCancerSampleData.get(cancerType).size();
+            double cancerSamples = mSampleDataCache.getCancerSampleCount(cancerType);
             int wgdCount = (int)traitsData.stream().filter(x -> x.HasWGD).count();
             int femaleCount = (int)traitsData.stream().filter(x -> x.GenderType == Gender.FEMALE).count();
 
