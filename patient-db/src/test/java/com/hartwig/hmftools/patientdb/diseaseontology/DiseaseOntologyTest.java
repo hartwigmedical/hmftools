@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.diseaseontology2;
+package com.hartwig.hmftools.patientdb.diseaseontology;
 
 import com.google.common.io.Resources;
 
