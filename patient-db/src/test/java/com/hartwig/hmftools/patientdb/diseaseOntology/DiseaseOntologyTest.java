@@ -11,7 +11,6 @@ public class DiseaseOntologyTest {
     public static final String DOID_FILE = Resources.getResource("diseaseOntology/doid.owl").getPath();
 
     @Test
-    @Ignore
     public void canLoadTest() throws OWLOntologyCreationException {
         try {
             DiseaseOntology.readDoid(DOID_FILE);
