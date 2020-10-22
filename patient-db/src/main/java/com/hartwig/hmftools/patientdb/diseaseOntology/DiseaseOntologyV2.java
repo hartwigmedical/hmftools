@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.diseaseOntology;
 
-
 import java.io.File;
 import java.util.logging.Level;
 
@@ -20,8 +19,9 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
-public final class DiseaseOntology {
-    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
+public class DiseaseOntologyV2 {
+
+    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntologyV2.class);
 
     private static final IRI DISEASE_IRI = IRI.create("http://purl.obolibrary.org/obo/DOID_4");
 
@@ -56,5 +56,4 @@ public final class DiseaseOntology {
         //        val synonyms = diseases.flatMap { disease -> getSynonyms(disease, ontology).map { Pair(it, disease) } }
         //        return diseases.associateBy { getLabel(it, ontology) } + synonyms.toMap()
     }
-
 }
