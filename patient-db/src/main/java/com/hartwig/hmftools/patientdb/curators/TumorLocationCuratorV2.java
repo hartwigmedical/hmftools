@@ -28,11 +28,17 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     private final Set<String> unusedSearchTerms;
 
     private List<String> extractDoidTerms(@NotNull String doidFile, @Nullable List<String> doids) {
+        //TODO read doid File
+        List<String> doidTerms = Lists.newArrayList();
         if (doids == null) {
             return null;
         } else {
-            // TODO: implement logica for extract doidTerms
-            return Lists.newArrayList("doidTerms");
+            for (String doid: doids) {
+                // TODO: implement logica for extract doidTerms
+                doidTerms.add("doidTerms" + DOID_DELIMITER);
+            }
+            doidTerms.add(doidTerms.toString().substring(0, doidTerms.toString().length()-1));
+            return doidTerms;
         }
     }
 
