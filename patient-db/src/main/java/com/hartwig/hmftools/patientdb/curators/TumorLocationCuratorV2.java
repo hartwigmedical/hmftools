@@ -31,9 +31,7 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
 public class TumorLocationCuratorV2 implements CleanableCurator {
 
-    private static final Logger LOGGER = LogManager.getLogger(BiopsySiteCurator.class);
-    private static final IRI DISEASE_IRI = IRI.create("http://purl.obolibrary.org/obo/DOID_4");
-
+    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCuratorV2.class);
     private static final String FIELD_DELIMITER = "\t";
     private static final String DOID_DELIMITER = ";";
 
@@ -41,40 +39,13 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     private final Map<String, CuratedTumorLocationV2> tumorLocationMap = Maps.newHashMap();
     @NotNull
     private final Set<String> unusedSearchTerms;
-
-    private OWLOntology createOntology(@NotNull String doidFile) throws OWLOntologyCreationException {
-        java.util.logging.Logger logger = java.util.logging.Logger.getLogger("org.obolibrary.oboformat.parser.OBOFormatParser");
-        logger.setLevel(Level.SEVERE);
-        OWLOntologyManager ontologyManager = OWLManager.createOWLOntologyManager();
-        OWLOntologyLoaderConfiguration config = new OWLOntologyLoaderConfiguration().setFollowRedirects(true)
-                .setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
-
-        return ontologyManager.loadOntologyFromOntologyDocument(new FileDocumentSource(new File(doidFile)), config);
-    }
-
-    private OWLReasoner createReasoner(@NotNull OWLOntology ontology) {
-        OWLReasoner reasoner = new Reasoner.ReasonerFactory().createReasoner(ontology);
-        reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
-        return reasoner;
-    }
-
-    private void createDiseaseMapping(@NotNull OWLOntology ontology, @NotNull OWLReasoner reasoner) {
-
-        OWLClass diseaseClass = ontology.getOWLOntologyManager().getOWLDataFactory().getOWLClass(DISEASE_IRI);
-        LOGGER.info(diseaseClass);
-//        val diseases = setOf(diseaseClass) + subClasses(diseaseClass, reasoner)
-//        val synonyms = diseases.flatMap { disease -> getSynonyms(disease, ontology).map { Pair(it, disease) } }
-//        return diseases.associateBy { getLabel(it, ontology) } + synonyms.toMap()
-    }
     
 
 
-    private List<String> extractDoidTerms(@NotNull String doidFile, @Nullable List<String> doids) throws OWLOntologyCreationException {
+    private List<String> extractDoidTerms(@NotNull String doidFile, @Nullable List<String> doids)  {
         //TODO read doid File
 
-        OWLOntology ontology = createOntology(doidFile);
-        OWLReasoner reasoner = createReasoner(ontology);
-        createDiseaseMapping(ontology, reasoner);
+
 
         List<String> doidTerms = Lists.newArrayList();
         if (doids == null) {
@@ -89,8 +60,8 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
         }
     }
 
-    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTSV, @NotNull String doidFile)
-            throws IOException, OWLOntologyCreationException {
+    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTSV)
+            throws IOException {
         List<String> lines = Files.readAllLines(new File(tumorLocationV2MappingTSV).toPath());
 
         // Skip header
@@ -111,7 +82,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
                             .primaryTumorSubType(primaryTumorSubType)
                             .primaryTumorExtraDetails(primaryTumorExtraDetails)
                             .doids(doids)
-                            .doidTerms(extractDoidTerms(doidFile, doids))
+                            .doidTerms(Lists.newArrayList())
                             .searchTerm(searchTerm)
                             .build());
         }
