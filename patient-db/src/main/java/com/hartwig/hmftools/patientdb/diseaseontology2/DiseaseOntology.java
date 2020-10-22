@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.diseaseOntology;
+package com.hartwig.hmftools.patientdb.diseaseontology2;
 
 import java.io.File;
 import java.util.Set;

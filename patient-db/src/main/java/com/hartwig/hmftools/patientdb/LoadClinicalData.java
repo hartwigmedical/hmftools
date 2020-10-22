@@ -33,7 +33,7 @@ import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
-import com.hartwig.hmftools.patientdb.diseaseOntology.DiseaseOntology;
+import com.hartwig.hmftools.patientdb.diseaseontology2.DiseaseOntology;
 import com.hartwig.hmftools.patientdb.readers.ColoPatientReader;
 import com.hartwig.hmftools.patientdb.readers.CorePatientReader;
 import com.hartwig.hmftools.patientdb.readers.EcrfPatientReader;

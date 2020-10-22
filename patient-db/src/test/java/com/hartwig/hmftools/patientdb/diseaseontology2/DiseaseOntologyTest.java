@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.diseaseOntology;
+package com.hartwig.hmftools.patientdb.diseaseontology2;
 
 import com.google.common.io.Resources;
 
@@ -7,7 +7,7 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public class DiseaseOntologyTest {
 
-    public static final String DOID_FILE = Resources.getResource("diseaseOntology/doid.owl").getPath();
+    public static final String DOID_FILE = Resources.getResource("disease_ontology/doid.owl").getPath();
 
     @Test
     public void canLoadTest() throws OWLOntologyCreationException {
