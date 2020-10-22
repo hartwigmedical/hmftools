@@ -19,9 +19,9 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
-public class DiseaseOntologyV2 {
+public class DiseaseOntology {
 
-    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntologyV2.class);
+    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
 
     private static final IRI DISEASE_IRI = IRI.create("http://purl.obolibrary.org/obo/DOID_4");
 

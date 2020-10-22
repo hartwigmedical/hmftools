@@ -12,7 +12,7 @@ public class DiseaseOntologyTest {
     @Test
     public void canLoadTest() throws OWLOntologyCreationException {
         try {
-            DiseaseOntologyV2.readDoid(DOID_FILE);
+            DiseaseOntology.readDoid(DOID_FILE);
         } catch (OWLOntologyCreationException e) {
             throw new OWLOntologyCreationException("Could not load doid file!");
         }
