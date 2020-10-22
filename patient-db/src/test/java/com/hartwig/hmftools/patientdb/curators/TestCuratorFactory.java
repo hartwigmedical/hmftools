@@ -20,7 +20,7 @@ public final class TestCuratorFactory {
     @NotNull
     public static TumorLocationCuratorV2 tumorLocationV2Curator() {
         try {
-            return new TumorLocationCuratorV2(TUMOR_LOCATION_V2_MAPPING_TSV, "");
+            return new TumorLocationCuratorV2(TUMOR_LOCATION_V2_MAPPING_TSV);
         } catch (IOException e) {
             throw new IllegalStateException("Could not create tumor location V2 curator!");
         }

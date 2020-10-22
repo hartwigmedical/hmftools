@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
+import com.hartwig.hmftools.healthchecker.runners.FlagstatChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
 import com.hartwig.hmftools.healthchecker.runners.MetricsChecker;
 import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
@@ -31,6 +32,7 @@ public final class HealthChecksApplication {
     private static final String TUMOR_SAMPLE = "tumor";
     private static final String METRICS_DIR = "metrics_dir";
     private static final String PURPLE_DIR = "purple_dir";
+    private static final String FLAGSTAT_DIR = "flagstat_dir";
     private static final String OUTPUT_DIR = "output_dir";
 
     @NotNull
@@ -41,16 +43,19 @@ public final class HealthChecksApplication {
     private final String metricsDirectory;
     @Nullable
     private final String purpleDirectory;
+    @Nullable
+    private final String flagstatDirectory;
     @NotNull
     private final String outputDir;
 
     @VisibleForTesting
     HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample, @NotNull String metricsDirectory,
-            @Nullable String purpleDirectory, @NotNull String outputDir) {
+            @Nullable String purpleDirectory, @Nullable String flagstatDirectory, @NotNull String outputDir) {
         this.refSample = refSample;
         this.tumorSample = tumorSample;
         this.metricsDirectory = metricsDirectory;
         this.purpleDirectory = purpleDirectory;
+        this.flagstatDirectory = flagstatDirectory;
         this.outputDir = outputDir;
     }
 
@@ -70,8 +75,9 @@ public final class HealthChecksApplication {
 
         String tumorSample = cmd.hasOption(TUMOR_SAMPLE) ? cmd.getOptionValue(TUMOR_SAMPLE) : null;
         String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
+        String flagstatDir = cmd.hasOption(FLAGSTAT_DIR) ? cmd.getOptionValue(FLAGSTAT_DIR) : null;
 
-        new HealthChecksApplication(refSample, tumorSample, metricsDir, purpleDir, outputDir).run(true);
+        new HealthChecksApplication(refSample, tumorSample, metricsDir, purpleDir, flagstatDir, outputDir).run(true);
     }
 
     @NotNull
@@ -81,6 +87,7 @@ public final class HealthChecksApplication {
         options.addOption(TUMOR_SAMPLE, true, "The name of the tumor sample");
         options.addOption(PURPLE_DIR, true, "The directory holding the purple output");
         options.addOption(METRICS_DIR, true, "The directory holding the metrics output");
+        options.addOption(FLAGSTAT_DIR, true, "The directory holding the flagstat output");
 
         options.addOption(OUTPUT_DIR, true, "The directory where health checker will write output to");
         return options;
@@ -102,7 +109,8 @@ public final class HealthChecksApplication {
             LOGGER.info("Running in Somatic mode");
             checkers = Lists.newArrayList(
                     new MetricsChecker(refSample, tumorSample, metricsDirectory),
-                    new PurpleChecker(tumorSample, purpleDirectory)
+                    new PurpleChecker(tumorSample, purpleDirectory),
+                    new FlagstatChecker(refSample, tumorSample, flagstatDirectory)
             );
         }
 

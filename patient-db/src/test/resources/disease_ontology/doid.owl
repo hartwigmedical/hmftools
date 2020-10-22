@@ -1,0 +1,853 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://purl.obolibrary.org/obo/doid.owl/"
+     xml:base="http://purl.obolibrary.org/obo/doid.owl/"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:terms="http://purl.org/dc/terms/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:oboInOwl="http://www.geneontology.org/formats/oboInOwl#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:doid="http://purl.obolibrary.org/obo/doid#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:obo="http://purl.obolibrary.org/obo/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <owl:Ontology rdf:about="http://purl.obolibrary.org/obo/doid.owl">
+        <owl:versionIRI rdf:resource="http://purl.obolibrary.org/obo/doid/releases/2018-11-02/doid.owl"/>
+        <owl:imports rdf:resource="http://purl.obolibrary.org/obo/doid/obo/ext.owl"/>
+        <oboInOwl:default-namespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:default-namespace>
+        <oboInOwl:saved-by rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lschriml</oboInOwl:saved-by>
+        <terms:license rdf:resource="https://creativecommons.org/publicdomain/zero/1.0/"/>
+        <dc:description rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The Disease Ontology has been developed as a standardized ontology for human disease with the purpose of providing the biomedical community with consistent, reusable and sustainable descriptions of human disease terms, phenotype characteristics and related medical vocabulary disease concepts.</dc:description>
+        <oboInOwl:date rdf:datatype="http://www.w3.org/2001/XMLSchema#string">11:02:2018 12:32</oboInOwl:date>
+        <oboInOwl:hasOBOFormatVersion rdf:datatype="http://www.w3.org/2001/XMLSchema#string">1.2</oboInOwl:hasOBOFormatVersion>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The Disease Ontology content is available via the Creative Commons Public Domain Dedication CC0 1.0 Universal license (https://creativecommons.org/publicdomain/zero/1.0/).</rdfs:comment>
+        <dc:title rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Human Disease Ontology</dc:title>
+    </owl:Ontology>
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+
+
+
+    <!-- http://purl.obolibrary.org/obo/IAO_0000115 -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/IAO_0000115">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">definition</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#DO_AGR_slim -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#DO_AGR_slim">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DO AGR slim</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#DO_FlyBase_slim -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#DO_FlyBase_slim">
+        <rdfs:label xml:lang="en">DO FlyBase slim</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#DO_MGI_slim -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#DO_MGI_slim">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DO MGI slim</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#DO_cancer_slim -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#DO_cancer_slim">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DO cancer slim</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#DO_rare_slim -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#DO_rare_slim">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DO rare slim</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#GOLD -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#GOLD">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GOLD</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#NCIthesaurus -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#NCIthesaurus">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">NCIthesaurus</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#TopNodes_DOcancerslim -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#TopNodes_DOcancerslim">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">TopNodes DOcancerslim</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#gram-negative_bacterial_infectious_disease -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#gram-negative_bacterial_infectious_disease">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">gram-negative bacterial infectious disease</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#gram-positive_bacterial_infectious_disease -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#gram-positive_bacterial_infectious_disease">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">gram-positive bacterial infectious disease</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#sexually_transmitted_infectious_disease -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#sexually_transmitted_infectious_disease">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sexually transmitted infectious disease</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#tick-borne_infectious_disease -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#tick-borne_infectious_disease">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">tick-borne infectious disease</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#zoonotic_infectious_disease -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/doid#zoonotic_infectious_disease">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">zoonotic infectious disease</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="http://www.geneontology.org/formats/oboInOwl#SubsetProperty"/>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.org/dc/elements/1.1/date -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/date">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dc:date</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.org/dc/elements/1.1/description -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/description">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">description</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.org/dc/elements/1.1/title -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/title">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">title</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://purl.org/dc/terms/license -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/terms/license">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">license</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#SubsetProperty -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#SubsetProperty">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">subset_property</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#auto-generated-by -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#auto-generated-by">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">auto-generated-by</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#created_by -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#created_by">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">created_by</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#creation_date -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#creation_date">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">creation_date</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#date -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#date">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">date</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#default-namespace -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#default-namespace">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">default-namespace</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#hasAlternativeId -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasAlternativeId">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_alternative_id</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#hasDbXref -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasDbXref">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">database_cross_reference</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#hasExactSynonym -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasExactSynonym">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_exact_synonym</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_narrow_synonym</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#hasOBOFormatVersion -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasOBOFormatVersion">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_obo_format_version</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#hasOBONamespace -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasOBONamespace">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</rdfs:comment>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_obo_namespace</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_related_synonym</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#id -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#id">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">id</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#inSubset -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#inSubset">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">in_subset</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.geneontology.org/formats/oboInOwl#saved-by -->
+
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#saved-by">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">saved-by</rdfs:label>
+    </owl:AnnotationProperty>
+
+
+
+    <!-- http://www.w3.org/2000/01/rdf-schema#comment -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#comment"/>
+
+
+
+    <!-- http://www.w3.org/2000/01/rdf-schema#label -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#label"/>
+
+
+
+    <!-- http://www.w3.org/2002/07/owl#deprecated -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2002/07/owl#deprecated"/>
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+
+
+
+    <!-- http://purl.obolibrary.org/obo/IDO_0000664 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/IDO_0000664">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has material basis in</rdfs:label>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#complicated_by -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#complicated_by">
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">complicated_by</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">complicated_by</rdfs:label>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#composed_of -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#composed_of">
+        <obo:IAO_0000115 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Component parts of anatomy of tissue made up of certain cells or other body area/system or tissue types.</obo:IAO_0000115>
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">composed_of</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">composed_of</rdfs:label>
+    </owl:ObjectProperty>
+    <owl:Axiom>
+        <owl:annotatedSource rdf:resource="http://purl.obolibrary.org/obo/doid#composed_of"/>
+        <owl:annotatedProperty rdf:resource="http://purl.obolibrary.org/obo/IAO_0000115"/>
+        <owl:annotatedTarget rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Component parts of anatomy of tissue made up of certain cells or other body area/system or tissue types.</owl:annotatedTarget>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DO:lh</oboInOwl:hasDbXref>
+    </owl:Axiom>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#derives_from -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#derives_from">
+        <obo:IAO_0000115 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Type of tissue or cell/the source of the material.</obo:IAO_0000115>
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">derives_from</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">derives_from</rdfs:label>
+    </owl:ObjectProperty>
+    <owl:Axiom>
+        <owl:annotatedSource rdf:resource="http://purl.obolibrary.org/obo/doid#derives_from"/>
+        <owl:annotatedProperty rdf:resource="http://purl.obolibrary.org/obo/IAO_0000115"/>
+        <owl:annotatedTarget rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Type of tissue or cell/the source of the material.</owl:annotatedTarget>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DO:lh</oboInOwl:hasDbXref>
+    </owl:Axiom>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#has_symptom -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#has_symptom">
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_symptom</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_symptom</rdfs:label>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#inheres_in -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#inheres_in">
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">inheres_in</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">inheres_in</rdfs:label>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#is_a -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#is_a">
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">is_a</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">is_a</rdfs:label>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#occurs_with -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#occurs_with">
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">occurs_with</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">occurs_with</rdfs:label>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#part_of -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#part_of">
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">part_of</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">part_of</rdfs:label>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#realized_by -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#realized_by">
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">realized_by</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">realized_by</rdfs:label>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#realized_by_supression_with -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#realized_by_supression_with">
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">realized_by_supression_with</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">realized_by_supression_with</rdfs:label>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#results_in -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#results_in">
+        <obo:IAO_0000115 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Development process/cause and effect/disease progress,process.</obo:IAO_0000115>
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">results_in</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">results_in</rdfs:label>
+    </owl:ObjectProperty>
+    <owl:Axiom>
+        <owl:annotatedSource rdf:resource="http://purl.obolibrary.org/obo/doid#results_in"/>
+        <owl:annotatedProperty rdf:resource="http://purl.obolibrary.org/obo/IAO_0000115"/>
+        <owl:annotatedTarget rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Development process/cause and effect/disease progress,process.</owl:annotatedTarget>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DO:lh</oboInOwl:hasDbXref>
+    </owl:Axiom>
+
+
+
+    <!-- http://purl.obolibrary.org/obo/doid#results_in_formation_of -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/doid#results_in_formation_of">
+        <obo:IAO_0000115 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Formation of structure,cancer,etc./cause and effect.</obo:IAO_0000115>
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">results_in_formation_of</oboInOwl:id>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">results_in_formation_of</rdfs:label>
+    </owl:ObjectProperty>
+    <owl:Axiom>
+        <owl:annotatedSource rdf:resource="http://purl.obolibrary.org/obo/doid#results_in_formation_of"/>
+        <owl:annotatedProperty rdf:resource="http://purl.obolibrary.org/obo/IAO_0000115"/>
+        <owl:annotatedTarget rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Formation of structure,cancer,etc./cause and effect.</owl:annotatedTarget>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DO:lh</oboInOwl:hasDbXref>
+    </owl:Axiom>
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+
+
+
+    <!-- http://purl.obolibrary.org/obo/DOID_0001816 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/DOID_0001816">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/DOID_175"/>
+        <obo:IAO_0000115 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Angiosarcoma is a cancer of the cells that line the walls of blood vessels or lymphatic vessels.</obo:IAO_0000115>
+        <oboInOwl:hasAlternativeId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DOID:267</oboInOwl:hasAlternativeId>
+        <oboInOwl:hasAlternativeId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DOID:4508</oboInOwl:hasAlternativeId>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">MESH:D006394</oboInOwl:hasDbXref>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">NCI:C3088</oboInOwl:hasDbXref>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">NCI:C9275</oboInOwl:hasDbXref>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SNOMEDCT_US_2018_03_01:33176006</oboInOwl:hasDbXref>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SNOMEDCT_US_2018_03_01:39000009</oboInOwl:hasDbXref>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">UMLS_CUI:C0018923</oboInOwl:hasDbXref>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">UMLS_CUI:C0854893</oboInOwl:hasDbXref>
+        <oboInOwl:hasExactSynonym rdf:datatype="http://www.w3.org/2001/XMLSchema#string">hemangiosarcoma</oboInOwl:hasExactSynonym>
+        <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">disease_ontology</oboInOwl:hasOBONamespace>
+        <oboInOwl:id rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DOID:0001816</oboInOwl:id>
+        <oboInOwl:inSubset rdf:resource="http://purl.obolibrary.org/obo/doid#NCIthesaurus"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">angiosarcoma</rdfs:label>
+    </owl:Class>
+    <owl:Axiom>
+        <owl:annotatedSource rdf:resource="http://purl.obolibrary.org/obo/DOID_0001816"/>
+        <owl:annotatedProperty rdf:resource="http://purl.obolibrary.org/obo/IAO_0000115"/>
+        <owl:annotatedTarget rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Angiosarcoma is a cancer of the cells that line the walls of blood vessels or lymphatic vessels.</owl:annotatedTarget>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">url:http://emedicine.medscape.com/article/276512-overview</oboInOwl:hasDbXref>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">url:http://en.wikipedia.org/wiki/Hemangiosarcoma</oboInOwl:hasDbXref>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">url:https://en.wikipedia.org/wiki/Angiosarcoma</oboInOwl:hasDbXref>
+        <oboInOwl:hasDbXref rdf:datatype="http://www.w3.org/2001/XMLSchema#string">url:https://www.ncbi.nlm.nih.gov/pubmed/23327728</oboInOwl:hasDbXref>
+    </owl:Axiom>
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // General axioms
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0060160"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0060161"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111064"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111065"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_4873"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0060376"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110980"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110981"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110982"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110983"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110984"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110985"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110986"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110987"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110988"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110989"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110990"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110991"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110992"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110993"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110994"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110995"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110996"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110997"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110998"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110999"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111000"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111001"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111002"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111003"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111004"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0060534"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0080202"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_3030"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_3111"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_3112"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_3493"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_4024"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_4468"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_4917"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_4929"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0060691"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0060692"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111044"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111045"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111046"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111047"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111048"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111049"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111050"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111051"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111052"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_12259"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_12531"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_2211"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_2215"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_2216"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_2217"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_2219"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_2222"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_2236"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_3755"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_3756"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110926"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110927"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110928"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110929"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110930"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110931"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110932"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110933"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110934"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110935"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110936"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110937"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110938"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110939"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110940"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110941"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110942"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110943"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110944"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110945"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110946"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110947"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110948"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110949"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110950"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110951"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110952"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110953"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110954"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110955"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110956"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110957"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110958"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110959"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110960"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0110961"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111005"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111006"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111007"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111008"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111009"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111010"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111011"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111012"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111013"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111014"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111015"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111016"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111017"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111018"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111019"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111020"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111021"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111022"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111023"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111024"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111025"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111026"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111037"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111038"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111039"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111040"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111041"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111042"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111043"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111066"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111067"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111068"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111069"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111070"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111071"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111074"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111075"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111076"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111080"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111081"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111082"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111083"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111084"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111085"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111086"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111087"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111088"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111089"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111090"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111091"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111092"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111093"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111094"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111095"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111096"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111097"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111098"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111099"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111100"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111101"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111102"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111103"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111104"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111105"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111106"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111107"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111108"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111109"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111110"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111111"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111112"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111113"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111114"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111115"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111116"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111117"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111118"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111119"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111120"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111121"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111122"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111123"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111124"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111125"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111126"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111127"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111128"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111129"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111130"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111131"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111132"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111133"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111134"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111135"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111136"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111137"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/DOID_0111138"/>
+        </owl:members>
+    </rdf:Description>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.2.8.20170104-2310) https://github.com/owlcs/owlapi -->
+
+

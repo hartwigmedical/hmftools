@@ -11,7 +11,7 @@ public class SignaturesExtractorTest {
     @Test
     public void canExtractSignatureName() {
         assertEquals(SignatureName.MICROSATELLITE_UNSTABLE, SignaturesExtractor.extractSignatureName("Microsatellite Instability-High"));
-        assertEquals(SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD, SignaturesExtractor.extractSignatureName("High mutational load"));
+        assertEquals(SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD, SignaturesExtractor.extractSignatureName("High tumor mutational load"));
         assertEquals(SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENY, SignaturesExtractor.extractSignatureName("HRD"));
         assertEquals(SignatureName.UNKNOWN, SignaturesExtractor.extractSignatureName("abc"));
 

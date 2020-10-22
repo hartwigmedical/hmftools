@@ -54,7 +54,7 @@ public final class FeatureTypeExtractor {
             "Truncating Mutations",
             "feature_truncation",
             "FRAMESHIFT TRUNCATION",
-            "FRAMESHIFT MUTATION");
+            "FRAMESHIFT MUTATION", "ALTERATION");
     public static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_TSG = Sets.newHashSet("inact mut",
             "biallelic inactivation",
             "Loss Of Function Variant",

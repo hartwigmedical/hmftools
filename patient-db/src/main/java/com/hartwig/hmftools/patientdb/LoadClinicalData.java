@@ -33,6 +33,7 @@ import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.diseaseontology.DiseaseOntology;
 import com.hartwig.hmftools.patientdb.readers.ColoPatientReader;
 import com.hartwig.hmftools.patientdb.readers.CorePatientReader;
 import com.hartwig.hmftools.patientdb.readers.EcrfPatientReader;
@@ -62,6 +63,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public final class LoadClinicalData {
 
@@ -96,7 +98,8 @@ public final class LoadClinicalData {
     private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
     private static final String BIOPSY_MAPPING_CSV = "biopsy_mapping_csv";
 
-    public static void main(@NotNull String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
+    public static void main(@NotNull String[] args) throws ParseException, IOException, XMLStreamException, SQLException,
+            OWLOntologyCreationException {
         LOGGER.info("Running patient-db v{}", VERSION);
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
@@ -106,13 +109,12 @@ public final class LoadClinicalData {
             formatter.printHelp("patient-db", options);
             System.exit(1);
         }
-
+        DiseaseOntology.readDoid(cmd.getOptionValue(DOID_FILE));
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
         TumorLocationCuratorV2 tumorLocationCuratorV2 =
-                new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), cmd.getOptionValue(DOID_FILE));
+                new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV));
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
-
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
         List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY), cmd.getOptionValue(PIPELINE_VERSION));
         Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
