@@ -600,9 +600,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 # Version History and Download Links
  - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.4)
-  - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
-  - Do not hard filter germline variants in the same local phase set as passing somatic variants
-  - Large skipped reference sections (representating a splice junction gap in RNA) contribute towards FULL or PARTIAL matches.
+   - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
+   - Do not hard filter germline variants in the same local phase set as passing somatic variants
+   - Large skipped reference sections (representating a splice junction gap in RNA) contribute towards FULL or PARTIAL matches.
  - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.3)
    - Extend local phase set detection to maximum of 60 bases
    - Favour reads with variants closer to the centre when determining read context
