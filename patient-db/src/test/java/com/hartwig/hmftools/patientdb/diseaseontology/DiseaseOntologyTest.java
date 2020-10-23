@@ -20,6 +20,16 @@ public class DiseaseOntologyTest {
             List<Doid> doids = DiseaseOntology.readDoidJsonFile(DOID_FIL_JSON);
             assertEquals(2, doids.size());
 
+            Doid doid1 = doids.get(0);
+            assertEquals(doid1.id(), "http://purl.obolibrary.org/obo/DOID_8718");
+            assertEquals(doid1.doid(), "8718");
+            assertEquals(doid1.doidTerm(), "obsolete carcinoma in situ of respiratory system");
+
+            Doid doid2 = doids.get(1);
+            assertEquals(doid2.id(), "http://purl.obolibrary.org/obo/DOID_8717");
+            assertEquals(doid2.doid(), "8717");
+            assertEquals(doid2.doidTerm(), "decubitus ulcer");
+
         } catch (FileNotFoundException e) {
             throw new FileNotFoundException("Could not load doid file!");
         }

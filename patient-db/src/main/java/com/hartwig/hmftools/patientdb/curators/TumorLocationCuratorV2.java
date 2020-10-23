@@ -38,7 +38,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
             for (String doid : doids) {
                 for (Doid doidInfo: doidsInformation) {
                     if (doid.equals(doidInfo.doid())) {
-                        doidTerms.add(doidInfo.doidTerm() + DOID_DELIMITER);
+                        doidTerms.add(doidInfo.doidTerm());
                     }
                 }
             }
