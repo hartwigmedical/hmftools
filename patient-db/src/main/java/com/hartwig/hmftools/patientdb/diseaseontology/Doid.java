@@ -15,6 +15,9 @@ public abstract class Doid {
     public abstract String doid();
 
     @NotNull
+    public abstract String id();
+
+    @NotNull
     public abstract String doidTerm();
 
     @NotNull

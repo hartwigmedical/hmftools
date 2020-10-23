@@ -13,12 +13,16 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class DiseaseOntology {
+    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
+
 
     @NotNull
-    public static DoidDefinition extractDoidDefinition(@NotNull JsonObject definitionJsonObject) {
+    private static DoidDefinition extractDoidDefinition(@NotNull JsonObject definitionJsonObject) {
         ImmutableDoidDefinition.Builder doidDefinition = ImmutableDoidDefinition.builder();
         doidDefinition.definitionVal(JsonFunctions.toString(definitionJsonObject, "val"));
         doidDefinition.definitionXref(JsonFunctions.stringList(definitionJsonObject, "xrefs"));
@@ -27,7 +31,7 @@ public class DiseaseOntology {
     }
 
     @NotNull
-    public static List<DoidSynonyms> extractDoidSynonyms(@NotNull JsonArray arraySynonyms) {
+    private static List<DoidSynonyms> extractDoidSynonyms(@NotNull JsonArray arraySynonyms) {
         List<DoidSynonyms> doidSynonymsList = Lists.newArrayList();
         for (JsonElement synonyms : arraySynonyms) {
             doidSynonymsList.add(ImmutableDoidSynonyms.builder()
@@ -41,7 +45,7 @@ public class DiseaseOntology {
     }
 
     @NotNull
-    public static List<DoidBasicPropertyValues> extractBasicProportiesValues(@NotNull JsonArray arrayBasicPropertyValues) {
+    private static List<DoidBasicPropertyValues> extractBasicProportiesValues(@NotNull JsonArray arrayBasicPropertyValues) {
         List<DoidBasicPropertyValues> doidBasicPropertyValuesList = Lists.newArrayList();
         for (JsonElement basicProperty : arrayBasicPropertyValues) {
             doidBasicPropertyValuesList.add(ImmutableDoidBasicPropertyValues.builder()
@@ -55,7 +59,7 @@ public class DiseaseOntology {
     }
 
     @NotNull
-    public static DoidMetadata extractDoidMetadata(@NotNull JsonObject metaDataJsonObject) {
+    private static DoidMetadata extractDoidMetadata(@NotNull JsonObject metaDataJsonObject) {
         ImmutableDoidMetadata.Builder doidMetadata = ImmutableDoidMetadata.builder();
         List<DoidXref> xrefValList = Lists.newArrayList();
 
@@ -74,6 +78,11 @@ public class DiseaseOntology {
 
     }
 
+    @NotNull
+    private static String extractDoidId(@NotNull String id) {
+        return id.replace("http://purl.obolibrary.org/obo/", "");
+    }
+
     @VisibleForTesting
     public static List<Doid> readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
         JsonParser parser = new JsonParser();
@@ -88,7 +97,8 @@ public class DiseaseOntology {
                 JsonArray arrayNodes = graph.getAsJsonObject().getAsJsonArray("nodes");
                 for (JsonElement nodes : arrayNodes) {
                     doids.add(ImmutableDoid.builder()
-                            .doid(JsonFunctions.toString(nodes.getAsJsonObject(), "id"))
+                            .id(JsonFunctions.toString(nodes.getAsJsonObject(), "id"))
+                            .doid(extractDoidId(JsonFunctions.toString(nodes.getAsJsonObject(), "id")))
                             .doidMetadata(extractDoidMetadata(nodes.getAsJsonObject().getAsJsonObject("meta")))
                             .type(JsonFunctions.toString(nodes.getAsJsonObject(), "type"))
                             .doidTerm(JsonFunctions.toString(nodes.getAsJsonObject(), "lbl"))
@@ -96,6 +106,7 @@ public class DiseaseOntology {
                 }
             }
         }
+        LOGGER.info(doids);
         return doids;
     }
 
