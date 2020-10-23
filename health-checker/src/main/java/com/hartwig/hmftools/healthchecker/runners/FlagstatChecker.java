@@ -5,19 +5,16 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+
 import com.hartwig.hmftools.common.utils.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FlagstatChecker implements HealthChecker {
-
-    private static final Logger LOGGER = LogManager.getLogger(FlagstatChecker.class);
 
     @NotNull
     private final String refSample;
@@ -42,7 +39,7 @@ public class FlagstatChecker implements HealthChecker {
         assert total_line.size() == 1;
         String total = total_line.get(0).split(" ")[0];
 
-        List<String> mapped_line = LineReader.build().readLines(new File(flagstatFile).toPath(), x -> x.contains("mapped ("));
+        List<String> mapped_line  = LineReader.build().readLines(new File(flagstatFile).toPath(), x -> x.contains("mapped ("));
         assert mapped_line.size() == 1;
         String mapped = mapped_line.get(0).split(" ")[0];
 
