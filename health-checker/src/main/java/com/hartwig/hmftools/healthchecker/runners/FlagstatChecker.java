@@ -33,43 +33,34 @@ public class FlagstatChecker implements HealthChecker {
     }
 
     public static String divideTwoStrings(String string1, String string2) {
-        return String.valueOf(Double.valueOf(string1) / Double.valueOf(string2));
+        return String.valueOf(Double.parseDouble(string1) / Double.parseDouble(string2));
+    }
+
+    public static String flagstatMappingProportion(String flagstatFile) throws IOException {
+        // Example flagstat line: 323329219 + 0 in total (QC-passed reads + QC-failed reads)
+        List<String> total_line = LineReader.build().readLines(new File(flagstatFile).toPath(), x -> x.contains("in total"));
+        assert total_line.size() == 1;
+        String total = total_line.get(0).split(" ")[0];
+
+        List<String> mapped_line = LineReader.build().readLines(new File(flagstatFile).toPath(), x -> x.contains("mapped ("));
+        assert mapped_line.size() == 1;
+        String mapped = mapped_line.get(0).split(" ")[0];
+
+        return divideTwoStrings(mapped, total);
     }
 
     @NotNull
     @Override
     public List<QCValue> run() throws IOException {
-
         String refFlagstat = PathPrefixSuffixFinder.build().findPath(flagstatDirectory, refSample, ".flagstat").toString();
         String tumFlagstat = PathPrefixSuffixFinder.build().findPath(flagstatDirectory, tumSample, ".flagstat").toString();
 
-        // Example flagstat lines
-        // 323329219 + 0 in total (QC-passed reads + QC-failed reads)
-        // 322517430 + 0 mapped (99.75%:N/A)
-
-        List<String> ref_total_line = LineReader.build().readLines(new File(refFlagstat).toPath(), x -> x.contains("in total"));
-        assert ref_total_line.size() == 1;
-        String ref_total = ref_total_line.get(0).split(" ")[0];
-
-        List<String> ref_mapped_line = LineReader.build().readLines(new File(refFlagstat).toPath(), x -> x.contains("mapped ("));
-        assert ref_mapped_line.size() == 1;
-        String ref_mapped = ref_mapped_line.get(0).split(" ")[0];
-
-        List<String> tum_total_line = LineReader.build().readLines(new File(tumFlagstat).toPath(), x -> x.contains("in total"));
-        assert tum_total_line.size() == 1;
-        String tum_total = tum_total_line.get(0).split(" ")[0];
-
-        List<String> tum_mapped_line = LineReader.build().readLines(new File(tumFlagstat).toPath(), x -> x.contains("mapped ("));
-        assert tum_mapped_line.size() == 1;
-        String tum_mapped = tum_mapped_line.get(0).split(" ")[0];
-
-        String ref_prop = divideTwoStrings(ref_mapped, ref_total);
-        String tum_prop = divideTwoStrings(tum_mapped, tum_total);
+        String refProportion = flagstatMappingProportion(refFlagstat);
+        String tumProportion = flagstatMappingProportion(tumFlagstat);
 
         return Lists.newArrayList(
-            ImmutableQCValue.of(QCValueType.REF_PROPORTION_MAPPED, ref_prop),
-            ImmutableQCValue.of(QCValueType.TUM_PROPORTION_MAPPED, tum_prop)
+            ImmutableQCValue.of(QCValueType.REF_PROPORTION_MAPPED, refProportion),
+            ImmutableQCValue.of(QCValueType.TUM_PROPORTION_MAPPED, tumProportion)
         );
-
     }
 }
