@@ -327,7 +327,7 @@ Failing any of the above matches, SAGE searches for matches that would occur if 
 
 If the variant is not found and instead matches the ref genome at that location, the `REFERENCE` tally is incremented.
 
-Any read which spans the core read context increments the `TOTAL` tally. 
+Any read which spans the core read context increments the `TOTAL` tally.  
 
 ### Modified Tumor Quality Score
 
@@ -404,7 +404,9 @@ hard_max_normal_alt_support** |2| Normal `AD[1]`
 
 ** Hotspots are kept regardless of tumor quality
 
-The first 3 filters are excluded from this point onwards and have no further processing applied to them.  The hard_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size.
+The first 3 filters are excluded from this point onwards and have no further processing applied to them.  
+The hard_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size. 
+The hard_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
  
 ## 4. Normal Counts and Quality
 
@@ -597,8 +599,10 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
-- Upcoming
+ - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.4)
   - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
+  - Do not hard filter germline variants in the same local phase set as passing somatic variants
+  - Large skipped reference sections (representating a splice junction gap in RNA) contribute towards FULL or PARTIAL matches.
  - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.3)
    - Extend local phase set detection to maximum of 60 bases
    - Favour reads with variants closer to the centre when determining read context
