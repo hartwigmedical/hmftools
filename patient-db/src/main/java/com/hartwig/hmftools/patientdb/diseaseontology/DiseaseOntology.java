@@ -13,62 +13,88 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class DiseaseOntology {
 
-    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
+    @NotNull
+    public static DoidDefinition extractDoidDefinition(@NotNull JsonObject definitionJsonObject) {
+        ImmutableDoidDefinition.Builder doidDefinition = ImmutableDoidDefinition.builder();
+        doidDefinition.definitionVal(JsonFunctions.toString(definitionJsonObject, "val"));
+        doidDefinition.definitionXref(JsonFunctions.stringList(definitionJsonObject, "xrefs"));
+        return doidDefinition.build();
+
+    }
+
+    @NotNull
+    public static List<DoidSynonyms> extractDoidSynonyms(@NotNull JsonArray arraySynonyms) {
+        List<DoidSynonyms> doidSynonymsList = Lists.newArrayList();
+        for (JsonElement synonyms : arraySynonyms) {
+            doidSynonymsList.add(ImmutableDoidSynonyms.builder()
+                    .pred(JsonFunctions.toString(synonyms.getAsJsonObject(), "pred"))
+                    .val(JsonFunctions.toString(synonyms.getAsJsonObject(), "val"))
+                    .xrefs(JsonFunctions.stringList(synonyms.getAsJsonObject(), "xrefs"))
+                    .build());
+        }
+
+        return doidSynonymsList;
+    }
+
+    @NotNull
+    public static List<DoidBasicPropertyValues> extractBasicProportiesValues(@NotNull JsonArray arrayBasicPropertyValues) {
+        List<DoidBasicPropertyValues> doidBasicPropertyValuesList = Lists.newArrayList();
+        for (JsonElement basicProperty : arrayBasicPropertyValues) {
+            doidBasicPropertyValuesList.add(ImmutableDoidBasicPropertyValues.builder()
+                    .pred(JsonFunctions.toString(basicProperty.getAsJsonObject(), "pred"))
+                    .val(JsonFunctions.toString(basicProperty.getAsJsonObject(), "val"))
+                    .build());
+        }
+
+        return doidBasicPropertyValuesList;
+
+    }
+
+    @NotNull
+    public static DoidMetadata extractDoidMetadata(@NotNull JsonObject metaDataJsonObject) {
+        ImmutableDoidMetadata.Builder doidMetadata = ImmutableDoidMetadata.builder();
+        List<DoidXref> xrefValList = Lists.newArrayList();
+
+        JsonArray arrayXref = metaDataJsonObject.getAsJsonArray("xrefs");
+        if (arrayXref != null) {
+            for (JsonElement xref : arrayXref) {
+                xrefValList.add(ImmutableDoidXref.builder().val(JsonFunctions.toString(xref.getAsJsonObject(), "val")).build());
+            }
+        }
+        doidMetadata.synonyms(extractDoidSynonyms(metaDataJsonObject.getAsJsonArray("synonyms")));
+        doidMetadata.basicPropertyValues(extractBasicProportiesValues(metaDataJsonObject.getAsJsonArray("basicPropertyValues")));
+        doidMetadata.doidDefinition(extractDoidDefinition(metaDataJsonObject.getAsJsonObject("definition")));
+        doidMetadata.subset(JsonFunctions.optionalStringList(metaDataJsonObject, "subsets"));
+        doidMetadata.xref(xrefValList);
+        return doidMetadata.build();
+
+    }
 
     @VisibleForTesting
-    public static List<Doid> readDoidJsonFile(@NotNull String doidJsonFile)throws IOException {
-        List<Doid> doids = Lists.newArrayList();
+    public static List<Doid> readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);
-
+        List<Doid> doids = Lists.newArrayList();
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject doidObject = parser.parse(reader).getAsJsonObject();
-            LOGGER.info("doidObject {} ",  doidObject);
 
             JsonArray arrayGraphs = doidObject.getAsJsonObject().getAsJsonArray("graphs").getAsJsonArray();
             for (JsonElement graph : arrayGraphs) {
                 JsonArray arrayNodes = graph.getAsJsonObject().getAsJsonArray("nodes");
-                for (JsonElement nodes: arrayNodes) {
-                    LOGGER.info(nodes.getAsJsonObject().getAsJsonPrimitive("id"));
-                    LOGGER.info(nodes.getAsJsonObject().getAsJsonObject("meta"));
-                    LOGGER.info(nodes.getAsJsonObject().getAsJsonObject("meta").getAsJsonObject("definition").getAsJsonPrimitive("val"));
-                    LOGGER.info(nodes.getAsJsonObject().getAsJsonObject("meta").getAsJsonObject("definition").getAsJsonArray("xrefs"));
-                    LOGGER.info(nodes.getAsJsonObject().getAsJsonObject("meta").getAsJsonArray("subsets"));
-                    JsonArray arrayXref = nodes.getAsJsonObject().getAsJsonObject("meta").getAsJsonArray("xrefs");
-                    if (arrayXref != null) {
-                        for (JsonElement xref: arrayXref) {
-                            LOGGER.info(xref.getAsJsonObject().getAsJsonPrimitive("val"));
-                        }
-                    }
-                    LOGGER.info(nodes.getAsJsonObject().getAsJsonObject("meta").getAsJsonArray("synonyms"));
-                    JsonArray arraySynonyms = nodes.getAsJsonObject().getAsJsonObject("meta").getAsJsonArray("synonyms");
-                    for (JsonElement synonyms: arraySynonyms) {
-                        LOGGER.info(synonyms.getAsJsonObject().getAsJsonPrimitive("pred"));
-                        LOGGER.info(synonyms.getAsJsonObject().getAsJsonPrimitive("val"));
-                        LOGGER.info(synonyms.getAsJsonObject().getAsJsonArray("xrefs"));
-                    }
-                    LOGGER.info(nodes.getAsJsonObject().getAsJsonObject("meta").getAsJsonArray("basicPropertyValues"));
-                    JsonArray arrayBasicPropertyValues = nodes.getAsJsonObject().getAsJsonObject("meta").getAsJsonArray("basicPropertyValues");
-                    for (JsonElement basicPropertyValues: arrayBasicPropertyValues) {
-                        LOGGER.info(basicPropertyValues.getAsJsonObject().getAsJsonPrimitive("pred"));
-                        LOGGER.info(basicPropertyValues.getAsJsonObject().getAsJsonPrimitive("val"));
-                    }
-
-
-                    LOGGER.info(nodes.getAsJsonObject().getAsJsonPrimitive("type"));
-                    LOGGER.info(nodes.getAsJsonObject().getAsJsonPrimitive("lbl"));
-
+                for (JsonElement nodes : arrayNodes) {
+                    doids.add(ImmutableDoid.builder()
+                            .doid(JsonFunctions.toString(nodes.getAsJsonObject(), "id"))
+                            .doidMetadata(extractDoidMetadata(nodes.getAsJsonObject().getAsJsonObject("meta")))
+                            .type(JsonFunctions.toString(nodes.getAsJsonObject(), "type"))
+                            .doidTerm(JsonFunctions.toString(nodes.getAsJsonObject(), "lbl"))
+                            .build());
                 }
             }
-
-            //doids.add(doidObject);
         }
         return doids;
     }

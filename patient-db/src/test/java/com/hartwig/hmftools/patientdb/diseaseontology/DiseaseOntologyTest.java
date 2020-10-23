@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.diseaseontology;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
@@ -16,6 +18,8 @@ public class DiseaseOntologyTest {
     public void canLoadDoidJsonFile() throws IOException {
         try {
             List<Doid> doids = DiseaseOntology.readDoidJsonFile(DOID_FIL_JSON);
+            assertEquals(2, doids.size());
+
         } catch (FileNotFoundException e) {
             throw new FileNotFoundException("Could not load doid file!");
         }

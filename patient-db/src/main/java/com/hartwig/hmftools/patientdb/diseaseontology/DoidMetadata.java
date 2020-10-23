@@ -9,17 +9,20 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Doid {
+public abstract class DoidMetadata {
 
     @NotNull
-    public abstract String doid();
+    public abstract DoidDefinition doidDefinition();
 
     @NotNull
-    public abstract String doidTerm();
+    public abstract List<String> subset();
 
     @NotNull
-    public abstract String type();
+    public abstract List<DoidXref> xref();
 
     @NotNull
-    public abstract DoidMetadata doidMetadata();
+    public abstract List<DoidSynonyms> synonyms();
+
+    @NotNull
+    public abstract List<DoidBasicPropertyValues> basicPropertyValues();
 }
