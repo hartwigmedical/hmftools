@@ -12,10 +12,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocationV2;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import com.hartwig.hmftools.patientdb.diseaseontology.Doid;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class TumorLocationCuratorV2 implements CleanableCurator {
 
-    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCuratorV2.class);
     private static final String FIELD_DELIMITER = "\t";
     private static final String DOID_DELIMITER = ";";
 
@@ -32,28 +28,26 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     private final Map<String, CuratedTumorLocationV2> tumorLocationMap = Maps.newHashMap();
     @NotNull
     private final Set<String> unusedSearchTerms;
-    
 
-
-    private List<String> extractDoidTerms(@NotNull String doidFile, @Nullable List<String> doids)  {
-        //TODO read doid File
-
-
+    private List<String> extractDoidTerms(@NotNull List<Doid> doidsInformation, List<String> doids )  {
 
         List<String> doidTerms = Lists.newArrayList();
         if (doids == null) {
             return null;
         } else {
             for (String doid : doids) {
-                // TODO: implement logica for extract doidTerms
-                doidTerms.add("doidTerms" + DOID_DELIMITER);
+                for (Doid doidInfo: doidsInformation) {
+                    if (doid.equals(doidInfo.doid())) {
+                        doidTerms.add(doidInfo.doidTerm() + DOID_DELIMITER);
+                    }
+                }
             }
             doidTerms.add(doidTerms.toString().substring(0, doidTerms.toString().length() - 1));
             return doidTerms;
         }
     }
 
-    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTSV)
+    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTSV, @NotNull List<Doid> doidsInfo)
             throws IOException {
         List<String> lines = Files.readAllLines(new File(tumorLocationV2MappingTSV).toPath());
 
@@ -75,7 +69,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
                             .primaryTumorSubType(primaryTumorSubType)
                             .primaryTumorExtraDetails(primaryTumorExtraDetails)
                             .doids(doids)
-                            .doidTerms(Lists.newArrayList())
+                            .doidTerms(extractDoidTerms(doidsInfo, doids))
                             .searchTerm(searchTerm)
                             .build());
         }

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.curators;
 
 import java.io.IOException;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +21,7 @@ public final class TestCuratorFactory {
     @NotNull
     public static TumorLocationCuratorV2 tumorLocationV2Curator() {
         try {
-            return new TumorLocationCuratorV2(TUMOR_LOCATION_V2_MAPPING_TSV);
+            return new TumorLocationCuratorV2(TUMOR_LOCATION_V2_MAPPING_TSV, Lists.newArrayList());
         } catch (IOException e) {
             throw new IllegalStateException("Could not create tumor location V2 curator!");
         }
