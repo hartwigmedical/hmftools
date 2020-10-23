@@ -1,8 +1,17 @@
 package com.hartwig.hmftools.patientdb.diseaseontology;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Set;
 import java.util.logging.Level;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,6 +37,18 @@ public class DiseaseOntology {
     private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
 
     private static final IRI DISEASE_IRI = IRI.create("http://purl.obolibrary.org/obo/DOID_4");
+
+    @VisibleForTesting
+    public static void readDoidJsonFile(@NotNull String doidJsonFile)throws IOException {
+        JsonParser parser = new JsonParser();
+        JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
+        reader.setLenient(true);
+
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
+            JsonObject doidObject = parser.parse(reader).getAsJsonObject();
+            LOGGER.info(doidObject);
+        }
+    }
 
     public static void readDoid(@NotNull String doidFile) throws OWLOntologyCreationException {
         OWLOntology ontology = createOntology(doidFile);
