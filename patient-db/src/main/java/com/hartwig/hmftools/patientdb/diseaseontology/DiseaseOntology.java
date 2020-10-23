@@ -87,7 +87,7 @@ public class DiseaseOntology {
 
     @NotNull
     private static String extractDoidId(@NotNull String id) {
-        return id.replace("http://purl.obolibrary.org/obo/", "");
+        return id.replace("http://purl.obolibrary.org/obo/DOID_", "");
     }
 
     @VisibleForTesting

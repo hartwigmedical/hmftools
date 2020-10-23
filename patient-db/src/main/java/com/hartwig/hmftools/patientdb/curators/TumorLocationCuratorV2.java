@@ -42,7 +42,6 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
                     }
                 }
             }
-            doidTerms.add(doidTerms.toString().substring(0, doidTerms.toString().length() - 1));
             return doidTerms;
         }
     }
