@@ -48,7 +48,11 @@ public class DiseaseOntology {
     @NotNull
     private static List<DoidBasicPropertyValues> extractBasicProportiesValues(@NotNull JsonArray arrayBasicPropertyValues) {
         List<DoidBasicPropertyValues> doidBasicPropertyValuesList = Lists.newArrayList();
+        DoidDatamodelChecker doidBasicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
+
         for (JsonElement basicProperty : arrayBasicPropertyValues) {
+            doidBasicPropertyValuesChecker.check(basicProperty.getAsJsonObject());
+
             doidBasicPropertyValuesList.add(ImmutableDoidBasicPropertyValues.builder()
                     .pred(JsonFunctions.toString(basicProperty.getAsJsonObject(), "pred"))
                     .val(JsonFunctions.toString(basicProperty.getAsJsonObject(), "val"))
@@ -63,6 +67,9 @@ public class DiseaseOntology {
     private static DoidMetadata extractDoidMetadata(@NotNull JsonObject metaDataJsonObject) {
         ImmutableDoidMetadata.Builder doidMetadata = ImmutableDoidMetadata.builder();
         List<DoidXref> xrefValList = Lists.newArrayList();
+        DoidDatamodelChecker doidMetadataChecker = DoidDatamodelCheckerFactory.doidMetadataChecker();
+        doidMetadataChecker.check(metaDataJsonObject);
+
 
         JsonArray arrayXref = metaDataJsonObject.getAsJsonArray("xrefs");
         if (arrayXref != null) {
