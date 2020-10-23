@@ -6,7 +6,6 @@ import java.io.IOException;
 import com.google.common.io.Resources;
 
 import org.junit.Test;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public class DiseaseOntologyTest {
 

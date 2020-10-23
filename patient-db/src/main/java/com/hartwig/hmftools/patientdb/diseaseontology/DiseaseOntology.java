@@ -2,8 +2,10 @@ package com.hartwig.hmftools.patientdb.diseaseontology;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
@@ -19,6 +21,7 @@ public class DiseaseOntology {
 
     @VisibleForTesting
     public static void readDoidJsonFile(@NotNull String doidJsonFile)throws IOException {
+        List<Doid> doids = Lists.newArrayList();
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);
@@ -26,6 +29,7 @@ public class DiseaseOntology {
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject doidObject = parser.parse(reader).getAsJsonObject();
             LOGGER.info(doidObject);
+            //doids.add(doidObject);
         }
     }
 

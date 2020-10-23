@@ -20,7 +20,6 @@ import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public class WidePatientReaderTest {
 
@@ -71,7 +70,7 @@ public class WidePatientReaderTest {
     }
 
     @Test
-    public void canLoadEmptyPatient() throws OWLOntologyCreationException {
+    public void canLoadEmptyPatient() {
         WideEcrfModel wideEcrfModel = ImmutableWideEcrfModel.builder()
                 .preAvlTreatments(Lists.newArrayList())
                 .biopsies(Lists.newArrayList())
