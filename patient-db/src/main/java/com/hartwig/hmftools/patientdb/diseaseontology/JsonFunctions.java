@@ -9,9 +9,21 @@ import com.google.gson.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class JsonFunctions {
     private static final Logger LOGGER = LogManager.getLogger(JsonFunctions.class);
+
+    @Nullable
+    static String nullableString(@NotNull JsonObject object, @NotNull String field) {
+        assert object.has(field);
+
+        if (object.get(field).isJsonNull()) {
+            return null;
+        }
+
+        return toString(object, field);
+    }
 
     @NotNull
     static String toString(@NotNull JsonObject object, @NotNull String field) {

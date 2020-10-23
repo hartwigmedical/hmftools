@@ -17,12 +17,12 @@ public abstract class Doid {
     @NotNull
     public abstract String id();
 
-    @NotNull
+    @Nullable
     public abstract String doidTerm();
 
-    @NotNull
+    @Nullable
     public abstract String type();
 
-    @NotNull
+    @Nullable
     public abstract DoidMetadata doidMetadata();
 }

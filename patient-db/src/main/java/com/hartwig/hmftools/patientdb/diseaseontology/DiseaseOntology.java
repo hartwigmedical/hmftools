@@ -16,15 +16,16 @@ import com.google.gson.stream.JsonToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 
 public class DiseaseOntology {
     private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
 
-
-    @NotNull
+    @Nullable
     private static DoidDefinition extractDoidDefinition(@NotNull JsonObject definitionJsonObject) {
         ImmutableDoidDefinition.Builder doidDefinition = ImmutableDoidDefinition.builder();
-        doidDefinition.definitionVal(JsonFunctions.toString(definitionJsonObject, "val"));
+        doidDefinition.definitionVal(JsonFunctions.nullableString(definitionJsonObject, "val"));
         doidDefinition.definitionXref(JsonFunctions.stringList(definitionJsonObject, "xrefs"));
         return doidDefinition.build();
 
@@ -69,9 +70,15 @@ public class DiseaseOntology {
                 xrefValList.add(ImmutableDoidXref.builder().val(JsonFunctions.toString(xref.getAsJsonObject(), "val")).build());
             }
         }
-        doidMetadata.synonyms(extractDoidSynonyms(metaDataJsonObject.getAsJsonArray("synonyms")));
-        doidMetadata.basicPropertyValues(extractBasicProportiesValues(metaDataJsonObject.getAsJsonArray("basicPropertyValues")));
-        doidMetadata.doidDefinition(extractDoidDefinition(metaDataJsonObject.getAsJsonObject("definition")));
+        doidMetadata.synonyms(metaDataJsonObject.getAsJsonArray("synonyms") == null
+                ? null
+                : extractDoidSynonyms(metaDataJsonObject.getAsJsonArray("synonyms")));
+        doidMetadata.basicPropertyValues(metaDataJsonObject.getAsJsonArray("basicPropertyValues") == null
+                ? null
+                : extractBasicProportiesValues(metaDataJsonObject.getAsJsonArray("basicPropertyValues")));
+        doidMetadata.doidDefinition(metaDataJsonObject.getAsJsonObject("definition") == null
+                ? null
+                : extractDoidDefinition(metaDataJsonObject.getAsJsonObject("definition")));
         doidMetadata.subset(JsonFunctions.optionalStringList(metaDataJsonObject, "subsets"));
         doidMetadata.xref(xrefValList);
         return doidMetadata.build();
@@ -99,14 +106,19 @@ public class DiseaseOntology {
                     doids.add(ImmutableDoid.builder()
                             .id(JsonFunctions.toString(nodes.getAsJsonObject(), "id"))
                             .doid(extractDoidId(JsonFunctions.toString(nodes.getAsJsonObject(), "id")))
-                            .doidMetadata(extractDoidMetadata(nodes.getAsJsonObject().getAsJsonObject("meta")))
-                            .type(JsonFunctions.toString(nodes.getAsJsonObject(), "type"))
-                            .doidTerm(JsonFunctions.toString(nodes.getAsJsonObject(), "lbl"))
+                            .doidMetadata(nodes.getAsJsonObject().getAsJsonObject("meta") == null
+                                    ? null
+                                    : extractDoidMetadata(nodes.getAsJsonObject().getAsJsonObject("meta")))
+                            .type(nodes.getAsJsonObject().getAsJsonPrimitive("type") == null
+                                    ? null
+                                    : JsonFunctions.toString(nodes.getAsJsonObject(), "type"))
+                            .doidTerm(nodes.getAsJsonObject().getAsJsonPrimitive("lbl") == null
+                                    ? null
+                                    : JsonFunctions.nullableString(nodes.getAsJsonObject(), "lbl"))
                             .build());
                 }
             }
         }
-        LOGGER.info(doids);
         return doids;
     }
 

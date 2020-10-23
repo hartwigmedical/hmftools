@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DoidMetadata {
 
-    @NotNull
+    @Nullable
     public abstract DoidDefinition doidDefinition();
 
     @NotNull
@@ -20,9 +20,9 @@ public abstract class DoidMetadata {
     @NotNull
     public abstract List<DoidXref> xref();
 
-    @NotNull
+    @Nullable
     public abstract List<DoidSynonyms> synonyms();
 
-    @NotNull
+    @Nullable
     public abstract List<DoidBasicPropertyValues> basicPropertyValues();
 }
