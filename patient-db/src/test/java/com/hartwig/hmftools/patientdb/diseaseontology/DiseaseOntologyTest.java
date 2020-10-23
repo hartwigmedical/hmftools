@@ -10,18 +10,7 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public class DiseaseOntologyTest {
 
-    public static final String DOID_FILE_OWL = Resources.getResource("disease_ontology/doid.owl").getPath();
-    public static final String DOID_FIL_JSON = Resources.getResource("disease_ontology/doid.json").getPath();
-
-    @Test
-    public void canLoadTest() throws OWLOntologyCreationException {
-        try {
-            DiseaseOntology.readDoid(DOID_FILE_OWL);
-        } catch (OWLOntologyCreationException e) {
-            throw new OWLOntologyCreationException("Could not load doid file!");
-        }
-    }
-
+    private static final String DOID_FIL_JSON = Resources.getResource("disease_ontology/doid.json").getPath();
 
     @Test
     public void canLoadDoidJsonFile() throws IOException {
