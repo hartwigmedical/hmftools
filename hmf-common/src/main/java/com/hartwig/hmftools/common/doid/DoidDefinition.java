@@ -15,5 +15,5 @@ public abstract class DoidDefinition {
     public abstract String definitionVal();
 
     @NotNull
-    public abstract List<String> definitionXref();
+    public abstract List<String> definitionXrefs();
 }

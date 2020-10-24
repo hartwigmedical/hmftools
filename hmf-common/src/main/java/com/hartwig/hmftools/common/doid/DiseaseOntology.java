@@ -41,15 +41,15 @@ public final class DiseaseOntology {
             JsonArray graphArray = doidObject.getAsJsonArray("graphs");
             for (JsonElement graph : graphArray) {
                 JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
-                for (JsonElement node : nodeArray) {
-                    JsonObject nodeObject = node.getAsJsonObject();
-                    String id = string(nodeObject, "id");
+                for (JsonElement nodeElement : nodeArray) {
+                    JsonObject node = nodeElement.getAsJsonObject();
+                    String url = string(node, "id");
                     doids.add(ImmutableDoidEntry.builder()
-                            .id(id)
-                            .doid(extractDoid(id))
-                            .doidMetadata(extractDoidMetadata(optionalJsonObject(nodeObject, "meta")))
-                            .type(optionalString(nodeObject, "type"))
-                            .doidTerm(optionalString(nodeObject, "lbl"))
+                            .doid(extractDoid(url))
+                            .url(url)
+                            .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
+                            .type(optionalString(node, "type"))
+                            .doidTerm(optionalString(node, "lbl"))
                             .build());
                 }
             }
@@ -58,33 +58,33 @@ public final class DiseaseOntology {
     }
 
     @NotNull
-    private static String extractDoid(@NotNull String id) {
-        return id.replace("http://purl.obolibrary.org/obo/DOID_", "");
+    private static String extractDoid(@NotNull String url) {
+        return url.replace("http://purl.obolibrary.org/obo/DOID_", "");
     }
 
     @Nullable
-    private static DoidMetadata extractDoidMetadata(@Nullable JsonObject metaDataJsonObject) {
-        if (metaDataJsonObject == null) {
+    private static DoidMetadata extractDoidMetadata(@Nullable JsonObject metadataObject) {
+        if (metadataObject == null) {
             return null;
         }
 
-        JsonDatamodelChecker doidMetadataChecker = DoidDatamodelCheckerFactory.doidMetadataChecker();
-        doidMetadataChecker.check(metaDataJsonObject);
+        JsonDatamodelChecker metadataChecker = DoidDatamodelCheckerFactory.doidMetadataChecker();
+        metadataChecker.check(metadataObject);
 
-        JsonArray arrayXref = metaDataJsonObject.getAsJsonArray("xrefs");
+        JsonArray xrefArray = metadataObject.getAsJsonArray("xrefs");
         List<DoidXref> xrefValList = Lists.newArrayList();
-        if (arrayXref != null) {
-            for (JsonElement xref : arrayXref) {
+        if (xrefArray != null) {
+            for (JsonElement xref : xrefArray) {
                 xrefValList.add(ImmutableDoidXref.builder().val(string(xref.getAsJsonObject(), "val")).build());
             }
         }
 
         ImmutableDoidMetadata.Builder doidMetadataBuilder = ImmutableDoidMetadata.builder();
-        doidMetadataBuilder.synonyms(extractDoidSynonyms(optionalJsonArray(metaDataJsonObject, "synonyms")));
-        doidMetadataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metaDataJsonObject, "basicPropertyValues")));
-        doidMetadataBuilder.doidDefinition(extractDoidDefinition(optionalJsonObject(metaDataJsonObject, "definition")));
-        doidMetadataBuilder.subset(optionalStringList(metaDataJsonObject, "subsets"));
-        doidMetadataBuilder.xref(xrefValList);
+        doidMetadataBuilder.synonyms(extractDoidSynonyms(optionalJsonArray(metadataObject, "synonyms")));
+        doidMetadataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metadataObject, "basicPropertyValues")));
+        doidMetadataBuilder.doidDefinition(extractDoidDefinition(optionalJsonObject(metadataObject, "definition")));
+        doidMetadataBuilder.subsets(optionalStringList(metadataObject, "subsets"));
+        doidMetadataBuilder.xrefs(xrefValList);
         return doidMetadataBuilder.build();
     }
 
@@ -95,12 +95,12 @@ public final class DiseaseOntology {
         }
 
         List<DoidSynonym> doidSynonymList = Lists.newArrayList();
-        for (JsonElement synonym : synonymArray) {
-            JsonObject synonymObject = synonym.getAsJsonObject();
+        for (JsonElement synonymElement : synonymArray) {
+            JsonObject synonym = synonymElement.getAsJsonObject();
             doidSynonymList.add(ImmutableDoidSynonym.builder()
-                    .pred(string(synonymObject, "pred"))
-                    .val(string(synonymObject, "val"))
-                    .xrefs(stringList(synonymObject, "xrefs"))
+                    .pred(string(synonym, "pred"))
+                    .val(string(synonym, "val"))
+                    .xrefs(stringList(synonym, "xrefs"))
                     .build());
         }
 
@@ -114,14 +114,15 @@ public final class DiseaseOntology {
         }
 
         List<DoidBasicPropertyValue> doidBasicPropertyValueList = Lists.newArrayList();
-        JsonDatamodelChecker doidBasicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
+        JsonDatamodelChecker basicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
 
-        for (JsonElement basicProperty : basicPropertyValueArray) {
-            JsonObject basicPropertyObject = basicProperty.getAsJsonObject();
-            doidBasicPropertyValuesChecker.check(basicPropertyObject);
+        for (JsonElement basicPropertyElement : basicPropertyValueArray) {
+            JsonObject basicProperty = basicPropertyElement.getAsJsonObject();
+            basicPropertyValuesChecker.check(basicProperty);
 
-            doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder().pred(string(basicPropertyObject, "pred"))
-                    .val(string(basicPropertyObject, "val"))
+            doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder()
+                    .pred(string(basicProperty, "pred"))
+                    .val(string(basicProperty, "val"))
                     .build());
         }
 
@@ -136,7 +137,7 @@ public final class DiseaseOntology {
 
         ImmutableDoidDefinition.Builder doidDefinitionBuilder = ImmutableDoidDefinition.builder();
         doidDefinitionBuilder.definitionVal(nullableString(definitionObject, "val"));
-        doidDefinitionBuilder.definitionXref(stringList(definitionObject, "xrefs"));
+        doidDefinitionBuilder.definitionXrefs(stringList(definitionObject, "xrefs"));
         return doidDefinitionBuilder.build();
     }
 }

@@ -15,10 +15,10 @@ public abstract class DoidMetadata {
     public abstract DoidDefinition doidDefinition();
 
     @NotNull
-    public abstract List<String> subset();
+    public abstract List<String> subsets();
 
     @NotNull
-    public abstract List<DoidXref> xref();
+    public abstract List<DoidXref> xrefs();
 
     @Nullable
     public abstract List<DoidSynonym> synonyms();

@@ -13,7 +13,7 @@ public abstract class DoidEntry {
     public abstract String doid();
 
     @NotNull
-    public abstract String id();
+    public abstract String url();
 
     @Nullable
     public abstract String doidTerm();
