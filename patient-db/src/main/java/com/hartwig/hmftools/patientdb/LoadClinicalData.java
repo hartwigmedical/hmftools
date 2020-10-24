@@ -562,11 +562,6 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
                 cmd.getOptionValue(DRUP_ECRF_FILE),
                 cmd.getOptionValue(LIMS_DIRECTORY),
-                cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV),
-                cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV),
-                cmd.getOptionValue(WIDE_BIOPSY_CSV),
-                cmd.getOptionValue(WIDE_RESPONSE_CSV),
-                cmd.getOptionValue(WIDE_FIVE_DAYS_CSV),
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV),
                 cmd.getOptionValue(TREATMENT_MAPPING_CSV),
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV),
@@ -575,6 +570,14 @@ public final class LoadClinicalData {
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
             allParamsPresent = allParamsPresent && DatabaseAccess.hasDatabaseConfig(cmd);
+        }
+
+        if (cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA)) {
+            allParamsPresent = allParamsPresent && !Utils.anyNull(cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV),
+                    cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV),
+                    cmd.getOptionValue(WIDE_BIOPSY_CSV),
+                    cmd.getOptionValue(WIDE_RESPONSE_CSV),
+                    cmd.getOptionValue(WIDE_FIVE_DAYS_CSV));
         }
 
         boolean validRunDirectories = true;
