@@ -2,7 +2,6 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -35,7 +34,7 @@ public class FlagstatChecker implements HealthChecker {
 
     public static String flagstatMappingProportion(String flagstatFile) throws IOException {
         // Example flagstat line: 323329219 + 0 in total (QC-passed reads + QC-failed reads)
-        List<String> lines = Files.readAllLines(new File(flagstatFile).toPath());
+        // List<String> lines = Files.readAllLines(new File(flagstatFile).toPath());
         List<String> total_line = LineReader.build().readLines(new File(flagstatFile).toPath(), x -> x.contains("in total"));
         assert total_line.size() == 1;
         String total = total_line.get(0).split(" ")[0];
