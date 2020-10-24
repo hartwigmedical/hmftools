@@ -40,7 +40,6 @@ public class PatientTumorLocationV2File {
                     .primaryTumorSubType(parts[4])
                     .primaryTumorExtraDetails(parts[5])
                     .doids(toDOIDs(parts[6]))
-                    .doidTerms(toDOIDTerms(parts[7]))
                     .isOverridden(Boolean.parseBoolean(parts[7]))
                     .build());
         }
@@ -72,7 +71,6 @@ public class PatientTumorLocationV2File {
                 .add("primaryTumorSubType")
                 .add("primaryTumorExtraDetails")
                 .add("doids")
-                .add("doidTerms")
                 .add("overridden")
                 .toString();
     }
@@ -86,7 +84,6 @@ public class PatientTumorLocationV2File {
                 .add(patientTumorLocation.primaryTumorSubType())
                 .add(patientTumorLocation.primaryTumorExtraDetails())
                 .add(fromDOIDs(patientTumorLocation.doids()))
-                .add(fromDOIDTerms(patientTumorLocation.doidTerms()))
                 .add(String.valueOf(patientTumorLocation.isOverridden()))
                 .toString();
     }
@@ -97,27 +94,9 @@ public class PatientTumorLocationV2File {
         return Lists.newArrayList(doidPart.split(DOID_DELIMITER));
     }
 
-    @NotNull
-    @VisibleForTesting
-    static List<String> toDOIDTerms(@NotNull String doidPart) {
-        return Lists.newArrayList(doidPart.split(DOID_DELIMITER));
-    }
-
     @Nullable
     @VisibleForTesting
     static String fromDOIDs(@Nullable List<String> doids) {
-        StringJoiner joiner = new StringJoiner(DOID_DELIMITER);
-        if (doids != null) {
-            for (String doid : doids) {
-                joiner.add(doid);
-            }
-        }
-        return joiner.toString();
-    }
-
-    @Nullable
-    @VisibleForTesting
-    static String fromDOIDTerms(@Nullable List<String> doids) {
         StringJoiner joiner = new StringJoiner(DOID_DELIMITER);
         if (doids != null) {
             for (String doid : doids) {

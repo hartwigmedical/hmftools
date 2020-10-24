@@ -18,7 +18,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-
 public class TumorLocationCuratorV2 implements CleanableCurator {
 
     private static final String FIELD_DELIMITER = "\t";
@@ -29,26 +28,8 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     @NotNull
     private final Set<String> unusedSearchTerms;
 
-    private List<String> extractDoidTerms(@NotNull List<Doid> doidsInformation, List<String> doids )  {
-
-        List<String> doidTerms = Lists.newArrayList();
-        if (doids == null) {
-            return null;
-        } else {
-            for (String doid : doids) {
-                for (Doid doidInfo: doidsInformation) {
-                    if (doid.equals(doidInfo.doid())) {
-                        doidTerms.add(doidInfo.doidTerm());
-                    }
-                }
-            }
-            return doidTerms;
-        }
-    }
-
-    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTSV, @NotNull List<Doid> doidsInfo)
-            throws IOException {
-        List<String> lines = Files.readAllLines(new File(tumorLocationV2MappingTSV).toPath());
+    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTsv, @NotNull List<Doid> allDoidEntries) throws IOException {
+        List<String> lines = Files.readAllLines(new File(tumorLocationV2MappingTsv).toPath());
 
         // Skip header
         for (String line : lines.subList(1, lines.size())) {
@@ -60,6 +41,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
             String primaryTumorSubType = parts.length > 4 ? parts[4] : Strings.EMPTY;
             String primaryTumorExtraDetails = parts.length > 5 ? parts[5] : Strings.EMPTY;
             List<String> doids = parts.length > 6 ? Lists.newArrayList(parts[6].split(DOID_DELIMITER)) : Lists.newArrayList();
+
             tumorLocationMap.put(searchTerm,
                     ImmutableCuratedTumorLocationV2.builder()
                             .primaryTumorLocation(primaryTumorLocation)
@@ -67,14 +49,27 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
                             .primaryTumorType(primaryTumorType)
                             .primaryTumorSubType(primaryTumorSubType)
                             .primaryTumorExtraDetails(primaryTumorExtraDetails)
-                            .doids(doids)
-                            .doidTerms(extractDoidTerms(doidsInfo, doids))
+                            .doids(toDoidEntries(allDoidEntries, doids))
                             .searchTerm(searchTerm)
                             .build());
         }
 
         // Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
         unusedSearchTerms = Sets.newHashSet(tumorLocationMap.keySet());
+    }
+
+    @NotNull
+    private static List<Doid> toDoidEntries(@NotNull List<Doid> allDoidEntries, @NotNull List<String> doidsToResolve) {
+        List<Doid> resolvedDoidEntries = Lists.newArrayList();
+        for (String doid : doidsToResolve) {
+            for (Doid doidEntry : allDoidEntries) {
+                if (doidEntry.doid().equals(doid)) {
+                    resolvedDoidEntries.add(doidEntry);
+                }
+            }
+        }
+        return resolvedDoidEntries;
+
     }
 
     @NotNull
