@@ -1,8 +1,5 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Can be removed after 1st of november 2020
-DROP TABLE IF EXISTS clinicalEvidenceProtect;
-
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
@@ -25,8 +22,6 @@ CREATE TABLE baseline
     primaryTumorSubType varchar(255),
     primaryTumorExtraDetails varchar(255),
     primaryTumorOverridden BOOLEAN,
-    doid varchar(255),
-    doidTerm varchar(255),
     deathDate DATE,
     hasSystemicPreTreatment varchar(3),
     hasRadiotherapyPreTreatment varchar(3),
@@ -34,6 +29,16 @@ CREATE TABLE baseline
     preTreatmentsType varchar(510),
     preTreatmentsMechanism varchar(510),
     PRIMARY KEY (patientId),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
+);
+
+DROP TABLE IF EXISTS doid;
+CREATE TABLE doid
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    doid varchar(255) NOT NULL,
+    doidTerm varchar(255) NOT NULL,
+    PRIMARY KEY (id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
