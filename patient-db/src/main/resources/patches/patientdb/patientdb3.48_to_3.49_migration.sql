@@ -4,7 +4,7 @@ ALTER TABLE baseline
     ADD COLUMN primaryTumorType varchar(255) AFTER primaryTumorSubLocation,
     ADD COLUMN primaryTumorSubType varchar(255) AFTER primaryTumorType,
     ADD COLUMN primaryTumorExtraDetails varchar(255) AFTER primaryTumorSubType,
-    ADD COLUMN primaryTumorOverridden BOOLEAN AFTER primaryTumorExtraDetails
+    ADD COLUMN primaryTumorOverridden BOOLEAN AFTER primaryTumorExtraDetails;
 
 CREATE TABLE doidEntry
 (   id int NOT NULL AUTO_INCREMENT,
