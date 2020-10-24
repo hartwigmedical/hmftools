@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.diseaseontology;
+package com.hartwig.hmftools.common.doid;
 
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.diseaseontology;
+package com.hartwig.hmftools.common.doid;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

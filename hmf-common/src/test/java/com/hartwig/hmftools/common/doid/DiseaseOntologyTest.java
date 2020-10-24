@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.diseaseontology;
+package com.hartwig.hmftools.common.doid;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,11 +11,11 @@ import org.junit.Test;
 
 public class DiseaseOntologyTest {
 
-    private static final String DOID_FIL_JSON = Resources.getResource("disease_ontology/doid.json").getPath();
+    private static final String DOID_FILE_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
     @Test
     public void canLoadDoidJsonFile() throws IOException {
-        List<Doid> doids = DiseaseOntology.readDoidJsonFile(DOID_FIL_JSON);
+        List<Doid> doids = DiseaseOntology.readDoidJsonFile(DOID_FILE_JSON);
         assertEquals(2, doids.size());
 
         Doid doid1 = doids.get(0);

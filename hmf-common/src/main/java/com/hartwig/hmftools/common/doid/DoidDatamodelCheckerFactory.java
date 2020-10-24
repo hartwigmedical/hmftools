@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.diseaseontology;
+package com.hartwig.hmftools.common.doid;
 
 import java.util.Map;
 
