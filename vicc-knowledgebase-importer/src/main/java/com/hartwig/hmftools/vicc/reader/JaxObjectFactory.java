@@ -80,7 +80,7 @@ final class JaxObjectFactory {
             return Lists.newArrayList();
         }
 
-        ViccDatamodelChecker referenceChecker = ViccDatamodelCheckerFactory.jaxReferenceChecker();
+        DatamodelChecker referenceChecker = ViccDatamodelCheckerFactory.jaxReferenceChecker();
         List<JaxReference> referenceList = Lists.newArrayList();
 
         for (JsonElement referenceElement : referenceArray) {

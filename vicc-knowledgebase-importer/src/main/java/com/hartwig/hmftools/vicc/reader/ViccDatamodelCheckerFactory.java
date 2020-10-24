@@ -12,7 +12,7 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
-    static ViccDatamodelChecker viccEntryChecker() {
+    static DatamodelChecker viccEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("source", true);
         map.put("genes", true);
@@ -32,20 +32,20 @@ final class ViccDatamodelCheckerFactory {
         map.put("molecularmatch", false);
         map.put("molecularmatch_trials", false);
         map.put("civic", false);
-        return new ViccDatamodelChecker("ViccEntry", map);
+        return new DatamodelChecker("ViccEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker geneIdentifierChecker() {
+    static DatamodelChecker geneIdentifierChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("symbol", true);
         map.put("entrez_id", true);
         map.put("ensembl_gene_id", true);
-        return new ViccDatamodelChecker("GeneIdentifier", map);
+        return new DatamodelChecker("GeneIdentifier", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker featureChecker() {
+    static DatamodelChecker featureChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("biomarker_type", false);
@@ -65,18 +65,18 @@ final class ViccDatamodelCheckerFactory {
         map.put("description", false);
         map.put("attributes", false);
         map.put("info", false);
-        return new ViccDatamodelChecker("Feature", map);
+        return new DatamodelChecker("Feature", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker featureInfoChecker() {
+    static DatamodelChecker featureInfoChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("germline_or_somatic", true);
-        return new ViccDatamodelChecker("FeatureInfo", map);
+        return new DatamodelChecker("FeatureInfo", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker featureAttributeChecker() {
+    static DatamodelChecker featureAttributeChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("amino_acid_change", true);
         map.put("germline", true);
@@ -96,29 +96,29 @@ final class ViccDatamodelCheckerFactory {
         map.put("transcript", true);
         map.put("description_type", true);
         map.put("chromosome", true);
-        return new ViccDatamodelChecker("FeatureAttribute", map);
+        return new DatamodelChecker("FeatureAttribute", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker featureAttributeObjectChecker() {
+    static DatamodelChecker featureAttributeObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("string_value", true);
-        return new ViccDatamodelChecker("FeatureAttributeObject", map);
+        return new DatamodelChecker("FeatureAttributeObject", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker sequenceOntologyChecker() {
+    static DatamodelChecker sequenceOntologyChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("hierarchy", false);
         map.put("soid", true);
         map.put("parent_soid", true);
         map.put("name", true);
         map.put("parent_name", true);
-        return new ViccDatamodelChecker("SequenceOntology", map);
+        return new DatamodelChecker("SequenceOntology", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker associationChecker() {
+    static DatamodelChecker associationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("variant_name", false);
         map.put("evidence", true);
@@ -132,35 +132,35 @@ final class ViccDatamodelCheckerFactory {
         map.put("description", true);
         map.put("environmentalContexts", false);
         map.put("oncogenic", false);
-        return new ViccDatamodelChecker("Association", map);
+        return new DatamodelChecker("Association", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker evidenceChecker() {
+    static DatamodelChecker evidenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("info", true);
         map.put("evidenceType", true);
         map.put("description", true);
-        return new ViccDatamodelChecker("Evidence", map);
+        return new DatamodelChecker("Evidence", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker evidenceInfoChecker() {
+    static DatamodelChecker evidenceInfoChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("publications", true);
-        return new ViccDatamodelChecker("EvidenceInfo", map);
+        return new DatamodelChecker("EvidenceInfo", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker evidenceTypeChecker() {
+    static DatamodelChecker evidenceTypeChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("sourceName", true);
         map.put("id", false);
-        return new ViccDatamodelChecker("EvidenceType", map);
+        return new DatamodelChecker("EvidenceType", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker environmentalContextChecker() {
+    static DatamodelChecker environmentalContextChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("term", false);
         map.put("description", true);
@@ -170,41 +170,41 @@ final class ViccDatamodelCheckerFactory {
         map.put("approved_countries", false);
         map.put("toxicity", false);
         map.put("id", false);
-        return new ViccDatamodelChecker("EnvironmentalContext", map);
+        return new DatamodelChecker("EnvironmentalContext", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker taxonomyChecker() {
+    static DatamodelChecker taxonomyChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("kingdom", true);
         map.put("direct-parent", true);
         map.put("class", true);
         map.put("subclass", false);
         map.put("superclass", true);
-        return new ViccDatamodelChecker("Taxonomy", map);
+        return new DatamodelChecker("Taxonomy", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker phenotypeChecker() {
+    static DatamodelChecker phenotypeChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("type", false);
         map.put("description", true);
         map.put("family", true);
         map.put("id", false);
-        return new ViccDatamodelChecker("Phenotype", map);
+        return new DatamodelChecker("Phenotype", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker phenotypeTypeChecker() {
+    static DatamodelChecker phenotypeTypeChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("source", true);
         map.put("term", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("PhenotypeType", map);
+        return new DatamodelChecker("PhenotypeType", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker brcaEntryChecker() {
+    static DatamodelChecker brcaEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("Gene_Symbol", true);
         map.put("Chr", true);
@@ -352,11 +352,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("Submitters_LOVD", true);
         map.put("Individuals_LOVD", true);
 
-        return new ViccDatamodelChecker("BrcaEntry", map);
+        return new DatamodelChecker("BrcaEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicEntryChecker() {
+    static DatamodelChecker civicEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("entrez_id", true);
         map.put("entrez_name", true);
@@ -379,11 +379,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("errors", true);
         map.put("id", true);
         map.put("description", true);
-        return new ViccDatamodelChecker("CivicEntry", map);
+        return new DatamodelChecker("CivicEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicCoordinatesChecker() {
+    static DatamodelChecker civicCoordinatesChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("chromosome", true);
         map.put("start", true);
@@ -397,11 +397,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("start2", true);
         map.put("stop2", true);
         map.put("representative_transcript2", true);
-        return new ViccDatamodelChecker("CivicCoordinates", map);
+        return new DatamodelChecker("CivicCoordinates", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicSourceChecker() {
+    static DatamodelChecker civicSourceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("status", true);
         map.put("open_access", true);
@@ -416,37 +416,37 @@ final class ViccDatamodelCheckerFactory {
         map.put("is_review", true);
         map.put("publication_date", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("CivicSource", map);
+        return new DatamodelChecker("CivicSource", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicProvisionalValueChecker() {
+    static DatamodelChecker civicProvisionalValueChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("description", false);
-        return new ViccDatamodelChecker("CivicProvisionalValue", map);
+        return new DatamodelChecker("CivicProvisionalValue", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicProvisionalValueDescriptionChecker() {
+    static DatamodelChecker civicProvisionalValueDescriptionChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("revision_id", false);
         map.put("value", false);
-        return new ViccDatamodelChecker("CivicProvisionalValueDescription", map);
+        return new DatamodelChecker("CivicProvisionalValueDescription", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicVariantGroupChecker() {
+    static DatamodelChecker civicVariantGroupChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("type", true);
         map.put("description", true);
         map.put("variants", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("CivicVariantGroup", map);
+        return new DatamodelChecker("CivicVariantGroup", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicVariantChecker() {
+    static DatamodelChecker civicVariantChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("entrez_id", true);
         map.put("entrez_name", true);
@@ -458,11 +458,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("id", true);
         map.put("gene_id", true);
         map.put("description", true);
-        return new ViccDatamodelChecker("CivicVariant", map);
+        return new DatamodelChecker("CivicVariant", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicVariantTypeChecker() {
+    static DatamodelChecker civicVariantTypeChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("display_name", true);
@@ -470,11 +470,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("url", true);
         map.put("so_id", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("CivicVariantType", map);
+        return new DatamodelChecker("CivicVariantType", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicEvidenceItemChecker() {
+    static DatamodelChecker civicEvidenceItemChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("type", true);
@@ -493,83 +493,83 @@ final class ViccDatamodelCheckerFactory {
         map.put("description", true);
         map.put("variant_id", false);
         map.put("id", true);
-        return new ViccDatamodelChecker("CivicEvidenceItem", map);
+        return new DatamodelChecker("CivicEvidenceItem", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicClinicalTrialChecker() {
+    static DatamodelChecker civicClinicalTrialChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("nct_id", true);
         map.put("clinical_trial_url", true);
         map.put("description", true);
-        return new ViccDatamodelChecker("CivicClinicalTrial", map);
+        return new DatamodelChecker("CivicClinicalTrial", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicPublicationDateChecker() {
+    static DatamodelChecker civicPublicationDateChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("year", false);
         map.put("month", false);
         map.put("day", false);
-        return new ViccDatamodelChecker("CivicPublicationDate", map);
+        return new DatamodelChecker("CivicPublicationDate", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicDiseaseChecker() {
+    static DatamodelChecker civicDiseaseChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("display_name", true);
         map.put("doid", true);
         map.put("url", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("CivicDisease", map);
+        return new DatamodelChecker("CivicDisease", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicDrugChecker() {
+    static DatamodelChecker civicDrugChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("pubchem_id", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("CivicDrug", map);
+        return new DatamodelChecker("CivicDrug", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicLifecycleActionsChecker() {
+    static DatamodelChecker civicLifecycleActionsChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("last_commented_on", false);
         map.put("last_modified", false);
         map.put("last_reviewed", false);
-        return new ViccDatamodelChecker("CivicLifecycleActions", map);
+        return new DatamodelChecker("CivicLifecycleActions", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicLastCommentedOnChecker() {
+    static DatamodelChecker civicLastCommentedOnChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("timestamp", true);
         map.put("user", true);
-        return new ViccDatamodelChecker("CivicLastCommentedOn", map);
+        return new DatamodelChecker("CivicLastCommentedOn", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicLastModifiedChecker() {
+    static DatamodelChecker civicLastModifiedChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("timestamp", true);
         map.put("user", true);
-        return new ViccDatamodelChecker("CivicLastModified", map);
+        return new DatamodelChecker("CivicLastModified", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicLastReviewedChecker() {
+    static DatamodelChecker civicLastReviewedChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("timestamp", true);
         map.put("user", true);
-        return new ViccDatamodelChecker("CivicLastReviewed", map);
+        return new DatamodelChecker("CivicLastReviewed", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicUserChecker() {
+    static DatamodelChecker civicUserChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("username", true);
         map.put("name", true);
@@ -592,43 +592,43 @@ final class ViccDatamodelCheckerFactory {
         map.put("signup_complete", true);
         map.put("accepted_license", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("CivicUser", map);
+        return new DatamodelChecker("CivicUser", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicOrganizationChecker() {
+    static DatamodelChecker civicOrganizationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", false);
         map.put("url", false);
         map.put("profile_image", false);
         map.put("id", false);
         map.put("description", false);
-        return new ViccDatamodelChecker("CivicOrganization", map);
+        return new DatamodelChecker("CivicOrganization", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicProfileImageChecker() {
+    static DatamodelChecker civicProfileImageChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("x14", true);
         map.put("x32", true);
         map.put("x64", true);
         map.put("x128", true);
         map.put("x256", true);
-        return new ViccDatamodelChecker("CivicProfileImage", map);
+        return new DatamodelChecker("CivicProfileImage", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker civicAvatarsChecker() {
+    static DatamodelChecker civicAvatarsChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("x14", true);
         map.put("x32", true);
         map.put("x64", true);
         map.put("x128", true);
-        return new ViccDatamodelChecker("CivicAvatars", map);
+        return new DatamodelChecker("CivicAvatars", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxEntryChecker() {
+    static DatamodelChecker jaxEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("responseType", true);
         map.put("approvalStatus", true);
@@ -639,54 +639,54 @@ final class ViccDatamodelCheckerFactory {
         map.put("efficacyEvidence", true);
         map.put("references", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("JaxEntry", map);
+        return new DatamodelChecker("JaxEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxMolecularProfileChecker() {
+    static DatamodelChecker jaxMolecularProfileChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("profileName", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("JaxMolecularProfile", map);
+        return new DatamodelChecker("JaxMolecularProfile", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxTherapyChecker() {
+    static DatamodelChecker jaxTherapyChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("therapyName", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("JaxTherapy", map);
+        return new DatamodelChecker("JaxTherapy", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxIndicationChecker() {
+    static DatamodelChecker jaxIndicationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("source", true);
         map.put("id", true);
         map.put("name", true);
-        return new ViccDatamodelChecker("JaxIndication", map);
+        return new DatamodelChecker("JaxIndication", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxReferenceChecker() {
+    static DatamodelChecker jaxReferenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("url", true);
         map.put("id", true);
         map.put("pubMedId", true);
         map.put("title", true);
-        return new ViccDatamodelChecker("JaxReference", map);
+        return new DatamodelChecker("JaxReference", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker oncoKbEntryChecker() {
+    static DatamodelChecker oncoKbEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("biological", false);
         map.put("clinical", false);
-        return new ViccDatamodelChecker("OncoKbEntry", map);
+        return new DatamodelChecker("OncoKbEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker oncoKbBiologicalChecker() {
+    static DatamodelChecker oncoKbBiologicalChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("mutationEffectPmids", true);
         map.put("Isoform", true);
@@ -697,11 +697,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("RefSeq", true);
         map.put("gene", true);
         map.put("mutationEffectAbstracts", true);
-        return new ViccDatamodelChecker("OncoKbBiological", map);
+        return new DatamodelChecker("OncoKbBiological", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker oncoKbClinicalChecker() {
+    static DatamodelChecker oncoKbClinicalChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("RefSeq", true);
         map.put("level", true);
@@ -714,19 +714,19 @@ final class ViccDatamodelCheckerFactory {
         map.put("gene", true);
         map.put("level_label", true);
         map.put("drugAbstracts", true);
-        return new ViccDatamodelChecker("OncoKbClinical", map);
+        return new DatamodelChecker("OncoKbClinical", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker oncoKbDrugsAbstractChecker() {
+    static DatamodelChecker oncoKbDrugsAbstractChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("text", true);
         map.put("link", true);
-        return new ViccDatamodelChecker("OncoKbDrugsAbstract", map);
+        return new DatamodelChecker("OncoKbDrugsAbstract", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker oncoKbVariantChecker() {
+    static DatamodelChecker oncoKbVariantChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("variantResidues", true);
         map.put("proteinStart", true);
@@ -736,20 +736,20 @@ final class ViccDatamodelCheckerFactory {
         map.put("alteration", true);
         map.put("consequence", true);
         map.put("gene", true);
-        return new ViccDatamodelChecker("OncoKbVariant", map);
+        return new DatamodelChecker("OncoKbVariant", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker oncoKbConsequenceChecker() {
+    static DatamodelChecker oncoKbConsequenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("term", true);
         map.put("description", true);
         map.put("isGenerallyTruncating", true);
-        return new ViccDatamodelChecker("OncoKbConsequence", map);
+        return new DatamodelChecker("OncoKbConsequence", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker oncoKbGeneChecker() {
+    static DatamodelChecker oncoKbGeneChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("oncogene", true);
         map.put("name", true);
@@ -759,36 +759,36 @@ final class ViccDatamodelCheckerFactory {
         map.put("geneAliases", true);
         map.put("tsg", true);
         map.put("curatedIsoform", true);
-        return new ViccDatamodelChecker("OncoKbGene", map);
+        return new DatamodelChecker("OncoKbGene", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker pmkbEntryChecker() {
+    static DatamodelChecker pmkbEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("tumor", true);
         map.put("tissues", true);
         map.put("variant", true);
-        return new ViccDatamodelChecker("PmkbEntry", map);
+        return new DatamodelChecker("PmkbEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker pmkbTumorChecker() {
+    static DatamodelChecker pmkbTumorChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("PmkbTumor", map);
+        return new DatamodelChecker("PmkbTumor", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker pmkbTissueChecker() {
+    static DatamodelChecker pmkbTissueChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("PmkbTissue", map);
+        return new DatamodelChecker("PmkbTissue", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker pmkbVariantChecker() {
+    static DatamodelChecker pmkbVariantChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("coordinates", true);
@@ -811,11 +811,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("description_type", true);
         map.put("notes", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("PmkbVariant", map);
+        return new DatamodelChecker("PmkbVariant", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker pmkbGeneChecker() {
+    static DatamodelChecker pmkbGeneChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("created_at", true);
@@ -824,11 +824,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("description", true);
         map.put("external_id", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("PmkbGene", map);
+        return new DatamodelChecker("PmkbGene", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker cgiEntryChecker() {
+    static DatamodelChecker cgiEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("Gene", true);
         map.put("Biomarker", true);
@@ -853,11 +853,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("Source", true);
         map.put("Curator", true);
         map.put("Assay type", true);
-        return new ViccDatamodelChecker("CgiEntry", map);
+        return new DatamodelChecker("CgiEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxTrialsEntryChecker() {
+    static DatamodelChecker jaxTrialsEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("nctId", true);
         map.put("title", true);
@@ -870,44 +870,44 @@ final class ViccDatamodelCheckerFactory {
         map.put("phase", true);
         map.put("sponsors", true);
         map.put("updateDate", true);
-        return new ViccDatamodelChecker("JaxTrialsEntry", map);
+        return new DatamodelChecker("JaxTrialsEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxTrialsVariantRequirementDetailsChecker() {
+    static DatamodelChecker jaxTrialsVariantRequirementDetailsChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("molecularProfile", true);
         map.put("requirementType", true);
-        return new ViccDatamodelChecker("JaxTrialsVariantRequirementDetails", map);
+        return new DatamodelChecker("JaxTrialsVariantRequirementDetails", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxTrialsMolecularProfileChecker() {
+    static DatamodelChecker jaxTrialsMolecularProfileChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("profileName", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("JaxTrialsMolecularProfile", map);
+        return new DatamodelChecker("JaxTrialsMolecularProfile", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxTrialsIndicationChecker() {
+    static DatamodelChecker jaxTrialsIndicationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("source", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("JaxTrialsIndication", map);
+        return new DatamodelChecker("JaxTrialsIndication", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker jaxTrialsTherapyChecker() {
+    static DatamodelChecker jaxTrialsTherapyChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("therapyName", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("JaxTrialsTherapy", map);
+        return new DatamodelChecker("JaxTrialsTherapy", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchEntryChecker() {
+    static DatamodelChecker molecularMatchEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("direction", true);
         map.put("biomarkerClass", true);
@@ -955,11 +955,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("external_id", false);
         map.put("uniqueKey", true);
         map.put("hashKey", true);
-        return new ViccDatamodelChecker("MolecularMatchEntry", map);
+        return new DatamodelChecker("MolecularMatchEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchMutationChecker() {
+    static DatamodelChecker molecularMatchMutationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("geneSymbol", true);
         map.put("name", true);
@@ -982,11 +982,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("description", true);
         map.put("_src", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("MolecularMatchMutation", map);
+        return new DatamodelChecker("MolecularMatchMutation", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTranscriptConsequenceChecker() {
+    static DatamodelChecker molecularMatchTranscriptConsequenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("chr", false);
         map.put("start", false);
@@ -1004,18 +1004,18 @@ final class ViccDatamodelCheckerFactory {
         map.put("custom", true);
         map.put("validated", true);
         map.put("compositeKey", true);
-        return new ViccDatamodelChecker("MolecularMatchTranscriptConsequence", map);
+        return new DatamodelChecker("MolecularMatchTranscriptConsequence", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchWGSADataChecker() {
+    static DatamodelChecker molecularMatchWGSADataChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("locations", true);
-        return new ViccDatamodelChecker("MolecularMatchWGSAData", map);
+        return new DatamodelChecker("MolecularMatchWGSAData", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchWGSALocationChecker() {
+    static DatamodelChecker molecularMatchWGSALocationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("Gene", true);
         map.put("Chr", true);
@@ -1064,11 +1064,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("wgRna", false);
         map.put("targetScanS", false);
         map.put("_key", true);
-        return new ViccDatamodelChecker("MolecularMatchWGSALocation", map);
+        return new DatamodelChecker("MolecularMatchWGSALocation", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchWGSAMapChecker() {
+    static DatamodelChecker molecularMatchWGSAMapChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("Gene", true);
@@ -1079,11 +1079,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("AA", false);
         map.put("Synonyms", true);
         map.put("ProtCoords", true);
-        return new ViccDatamodelChecker("MolecularMatchWGSAMap", map);
+        return new DatamodelChecker("MolecularMatchWGSAMap", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchExonsInfoChecker() {
+    static DatamodelChecker molecularMatchExonsInfoChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("chr", true);
         map.put("transcript", true);
@@ -1092,11 +1092,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("cdsStart", false);
         map.put("cdsEnd", false);
         map.put("exonBoundaries", true);
-        return new ViccDatamodelChecker("MolecularMatchExonsInfo", map);
+        return new DatamodelChecker("MolecularMatchExonsInfo", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchExonBoundariesChecker() {
+    static DatamodelChecker molecularMatchExonBoundariesChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("1", false);
         map.put("2", false);
@@ -1139,19 +1139,19 @@ final class ViccDatamodelCheckerFactory {
         map.put("39", false);
         map.put("40", false);
         map.put("41", false);
-        return new ViccDatamodelChecker("MolecularMatchExonBoundaries", map);
+        return new DatamodelChecker("MolecularMatchExonBoundaries", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchPositionChecker() {
+    static DatamodelChecker molecularMatchPositionChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("start", true);
         map.put("stop", true);
-        return new ViccDatamodelChecker("MolecularMatchPosition", map);
+        return new DatamodelChecker("MolecularMatchPosition", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchFusionDataChecker() {
+    static DatamodelChecker molecularMatchFusionDataChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("source", false);
         map.put("synonym", false);
@@ -1171,19 +1171,19 @@ final class ViccDatamodelCheckerFactory {
         map.put("Bgreg", false);
         map.put("ins", false);
         map.put("Paper", false);
-        return new ViccDatamodelChecker("MolecularMatchFusionData", map);
+        return new DatamodelChecker("MolecularMatchFusionData", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchFusionGenomicRegionChecker() {
+    static DatamodelChecker molecularMatchFusionGenomicRegionChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("num", true);
         map.put("type", true);
-        return new ViccDatamodelChecker("MolecularMatchFusionGenomicRegion", map);
+        return new DatamodelChecker("MolecularMatchFusionGenomicRegion", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchGRCh37LocationChecker() {
+    static DatamodelChecker molecularMatchGRCh37LocationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("chr", true);
         map.put("start", true);
@@ -1194,11 +1194,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("transcript_consequences", true);
         map.put("validated", true);
         map.put("compositeKey", true);
-        return new ViccDatamodelChecker("MolecularMatchGRCh37Location", map);
+        return new DatamodelChecker("MolecularMatchGRCh37Location", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchGRCh37TranscriptConsequenceChecker() {
+    static DatamodelChecker molecularMatchGRCh37TranscriptConsequenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("transcript", true);
         map.put("cdna", true);
@@ -1207,11 +1207,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("intronNumber", true);
         map.put("exonNumber", true);
 
-        return new ViccDatamodelChecker("MolecularMatchGRCh37TranscriptConsequence", map);
+        return new DatamodelChecker("MolecularMatchGRCh37TranscriptConsequence", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchVariantInfoChecker() {
+    static DatamodelChecker molecularMatchVariantInfoChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("gene", true);
@@ -1223,11 +1223,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("geneFusionPartner", true);
         map.put("COSMIC_ID", true);
         map.put("popFreqMax", true);
-        return new ViccDatamodelChecker("MolecularMatchVariantInfo", map);
+        return new DatamodelChecker("MolecularMatchVariantInfo", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchFusionChecker() {
+    static DatamodelChecker molecularMatchFusionChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("chr", true);
         map.put("referenceGenome", true);
@@ -1237,11 +1237,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("RBPWLEP", true);
         map.put("intronNumber", true);
         map.put("exonNumber", true);
-        return new ViccDatamodelChecker("MolecularMatchFusion", map);
+        return new DatamodelChecker("MolecularMatchFusion", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchLocationChecker() {
+    static DatamodelChecker molecularMatchLocationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("chr", true);
         map.put("start", true);
@@ -1254,11 +1254,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("strand", false);
         map.put("intronNumber", false);
         map.put("exonNumber", false);
-        return new ViccDatamodelChecker("MolecularMatchLocation", map);
+        return new DatamodelChecker("MolecularMatchLocation", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchPrevalenceChecker() {
+    static DatamodelChecker molecularMatchPrevalenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("studyId", true);
         map.put("count", true);
@@ -1266,11 +1266,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("percent", true);
         map.put("molecular", false);
         map.put("condition", false);
-        return new ViccDatamodelChecker("MolecularMatchPrevalence", map);
+        return new DatamodelChecker("MolecularMatchPrevalence", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchSourceChecker() {
+    static DatamodelChecker molecularMatchSourceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("type", true);
@@ -1286,21 +1286,21 @@ final class ViccDatamodelCheckerFactory {
         map.put("trustRating", false);
         map.put("suppress", true);
         map.put("id", true);
-        return new ViccDatamodelChecker("MolecularMatchSource", map);
+        return new DatamodelChecker("MolecularMatchSource", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTierExplanationChecker() {
+    static DatamodelChecker molecularMatchTierExplanationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("tier", true);
         map.put("step", true);
         map.put("message", true);
         map.put("success", true);
-        return new ViccDatamodelChecker("MolecularMatchTierExplanation", map);
+        return new DatamodelChecker("MolecularMatchTierExplanation", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchCriteriaUnmetChecker() {
+    static DatamodelChecker molecularMatchCriteriaUnmetChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("term", true);
         map.put("filterType", true);
@@ -1316,11 +1316,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("primary", false);
         map.put("compositeKey", true);
         map.put("custom", false);
-        return new ViccDatamodelChecker("MolecularMatchCriteriaUnmet", map);
+        return new DatamodelChecker("MolecularMatchCriteriaUnmet", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchAstChecker() {
+    static DatamodelChecker molecularMatchAstChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("type", true);
         map.put("raw", false);
@@ -1328,11 +1328,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("operator", false);
         map.put("left", false);
         map.put("right", false);
-        return new ViccDatamodelChecker("MolecularMatchAst", map);
+        return new DatamodelChecker("MolecularMatchAst", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTagChecker() {
+    static DatamodelChecker molecularMatchTagChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("term", true);
         map.put("facet", true);
@@ -1349,11 +1349,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("manualSuppress", false);
         map.put("composite", false);
         map.put("compositeKey", false);
-        return new ViccDatamodelChecker("MolecularMatchTag", map);
+        return new DatamodelChecker("MolecularMatchTag", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchClassificationChecker() {
+    static DatamodelChecker molecularMatchClassificationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", false);
         map.put("geneSymbol", false);
@@ -1386,31 +1386,31 @@ final class ViccDatamodelCheckerFactory {
         map.put("alias", false);
         map.put("priority", false);
         map.put("description", false);
-        return new ViccDatamodelChecker("MolecularMatchClassification", map);
+        return new DatamodelChecker("MolecularMatchClassification", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchParentChecker() {
+    static DatamodelChecker molecularMatchParentChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("type", false);
         map.put("actionableParent", false);
         map.put("transcripts", true);
-        return new ViccDatamodelChecker("MolecularMatchParent", map);
+        return new DatamodelChecker("MolecularMatchParent", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTherapeuticContextChecker() {
+    static DatamodelChecker molecularMatchTherapeuticContextChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("facet", true);
         map.put("suppress", true);
         map.put("valid", false);
-        return new ViccDatamodelChecker("MolecularMatchTherapeuticContext", map);
+        return new DatamodelChecker("MolecularMatchTherapeuticContext", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTrialsEntryChecker() {
+    static DatamodelChecker molecularMatchTrialsEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("status", true);
         map.put("startDate", false);
@@ -1426,22 +1426,22 @@ final class ViccDatamodelCheckerFactory {
         map.put("tags", true);
         map.put("id", true);
         map.put("studyType", true);
-        return new ViccDatamodelChecker("MolecularMatchTrialsEntry", map);
+        return new DatamodelChecker("MolecularMatchTrialsEntry", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTrialsInterventionChecker() {
+    static DatamodelChecker molecularMatchTrialsInterventionChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("intervention_name", false);
         map.put("other_name", false);
         map.put("description", false);
         map.put("arm_group_label", false);
         map.put("intervention_type", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsIntervention", map);
+        return new DatamodelChecker("MolecularMatchTrialsIntervention", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTrialsLocationChecker() {
+    static DatamodelChecker molecularMatchTrialsLocationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("status", true);
         map.put("last_name", false);
@@ -1469,11 +1469,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("geo", false);
         map.put("_validMessage", false);
         map.put("name", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsLocation", map);
+        return new DatamodelChecker("MolecularMatchTrialsLocation", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTrialsOverallContactChecker() {
+    static DatamodelChecker molecularMatchTrialsOverallContactChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("phone", false);
         map.put("last_name", false);
@@ -1487,36 +1487,36 @@ final class ViccDatamodelCheckerFactory {
         map.put("url", false);
         map.put("street", false);
         map.put("type", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsOverallContact", map);
+        return new DatamodelChecker("MolecularMatchTrialsOverallContact", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTrialsGeoChecker() {
+    static DatamodelChecker molecularMatchTrialsGeoChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("lat", true);
         map.put("lon", true);
-        return new ViccDatamodelChecker("MolecularMatchTrialsGeo", map);
+        return new DatamodelChecker("MolecularMatchTrialsGeo", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTrialsSubLocationChecker() {
+    static DatamodelChecker molecularMatchTrialsSubLocationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("type", true);
         map.put("coordinates", true);
-        return new ViccDatamodelChecker("MolecularMatchTrialsSubLocation", map);
+        return new DatamodelChecker("MolecularMatchTrialsSubLocation", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTrialsContactChecker() {
+    static DatamodelChecker molecularMatchTrialsContactChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("phone", false);
         map.put("name", false);
         map.put("email", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsContact", map);
+        return new DatamodelChecker("MolecularMatchTrialsContact", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker molecularMatchTrialsTagChecker() {
+    static DatamodelChecker molecularMatchTrialsTagChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("facet", true);
         map.put("compositeKey", true);
@@ -1531,11 +1531,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("generatedByTerm", false);
         map.put("id", false);
         map.put("manualPriority", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsTag", map);
+        return new DatamodelChecker("MolecularMatchTrialsTag", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker sageEntryChecker() {
+    static DatamodelChecker sageEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("gene", true);
         map.put("entrez_id", true);
@@ -1545,6 +1545,6 @@ final class ViccDatamodelCheckerFactory {
         map.put("drug_labels", true);
         map.put("germline_or_somatic", true);
         map.put("publication_url", true);
-        return new ViccDatamodelChecker("SageEntry", map);
+        return new DatamodelChecker("SageEntry", map);
     }
 }

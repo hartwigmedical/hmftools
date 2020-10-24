@@ -77,7 +77,7 @@ final class OncokbObjectFactory {
     @NotNull
     private static List<OncoKbDrugAbstract> createDrugsAbstracts(@NotNull JsonArray drugAbstractArray) {
         List<OncoKbDrugAbstract> drugAbstractList = Lists.newArrayList();
-        ViccDatamodelChecker drugAbstractChecker = ViccDatamodelCheckerFactory.oncoKbDrugsAbstractChecker();
+        DatamodelChecker drugAbstractChecker = ViccDatamodelCheckerFactory.oncoKbDrugsAbstractChecker();
 
         for (JsonElement drugAbstractElement : drugAbstractArray) {
             JsonObject drugAbstractObject = drugAbstractElement.getAsJsonObject();

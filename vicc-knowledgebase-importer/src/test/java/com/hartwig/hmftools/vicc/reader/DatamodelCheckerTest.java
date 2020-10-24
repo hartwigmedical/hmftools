@@ -10,7 +10,7 @@ import com.google.gson.JsonObject;
 
 import org.junit.Test;
 
-public class ViccDatamodelCheckerTest {
+public class DatamodelCheckerTest {
 
     @Test
     public void checkingWorksAsExpected() {
@@ -18,7 +18,7 @@ public class ViccDatamodelCheckerTest {
         map.put("A", true);
         map.put("B", false);
 
-        ViccDatamodelChecker checker = new ViccDatamodelChecker("test", map);
+        DatamodelChecker checker = new DatamodelChecker("test", map);
 
         JsonObject object = new JsonObject();
         assertFalse(checker.check(object));

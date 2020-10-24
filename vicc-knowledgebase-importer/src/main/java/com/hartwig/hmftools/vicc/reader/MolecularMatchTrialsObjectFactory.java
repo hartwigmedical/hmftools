@@ -64,7 +64,7 @@ final class MolecularMatchTrialsObjectFactory {
     @NotNull
     private static List<MolecularMatchTrialsIntervention> createInterventions(@NotNull JsonArray interventionArray) {
         List<MolecularMatchTrialsIntervention> molecularMatchTrialsInterventionList = Lists.newArrayList();
-        ViccDatamodelChecker interventionChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsInterventionChecker();
+        DatamodelChecker interventionChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsInterventionChecker();
 
         for (JsonElement interventionElement : interventionArray) {
             JsonObject interventionObject = interventionElement.getAsJsonObject();
@@ -85,7 +85,7 @@ final class MolecularMatchTrialsObjectFactory {
     @NotNull
     private static List<MolecularMatchTrialsLocation> createLocations(@NotNull JsonArray locationArray) {
         List<MolecularMatchTrialsLocation> locationList = Lists.newArrayList();
-        ViccDatamodelChecker locationChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsLocationChecker();
+        DatamodelChecker locationChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsLocationChecker();
 
         for (JsonElement locationElement : locationArray) {
             JsonObject locationObject = locationElement.getAsJsonObject();
@@ -191,7 +191,7 @@ final class MolecularMatchTrialsObjectFactory {
     @NotNull
     private static List<MolecularMatchTrialsTag> createTags(@NotNull JsonArray tagArray) {
         List<MolecularMatchTrialsTag> tagList = Lists.newArrayList();
-        ViccDatamodelChecker tagChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsTagChecker();
+        DatamodelChecker tagChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsTagChecker();
 
         for (JsonElement tagElement : tagArray) {
             JsonObject tagObject = tagElement.getAsJsonObject();

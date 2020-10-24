@@ -51,7 +51,7 @@ final class PmkbObjectFactory {
     @NotNull
     private static List<PmkbTissue> createTissues(@NotNull JsonArray tissueArray) {
         List<PmkbTissue> tissueList = Lists.newArrayList();
-        ViccDatamodelChecker tissueChecker = ViccDatamodelCheckerFactory.pmkbTissueChecker();
+        DatamodelChecker tissueChecker = ViccDatamodelCheckerFactory.pmkbTissueChecker();
 
         for (JsonElement tissueElement : tissueArray) {
             JsonObject tissueObject = tissueElement.getAsJsonObject();

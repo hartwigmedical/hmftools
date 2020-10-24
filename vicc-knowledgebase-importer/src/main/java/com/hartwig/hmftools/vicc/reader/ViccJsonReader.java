@@ -138,7 +138,7 @@ public final class ViccJsonReader {
     @NotNull
     private static List<GeneIdentifier> createGeneIdentifiers(@NotNull JsonArray geneIdentifierArray) {
         List<GeneIdentifier> geneIdentifierList = Lists.newArrayList();
-        ViccDatamodelChecker geneIdentifierChecker = ViccDatamodelCheckerFactory.geneIdentifierChecker();
+        DatamodelChecker geneIdentifierChecker = ViccDatamodelCheckerFactory.geneIdentifierChecker();
 
         for (JsonElement geneIdentifierElement : geneIdentifierArray) {
             JsonObject geneIdentifierObject = geneIdentifierElement.getAsJsonObject();
@@ -157,7 +157,7 @@ public final class ViccJsonReader {
     @NotNull
     private static List<Feature> createFeatures(@NotNull JsonArray featureArray) {
         List<Feature> featureList = Lists.newArrayList();
-        ViccDatamodelChecker featureChecker = ViccDatamodelCheckerFactory.featureChecker();
+        DatamodelChecker featureChecker = ViccDatamodelCheckerFactory.featureChecker();
 
         for (JsonElement featureElement : featureArray) {
             JsonObject featureObject = featureElement.getAsJsonObject();
@@ -318,7 +318,7 @@ public final class ViccJsonReader {
         }
 
         List<EnvironmentalContext> environmentalContextList = Lists.newArrayList();
-        ViccDatamodelChecker environmentalContextChecker = ViccDatamodelCheckerFactory.environmentalContextChecker();
+        DatamodelChecker environmentalContextChecker = ViccDatamodelCheckerFactory.environmentalContextChecker();
 
         for (JsonElement environmentalContextElement : environmentalContextArray) {
             JsonObject environmentalContextObject = environmentalContextElement.getAsJsonObject();

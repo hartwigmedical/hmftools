@@ -157,7 +157,7 @@ final class CivicObjectFactory {
         }
 
         List<CivicVariantGroup> variantGroupList = Lists.newArrayList();
-        ViccDatamodelChecker variantGroupChecker = ViccDatamodelCheckerFactory.civicVariantGroupChecker();
+        DatamodelChecker variantGroupChecker = ViccDatamodelCheckerFactory.civicVariantGroupChecker();
 
         for (JsonElement variantGroupElement : variantGroupArray) {
             JsonObject variantGroupObject = variantGroupElement.getAsJsonObject();
@@ -177,7 +177,7 @@ final class CivicObjectFactory {
     @NotNull
     private static List<CivicVariant> createVariants(@NotNull JsonArray variantArray) {
         List<CivicVariant> variantList = Lists.newArrayList();
-        ViccDatamodelChecker variantChecker = ViccDatamodelCheckerFactory.civicVariantChecker();
+        DatamodelChecker variantChecker = ViccDatamodelCheckerFactory.civicVariantChecker();
 
         for (JsonElement variantElement : variantArray) {
             JsonObject variantObject = variantElement.getAsJsonObject();
@@ -203,7 +203,7 @@ final class CivicObjectFactory {
     @NotNull
     private static List<CivicVariantType> createVariantTypes(@NotNull JsonArray variantTypeArray) {
         List<CivicVariantType> variantTypeList = Lists.newArrayList();
-        ViccDatamodelChecker variantTypeChecker = ViccDatamodelCheckerFactory.civicVariantTypeChecker();
+        DatamodelChecker variantTypeChecker = ViccDatamodelCheckerFactory.civicVariantTypeChecker();
 
         for (JsonElement variantTypeElement : variantTypeArray) {
             JsonObject variantTypeObject = variantTypeElement.getAsJsonObject();
@@ -224,7 +224,7 @@ final class CivicObjectFactory {
     @NotNull
     private static CivicEvidenceItem createEvidenceItem(@NotNull JsonArray evidenceItemArray) {
         List<CivicEvidenceItem> evidenceItemList = Lists.newArrayList();
-        ViccDatamodelChecker evidenceItemChecker = ViccDatamodelCheckerFactory.civicEvidenceItemChecker();
+        DatamodelChecker evidenceItemChecker = ViccDatamodelCheckerFactory.civicEvidenceItemChecker();
 
         for (JsonElement evidenceItemElement : evidenceItemArray) {
             JsonObject evidenceItemObject = evidenceItemElement.getAsJsonObject();
@@ -285,7 +285,7 @@ final class CivicObjectFactory {
     @NotNull
     private static List<CivicClinicalTrial> createClinicalTrials(@NotNull JsonArray clinicalTrialArray) {
         List<CivicClinicalTrial> clinicalTrialList = Lists.newArrayList();
-        ViccDatamodelChecker clinicalTrialChecker = ViccDatamodelCheckerFactory.civicClinicalTrialChecker();
+        DatamodelChecker clinicalTrialChecker = ViccDatamodelCheckerFactory.civicClinicalTrialChecker();
 
         for (JsonElement clinicalTrialElement : clinicalTrialArray) {
             JsonObject clinicalTrialObject = clinicalTrialElement.getAsJsonObject();
@@ -328,7 +328,7 @@ final class CivicObjectFactory {
     @NotNull
     private static List<CivicDrug> createDrugs(@NotNull JsonArray drugArray) {
         List<CivicDrug> drugList = Lists.newArrayList();
-        ViccDatamodelChecker drugChecker = ViccDatamodelCheckerFactory.civicDrugChecker();
+        DatamodelChecker drugChecker = ViccDatamodelCheckerFactory.civicDrugChecker();
 
         for (JsonElement drugElement : drugArray) {
             JsonObject drugObject = drugElement.getAsJsonObject();
