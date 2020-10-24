@@ -14,7 +14,7 @@ final class DoidDatamodelCheckerFactory {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("pred", true);
         map.put("val", true);
-        return new JsonDatamodelChecker("doidBasicPropertyValues", map);
+        return new JsonDatamodelChecker("DoidBasicPropertyValues", map);
     }
 
     @NotNull
