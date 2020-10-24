@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.context;
 
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalNullableString;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 final class MetaDataResolver {
 
     private static final Logger LOGGER = LogManager.getLogger(MetaDataResolver.class);
+
     private static final String METADATA_FILE_P4 = "metadata";
     private static final String METADATA_FILE_P5 = "metadata.json";
 
@@ -74,9 +76,9 @@ final class MetaDataResolver {
     private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile) throws FileNotFoundException {
         JsonObject json = GSON.fromJson(new FileReader(pv4MetadataFile), JsonObject.class);
 
-        String refSample = fieldValue(json, REF_SAMPLE_ID_FIELD_P4);
-        String tumorSample = fieldValue(json, TUMOR_SAMPLE_ID_FIELD_P4);
-        String setName = fieldValue(json, SET_NAME_FIELD_P4);
+        String refSample = nullableString(json, REF_SAMPLE_ID_FIELD_P4);
+        String tumorSample = nullableString(json, TUMOR_SAMPLE_ID_FIELD_P4);
+        String setName = nullableString(json, SET_NAME_FIELD_P4);
 
         if (refSample == null) {
             LOGGER.warn("Could not find '{}' in metadata file!", REF_SAMPLE_ID_FIELD_P4);
@@ -143,12 +145,6 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    private static String fieldValue(@NotNull JsonObject object, @NotNull String fieldName) {
-        JsonElement element = object.get(fieldName);
-        return element != null && !(element instanceof JsonNull) ? element.getAsString() : null;
-    }
-
-    @Nullable
     private static String sampleIdP5(@NotNull JsonObject metadata, @NotNull String objectName) {
         JsonObject object = metadata.getAsJsonObject(objectName);
         if (object == null) {
@@ -165,14 +161,12 @@ final class MetaDataResolver {
             return null;
         }
 
-        JsonElement sampleBarcodeId;
         if (isPostP5dot15(pipelineVersion)) {
-            sampleBarcodeId = object.get("barcode");
+            return optionalNullableString(object, "barcode");
         } else {
             // this is pre 5.15 pipelines
-            sampleBarcodeId = object.get("sampleId");
+            return optionalNullableString(object, "sampleId");
         }
-        return sampleBarcodeId != null && !(sampleBarcodeId instanceof JsonNull) ? sampleBarcodeId.getAsString() : null;
     }
 
     @NotNull
