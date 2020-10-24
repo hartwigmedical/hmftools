@@ -157,17 +157,20 @@ public class SampleAnalyser
         mAllVariants.clear();
     }
 
-    public void setSampleSVs(final String sampleId, final List<SvVarData> variants)
+    public void setSampleId(final String sampleId)
     {
         clearState();
 
         mSampleId = sampleId;
         mCohortDataWriter.getVisWriter().setSampleId(sampleId);
+    }
 
+    public void setSampleSVs(final List<SvVarData> variants)
+    {
         if (variants.isEmpty())
         {
             if(mConfig.isSingleSample())
-                writeSampleWithNoSVs(sampleId);
+                writeSampleWithNoSVs();
 
             return;
         }
@@ -413,18 +416,18 @@ public class SampleAnalyser
         mPcWrite.stop();
     }
 
-    public void writeSampleWithNoSVs(final String sampleId)
+    private void writeSampleWithNoSVs()
     {
         try
         {
-            LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
 
-            LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
-            LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
 
             VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
             VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());

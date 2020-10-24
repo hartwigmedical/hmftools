@@ -134,8 +134,9 @@ public class ExternalToolCompare
                 LNX_LOGGER.info("sample({}) processing {} SVs, completed({})", sampleId, svDataList.size(), count - 1);
             }
 
+            sampleAnalyser.setSampleId(sampleId);
             cnDataLoader.loadSampleData(sampleId, svRecords);
-            sampleAnalyser.setSampleSVs(sampleId, svDataList);
+            sampleAnalyser.setSampleSVs(svDataList);
 
             if(ensemblDataCache != null)
             {
