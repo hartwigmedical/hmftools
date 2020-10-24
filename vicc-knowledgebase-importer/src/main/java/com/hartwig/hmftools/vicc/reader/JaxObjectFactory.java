@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonArray;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
 
 import java.util.List;
 

@@ -1,10 +1,17 @@
 package com.hartwig.hmftools.patientdb.diseaseontology;
 
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalStringList;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.stringList;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -13,91 +20,15 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+public final class DiseaseOntology {
 
-public class DiseaseOntology {
-    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
-
-    @Nullable
-    private static DoidDefinition extractDoidDefinition(@NotNull JsonObject definitionJsonObject) {
-        ImmutableDoidDefinition.Builder doidDefinition = ImmutableDoidDefinition.builder();
-        doidDefinition.definitionVal(JsonFunctions.nullableString(definitionJsonObject, "val"));
-        doidDefinition.definitionXref(JsonFunctions.stringList(definitionJsonObject, "xrefs"));
-        return doidDefinition.build();
-
+    private DiseaseOntology() {
     }
 
     @NotNull
-    private static List<DoidSynonyms> extractDoidSynonyms(@NotNull JsonArray arraySynonyms) {
-        List<DoidSynonyms> doidSynonymsList = Lists.newArrayList();
-        for (JsonElement synonyms : arraySynonyms) {
-            doidSynonymsList.add(ImmutableDoidSynonyms.builder()
-                    .pred(JsonFunctions.toString(synonyms.getAsJsonObject(), "pred"))
-                    .val(JsonFunctions.toString(synonyms.getAsJsonObject(), "val"))
-                    .xrefs(JsonFunctions.stringList(synonyms.getAsJsonObject(), "xrefs"))
-                    .build());
-        }
-
-        return doidSynonymsList;
-    }
-
-    @NotNull
-    private static List<DoidBasicPropertyValues> extractBasicProportiesValues(@NotNull JsonArray arrayBasicPropertyValues) {
-        List<DoidBasicPropertyValues> doidBasicPropertyValuesList = Lists.newArrayList();
-        DoidDatamodelChecker doidBasicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
-
-        for (JsonElement basicProperty : arrayBasicPropertyValues) {
-            doidBasicPropertyValuesChecker.check(basicProperty.getAsJsonObject());
-
-            doidBasicPropertyValuesList.add(ImmutableDoidBasicPropertyValues.builder()
-                    .pred(JsonFunctions.toString(basicProperty.getAsJsonObject(), "pred"))
-                    .val(JsonFunctions.toString(basicProperty.getAsJsonObject(), "val"))
-                    .build());
-        }
-
-        return doidBasicPropertyValuesList;
-
-    }
-
-    @NotNull
-    private static DoidMetadata extractDoidMetadata(@NotNull JsonObject metaDataJsonObject) {
-        ImmutableDoidMetadata.Builder doidMetadata = ImmutableDoidMetadata.builder();
-        List<DoidXref> xrefValList = Lists.newArrayList();
-        DoidDatamodelChecker doidMetadataChecker = DoidDatamodelCheckerFactory.doidMetadataChecker();
-        doidMetadataChecker.check(metaDataJsonObject);
-
-
-        JsonArray arrayXref = metaDataJsonObject.getAsJsonArray("xrefs");
-        if (arrayXref != null) {
-            for (JsonElement xref : arrayXref) {
-                xrefValList.add(ImmutableDoidXref.builder().val(JsonFunctions.toString(xref.getAsJsonObject(), "val")).build());
-            }
-        }
-        doidMetadata.synonyms(metaDataJsonObject.getAsJsonArray("synonyms") == null
-                ? null
-                : extractDoidSynonyms(metaDataJsonObject.getAsJsonArray("synonyms")));
-        doidMetadata.basicPropertyValues(metaDataJsonObject.getAsJsonArray("basicPropertyValues") == null
-                ? null
-                : extractBasicProportiesValues(metaDataJsonObject.getAsJsonArray("basicPropertyValues")));
-        doidMetadata.doidDefinition(metaDataJsonObject.getAsJsonObject("definition") == null
-                ? null
-                : extractDoidDefinition(metaDataJsonObject.getAsJsonObject("definition")));
-        doidMetadata.subset(JsonFunctions.optionalStringList(metaDataJsonObject, "subsets"));
-        doidMetadata.xref(xrefValList);
-        return doidMetadata.build();
-
-    }
-
-    @NotNull
-    private static String extractDoidId(@NotNull String id) {
-        return id.replace("http://purl.obolibrary.org/obo/DOID_", "");
-    }
-
-    @VisibleForTesting
     public static List<Doid> readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
@@ -106,22 +37,18 @@ public class DiseaseOntology {
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject doidObject = parser.parse(reader).getAsJsonObject();
 
-            JsonArray arrayGraphs = doidObject.getAsJsonObject().getAsJsonArray("graphs").getAsJsonArray();
-            for (JsonElement graph : arrayGraphs) {
-                JsonArray arrayNodes = graph.getAsJsonObject().getAsJsonArray("nodes");
-                for (JsonElement nodes : arrayNodes) {
+            JsonArray graphsArray = doidObject.getAsJsonObject().getAsJsonArray("graphs").getAsJsonArray();
+            for (JsonElement graph : graphsArray) {
+                JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
+                for (JsonElement node : nodeArray) {
+                    JsonObject nodeObject = node.getAsJsonObject();
+                    String id = string(nodeObject, "id");
                     doids.add(ImmutableDoid.builder()
-                            .id(JsonFunctions.toString(nodes.getAsJsonObject(), "id"))
-                            .doid(extractDoidId(JsonFunctions.toString(nodes.getAsJsonObject(), "id")))
-                            .doidMetadata(nodes.getAsJsonObject().getAsJsonObject("meta") == null
-                                    ? null
-                                    : extractDoidMetadata(nodes.getAsJsonObject().getAsJsonObject("meta")))
-                            .type(nodes.getAsJsonObject().getAsJsonPrimitive("type") == null
-                                    ? null
-                                    : JsonFunctions.toString(nodes.getAsJsonObject(), "type"))
-                            .doidTerm(nodes.getAsJsonObject().getAsJsonPrimitive("lbl") == null
-                                    ? null
-                                    : JsonFunctions.nullableString(nodes.getAsJsonObject(), "lbl"))
+                            .id(id)
+                            .doid(extractDoidId(id))
+                            .doidMetadata(extractDoidMetadata(optionalJsonObject(nodeObject, "meta")))
+                            .type(optionalString(nodeObject, "type"))
+                            .doidTerm(optionalString(nodeObject, "lbl"))
                             .build());
                 }
             }
@@ -129,4 +56,83 @@ public class DiseaseOntology {
         return doids;
     }
 
+    @NotNull
+    private static String extractDoidId(@NotNull String id) {
+        return id.replace("http://purl.obolibrary.org/obo/DOID_", "");
+    }
+
+    @Nullable
+    private static DoidMetadata extractDoidMetadata(@Nullable JsonObject metaDataJsonObject) {
+        if (metaDataJsonObject == null) {
+            return null;
+        }
+
+        DoidDatamodelChecker doidMetadataChecker = DoidDatamodelCheckerFactory.doidMetadataChecker();
+        doidMetadataChecker.check(metaDataJsonObject);
+
+        JsonArray arrayXref = metaDataJsonObject.getAsJsonArray("xrefs");
+        List<DoidXref> xrefValList = Lists.newArrayList();
+        if (arrayXref != null) {
+            for (JsonElement xref : arrayXref) {
+                xrefValList.add(ImmutableDoidXref.builder().val(string(xref.getAsJsonObject(), "val")).build());
+            }
+        }
+
+        ImmutableDoidMetadata.Builder doidMetadataBuilder = ImmutableDoidMetadata.builder();
+        doidMetadataBuilder.synonyms(extractDoidSynonyms(optionalJsonArray(metaDataJsonObject, "synonyms")));
+        doidMetadataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metaDataJsonObject, "basicPropertyValues")));
+        doidMetadataBuilder.doidDefinition(extractDoidDefinition(optionalJsonObject(metaDataJsonObject, "definition")));
+        doidMetadataBuilder.subset(optionalStringList(metaDataJsonObject, "subsets"));
+        doidMetadataBuilder.xref(xrefValList);
+        return doidMetadataBuilder.build();
+    }
+
+    @Nullable
+    private static List<DoidSynonym> extractDoidSynonyms(@Nullable JsonArray synonymArray) {
+        if (synonymArray == null) {
+            return null;
+        }
+
+        List<DoidSynonym> doidSynonymList = Lists.newArrayList();
+        for (JsonElement synonym : synonymArray) {
+            JsonObject synonymObject = synonym.getAsJsonObject();
+            doidSynonymList.add(ImmutableDoidSynonym.builder()
+                    .pred(string(synonymObject, "pred"))
+                    .val(string(synonymObject, "val"))
+                    .xrefs(stringList(synonymObject, "xrefs"))
+                    .build());
+        }
+
+        return doidSynonymList;
+    }
+
+    @NotNull
+    private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@NotNull JsonArray basicPropertyValueArray) {
+        List<DoidBasicPropertyValue> doidBasicPropertyValueList = Lists.newArrayList();
+        DoidDatamodelChecker doidBasicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
+
+        for (JsonElement basicProperty : basicPropertyValueArray) {
+            JsonObject basicPropertyObject = basicProperty.getAsJsonObject();
+            doidBasicPropertyValuesChecker.check(basicPropertyObject);
+
+            doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder()
+                    .pred(string(basicPropertyObject, "pred"))
+                    .val(string(basicPropertyObject, "val"))
+                    .build());
+        }
+
+        return doidBasicPropertyValueList;
+    }
+
+    @Nullable
+    private static DoidDefinition extractDoidDefinition(@Nullable JsonObject definitionObject) {
+        if (definitionObject == null) {
+            return null;
+        }
+
+        ImmutableDoidDefinition.Builder doidDefinitionBuilder = ImmutableDoidDefinition.builder();
+        doidDefinitionBuilder.definitionVal(nullableString(definitionObject, "val"));
+        doidDefinitionBuilder.definitionXref(stringList(definitionObject, "xrefs"));
+        return doidDefinitionBuilder.build();
+    }
 }

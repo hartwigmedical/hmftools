@@ -23,27 +23,19 @@ public class DoidDatamodelChecker {
         this.datamodel = datamodel;
     }
 
-    boolean check(@NotNull JsonObject object) {
-        boolean correct = true;
+    void check(@NotNull JsonObject object) {
         Set<String> keys = object.keySet();
 
         for (String key : keys) {
             if (!datamodel.containsKey(key)) {
                 LOGGER.warn("JSON object contains key '{}' which is not expected for '{}'", key, name);
-                correct = false;
             }
         }
 
         for (Map.Entry<String, Boolean> datamodelEntry : datamodel.entrySet()) {
-            Boolean isMandatory = datamodelEntry.getValue();
-            assert isMandatory != null;
-            if (isMandatory && !keys.contains(datamodelEntry.getKey())) {
+            if (datamodelEntry.getValue() && !keys.contains(datamodelEntry.getKey())) {
                 LOGGER.warn("Mandatory key '{}' missing from JSON object in '{}'", datamodelEntry.getKey(), name);
-                correct = false;
             }
         }
-
-        return correct;
     }
-
 }

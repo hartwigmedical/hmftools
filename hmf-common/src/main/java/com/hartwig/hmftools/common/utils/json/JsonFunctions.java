@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.reader;
+package com.hartwig.hmftools.common.utils.json;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class JsonFunctions {
+public final class JsonFunctions {
 
     private static final Logger LOGGER = LogManager.getLogger(JsonFunctions.class);
 
@@ -20,7 +20,7 @@ final class JsonFunctions {
     }
 
     @Nullable
-    static JsonObject optionalJsonObject(@NotNull JsonObject object, @NotNull String field) {
+    public static JsonObject optionalJsonObject(@NotNull JsonObject object, @NotNull String field) {
         if (!object.has(field)) {
             return null;
         }
@@ -34,7 +34,7 @@ final class JsonFunctions {
     }
 
     @Nullable
-    static JsonArray optionalJsonArray(@NotNull JsonObject object, @NotNull String field) {
+    public static JsonArray optionalJsonArray(@NotNull JsonObject object, @NotNull String field) {
         if (!object.has(field)) {
             return null;
         }
@@ -48,7 +48,7 @@ final class JsonFunctions {
     }
 
     @NotNull
-    static List<String> stringList(@NotNull JsonObject object, @NotNull String field) {
+    public static List<String> stringList(@NotNull JsonObject object, @NotNull String field) {
         assert object.has(field);
 
         if (object.get(field).isJsonNull()) {
@@ -71,7 +71,7 @@ final class JsonFunctions {
     }
 
     @NotNull
-    static List<String> optionalStringList(@NotNull JsonObject object, @NotNull String field) {
+    public static List<String> optionalStringList(@NotNull JsonObject object, @NotNull String field) {
         if (!object.has(field)) {
             return Lists.newArrayList();
         }
@@ -80,7 +80,7 @@ final class JsonFunctions {
     }
 
     @NotNull
-    static String string(@NotNull JsonObject object, @NotNull String field) {
+    public static String string(@NotNull JsonObject object, @NotNull String field) {
         assert object.has(field);
 
         JsonElement element = object.get(field);
@@ -91,7 +91,7 @@ final class JsonFunctions {
     }
 
     @Nullable
-    static String optionalString(@NotNull JsonObject object, @NotNull String field) {
+    public static String optionalString(@NotNull JsonObject object, @NotNull String field) {
         if (!object.has(field)) {
             return null;
         }
@@ -100,7 +100,7 @@ final class JsonFunctions {
     }
 
     @Nullable
-    static String nullableString(@NotNull JsonObject object, @NotNull String field) {
+    public static String nullableString(@NotNull JsonObject object, @NotNull String field) {
         assert object.has(field);
 
         if (object.get(field).isJsonNull()) {
@@ -111,7 +111,7 @@ final class JsonFunctions {
     }
 
     @Nullable
-    static String optionalNullableString(@NotNull JsonObject object, @NotNull String field) {
+    public static String optionalNullableString(@NotNull JsonObject object, @NotNull String field) {
         if (!object.has(field)) {
             return null;
         }

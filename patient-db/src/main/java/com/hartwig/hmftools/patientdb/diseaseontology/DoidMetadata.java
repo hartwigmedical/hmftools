@@ -21,8 +21,8 @@ public abstract class DoidMetadata {
     public abstract List<DoidXref> xref();
 
     @Nullable
-    public abstract List<DoidSynonyms> synonyms();
+    public abstract List<DoidSynonym> synonyms();
 
     @Nullable
-    public abstract List<DoidBasicPropertyValues> basicPropertyValues();
+    public abstract List<DoidBasicPropertyValue> basicPropertyValues();
 }

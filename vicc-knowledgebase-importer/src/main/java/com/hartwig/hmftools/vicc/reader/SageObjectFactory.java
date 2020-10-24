@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
 
 import com.google.gson.JsonObject;
 import com.hartwig.hmftools.vicc.datamodel.sage.ImmutableSage;
