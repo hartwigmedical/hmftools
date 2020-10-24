@@ -186,7 +186,8 @@ class ClinicalDAO {
 
     private void writeDoidEntry(int patientId, @NotNull DoidEntry doidEntry) {
         context.insertInto(DOIDENTRY, DOIDENTRY.PATIENTID, DOIDENTRY.DOID, DOIDENTRY.DOIDTERM)
-                .values(patientId, doidEntry.doid(), doidEntry.doidTerm());
+                .values(patientId, doidEntry.doid(), doidEntry.doidTerm())
+                .execute();
     }
 
     private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
