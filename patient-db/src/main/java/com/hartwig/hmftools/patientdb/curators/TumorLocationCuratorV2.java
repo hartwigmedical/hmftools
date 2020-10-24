@@ -49,7 +49,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
                             .primaryTumorType(primaryTumorType)
                             .primaryTumorSubType(primaryTumorSubType)
                             .primaryTumorExtraDetails(primaryTumorExtraDetails)
-                            .doidEntries(toDoidEntries(doidEntries, doids))
+                            .doidEntries(resolveDoidEntries(doidEntries, doids))
                             .searchTerm(searchTerm)
                             .build());
         }
@@ -59,7 +59,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     }
 
     @NotNull
-    private static List<DoidEntry> toDoidEntries(@NotNull List<DoidEntry> doidEntries, @NotNull List<String> doidsToResolve) {
+    private static List<DoidEntry> resolveDoidEntries(@NotNull List<DoidEntry> doidEntries, @NotNull List<String> doidsToResolve) {
         List<DoidEntry> resolvedDoidEntries = Lists.newArrayList();
         for (String doid : doidsToResolve) {
             for (DoidEntry doidEntry : doidEntries) {
