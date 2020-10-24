@@ -14,7 +14,6 @@ import com.hartwig.hmftools.healthchecker.runners.MetricsChecker;
 import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -24,7 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class HealthChecksApplication {
+public class HealthChecksApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
@@ -59,16 +58,16 @@ public final class HealthChecksApplication {
         this.outputDir = outputDir;
     }
 
-    public static void main(final String... args) throws ParseException, IOException {
+    public static void main(String... args) throws ParseException, IOException {
         Options options = createOptions();
-        CommandLine cmd = createCommandLine(options, args);
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         String refSample = cmd.getOptionValue(REF_SAMPLE);
         String metricsDir = cmd.getOptionValue(METRICS_DIR);
         String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
         if (refSample == null || metricsDir == null || outputDir == null) {
-            final HelpFormatter formatter = new HelpFormatter();
+            HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
         }
@@ -93,12 +92,6 @@ public final class HealthChecksApplication {
         return options;
     }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
-        CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
     @VisibleForTesting
     void run(boolean writeOutput) throws IOException {
         List<HealthChecker> checkers;
@@ -115,7 +108,7 @@ public final class HealthChecksApplication {
         }
 
         List<QCValue> qcValues = Lists.newArrayList();
-        for (final HealthChecker checker : checkers) {
+        for (HealthChecker checker : checkers) {
             qcValues.addAll(checker.run());
         }
 
@@ -128,7 +121,6 @@ public final class HealthChecksApplication {
             if (writeOutput) {
                 new FileOutputStream(fileOutputBasePath() + ".HealthCheckSucceeded").close();
             }
-
         } else {
             LOGGER.info("Health check evaluation failed!");
             if (writeOutput) {
