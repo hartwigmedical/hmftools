@@ -160,7 +160,7 @@ class ClinicalDAO {
                         preTreatmentTypes,
                         preTreatmentMechanism).execute();
 
-        patient.curatedTumorLocationV2().doidEntries().forEach(doid -> writeDoid(patientId, doid));
+        patient.curatedTumorLocationV2().doidEntries().forEach(doidEntry -> writeDoidEntry(patientId, doidEntry));
 
         preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
 
@@ -177,7 +177,7 @@ class ClinicalDAO {
         writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
     }
 
-    private void writeDoid(int patientId, @NotNull DoidEntry doidEntry) {
+    private void writeDoidEntry(int patientId, @NotNull DoidEntry doidEntry) {
         context.insertInto(DOIDENTRY, DOIDENTRY.PATIENTID, DOIDENTRY.DOID, DOIDENTRY.DOIDTERM)
                 .values(patientId, doidEntry.doid(), doidEntry.doidTerm());
     }
