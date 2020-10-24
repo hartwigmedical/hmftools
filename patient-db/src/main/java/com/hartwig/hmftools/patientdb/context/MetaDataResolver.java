@@ -76,9 +76,9 @@ final class MetaDataResolver {
     private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile) throws FileNotFoundException {
         JsonObject json = GSON.fromJson(new FileReader(pv4MetadataFile), JsonObject.class);
 
-        String refSample = nullableString(json, REF_SAMPLE_ID_FIELD_P4);
-        String tumorSample = nullableString(json, TUMOR_SAMPLE_ID_FIELD_P4);
-        String setName = nullableString(json, SET_NAME_FIELD_P4);
+        String refSample = optionalNullableString(json, REF_SAMPLE_ID_FIELD_P4);
+        String tumorSample = optionalNullableString(json, TUMOR_SAMPLE_ID_FIELD_P4);
+        String setName = optionalNullableString(json, SET_NAME_FIELD_P4);
 
         if (refSample == null) {
             LOGGER.warn("Could not find '{}' in metadata file!", REF_SAMPLE_ID_FIELD_P4);
