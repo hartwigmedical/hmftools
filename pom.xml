@@ -70,7 +70,7 @@
         <sage.version>2.4</sage.version>
         <health-checker.version>3.2</health-checker.version>
         <patient-reporter.version>7.16</patient-reporter.version>
-        <patient-db.version>3.48</patient-db.version>
+        <patient-db.version>3.49</patient-db.version>
         <gripss.version>1.8</gripss.version>
         <paddle.version>0.1</paddle.version>
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
