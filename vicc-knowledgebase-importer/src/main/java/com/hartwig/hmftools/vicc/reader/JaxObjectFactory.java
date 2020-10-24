@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.utils.json.DatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.jax.ImmutableJax;
 import com.hartwig.hmftools.vicc.datamodel.jax.ImmutableJaxIndication;
 import com.hartwig.hmftools.vicc.datamodel.jax.ImmutableJaxMolecularProfile;

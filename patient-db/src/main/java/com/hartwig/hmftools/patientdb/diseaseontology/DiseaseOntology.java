@@ -19,6 +19,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.common.utils.json.DatamodelChecker;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -67,7 +68,7 @@ public final class DiseaseOntology {
             return null;
         }
 
-        DoidDatamodelChecker doidMetadataChecker = DoidDatamodelCheckerFactory.doidMetadataChecker();
+        DatamodelChecker doidMetadataChecker = DoidDatamodelCheckerFactory.doidMetadataChecker();
         doidMetadataChecker.check(metaDataJsonObject);
 
         JsonArray arrayXref = metaDataJsonObject.getAsJsonArray("xrefs");
@@ -109,7 +110,7 @@ public final class DiseaseOntology {
     @NotNull
     private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@NotNull JsonArray basicPropertyValueArray) {
         List<DoidBasicPropertyValue> doidBasicPropertyValueList = Lists.newArrayList();
-        DoidDatamodelChecker doidBasicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
+        DatamodelChecker doidBasicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
 
         for (JsonElement basicProperty : basicPropertyValueArray) {
             JsonObject basicPropertyObject = basicProperty.getAsJsonObject();

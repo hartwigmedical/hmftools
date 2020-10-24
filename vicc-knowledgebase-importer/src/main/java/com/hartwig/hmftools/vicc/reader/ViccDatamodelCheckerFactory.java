@@ -3,6 +3,7 @@ package com.hartwig.hmftools.vicc.reader;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.json.DatamodelChecker;
 
 import org.jetbrains.annotations.NotNull;
 

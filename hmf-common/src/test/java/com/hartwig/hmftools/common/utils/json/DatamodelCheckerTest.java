@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.reader;
+package com.hartwig.hmftools.common.utils.json;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
