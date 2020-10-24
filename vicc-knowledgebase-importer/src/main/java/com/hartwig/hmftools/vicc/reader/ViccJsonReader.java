@@ -22,7 +22,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import com.hartwig.hmftools.common.utils.json.DatamodelChecker;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
@@ -139,7 +139,7 @@ public final class ViccJsonReader {
     @NotNull
     private static List<GeneIdentifier> createGeneIdentifiers(@NotNull JsonArray geneIdentifierArray) {
         List<GeneIdentifier> geneIdentifierList = Lists.newArrayList();
-        DatamodelChecker geneIdentifierChecker = ViccDatamodelCheckerFactory.geneIdentifierChecker();
+        JsonDatamodelChecker geneIdentifierChecker = ViccDatamodelCheckerFactory.geneIdentifierChecker();
 
         for (JsonElement geneIdentifierElement : geneIdentifierArray) {
             JsonObject geneIdentifierObject = geneIdentifierElement.getAsJsonObject();
@@ -158,7 +158,7 @@ public final class ViccJsonReader {
     @NotNull
     private static List<Feature> createFeatures(@NotNull JsonArray featureArray) {
         List<Feature> featureList = Lists.newArrayList();
-        DatamodelChecker featureChecker = ViccDatamodelCheckerFactory.featureChecker();
+        JsonDatamodelChecker featureChecker = ViccDatamodelCheckerFactory.featureChecker();
 
         for (JsonElement featureElement : featureArray) {
             JsonObject featureObject = featureElement.getAsJsonObject();
@@ -319,7 +319,7 @@ public final class ViccJsonReader {
         }
 
         List<EnvironmentalContext> environmentalContextList = Lists.newArrayList();
-        DatamodelChecker environmentalContextChecker = ViccDatamodelCheckerFactory.environmentalContextChecker();
+        JsonDatamodelChecker environmentalContextChecker = ViccDatamodelCheckerFactory.environmentalContextChecker();
 
         for (JsonElement environmentalContextElement : environmentalContextArray) {
             JsonObject environmentalContextObject = environmentalContextElement.getAsJsonObject();

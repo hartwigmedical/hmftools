@@ -9,7 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.hartwig.hmftools.common.utils.json.DatamodelChecker;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrials;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsIndication;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsMolecularProfile;
@@ -48,8 +48,8 @@ final class JaxTrialsObjectFactory {
     @NotNull
     private static List<JaxTrialsMolecularProfile> createMolecularProfiles(@NotNull JsonArray variantRequirementDetailsArray) {
         List<JaxTrialsMolecularProfile> molecularProfileList = Lists.newArrayList();
-        DatamodelChecker variantRequirementDetailsChecker = ViccDatamodelCheckerFactory.jaxTrialsVariantRequirementDetailsChecker();
-        DatamodelChecker molecularProfileChecker = ViccDatamodelCheckerFactory.jaxTrialsMolecularProfileChecker();
+        JsonDatamodelChecker variantRequirementDetailsChecker = ViccDatamodelCheckerFactory.jaxTrialsVariantRequirementDetailsChecker();
+        JsonDatamodelChecker molecularProfileChecker = ViccDatamodelCheckerFactory.jaxTrialsMolecularProfileChecker();
 
         for (JsonElement variantRequirementDetailsElement : variantRequirementDetailsArray) {
             JsonObject variantRequirementDetailsObject = variantRequirementDetailsElement.getAsJsonObject();
@@ -70,7 +70,7 @@ final class JaxTrialsObjectFactory {
     @NotNull
     private static List<JaxTrialsIndication> createIndications(@NotNull JsonArray indicationArray) {
         List<JaxTrialsIndication> indicationList = Lists.newArrayList();
-        DatamodelChecker indicationChecker = ViccDatamodelCheckerFactory.jaxTrialsIndicationChecker();
+        JsonDatamodelChecker indicationChecker = ViccDatamodelCheckerFactory.jaxTrialsIndicationChecker();
 
         for (JsonElement indicationElement : indicationArray) {
             JsonObject indicationObject = indicationElement.getAsJsonObject();
@@ -88,7 +88,7 @@ final class JaxTrialsObjectFactory {
     @NotNull
     private static List<JaxTrialsTherapy> createTherapies(@NotNull JsonArray therapyArray) {
         List<JaxTrialsTherapy> therapyList = Lists.newArrayList();
-        DatamodelChecker therapyChecker = ViccDatamodelCheckerFactory.jaxTrialsTherapyChecker();
+        JsonDatamodelChecker therapyChecker = ViccDatamodelCheckerFactory.jaxTrialsTherapyChecker();
 
         for (JsonElement therapyElement : therapyArray) {
             JsonObject therapyObject = therapyElement.getAsJsonObject();

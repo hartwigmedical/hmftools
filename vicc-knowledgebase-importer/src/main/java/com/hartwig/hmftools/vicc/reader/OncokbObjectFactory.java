@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.hartwig.hmftools.common.utils.json.DatamodelChecker;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbClinical;
@@ -78,7 +78,7 @@ final class OncokbObjectFactory {
     @NotNull
     private static List<OncoKbDrugAbstract> createDrugsAbstracts(@NotNull JsonArray drugAbstractArray) {
         List<OncoKbDrugAbstract> drugAbstractList = Lists.newArrayList();
-        DatamodelChecker drugAbstractChecker = ViccDatamodelCheckerFactory.oncoKbDrugsAbstractChecker();
+        JsonDatamodelChecker drugAbstractChecker = ViccDatamodelCheckerFactory.oncoKbDrugsAbstractChecker();
 
         for (JsonElement drugAbstractElement : drugAbstractArray) {
             JsonObject drugAbstractObject = drugAbstractElement.getAsJsonObject();

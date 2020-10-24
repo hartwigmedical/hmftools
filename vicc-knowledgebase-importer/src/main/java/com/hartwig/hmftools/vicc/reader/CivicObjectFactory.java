@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.hartwig.hmftools.common.utils.json.DatamodelChecker;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicAvatars;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicClinicalTrial;
@@ -158,7 +158,7 @@ final class CivicObjectFactory {
         }
 
         List<CivicVariantGroup> variantGroupList = Lists.newArrayList();
-        DatamodelChecker variantGroupChecker = ViccDatamodelCheckerFactory.civicVariantGroupChecker();
+        JsonDatamodelChecker variantGroupChecker = ViccDatamodelCheckerFactory.civicVariantGroupChecker();
 
         for (JsonElement variantGroupElement : variantGroupArray) {
             JsonObject variantGroupObject = variantGroupElement.getAsJsonObject();
@@ -178,7 +178,7 @@ final class CivicObjectFactory {
     @NotNull
     private static List<CivicVariant> createVariants(@NotNull JsonArray variantArray) {
         List<CivicVariant> variantList = Lists.newArrayList();
-        DatamodelChecker variantChecker = ViccDatamodelCheckerFactory.civicVariantChecker();
+        JsonDatamodelChecker variantChecker = ViccDatamodelCheckerFactory.civicVariantChecker();
 
         for (JsonElement variantElement : variantArray) {
             JsonObject variantObject = variantElement.getAsJsonObject();
@@ -204,7 +204,7 @@ final class CivicObjectFactory {
     @NotNull
     private static List<CivicVariantType> createVariantTypes(@NotNull JsonArray variantTypeArray) {
         List<CivicVariantType> variantTypeList = Lists.newArrayList();
-        DatamodelChecker variantTypeChecker = ViccDatamodelCheckerFactory.civicVariantTypeChecker();
+        JsonDatamodelChecker variantTypeChecker = ViccDatamodelCheckerFactory.civicVariantTypeChecker();
 
         for (JsonElement variantTypeElement : variantTypeArray) {
             JsonObject variantTypeObject = variantTypeElement.getAsJsonObject();
@@ -225,7 +225,7 @@ final class CivicObjectFactory {
     @NotNull
     private static CivicEvidenceItem createEvidenceItem(@NotNull JsonArray evidenceItemArray) {
         List<CivicEvidenceItem> evidenceItemList = Lists.newArrayList();
-        DatamodelChecker evidenceItemChecker = ViccDatamodelCheckerFactory.civicEvidenceItemChecker();
+        JsonDatamodelChecker evidenceItemChecker = ViccDatamodelCheckerFactory.civicEvidenceItemChecker();
 
         for (JsonElement evidenceItemElement : evidenceItemArray) {
             JsonObject evidenceItemObject = evidenceItemElement.getAsJsonObject();
@@ -286,7 +286,7 @@ final class CivicObjectFactory {
     @NotNull
     private static List<CivicClinicalTrial> createClinicalTrials(@NotNull JsonArray clinicalTrialArray) {
         List<CivicClinicalTrial> clinicalTrialList = Lists.newArrayList();
-        DatamodelChecker clinicalTrialChecker = ViccDatamodelCheckerFactory.civicClinicalTrialChecker();
+        JsonDatamodelChecker clinicalTrialChecker = ViccDatamodelCheckerFactory.civicClinicalTrialChecker();
 
         for (JsonElement clinicalTrialElement : clinicalTrialArray) {
             JsonObject clinicalTrialObject = clinicalTrialElement.getAsJsonObject();
@@ -329,7 +329,7 @@ final class CivicObjectFactory {
     @NotNull
     private static List<CivicDrug> createDrugs(@NotNull JsonArray drugArray) {
         List<CivicDrug> drugList = Lists.newArrayList();
-        DatamodelChecker drugChecker = ViccDatamodelCheckerFactory.civicDrugChecker();
+        JsonDatamodelChecker drugChecker = ViccDatamodelCheckerFactory.civicDrugChecker();
 
         for (JsonElement drugElement : drugArray) {
             JsonObject drugObject = drugElement.getAsJsonObject();

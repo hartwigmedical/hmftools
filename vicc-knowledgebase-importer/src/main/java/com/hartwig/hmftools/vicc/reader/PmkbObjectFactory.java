@@ -9,7 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.hartwig.hmftools.common.utils.json.DatamodelChecker;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.ImmutablePmkb;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.ImmutablePmkbGene;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.ImmutablePmkbTissue;
@@ -52,7 +52,7 @@ final class PmkbObjectFactory {
     @NotNull
     private static List<PmkbTissue> createTissues(@NotNull JsonArray tissueArray) {
         List<PmkbTissue> tissueList = Lists.newArrayList();
-        DatamodelChecker tissueChecker = ViccDatamodelCheckerFactory.pmkbTissueChecker();
+        JsonDatamodelChecker tissueChecker = ViccDatamodelCheckerFactory.pmkbTissueChecker();
 
         for (JsonElement tissueElement : tissueArray) {
             JsonObject tissueObject = tissueElement.getAsJsonObject();

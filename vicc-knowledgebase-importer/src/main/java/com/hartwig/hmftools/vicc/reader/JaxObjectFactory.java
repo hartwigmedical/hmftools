@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.hartwig.hmftools.common.utils.json.DatamodelChecker;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.jax.ImmutableJax;
 import com.hartwig.hmftools.vicc.datamodel.jax.ImmutableJaxIndication;
 import com.hartwig.hmftools.vicc.datamodel.jax.ImmutableJaxMolecularProfile;
@@ -81,7 +81,7 @@ final class JaxObjectFactory {
             return Lists.newArrayList();
         }
 
-        DatamodelChecker referenceChecker = ViccDatamodelCheckerFactory.jaxReferenceChecker();
+        JsonDatamodelChecker referenceChecker = ViccDatamodelCheckerFactory.jaxReferenceChecker();
         List<JaxReference> referenceList = Lists.newArrayList();
 
         for (JsonElement referenceElement : referenceArray) {

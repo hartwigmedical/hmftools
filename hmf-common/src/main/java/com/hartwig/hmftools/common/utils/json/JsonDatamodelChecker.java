@@ -9,16 +9,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class DatamodelChecker {
+public class JsonDatamodelChecker {
 
-    private static final Logger LOGGER = LogManager.getLogger(DatamodelChecker.class);
+    private static final Logger LOGGER = LogManager.getLogger(JsonDatamodelChecker.class);
 
     @NotNull
     private final String name;
     @NotNull
     private final Map<String, Boolean> datamodel;
 
-    public DatamodelChecker(@NotNull final String name, @NotNull final Map<String, Boolean> datamodel) {
+    public JsonDatamodelChecker(@NotNull final String name, @NotNull final Map<String, Boolean> datamodel) {
         this.name = name;
         this.datamodel = datamodel;
     }

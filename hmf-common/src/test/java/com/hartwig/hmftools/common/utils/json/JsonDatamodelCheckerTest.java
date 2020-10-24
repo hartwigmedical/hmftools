@@ -10,7 +10,7 @@ import com.google.gson.JsonObject;
 
 import org.junit.Test;
 
-public class DatamodelCheckerTest {
+public class JsonDatamodelCheckerTest {
 
     @Test
     public void checkingWorksAsExpected() {
@@ -18,7 +18,7 @@ public class DatamodelCheckerTest {
         map.put("A", true);
         map.put("B", false);
 
-        DatamodelChecker checker = new DatamodelChecker("test", map);
+        JsonDatamodelChecker checker = new JsonDatamodelChecker("test", map);
 
         JsonObject object = new JsonObject();
         assertFalse(checker.check(object));
