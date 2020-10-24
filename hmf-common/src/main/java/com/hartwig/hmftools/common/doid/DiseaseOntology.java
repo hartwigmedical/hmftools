@@ -30,23 +30,23 @@ public final class DiseaseOntology {
     }
 
     @NotNull
-    public static List<Doid> readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
+    public static List<DoidEntry> readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);
-        List<Doid> doids = Lists.newArrayList();
+        List<DoidEntry> doids = Lists.newArrayList();
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject doidObject = parser.parse(reader).getAsJsonObject();
 
-            JsonArray graphsArray = doidObject.getAsJsonObject().getAsJsonArray("graphs").getAsJsonArray();
-            for (JsonElement graph : graphsArray) {
+            JsonArray graphArray = doidObject.getAsJsonArray("graphs");
+            for (JsonElement graph : graphArray) {
                 JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
                 for (JsonElement node : nodeArray) {
                     JsonObject nodeObject = node.getAsJsonObject();
                     String id = string(nodeObject, "id");
-                    doids.add(ImmutableDoid.builder()
+                    doids.add(ImmutableDoidEntry.builder()
                             .id(id)
-                            .doid(extractDoidId(id))
+                            .doid(extractDoid(id))
                             .doidMetadata(extractDoidMetadata(optionalJsonObject(nodeObject, "meta")))
                             .type(optionalString(nodeObject, "type"))
                             .doidTerm(optionalString(nodeObject, "lbl"))
@@ -58,7 +58,7 @@ public final class DiseaseOntology {
     }
 
     @NotNull
-    private static String extractDoidId(@NotNull String id) {
+    private static String extractDoid(@NotNull String id) {
         return id.replace("http://purl.obolibrary.org/obo/DOID_", "");
     }
 
@@ -107,8 +107,12 @@ public final class DiseaseOntology {
         return doidSynonymList;
     }
 
-    @NotNull
-    private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@NotNull JsonArray basicPropertyValueArray) {
+    @Nullable
+    private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@Nullable JsonArray basicPropertyValueArray) {
+        if (basicPropertyValueArray == null) {
+            return null;
+        }
+
         List<DoidBasicPropertyValue> doidBasicPropertyValueList = Lists.newArrayList();
         JsonDatamodelChecker doidBasicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
 
@@ -116,8 +120,7 @@ public final class DiseaseOntology {
             JsonObject basicPropertyObject = basicProperty.getAsJsonObject();
             doidBasicPropertyValuesChecker.check(basicPropertyObject);
 
-            doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder()
-                    .pred(string(basicPropertyObject, "pred"))
+            doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder().pred(string(basicPropertyObject, "pred"))
                     .val(string(basicPropertyObject, "val"))
                     .build());
         }

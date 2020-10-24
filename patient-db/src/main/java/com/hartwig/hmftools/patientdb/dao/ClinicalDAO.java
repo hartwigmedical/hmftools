@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSY;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DOIDENTRY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.FORMSMETADATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENT;
@@ -11,11 +12,10 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SAMPLE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMARKER;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Doid.DOID;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.doid.Doid;
+import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
@@ -49,7 +49,7 @@ class ClinicalDAO {
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
         context.truncate(PATIENT).execute();
         context.truncate(BASELINE).execute();
-        context.truncate(DOID).execute();
+        context.truncate(DOIDENTRY).execute();
         context.truncate(PRETREATMENTDRUG).execute();
         context.truncate(SAMPLE).execute();
         context.truncate(BIOPSY).execute();
@@ -160,7 +160,7 @@ class ClinicalDAO {
                         preTreatmentTypes,
                         preTreatmentMechanism).execute();
 
-        patient.curatedTumorLocationV2().doids().forEach(doid -> writeDoid(patientId, doid));
+        patient.curatedTumorLocationV2().doidEntries().forEach(doid -> writeDoid(patientId, doid));
 
         preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
 
@@ -177,8 +177,9 @@ class ClinicalDAO {
         writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
     }
 
-    private void writeDoid(int patientId, @NotNull Doid doid) {
-        context.insertInto(DOID, DOID.PATIENTID, DOID.DOID_, DOID.DOIDTERM).values(patientId, doid.doid(), doid.doidTerm());
+    private void writeDoid(int patientId, @NotNull DoidEntry doidEntry) {
+        context.insertInto(DOIDENTRY, DOIDENTRY.PATIENTID, DOIDENTRY.DOID, DOIDENTRY.DOIDTERM)
+                .values(patientId, doidEntry.doid(), doidEntry.doidTerm());
     }
 
     private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {

@@ -6,7 +6,7 @@ ALTER TABLE baseline
     ADD COLUMN primaryTumorExtraDetails varchar(255) AFTER primaryTumorSubType,
     ADD COLUMN primaryTumorOverridden BOOLEAN AFTER primaryTumorExtraDetails
 
-CREATE TABLE doid
+CREATE TABLE doidEntry
 (   id int NOT NULL AUTO_INCREMENT,
     patientId int NOT NULL,
     doid varchar(255) NOT NULL,

@@ -15,17 +15,17 @@ public class DiseaseOntologyTest {
 
     @Test
     public void canLoadDoidJsonFile() throws IOException {
-        List<Doid> doids = DiseaseOntology.readDoidJsonFile(DOID_FILE_JSON);
-        assertEquals(2, doids.size());
+        List<DoidEntry> doidEntries = DiseaseOntology.readDoidJsonFile(DOID_FILE_JSON);
+        assertEquals(2, doidEntries.size());
 
-        Doid doid1 = doids.get(0);
-        assertEquals(doid1.id(), "http://purl.obolibrary.org/obo/DOID_8718");
-        assertEquals(doid1.doid(), "8718");
-        assertEquals(doid1.doidTerm(), "obsolete carcinoma in situ of respiratory system");
+        DoidEntry doidEntry1 = doidEntries.get(0);
+        assertEquals(doidEntry1.id(), "http://purl.obolibrary.org/obo/DOID_8718");
+        assertEquals(doidEntry1.doid(), "8718");
+        assertEquals(doidEntry1.doidTerm(), "obsolete carcinoma in situ of respiratory system");
 
-        Doid doid2 = doids.get(1);
-        assertEquals(doid2.id(), "http://purl.obolibrary.org/obo/DOID_8717");
-        assertEquals(doid2.doid(), "8717");
-        assertEquals(doid2.doidTerm(), "decubitus ulcer");
+        DoidEntry doidEntry2 = doidEntries.get(1);
+        assertEquals(doidEntry2.id(), "http://purl.obolibrary.org/obo/DOID_8717");
+        assertEquals(doidEntry2.doid(), "8717");
+        assertEquals(doidEntry2.doidTerm(), "decubitus ulcer");
     }
 }

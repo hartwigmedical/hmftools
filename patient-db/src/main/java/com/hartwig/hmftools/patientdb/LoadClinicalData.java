@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
-import com.hartwig.hmftools.common.doid.Doid;
+import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -109,7 +109,7 @@ public final class LoadClinicalData {
             System.exit(1);
         }
 
-        List<Doid> doids = DiseaseOntology.readDoidJsonFile(cmd.getOptionValue(DOID_JSON));
+        List<DoidEntry> doids = DiseaseOntology.readDoidJsonFile(cmd.getOptionValue(DOID_JSON));
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
         TumorLocationCuratorV2 tumorLocationCuratorV2 =
                 new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), doids);

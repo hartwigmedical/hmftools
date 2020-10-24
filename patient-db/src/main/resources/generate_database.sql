@@ -32,8 +32,8 @@ CREATE TABLE baseline
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
-DROP TABLE IF EXISTS doid;
-CREATE TABLE doid
+DROP TABLE IF EXISTS doidEntry;
+CREATE TABLE doidEntry
 (   id int NOT NULL AUTO_INCREMENT,
     patientId int NOT NULL,
     doid varchar(255) NOT NULL,
