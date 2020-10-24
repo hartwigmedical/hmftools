@@ -19,6 +19,7 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class DumpTumorLocationData {
 
@@ -59,7 +60,11 @@ final class DumpTumorLocationData {
     }
 
     @NotNull
-    private static List<String> extractDoids(@NotNull List<DoidEntry> doidEntries) {
+    private static List<String> extractDoids(@Nullable List<DoidEntry> doidEntries) {
+        if (doidEntries == null) {
+            return Lists.newArrayList();
+        }
+
         List<String> doids = Lists.newArrayList();
         for (DoidEntry doidEntry : doidEntries) {
             doids.add(doidEntry.doid());

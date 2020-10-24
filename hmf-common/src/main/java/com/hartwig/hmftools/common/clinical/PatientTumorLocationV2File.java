@@ -10,7 +10,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class PatientTumorLocationV2File {
 
@@ -94,14 +93,12 @@ public class PatientTumorLocationV2File {
         return Lists.newArrayList(doidPart.split(DOID_DELIMITER));
     }
 
-    @Nullable
+    @NotNull
     @VisibleForTesting
-    static String fromDOIDs(@Nullable List<String> doids) {
+    static String fromDOIDs(@NotNull List<String> doids) {
         StringJoiner joiner = new StringJoiner(DOID_DELIMITER);
-        if (doids != null) {
-            for (String doid : doids) {
-                joiner.add(doid);
-            }
+        for (String doid : doids) {
+            joiner.add(doid);
         }
         return joiner.toString();
     }

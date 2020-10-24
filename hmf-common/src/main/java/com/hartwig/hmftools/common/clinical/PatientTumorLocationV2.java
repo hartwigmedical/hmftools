@@ -29,7 +29,7 @@ public abstract class PatientTumorLocationV2 {
     @NotNull
     public abstract String primaryTumorExtraDetails();
 
-    @Nullable
+    @NotNull
     public abstract List<String> doids();
 
     public abstract boolean isOverridden();
