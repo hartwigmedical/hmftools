@@ -160,9 +160,16 @@ class ClinicalDAO {
                         preTreatmentTypes,
                         preTreatmentMechanism).execute();
 
-        patient.curatedTumorLocationV2().doidEntries().forEach(doidEntry -> writeDoidEntry(patientId, doidEntry));
+        List<DoidEntry> doidEntries = patient.curatedTumorLocationV2().doidEntries();
+        if (doidEntries != null) {
+            for (DoidEntry doidEntry : doidEntries) {
+                writeDoidEntry(patientId, doidEntry);
+            }
+        }
 
-        preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
+        for (DrugData drug : preTreatmentData.drugs()) {
+            writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus());
+        }
 
         writeBaselineFormStatus(patientId, "demography", patient.demographyStatus());
         writeBaselineFormStatus(patientId, "primaryTumor", patient.primaryTumorStatus());
