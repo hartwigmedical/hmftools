@@ -5,10 +5,10 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.Source;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.sources.Source;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;

@@ -8,8 +8,8 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
-import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

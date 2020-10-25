@@ -7,9 +7,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.protect.ImmutableProtectEvidenceItem;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.hartwig.hmftools.common.serve.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
 

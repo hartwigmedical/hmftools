@@ -3,8 +3,8 @@ package com.hartwig.hmftools.serve.sources.vicc;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.hartwig.hmftools.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.EvidenceLevel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
