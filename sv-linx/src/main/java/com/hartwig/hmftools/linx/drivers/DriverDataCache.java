@@ -186,6 +186,12 @@ public class DriverDataCache
             return null;
 
         final TranscriptData canonicalTrans = GeneTransCache.getTranscriptData(geneData.GeneId, "");
+
+        if(canonicalTrans == null)
+        {
+            LNX_LOGGER.warn("gene({}:{}) no canonical transcript found", geneData.GeneId, gene.GeneName);
+        }
+
         GeneCopyNumberRegion copyNumberRegion;
 
         if(gcnData != null)

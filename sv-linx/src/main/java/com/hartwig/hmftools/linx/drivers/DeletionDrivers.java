@@ -159,6 +159,12 @@ public class DeletionDrivers
     public void annotateBiallelicEvent(DriverGeneData dgData)
     {
         // look for an LOH covering any part of the coding region
+        if(dgData == null || dgData.TransData == null)
+        {
+            LNX_LOGGER.error("null");
+            return;
+        }
+
         if(dgData.TransData.CodingStart == null || dgData.TransData.CodingEnd == null)
             return;
 

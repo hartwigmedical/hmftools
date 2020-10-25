@@ -129,6 +129,13 @@ public class DriverGeneAnnotator
 
             final TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
 
+            if(canonicalTrans == null)
+            {
+                List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
+                LNX_LOGGER.warn("driver gene({}) canonical trans not found", driverGene.gene());
+                continue;
+            }
+
             GeneCopyNumber geneCN = mDataCache.findGeneCopyNumber(driverGene.gene());
             GeneCopyNumberRegion geneMinCopyNumber;
 

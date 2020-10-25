@@ -220,20 +220,25 @@ public class SimpleMergeRuleTest
     {
         LinxTester tester = new LinxTester();
 
+        // Configurator.setRootLevel(Level.DEBUG);
+
         // test 2 overlapping DUPs, too far for proximity, are merged
         SvVarData var1 = createDel(1, "1", 1000, 2000);
 
         SvVarData var2 = createTestSv(2, "1", "1", 10000,40000, -1, 1, DUP,  6);
         SvVarData var3 = createTestSv(3, "1", "1", 30000,70000, -1, 1, DUP,  6);
 
-        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3));
+        // to prevent a single group being dissolved
+        SvVarData var4 = createTestSv(4, "1", "1", 72000,80000, -1, -1, INV,  2);
+
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4));
         tester.preClusteringInit();
 
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(2, tester.Analyser.getClusters().size());
 
-        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3, var4));
         assertTrue(cluster != null);
 
         assertTrue(cluster.hasClusterReason(HIGH_JCN));
@@ -250,7 +255,7 @@ public class SimpleMergeRuleTest
         var3 = createTestSv(3, "1", "", 30000,0, 1, 0, SGL,  6);
 
         // simple SV2 ignored
-        SvVarData var4 = createDel(4, "1", 40000, 41000);
+        var4 = createDel(4, "1", 40000, 41000);
         SvVarData var5 = createDup(5, "1", 50000, 51000);
 
         // next SGL raises the CN again

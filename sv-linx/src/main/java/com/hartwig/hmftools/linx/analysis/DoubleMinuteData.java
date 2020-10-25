@@ -429,11 +429,11 @@ public class DoubleMinuteData
 
     public static boolean variantExceedsBothAdjacentJcn(final SvVarData var)
     {
-        double minAdjacentMaJcn = min(
+        double maxAdjacentMaJcn = max(
                 var.getBreakend(true).majorAlleleJcn(true),
                 var.getBreakend(false).majorAlleleJcn(false));
 
-        return var.jcn() / max(minAdjacentMaJcn, 0.01) >= ADJACENT_JCN_RATIO;
+        return var.jcn() / max(maxAdjacentMaJcn, 0.01) >= ADJACENT_JCN_RATIO;
     }
 
     private boolean setValidChains()

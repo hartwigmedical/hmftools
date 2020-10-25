@@ -56,7 +56,7 @@ public class DoubleMinuteFinder
     private boolean mLogCandidates;
 
     protected static final double JCN_UPPER_THRESHOLD = 8;
-    private static final double JCN_THRESHOLD = 4.5;
+    private static final double JCN_THRESHOLD = 5;
     private static final double LOWER_ADJACENT_JCN_RATIO = 2;
     private static final double MIN_PERC_OF_MAX_JCN = 0.25;
 
