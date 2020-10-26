@@ -51,7 +51,7 @@ final class IclusionApiObjectMapper {
                     .eudra(study.eudra)
                     .nct(nullToEmpty(study.nct))
                     .ipn(nullToEmpty(study.ipn))
-                    .ccmo(study.ccmo)
+                    .ccmo(nullToEmpty(study.ccmo))
                     .tumorLocations(buildTumorLocations(indications, study.indicationIds))
                     .blacklistedTumorLocations(buildTumorLocations(indications, study.blacklistIndicationIds))
                     .mutationConditions(buildMutationConditions(genes, variants, study.mutationConditions))
@@ -128,7 +128,7 @@ final class IclusionApiObjectMapper {
             }
             mutationConditions.add(ImmutableIclusionMutationCondition.builder()
                     .mutations(mutations)
-                    .logicType(mutationConditionObject.logicType)
+                    .logicType(nullToEmpty(mutationConditionObject.logicType))
                     .build());
         }
 
