@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;

@@ -11,12 +11,11 @@ import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 
 import org.junit.Test;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public class BaselineReaderTest {
 
     @Test
-    public void canReadEmptyBaselineInfo() throws OWLOntologyCreationException {
+    public void canReadEmptyBaselineInfo() {
         Map<Integer, String> hospitals = Maps.newHashMap();
         BaselineReader baselineReader =
                 new BaselineReader(TestCuratorFactory.tumorLocationCurator(), TestCuratorFactory.tumorLocationV2Curator(), hospitals);

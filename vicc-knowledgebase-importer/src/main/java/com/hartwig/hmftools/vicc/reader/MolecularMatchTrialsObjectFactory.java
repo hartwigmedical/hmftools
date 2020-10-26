@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonObject;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalNullableString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalStringList;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.stringList;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalNullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalStringList;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.stringList;
 
 import java.util.List;
 
@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrials;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsContact;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsGeo;
@@ -64,7 +65,7 @@ final class MolecularMatchTrialsObjectFactory {
     @NotNull
     private static List<MolecularMatchTrialsIntervention> createInterventions(@NotNull JsonArray interventionArray) {
         List<MolecularMatchTrialsIntervention> molecularMatchTrialsInterventionList = Lists.newArrayList();
-        ViccDatamodelChecker interventionChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsInterventionChecker();
+        JsonDatamodelChecker interventionChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsInterventionChecker();
 
         for (JsonElement interventionElement : interventionArray) {
             JsonObject interventionObject = interventionElement.getAsJsonObject();
@@ -85,7 +86,7 @@ final class MolecularMatchTrialsObjectFactory {
     @NotNull
     private static List<MolecularMatchTrialsLocation> createLocations(@NotNull JsonArray locationArray) {
         List<MolecularMatchTrialsLocation> locationList = Lists.newArrayList();
-        ViccDatamodelChecker locationChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsLocationChecker();
+        JsonDatamodelChecker locationChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsLocationChecker();
 
         for (JsonElement locationElement : locationArray) {
             JsonObject locationObject = locationElement.getAsJsonObject();
@@ -191,7 +192,7 @@ final class MolecularMatchTrialsObjectFactory {
     @NotNull
     private static List<MolecularMatchTrialsTag> createTags(@NotNull JsonArray tagArray) {
         List<MolecularMatchTrialsTag> tagList = Lists.newArrayList();
-        ViccDatamodelChecker tagChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsTagChecker();
+        JsonDatamodelChecker tagChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsTagChecker();
 
         for (JsonElement tagElement : tagArray) {
             JsonObject tagObject = tagElement.getAsJsonObject();

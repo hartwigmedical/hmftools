@@ -14,10 +14,13 @@ import org.junit.Test;
 public class FlagstatCheckerTest {
 
     private static final String FLAGSTAT_DIRECTORY = Resources.getResource("flagstat").getPath();
+    private static final String REF_FLAGSTAT = FLAGSTAT_DIRECTORY + "/reference.flagstat";
+    private static final String TUM_FLAGSTAT = FLAGSTAT_DIRECTORY + "/tumor.flagstat";
+    private static final String MALFORMED_FLAGSTAT = FLAGSTAT_DIRECTORY + "/malformed.flagstat";
 
     @Test
     public void extractDataFromFlagstatWorksForSomatic() throws IOException {
-        FlagstatChecker checker = new FlagstatChecker("reference", "tumor", FLAGSTAT_DIRECTORY);
+        FlagstatChecker checker = new FlagstatChecker(REF_FLAGSTAT, TUM_FLAGSTAT);
         List<QCValue> values = checker.run();
 
         assertEquals(2, values.size());
@@ -32,13 +35,13 @@ public class FlagstatCheckerTest {
 
     @Test(expected = IOException.class)
     public void malformedYieldsIOException() throws IOException {
-        FlagstatChecker checker = new FlagstatChecker("malformed", "malformed", FLAGSTAT_DIRECTORY);
+        FlagstatChecker checker = new FlagstatChecker(MALFORMED_FLAGSTAT, MALFORMED_FLAGSTAT);
         checker.run();
     }
 
     @Test(expected = IOException.class)
     public void missingYieldsIOException() throws IOException {
-        FlagstatChecker checker = new FlagstatChecker("missing", "missing", FLAGSTAT_DIRECTORY);
+        FlagstatChecker checker = new FlagstatChecker("missing", "missing");
         checker.run();
     }
 }

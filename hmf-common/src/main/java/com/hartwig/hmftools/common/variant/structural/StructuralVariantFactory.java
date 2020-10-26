@@ -69,8 +69,6 @@ public class StructuralVariantFactory {
      * Must match the small deldup threshold in scripts/gridss/gridss.config.R
      */
     private static final int SMALL_DELDUP_SIZE = 1000;
-    private static final int NORMAL_GENOTYPE_ORDINAL = 0;
-    private static final int TUMOUR_GENOTYPE_ORDINAL = 1;
     private static final Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
     private static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
 
@@ -414,8 +412,12 @@ public class StructuralVariantFactory {
                 builder.inexactHomologyOffsetEnd(ihompos.get(1));
             }
         }
-        if (context.getGenotype(NORMAL_GENOTYPE_ORDINAL) != null) {
-            Genotype geno = context.getGenotype(NORMAL_GENOTYPE_ORDINAL);
+
+        int normalOrdinal = context.getGenotypes().size() == 1 ? -1 : 0;
+        int tumorOrdinal = context.getGenotypes().size() == 1 ? 0 : 1;
+
+        if (normalOrdinal >= 0 && context.getGenotype(normalOrdinal) != null) {
+            Genotype geno = context.getGenotype(normalOrdinal);
             if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
                     VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
@@ -427,8 +429,8 @@ public class StructuralVariantFactory {
                 builder.normalReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
         }
-        if (context.getGenotype(TUMOUR_GENOTYPE_ORDINAL) != null) {
-            Genotype geno = context.getGenotype(TUMOUR_GENOTYPE_ORDINAL);
+        if (context.getGenotype(tumorOrdinal) != null) {
+            Genotype geno = context.getGenotype(tumorOrdinal);
             if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
                     VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)

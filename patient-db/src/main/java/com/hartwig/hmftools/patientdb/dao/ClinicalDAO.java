@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSY;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DOIDENTRY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.FORMSMETADATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENT;
@@ -14,6 +15,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMA
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
@@ -29,7 +31,6 @@ import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
@@ -48,6 +49,7 @@ class ClinicalDAO {
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
         context.truncate(PATIENT).execute();
         context.truncate(BASELINE).execute();
+        context.truncate(DOIDENTRY).execute();
         context.truncate(PRETREATMENTDRUG).execute();
         context.truncate(SAMPLE).execute();
         context.truncate(BIOPSY).execute();
@@ -62,7 +64,7 @@ class ClinicalDAO {
 
     void writeFullClinicalData(@NotNull Patient patient, boolean blacklisted) {
         int patientId = writePatient(patient.patientIdentifier(), blacklisted);
-        writeBaselineData(patientId, patient.baselineData(), patient.preTreatmentData());
+        writePatientData(patientId, patient.baselineData(), patient.preTreatmentData());
         patient.sequencedBiopsies().forEach(sample -> writeSampleData(patientId, sample));
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));
         patient.treatments().forEach(treatment -> writeTreatmentData(patientId, treatment));
@@ -105,17 +107,17 @@ class ClinicalDAO {
                 .execute();
     }
 
-    private void writeBaselineData(int patientId, @NotNull BaselineData patient, @NotNull PreTreatmentData preTreatmentData) {
+    private void writePatientData(int patientId, @NotNull BaselineData patient, @NotNull PreTreatmentData preTreatmentData) {
         // preTreatmentTypes exceeds the usual 255 length of varchar fields in production.
         String preTreatmentTypes = preTreatmentData.concatenatedType();
         if (preTreatmentTypes != null && preTreatmentTypes.length() > BASELINE.PRETREATMENTSTYPE.getDataType().length()) {
-            LOGGER.warn(String.format("Truncating pre-treatment type: %s", preTreatmentTypes));
+            LOGGER.warn("Truncating pre-treatment type: {}", preTreatmentTypes);
             preTreatmentTypes = preTreatmentTypes.substring(0, BASELINE.PRETREATMENTSTYPE.getDataType().length());
         }
 
         String preTreatmentMechanism = preTreatmentData.concatenatedMechanism();
         if (preTreatmentMechanism != null && preTreatmentMechanism.length() > BASELINE.PRETREATMENTSMECHANISM.getDataType().length()) {
-            LOGGER.warn(String.format("Truncating pre-treatment type: %s", preTreatmentMechanism));
+            LOGGER.warn("Truncating pre-treatment type: {}", preTreatmentMechanism);
             preTreatmentMechanism = preTreatmentMechanism.substring(0, BASELINE.PRETREATMENTSMECHANISM.getDataType().length());
         }
         byte primaryTumorOverridden = 0;
@@ -133,8 +135,6 @@ class ClinicalDAO {
                 BASELINE.PRIMARYTUMORSUBTYPE,
                 BASELINE.PRIMARYTUMOREXTRADETAILS,
                 BASELINE.PRIMARYTUMOROVERRIDDEN,
-                BASELINE.DOID,
-                BASELINE.DOIDTERM,
                 BASELINE.DEATHDATE,
                 BASELINE.HASSYSTEMICPRETREATMENT,
                 BASELINE.HASRADIOTHERAPYPRETREATMENT,
@@ -153,17 +153,23 @@ class ClinicalDAO {
                         patient.curatedTumorLocationV2().primaryTumorSubType(),
                         patient.curatedTumorLocationV2().primaryTumorExtraDetails(),
                         primaryTumorOverridden,
-                        patient.curatedTumorLocationV2().doids() == null ? Strings.EMPTY : patient.curatedTumorLocationV2().doids().toString().replace("[", "").replace("]", ""),
-                        patient.curatedTumorLocationV2().doidTerms() == null ? Strings.EMPTY : patient.curatedTumorLocationV2().doidTerms().toString().replace("[", "").replace("]", ""),
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),
                         preTreatmentData.treatmentName(),
                         preTreatmentTypes,
-                        preTreatmentMechanism)
-                .execute();
+                        preTreatmentMechanism).execute();
 
-        preTreatmentData.drugs().forEach(drug -> writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus()));
+        List<DoidEntry> doidEntries = patient.curatedTumorLocationV2().doidEntries();
+        if (doidEntries != null) {
+            for (DoidEntry doidEntry : doidEntries) {
+                writeDoidEntry(patientId, doidEntry);
+            }
+        }
+
+        for (DrugData drug : preTreatmentData.drugs()) {
+            writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus());
+        }
 
         writeBaselineFormStatus(patientId, "demography", patient.demographyStatus());
         writeBaselineFormStatus(patientId, "primaryTumor", patient.primaryTumorStatus());
@@ -176,6 +182,12 @@ class ClinicalDAO {
 
     private void writeBaselineFormStatus(int patientId, @NotNull String form, @NotNull FormStatus formStatus) {
         writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
+    }
+
+    private void writeDoidEntry(int patientId, @NotNull DoidEntry doidEntry) {
+        context.insertInto(DOIDENTRY, DOIDENTRY.PATIENTID, DOIDENTRY.DOID, DOIDENTRY.DOIDTERM)
+                .values(patientId, doidEntry.doid(), doidEntry.doidTerm())
+                .execute();
     }
 
     private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {

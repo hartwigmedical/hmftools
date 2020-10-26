@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.reader;
+package com.hartwig.hmftools.common.utils.json;
 
 import java.util.Map;
 import java.util.Set;
@@ -9,21 +9,21 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class ViccDatamodelChecker {
+public class JsonDatamodelChecker {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccDatamodelChecker.class);
+    private static final Logger LOGGER = LogManager.getLogger(JsonDatamodelChecker.class);
 
     @NotNull
     private final String name;
     @NotNull
     private final Map<String, Boolean> datamodel;
 
-    ViccDatamodelChecker(@NotNull final String name, @NotNull final Map<String, Boolean> datamodel) {
+    public JsonDatamodelChecker(@NotNull final String name, @NotNull final Map<String, Boolean> datamodel) {
         this.name = name;
         this.datamodel = datamodel;
     }
 
-    boolean check(@NotNull JsonObject object) {
+    public boolean check(@NotNull JsonObject object) {
         boolean correct = true;
         Set<String> keys = object.keySet();
 
@@ -35,8 +35,7 @@ class ViccDatamodelChecker {
         }
 
         for (Map.Entry<String, Boolean> datamodelEntry : datamodel.entrySet()) {
-            Boolean isMandatory = datamodelEntry.getValue();
-            assert isMandatory != null;
+            boolean isMandatory = datamodelEntry.getValue();
             if (isMandatory && !keys.contains(datamodelEntry.getKey())) {
                 LOGGER.warn("Mandatory key '{}' missing from JSON object in '{}'", datamodelEntry.getKey(), name);
                 correct = false;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.reader;
+package com.hartwig.hmftools.common.utils.json;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -10,7 +10,7 @@ import com.google.gson.JsonObject;
 
 import org.junit.Test;
 
-public class ViccDatamodelCheckerTest {
+public class JsonDatamodelCheckerTest {
 
     @Test
     public void checkingWorksAsExpected() {
@@ -18,7 +18,7 @@ public class ViccDatamodelCheckerTest {
         map.put("A", true);
         map.put("B", false);
 
-        ViccDatamodelChecker checker = new ViccDatamodelChecker("test", map);
+        JsonDatamodelChecker checker = new JsonDatamodelChecker("test", map);
 
         JsonObject object = new JsonObject();
         assertFalse(checker.check(object));

@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.common.metrics;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-
-import com.hartwig.hmftools.common.utils.io.path.PathPrefixSuffixFinder;
-
 import org.jetbrains.annotations.NotNull;
 
 public final class WGSMetricsFile {
@@ -18,11 +14,6 @@ public final class WGSMetricsFile {
     private static final String COVERAGE_60X_COLUMN = "PCT_60X";
 
     private WGSMetricsFile() {
-    }
-
-    @NotNull
-    public static String generateFilename(@NotNull final String metricsDir, @NotNull final String sample) throws FileNotFoundException {
-        return PathPrefixSuffixFinder.build().findPath(metricsDir, sample, METRICS_EXTENSION).toString();
     }
 
     @NotNull

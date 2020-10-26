@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonArray;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonObject;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalNullableString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalStringList;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.stringList;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalNullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalStringList;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.stringList;
 
 import java.util.List;
 
@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstLeft;
@@ -141,7 +142,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchMutation> createMutations(@NotNull JsonArray mutationArray) {
         List<MolecularMatchMutation> mutationList = Lists.newArrayList();
-        ViccDatamodelChecker mutationChecker = ViccDatamodelCheckerFactory.molecularMatchMutationChecker();
+        JsonDatamodelChecker mutationChecker = ViccDatamodelCheckerFactory.molecularMatchMutationChecker();
 
         for (JsonElement mutationElement : mutationArray) {
             JsonObject mutationObject = mutationElement.getAsJsonObject();
@@ -181,7 +182,7 @@ final class MolecularMatchObjectFactory {
         }
 
         List<MolecularMatchTranscriptConsequence> transcriptConsequenceList = Lists.newArrayList();
-        ViccDatamodelChecker transcriptConsequenceChecker = ViccDatamodelCheckerFactory.molecularMatchTranscriptConsequenceChecker();
+        JsonDatamodelChecker transcriptConsequenceChecker = ViccDatamodelCheckerFactory.molecularMatchTranscriptConsequenceChecker();
 
         for (JsonElement transcriptConsequenceElement : transcriptConsequenceArray) {
             JsonObject transcriptConsequenceObject = transcriptConsequenceElement.getAsJsonObject();
@@ -218,7 +219,7 @@ final class MolecularMatchObjectFactory {
         ViccDatamodelCheckerFactory.molecularMatchWGSADataChecker().check(wgsaDataObject);
 
         List<MolecularMatchWGSALocation> wgsaLocationList = Lists.newArrayList();
-        ViccDatamodelChecker wgsaLocationChecker = ViccDatamodelCheckerFactory.molecularMatchWGSALocationChecker();
+        JsonDatamodelChecker wgsaLocationChecker = ViccDatamodelCheckerFactory.molecularMatchWGSALocationChecker();
 
         for (JsonElement wgsaLocationElement : wgsaDataObject.get("locations").getAsJsonArray()) {
             JsonObject wgsaLocationObject = wgsaLocationElement.getAsJsonObject();
@@ -284,7 +285,7 @@ final class MolecularMatchObjectFactory {
         }
 
         List<MolecularMatchWGSAMap> wgsaMapList = Lists.newArrayList();
-        ViccDatamodelChecker wgsaMapChecker = ViccDatamodelCheckerFactory.molecularMatchWGSAMapChecker();
+        JsonDatamodelChecker wgsaMapChecker = ViccDatamodelCheckerFactory.molecularMatchWGSAMapChecker();
 
         for (JsonElement wgsaMapElement : wgsaMapArray) {
             JsonObject wgsaMapObject = wgsaMapElement.getAsJsonObject();
@@ -394,7 +395,7 @@ final class MolecularMatchObjectFactory {
         }
 
         List<MolecularMatchFusionData> fusionDataList = Lists.newArrayList();
-        ViccDatamodelChecker fusionDataChecker = ViccDatamodelCheckerFactory.molecularMatchFusionDataChecker();
+        JsonDatamodelChecker fusionDataChecker = ViccDatamodelCheckerFactory.molecularMatchFusionDataChecker();
 
         for (JsonElement fusionDataElement : fusionDataArray) {
             JsonObject fusionDataObject = fusionDataElement.getAsJsonObject();
@@ -431,7 +432,7 @@ final class MolecularMatchObjectFactory {
         }
 
         List<MolecularMatchFusionGenomicRegion> genomicRegionList = Lists.newArrayList();
-        ViccDatamodelChecker fusionGenomicRegionChecker = ViccDatamodelCheckerFactory.molecularMatchFusionGenomicRegionChecker();
+        JsonDatamodelChecker fusionGenomicRegionChecker = ViccDatamodelCheckerFactory.molecularMatchFusionGenomicRegionChecker();
 
         for (JsonElement genomicRegionElement : genomicRegionArray) {
             JsonObject genomicRegionObject = genomicRegionElement.getAsJsonObject();
@@ -448,7 +449,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchGRCh37Location> createGRCh37Locations(@NotNull JsonArray locationArray) {
         List<MolecularMatchGRCh37Location> grch37LocationList = Lists.newArrayList();
-        ViccDatamodelChecker grch37LocationChecker = ViccDatamodelCheckerFactory.molecularMatchGRCh37LocationChecker();
+        JsonDatamodelChecker grch37LocationChecker = ViccDatamodelCheckerFactory.molecularMatchGRCh37LocationChecker();
 
         for (JsonElement locationElement : locationArray) {
             JsonObject locationObject = locationElement.getAsJsonObject();
@@ -473,7 +474,7 @@ final class MolecularMatchObjectFactory {
     private static List<MolecularMatchGRCh37TranscriptConsequence> createGRCh37TranscriptConsequences(
             @NotNull JsonArray transcriptConsequenceArray) {
         List<MolecularMatchGRCh37TranscriptConsequence> transcriptConsequenceList = Lists.newArrayList();
-        ViccDatamodelChecker grch37TranscriptConsequenceChecker =
+        JsonDatamodelChecker grch37TranscriptConsequenceChecker =
                 ViccDatamodelCheckerFactory.molecularMatchGRCh37TranscriptConsequenceChecker();
 
         for (JsonElement transcriptConsequenceElement : transcriptConsequenceArray) {
@@ -495,7 +496,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchVariantInfo> createVariantInfos(@NotNull JsonArray variantInfoArray) {
         List<MolecularMatchVariantInfo> variantInfoList = Lists.newArrayList();
-        ViccDatamodelChecker variantInfoChecker = ViccDatamodelCheckerFactory.molecularMatchVariantInfoChecker();
+        JsonDatamodelChecker variantInfoChecker = ViccDatamodelCheckerFactory.molecularMatchVariantInfoChecker();
 
         for (JsonElement variantInfoElement : variantInfoArray) {
             JsonObject variantInfoObject = variantInfoElement.getAsJsonObject();
@@ -520,7 +521,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchFusion> createFusions(@NotNull JsonArray fusionArray) {
         List<MolecularMatchFusion> fusionList = Lists.newArrayList();
-        ViccDatamodelChecker fusionChecker = ViccDatamodelCheckerFactory.molecularMatchFusionChecker();
+        JsonDatamodelChecker fusionChecker = ViccDatamodelCheckerFactory.molecularMatchFusionChecker();
 
         for (JsonElement fusionElement : fusionArray) {
             JsonObject fusionObject = fusionElement.getAsJsonObject();
@@ -543,7 +544,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchLocation> createLocations(@NotNull JsonArray locationArray) {
         List<MolecularMatchLocation> locationsList = Lists.newArrayList();
-        ViccDatamodelChecker locationChecker = ViccDatamodelCheckerFactory.molecularMatchLocationChecker();
+        JsonDatamodelChecker locationChecker = ViccDatamodelCheckerFactory.molecularMatchLocationChecker();
 
         for (JsonElement locationElement : locationArray) {
             JsonObject locationObject = locationElement.getAsJsonObject();
@@ -569,7 +570,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchPrevalence> createPrevalences(@NotNull JsonArray prevalenceArray) {
         List<MolecularMatchPrevalence> prevalenceList = Lists.newArrayList();
-        ViccDatamodelChecker prevalenceChecker = ViccDatamodelCheckerFactory.molecularMatchPrevalenceChecker();
+        JsonDatamodelChecker prevalenceChecker = ViccDatamodelCheckerFactory.molecularMatchPrevalenceChecker();
 
         for (JsonElement prevalenceElement : prevalenceArray) {
             JsonObject prevalenceObject = prevalenceElement.getAsJsonObject();
@@ -590,7 +591,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchSource> createSources(@NotNull JsonArray sourceArray) {
         List<MolecularMatchSource> sourceList = Lists.newArrayList();
-        ViccDatamodelChecker sourceChecker = ViccDatamodelCheckerFactory.molecularMatchSourceChecker();
+        JsonDatamodelChecker sourceChecker = ViccDatamodelCheckerFactory.molecularMatchSourceChecker();
 
         for (JsonElement sourceElement : sourceArray) {
             JsonObject sourceObject = sourceElement.getAsJsonObject();
@@ -619,7 +620,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchTierExplanation> createTierExplanations(@NotNull JsonArray tierExplanationArray) {
         List<MolecularMatchTierExplanation> tierExplanationList = Lists.newArrayList();
-        ViccDatamodelChecker tierExplanationChecker = ViccDatamodelCheckerFactory.molecularMatchTierExplanationChecker();
+        JsonDatamodelChecker tierExplanationChecker = ViccDatamodelCheckerFactory.molecularMatchTierExplanationChecker();
 
         for (JsonElement tierExplanationElement : tierExplanationArray) {
             JsonObject tierExplanationObject = tierExplanationElement.getAsJsonObject();
@@ -638,7 +639,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchCriteriaUnmet> createCriteriaUnmets(@NotNull JsonArray criteriaUnmetArray) {
         List<MolecularMatchCriteriaUnmet> criteriaUnmetList = Lists.newArrayList();
-        ViccDatamodelChecker criteriaUnmetChecker = ViccDatamodelCheckerFactory.molecularMatchCriteriaUnmetChecker();
+        JsonDatamodelChecker criteriaUnmetChecker = ViccDatamodelCheckerFactory.molecularMatchCriteriaUnmetChecker();
 
         for (JsonElement criteriaUnmetElement : criteriaUnmetArray) {
             JsonObject criteriaUnmetObject = criteriaUnmetElement.getAsJsonObject();
@@ -785,7 +786,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchTag> createTags(@NotNull JsonArray tagArray) {
         List<MolecularMatchTag> tagList = Lists.newArrayList();
-        ViccDatamodelChecker tagChecker = ViccDatamodelCheckerFactory.molecularMatchTagChecker();
+        JsonDatamodelChecker tagChecker = ViccDatamodelCheckerFactory.molecularMatchTagChecker();
 
         for (JsonElement tagElement : tagArray) {
             JsonObject tagObject = tagElement.getAsJsonObject();
@@ -815,7 +816,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchClassification> createClassifications(@NotNull JsonArray classificationArray) {
         List<MolecularMatchClassification> classificationList = Lists.newArrayList();
-        ViccDatamodelChecker classificationChecker = ViccDatamodelCheckerFactory.molecularMatchClassificationChecker();
+        JsonDatamodelChecker classificationChecker = ViccDatamodelCheckerFactory.molecularMatchClassificationChecker();
 
         for (JsonElement classificationElement : classificationArray) {
             JsonObject classificationObject = classificationElement.getAsJsonObject();
@@ -865,7 +866,7 @@ final class MolecularMatchObjectFactory {
         }
 
         List<MolecularMatchParent> parentList = Lists.newArrayList();
-        ViccDatamodelChecker parentChecker = ViccDatamodelCheckerFactory.molecularMatchParentChecker();
+        JsonDatamodelChecker parentChecker = ViccDatamodelCheckerFactory.molecularMatchParentChecker();
 
         for (JsonElement parentElement : parentArray) {
             JsonObject parentObject = parentElement.getAsJsonObject();
@@ -884,7 +885,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchTherapeuticContext> createTherapeuticContexts(@NotNull JsonArray therapeuticContextArray) {
         List<MolecularMatchTherapeuticContext> therapeuticContextList = Lists.newArrayList();
-        ViccDatamodelChecker therapeuticContextChecker = ViccDatamodelCheckerFactory.molecularMatchTherapeuticContextChecker();
+        JsonDatamodelChecker therapeuticContextChecker = ViccDatamodelCheckerFactory.molecularMatchTherapeuticContextChecker();
 
         for (JsonElement therapeuticContextElement : therapeuticContextArray) {
             JsonObject therapeuticContextObject = therapeuticContextElement.getAsJsonObject();

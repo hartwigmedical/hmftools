@@ -1,14 +1,28 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Can be removed after 1st of november 2020
-DROP TABLE IF EXISTS clinicalEvidenceProtect;
-
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
     patientIdentifier varchar(50) UNIQUE,
     blacklisted BOOLEAN NOT NULL,
     PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS protect;
+CREATE TABLE protect
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    event varchar(255) NOT NULL,
+    source varchar(255) NOT NULL,
+    treatment varchar(255) NOT NULL,
+    level varchar(255) NOT NULL,
+    direction varchar(255) NOT NULL,
+    url varchar(255) NOT NULL,
+    onLabel BOOLEAN NOT NULL,
+    reported BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
 );
 
 DROP TABLE IF EXISTS baseline;
@@ -25,8 +39,6 @@ CREATE TABLE baseline
     primaryTumorSubType varchar(255),
     primaryTumorExtraDetails varchar(255),
     primaryTumorOverridden BOOLEAN,
-    doid varchar(255),
-    doidTerm varchar(255),
     deathDate DATE,
     hasSystemicPreTreatment varchar(3),
     hasRadiotherapyPreTreatment varchar(3),
@@ -34,6 +46,16 @@ CREATE TABLE baseline
     preTreatmentsType varchar(510),
     preTreatmentsMechanism varchar(510),
     PRIMARY KEY (patientId),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
+);
+
+DROP TABLE IF EXISTS doidEntry;
+CREATE TABLE doidEntry
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    doid varchar(255) NOT NULL,
+    doidTerm varchar(255) NOT NULL,
+    PRIMARY KEY (id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 

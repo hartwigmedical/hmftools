@@ -14,12 +14,11 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
 import org.junit.Test;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public class CpctPatientReaderTest {
 
     @Test
-    public void canLoadEmptyPatient() throws OWLOntologyCreationException {
+    public void canLoadEmptyPatient() {
         CpctPatientReader patientReader = new CpctPatientReader(TestCuratorFactory.tumorLocationCurator(),
                 TestCuratorFactory.tumorLocationV2Curator(),
                 Maps.newHashMap(),

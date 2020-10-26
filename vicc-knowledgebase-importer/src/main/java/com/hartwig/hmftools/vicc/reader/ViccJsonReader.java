@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonArray;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonObject;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalNullableString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalStringList;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.stringList;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalNullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalStringList;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.stringList;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -22,6 +22,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
@@ -138,7 +139,7 @@ public final class ViccJsonReader {
     @NotNull
     private static List<GeneIdentifier> createGeneIdentifiers(@NotNull JsonArray geneIdentifierArray) {
         List<GeneIdentifier> geneIdentifierList = Lists.newArrayList();
-        ViccDatamodelChecker geneIdentifierChecker = ViccDatamodelCheckerFactory.geneIdentifierChecker();
+        JsonDatamodelChecker geneIdentifierChecker = ViccDatamodelCheckerFactory.geneIdentifierChecker();
 
         for (JsonElement geneIdentifierElement : geneIdentifierArray) {
             JsonObject geneIdentifierObject = geneIdentifierElement.getAsJsonObject();
@@ -157,7 +158,7 @@ public final class ViccJsonReader {
     @NotNull
     private static List<Feature> createFeatures(@NotNull JsonArray featureArray) {
         List<Feature> featureList = Lists.newArrayList();
-        ViccDatamodelChecker featureChecker = ViccDatamodelCheckerFactory.featureChecker();
+        JsonDatamodelChecker featureChecker = ViccDatamodelCheckerFactory.featureChecker();
 
         for (JsonElement featureElement : featureArray) {
             JsonObject featureObject = featureElement.getAsJsonObject();
@@ -318,7 +319,7 @@ public final class ViccJsonReader {
         }
 
         List<EnvironmentalContext> environmentalContextList = Lists.newArrayList();
-        ViccDatamodelChecker environmentalContextChecker = ViccDatamodelCheckerFactory.environmentalContextChecker();
+        JsonDatamodelChecker environmentalContextChecker = ViccDatamodelCheckerFactory.environmentalContextChecker();
 
         for (JsonElement environmentalContextElement : environmentalContextArray) {
             JsonObject environmentalContextObject = environmentalContextElement.getAsJsonObject();

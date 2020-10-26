@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.stringList;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.stringList;
 
 import java.util.List;
 
@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKb;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbClinical;
@@ -77,7 +78,7 @@ final class OncokbObjectFactory {
     @NotNull
     private static List<OncoKbDrugAbstract> createDrugsAbstracts(@NotNull JsonArray drugAbstractArray) {
         List<OncoKbDrugAbstract> drugAbstractList = Lists.newArrayList();
-        ViccDatamodelChecker drugAbstractChecker = ViccDatamodelCheckerFactory.oncoKbDrugsAbstractChecker();
+        JsonDatamodelChecker drugAbstractChecker = ViccDatamodelCheckerFactory.oncoKbDrugsAbstractChecker();
 
         for (JsonElement drugAbstractElement : drugAbstractArray) {
             JsonObject drugAbstractObject = drugAbstractElement.getAsJsonObject();

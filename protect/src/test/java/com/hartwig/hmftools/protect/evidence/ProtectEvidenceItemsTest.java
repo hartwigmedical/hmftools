@@ -1,19 +1,20 @@
 package com.hartwig.hmftools.protect.evidence;
 
+import static com.hartwig.hmftools.common.serve.EvidenceDirection.RESISTANT;
+import static com.hartwig.hmftools.common.serve.EvidenceDirection.RESPONSIVE;
+import static com.hartwig.hmftools.common.serve.EvidenceLevel.A;
+import static com.hartwig.hmftools.common.serve.EvidenceLevel.B;
+import static com.hartwig.hmftools.common.serve.EvidenceLevel.C;
+import static com.hartwig.hmftools.common.serve.EvidenceLevel.D;
 import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceItems.highestLevel;
 import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceItems.report;
-import static com.hartwig.hmftools.serve.actionability.EvidenceDirection.RESISTANT;
-import static com.hartwig.hmftools.serve.actionability.EvidenceDirection.RESPONSIVE;
-import static com.hartwig.hmftools.serve.actionability.EvidenceLevel.A;
-import static com.hartwig.hmftools.serve.actionability.EvidenceLevel.B;
-import static com.hartwig.hmftools.serve.actionability.EvidenceLevel.C;
-import static com.hartwig.hmftools.serve.actionability.EvidenceLevel.D;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
 
 import org.junit.Test;
 

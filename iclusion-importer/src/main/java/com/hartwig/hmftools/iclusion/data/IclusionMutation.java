@@ -14,4 +14,6 @@ public abstract class IclusionMutation {
 
     @NotNull
     public abstract String name();
+
+    public abstract boolean negation();
 }

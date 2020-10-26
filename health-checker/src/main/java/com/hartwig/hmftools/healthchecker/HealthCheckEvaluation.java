@@ -48,7 +48,7 @@ final class HealthCheckEvaluation {
             case REF_PROPORTION_MAPPED:
                 return checkFlagstatMappingProportion(qcValue.value(), "Ref");
             case TUM_PROPORTION_MAPPED:
-                return checkFlagstatMappingProportion(qcValue.value(), "Tum");
+                return checkFlagstatMappingProportion(qcValue.value(), "Tumor");
             default: {
                 LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.type());
                 return false;

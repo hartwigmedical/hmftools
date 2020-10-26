@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.evidence;
+package com.hartwig.hmftools.common.protect;
 
 import java.io.File;
 import java.io.IOException;

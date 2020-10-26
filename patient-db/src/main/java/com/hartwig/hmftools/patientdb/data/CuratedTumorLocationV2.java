@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientdb.data;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.doid.DoidEntry;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,9 +32,6 @@ public abstract class CuratedTumorLocationV2 {
     public abstract String primaryTumorExtraDetails();
 
     @Nullable
-    public abstract List<String> doids();
-
-    @Nullable
-    public abstract List<String> doidTerms();
+    public abstract List<DoidEntry> doidEntries();
 
 }

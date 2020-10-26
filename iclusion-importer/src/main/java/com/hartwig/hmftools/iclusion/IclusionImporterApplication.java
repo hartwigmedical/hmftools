@@ -1,12 +1,6 @@
 package com.hartwig.hmftools.iclusion;
 
 import java.io.IOException;
-import java.util.List;
-
-import com.hartwig.hmftools.iclusion.api.IclusionApiMain;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
-import com.hartwig.hmftools.iclusion.qc.IclusionTrialChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -35,20 +29,19 @@ public class IclusionImporterApplication {
         LOGGER.info("Running iClusion Importer v{}", VERSION);
 
         Options options = createOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         if (!validInputForIclusionImporting(cmd)) {
             printUsageAndExit(options);
         }
 
-        List<IclusionTrial> trials = IclusionApiMain.readIclusionTrials(cmd.getOptionValue(ICLUSION_ENDPOINT), buildCredentials(cmd));
-
-        IclusionTrialChecker.check(trials);
-
+        String apiEndPoint = cmd.getOptionValue(ICLUSION_ENDPOINT);
+        IclusionCredentials credentials = buildCredentials(cmd);
         String iClusionTrialTsv = cmd.getOptionValue(ICLUSION_TRIAL_TSV);
-        IclusionTrialFile.write(iClusionTrialTsv, trials);
 
-        LOGGER.info("iClusion Importer has written {} trials to {}", trials.size(), iClusionTrialTsv);
+        new IclusionImporter(apiEndPoint, credentials).importToTsv(iClusionTrialTsv);
+
+        LOGGER.info("Done!");
     }
 
     @NotNull
@@ -72,11 +65,6 @@ public class IclusionImporterApplication {
             return false;
         }
         return true;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 
     @NotNull

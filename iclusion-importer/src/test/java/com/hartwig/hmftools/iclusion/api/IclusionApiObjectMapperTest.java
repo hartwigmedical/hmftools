@@ -4,6 +4,8 @@ import static com.google.common.base.Strings.nullToEmpty;
 
 import static org.junit.Assert.assertEquals;
 
+import static junit.framework.TestCase.assertTrue;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -18,10 +20,16 @@ public class IclusionApiObjectMapperTest {
         IclusionObjectMutation mutation1 = new IclusionObjectMutation();
         mutation1.variantId = "var1";
         mutation1.geneId = "gen1";
+        mutation1.negation = "0";
 
         IclusionObjectMutation mutation2 = new IclusionObjectMutation();
         mutation2.variantId = "var2";
         mutation2.geneId = "gen1";
+        mutation2.negation = "0";
+
+        IclusionObjectMutationCondition mutationCondition1 = new IclusionObjectMutationCondition();
+        mutationCondition1.mutations = Lists.newArrayList(mutation1, mutation2);
+        mutationCondition1.logicType = "or";
 
         IclusionObjectGene gene = new IclusionObjectGene();
         gene.id = "gen1";
@@ -37,9 +45,6 @@ public class IclusionApiObjectMapperTest {
 
         IclusionObjectIndication indication = new IclusionObjectIndication();
         indication.id = "ind1";
-        indication.parentId = "par1";
-        indication.doid = "123";
-        indication.doid2 = "456";
         indication.indicationName = "indName";
         indication.indicationNameFull = "indNameFull";
         indication.nodeIds = Lists.newArrayList();
@@ -52,14 +57,14 @@ public class IclusionApiObjectMapperTest {
         study.nct = "nct";
         study.ipn = null;
         study.ccmo = "ccmo";
-        study.type = "type";
-        study.age = "age";
-        study.phase = "phase";
-        study.mutations = Lists.newArrayList(mutation1, mutation2);
         study.indicationIds = Lists.newArrayList("ind1");
+        study.blacklistIndicationIds = Lists.newArrayList();
+        study.mutationConditions = Lists.newArrayList(mutationCondition1);
 
-        List<IclusionTrial> trials = IclusionApiObjectMapper.fromApiObjects(Lists.newArrayList(study), Lists.newArrayList(indication),
-                Lists.newArrayList(gene), Lists.newArrayList(variant1, variant2));
+        List<IclusionTrial> trials = IclusionApiObjectMapper.fromApiObjects(Lists.newArrayList(study),
+                Lists.newArrayList(indication),
+                Lists.newArrayList(gene),
+                Lists.newArrayList(variant1, variant2));
 
         assertEquals(1, trials.size());
 
@@ -70,17 +75,13 @@ public class IclusionApiObjectMapperTest {
         assertEquals(nullToEmpty(study.nct), trials.get(0).nct());
         assertEquals(nullToEmpty(study.ipn), trials.get(0).ipn());
         assertEquals(study.ccmo, trials.get(0).ccmo());
-        assertEquals(study.type, trials.get(0).type());
-        assertEquals(study.age, trials.get(0).age());
-        assertEquals(study.phase, trials.get(0).phase());
 
         assertEquals(indication.indicationNameFull, trials.get(0).tumorLocations().get(0).primaryTumorLocation());
-        assertEquals(indication.doid, trials.get(0).tumorLocations().get(0).doids().get(0));
-        assertEquals(indication.doid2, trials.get(0).tumorLocations().get(0).doids().get(1));
+        assertTrue(trials.get(0).blacklistedTumorLocations().isEmpty());
 
-        assertEquals(gene.geneName, trials.get(0).mutations().get(0).gene());
-        assertEquals(variant1.variantName, trials.get(0).mutations().get(0).name());
-        assertEquals(gene.geneName, trials.get(0).mutations().get(1).gene());
-        assertEquals(variant2.variantName, trials.get(0).mutations().get(1).name());
+        assertEquals(gene.geneName, trials.get(0).mutationConditions().get(0).mutations().get(0).gene());
+        assertEquals(variant1.variantName, trials.get(0).mutationConditions().get(0).mutations().get(0).name());
+        assertEquals(gene.geneName, trials.get(0).mutationConditions().get(0).mutations().get(1).gene());
+        assertEquals(variant2.variantName, trials.get(0).mutationConditions().get(0).mutations().get(1).name());
     }
 }

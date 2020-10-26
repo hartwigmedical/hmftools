@@ -14,7 +14,6 @@ import com.hartwig.hmftools.healthchecker.runners.MetricsChecker;
 import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -24,15 +23,17 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class HealthChecksApplication {
+public class HealthChecksApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
     private static final String REF_SAMPLE = "reference";
     private static final String TUMOR_SAMPLE = "tumor";
-    private static final String METRICS_DIR = "metrics_dir";
     private static final String PURPLE_DIR = "purple_dir";
-    private static final String FLAGSTAT_DIR = "flagstat_dir";
+    private static final String REF_WGS_METRICS_FILE = "ref_wgs_metrics_file";
+    private static final String TUM_WGS_METRICS_FILE = "tum_wgs_metrics_file";
+    private static final String REF_FLAGSTAT_FILE = "ref_flagstat_file";
+    private static final String TUM_FLAGSTAT_FILE = "tum_flagstat_file";
     private static final String OUTPUT_DIR = "output_dir";
 
     @NotNull
@@ -40,44 +41,55 @@ public final class HealthChecksApplication {
     @Nullable
     private final String tumorSample;
     @NotNull
-    private final String metricsDirectory;
+    private final String refWgsMetricsFile;
+    @Nullable
+    private final String tumWgsMetricsFile;
+    @NotNull
+    private final String refFlagstatFile;
+    @Nullable
+    private final String tumFlagstatFile;
     @Nullable
     private final String purpleDirectory;
-    @Nullable
-    private final String flagstatDirectory;
     @NotNull
     private final String outputDir;
 
     @VisibleForTesting
-    HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample, @NotNull String metricsDirectory,
-            @Nullable String purpleDirectory, @Nullable String flagstatDirectory, @NotNull String outputDir) {
+    HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample,
+                            @NotNull String refWgsMetricsFile, @Nullable String tumWgsMetricsFile,
+                            @NotNull String refFlagstatFile, @Nullable String tumFlagstatFile,
+                            @Nullable String purpleDirectory,
+                            @NotNull String outputDir) {
         this.refSample = refSample;
         this.tumorSample = tumorSample;
-        this.metricsDirectory = metricsDirectory;
+        this.refWgsMetricsFile = refWgsMetricsFile;
+        this.tumWgsMetricsFile = tumWgsMetricsFile;
+        this.refFlagstatFile = refFlagstatFile;
+        this.tumFlagstatFile = tumFlagstatFile;
         this.purpleDirectory = purpleDirectory;
-        this.flagstatDirectory = flagstatDirectory;
         this.outputDir = outputDir;
     }
 
-    public static void main(final String... args) throws ParseException, IOException {
+    public static void main(String... args) throws ParseException, IOException {
         Options options = createOptions();
-        CommandLine cmd = createCommandLine(options, args);
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         String refSample = cmd.getOptionValue(REF_SAMPLE);
-        String metricsDir = cmd.getOptionValue(METRICS_DIR);
+        String refFlagstat = cmd.getOptionValue(REF_FLAGSTAT_FILE);
+        String refWgsMetricsFile = cmd.getOptionValue(REF_WGS_METRICS_FILE);
         String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
-        if (refSample == null || metricsDir == null || outputDir == null) {
-            final HelpFormatter formatter = new HelpFormatter();
+        if (refSample == null || refFlagstat == null || refWgsMetricsFile == null || outputDir == null) {
+            HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
         }
 
         String tumorSample = cmd.hasOption(TUMOR_SAMPLE) ? cmd.getOptionValue(TUMOR_SAMPLE) : null;
+        String tumWgsMetricsFile = cmd.hasOption(TUM_WGS_METRICS_FILE) ? cmd.getOptionValue(TUM_WGS_METRICS_FILE) : null;
+        String tumFlagstat = cmd.hasOption(TUM_FLAGSTAT_FILE) ? cmd.getOptionValue(TUM_FLAGSTAT_FILE) : null;
         String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
-        String flagstatDir = cmd.hasOption(FLAGSTAT_DIR) ? cmd.getOptionValue(FLAGSTAT_DIR) : null;
 
-        new HealthChecksApplication(refSample, tumorSample, metricsDir, purpleDir, flagstatDir, outputDir).run(true);
+        new HealthChecksApplication(refSample, tumorSample, refWgsMetricsFile, tumWgsMetricsFile, refFlagstat, tumFlagstat, purpleDir, outputDir).run(true);
     }
 
     @NotNull
@@ -86,17 +98,13 @@ public final class HealthChecksApplication {
         options.addOption(REF_SAMPLE, true, "The name of the reference sample");
         options.addOption(TUMOR_SAMPLE, true, "The name of the tumor sample");
         options.addOption(PURPLE_DIR, true, "The directory holding the purple output");
-        options.addOption(METRICS_DIR, true, "The directory holding the metrics output");
-        options.addOption(FLAGSTAT_DIR, true, "The directory holding the flagstat output");
+        options.addOption(REF_WGS_METRICS_FILE, true, "The path to the wgs metrics file of reference sample");
+        options.addOption(TUM_WGS_METRICS_FILE, true, "The path to the wgs metrics file of tumor sample");
+        options.addOption(REF_FLAGSTAT_FILE, true, "The path to the flagstat file of reference sample");
+        options.addOption(TUM_FLAGSTAT_FILE, true, "The path to the flagstat file of tumor sample");
 
         options.addOption(OUTPUT_DIR, true, "The directory where health checker will write output to");
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
-        CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 
     @VisibleForTesting
@@ -104,18 +112,18 @@ public final class HealthChecksApplication {
         List<HealthChecker> checkers;
         if (tumorSample == null || purpleDirectory == null) {
             LOGGER.info("Running in SingleSample mode");
-            checkers = Lists.newArrayList(new MetricsChecker(refSample, null, metricsDirectory));
+            checkers = Lists.newArrayList(new MetricsChecker(refWgsMetricsFile, null));
         } else {
             LOGGER.info("Running in Somatic mode");
             checkers = Lists.newArrayList(
-                    new MetricsChecker(refSample, tumorSample, metricsDirectory),
+                    new MetricsChecker(refWgsMetricsFile, tumWgsMetricsFile),
                     new PurpleChecker(tumorSample, purpleDirectory),
-                    new FlagstatChecker(refSample, tumorSample, flagstatDirectory)
+                    new FlagstatChecker(refFlagstatFile, tumFlagstatFile)
             );
         }
 
         List<QCValue> qcValues = Lists.newArrayList();
-        for (final HealthChecker checker : checkers) {
+        for (HealthChecker checker : checkers) {
             qcValues.addAll(checker.run());
         }
 
@@ -128,7 +136,6 @@ public final class HealthChecksApplication {
             if (writeOutput) {
                 new FileOutputStream(fileOutputBasePath() + ".HealthCheckSucceeded").close();
             }
-
         } else {
             LOGGER.info("Health check evaluation failed!");
             if (writeOutput) {

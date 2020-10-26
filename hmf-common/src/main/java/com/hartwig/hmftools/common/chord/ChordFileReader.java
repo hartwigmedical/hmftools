@@ -19,63 +19,49 @@ import org.jetbrains.annotations.NotNull;
 public final class ChordFileReader {
 
     private static final String VALUE_SEPARATOR = "\t";
-    @VisibleForTesting
-    static final String V1_NA = "UNKNOWN";
 
-    private static final int V1_BRCA1_COLUMN = 2;
-    private static final int V1_BRCA2_COLUMN = 3;
-    private static final int V1_HRD_COLUMN = 4;
-
-    private static final int V2_BRCA1_COLUMN = 1;
-    private static final int V2_BRCA2_COLUMN = 2;
-    private static final int V2_HRD_COLUMN = 3;
-    private static final int V2_HR_STATUS_COLUMN = 4;
-    private static final int V2_HRD_TYPE_COLUMN = 5;
-    private static final int V2_REMARKS_HR_STATUS_COLUMN = 6;
-    private static final int V2_REMARKS_HRD_TYPE_COLUMN = 7;
+    private static final int BRCA1_COLUMN = 1;
+    private static final int BRCA2_COLUMN = 2;
+    private static final int HRD_COLUMN = 3;
+    private static final int HR_STATUS_COLUMN = 4;
+    private static final int HRD_TYPE_COLUMN = 5;
+    private static final int REMARKS_HR_STATUS_COLUMN = 6;
+    private static final int REMARKS_HRD_TYPE_COLUMN = 7;
 
     private static final Logger LOGGER = LogManager.getLogger(ChordFileReader.class);
-
 
     private ChordFileReader() {
     }
 
     @NotNull
     public static ChordAnalysis read(@NotNull String filePath) throws IOException {
-        ImmutableChordAnalysis.Builder builder = ImmutableChordAnalysis.builder();
+
         String[] values = findValuesLine(filePath).split(VALUE_SEPARATOR);
 
-        if (isV1(values)) {
-            builder.BRCA1Value(Double.parseDouble(values[V1_BRCA1_COLUMN]));
-            builder.BRCA2Value(Double.parseDouble(values[V1_BRCA2_COLUMN]));
-            builder.hrdValue(Double.parseDouble(values[V1_HRD_COLUMN]));
-            builder.hrStatus(extractHrStatus(V1_NA));
-            builder.hrdType(V1_NA);
-            builder.remarksHrStatus(V1_NA);
-            builder.remarksHrdType(V1_NA);
-        } else {
-            String remarksHrStatus = values.length > V2_REMARKS_HR_STATUS_COLUMN ? values[V2_REMARKS_HR_STATUS_COLUMN] : Strings.EMPTY;
-            String remarksHrdType = values.length > V2_REMARKS_HRD_TYPE_COLUMN ? values[V2_REMARKS_HRD_TYPE_COLUMN] : Strings.EMPTY;
+        String remarksHrStatus = values.length > REMARKS_HR_STATUS_COLUMN ? values[REMARKS_HR_STATUS_COLUMN] : Strings.EMPTY;
+        String remarksHrdType = values.length > REMARKS_HRD_TYPE_COLUMN ? values[REMARKS_HRD_TYPE_COLUMN] : Strings.EMPTY;
 
-            builder.BRCA1Value(Double.parseDouble(values[V2_BRCA1_COLUMN]));
-            builder.BRCA2Value(Double.parseDouble(values[V2_BRCA2_COLUMN]));
-            builder.hrdValue(Double.parseDouble(values[V2_HRD_COLUMN]));
-            builder.hrStatus(extractHrStatus(values[V2_HR_STATUS_COLUMN]));
-            builder.hrdType(values[V2_HRD_TYPE_COLUMN]);
-            builder.remarksHrStatus(remarksHrStatus);
-            builder.remarksHrdType(remarksHrdType);
-        }
-
-        return builder.build();
+        return ImmutableChordAnalysis.builder()
+                .BRCA1Value(Double.parseDouble(values[BRCA1_COLUMN]))
+                .BRCA2Value(Double.parseDouble(values[BRCA2_COLUMN]))
+                .hrdValue(Double.parseDouble(values[HRD_COLUMN]))
+                .hrStatus(extractHrStatus(values[HR_STATUS_COLUMN]))
+                .hrdType(values[HRD_TYPE_COLUMN])
+                .remarksHrStatus(remarksHrStatus)
+                .remarksHrdType(remarksHrdType)
+                .build();
     }
 
     @VisibleForTesting
     @NotNull
     static ChordStatus extractHrStatus(@NotNull String hrStatus) {
         switch (hrStatus) {
-            case "cannot_be_determined": return ChordStatus.CANNOT_BE_DETERMINED;
-            case "HR_proficient": return ChordStatus.HR_PROFICIENT;
-            case "HR_deficient": return ChordStatus.HR_DEFICIENT;
+            case "cannot_be_determined":
+                return ChordStatus.CANNOT_BE_DETERMINED;
+            case "HR_proficient":
+                return ChordStatus.HR_PROFICIENT;
+            case "HR_deficient":
+                return ChordStatus.HR_DEFICIENT;
         }
         LOGGER.warn("Unknown CHORD HR status: '{}'", hrStatus);
         return ChordStatus.UNKNOWN;
@@ -101,19 +87,5 @@ public final class ChordFileReader {
             throw new MalformedFileException(String.format("Could not find header line in CHORD file with %s lines.", lines.size()));
         }
         return lineNumbers.get();
-    }
-
-    private static boolean isV1(@NotNull String[] values) {
-        assert V1_HRD_COLUMN == V2_HR_STATUS_COLUMN && V1_HRD_COLUMN == 4;
-        return isDouble(values[4]);
-    }
-
-    private static boolean isDouble(@NotNull String value) {
-        try {
-            Double.parseDouble(value);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 }

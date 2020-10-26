@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 
 import org.junit.Test;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public class TumorLocationCuratorV2Test {
 

@@ -16,16 +16,13 @@ import org.jetbrains.annotations.Nullable;
 public class MetricsChecker implements HealthChecker {
 
     @NotNull
-    private final String refSample;
+    private final String refWgsMetricsFile;
     @Nullable
-    private final String tumorSample;
-    @NotNull
-    private final String metricsDirectory;
+    private final String tumWgsMetricsFile;
 
-    public MetricsChecker(@NotNull final String refSample, @Nullable final String tumorSample, @NotNull final String metricsDirectory) {
-        this.refSample = refSample;
-        this.tumorSample = tumorSample;
-        this.metricsDirectory = metricsDirectory;
+    public MetricsChecker(@NotNull final String refWgsMetricsFile, @Nullable final String tumWgsMetricsFile) {
+        this.refWgsMetricsFile = refWgsMetricsFile;
+        this.tumWgsMetricsFile = tumWgsMetricsFile;
     }
 
     @NotNull
@@ -37,7 +34,7 @@ public class MetricsChecker implements HealthChecker {
         qcValues.add(ImmutableQCValue.of(QCValueType.REF_COVERAGE_10X, String.valueOf(metrics.ref10xCoveragePercentage())));
         qcValues.add(ImmutableQCValue.of(QCValueType.REF_COVERAGE_20X, String.valueOf(metrics.ref20xCoveragePercentage())));
 
-        if (tumorSample != null) {
+        if (tumWgsMetricsFile != null) {
             assert metrics.tumor30xCoveragePercentage() != null;
             assert metrics.tumor60xCoveragePercentage() != null;
 
@@ -50,12 +47,11 @@ public class MetricsChecker implements HealthChecker {
 
     @NotNull
     private WGSMetrics extractMetrics() throws IOException {
-        String refFile = WGSMetricsFile.generateFilename(metricsDirectory, refSample);
-        if (tumorSample != null) {
-            String tumorFile = WGSMetricsFile.generateFilename(metricsDirectory, tumorSample);
-            return WGSMetricsFile.read(refFile, tumorFile);
+
+        if (tumWgsMetricsFile != null) {
+            return WGSMetricsFile.read(refWgsMetricsFile, tumWgsMetricsFile);
         } else {
-            return WGSMetricsFile.read(refFile);
+            return WGSMetricsFile.read(refWgsMetricsFile);
         }
     }
 }

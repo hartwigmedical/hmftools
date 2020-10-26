@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb.context;
 
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalNullableString;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -23,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 final class MetaDataResolver {
 
     private static final Logger LOGGER = LogManager.getLogger(MetaDataResolver.class);
+
     private static final String METADATA_FILE_P4 = "metadata";
     private static final String METADATA_FILE_P5 = "metadata.json";
 
@@ -72,9 +76,9 @@ final class MetaDataResolver {
     private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile) throws FileNotFoundException {
         JsonObject json = GSON.fromJson(new FileReader(pv4MetadataFile), JsonObject.class);
 
-        String refSample = fieldValue(json, REF_SAMPLE_ID_FIELD_P4);
-        String tumorSample = fieldValue(json, TUMOR_SAMPLE_ID_FIELD_P4);
-        String setName = fieldValue(json, SET_NAME_FIELD_P4);
+        String refSample = optionalNullableString(json, REF_SAMPLE_ID_FIELD_P4);
+        String tumorSample = optionalNullableString(json, TUMOR_SAMPLE_ID_FIELD_P4);
+        String setName = optionalNullableString(json, SET_NAME_FIELD_P4);
 
         if (refSample == null) {
             LOGGER.warn("Could not find '{}' in metadata file!", REF_SAMPLE_ID_FIELD_P4);
@@ -116,11 +120,11 @@ final class MetaDataResolver {
         String tumorBarcodeSample = sampleBarcodeP5(json, TUMOR_SAMPLE_OBJECT_P5, pipelineVersion);
 
         String setName;
-        if (pipelineVersion.substring(2, 4).matches("[0-9]+") && Integer.valueOf(pipelineVersion.substring(2, 4)) >= 15) {
-            setName = fieldValue(json, SET_NAME_FIELD_POST_P5_15);
+        if (isPostP5dot15(pipelineVersion)) {
+            setName = nullableString(json, SET_NAME_FIELD_POST_P5_15);
         } else {
             // this is pre 5.15 pipelines
-            setName = fieldValue(json, SET_NAME_FIELD_P5);
+            setName = nullableString(json, SET_NAME_FIELD_P5);
         }
 
         if (refSample == null) {
@@ -141,12 +145,6 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    private static String fieldValue(@NotNull JsonObject object, @NotNull String fieldName) {
-        JsonElement element = object.get(fieldName);
-        return element != null && !(element instanceof JsonNull) ? element.getAsString() : null;
-    }
-
-    @Nullable
     private static String sampleIdP5(@NotNull JsonObject metadata, @NotNull String objectName) {
         JsonObject object = metadata.getAsJsonObject(objectName);
         if (object == null) {
@@ -162,14 +160,13 @@ final class MetaDataResolver {
         if (object == null) {
             return null;
         }
-        JsonElement sampleBarcodeId;
-        if (pipelineVersion.substring(2, 4).matches("[0-9]+") && Integer.valueOf(pipelineVersion.substring(2, 4)) >= 15) {
-            sampleBarcodeId = object.get("barcode");
+
+        if (isPostP5dot15(pipelineVersion)) {
+            return optionalNullableString(object, "barcode");
         } else {
             // this is pre 5.15 pipelines
-            sampleBarcodeId = object.get("sampleId");
+            return optionalNullableString(object, "sampleId");
         }
-        return sampleBarcodeId != null && !(sampleBarcodeId instanceof JsonNull) ? sampleBarcodeId.getAsString() : null;
     }
 
     @NotNull
@@ -181,11 +178,13 @@ final class MetaDataResolver {
             if (lines.size() == 1) {
                 return lines.get(0);
             } else {
-                LOGGER.warn("File of size is to big!");
+                LOGGER.warn("Too many lines in pipeline version file {}!", pipelineVersionFile);
                 return Strings.EMPTY;
             }
         }
-
     }
 
+    private static boolean isPostP5dot15(@NotNull String pipelineVersion) {
+        return pipelineVersion.substring(2, 4).matches("[0-9]+") && Integer.parseInt(pipelineVersion.substring(2, 4)) >= 15;
+    }
 }

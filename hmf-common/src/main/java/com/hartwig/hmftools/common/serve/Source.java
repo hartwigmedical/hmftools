@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources;
+package com.hartwig.hmftools.common.serve;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

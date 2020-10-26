@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -108,6 +109,8 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final ClinicalEvidenceDAO clinicalEvidenceDAO;
     @NotNull
+    private final ProtectDAO protectDAO;
+    @NotNull
     private final DriverGenePanelDAO driverGenePanelDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
@@ -120,6 +123,7 @@ public class DatabaseAccess implements AutoCloseable {
 
         ecrfDAO = new EcrfDAO(context);
         clinicalDAO = new ClinicalDAO(context);
+        protectDAO = new ProtectDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
         rnaDAO = new RNADAO(context);
         purityDAO = new PurityDAO(context);
@@ -392,6 +396,10 @@ public class DatabaseAccess implements AutoCloseable {
         pgxDAO.writePgx(sample, pgxGenotype, pgxCalls);
     }
 
+    public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidenceItem> evidence) {
+        protectDAO.write(sample, evidence);
+    }
+
     public void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {
         chordDAO.writeChord(sample, chordAnalysis);
     }
@@ -492,6 +500,7 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting evidence data for sample: {}", sample);
         clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
+        protectDAO.deleteEvidenceForSample(sample);
 
         LOGGER.info("Deleting driver catalog for sample: {}", sample);
         driverCatalogDAO.deleteForSample(sample);

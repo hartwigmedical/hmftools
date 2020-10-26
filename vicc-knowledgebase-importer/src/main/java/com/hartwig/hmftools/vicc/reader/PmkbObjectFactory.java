@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.string;
 
 import java.util.List;
 
@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.ImmutablePmkb;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.ImmutablePmkbGene;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.ImmutablePmkbTissue;
@@ -51,7 +52,7 @@ final class PmkbObjectFactory {
     @NotNull
     private static List<PmkbTissue> createTissues(@NotNull JsonArray tissueArray) {
         List<PmkbTissue> tissueList = Lists.newArrayList();
-        ViccDatamodelChecker tissueChecker = ViccDatamodelCheckerFactory.pmkbTissueChecker();
+        JsonDatamodelChecker tissueChecker = ViccDatamodelCheckerFactory.pmkbTissueChecker();
 
         for (JsonElement tissueElement : tissueArray) {
             JsonObject tissueObject = tissueElement.getAsJsonObject();

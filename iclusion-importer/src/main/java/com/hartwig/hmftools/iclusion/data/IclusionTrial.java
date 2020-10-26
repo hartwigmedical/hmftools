@@ -33,18 +33,12 @@ public abstract class IclusionTrial {
     public abstract String ccmo();
 
     @NotNull
-    public abstract String type();
-
-    @NotNull
-    public abstract String age();
-
-    @NotNull
-    public abstract String phase();
-
-    @NotNull
     public abstract List<IclusionTumorLocation> tumorLocations();
 
     @NotNull
-    public abstract List<IclusionMutation> mutations();
+    public abstract List<IclusionTumorLocation> blacklistedTumorLocations();
+
+    @NotNull
+    public abstract List<IclusionMutationCondition> mutationConditions();
 
 }

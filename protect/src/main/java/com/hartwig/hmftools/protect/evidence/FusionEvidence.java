@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;

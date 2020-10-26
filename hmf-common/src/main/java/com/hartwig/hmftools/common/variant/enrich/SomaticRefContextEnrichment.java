@@ -104,7 +104,7 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
                     : Microhomology.microhomologyAtInsert(relativePosition, sequence, alt);
 
             if (!microhomology.isEmpty()) {
-                variant.getCommonInfo().putAttribute(MICROHOMOLOGY_FLAG, microhomology);
+                variant.getCommonInfo().putAttribute(MICROHOMOLOGY_FLAG, microhomology, true);
             }
         }
     }

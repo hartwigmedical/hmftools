@@ -17,6 +17,8 @@ import javax.xml.stream.XMLStreamException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.doid.DiseaseOntology;
+import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -33,7 +35,6 @@ import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
-import com.hartwig.hmftools.patientdb.diseaseontology.DiseaseOntology;
 import com.hartwig.hmftools.patientdb.readers.ColoPatientReader;
 import com.hartwig.hmftools.patientdb.readers.CorePatientReader;
 import com.hartwig.hmftools.patientdb.readers.EcrfPatientReader;
@@ -63,7 +64,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 public final class LoadClinicalData {
 
@@ -92,14 +92,13 @@ public final class LoadClinicalData {
 
     private static final String LIMS_DIRECTORY = "lims_dir";
 
-    private static final String DOID_FILE = "doid_file";
+    private static final String DOID_JSON = "doid_json";
     private static final String TUMOR_LOCATION_V2_MAPPING_TSV = "tumor_location_v2_mapping_tsv";
     private static final String TUMOR_LOCATION_MAPPING_CSV = "tumor_location_mapping_csv";
     private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
     private static final String BIOPSY_MAPPING_CSV = "biopsy_mapping_csv";
 
-    public static void main(@NotNull String[] args) throws ParseException, IOException, XMLStreamException, SQLException,
-            OWLOntologyCreationException {
+    public static void main(@NotNull String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
         LOGGER.info("Running patient-db v{}", VERSION);
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
@@ -109,10 +108,11 @@ public final class LoadClinicalData {
             formatter.printHelp("patient-db", options);
             System.exit(1);
         }
-        DiseaseOntology.readDoid(cmd.getOptionValue(DOID_FILE));
+
+        List<DoidEntry> doidEntries = DiseaseOntology.readDoidJsonFile(cmd.getOptionValue(DOID_JSON));
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
         TumorLocationCuratorV2 tumorLocationCuratorV2 =
-                new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV));
+                new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), doidEntries);
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
@@ -165,8 +165,8 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static List<RunContext> loadRunContexts(@NotNull String runsDirectory, @NotNull String pipelineVersion) throws IOException {
-        List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), pipelineVersion);
+    private static List<RunContext> loadRunContexts(@NotNull String runsDirectory, @NotNull String pipelineVersionFile) throws IOException {
+        List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), pipelineVersionFile);
         LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
         return runContexts;
@@ -562,17 +562,22 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
                 cmd.getOptionValue(DRUP_ECRF_FILE),
                 cmd.getOptionValue(LIMS_DIRECTORY),
-                cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV),
-                cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV),
-                cmd.getOptionValue(WIDE_BIOPSY_CSV),
-                cmd.getOptionValue(WIDE_RESPONSE_CSV),
-                cmd.getOptionValue(WIDE_FIVE_DAYS_CSV),
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV),
                 cmd.getOptionValue(TREATMENT_MAPPING_CSV),
-                cmd.getOptionValue(BIOPSY_MAPPING_CSV));
+                cmd.getOptionValue(BIOPSY_MAPPING_CSV),
+                cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV),
+                cmd.getOptionValue(DOID_JSON));
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
             allParamsPresent = allParamsPresent && DatabaseAccess.hasDatabaseConfig(cmd);
+        }
+
+        if (cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA)) {
+            allParamsPresent = allParamsPresent && !Utils.anyNull(cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV),
+                    cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV),
+                    cmd.getOptionValue(WIDE_BIOPSY_CSV),
+                    cmd.getOptionValue(WIDE_RESPONSE_CSV),
+                    cmd.getOptionValue(WIDE_FIVE_DAYS_CSV));
         }
 
         boolean validRunDirectories = true;
@@ -615,7 +620,7 @@ public final class LoadClinicalData {
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
 
-        options.addOption(DOID_FILE, true, "Path towards to the file of the doid ID of tumor locations.");
+        options.addOption(DOID_JSON, true, "Path towards to the json file of the doid ID of tumor locations.");
         options.addOption(TUMOR_LOCATION_V2_MAPPING_TSV, true, "Path towards to the TSV of mapping the tumor location.");
         options.addOption(TUMOR_LOCATION_MAPPING_CSV, true, "Path towards to the CSV of mapping the tumor location.");
         options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the CSV of mapping the treatments.");
