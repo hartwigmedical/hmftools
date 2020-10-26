@@ -62,16 +62,12 @@ public final class DiseaseOntology {
                     }
                 }
 
+                //createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta"));
+                List<DoidEquivalentNodesSets> doidEquivalentNodesSets = extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets"));
+                List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms = extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
+                List<DoidDomainRangeAxioms> doidDomainRangeAxioms = extractDoidDomainRangeAxioms(graph.getAsJsonObject().getAsJsonArray("domainRangeAxioms"));
+                List<DoidPropertyChainAxioms> doidPropertyChainAxioms =  extractDoidPropertyChainAxioms(graph.getAsJsonObject().getAsJsonArray("propertyChainAxioms"));
 
-                DoidNodes doidNodes = ImmutableDoidNodes.builder()
-                        .idNodes(string(graph.getAsJsonObject(), "id"))
-                        .edges(extractDoidEdges(graph.getAsJsonObject().getAsJsonArray("edges")))
-                        .metaNodes(createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta")))
-                        .equivalentNodesSets(extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets")))
-                        .logicalDefinitionAxioms(extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms")))
-                        .domainRangeAxioms(extractDoidDomainRangeAxioms(graph.getAsJsonObject().getAsJsonArray("domainRangeAxioms")))
-                        .propertyChainAxioms(extractDoidPropertyChainAxioms(graph.getAsJsonObject().getAsJsonArray("propertyChainAxioms")))
-                        .build();
 
                 for (JsonElement nodeElement : nodeArray) {
                     JsonObject node = nodeElement.getAsJsonObject();
@@ -83,7 +79,7 @@ public final class DiseaseOntology {
                             .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
                             .type(optionalString(node, "type"))
                             .doidTerm(optionalString(node, "lbl"))
-                            .doidNodes(graph.getAsJsonObject().has("edges") ? doidNodes : null)
+                            .doidNodes(null)
                             .build());
                 }
                 //TODO return Doid
