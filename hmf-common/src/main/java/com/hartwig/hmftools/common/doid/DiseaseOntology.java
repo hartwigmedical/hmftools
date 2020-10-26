@@ -20,11 +20,15 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
+import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class DiseaseOntology {
+    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
 
     private DiseaseOntology() {
     }
@@ -50,6 +54,16 @@ public final class DiseaseOntology {
 
                 JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
 
+                DoidNodes doidNodes = ImmutableDoidNodes.builder()
+                        .idNodes(string(graph.getAsJsonObject(), "id"))
+                        .edges(extractDoidEdges(graph.getAsJsonObject().getAsJsonArray("edges")))
+                        .metaNodes(Lists.newArrayList())
+                        .equivalentNodesSets(Lists.newArrayList())
+                        .logicalDefinitionAxioms(Lists.newArrayList())
+                        .domainRangeAxioms(Lists.newArrayList())
+                        .propertyChainAxioms(Lists.newArrayList())
+                        .build();
+
                 for (JsonElement nodeElement : nodeArray) {
                     JsonObject node = nodeElement.getAsJsonObject();
                     doidEntryNodesChecker.check(node);
@@ -60,18 +74,35 @@ public final class DiseaseOntology {
                             .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
                             .type(optionalString(node, "type"))
                             .doidTerm(optionalString(node, "lbl"))
-                            .idNodes("")
-                            .edges(Lists.newArrayList())
-                            .metaNodes(Lists.newArrayList())
-                            .equivalentNodesSets(Lists.newArrayList())
-                            .logicalDefinitionAxioms(Lists.newArrayList())
-                            .domainRangeAxioms(Lists.newArrayList())
-                            .propertyChainAxioms(Lists.newArrayList())
+                            .doidNodes(doidNodes)
                             .build());
                 }
             }
         }
         return doids;
+    }
+
+    @Nullable
+    private static List<DoidEdge> extractDoidEdges(@Nullable JsonArray edgesArray) {
+        if (edgesArray == null) {
+            return null;
+        }
+
+        List<DoidEdge> doidEdge = Lists.newArrayList();
+        JsonDatamodelChecker edgesChecker = DoidDatamodelCheckerFactory.doidEdgeChecker();
+
+        for (JsonElement edges : edgesArray) {
+            JsonObject edgesObject = edges.getAsJsonObject();
+            edgesChecker.check(edgesObject);
+
+            doidEdge.add(ImmutableDoidEdge.builder()
+                    .sub(string(edgesObject, "sub"))
+                    .pred(string(edgesObject, "pred"))
+                    .obj(string(edgesObject, "obj"))
+                    .build());
+        }
+
+        return doidEdge;
     }
 
     @NotNull

@@ -20,8 +20,8 @@ public class DiseaseOntologyTest {
     }
     @Test
     public void canLoadDoidJsonFile() throws IOException {
-        List<DoidEntry> doidEntries = DiseaseOntology.readDoidJsonFile(DOID_FILE_JSON);
-        assertEquals(2, doidEntries.size());
+        List<DoidEntry> doidEntries = DiseaseOntology.readDoidJsonFile("/Users/liekeschoenmaker/hmf/tmp/201015_doid.json");
+        assertEquals(19208, doidEntries.size());
 
         DoidEntry doidEntry1 = doidEntries.get(0);
         assertEquals(doidEntry1.url(), "http://purl.obolibrary.org/obo/DOID_8718");

@@ -22,8 +22,8 @@ final class DoidDatamodelCheckerFactory {
     static JsonDatamodelChecker doidEntryGraphChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("nodes", true);
-        map.put("edges", false); //TODO
-        map.put("id", true); //TODO
+        map.put("edges", true);
+        map.put("id", true);
         map.put("meta", true); //TODO
         map.put("equivalentNodesSets", true); //TODO
         map.put("logicalDefinitionAxioms", true); //TODO
@@ -31,6 +31,16 @@ final class DoidDatamodelCheckerFactory {
         map.put("propertyChainAxioms", true); //TODO
 
         return new JsonDatamodelChecker("DoidEntry", map);
+    }
+
+    @NotNull
+    static JsonDatamodelChecker doidEdgeChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("sub", true);
+        map.put("pred", true);
+        map.put("obj", true);
+
+        return new JsonDatamodelChecker("DoidEdges", map);
     }
 
     @NotNull

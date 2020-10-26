@@ -7,24 +7,14 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DoidEntry {
+public abstract class DoidEdge {
 
     @NotNull
-    public abstract String doid();
+    public abstract String sub();
 
     @NotNull
-    public abstract String url();
-
-    @Nullable
-    public abstract String doidTerm();
-
-    @Nullable
-    public abstract String type();
-
-    @Nullable
-    public abstract DoidMetadata doidMetadata();
+    public abstract String pred();
 
     @NotNull
-    public abstract DoidNodes doidNodes();
-
+    public abstract String obj();
 }
