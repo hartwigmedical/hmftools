@@ -95,6 +95,33 @@ public class DoubleMinuteTest
     }
 
     @Test
+    public void testFlankingSvDM()
+    {
+        // SVs flanked by other DM SVs can be valid candidates themselves
+        LinxTester tester = new LinxTester();
+
+        final SvVarData var1 = createTestSv(1,"1","1",1000,2000,-1,-1, INV,8);
+        final SvVarData var2 = createTestSv(2,"1","1",4000,6000,-1,1, DUP,8);
+        final SvVarData var3 = createTestSv(3,"1","1",10000,12000,1,1, INV,8);
+
+        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3));
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+
+        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2, var3));
+        assertTrue(cluster != null);
+        assertEquals(COMPLEX, cluster.getResolvedType());
+        assertTrue(cluster.getAnnotations().contains(DOUBLE_MINUTES));
+        assertEquals(3, cluster.getDoubleMinuteSVs().size());
+
+        assertEquals(1, cluster.getChains().size());
+        SvChain chain = cluster.getChains().get(0);
+        assertEquals(3, chain.getLinkCount());
+        assertTrue(chain.isClosedLoop());
+    }
+
+    @Test
     public void testInvalidOpenBreakendDMs()
     {
         // a cluster is not a DM if it has too high a ratio of open breakends, with simple DELs excluded

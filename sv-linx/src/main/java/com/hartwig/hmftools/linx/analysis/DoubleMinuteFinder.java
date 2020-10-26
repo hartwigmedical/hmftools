@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.analysis;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -7,12 +8,15 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.variantExceedsBothAdjacentJcn;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
@@ -27,6 +31,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -59,6 +64,7 @@ public class DoubleMinuteFinder
     private static final double JCN_THRESHOLD = 5;
     private static final double LOWER_ADJACENT_JCN_RATIO = 2;
     private static final double MIN_PERC_OF_MAX_JCN = 0.25;
+    protected static final int MIN_SEGMENT_DEPTH_WINDOW_COUNT = 6;
 
     public DoubleMinuteFinder(final Map<String, List<SvBreakend>> chrBreakendMap)
     {
@@ -111,7 +117,8 @@ public class DoubleMinuteFinder
         }
 
         boolean hasValidSv = false;
-        final List<SvVarData> candidateDMSVs = Lists.newArrayList();
+        final List<SvVarData> candidateDmSVs = Lists.newArrayList();
+        final List<SvVarData> candidateFlankedSVs = Lists.newArrayList();
 
         for (SvVarData var : cluster.getSVs())
         {
@@ -124,22 +131,35 @@ public class DoubleMinuteFinder
                 hasValidSv = true;
 
             if(svAdjMAPRatio >= LOWER_ADJACENT_JCN_RATIO)
-                candidateDMSVs.add(var);
+                candidateDmSVs.add(var);
+
+            candidateFlankedSVs.add(var);
         }
 
         if(!hasValidSv)
             return;
 
         // take any candidate which are at high enough JCN relative to the max for the group
-        double maxDmJcn = candidateDMSVs.stream().mapToDouble(x -> x.jcn()).max().orElse(0);
+        double maxDmJcn = candidateDmSVs.stream().mapToDouble(x -> x.jcn()).max().orElse(0);
         final double minJcn = max(JCN_THRESHOLD, MIN_PERC_OF_MAX_JCN * maxDmJcn);
         final List<SvVarData> dmSVs = Lists.newArrayList();
 
-        candidateDMSVs.stream().filter(x -> x.jcn() >= minJcn).forEach(x -> dmSVs.add(x));
+        candidateDmSVs.stream().filter(x -> x.jcn() >= minJcn).forEach(x -> dmSVs.add(x));
+
+        final List<SvVarData> flankedSVs = addFlankedDmCandidates(cluster, dmSVs, candidateFlankedSVs);
+        dmSVs.addAll(flankedSVs);
 
         // dismiss any single SV which isn't a DUP
-        if(dmSVs.size() == 1 && dmSVs.get(0).type() != DUP)
-            return;
+        if(dmSVs.size() == 1)
+        {
+            final SvVarData var = dmSVs.get(0);
+
+            if(var.type() != DUP)
+                return;
+
+            if(!variantExceedsBothAdjacentJcn(var))
+                return;
+        }
 
         final List<SvChain> dmChains = createDMChains(cluster, dmSVs, false);
 
@@ -205,6 +225,8 @@ public class DoubleMinuteFinder
 
         dmData.annotate(mChrBreakendMap);
 
+        dmData.CandidateFlankedSVs.addAll(flankedSVs);
+
         boolean isDM = dmData.isDoubleMinute();
 
         if(!mLogCandidates && !isDM)
@@ -246,7 +268,86 @@ public class DoubleMinuteFinder
         }
     }
 
-    public static double getAdjacentMajorAPRatio(final SvVarData var)
+    private static final int MAX_FLANKING_DISTANCE = 5000000;
+
+    private List<SvVarData> addFlankedDmCandidates(final SvCluster cluster, final List<SvVarData> dmSVs, final List<SvVarData> candidateDmSVs)
+    {
+        // variants which are flanked on both sides of both start and end breakend by facing DM candidate variants within 5MB
+        // and have a JCN greater than or equal to the maximum JCN of all of the flanking DM candidate variants
+        final List<SvVarData> newDmSVs = Lists.newArrayList();
+
+        for(SvVarData var : candidateDmSVs)
+        {
+            if(dmSVs.contains(var))
+                continue;
+
+            if(var.isSglBreakend())
+                continue;
+
+            boolean flankedOnSides = true;
+            double maxFlankingJcn = 0;
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                final SvBreakend breakend = var.getBreakend(se);
+                final List<SvBreakend> breakendList = cluster.getChrBreakendMap().get(breakend.chromosome());
+
+                for(int i = 0; i <= 1; ++i)
+                {
+                    boolean searchDown = (i == 0);
+                    boolean flankedOnSide = false;
+
+                    int index = breakend.getClusterChrPosIndex();
+
+                    while(true)
+                    {
+                        if(searchDown)
+                        {
+                            --index;
+                            if(index < 0)
+                                break;
+                        }
+                        else
+                        {
+                            ++index;
+                            if(index >= breakendList.size())
+                                break;
+                        }
+
+                        final SvBreakend nextBreakend = breakendList.get(index);
+
+                        if(abs(breakend.position() - nextBreakend.position()) > MAX_FLANKING_DISTANCE)
+                            break;
+
+                        if(!dmSVs.contains(nextBreakend.getSV()))
+                            continue;
+
+                        byte requireOrient = searchDown ? NEG_ORIENT : POS_ORIENT;
+
+                        if(nextBreakend.orientation() != requireOrient)
+                            continue;
+
+                        maxFlankingJcn = max(maxFlankingJcn, nextBreakend.jcn());
+                        flankedOnSide = true;
+                        break;
+                    }
+
+                    if(!flankedOnSide)
+                    {
+                        flankedOnSides = false;
+                        break;
+                    }
+                }
+            }
+
+            if(flankedOnSides && var.jcn() > maxFlankingJcn || copyNumbersEqual(var.jcn(), maxFlankingJcn))
+                newDmSVs.add(var);
+        }
+
+        return newDmSVs;
+    }
+
+    protected static double getAdjacentMajorAPRatio(final SvVarData var)
     {
         // get the largest ratio of JCN to the adjacent major AP
         double maxRatio = 0;
@@ -347,6 +448,7 @@ public class DoubleMinuteFinder
             mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,FbIntCount,FbIntJcnTotal,FbIntJcnMax");
             mFileWriter.write(",SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
             mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAJcnRatio");
+            mFileWriter.write(",MinMinAdjMAJcnRatio,LowDepthCount,FlankedCandidates");
             mFileWriter.newLine();
         }
         catch (final IOException e)
@@ -441,6 +543,22 @@ public class DoubleMinuteFinder
 
             mFileWriter.write(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f",
                     maxDMCopyNumber, minDMJcn, dmData.MaxJcn, amplifiedGenesStr, dmData.ChainsCentromere, dmData.MinAdjMAJcnRatio));
+
+            //mFileWriter.write(",MinMinAdjMAJcnRatio,LowDepthCount,FlankedCandidates")
+            double minMinAmr = 0;
+            if(dmData.SVs.size() == 1)
+            {
+                final SvVarData var = dmData.SVs.get(0);
+
+                double maxAdjacentMaJcn = max(
+                        var.getBreakend(true).majorAlleleJcn(true),
+                        var.getBreakend(false).majorAlleleJcn(false));
+
+                minMinAmr = var.jcn() / max(maxAdjacentMaJcn, 0.01);
+            }
+
+            mFileWriter.write(String.format(",%.1f,%s,%d",
+                    minMinAmr, dmData.LowDepthCount, dmData.CandidateFlankedSVs.size()));
 
             mFileWriter.newLine();
         }

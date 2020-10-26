@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.linx.analysis;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
@@ -15,6 +18,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.classifySinglePairResolvedType;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.JCN_UPPER_THRESHOLD;
+import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.MIN_SEGMENT_DEPTH_WINDOW_COUNT;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.getAdjacentMajorAPRatio;
 import static com.hartwig.hmftools.linx.types.LinxConstants.ADJACENT_JCN_RATIO;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
@@ -42,10 +46,10 @@ public class DoubleMinuteData
     public final List<SvVarData> UnchainedSVs; // subset which could not be chained
 
     public double MaxJcn;
-    public double MinAdjacentMARatio;
     public double MinAdjMAJcnRatio;
 
     public final List<SvVarData> CandidateSVs;
+    public final List<SvVarData> CandidateFlankedSVs;
     public final List<SvChain> Chains;
     public boolean FullyChained;
 
@@ -66,6 +70,7 @@ public class DoubleMinuteData
 
     public double TotalSegmentCnChange;
     public boolean ChainsCentromere;
+    public boolean LowDepthCount;
 
     public double[] FbInternalData;
     public Map<Integer,double[]> ChainIntExtData; // data for SVs going from a chained segment to outside any chained segment
@@ -82,13 +87,13 @@ public class DoubleMinuteData
         SVs = svList;
         UnchainedSVs = Lists.newArrayList();
 
-        MinAdjacentMARatio = 0;
         MaxJcn = 0;
 
         Chains = Lists.newArrayList();
         ValidChains = Lists.newArrayList();
         ValidSVs = Lists.newArrayList();
         CandidateSVs = Lists.newArrayList();
+        CandidateFlankedSVs = Lists.newArrayList();
         FullyChained = false;
 
         MinAdjMAJcnRatio = 0;
@@ -102,6 +107,7 @@ public class DoubleMinuteData
         SimpleDels = 0;
         TotalSegmentCnChange = 0;
         ChainsCentromere = false;
+        LowDepthCount = false;
 
         FbInternalData = new double[SEG_DATA_SUM +1];
         ChainIntExtData = Maps.newHashMap();
@@ -153,7 +159,7 @@ public class DoubleMinuteData
             NonSegmentFoldbackJcnTotal += var.jcn();
         }
 
-        mIsDoubleMinute = checkCriteria();
+        mIsDoubleMinute = checkCriteria(allLinkedPairs);
     }
 
     private void setChainCharacteristics(final Map<String,List<SvBreakend>> chrBreakendMap, final List<LinkedPair> allLinkedPairs)
@@ -278,7 +284,8 @@ public class DoubleMinuteData
                     }
                     else
                     {
-                        LNX_LOGGER.debug("cluster({}) pair({}) has in-out SV({})", Cluster.id(), pair.toString(), breakend.getSV());
+                        LNX_LOGGER.debug("cluster({}) pair({}) has in-out SV({}) with JCN({})",
+                                Cluster.id(), pair.toString(), breakend.getSV(), String.format("%.1f", breakend.jcn()));
 
                         double[] segmentData = getOrAddSegmentData(chain, ChainIntExtData);
 
@@ -379,16 +386,18 @@ public class DoubleMinuteData
     private static final double MIN_CLOSED_SEG_RATIO = 0.66;
     private static final double LOW_JCN_BUFFER = 4;
 
-    private boolean checkCriteria()
+    private boolean checkCriteria(final List<LinkedPair> allLinkedPairs)
     {
         /* The following criteria must be met:
         - The total length of closed segments > 1500 bases
-        -  Either a complete closed chain is formed OR
+        - Either a complete closed chain is formed OR
             - Closed breakends / (OpenBreakends + ClosedBreakends >= 2/3
         - If only a single DUP, then both sides must meet DM criteria
         - (Max JCN - 4 )  / [sum(intExtJCN excluding assembled TI) + max(max_INT_INF_JCN,max_INT_SGL_JCN) + sum(FB JN in cluster)] > 1
             For closed chains all INT JCN are for breakends on that closed chain only
             FB are always at the full cluster level
+         - If the cluster includes only closed segments enclosed by single or inferred breakends on both sides,
+            then at least one closed segment must have PURPLE depthWindowCount > 5
         */
 
         double closedSegmentRatio = ClosedBreakends / (double)(ClosedBreakends + OpenBreakends);
@@ -417,9 +426,15 @@ public class DoubleMinuteData
             // require 1 SV to satisfy the adjacent major allele JCN rule on both sides
             if(SVs.size() > 1)
             {
-                if(!SVs.stream().anyMatch(x -> variantExceedsBothAdjacentJcn(x)))
+                if(SVs.stream().noneMatch(x -> variantExceedsBothAdjacentJcn(x)))
                     return false;
             }
+        }
+
+        if(allLinkedPairs.stream().allMatch(x -> haveLowAdjacentDepthWindowCount(x)))
+        {
+            LowDepthCount = true;
+            return false;
         }
 
         boolean hasValidCriteria = setValidChains();
@@ -427,11 +442,31 @@ public class DoubleMinuteData
         return hasValidCriteria;
     }
 
+    private static boolean haveLowAdjacentDepthWindowCount(final LinkedPair pair)
+    {
+        if(!pair.first().isSglBreakend() || !pair.second().isSglBreakend())
+            return false;
+
+        if(abs(pair.firstBreakend().getChrPosIndex() - pair.secondBreakend().getChrPosIndex()) != 1)
+            return false;
+
+        final SvBreakend first = pair.firstBreakend();
+        final SvBreakend second = pair.secondBreakend();
+
+        int depthWindowCount1 = first.getSV().getCopyNumberData(true, first.orientation() == 1).DepthWindowCount;
+        int depthWindowCount2 = second.getSV().getCopyNumberData(true, second.orientation() == 1).DepthWindowCount;
+
+        return min(depthWindowCount1, depthWindowCount2) < MIN_SEGMENT_DEPTH_WINDOW_COUNT;
+    }
+
     public static boolean variantExceedsBothAdjacentJcn(final SvVarData var)
     {
+        if(var.isSglBreakend())
+            return false;
+
         double maxAdjacentMaJcn = max(
-                var.getBreakend(true).majorAlleleJcn(true),
-                var.getBreakend(false).majorAlleleJcn(false));
+                var.getBreakend(true).majorAlleleJcn(var.orientation(true) == NEG_ORIENT),
+                var.getBreakend(false).majorAlleleJcn(var.orientation(false) == NEG_ORIENT));
 
         return var.jcn() / max(maxAdjacentMaJcn, 0.01) >= ADJACENT_JCN_RATIO;
     }
