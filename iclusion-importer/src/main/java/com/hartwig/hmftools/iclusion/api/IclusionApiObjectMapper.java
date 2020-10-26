@@ -37,11 +37,17 @@ final class IclusionApiObjectMapper {
             // We loose MAIN_FIELD_DELIMITER in titles for good but that is considered acceptable compromise.
             String title = study.title;
             if (title.contains(IclusionTrialFile.MAIN_FIELD_DELIMITER)) {
-                LOGGER.info("Replacing trial file delimiter '{}' with a space from study with acronym '{}'",
+                LOGGER.info("Replacing trial file delimiters '{}' with a space from study with acronym '{}'",
                         IclusionTrialFile.MAIN_FIELD_DELIMITER,
                         study.acronym);
                 title = title.replace(IclusionTrialFile.MAIN_FIELD_DELIMITER, " ");
             }
+
+            if (title.contains("\n")) {
+                LOGGER.info("Replacing line ends with a space from study with acronym '{}'", study.acronym);
+                title = title.replace("\n", " ");
+            }
+
             // We loose NULL nct and ipn fields forever, but that is considered acceptable
             // (no functional difference between empty nct and null nct)
             trials.add(ImmutableIclusionTrial.builder()

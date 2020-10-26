@@ -5,19 +5,24 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import com.hartwig.hmftools.iclusion.api.IclusionApiMain;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.qc.IclusionTrialChecker;
+import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class iClusionImporterLocalApp {
 
+    private static final Logger LOGGER = LogManager.getLogger(iClusionImporterLocalApp.class);
+
     public static void main(@NotNull final String[] args) throws IOException {
-        String endPoint = "https://iclusion.org/api";
+        String apiEndPoint = "https://iclusion.org/api";
 
         String config = System.getProperty("user.home") + "/hmf/tmp/iclusion";
         List<String> lines = Files.readAllLines(new File(config).toPath());
+
+        String iClusionTrialTsv = System.getProperty("user.home") + "/hmf/tmp/iclusionTrials.tsv";
 
         IclusionCredentials credentials = ImmutableIclusionCredentials.builder()
                 .clientId(lines.get(0))
@@ -26,8 +31,10 @@ public class iClusionImporterLocalApp {
                 .password(lines.get(3))
                 .build();
 
-        List<IclusionTrial> trials = IclusionApiMain.readIclusionTrials(endPoint, credentials);
+        new IclusionImporter(apiEndPoint, credentials).importToTsv(iClusionTrialTsv);
 
-        IclusionTrialChecker.check(trials);
+        List<IclusionTrial> trials = IclusionTrialFile.read(iClusionTrialTsv);
+
+        LOGGER.info("Read {} trials from {}", trials.size(), iClusionTrialTsv);
     }
 }
