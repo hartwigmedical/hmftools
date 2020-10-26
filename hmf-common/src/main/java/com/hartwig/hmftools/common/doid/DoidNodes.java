@@ -14,21 +14,21 @@ public abstract class DoidNodes {
     @Nullable
     public abstract List<DoidEdge> edges();
 
-    @NotNull
+    @Nullable
     public abstract String idNodes();
 
-    @NotNull
+    @Nullable
     public abstract List<String> metaNodes();
 
     @Nullable
     public abstract List<DoidEquivalentNodesSets> equivalentNodesSets();
 
-    @NotNull
+    @Nullable
     public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();
 
-    @NotNull
+    @Nullable
     public abstract List<DoidDomainRangeAxioms> domainRangeAxioms();
 
-    @NotNull
+    @Nullable
     public abstract List<DoidPropertyChainAxioms> propertyChainAxioms();
 }
