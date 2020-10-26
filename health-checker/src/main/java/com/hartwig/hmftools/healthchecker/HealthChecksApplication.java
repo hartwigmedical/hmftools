@@ -29,7 +29,6 @@ public class HealthChecksApplication {
 
     private static final String REF_SAMPLE = "reference";
     private static final String TUMOR_SAMPLE = "tumor";
-    private static final String METRICS_DIR = "metrics_dir";
     private static final String PURPLE_DIR = "purple_dir";
     private static final String REF_WGS_METRICS_FILE = "ref_wgs_metrics_file";
     private static final String TUM_WGS_METRICS_FILE = "tum_wgs_metrics_file";
@@ -41,29 +40,32 @@ public class HealthChecksApplication {
     private final String refSample;
     @Nullable
     private final String tumorSample;
-    @Nullable
-    private final String purpleDirectory;
     @NotNull
     private final String refWgsMetricsFile;
     @Nullable
     private final String tumWgsMetricsFile;
     @NotNull
-    private final String refFlagstat;
+    private final String refFlagstatFile;
     @Nullable
-    private final String tumFlagstat;
+    private final String tumFlagstatFile;
+    @Nullable
+    private final String purpleDirectory;
     @NotNull
     private final String outputDir;
 
     @VisibleForTesting
-    HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample, @NotNull String refWgsMetricsFile, @Nullable String tumWgsMetricsFile,
-            @Nullable String purpleDirectory, @NotNull String refFlagstat, @Nullable String tumFlagstat, @NotNull String outputDir) {
+    HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample,
+                            @NotNull String refWgsMetricsFile, @Nullable String tumWgsMetricsFile,
+                            @NotNull String refFlagstatFile, @Nullable String tumFlagstatFile,
+                            @Nullable String purpleDirectory,
+                            @NotNull String outputDir) {
         this.refSample = refSample;
         this.tumorSample = tumorSample;
-        this.purpleDirectory = purpleDirectory;
         this.refWgsMetricsFile = refWgsMetricsFile;
         this.tumWgsMetricsFile = tumWgsMetricsFile;
-        this.refFlagstat = refFlagstat;
-        this.tumFlagstat = tumFlagstat;
+        this.refFlagstatFile = refFlagstatFile;
+        this.tumFlagstatFile = tumFlagstatFile;
+        this.purpleDirectory = purpleDirectory;
         this.outputDir = outputDir;
     }
 
@@ -74,10 +76,9 @@ public class HealthChecksApplication {
         String refSample = cmd.getOptionValue(REF_SAMPLE);
         String refFlagstat = cmd.getOptionValue(REF_FLAGSTAT_FILE);
         String refWgsMetricsFile = cmd.getOptionValue(REF_WGS_METRICS_FILE);
-        String metricsDir = cmd.getOptionValue(METRICS_DIR);
         String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
-        if (refSample == null || refFlagstat == null || metricsDir == null || outputDir == null) {
+        if (refSample == null || refFlagstat == null || refWgsMetricsFile == null || outputDir == null) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
@@ -88,7 +89,7 @@ public class HealthChecksApplication {
         String tumFlagstat = cmd.hasOption(TUM_FLAGSTAT_FILE) ? cmd.getOptionValue(TUM_FLAGSTAT_FILE) : null;
         String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
 
-        new HealthChecksApplication(refSample, tumorSample, refWgsMetricsFile, tumWgsMetricsFile, purpleDir, refFlagstat, tumFlagstat, outputDir).run(true);
+        new HealthChecksApplication(refSample, tumorSample, refWgsMetricsFile, tumWgsMetricsFile, refFlagstat, tumFlagstat, purpleDir, outputDir).run(true);
     }
 
     @NotNull
@@ -117,7 +118,7 @@ public class HealthChecksApplication {
             checkers = Lists.newArrayList(
                     new MetricsChecker(refWgsMetricsFile, tumWgsMetricsFile),
                     new PurpleChecker(tumorSample, purpleDirectory),
-                    new FlagstatChecker(refFlagstat, tumFlagstat)
+                    new FlagstatChecker(refFlagstatFile, tumFlagstatFile)
             );
         }
 

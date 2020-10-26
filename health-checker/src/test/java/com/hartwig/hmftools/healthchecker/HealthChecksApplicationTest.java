@@ -21,9 +21,9 @@ public class HealthChecksApplicationTest {
                 "tumor",
                 BASE_DIR + "metrics/reference.wgsmetrics",
                 BASE_DIR + "metrics/tumor.wgsmetrics",
-                BASE_DIR + "purple",
                 BASE_DIR + "flagstat/reference.flagstat",
                 BASE_DIR + "flagstat/tumor.flagstat",
+                BASE_DIR + "purple",
                 OUTPUT_DIR
         );
 
@@ -37,8 +37,8 @@ public class HealthChecksApplicationTest {
                 null,
                 BASE_DIR + "metrics/reference.wgsmetrics",
                 null,
-                null,
                 BASE_DIR + "flagstat/reference.flagstat",
+                null,
                 null,
                  OUTPUT_DIR
         );
