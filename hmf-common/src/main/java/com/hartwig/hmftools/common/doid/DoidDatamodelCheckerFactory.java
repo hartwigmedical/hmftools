@@ -53,6 +53,9 @@ final class DoidDatamodelCheckerFactory {
     @NotNull
     static JsonDatamodelChecker doidLogicalDefinitionAxiomChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
+        map.put("restrictions", false);
+        map.put("definedClassId", false);
+        map.put("genusIds", false);
 
         return new JsonDatamodelChecker("DoidLogicalDefinitionAxiom", map);
     }
@@ -62,6 +65,13 @@ final class DoidDatamodelCheckerFactory {
         Map<String, Boolean> map = Maps.newHashMap();
 
         return new JsonDatamodelChecker("DoidDomainRangeAxioms", map);
+    }
+
+    @NotNull
+    static JsonDatamodelChecker doidPropertyChainAxiomsChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+
+        return new JsonDatamodelChecker("DoidPropertyChainAxioms", map);
     }
 
     @NotNull

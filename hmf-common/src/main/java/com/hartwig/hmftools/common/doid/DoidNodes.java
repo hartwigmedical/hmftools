@@ -30,5 +30,5 @@ public abstract class DoidNodes {
     public abstract List<DoidDomainRangeAxioms> domainRangeAxioms();
 
     @NotNull
-    public abstract List<String> propertyChainAxioms();
+    public abstract List<DoidPropertyChainAxioms> propertyChainAxioms();
 }

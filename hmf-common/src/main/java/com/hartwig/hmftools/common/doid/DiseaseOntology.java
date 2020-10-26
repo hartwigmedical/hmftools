@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +41,6 @@ public final class DiseaseOntology {
         reader.setLenient(true);
         List<DoidEntry> doids = Lists.newArrayList();
         JsonDatamodelChecker doidEntryChecker = DoidDatamodelCheckerFactory.doidEntryChecker();
-
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject doidObject = parser.parse(reader).getAsJsonObject();
             doidEntryChecker.check(doidObject);
@@ -57,11 +57,11 @@ public final class DiseaseOntology {
                 DoidNodes doidNodes = ImmutableDoidNodes.builder()
                         .idNodes(string(graph.getAsJsonObject(), "id"))
                         .edges(extractDoidEdges(graph.getAsJsonObject().getAsJsonArray("edges")))
-                        .metaNodes(Lists.newArrayList())
+                        .metaNodes(createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta")))
                         .equivalentNodesSets(extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets")))
                         .logicalDefinitionAxioms(extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms")))
                         .domainRangeAxioms(extractDoidDomainRangeAxioms(graph.getAsJsonObject().getAsJsonArray("domainRangeAxioms")))
-                        .propertyChainAxioms(Lists.newArrayList())
+                        .propertyChainAxioms(extractDoidPropertyChainAxioms(graph.getAsJsonObject().getAsJsonArray("propertyChainAxioms")))
                         .build();
 
                 for (JsonElement nodeElement : nodeArray) {
@@ -82,6 +82,32 @@ public final class DiseaseOntology {
         return doids;
     }
 
+    @Nullable
+    private static List<String> createMetaNodes(@Nullable JsonObject metaNodesObject) {
+        LOGGER.info(metaNodesObject);
+        return Lists.newArrayList();
+
+    }
+
+    @Nullable
+    private static List<DoidPropertyChainAxioms> extractDoidPropertyChainAxioms(@Nullable JsonArray propertyChainAxiomsArray) {
+        if (propertyChainAxiomsArray == null) {
+            return null;
+        }
+
+        List<DoidPropertyChainAxioms> doidPropertyChainAxioms = Lists.newArrayList();
+        JsonDatamodelChecker doidPropertyChainAxiomsChecker = DoidDatamodelCheckerFactory.doidPropertyChainAxiomsChecker();
+
+        for (JsonElement propertyChainAxioms : propertyChainAxiomsArray) {
+            JsonObject propertyChainAxiomsObject = propertyChainAxioms.getAsJsonObject();
+            doidPropertyChainAxiomsChecker.check(propertyChainAxiomsObject);
+
+            doidPropertyChainAxioms.add(ImmutableDoidPropertyChainAxioms.builder()
+                    .build());
+        }
+
+        return doidPropertyChainAxioms;
+    }
 
     @Nullable
     private static List<DoidDomainRangeAxioms> extractDoidDomainRangeAxioms(@Nullable JsonArray domainRangeAxiomsArray) {
