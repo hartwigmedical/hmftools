@@ -22,6 +22,7 @@ public interface ProtectConfig {
 
     String DEPRECATED_ACTIONABILITY_DIRECTORY = "deprecated_actionability_dir";
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
+    String DOID_JSON = "doid_json";
 
     String TUMOR_LOCATION_TSV = "tumor_location_tsv";
     String GERMLINE_GENES_CSV = "germline_genes_csv";
@@ -48,6 +49,7 @@ public interface ProtectConfig {
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
+        options.addOption(DOID_JSON, true, "Path to where the DOID definitions.");
 
         options.addOption(DEPRECATED_ACTIONABILITY_DIRECTORY, true, "Path towards the deprecated pre-SERVE actionability directory.");
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
@@ -71,6 +73,9 @@ public interface ProtectConfig {
 
         return options;
     }
+
+    @NotNull
+    String doidJsonFile();
 
     @NotNull
     String tumorSampleId();
@@ -147,6 +152,7 @@ public interface ProtectConfig {
                 .linxViralInsertionTsv(nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV))
                 .linxDriversTsv(nonOptionalFile(cmd, LINX_DRIVERS_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
+                .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .build();
     }
 

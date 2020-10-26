@@ -2,6 +2,7 @@ package com.hartwig.hmftools.protect;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,9 +15,12 @@ import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.doid.DiseaseOntology;
+import com.hartwig.hmftools.common.doid.DoidEdges;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItemFile;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.protect.bachelor.BachelorData;
 import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
@@ -32,6 +36,7 @@ import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -41,62 +46,87 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ProtectApplication {
+public class ProtectApplication implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
 
     public static void main(@NotNull String[] args) throws IOException {
         Options options = ProtectConfig.createOptions();
+        DatabaseAccess.addDatabaseCmdLineArgs(options);
 
-        ProtectConfig config = null;
-        try {
-            config = ProtectConfig.createConfig(new DefaultParser().parse(options, args));
+        try (final ProtectApplication application = new ProtectApplication(options, args)) {
+            application.runOld();
         } catch (ParseException exception) {
             LOGGER.warn(exception);
             new HelpFormatter().printHelp("PROTECT", options);
             System.exit(1);
+        } catch (SQLException exception) {
+            LOGGER.warn(exception);
+            System.exit(1);
         }
+    }
 
-        String tumorSampleId = config.tumorSampleId();
+    private final DatabaseAccess dbAccess;
+    private final ProtectConfig protectConfig;
+
+    public ProtectApplication(final Options options, final String... args) throws ParseException, SQLException, IOException {
+        final CommandLine cmd = new DefaultParser().parse(options, args);
+        this.dbAccess = DatabaseAccess.databaseAccess(cmd);
+        this.protectConfig = ProtectConfig.createConfig(cmd);
+    }
+
+    public void run() throws IOException {
+        final List<ProtectEvidenceItem> evidence = protectEvidence(protectConfig);
+
+        LOGGER.info("Writing {} records to database", evidence.size());
+        dbAccess.writeProtectEvidence(protectConfig.tumorSampleId(), evidence);
+
+        final String filename = ProtectEvidenceItemFile.generateFilename(protectConfig.outputDir(), protectConfig.tumorSampleId());
+        LOGGER.info("Writing {} records to file: {}", evidence.size(), filename);
+        ProtectEvidenceItemFile.write(filename, evidence);
+    }
+
+    public void runOld() throws IOException {
+        String tumorSampleId = protectConfig.tumorSampleId();
         LOGGER.info("Running PROTECT for {}", tumorSampleId);
 
-        PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(config.tumorLocationTsv(), tumorSampleId);
+        PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsv(), tumorSampleId);
 
-        LOGGER.info("Creating deprecated actionability analyzer from {}", config.deprecatedActionabilityDir());
-        ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(config.deprecatedActionabilityDir());
-        LOGGER.info("Creating germline reporting model from {}", config.germlineGenesCsv());
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(config.germlineGenesCsv());
+        LOGGER.info("Creating deprecated actionability analyzer from {}", protectConfig.deprecatedActionabilityDir());
+        ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(protectConfig.deprecatedActionabilityDir());
+        LOGGER.info("Creating germline reporting model from {}", protectConfig.germlineGenesCsv());
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(protectConfig.germlineGenesCsv());
 
         GenomicAnalyzer analyzer = new GenomicAnalyzer(actionabilityAnalyzer, germlineReportingModel);
         GenomicAnalysis analysis = analyzer.run(tumorSampleId,
                 patientTumorLocation,
                 LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
                 true,
-                config.purplePurityTsv(),
-                config.purpleQcFile(),
-                config.purpleGeneCnvTsv(),
-                config.purpleDriverCatalogTsv(),
-                config.purpleSomaticVariantVcf(),
-                config.bachelorTsv(),
-                config.linxFusionTsv(),
-                config.linxBreakendTsv(),
-                config.linxViralInsertionTsv(),
-                config.linxDriversTsv(),
-                config.chordPredictionTxt());
+                protectConfig.purplePurityTsv(),
+                protectConfig.purpleQcFile(),
+                protectConfig.purpleGeneCnvTsv(),
+                protectConfig.purpleDriverCatalogTsv(),
+                protectConfig.purpleSomaticVariantVcf(),
+                protectConfig.bachelorTsv(),
+                protectConfig.linxFusionTsv(),
+                protectConfig.linxBreakendTsv(),
+                protectConfig.linxViralInsertionTsv(),
+                protectConfig.linxDriversTsv(),
+                protectConfig.chordPredictionTxt());
 
         printResults(tumorSampleId, analysis);
 
-        EvidenceItemFile.write(config.outputDir() + File.separator + "evidence.off.tsv", analysis.offLabelEvidence());
-        EvidenceItemFile.write(config.outputDir() + File.separator + "evidence.tumor.tsv", analysis.tumorSpecificEvidence());
-
-        List<ProtectEvidenceItem> protectEvidence = protectEvidence(config).stream().filter(ProtectEvidenceItem::reported).collect(Collectors.toList());
-        ProtectEvidenceItemFile.write(config.outputDir() + File.separator + "evidence.protect.tsv", protectEvidence);
-
-        LOGGER.info("Complete");
+        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + "evidence.off.tsv", analysis.offLabelEvidence());
+        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + "evidence.tumor.tsv", analysis.tumorSpecificEvidence());
     }
 
     @NotNull
     private static List<ProtectEvidenceItem> protectEvidence(ProtectConfig config) throws IOException {
+
+        // DOID Data
+        LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
+        DoidEdges doidEdges = DiseaseOntology.readDoidJsonFileEdges(config.doidJsonFile());
+        LOGGER.info(" DOID hierarchy: {}", doidEdges.size());
 
         // Serve Data
         final String serveActionabilityDir = config.serveActionabilityDir();
@@ -124,6 +154,7 @@ public class ProtectApplication {
         result.addAll(fusionEvidence);
         return result;
     }
+
 
     @Nullable
     private static PatientTumorLocation loadPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String tumorSampleId)
@@ -157,4 +188,12 @@ public class ProtectApplication {
         LOGGER.info(" Off-label evidence items found: {}", analysis.offLabelEvidence().size());
 
     }
+
+    @Override
+    public void close()  {
+        dbAccess.close();
+        LOGGER.info("Complete");
+    }
+
+
 }

@@ -24,6 +24,10 @@ public class DoidEdges {
         }
     }
 
+    public int size() {
+        return relationship.size();
+    }
+
     @NotNull
     public Set<String> parents(@NotNull String child) {
         Set<String> result = Sets.newHashSet();
