@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.doid;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,4 +25,26 @@ public abstract class DoidEntry {
 
     @Nullable
     public abstract DoidMetadata doidMetadata();
+
+    @NotNull
+    public abstract List<String> edges();
+
+    @NotNull
+    public abstract String idNodes();
+
+    @NotNull
+    public abstract List<String> metaNodes();
+
+    @NotNull
+    public abstract List<String> equivalentNodesSets();
+
+    @NotNull
+    public abstract List<String> logicalDefinitionAxioms();
+
+    @NotNull
+    public abstract List<String> domainRangeAxioms();
+
+    @NotNull
+    public abstract List<String> propertyChainAxioms();
+
 }
