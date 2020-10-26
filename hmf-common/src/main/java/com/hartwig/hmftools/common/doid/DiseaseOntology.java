@@ -44,10 +44,24 @@ public final class DiseaseOntology {
             JsonArray graphArray = doidObject.getAsJsonArray("graphs");
 
             for (JsonElement graph : graphArray) {
+                DoidEdges result = new DoidEdges();
+
                 doidEntryGraphChecker.check(graph.getAsJsonObject());
                 JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
 
                 JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
+
+                JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
+                for (JsonElement edgeElement : edgesArray) {
+                    JsonObject edge = edgeElement.getAsJsonObject();
+                    String predicate = string(edge, "pred");
+                    if (predicate.equals("is_a")) {
+                        String child = extractDoid(string(edge, "sub"));
+                        String parent = extractDoid(string(edge, "obj"));
+                        result.isA(child, parent);
+                    }
+                }
+
 
                 DoidNodes doidNodes = ImmutableDoidNodes.builder()
                         .idNodes(string(graph.getAsJsonObject(), "id"))
@@ -72,6 +86,7 @@ public final class DiseaseOntology {
                             .doidNodes(graph.getAsJsonObject().has("edges") ? doidNodes : null)
                             .build());
                 }
+                //TODO return Doid
             }
         }
         return doids;
