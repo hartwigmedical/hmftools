@@ -159,12 +159,6 @@ public class DeletionDrivers
     public void annotateBiallelicEvent(DriverGeneData dgData)
     {
         // look for an LOH covering any part of the coding region
-        if(dgData == null || dgData.TransData == null)
-        {
-            LNX_LOGGER.error("null");
-            return;
-        }
-
         if(dgData.TransData.CodingStart == null || dgData.TransData.CodingEnd == null)
             return;
 
@@ -283,11 +277,15 @@ public class DeletionDrivers
                                 formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvJcn));
 
                         DriverGeneData dgData = mDataCache.createDriverData(gene);
-                        DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);
-                        event.addSvBreakendPair(breakend, otherBreakend, "DB");
-                        event.setCluster(breakend.getCluster());
-                        dgData.addEvent(event);
-                        disDelDrivers.add(dgData);
+
+                        if(dgData != null)
+                        {
+                            DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);
+                            event.addSvBreakendPair(breakend, otherBreakend, "DB");
+                            event.setCluster(breakend.getCluster());
+                            dgData.addEvent(event);
+                            disDelDrivers.add(dgData);
+                        }
                     }
                     else
                     {
@@ -318,11 +316,15 @@ public class DeletionDrivers
                                     formatJcn(cnLowSideStart), formatJcn(cnLowSideEnd), formatJcn(ploidy));
 
                             DriverGeneData dgData = mDataCache.createDriverData(gene);
-                            DriverGeneEvent event = new DriverGeneEvent(HOM_DUP_DISRUPTION);
-                            event.addSvBreakendPair(breakend, otherBreakend, "DUP");
-                            event.setCluster(breakend.getCluster());
-                            dgData.addEvent(event);
-                            disDelDrivers.add(dgData);
+
+                            if(dgData != null)
+                            {
+                                DriverGeneEvent event = new DriverGeneEvent(HOM_DUP_DISRUPTION);
+                                event.addSvBreakendPair(breakend, otherBreakend, "DUP");
+                                event.setCluster(breakend.getCluster());
+                                dgData.addEvent(event);
+                                disDelDrivers.add(dgData);
+                            }
                         }
                     }
                 }

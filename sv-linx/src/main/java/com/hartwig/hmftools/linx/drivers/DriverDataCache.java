@@ -183,13 +183,17 @@ public class DriverDataCache
         final EnsemblGeneData geneData = GeneTransCache.getGeneDataByName(gene.GeneName);
 
         if (geneData == null)
+        {
+            LNX_LOGGER.warn("gene({}:{}) no Ensembl gene data found", gene.GeneName);
             return null;
+        }
 
         final TranscriptData canonicalTrans = GeneTransCache.getTranscriptData(geneData.GeneId, "");
 
         if(canonicalTrans == null)
         {
             LNX_LOGGER.warn("gene({}:{}) no canonical transcript found", geneData.GeneId, gene.GeneName);
+            return null;
         }
 
         GeneCopyNumberRegion copyNumberRegion;
