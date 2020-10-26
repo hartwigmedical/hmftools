@@ -172,7 +172,7 @@ public class GenerateEnsemblDataCache
         {
             final List<TranscriptData> transDataList = transDataMap.get(geneId);
 
-            if(transDataList.isEmpty())
+            if(transDataList == null)
                 continue;
 
             for(final TranscriptData transData : transDataList)
