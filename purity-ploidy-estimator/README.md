@@ -1031,6 +1031,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Version History and Download Links
 - Upcoming
   - Correctly identify SV genotypes in tumor-only mode
+  - Allow overwrites of MH field in somatic VCF
 - [2.50](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.50) 
   - Fixed HG38 regression
 - [2.49](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.49) 
