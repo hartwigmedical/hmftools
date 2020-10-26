@@ -12,8 +12,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class IclusionMutationCondition {
 
     @NotNull
-    public abstract List<IclusionMutation> mutations();
+    public abstract String logicType();
 
     @NotNull
-    public abstract String logicType();
+    public abstract List<IclusionMutation> mutations();
 }

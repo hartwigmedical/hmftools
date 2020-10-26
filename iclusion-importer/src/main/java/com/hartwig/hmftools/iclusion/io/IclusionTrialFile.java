@@ -117,16 +117,13 @@ public final class IclusionTrialFile {
             StringJoiner mutationString = new StringJoiner(SUB_SUB_FIELD_DELIMITER);
             for (IclusionMutation mutation : mutationCondition.mutations()) {
                 if (!containsInvalidString(mutation.name(), SUB_FIELD_SEPARATOR) && !containsInvalidString(mutation.gene(),
-                        SUB_FIELD_SEPARATOR) && !containsInvalidString(mutation.gene(), SUB_SUB_FIELD_SEPARATOR) && !containsInvalidString(
-                        mutation.name(),
-                        SUB_SUB_FIELD_SEPARATOR)) {
-                    mutationString.add(
-                            mutation.gene() + SUB_SUB_FIELD_SEPARATOR + mutation.name() + SUB_SUB_FIELD_SEPARATOR + mutation.negation());
+                        SUB_FIELD_SEPARATOR)) {
+                    mutationString.add(mutation.gene() + SUB_FIELD_SEPARATOR + mutation.name() + SUB_FIELD_SEPARATOR + mutation.negation());
                 }
             }
             String finalMutationString = mutationString.toString();
             if (!finalMutationString.isEmpty()) {
-                mutationConditionString.add(mutationString.toString() + SUB_FIELD_SEPARATOR + mutationCondition.logicType());
+                mutationConditionString.add(mutationCondition.logicType() + "(" + mutationString.toString() + ")");
             }
         }
 
@@ -205,20 +202,20 @@ public final class IclusionTrialFile {
 
         String[] values = mutationConditionString.split("\\" + SUB_FIELD_DELIMITER);
         for (String value : values) {
-            String[] mutationConditionFields = value.split(SUB_FIELD_SEPARATOR);
+            // Format is "logicType(mutations)"
+            int separatorPos = value.indexOf("(");
+            String logicType = value.substring(0, separatorPos);
+            String mutationEntries = value.substring(separatorPos + 1, value.length() - 1);
             List<IclusionMutation> mutations = Lists.newArrayList();
-            for (String mutationEntry : mutationConditionFields[0].split(SUB_SUB_FIELD_DELIMITER)) {
-                String[] mutationFields = mutationEntry.split(SUB_SUB_FIELD_SEPARATOR);
+            for (String mutationEntry : mutationEntries.split(SUB_SUB_FIELD_DELIMITER)) {
+                String[] mutationFields = mutationEntry.split(SUB_FIELD_SEPARATOR);
                 mutations.add(ImmutableIclusionMutation.builder()
                         .gene(mutationFields[0])
                         .name(mutationFields[1])
                         .negation(Boolean.parseBoolean(mutationFields[2]))
                         .build());
             }
-            mutationConditions.add(ImmutableIclusionMutationCondition.builder()
-                    .mutations(mutations)
-                    .logicType(mutationConditionFields[1])
-                    .build());
+            mutationConditions.add(ImmutableIclusionMutationCondition.builder().logicType(logicType).mutations(mutations).build());
         }
 
         return mutationConditions;

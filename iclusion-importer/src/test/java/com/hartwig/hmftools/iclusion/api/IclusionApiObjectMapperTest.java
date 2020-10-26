@@ -45,9 +45,6 @@ public class IclusionApiObjectMapperTest {
 
         IclusionObjectIndication indication = new IclusionObjectIndication();
         indication.id = "ind1";
-        indication.parentId = "par1";
-        indication.doid = "123";
-        indication.doid2 = "456";
         indication.indicationName = "indName";
         indication.indicationNameFull = "indNameFull";
         indication.nodeIds = Lists.newArrayList();
@@ -80,8 +77,6 @@ public class IclusionApiObjectMapperTest {
         assertEquals(study.ccmo, trials.get(0).ccmo());
 
         assertEquals(indication.indicationNameFull, trials.get(0).tumorLocations().get(0).primaryTumorLocation());
-        assertEquals(indication.doid, trials.get(0).tumorLocations().get(0).doids().get(0));
-        assertEquals(indication.doid2, trials.get(0).tumorLocations().get(0).doids().get(1));
         assertTrue(trials.get(0).blacklistedTumorLocations().isEmpty());
 
         assertEquals(gene.geneName, trials.get(0).mutationConditions().get(0).mutations().get(0).gene());
