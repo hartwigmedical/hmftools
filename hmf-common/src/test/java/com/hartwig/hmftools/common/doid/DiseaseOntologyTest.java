@@ -14,6 +14,11 @@ public class DiseaseOntologyTest {
     private static final String DOID_FILE_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
     @Test
+    public void canExtractDoidFromUrl() {
+        String url = "http://purl.obolibrary.org/obo/DOID_345";
+        assertEquals("345", DiseaseOntology.extractDoid(url));
+    }
+    @Test
     public void canLoadDoidJsonFile() throws IOException {
         List<DoidEntry> doidEntries = DiseaseOntology.readDoidJsonFile(DOID_FILE_JSON);
         assertEquals(2, doidEntries.size());
