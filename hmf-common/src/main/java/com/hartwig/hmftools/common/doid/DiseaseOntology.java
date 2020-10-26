@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.doid;
 
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
@@ -36,14 +35,24 @@ public final class DiseaseOntology {
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);
         List<DoidEntry> doids = Lists.newArrayList();
+        JsonDatamodelChecker doidEntryChecker = DoidDatamodelCheckerFactory.doidEntryChecker();
+
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject doidObject = parser.parse(reader).getAsJsonObject();
+            doidEntryChecker.check(doidObject);
+            JsonDatamodelChecker doidEntryGraphChecker = DoidDatamodelCheckerFactory.doidEntryGraphChecker();
 
             JsonArray graphArray = doidObject.getAsJsonArray("graphs");
+
             for (JsonElement graph : graphArray) {
+                doidEntryGraphChecker.check(graph.getAsJsonObject());
                 JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
+
+                JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
+
                 for (JsonElement nodeElement : nodeArray) {
                     JsonObject node = nodeElement.getAsJsonObject();
+                    doidEntryNodesChecker.check(node);
                     String url = string(node, "id");
                     doids.add(ImmutableDoidEntry.builder()
                             .doid(extractDoid(url))
@@ -51,6 +60,13 @@ public final class DiseaseOntology {
                             .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
                             .type(optionalString(node, "type"))
                             .doidTerm(optionalString(node, "lbl"))
+                            .idNodes("")
+                            .edges(Lists.newArrayList())
+                            .metaNodes(Lists.newArrayList())
+                            .equivalentNodesSets(Lists.newArrayList())
+                            .logicalDefinitionAxioms(Lists.newArrayList())
+                            .domainRangeAxioms(Lists.newArrayList())
+                            .propertyChainAxioms(Lists.newArrayList())
                             .build());
                 }
             }
@@ -104,7 +120,10 @@ public final class DiseaseOntology {
         JsonArray xrefArray = metadataObject.getAsJsonArray("xrefs");
         List<DoidXref> xrefValList = Lists.newArrayList();
         if (xrefArray != null) {
+            JsonDatamodelChecker xrefChecker = DoidDatamodelCheckerFactory.doidMetadataXrefChecker();
+
             for (JsonElement xref : xrefArray) {
+                xrefChecker.check(xref.getAsJsonObject());
                 xrefValList.add(ImmutableDoidXref.builder().val(string(xref.getAsJsonObject(), "val")).build());
             }
         }
@@ -124,9 +143,13 @@ public final class DiseaseOntology {
             return null;
         }
 
+        JsonDatamodelChecker doidSynonymsChecker = DoidDatamodelCheckerFactory.doidSynonymsChecker();
+
         List<DoidSynonym> doidSynonymList = Lists.newArrayList();
         for (JsonElement synonymElement : synonymArray) {
             JsonObject synonym = synonymElement.getAsJsonObject();
+            doidSynonymsChecker.check(synonym);
+
             doidSynonymList.add(ImmutableDoidSynonym.builder()
                     .pred(string(synonym, "pred"))
                     .val(string(synonym, "val"))
@@ -165,8 +188,11 @@ public final class DiseaseOntology {
             return null;
         }
 
+        JsonDatamodelChecker doidDefinitionChecker = DoidDatamodelCheckerFactory.doidDefinitionChecker();
+        doidDefinitionChecker.check(definitionObject);
+
         ImmutableDoidDefinition.Builder doidDefinitionBuilder = ImmutableDoidDefinition.builder();
-        doidDefinitionBuilder.definitionVal(nullableString(definitionObject, "val"));
+        doidDefinitionBuilder.definitionVal(string(definitionObject, "val"));
         doidDefinitionBuilder.definitionXrefs(stringList(definitionObject, "xrefs"));
         return doidDefinitionBuilder.build();
     }

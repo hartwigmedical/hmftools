@@ -14,10 +14,10 @@ public abstract class DoidMetadata {
     @Nullable
     public abstract DoidDefinition doidDefinition();
 
-    @NotNull
+    @Nullable
     public abstract List<String> subsets();
 
-    @NotNull
+    @Nullable
     public abstract List<DoidXref> xrefs();
 
     @Nullable
