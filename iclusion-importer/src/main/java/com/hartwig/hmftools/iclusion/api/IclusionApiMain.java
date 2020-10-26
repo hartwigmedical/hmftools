@@ -77,13 +77,22 @@ public final class IclusionApiMain {
         MoshiConverterFactory moshiConverterFactory =
                 MoshiConverterFactory.create(new Moshi.Builder().add(new IclusionResponseAdapter()).build());
 
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(iClusionEndpoint)
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(forceTrailingSlash(iClusionEndpoint))
                 .addConverterFactory(moshiConverterFactory)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .client(httpClient)
                 .build();
 
         return retrofit.create(IclusionApi.class);
+    }
+
+    @NotNull
+    private static String forceTrailingSlash(@NotNull String iClusionEndpoint) {
+        if (!iClusionEndpoint.endsWith("/")) {
+            return iClusionEndpoint + "/";
+        } else {
+            return iClusionEndpoint;
+        }
     }
 
     @NotNull

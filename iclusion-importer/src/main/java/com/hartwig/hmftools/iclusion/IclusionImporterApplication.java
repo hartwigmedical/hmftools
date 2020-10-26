@@ -35,7 +35,7 @@ public class IclusionImporterApplication {
         LOGGER.info("Running iClusion Importer v{}", VERSION);
 
         Options options = createOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         if (!validInputForIclusionImporting(cmd)) {
             printUsageAndExit(options);
@@ -72,11 +72,6 @@ public class IclusionImporterApplication {
             return false;
         }
         return true;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 
     @NotNull
