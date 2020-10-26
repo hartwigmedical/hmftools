@@ -20,16 +20,11 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
-import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class DiseaseOntology {
-    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
 
     private DiseaseOntology() {
     }
@@ -74,7 +69,7 @@ public final class DiseaseOntology {
                             .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
                             .type(optionalString(node, "type"))
                             .doidTerm(optionalString(node, "lbl"))
-                            .doidNodes(doidNodes)
+                            .doidNodes(graph.getAsJsonObject().has("edges") ? doidNodes : null)
                             .build());
                 }
             }
@@ -82,9 +77,36 @@ public final class DiseaseOntology {
         return doids;
     }
 
+    @NotNull
+    public static DoidEdges readDoidJsonFileEdges(@NotNull String doidJsonFile) throws IOException {
+        DoidEdges result = new DoidEdges();
+
+        JsonParser parser = new JsonParser();
+        JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
+        reader.setLenient(true);
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
+            JsonObject doidObject = parser.parse(reader).getAsJsonObject();
+
+            JsonArray graphArray = doidObject.getAsJsonArray("graphs");
+            for (JsonElement graph : graphArray) {
+                JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
+                for (JsonElement edgeElement : edgesArray) {
+                    JsonObject edge = edgeElement.getAsJsonObject();
+                    String predicate = string(edge, "pred");
+                    if (predicate.equals("is_a")) {
+                        String child = extractDoid(string(edge, "sub"));
+                        String parent = extractDoid(string(edge, "obj"));
+                        result.isA(child, parent);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
     @Nullable
     private static List<String> createMetaNodes(@Nullable JsonObject metaNodesObject) {
-        LOGGER.info(metaNodesObject);
         return Lists.newArrayList();
 
     }
@@ -190,34 +212,6 @@ public final class DiseaseOntology {
         }
 
         return doidEdge;
-    }
-
-    @NotNull
-    public static DoidEdges readDoidJsonFileEdges(@NotNull String doidJsonFile) throws IOException {
-        DoidEdges result = new DoidEdges();
-
-        JsonParser parser = new JsonParser();
-        JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
-        reader.setLenient(true);
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
-            JsonObject doidObject = parser.parse(reader).getAsJsonObject();
-
-            JsonArray graphArray = doidObject.getAsJsonArray("graphs");
-            for (JsonElement graph : graphArray) {
-                JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
-                for (JsonElement edgeElement : edgesArray) {
-                    JsonObject edge = edgeElement.getAsJsonObject();
-                    String predicate = string(edge, "pred");
-                    if (predicate.equals("is_a")) {
-                        String child = extractDoid(string(edge, "sub"));
-                        String parent = extractDoid(string(edge, "obj"));
-                        result.isA(child, parent);
-                    }
-                }
-            }
-        }
-
-        return result;
     }
 
     @VisibleForTesting
