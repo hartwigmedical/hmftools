@@ -18,9 +18,9 @@ CREATE TABLE protect
     treatment varchar(255) NOT NULL,
     level varchar(255) NOT NULL,
     direction varchar(255) NOT NULL,
-    url varchar(255) NOT NULL,
     onLabel BOOLEAN NOT NULL,
     reported BOOLEAN NOT NULL,
+    url varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
