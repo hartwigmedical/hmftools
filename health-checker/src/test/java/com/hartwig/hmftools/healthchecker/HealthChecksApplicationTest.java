@@ -20,7 +20,8 @@ public class HealthChecksApplicationTest {
                 "tumor",
                 BASE_DIR + "metrics",
                 BASE_DIR + "purple",
-                BASE_DIR + "flagstat",
+                BASE_DIR + "flagstat/reference.flagstat",
+                BASE_DIR + "flagstat/tumor.flagstat",
                 OUTPUT_DIR);
 
         app.run(WRITE_OUTPUT);
@@ -32,7 +33,8 @@ public class HealthChecksApplicationTest {
                 null,
                 BASE_DIR + "metrics",
                 null,
-                BASE_DIR + "flagstat",
+                BASE_DIR + "flagstat/reference.flagstat",
+                null,
                  OUTPUT_DIR);
 
         app.run(WRITE_OUTPUT);

@@ -31,7 +31,8 @@ public class HealthChecksApplication {
     private static final String TUMOR_SAMPLE = "tumor";
     private static final String METRICS_DIR = "metrics_dir";
     private static final String PURPLE_DIR = "purple_dir";
-    private static final String FLAGSTAT_DIR = "flagstat_dir";
+    private static final String REF_FLAGSTAT_FILE = "ref_flagstat_file";
+    private static final String TUM_FLAGSTAT_FILE = "tum_flagstat_file";
     private static final String OUTPUT_DIR = "output_dir";
 
     @NotNull
@@ -42,19 +43,22 @@ public class HealthChecksApplication {
     private final String metricsDirectory;
     @Nullable
     private final String purpleDirectory;
+    @NotNull
+    private final String refFlagstat;
     @Nullable
-    private final String flagstatDirectory;
+    private final String tumFlagstat;
     @NotNull
     private final String outputDir;
 
     @VisibleForTesting
     HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample, @NotNull String metricsDirectory,
-            @Nullable String purpleDirectory, @Nullable String flagstatDirectory, @NotNull String outputDir) {
+            @Nullable String purpleDirectory, @NotNull String refFlagstat, @Nullable String tumFlagstat, @NotNull String outputDir) {
         this.refSample = refSample;
         this.tumorSample = tumorSample;
         this.metricsDirectory = metricsDirectory;
         this.purpleDirectory = purpleDirectory;
-        this.flagstatDirectory = flagstatDirectory;
+        this.refFlagstat = refFlagstat;
+        this.tumFlagstat = tumFlagstat;
         this.outputDir = outputDir;
     }
 
@@ -74,9 +78,10 @@ public class HealthChecksApplication {
 
         String tumorSample = cmd.hasOption(TUMOR_SAMPLE) ? cmd.getOptionValue(TUMOR_SAMPLE) : null;
         String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
-        String flagstatDir = cmd.hasOption(FLAGSTAT_DIR) ? cmd.getOptionValue(FLAGSTAT_DIR) : null;
+        String refFlagstat = cmd.hasOption(REF_FLAGSTAT_FILE) ? cmd.getOptionValue(REF_FLAGSTAT_FILE) : null;
+        String tumFlagstat = cmd.hasOption(TUM_FLAGSTAT_FILE) ? cmd.getOptionValue(TUM_FLAGSTAT_FILE) : null;
 
-        new HealthChecksApplication(refSample, tumorSample, metricsDir, purpleDir, flagstatDir, outputDir).run(true);
+        new HealthChecksApplication(refSample, tumorSample, metricsDir, purpleDir, refFlagstat, tumFlagstat, outputDir).run(true);
     }
 
     @NotNull
@@ -86,7 +91,8 @@ public class HealthChecksApplication {
         options.addOption(TUMOR_SAMPLE, true, "The name of the tumor sample");
         options.addOption(PURPLE_DIR, true, "The directory holding the purple output");
         options.addOption(METRICS_DIR, true, "The directory holding the metrics output");
-        options.addOption(FLAGSTAT_DIR, true, "The directory holding the flagstat output");
+        options.addOption(REF_FLAGSTAT_FILE, true, "The path to flagstat file of reference sample");
+        options.addOption(TUM_FLAGSTAT_FILE, true, "The path to flagstat file of tumor sample");
 
         options.addOption(OUTPUT_DIR, true, "The directory where health checker will write output to");
         return options;
@@ -103,7 +109,7 @@ public class HealthChecksApplication {
             checkers = Lists.newArrayList(
                     new MetricsChecker(refSample, tumorSample, metricsDirectory),
                     new PurpleChecker(tumorSample, purpleDirectory),
-                    new FlagstatChecker(refSample, tumorSample, flagstatDirectory)
+                    new FlagstatChecker(refFlagstat, tumFlagstat)
             );
         }
 

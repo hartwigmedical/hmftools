@@ -5,27 +5,24 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.io.path.PathPrefixSuffixFinder;
 import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class FlagstatChecker implements HealthChecker {
 
     @NotNull
-    private final String refSample;
+    private final String refFlagstat;
     @NotNull
-    private final String tumSample;
-    @NotNull
-    private final String flagstatDirectory;
+    private final String tumFlagstat;
 
-    public FlagstatChecker(@NotNull final String refSample, @NotNull final String tumSample, @NotNull final String flagstatDirectory) {
-        this.tumSample = tumSample;
-        this.refSample = refSample;
-        this.flagstatDirectory = flagstatDirectory;
+    public FlagstatChecker(@NotNull final String refFlagstat, @Nullable final String tumFlagstat) {
+        this.refFlagstat = refFlagstat;
+        this.tumFlagstat = tumFlagstat;
     }
 
     public static String divideTwoStrings(String string1, String string2) {
@@ -49,8 +46,6 @@ public class FlagstatChecker implements HealthChecker {
     @NotNull
     @Override
     public List<QCValue> run() throws IOException {
-        String refFlagstat = PathPrefixSuffixFinder.build().findPath(flagstatDirectory, refSample, ".flagstat").toString();
-        String tumFlagstat = PathPrefixSuffixFinder.build().findPath(flagstatDirectory, tumSample, ".flagstat").toString();
 
         String refProportion = flagstatMappingProportion(refFlagstat);
         String tumProportion = flagstatMappingProportion(tumFlagstat);
