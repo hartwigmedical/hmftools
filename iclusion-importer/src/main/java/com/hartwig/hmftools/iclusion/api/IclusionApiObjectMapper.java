@@ -6,9 +6,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.iclusion.data.IclusionMutation;
+import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.data.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
+import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTrial;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
@@ -50,11 +52,9 @@ final class IclusionApiObjectMapper {
                     .nct(nullToEmpty(study.nct))
                     .ipn(nullToEmpty(study.ipn))
                     .ccmo(study.ccmo)
-                    .type(study.type)
-                    .age(study.age)
-                    .phase(study.phase)
                     .tumorLocations(buildTumorLocations(indications, study.indicationIds))
-                    .mutations(buildMutations(genes, variants, study.mutations))
+                    .blacklistedTumorLocations(buildTumorLocations(indications, study.blacklistIndicationIds))
+                    .mutationConditions(buildMutationConditions(genes, variants, study.mutationConditions))
                     .build());
         }
 
@@ -100,26 +100,39 @@ final class IclusionApiObjectMapper {
     }
 
     @NotNull
-    private static List<IclusionMutation> buildMutations(@NotNull Iterable<IclusionObjectGene> genes,
-            @NotNull Iterable<IclusionObjectVariant> variants, @NotNull Iterable<IclusionObjectMutation> mutationObjects) {
-        List<IclusionMutation> mutations = Lists.newArrayList();
-        for (IclusionObjectMutation mutationObject : mutationObjects) {
-            IclusionObjectGene gene = findGeneById(genes, mutationObject.geneId);
-            if (gene == null) {
-                LOGGER.warn("Could not find gene with ID '{}' in list of genes!", mutationObject.geneId);
-            }
+    private static List<IclusionMutationCondition> buildMutationConditions(@NotNull Iterable<IclusionObjectGene> genes,
+            @NotNull Iterable<IclusionObjectVariant> variants,
+            @NotNull Iterable<IclusionObjectMutationCondition> mutationConditionObjects) {
+        List<IclusionMutationCondition> mutationConditions = Lists.newArrayList();
+        for (IclusionObjectMutationCondition mutationConditionObject : mutationConditionObjects) {
+            List<IclusionMutation> mutations = Lists.newArrayList();
+            for (IclusionObjectMutation mutationObject : mutationConditionObject.mutations) {
+                IclusionObjectGene gene = findGeneById(genes, mutationObject.geneId);
+                if (gene == null) {
+                    LOGGER.warn("Could not find gene with ID '{}' in list of genes!", mutationObject.geneId);
+                }
 
-            IclusionObjectVariant variant = findVariantById(variants, mutationObject.variantId);
-            if (variant == null) {
-                LOGGER.warn("Could not find variant with ID '{}' in list of variants!", mutationObject.variantId);
-            }
+                IclusionObjectVariant variant = findVariantById(variants, mutationObject.variantId);
+                if (variant == null) {
+                    LOGGER.warn("Could not find variant with ID '{}' in list of variants!", mutationObject.variantId);
+                }
 
-            if (gene != null && variant != null) {
-                mutations.add(ImmutableIclusionMutation.builder().name(variant.variantName).gene(gene.geneName).build());
+                if (gene != null && variant != null) {
+                    boolean negation = mutationObject.negation.equals("1");
+                    mutations.add(ImmutableIclusionMutation.builder()
+                            .name(variant.variantName)
+                            .gene(gene.geneName)
+                            .negation(negation)
+                            .build());
+                }
             }
+            mutationConditions.add(ImmutableIclusionMutationCondition.builder()
+                    .mutations(mutations)
+                    .logicType(mutationConditionObject.logicType)
+                    .build());
         }
 
-        return mutations;
+        return mutationConditions;
     }
 
     @Nullable

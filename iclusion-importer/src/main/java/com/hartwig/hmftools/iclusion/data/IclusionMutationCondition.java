@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.iclusion.data;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -7,13 +9,11 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class IclusionMutation {
+public abstract class IclusionMutationCondition {
 
     @NotNull
-    public abstract String gene();
+    public abstract List<IclusionMutation> mutations();
 
     @NotNull
-    public abstract String name();
-
-    public abstract boolean negation();
+    public abstract String logicType();
 }

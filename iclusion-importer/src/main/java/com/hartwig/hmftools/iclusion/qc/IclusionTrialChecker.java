@@ -30,18 +30,6 @@ public final class IclusionTrialChecker {
                 // EUDRA codes are formatted as 'yyyy-xxxxxx-xx' where 'yyyy' is (full) year, eg 2019.
                 LOGGER.warn("Potentially incorrect EUDRA code found for {} with id {}: '{}'", trial.acronym(), trial.id(), trial.eudra());
             }
-
-            if (trial.type().isEmpty()) {
-                LOGGER.warn("Empty type for trial with title {}", trial.title());
-            }
-
-            if (trial.age().isEmpty()) {
-                LOGGER.warn("Empty age for trial with title {}", trial.title());
-            }
-
-            if (trial.phase().isEmpty()) {
-                LOGGER.warn("Empty phase for trial with title {}", trial.title());
-            }
         }
     }
 }

@@ -9,9 +9,11 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.iclusion.data.IclusionMutation;
+import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.data.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
+import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTrial;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTumorLocation;
 
@@ -25,7 +27,10 @@ public final class IclusionTrialFile {
 
     public static final String MAIN_FIELD_DELIMITER = "\t";
     private static final String SUB_FIELD_DELIMITER = "|";
+    private static final String SUB_SUB_FIELD_DELIMITER = "#";
     private static final String SUB_FIELD_SEPARATOR = " - ";
+    private static final String SUB_SUB_FIELD_SEPARATOR = " _ ";
+
     private static final String DOID_DELIMITER = ",";
 
     private static final String NO_LIST_ENTRIES = "-";
@@ -60,11 +65,9 @@ public final class IclusionTrialFile {
                 .add("nct")
                 .add("ipn")
                 .add("ccmo")
-                .add("type")
-                .add("age")
-                .add("phase")
                 .add("tumorLocations")
-                .add("mutations")
+                .add("blacklistedTumorLocations")
+                .add("mutationConditions")
                 .toString();
     }
 
@@ -77,11 +80,9 @@ public final class IclusionTrialFile {
                 .add(trial.nct())
                 .add(trial.ipn())
                 .add(trial.ccmo())
-                .add(trial.type())
-                .add(trial.age())
-                .add(trial.phase())
                 .add(tumorLocationsToString(trial.tumorLocations()))
-                .add(mutationsToString(trial.mutations()))
+                .add(tumorLocationsToString(trial.blacklistedTumorLocations()))
+                .add(mutationConditionsToString(trial.mutationConditions()))
                 .toString();
     }
 
@@ -109,17 +110,27 @@ public final class IclusionTrialFile {
     }
 
     @NotNull
-    private static String mutationsToString(@NotNull List<IclusionMutation> mutations) {
-        StringJoiner mutationString = new StringJoiner(SUB_FIELD_DELIMITER);
+    private static String mutationConditionsToString(@NotNull List<IclusionMutationCondition> mutationConditions) {
+        StringJoiner mutationConditionString = new StringJoiner(SUB_FIELD_DELIMITER);
 
-        for (IclusionMutation mutation : mutations) {
-            if (!containsInvalidString(mutation.gene(), SUB_FIELD_SEPARATOR) && !containsInvalidString(mutation.name(),
-                    SUB_FIELD_SEPARATOR)) {
-                mutationString.add(mutation.gene() + SUB_FIELD_SEPARATOR + mutation.name());
+        for (IclusionMutationCondition mutationCondition : mutationConditions) {
+            StringJoiner mutationString = new StringJoiner(SUB_SUB_FIELD_DELIMITER);
+            for (IclusionMutation mutation : mutationCondition.mutations()) {
+                if (!containsInvalidString(mutation.name(), SUB_FIELD_SEPARATOR) && !containsInvalidString(mutation.gene(),
+                        SUB_FIELD_SEPARATOR) && !containsInvalidString(mutation.gene(), SUB_SUB_FIELD_SEPARATOR) && !containsInvalidString(
+                        mutation.name(),
+                        SUB_SUB_FIELD_SEPARATOR)) {
+                    mutationString.add(
+                            mutation.gene() + SUB_SUB_FIELD_SEPARATOR + mutation.name() + SUB_SUB_FIELD_SEPARATOR + mutation.negation());
+                }
+            }
+            String finalMutationString = mutationString.toString();
+            if (!finalMutationString.isEmpty()) {
+                mutationConditionString.add(mutationString.toString() + SUB_FIELD_SEPARATOR + mutationCondition.logicType());
             }
         }
 
-        String finalString = mutationString.toString();
+        String finalString = mutationConditionString.toString();
 
         return !finalString.isEmpty() ? finalString : NO_LIST_ENTRIES;
     }
@@ -158,11 +169,9 @@ public final class IclusionTrialFile {
                 .nct(values[4])
                 .ipn(values[5])
                 .ccmo(values[6])
-                .type(values[7])
-                .age(values[8])
-                .phase(values[9])
-                .tumorLocations(tumorLocationsFromString(values[10]))
-                .mutations(mutationsFromString(values[11]))
+                .tumorLocations(tumorLocationsFromString(values[7]))
+                .blacklistedTumorLocations(tumorLocationsFromString(values[8]))
+                .mutationConditions(mutationConditionsFromString(values[9]))
                 .build();
     }
 
@@ -187,19 +196,31 @@ public final class IclusionTrialFile {
     }
 
     @NotNull
-    private static List<IclusionMutation> mutationsFromString(@NotNull String mutationsString) {
-        if (mutationsString.equals(NO_LIST_ENTRIES)) {
+    private static List<IclusionMutationCondition> mutationConditionsFromString(@NotNull String mutationConditionString) {
+        if (mutationConditionString.equals(NO_LIST_ENTRIES)) {
             return Lists.newArrayList();
         }
 
-        List<IclusionMutation> mutations = Lists.newArrayList();
+        List<IclusionMutationCondition> mutationConditions = Lists.newArrayList();
 
-        String[] values = mutationsString.split("\\" + SUB_FIELD_DELIMITER);
+        String[] values = mutationConditionString.split("\\" + SUB_FIELD_DELIMITER);
         for (String value : values) {
-            String[] fields = value.split(SUB_FIELD_SEPARATOR);
-            mutations.add(ImmutableIclusionMutation.builder().gene(fields[0]).name(fields[1]).build());
+            String[] mutationConditionFields = value.split(SUB_FIELD_SEPARATOR);
+            List<IclusionMutation> mutations = Lists.newArrayList();
+            for (String mutationEntry : mutationConditionFields[0].split(SUB_SUB_FIELD_DELIMITER)) {
+                String[] mutationFields = mutationEntry.split(SUB_SUB_FIELD_SEPARATOR);
+                mutations.add(ImmutableIclusionMutation.builder()
+                        .gene(mutationFields[0])
+                        .name(mutationFields[1])
+                        .negation(Boolean.parseBoolean(mutationFields[2]))
+                        .build());
+            }
+            mutationConditions.add(ImmutableIclusionMutationCondition.builder()
+                    .mutations(mutations)
+                    .logicType(mutationConditionFields[1])
+                    .build());
         }
 
-        return mutations;
+        return mutationConditions;
     }
 }
