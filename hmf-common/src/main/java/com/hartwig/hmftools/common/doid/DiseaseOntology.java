@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -85,8 +86,9 @@ public final class DiseaseOntology {
         return result;
     }
 
+    @VisibleForTesting
     @NotNull
-    private static String extractDoid(@NotNull String url) {
+    public static String extractDoid(@NotNull String url) {
         return url.replace("http://purl.obolibrary.org/obo/DOID_", "");
     }
 
