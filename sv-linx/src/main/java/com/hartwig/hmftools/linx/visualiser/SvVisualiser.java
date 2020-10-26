@@ -35,9 +35,7 @@ import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
-import com.hartwig.hmftools.linx.visualiser.data.ExonType;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableExon;
 import com.hartwig.hmftools.linx.visualiser.data.Link;
 import com.hartwig.hmftools.linx.visualiser.data.Links;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
@@ -199,6 +197,8 @@ public class SvVisualiser implements AutoCloseable
     {
         final List<Link> clusterLinks = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         final List<Segment> clusterSegments = config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<Exon> clusterExons =
+                config.exons().stream().filter(x -> clusterIds.contains(x.clusterId())).distinct().collect(toList());
 
         String clusterIdsStr = "";
 
@@ -213,7 +213,7 @@ public class SvVisualiser implements AutoCloseable
             return;
         }
 
-        if (clusterLinks.size() == 1 && skipSingles)
+        if (clusterLinks.size() == 1 && skipSingles && clusterExons.isEmpty())
         {
             LOGGER.debug("Skipping simple cluster {}", clusterIdsStr);
             return;
@@ -233,8 +233,7 @@ public class SvVisualiser implements AutoCloseable
         final String sample = config.sample() + ".cluster" + clusterIdsStr + "." + resolvedTypeString + ".sv" + clusterLinks.size()
                 + (config.debug() ? ".debug" : "");
 
-        final List<Exon> clusterExons =
-                config.exons().stream().filter(x -> clusterIds.contains(x.clusterId())).distinct().collect(toList());
+
 
         final List<ProteinDomain> clusterProteinDomains =
                 config.proteinDomain().stream().filter(x -> clusterIds.contains(x.clusterId())).distinct().collect(toList());
