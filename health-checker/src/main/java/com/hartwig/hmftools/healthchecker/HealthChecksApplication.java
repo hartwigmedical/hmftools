@@ -31,6 +31,8 @@ public class HealthChecksApplication {
     private static final String TUMOR_SAMPLE = "tumor";
     private static final String METRICS_DIR = "metrics_dir";
     private static final String PURPLE_DIR = "purple_dir";
+    private static final String REF_WGS_METRICS_FILE = "ref_wgs_metrics_file";
+    private static final String TUM_WGS_METRICS_FILE = "tum_wgs_metrics_file";
     private static final String REF_FLAGSTAT_FILE = "ref_flagstat_file";
     private static final String TUM_FLAGSTAT_FILE = "tum_flagstat_file";
     private static final String OUTPUT_DIR = "output_dir";
@@ -39,10 +41,12 @@ public class HealthChecksApplication {
     private final String refSample;
     @Nullable
     private final String tumorSample;
-    @NotNull
-    private final String metricsDirectory;
     @Nullable
     private final String purpleDirectory;
+    @NotNull
+    private final String refWgsMetricsFile;
+    @Nullable
+    private final String tumWgsMetricsFile;
     @NotNull
     private final String refFlagstat;
     @Nullable
@@ -51,12 +55,13 @@ public class HealthChecksApplication {
     private final String outputDir;
 
     @VisibleForTesting
-    HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample, @NotNull String metricsDirectory,
+    HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample, @NotNull String refWgsMetricsFile, @Nullable String tumWgsMetricsFile,
             @Nullable String purpleDirectory, @NotNull String refFlagstat, @Nullable String tumFlagstat, @NotNull String outputDir) {
         this.refSample = refSample;
         this.tumorSample = tumorSample;
-        this.metricsDirectory = metricsDirectory;
         this.purpleDirectory = purpleDirectory;
+        this.refWgsMetricsFile = refWgsMetricsFile;
+        this.tumWgsMetricsFile = tumWgsMetricsFile;
         this.refFlagstat = refFlagstat;
         this.tumFlagstat = tumFlagstat;
         this.outputDir = outputDir;
@@ -67,21 +72,23 @@ public class HealthChecksApplication {
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String refSample = cmd.getOptionValue(REF_SAMPLE);
+        String refFlagstat = cmd.getOptionValue(REF_FLAGSTAT_FILE);
+        String refWgsMetricsFile = cmd.getOptionValue(REF_WGS_METRICS_FILE);
         String metricsDir = cmd.getOptionValue(METRICS_DIR);
         String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
-        if (refSample == null || metricsDir == null || outputDir == null) {
+        if (refSample == null || refFlagstat == null || metricsDir == null || outputDir == null) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checks", options);
             System.exit(1);
         }
 
         String tumorSample = cmd.hasOption(TUMOR_SAMPLE) ? cmd.getOptionValue(TUMOR_SAMPLE) : null;
-        String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
-        String refFlagstat = cmd.hasOption(REF_FLAGSTAT_FILE) ? cmd.getOptionValue(REF_FLAGSTAT_FILE) : null;
+        String tumWgsMetricsFile = cmd.hasOption(TUM_WGS_METRICS_FILE) ? cmd.getOptionValue(TUM_WGS_METRICS_FILE) : null;
         String tumFlagstat = cmd.hasOption(TUM_FLAGSTAT_FILE) ? cmd.getOptionValue(TUM_FLAGSTAT_FILE) : null;
+        String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
 
-        new HealthChecksApplication(refSample, tumorSample, metricsDir, purpleDir, refFlagstat, tumFlagstat, outputDir).run(true);
+        new HealthChecksApplication(refSample, tumorSample, refWgsMetricsFile, tumWgsMetricsFile, purpleDir, refFlagstat, tumFlagstat, outputDir).run(true);
     }
 
     @NotNull
@@ -90,9 +97,10 @@ public class HealthChecksApplication {
         options.addOption(REF_SAMPLE, true, "The name of the reference sample");
         options.addOption(TUMOR_SAMPLE, true, "The name of the tumor sample");
         options.addOption(PURPLE_DIR, true, "The directory holding the purple output");
-        options.addOption(METRICS_DIR, true, "The directory holding the metrics output");
-        options.addOption(REF_FLAGSTAT_FILE, true, "The path to flagstat file of reference sample");
-        options.addOption(TUM_FLAGSTAT_FILE, true, "The path to flagstat file of tumor sample");
+        options.addOption(REF_WGS_METRICS_FILE, true, "The path to the wgs metrics file of reference sample");
+        options.addOption(TUM_WGS_METRICS_FILE, true, "The path to the wgs metrics file of tumor sample");
+        options.addOption(REF_FLAGSTAT_FILE, true, "The path to the flagstat file of reference sample");
+        options.addOption(TUM_FLAGSTAT_FILE, true, "The path to the flagstat file of tumor sample");
 
         options.addOption(OUTPUT_DIR, true, "The directory where health checker will write output to");
         return options;
@@ -103,11 +111,11 @@ public class HealthChecksApplication {
         List<HealthChecker> checkers;
         if (tumorSample == null || purpleDirectory == null) {
             LOGGER.info("Running in SingleSample mode");
-            checkers = Lists.newArrayList(new MetricsChecker(refSample, null, metricsDirectory));
+            checkers = Lists.newArrayList(new MetricsChecker(refWgsMetricsFile, null));
         } else {
             LOGGER.info("Running in Somatic mode");
             checkers = Lists.newArrayList(
-                    new MetricsChecker(refSample, tumorSample, metricsDirectory),
+                    new MetricsChecker(refWgsMetricsFile, tumWgsMetricsFile),
                     new PurpleChecker(tumorSample, purpleDirectory),
                     new FlagstatChecker(refFlagstat, tumFlagstat)
             );
