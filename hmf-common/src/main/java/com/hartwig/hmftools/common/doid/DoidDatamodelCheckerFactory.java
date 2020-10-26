@@ -25,9 +25,9 @@ final class DoidDatamodelCheckerFactory {
         map.put("edges", true);
         map.put("id", true);
         map.put("meta", true); //TODO
-        map.put("equivalentNodesSets", true); //TODO
-        map.put("logicalDefinitionAxioms", true); //TODO
-        map.put("domainRangeAxioms", true); //TODO
+        map.put("equivalentNodesSets", true);
+        map.put("logicalDefinitionAxioms", true);
+        map.put("domainRangeAxioms", true);
         map.put("propertyChainAxioms", true); //TODO
 
         return new JsonDatamodelChecker("DoidEntry", map);
@@ -41,6 +41,27 @@ final class DoidDatamodelCheckerFactory {
         map.put("obj", true);
 
         return new JsonDatamodelChecker("DoidEdges", map);
+    }
+
+    @NotNull
+    static JsonDatamodelChecker doidEquivalentNodesSetsChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+
+        return new JsonDatamodelChecker("DoidEquivalentNodesSets", map);
+    }
+
+    @NotNull
+    static JsonDatamodelChecker doidLogicalDefinitionAxiomChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+
+        return new JsonDatamodelChecker("DoidLogicalDefinitionAxiom", map);
+    }
+
+    @NotNull
+    static JsonDatamodelChecker doidDomainRangeAxiomsChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+
+        return new JsonDatamodelChecker("DoidDomainRangeAxioms", map);
     }
 
     @NotNull

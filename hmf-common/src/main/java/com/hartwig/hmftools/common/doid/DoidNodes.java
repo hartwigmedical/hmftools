@@ -20,14 +20,14 @@ public abstract class DoidNodes {
     @NotNull
     public abstract List<String> metaNodes();
 
-    @NotNull
-    public abstract List<String> equivalentNodesSets();
+    @Nullable
+    public abstract List<DoidEquivalentNodesSets> equivalentNodesSets();
 
     @NotNull
-    public abstract List<String> logicalDefinitionAxioms();
+    public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();
 
     @NotNull
-    public abstract List<String> domainRangeAxioms();
+    public abstract List<DoidDomainRangeAxioms> domainRangeAxioms();
 
     @NotNull
     public abstract List<String> propertyChainAxioms();
