@@ -11,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DoidEntry {
 
-    // TODO rename to DoidNode
     @NotNull
     public abstract List<DoidNode> doidNodes();
 
