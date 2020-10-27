@@ -21,6 +21,8 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,6 +30,8 @@ public final class DiseaseOntology {
 
     private DiseaseOntology() {
     }
+
+    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
 
     @NotNull
     public static DoidEntry readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
@@ -44,49 +48,52 @@ public final class DiseaseOntology {
             JsonDatamodelChecker doidEntryGraphChecker = DoidDatamodelCheckerFactory.doidEntryGraphChecker();
 
             JsonArray graphArray = doidObject.getAsJsonArray("graphs");
+            if (graphArray.size() == 1) {
+                for (JsonElement graph : graphArray) {
+                    DoidEdges result = new DoidEdges();
 
-            for (JsonElement graph : graphArray) {
-                DoidEdges result = new DoidEdges();
+                    doidEntryGraphChecker.check(graph.getAsJsonObject());
+                    JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
 
-                doidEntryGraphChecker.check(graph.getAsJsonObject());
-                JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
+                    JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
 
-                JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
-
-                JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
-                for (JsonElement edgeElement : edgesArray) {
-                    JsonObject edge = edgeElement.getAsJsonObject();
-                    String predicate = string(edge, "pred");
-                    if (predicate.equals("is_a")) {
-                        String child = extractDoid(string(edge, "sub"));
-                        String parent = extractDoid(string(edge, "obj"));
-                        result.isA(child, parent);
+                    JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
+                    for (JsonElement edgeElement : edgesArray) {
+                        JsonObject edge = edgeElement.getAsJsonObject();
+                        String predicate = string(edge, "pred");
+                        if (predicate.equals("is_a")) {
+                            String child = extractDoid(string(edge, "sub"));
+                            String parent = extractDoid(string(edge, "obj"));
+                            result.isA(child, parent);
+                        }
                     }
-                }
 
-                //createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta"));
-                List<DoidEquivalentNodesSets> doidEquivalentNodesSets =
-                        extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets"));
-                List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
-                        extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
-                List<DoidDomainRangeAxioms> doidDomainRangeAxioms =
-                        extractDoidDomainRangeAxioms(graph.getAsJsonObject().getAsJsonArray("domainRangeAxioms"));
-                List<DoidPropertyChainAxioms> doidPropertyChainAxioms =
-                        extractDoidPropertyChainAxioms(graph.getAsJsonObject().getAsJsonArray("propertyChainAxioms"));
+                    //createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta"));
+                    List<DoidEquivalentNodesSets> doidEquivalentNodesSets =
+                            extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets"));
+                    List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
+                            extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
+                    List<DoidDomainRangeAxioms> doidDomainRangeAxioms =
+                            extractDoidDomainRangeAxioms(graph.getAsJsonObject().getAsJsonArray("domainRangeAxioms"));
+                    List<DoidPropertyChainAxioms> doidPropertyChainAxioms =
+                            extractDoidPropertyChainAxioms(graph.getAsJsonObject().getAsJsonArray("propertyChainAxioms"));
 
-                for (JsonElement nodeElement : nodeArray) {
-                    JsonObject node = nodeElement.getAsJsonObject();
-                    doidEntryNodesChecker.check(node);
-                    String url = string(node, "id");
-                    doidNodes.add(ImmutableDoidNode.builder()
-                            .doid(extractDoid(url))
-                            .url(url)
-                            .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
-                            .type(optionalString(node, "type"))
-                            .doidTerm(optionalString(node, "lbl"))
-                            .build());
+                    for (JsonElement nodeElement : nodeArray) {
+                        JsonObject node = nodeElement.getAsJsonObject();
+                        doidEntryNodesChecker.check(node);
+                        String url = string(node, "id");
+                        doidNodes.add(ImmutableDoidNode.builder()
+                                .doid(extractDoid(url))
+                                .url(url)
+                                .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
+                                .type(optionalString(node, "type"))
+                                .doidTerm(optionalString(node, "lbl"))
+                                .build());
+                    }
+                    //TODO return DoidEntry
                 }
-                //TODO return DoidEntry
+            } else {
+                LOGGER.info(" Size of graph elements are not correct {}", graphArray.size());
             }
         }
         return doidDoidEntryBuilder.build();
