@@ -7,18 +7,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocationV2;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TumorLocationCuratorV2 implements CleanableCurator {
+    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCuratorV2.class);
 
     private static final String FIELD_DELIMITER = "\t";
     private static final String DOID_DELIMITER = ";";
@@ -59,7 +64,9 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     }
 
     @NotNull
-    private static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidNodesToResolve) {
+    @VisibleForTesting
+    public static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidNodesToResolve) {
+        LOGGER.info(doidNodes);
         List<DoidNode> resolvedDoidNodes = Lists.newArrayList();
         for (String doid : doidNodesToResolve) {
             for (DoidNode doidNode : doidNodes) {
