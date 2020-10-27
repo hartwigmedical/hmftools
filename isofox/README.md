@@ -65,6 +65,12 @@ excluded_gene_id_file | Exclude genes in file, format EnsemblGeneId,GeneName
 enriched_gene_ids | List of EnsemblGeneIds separated by ';', see Enriched Genes information below
 drop_dups | Default is false. By default duplicate fragments will be counted towards transcript expression.
 
+### Reference Files
+Reference files are available for HG19 and HG38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
+- Isofox: expected transcript expression and GC Bias
+- Ensembl: cached Ensembl files
+- KnownFusions: HMF known fusion data
+
 ### Transcript Expression
 The expression function in Isofox depends on the calculation of expected rates for each gene and transcript given a set of fragment lengths. These can be computed from scratch each time a sample is run, or pre-computed independently once and then loaded from file for subsequent sample runs. Using the pre-computed expected counts file reduces the processing time by around 95%.
 

@@ -68,6 +68,12 @@ replication_origins_file | Optional: Replication timing input - in BED format wi
 viral_hosts_file | Optional: List of known viral hosts - Refseq_id,Virus_name
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 
+Reference files are available for HG19 and HG38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
+- Linx: fragile sites, LINE elements, viral hosts and replication origins
+- Ensembl: cached Ensembl files
+- KnownFusions: HMF known fusion data
+- GenePanel: HMF driver genes
+ 
 ### Clustering
 Argument  | Description
 ---|---
@@ -94,7 +100,6 @@ Single sample - Load SVs and purple data from file, upload Linx results to datab
 ```
 java -jar sv-linx.jar 
     -sample SAMPLE_ID 
-    -db_url [db_url] -db_user [username] -db_pass [password] 
     -sv_vcf /path_to_purple_vcf/
     -purple_dir /path_to_purple_data_files/
     -output_dir /path_to_sample_data/ 
@@ -106,6 +111,7 @@ java -jar sv-linx.jar
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
     -check_drivers
+    -driver_gene_panel DriverGenePanel.tsv
     -log_debug
 ```
 
@@ -124,11 +130,12 @@ java -jar sv-linx.jar
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
     -check_drivers
+    -driver_gene_panel DriverGenePanel.tsv
     -log_debug
 ```
 
 Cohort analysis - run all samples by sampleId in provided file, query SVs and purple data from database.
-Write Linx results to cohort files, no uopload to database:
+Write Linx results to cohort files, no upload to database:
 
 ```
 java -jar sv-linx.jar 
@@ -141,6 +148,7 @@ java -jar sv-linx.jar
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
     -check_drivers
+    -driver_gene_panel DriverGenePanel.tsv
     -write_all
 ```
 
@@ -165,7 +173,6 @@ By default LINX will use HG19, but this can be overridden using the ref_genome_v
 Note that ENST00000467125 is blacklisted from Ensembl as it is shares a splice boundary with a chimeric pathogenic GOPC_ROS1 fusion transcript.
 
 ## Outputs
-
 Linx writes all output to tsv files, each of which is decribed below.
 
 ### SV Annotations
