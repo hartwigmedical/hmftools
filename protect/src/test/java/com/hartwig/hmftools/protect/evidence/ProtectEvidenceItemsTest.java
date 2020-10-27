@@ -40,8 +40,11 @@ public class ProtectEvidenceItemsTest {
 
     @Test
     public void testDoNotReportC() {
-        assertEquals(Optional.empty(), highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveC)));
-        assertEquals(Optional.empty(), highestReportableLevel(false, Lists.newArrayList(onLabelResponsiveC)));
+        final List<ProtectEvidenceItem> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveC);
+        final Set<ProtectEvidenceItem> victims = Sets.newHashSet(ProtectEvidenceItems.reportHighest(evidence));
+        assertEquals(2, victims.size());
+        assertFalse(victims.contains(onLabelResponsiveC));
+        assertFalse(victims.contains(offLabelResponsiveC));
     }
 
     @Test

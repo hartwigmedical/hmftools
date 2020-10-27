@@ -60,10 +60,11 @@ public class ProtectEvidenceItems {
     @NotNull
     private static List<ProtectEvidenceItem> reportHighestPerEventTreatmentDirection(@NotNull Collection<ProtectEvidenceItem> evidence) {
         Optional<EvidenceLevel> highestOnLabel = highestReportableLevel(true, evidence);
-        EvidenceLevel highestOffLabel = highestReportableLevel(false, evidence).orElse(EvidenceLevel.D);
+        Optional<EvidenceLevel> highestOffLabel = highestReportableLevel(false, evidence);
         Predicate<ProtectEvidenceItem> report = x -> x.reported() && x.onLabel()
-                ? x.level().ordinal() == highestOnLabel.orElse(EvidenceLevel.B).ordinal()
-                : x.level().ordinal() == highestOffLabel.ordinal() && (!highestOnLabel.isPresent() || x.level().ordinal() < highestOnLabel.get().ordinal());
+                ? highestOnLabel.filter(highest -> x.level().ordinal() == highest.ordinal()).isPresent()
+                : highestOffLabel.filter(highest -> x.level().ordinal() == highest.ordinal()).isPresent()
+                        && !highestOnLabel.filter(highest -> x.level().ordinal() >= highest.ordinal()).isPresent();
 
         return evidence.stream()
                 .map(x -> ImmutableProtectEvidenceItem.builder().from(x).reported(report.test(x)).build())
@@ -72,7 +73,8 @@ public class ProtectEvidenceItems {
     }
 
     @NotNull
-    static Optional<EvidenceLevel> highestReportableLevel(boolean isOnLabel, @NotNull Collection<? extends ProtectEvidenceItem> actionable) {
+    static Optional<EvidenceLevel> highestReportableLevel(boolean isOnLabel,
+            @NotNull Collection<? extends ProtectEvidenceItem> actionable) {
         return actionable.stream()
                 .filter(x -> x.level().ordinal() <= EvidenceLevel.B.ordinal())
                 .filter(x -> x.onLabel() == isOnLabel)
