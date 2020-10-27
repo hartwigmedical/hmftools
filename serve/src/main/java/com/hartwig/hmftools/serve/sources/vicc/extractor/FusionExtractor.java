@@ -16,6 +16,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class FusionExtractor {
+
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
     public FusionExtractor() {
@@ -61,10 +62,10 @@ public class FusionExtractor {
                         fusionGeneStart = "ITD";
                         fusionGeneEnd = "ITD";
                     } else {
-                        LOGGER.warn("Fusion {] is not yet curated!", curatedFusion);
+                        LOGGER.warn("Fusion {} is not yet curated!", curatedFusion);
                     }
                 } else {
-                    LOGGER.warn("Fusion name {} is to long!", curatedFusion);
+                    LOGGER.warn("Fusion name {} is too long!", curatedFusion);
                 }
 
                 fusionsPerFeature.put(feature,
@@ -84,9 +85,9 @@ public class FusionExtractor {
                     exonDown = Integer.valueOf(feature.proteinAnnotation());
                 } else if (feature.description().equals("MET EXON 14 SKIPPING MUTATION")) {
                     fusionGeneStart = feature.geneSymbol();
-                    exonUp = Integer.valueOf(feature.proteinAnnotation())-1;
+                    exonUp = Integer.parseInt(feature.proteinAnnotation()) - 1;
                     fusionGeneEnd = feature.geneSymbol();
-                    exonDown = Integer.valueOf(feature.proteinAnnotation())+1;
+                    exonDown = Integer.parseInt(feature.proteinAnnotation()) + 1;
                 }
                 fusionsPerFeature.put(feature,
                         ImmutableKnownFusionPair.builder()

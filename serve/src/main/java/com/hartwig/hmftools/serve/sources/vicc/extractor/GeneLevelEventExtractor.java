@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -27,11 +26,11 @@ public class GeneLevelEventExtractor {
     public GeneLevelEventExtractor() {
     }
 
-    @VisibleForTesting
     @NotNull
     public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String eventDescription = feature.description().split(" ", 2)[1].trim();
-        if (FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription) || feature.provenanceRule() != null) {
+        if (FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)
+                || feature.provenanceRule() != null) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {

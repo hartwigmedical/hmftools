@@ -13,18 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class SignaturesExtractor {
 
-    @NotNull
-    @VisibleForTesting
-    public static SignatureName extractSignatureName(@NotNull String featureName) {
-        if (featureName.equals("Microsatellite Instability-High")) {
-            return SignatureName.MICROSATELLITE_UNSTABLE;
-        } else if (featureName.equals("High tumor mutational load")) { // TODO: check for right string
-            return SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD;
-        } else if (featureName.equals("HRD")) {
-            return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENY; // TODO: check for right string
-        } else {
-            return SignatureName.UNKNOWN;
-        }
+    public SignaturesExtractor() {
     }
 
     @NotNull
@@ -37,5 +26,19 @@ public class SignaturesExtractor {
             }
         }
         return signaturesPerFeature;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static SignatureName extractSignatureName(@NotNull String featureName) {
+        if (featureName.equals("Microsatellite Instability-High")) {
+            return SignatureName.MICROSATELLITE_UNSTABLE;
+        } else if (featureName.equals("High tumor mutational load")) { // TODO: check for right string
+            return SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD;
+        } else if (featureName.equals("HRD")) {
+            return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENY; // TODO: check for right string
+        } else {
+            return SignatureName.UNKNOWN;
+        }
     }
 }

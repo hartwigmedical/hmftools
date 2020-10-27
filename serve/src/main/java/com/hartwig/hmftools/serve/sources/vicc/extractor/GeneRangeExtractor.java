@@ -325,7 +325,7 @@ public class GeneRangeExtractor {
 
         if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
             String geneSymbol = feature.geneSymbol();
-            int codonNumber = Integer.valueOf(proteinAnnotation.replaceAll("\\D+", ""));
+            int codonNumber = Integer.parseInt(proteinAnnotation.replaceAll("\\D+", ""));
             List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
             if (genomeRegions.size() == 1) {
                 long start = genomeRegions.get(0).start();
