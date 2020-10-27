@@ -10,7 +10,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.doid.DoidEntry;
+import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocationV2;
 
@@ -28,7 +28,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     @NotNull
     private final Set<String> unusedSearchTerms;
 
-    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTsv, @NotNull List<DoidEntry> doidEntries) throws IOException {
+    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTsv, @NotNull List<DoidNode> doidNodes) throws IOException {
         List<String> lines = Files.readAllLines(new File(tumorLocationV2MappingTsv).toPath());
 
         // Skip header
@@ -49,7 +49,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
                             .primaryTumorType(primaryTumorType)
                             .primaryTumorSubType(primaryTumorSubType)
                             .primaryTumorExtraDetails(primaryTumorExtraDetails)
-                            .doidEntries(resolveDoidEntries(doidEntries, doids))
+                            .doidNodes(resolveDoidNodes(doidNodes, doids))
                             .searchTerm(searchTerm)
                             .build());
         }
@@ -59,16 +59,16 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     }
 
     @NotNull
-    private static List<DoidEntry> resolveDoidEntries(@NotNull List<DoidEntry> doidEntries, @NotNull List<String> doidsToResolve) {
-        List<DoidEntry> resolvedDoidEntries = Lists.newArrayList();
-        for (String doid : doidsToResolve) {
-            for (DoidEntry doidEntry : doidEntries) {
-                if (doidEntry.doid().equals(doid)) {
-                    resolvedDoidEntries.add(doidEntry);
+    private static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidNodesToResolve) {
+        List<DoidNode> resolvedDoidNodes = Lists.newArrayList();
+        for (String doid : doidNodesToResolve) {
+            for (DoidNode doidNode : doidNodes) {
+                if (doidNode.doid().equals(doid)) {
+                    resolvedDoidNodes.add(doidNode);
                 }
             }
         }
-        return resolvedDoidEntries;
+        return resolvedDoidNodes;
 
     }
 

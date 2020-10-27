@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMA
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.doid.DoidEntry;
+import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
@@ -160,10 +160,10 @@ class ClinicalDAO {
                         preTreatmentTypes,
                         preTreatmentMechanism).execute();
 
-        List<DoidEntry> doidEntries = patient.curatedTumorLocationV2().doidEntries();
-        if (doidEntries != null) {
-            for (DoidEntry doidEntry : doidEntries) {
-                writeDoidEntry(patientId, doidEntry);
+        List<DoidNode> doidNodes = patient.curatedTumorLocationV2().doidNodes();
+        if (doidNodes != null) {
+            for (DoidNode doidNode : doidNodes) {
+                writeDoidNode(patientId, doidNode);
             }
         }
 
@@ -184,7 +184,7 @@ class ClinicalDAO {
         writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
     }
 
-    private void writeDoidEntry(int patientId, @NotNull DoidEntry doidEntry) {
+    private void writeDoidNode(int patientId, @NotNull DoidNode doidEntry) {
         context.insertInto(DOIDENTRY, DOIDENTRY.PATIENTID, DOIDENTRY.DOID, DOIDENTRY.DOIDTERM)
                 .values(patientId, doidEntry.doid(), doidEntry.doidTerm())
                 .execute();

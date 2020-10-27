@@ -14,7 +14,7 @@ final class DoidDatamodelCheckerFactory {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("graphs", true);
 
-        return new JsonDatamodelChecker("DoidEntry", map);
+        return new JsonDatamodelChecker("DoidNode", map);
     }
 
     @NotNull
@@ -30,7 +30,7 @@ final class DoidDatamodelCheckerFactory {
         map.put("domainRangeAxioms", true);
         map.put("propertyChainAxioms", true); //TODO
 
-        return new JsonDatamodelChecker("DoidEntry", map);
+        return new JsonDatamodelChecker("DoidNode", map);
     }
 
     @NotNull
@@ -82,7 +82,7 @@ final class DoidDatamodelCheckerFactory {
         map.put("id", true);
         map.put("meta", false);
 
-        return new JsonDatamodelChecker("DoidEntry", map);
+        return new JsonDatamodelChecker("DoidNode", map);
     }
 
     @NotNull

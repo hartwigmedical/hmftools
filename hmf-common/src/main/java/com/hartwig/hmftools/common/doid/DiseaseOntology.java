@@ -30,11 +30,11 @@ public final class DiseaseOntology {
     }
 
     @NotNull
-    public static List<DoidEntry> readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
+    public static List<DoidNode> readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);
-        List<DoidEntry> doids = Lists.newArrayList();
+        List<DoidNode> doidNodes = Lists.newArrayList();
         JsonDatamodelChecker doidEntryChecker = DoidDatamodelCheckerFactory.doidEntryChecker();
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject doidObject = parser.parse(reader).getAsJsonObject();
@@ -76,7 +76,7 @@ public final class DiseaseOntology {
                     JsonObject node = nodeElement.getAsJsonObject();
                     doidEntryNodesChecker.check(node);
                     String url = string(node, "id");
-                    doids.add(ImmutableDoidEntry.builder()
+                    doidNodes.add(ImmutableDoidEntry.builder()
                             .doid(extractDoid(url))
                             .url(url)
                             .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
@@ -87,7 +87,7 @@ public final class DiseaseOntology {
                 //TODO return Doid
             }
         }
-        return doids;
+        return doidNodes;
     }
 
     @NotNull

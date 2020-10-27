@@ -13,7 +13,7 @@ public abstract class Doid {
 
     // TODO rename to DoidNode
     @NotNull
-    public abstract List<DoidEntry> entries();
+    public abstract List<DoidNode> doidNodes();
 
     @NotNull
     public abstract DoidEdges edges();
