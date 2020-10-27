@@ -24,7 +24,8 @@ public interface ProtectConfig {
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
     String DOID_JSON = "doid_json";
 
-    String TUMOR_LOCATION_TSV = "tumor_location_tsv";
+    String TUMOR_LOCATION_TSV_V1 = "tumor_location_tsv_v1";
+    String TUMOR_LOCATION_TSV_V2 = "tumor_location_tsv_v2";
     String GERMLINE_GENES_CSV = "germline_genes_csv";
 
     // Files containing the actual genomic results for this sample.
@@ -54,7 +55,8 @@ public interface ProtectConfig {
         options.addOption(DEPRECATED_ACTIONABILITY_DIRECTORY, true, "Path towards the deprecated pre-SERVE actionability directory.");
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
 
-        options.addOption(TUMOR_LOCATION_TSV, true, "Path towards the (curated) tumor location TSV.");
+        options.addOption(TUMOR_LOCATION_TSV_V1, true, "Path towards the (curated) tumor location TSV.");
+        options.addOption(TUMOR_LOCATION_TSV_V2, true, "Path towards the (curated) tumor location TSV.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
@@ -90,7 +92,10 @@ public interface ProtectConfig {
     String serveActionabilityDir();
 
     @NotNull
-    String tumorLocationTsv();
+    String tumorLocationTsvV1();
+
+    @NotNull
+    String tumorLocationTsvV2();
 
     @NotNull
     String germlineGenesCsv();
@@ -139,7 +144,8 @@ public interface ProtectConfig {
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
                 .deprecatedActionabilityDir(nonOptionalDir(cmd, DEPRECATED_ACTIONABILITY_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
-                .tumorLocationTsv(nonOptionalFile(cmd, TUMOR_LOCATION_TSV))
+                .tumorLocationTsvV1(nonOptionalFile(cmd, TUMOR_LOCATION_TSV_V1))
+                .tumorLocationTsvV2(nonOptionalFile(cmd, TUMOR_LOCATION_TSV_V2))
                 .germlineGenesCsv(nonOptionalFile(cmd, GERMLINE_GENES_CSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -15,6 +16,9 @@ import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2File;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2Functions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEdges;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -49,13 +53,15 @@ import org.jetbrains.annotations.Nullable;
 public class ProtectApplication implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
+    private static final String PAN_CANCER_DOID = "162";
 
     public static void main(@NotNull String[] args) throws IOException {
         Options options = ProtectConfig.createOptions();
         DatabaseAccess.addDatabaseCmdLineArgs(options);
 
         try (final ProtectApplication application = new ProtectApplication(options, args)) {
-            application.runOld();
+            application.run();
+//            application.runOld();
         } catch (ParseException exception) {
             LOGGER.warn(exception);
             new HelpFormatter().printHelp("PROTECT", options);
@@ -69,7 +75,7 @@ public class ProtectApplication implements AutoCloseable {
     private final DatabaseAccess dbAccess;
     private final ProtectConfig protectConfig;
 
-    public ProtectApplication(final Options options, final String... args) throws ParseException, SQLException, IOException {
+    public ProtectApplication(final Options options, final String... args) throws ParseException, SQLException {
         final CommandLine cmd = new DefaultParser().parse(options, args);
         this.dbAccess = DatabaseAccess.databaseAccess(cmd);
         this.protectConfig = ProtectConfig.createConfig(cmd);
@@ -90,8 +96,7 @@ public class ProtectApplication implements AutoCloseable {
         String tumorSampleId = protectConfig.tumorSampleId();
         LOGGER.info("Running PROTECT for {}", tumorSampleId);
 
-        PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsv(), tumorSampleId);
-
+        PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsvV1(), tumorSampleId);
         LOGGER.info("Creating deprecated actionability analyzer from {}", protectConfig.deprecatedActionabilityDir());
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(protectConfig.deprecatedActionabilityDir());
         LOGGER.info("Creating germline reporting model from {}", protectConfig.germlineGenesCsv());
@@ -114,19 +119,38 @@ public class ProtectApplication implements AutoCloseable {
                 protectConfig.linxDriversTsv(),
                 protectConfig.chordPredictionTxt());
 
-        printResults(tumorSampleId, analysis);
+//        printResults(tumorSampleId, analysis);
 
         EvidenceItemFile.write(protectConfig.outputDir() + File.separator + "evidence.off.tsv", analysis.offLabelEvidence());
         EvidenceItemFile.write(protectConfig.outputDir() + File.separator + "evidence.tumor.tsv", analysis.tumorSpecificEvidence());
     }
 
+    private static Set<String> doids(@NotNull ProtectConfig config) throws IOException {
+        final Set<String> result = Sets.newHashSet();
+        LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
+        final DoidEdges doidEdges = DiseaseOntology.readDoidJsonFileEdges(config.doidJsonFile());
+
+        LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsvV2());
+        final List<PatientTumorLocationV2> tumorLocations = PatientTumorLocationV2File.read(config.tumorLocationTsvV2());
+        @Nullable  PatientTumorLocationV2 sampleTumorLocation = PatientTumorLocationV2Functions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
+        if (sampleTumorLocation == null) {
+            result.add(PAN_CANCER_DOID);
+            return result;
+        }
+
+        final List<String> initialDoids = sampleTumorLocation.doids();
+        for (String initialDoid : initialDoids) {
+            result.add(initialDoid);
+            result.addAll(doidEdges.parents(initialDoid));
+        }
+
+        LOGGER.info(" Resolved doids: {}", String.join(";", result));
+        return result;
+    }
+
     @NotNull
     private static List<ProtectEvidenceItem> protectEvidence(ProtectConfig config) throws IOException {
-
-        // DOID Data
-        LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
-        DoidEdges doidEdges = DiseaseOntology.readDoidJsonFileEdges(config.doidJsonFile());
-        LOGGER.info(" DOID hierarchy: {}", doidEdges.size());
+        final Set<String> doids = doids(config);
 
         // Serve Data
         final String serveActionabilityDir = config.serveActionabilityDir();
@@ -143,10 +167,10 @@ public class ProtectApplication implements AutoCloseable {
 
         // Evidence
         final List<ProtectEvidenceItem> variantEvidence =
-                variantEvidenceFactory.evidence(Sets.newHashSet(), bachelorData.germlineVariants(), purpleData.somaticVariants());
+                variantEvidenceFactory.evidence(doids, bachelorData.germlineVariants(), purpleData.somaticVariants());
         final List<ProtectEvidenceItem> copyNumberEvidence =
-                copyNumberEvidenceFactory.evidence(Sets.newHashSet(), purpleData.copyNumberAlterations());
-        final List<ProtectEvidenceItem> fusionEvidence = fusionEvidenceFactory.evidence(Sets.newHashSet(), linxData.fusions());
+                copyNumberEvidenceFactory.evidence(doids, purpleData.copyNumberAlterations());
+        final List<ProtectEvidenceItem> fusionEvidence = fusionEvidenceFactory.evidence(doids, linxData.fusions());
 
         final List<ProtectEvidenceItem> result = Lists.newArrayList();
         result.addAll(variantEvidence);
@@ -194,6 +218,4 @@ public class ProtectApplication implements AutoCloseable {
         dbAccess.close();
         LOGGER.info("Complete");
     }
-
-
 }
