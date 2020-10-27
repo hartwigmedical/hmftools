@@ -50,13 +50,22 @@ public final class DiseaseOntology {
             JsonArray graphArray = doidObject.getAsJsonArray("graphs");
             if (graphArray.size() == 1) {
                 for (JsonElement graph : graphArray) {
-                    DoidEdges result = new DoidEdges();
-
                     doidEntryGraphChecker.check(graph.getAsJsonObject());
-                    JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
-
                     JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
 
+                    // Extract doid graph
+                    //createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta"));
+                    List<DoidEquivalentNodesSets> doidEquivalentNodesSets =
+                            extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets"));
+                    List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
+                            extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
+                    List<DoidDomainRangeAxioms> doidDomainRangeAxioms =
+                            extractDoidDomainRangeAxioms(graph.getAsJsonObject().getAsJsonArray("domainRangeAxioms"));
+                    List<DoidPropertyChainAxioms> doidPropertyChainAxioms =
+                            extractDoidPropertyChainAxioms(graph.getAsJsonObject().getAsJsonArray("propertyChainAxioms"));
+
+                    // Extract doid edges
+                    DoidEdges result = new DoidEdges();
                     JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
                     for (JsonElement edgeElement : edgesArray) {
                         JsonObject edge = edgeElement.getAsJsonObject();
@@ -68,16 +77,8 @@ public final class DiseaseOntology {
                         }
                     }
 
-                    //createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta"));
-                    List<DoidEquivalentNodesSets> doidEquivalentNodesSets =
-                            extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets"));
-                    List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
-                            extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
-                    List<DoidDomainRangeAxioms> doidDomainRangeAxioms =
-                            extractDoidDomainRangeAxioms(graph.getAsJsonObject().getAsJsonArray("domainRangeAxioms"));
-                    List<DoidPropertyChainAxioms> doidPropertyChainAxioms =
-                            extractDoidPropertyChainAxioms(graph.getAsJsonObject().getAsJsonArray("propertyChainAxioms"));
-
+                    // Extract doid nodes
+                    JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
                     for (JsonElement nodeElement : nodeArray) {
                         JsonObject node = nodeElement.getAsJsonObject();
                         doidEntryNodesChecker.check(node);
@@ -90,6 +91,8 @@ public final class DiseaseOntology {
                                 .doidTerm(optionalString(node, "lbl"))
                                 .build());
                     }
+
+                    // Add data to doid entry
                     doidDoidEntryBuilder.doidNodes(doidNodes);
                     doidDoidEntryBuilder.edges(result);
                     doidDoidEntryBuilder.id("");
