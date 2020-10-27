@@ -20,15 +20,11 @@ public abstract class DoidEntry {
     @NotNull
     public abstract String id();
 
-    // TODO Is this a list of strings?
     @NotNull
     public abstract List<DoidEquivalentNodesSets> equivalentNodesSets();
 
-    // TODO Add all other fields of a graphElement.
-
     @NotNull
-    public abstract List<String> meta();
-
+    public abstract DoidGraphMetaData meta();
 
     @NotNull
     public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();

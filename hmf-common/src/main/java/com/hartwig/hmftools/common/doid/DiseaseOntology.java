@@ -54,7 +54,8 @@ public final class DiseaseOntology {
                     JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
 
                     // Extract doid graph
-                    //createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta"));
+                    DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta"));
+                    String graphId = string(graph.getAsJsonObject(), "id");
                     List<DoidEquivalentNodesSets> doidEquivalentNodesSets =
                             extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets"));
                     List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
@@ -95,9 +96,9 @@ public final class DiseaseOntology {
                     // Add data to doid entry
                     doidDoidEntryBuilder.doidNodes(doidNodes);
                     doidDoidEntryBuilder.edges(result);
-                    doidDoidEntryBuilder.id("");
+                    doidDoidEntryBuilder.id(graphId);
                     doidDoidEntryBuilder.equivalentNodesSets(doidEquivalentNodesSets);
-                    doidDoidEntryBuilder.meta(Lists.newArrayList());
+                    doidDoidEntryBuilder.meta(graphMetaData);
                     doidDoidEntryBuilder.logicalDefinitionAxioms(doidLogicalDefinitionAxioms);
                     doidDoidEntryBuilder.domainRangeAxioms(doidDomainRangeAxioms);
                     doidDoidEntryBuilder.propertyChainAxioms(doidPropertyChainAxioms);
@@ -110,8 +111,25 @@ public final class DiseaseOntology {
     }
 
     @Nullable
-    private static List<String> createMetaNodes(@Nullable JsonObject metaNodesObject) {
-        return Lists.newArrayList();
+    private static DoidGraphMetaData createMetaNodes(@Nullable JsonObject metaGraphObject) {
+
+        JsonArray xrefArray = metaGraphObject.getAsJsonArray("xrefs");
+        List<DoidXref> xrefValList = Lists.newArrayList();
+        if (xrefArray != null) {
+            JsonDatamodelChecker xrefChecker = DoidDatamodelCheckerFactory.doidMetadataXrefChecker();
+
+            for (JsonElement xref : xrefArray) {
+                xrefChecker.check(xref.getAsJsonObject());
+                xrefValList.add(ImmutableDoidXref.builder().val(string(xref.getAsJsonObject(), "val")).build());
+            }
+        }
+
+        ImmutableDoidGraphMetaData.Builder DoidGraphMetaDataBuilder = ImmutableDoidGraphMetaData.builder();
+        DoidGraphMetaDataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metaGraphObject, "basicPropertyValues")));
+        DoidGraphMetaDataBuilder.subsets(optionalStringList(metaGraphObject, "subsets"));
+        DoidGraphMetaDataBuilder.xrefs(xrefValList);
+        DoidGraphMetaDataBuilder.version(string(metaGraphObject, "version"));
+        return DoidGraphMetaDataBuilder.build();
 
     }
 
