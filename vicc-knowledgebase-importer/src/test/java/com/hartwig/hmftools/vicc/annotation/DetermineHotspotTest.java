@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.vicc.annotation;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -7,6 +8,24 @@ import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class DetermineHotspotTest {
+
+    @Test
+    public void canConvertFeatureNameToProteinAnnotation() {
+        assertEquals("E709K", DetermineHotspot.extractProteinAnnotation("E709K"));
+        assertEquals("E709K", DetermineHotspot.extractProteinAnnotation("EGFR E709K "));
+        assertEquals("E709K", DetermineHotspot.extractProteinAnnotation("EGFR:E709K"));
+        assertEquals("E709K", DetermineHotspot.extractProteinAnnotation("EGFR:p.E709K"));
+        assertEquals("E709K", DetermineHotspot.extractProteinAnnotation("EGFR p.E709K"));
+        assertEquals("E709K", DetermineHotspot.extractProteinAnnotation("E709K (c.2100A>c)"));
+
+        assertEquals("G778_P780dup", DetermineHotspot.extractProteinAnnotation("G778_P780DUP"));
+        assertEquals("V560del", DetermineHotspot.extractProteinAnnotation("KIT:p.V560DEL"));
+        assertEquals("V560fs", DetermineHotspot.extractProteinAnnotation("KIT:p.V560FS"));
+        assertEquals("V560fs", DetermineHotspot.extractProteinAnnotation("KIT:p.V560FS*"));
+        assertEquals("V560insAYVM", DetermineHotspot.extractProteinAnnotation("KIT:p.V560INSAYVM"));
+        assertEquals("V560insINS", DetermineHotspot.extractProteinAnnotation("KIT:p.V560INSINS"));
+        assertEquals("V560delinsDEL", DetermineHotspot.extractProteinAnnotation("KIT:p.V560DELINSDEL"));
+    }
 
     @Test
     public void canAssessWhetherProteinAnnotationIsHotspot() {

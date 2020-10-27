@@ -80,14 +80,14 @@ public class FusionExtractor {
                         .description()
                         .equals("KIT Exon 11 deletions")) {
                     fusionGeneStart = feature.geneSymbol();
-                    exonUp = Integer.valueOf(feature.proteinAnnotation());
+                    exonUp = 0; // Integer.valueOf(feature.proteinAnnotation());
                     fusionGeneEnd = feature.geneSymbol();
-                    exonDown = Integer.valueOf(feature.proteinAnnotation());
+                    exonDown = 0; //Integer.valueOf(feature.proteinAnnotation());
                 } else if (feature.description().equals("MET EXON 14 SKIPPING MUTATION")) {
                     fusionGeneStart = feature.geneSymbol();
-                    exonUp = Integer.parseInt(feature.proteinAnnotation()) - 1;
+                    exonUp = 0; // Integer.parseInt(feature.proteinAnnotation()) - 1;
                     fusionGeneEnd = feature.geneSymbol();
-                    exonDown = Integer.parseInt(feature.proteinAnnotation()) + 1;
+                    exonDown = 0; //Integer.parseInt(feature.proteinAnnotation()) + 1;
                 }
                 fusionsPerFeature.put(feature,
                         ImmutableKnownFusionPair.builder()

@@ -47,7 +47,7 @@ public class GeneRangeExtractor {
                 } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                     if (specificMutationType == MutationTypeFilter.UNKNOWN) {
                         //TODO which inactivation event for TSG?
-                        if (feature.biomarkerType() != null && feature.biomarkerType().contains("inactivation") ) {
+                        if (feature.biomarkerType() != null && feature.biomarkerType().contains("inactivation")) {
                             return MutationTypeFilter.MISSENSE_ANY;
                         } else {
                             return MutationTypeFilter.ANY;
@@ -181,33 +181,34 @@ public class GeneRangeExtractor {
                                 geneRangesPerFeature,
                                 extractSpecificMutationTypeFilter(feature));
                     } else if (feature.name().contains("-")) {
-                        String exons = feature.proteinAnnotation();
+                        String exons = ""; //feature.proteinAnnotation();
                         List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
 
                         if (exons.equals("mutation")) {
                             exons = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
                         }
-                        int startExon =
-                                Integer.parseInt(exons.split("-")[0]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-                        int endExon =
-                                Integer.parseInt(exons.split("-")[1]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-                        HmfExonRegion hmfExonRegionStart = exonRegions.get(startExon);
-                        HmfExonRegion hmfExonRegionEnd = exonRegions.get(endExon);
-                        long start = hmfExonRegionStart.start();
-                        long end = hmfExonRegionEnd.end();
-                        String chromosome = hmfExonRegionStart.chromosome();
-
-                        geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
-                                .gene(feature.geneSymbol())
-                                .start(start)
-                                .end(end)
-                                .chromosome(chromosome)
-                                .rangeInfo(exons)
-                                .mutationType(extractMutationFilter(driverGenes,
-                                        feature.geneSymbol(),
-                                        extractSpecificMutationTypeFilter(feature), feature))
-                                .build());
-                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                        //                        int startExon =
+                        //                                Integer.parseInt(exons.split("-")[0]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                        //                        int endExon =
+                        //                                Integer.parseInt(exons.split("-")[1]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+                        //                        HmfExonRegion hmfExonRegionStart = exonRegions.get(startExon);
+                        //                        HmfExonRegion hmfExonRegionEnd = exonRegions.get(endExon);
+                        //                        long start = hmfExonRegionStart.start();
+                        //                        long end = hmfExonRegionEnd.end();
+                        //                        String chromosome = hmfExonRegionStart.chromosome();
+                        //
+                        //                        geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                        //                                .gene(feature.geneSymbol())
+                        //                                .start(start)
+                        //                                .end(end)
+                        //                                .chromosome(chromosome)
+                        //                                .rangeInfo(exons)
+                        //                                .mutationType(extractMutationFilter(driverGenes,
+                        //                                        feature.geneSymbol(),
+                        //                                        extractSpecificMutationTypeFilter(feature),
+                        //                                        feature))
+                        //                                .build());
+                        //                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     } else if (feature.proteinAnnotation().equals("mutation") && !feature.name().contains("-")) {
                         String exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
                         extractGeneRangesPerFeature(exonNumber,
@@ -325,22 +326,24 @@ public class GeneRangeExtractor {
 
         if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
             String geneSymbol = feature.geneSymbol();
-            int codonNumber = Integer.parseInt(proteinAnnotation.replaceAll("\\D+", ""));
-            List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
-            if (genomeRegions.size() == 1) {
-                long start = genomeRegions.get(0).start();
-                long end = genomeRegions.get(0).end();
-                String chromosome = genomeRegions.get(0).chromosome();
+            if (!proteinAnnotation.isEmpty()) {
+                int codonNumber = Integer.parseInt(proteinAnnotation.replaceAll("\\D+", ""));
+                List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
+                if (genomeRegions.size() == 1) {
+                    long start = genomeRegions.get(0).start();
+                    long end = genomeRegions.get(0).end();
+                    String chromosome = genomeRegions.get(0).chromosome();
 
-                geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
-                        .gene(geneSymbol)
-                        .start(start)
-                        .end(end)
-                        .chromosome(chromosome)
-                        .rangeInfo(proteinAnnotation)
-                        .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
-                        .build());
-                geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                            .gene(geneSymbol)
+                            .start(start)
+                            .end(end)
+                            .chromosome(chromosome)
+                            .rangeInfo(proteinAnnotation)
+                            .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
+                            .build());
+                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                }
 
             } else {
                 LOGGER.warn("Multiple genomic regions known for event {}", feature);
