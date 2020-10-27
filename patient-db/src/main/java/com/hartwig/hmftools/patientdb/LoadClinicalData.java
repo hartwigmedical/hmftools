@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
-import com.hartwig.hmftools.common.doid.DoidEntry;
+import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
@@ -109,10 +109,10 @@ public final class LoadClinicalData {
             System.exit(1);
         }
 
-        List<DoidEntry> doidEntries = DiseaseOntology.readDoidJsonFile(cmd.getOptionValue(DOID_JSON));
+        List<DoidNode> doidNodes = DiseaseOntology.readDoidJsonFile(cmd.getOptionValue(DOID_JSON)).doidNodes();
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
         TumorLocationCuratorV2 tumorLocationCuratorV2 =
-                new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), doidEntries);
+                new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), doidNodes);
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.doid;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,21 +12,31 @@ import org.jetbrains.annotations.Nullable;
 public abstract class DoidEntry {
 
     @NotNull
-    public abstract String doid();
+    public abstract List<DoidNode> doidNodes();
 
     @NotNull
-    public abstract String url();
+    public abstract DoidEdges edges();
 
-    @Nullable
-    public abstract String doidTerm();
+    @NotNull
+    public abstract String id();
 
-    @Nullable
-    public abstract String type();
+    // TODO Is this a list of strings?
+    @NotNull
+    public abstract List<DoidEquivalentNodesSets> equivalentNodesSets();
 
-    @Nullable
-    public abstract DoidMetadata doidMetadata();
+    // TODO Add all other fields of a graphElement.
 
-    @Nullable
-    public abstract DoidNodes doidNodes();
+    @NotNull
+    public abstract List<String> meta();
+
+
+    @NotNull
+    public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();
+
+    @NotNull
+    public abstract List<DoidDomainRangeAxioms> domainRangeAxioms();
+
+    @NotNull
+    public abstract List<DoidPropertyChainAxioms> propertyChainAxioms();
 
 }

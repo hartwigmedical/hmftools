@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2File;
-import com.hartwig.hmftools.common.doid.DoidEntry;
+import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.patientdb.data.Patient;
 
 import org.apache.logging.log4j.LogManager;
@@ -54,20 +54,20 @@ final class DumpTumorLocationData {
                         .primaryTumorExtraDetails(Strings.nullToEmpty(patient.baselineData()
                                 .curatedTumorLocationV2()
                                 .primaryTumorExtraDetails()))
-                        .doids(extractDoids(patient.baselineData().curatedTumorLocationV2().doidEntries()))
+                        .doids(extractDoids(patient.baselineData().curatedTumorLocationV2().doidNodes()))
                         .isOverridden(false)
                         .build()).collect(Collectors.toList());
     }
 
     @NotNull
-    private static List<String> extractDoids(@Nullable List<DoidEntry> doidEntries) {
-        if (doidEntries == null) {
+    private static List<String> extractDoids(@Nullable List<DoidNode> doidNodes) {
+        if (doidNodes == null) {
             return Lists.newArrayList();
         }
 
         List<String> doids = Lists.newArrayList();
-        for (DoidEntry doidEntry : doidEntries) {
-            doids.add(doidEntry.doid());
+        for (DoidNode doidNode : doidNodes) {
+            doids.add(doidNode.doid());
         }
         return doids;
     }
