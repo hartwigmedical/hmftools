@@ -170,6 +170,10 @@ public final class DiseaseOntology {
             JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
             doidLogicalDefinitionAxiomsChecker.check(logicalDefinitionAxiomsObject);
 
+            LOGGER.info(logicalDefinitionAxiomsObject.getAsJsonArray("restrictions"));
+            for (JsonElement element: logicalDefinitionAxiomsObject.getAsJsonArray("restrictions")) {
+                LOGGER.info(element);
+            }
             doidLogicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
                     .definedClassId(string(logicalDefinitionAxiomsObject, "definedClassId"))
                     .genusIds(Lists.newArrayList()) //TODO
