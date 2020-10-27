@@ -53,7 +53,7 @@ public final class DiseaseOntology {
                     doidGraphsChecker.check(graph.getAsJsonObject());
 
                     // Extract doid graph
-                    DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta"));
+                    DoidGraphMetaData graphMetaData = createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta"));
                     List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
                             extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
 
@@ -110,7 +110,7 @@ public final class DiseaseOntology {
         return doidDoidEntryBuilder.build();
     }
 
-    @Nullable
+    @NotNull
     private static DoidGraphMetaData createMetaNodes(@Nullable JsonObject metaGraphObject) {
 
         JsonArray xrefArray = metaGraphObject.getAsJsonArray("xrefs");
