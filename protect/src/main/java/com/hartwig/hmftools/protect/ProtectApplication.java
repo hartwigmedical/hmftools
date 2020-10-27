@@ -61,7 +61,7 @@ public class ProtectApplication implements AutoCloseable {
 
         try (final ProtectApplication application = new ProtectApplication(options, args)) {
             application.run();
-//            application.runOld();
+            application.runOld();
         } catch (ParseException exception) {
             LOGGER.warn(exception);
             new HelpFormatter().printHelp("PROTECT", options);
@@ -75,7 +75,7 @@ public class ProtectApplication implements AutoCloseable {
     private final DatabaseAccess dbAccess;
     private final ProtectConfig protectConfig;
 
-    public ProtectApplication(final Options options, final String... args) throws ParseException, SQLException {
+    public ProtectApplication(final Options options, final String... args) throws ParseException, SQLException, IOException {
         final CommandLine cmd = new DefaultParser().parse(options, args);
         this.dbAccess = DatabaseAccess.databaseAccess(cmd);
         this.protectConfig = ProtectConfig.createConfig(cmd);
@@ -121,8 +121,8 @@ public class ProtectApplication implements AutoCloseable {
 
 //        printResults(tumorSampleId, analysis);
 
-        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + "evidence.off.tsv", analysis.offLabelEvidence());
-        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + "evidence.tumor.tsv", analysis.tumorSpecificEvidence());
+        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.offLabel.tsv", analysis.offLabelEvidence());
+        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.onLabel.tsv", analysis.tumorSpecificEvidence());
     }
 
     private static Set<String> doids(@NotNull ProtectConfig config) throws IOException {

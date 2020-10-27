@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.protect;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.commons.cli.CommandLine;
@@ -134,14 +135,14 @@ public interface ProtectConfig {
     String chordPredictionTxt();
 
     @NotNull
-    static ProtectConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
+    static ProtectConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
         return ImmutableProtectConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
-                .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
+                .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .deprecatedActionabilityDir(nonOptionalDir(cmd, DEPRECATED_ACTIONABILITY_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .tumorLocationTsvV1(nonOptionalFile(cmd, TUMOR_LOCATION_TSV_V1))
@@ -180,6 +181,16 @@ public interface ProtectConfig {
             throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
         }
 
+        return value;
+    }
+
+    @NotNull
+    static String outputDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException, IOException {
+        String value = nonOptionalValue(cmd, param);
+        final File outputDir = new File(value);
+        if (!outputDir.exists() && !outputDir.mkdirs()) {
+            throw new IOException("Unable to write to directory " + value);
+        }
         return value;
     }
 
