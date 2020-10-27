@@ -72,6 +72,23 @@ final class DoidDatamodelCheckerFactory {
         return new JsonDatamodelChecker("DoidSynonyms", map);
     }
 
+    @NotNull
+    static JsonDatamodelChecker doidDefinitionChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("xrefs", true);
+        map.put("val", true);
+        return new JsonDatamodelChecker("DoidDefinition", map);
+    }
+
+
+
+
+
+
+
+
+
+
 
     //TODO below checks!!!
 
@@ -106,11 +123,5 @@ final class DoidDatamodelCheckerFactory {
         return new JsonDatamodelChecker("DoidBasicPropertyValues", map);
     }
 
-    @NotNull
-    static JsonDatamodelChecker doidDefinitionChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("xrefs", true);
-        map.put("val", true);
-        return new JsonDatamodelChecker("DoidDefinition", map);
-    }
+
 }

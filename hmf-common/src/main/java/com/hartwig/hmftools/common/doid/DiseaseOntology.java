@@ -244,7 +244,6 @@ public final class DiseaseOntology {
 
     @Nullable
     private static DoidDefinition extractDoidDefinition(@Nullable JsonObject definitionObject) {
-        //TODO check
         if (definitionObject == null) {
             return null;
         }
