@@ -55,7 +55,7 @@ public final class DiseaseOntology {
                     // Extract doid graph
                     DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta")); //TODO
                     List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
-                            extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms")); //TODO
+                            extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
 
                     // Extract doid edges
                     DoidEdges result = new DoidEdges();
