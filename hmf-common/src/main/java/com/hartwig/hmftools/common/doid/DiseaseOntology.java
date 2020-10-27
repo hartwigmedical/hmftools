@@ -76,7 +76,7 @@ public final class DiseaseOntology {
                     JsonObject node = nodeElement.getAsJsonObject();
                     doidEntryNodesChecker.check(node);
                     String url = string(node, "id");
-                    doidNodes.add(ImmutableDoidEntry.builder()
+                    doidNodes.add(ImmutableDoidNode.builder()
                             .doid(extractDoid(url))
                             .url(url)
                             .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
@@ -84,7 +84,7 @@ public final class DiseaseOntology {
                             .doidTerm(optionalString(node, "lbl"))
                             .build());
                 }
-                //TODO return Doid
+                //TODO return DoidEntry
             }
         }
         return doidNodes;
