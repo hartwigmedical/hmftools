@@ -80,7 +80,13 @@ final class DoidDatamodelCheckerFactory {
         return new JsonDatamodelChecker("DoidDefinition", map);
     }
 
-
+    @NotNull
+    static JsonDatamodelChecker doidBasicPropertyValuesChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("pred", true);
+        map.put("val", true);
+        return new JsonDatamodelChecker("DoidBasicPropertyValues", map);
+    }
 
 
 
@@ -115,13 +121,7 @@ final class DoidDatamodelCheckerFactory {
 
 
 
-    @NotNull
-    static JsonDatamodelChecker doidBasicPropertyValuesChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("pred", true);
-        map.put("val", true);
-        return new JsonDatamodelChecker("DoidBasicPropertyValues", map);
-    }
+
 
 
 }

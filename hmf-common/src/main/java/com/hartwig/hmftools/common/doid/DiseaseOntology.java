@@ -136,16 +136,15 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@Nullable JsonArray basicPropertyValueArray) {
-        //TODO check
         if (basicPropertyValueArray == null) {
             return null;
         }
 
         List<DoidBasicPropertyValue> doidBasicPropertyValueList = Lists.newArrayList();
-        JsonDatamodelChecker basicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
 
         for (JsonElement basicPropertyElement : basicPropertyValueArray) {
             JsonObject basicProperty = basicPropertyElement.getAsJsonObject();
+            JsonDatamodelChecker basicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
             basicPropertyValuesChecker.check(basicProperty);
 
             doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder()
