@@ -55,15 +55,8 @@ public final class DiseaseOntology {
 
                     // Extract doid graph
                     DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta"));
-                    String graphId = string(graph.getAsJsonObject(), "id");
-                    List<DoidEquivalentNodesSets> doidEquivalentNodesSets =
-                            extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets"));
                     List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
                             extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
-                    List<DoidDomainRangeAxioms> doidDomainRangeAxioms =
-                            extractDoidDomainRangeAxioms(graph.getAsJsonObject().getAsJsonArray("domainRangeAxioms"));
-                    List<DoidPropertyChainAxioms> doidPropertyChainAxioms =
-                            extractDoidPropertyChainAxioms(graph.getAsJsonObject().getAsJsonArray("propertyChainAxioms"));
 
                     // Extract doid edges
                     DoidEdges result = new DoidEdges();
@@ -100,12 +93,12 @@ public final class DiseaseOntology {
                     // Add data to doid entry
                     doidDoidEntryBuilder.doidNodes(doidNodes);
                     doidDoidEntryBuilder.edges(result);
-                    doidDoidEntryBuilder.id(graphId);
+                    doidDoidEntryBuilder.id(string(graph.getAsJsonObject(), "id"));
                     doidDoidEntryBuilder.meta(graphMetaData);
-                    doidDoidEntryBuilder.equivalentNodesSets(doidEquivalentNodesSets);
+                    doidDoidEntryBuilder.equivalentNodesSets(optionalStringList(graph.getAsJsonObject(), "equivalentNodesSets")); // is always empty string list
                     doidDoidEntryBuilder.logicalDefinitionAxioms(doidLogicalDefinitionAxioms);
-                    doidDoidEntryBuilder.domainRangeAxioms(doidDomainRangeAxioms);
-                    doidDoidEntryBuilder.propertyChainAxioms(doidPropertyChainAxioms);
+                    doidDoidEntryBuilder.domainRangeAxioms(optionalStringList(graph.getAsJsonObject(), "domainRangeAxioms")); // is always empty string list
+                    doidDoidEntryBuilder.propertyChainAxioms(optionalStringList(graph.getAsJsonObject(), ("propertyChainAxioms"))); // is always empty string list
                 }
             } else {
                 LOGGER.error(" Size {} of graph elements are not correct!", doidObject.size());
@@ -162,26 +155,6 @@ public final class DiseaseOntology {
     }
 
     @Nullable
-    private static List<DoidEquivalentNodesSets> extractDoidEquivalentNodesSets(@Nullable JsonArray equivalentNodesSetsArray) {
-        //TODO check
-        if (equivalentNodesSetsArray == null) {
-            return null;
-        }
-
-        List<DoidEquivalentNodesSets> doidEquivalentNodesSets = Lists.newArrayList();
-        JsonDatamodelChecker doidEquivalentNodesSetsChecker = DoidDatamodelCheckerFactory.doidEquivalentNodesSetsChecker();
-
-        for (JsonElement equivalentNodesSets : equivalentNodesSetsArray) {
-            JsonObject equivalentNodesSetsObject = equivalentNodesSets.getAsJsonObject();
-            doidEquivalentNodesSetsChecker.check(equivalentNodesSetsObject);
-
-            doidEquivalentNodesSets.add(ImmutableDoidEquivalentNodesSets.builder().build());
-        }
-
-        return doidEquivalentNodesSets;
-    }
-
-    @Nullable
     private static List<DoidLogicalDefinitionAxioms> extractDoidLogicalDefinitionAxioms(@Nullable JsonArray logicalDefinitionAxiomsArray) {
         //TODO check
         if (logicalDefinitionAxiomsArray == null) {
@@ -199,46 +172,6 @@ public final class DiseaseOntology {
         }
 
         return doidLogicalDefinitionAxioms;
-    }
-
-    @Nullable
-    private static List<DoidDomainRangeAxioms> extractDoidDomainRangeAxioms(@Nullable JsonArray domainRangeAxiomsArray) {
-        //TODO check
-        if (domainRangeAxiomsArray == null) {
-            return null;
-        }
-
-        List<DoidDomainRangeAxioms> doidDomainRangeAxioms = Lists.newArrayList();
-        JsonDatamodelChecker doidDomainRangeAxiomsChecker = DoidDatamodelCheckerFactory.doidDomainRangeAxiomsChecker();
-
-        for (JsonElement domainRangeAxioms : domainRangeAxiomsArray) {
-            JsonObject domainRangeAxiomsObject = domainRangeAxioms.getAsJsonObject();
-            doidDomainRangeAxiomsChecker.check(domainRangeAxiomsObject);
-
-            doidDomainRangeAxioms.add(ImmutableDoidDomainRangeAxioms.builder().build());
-        }
-
-        return doidDomainRangeAxioms;
-    }
-
-    @Nullable
-    private static List<DoidPropertyChainAxioms> extractDoidPropertyChainAxioms(@Nullable JsonArray propertyChainAxiomsArray) {
-        //TODO check
-        if (propertyChainAxiomsArray == null) {
-            return null;
-        }
-
-        List<DoidPropertyChainAxioms> doidPropertyChainAxioms = Lists.newArrayList();
-        JsonDatamodelChecker doidPropertyChainAxiomsChecker = DoidDatamodelCheckerFactory.doidPropertyChainAxiomsChecker();
-
-        for (JsonElement propertyChainAxioms : propertyChainAxiomsArray) {
-            JsonObject propertyChainAxiomsObject = propertyChainAxioms.getAsJsonObject();
-            doidPropertyChainAxiomsChecker.check(propertyChainAxiomsObject);
-
-            doidPropertyChainAxioms.add(ImmutableDoidPropertyChainAxioms.builder().build());
-        }
-
-        return doidPropertyChainAxioms;
     }
 
     @VisibleForTesting

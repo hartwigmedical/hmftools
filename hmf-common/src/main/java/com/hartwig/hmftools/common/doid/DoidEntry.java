@@ -24,15 +24,15 @@ public abstract class DoidEntry {
     public abstract DoidGraphMetaData meta();
 
     @NotNull
-    public abstract List<DoidEquivalentNodesSets> equivalentNodesSets();
+    public abstract List<String> equivalentNodesSets();
 
     @NotNull
     public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();
 
     @NotNull
-    public abstract List<DoidDomainRangeAxioms> domainRangeAxioms();
+    public abstract List<String> domainRangeAxioms();
 
     @NotNull
-    public abstract List<DoidPropertyChainAxioms> propertyChainAxioms();
+    public abstract List<String> propertyChainAxioms();
 
 }
