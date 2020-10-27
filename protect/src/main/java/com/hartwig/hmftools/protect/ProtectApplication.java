@@ -11,8 +11,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItemFile;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
@@ -160,10 +158,9 @@ public class ProtectApplication implements AutoCloseable {
         final FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());
 
         // External Data
-        final ChordAnalysis chordAnalysis = ChordFileReader.read(config.chordPredictionTxt());
         final LinxData linxData = LinxDataLoader.load(config);
         final PurpleData purpleData = PurpleDataLoader.load(config);
-        final BachelorData bachelorData = BachelorDataLoader.load(purpleData, config.bachelorTsv(), chordAnalysis.hrStatus());
+        final BachelorData bachelorData = BachelorDataLoader.load(config.bachelorTsv(), purpleData, linxData);
 
         // Evidence
         final List<ProtectEvidenceItem> variantEvidence =
