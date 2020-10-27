@@ -26,7 +26,7 @@ public abstract class DoidEntry {
     @NotNull
     public abstract List<String> equivalentNodesSets();
 
-    @NotNull
+    @Nullable
     public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();
 
     @NotNull
