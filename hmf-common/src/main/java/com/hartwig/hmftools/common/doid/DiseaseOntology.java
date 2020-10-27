@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.doid;
 
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
@@ -169,14 +168,27 @@ public final class DiseaseOntology {
             JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
             doidLogicalDefinitionAxiomsChecker.check(logicalDefinitionAxiomsObject);
 
-            LOGGER.info(logicalDefinitionAxiomsObject.getAsJsonArray("restrictions"));
-            for (JsonElement element: logicalDefinitionAxiomsObject.getAsJsonArray("restrictions")) {
-                LOGGER.info(element);
+            JsonArray restrictionArray = optionalJsonArray(logicalDefinitionAxiomsObject, "restrictions");
+            List<DoidRestrictions> doidRestrictionsList = Lists.newArrayList();
+            if (restrictionArray != null) {
+                for (JsonElement restrictionsElement : restrictionArray) {
+                    JsonDatamodelChecker doidRestrictionChecker = DoidDatamodelCheckerFactory.doidRestrictionsChecker();
+
+                    if (restrictionsElement.isJsonObject()) {
+                        JsonObject restrictionObject = restrictionsElement.getAsJsonObject();
+                        doidRestrictionChecker.check(restrictionObject.getAsJsonObject());
+                        doidRestrictionsList.add(ImmutableDoidRestrictions.builder()
+                                .propertyId(string(restrictionObject, "propertyId"))
+                                .fillerId(string(restrictionObject, "fillerId"))
+                                .build());
+                    }
+                }
             }
+
             doidLogicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
                     .definedClassId(string(logicalDefinitionAxiomsObject, "definedClassId"))
                     .genusIds(Lists.newArrayList()) //TODO
-                    .restrictions(Lists.newArrayList()) //TODO
+                    .restrictions(doidRestrictionsList)
                     .build());
         }
 

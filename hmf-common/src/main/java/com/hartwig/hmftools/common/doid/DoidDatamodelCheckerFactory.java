@@ -58,9 +58,18 @@ final class DoidDatamodelCheckerFactory {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("definedClassId", true);
         map.put("genusIds", true); //TODO
-        map.put("restrictions", true); //TODO
+        map.put("restrictions", true);
 
         return new JsonDatamodelChecker("DoidLogicalDefinitionAxiom", map);
+    }
+
+    @NotNull
+    static JsonDatamodelChecker doidRestrictionsChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("propertyId", true);
+        map.put("fillerId", true);
+
+        return new JsonDatamodelChecker("doidRestrictionsChecker", map);
     }
 
     @NotNull

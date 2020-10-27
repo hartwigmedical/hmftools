@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.doid;
 
-import java.util.List;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,14 +7,12 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DoidLogicalDefinitionAxioms {
+public abstract class DoidRestrictions {
 
     @NotNull
-    public abstract String definedClassId();
+    public abstract String propertyId();
 
     @NotNull
-    public abstract List<String> genusIds(); //TODO
+    public abstract String fillerId();
 
-    @NotNull
-    public abstract List<DoidRestrictions> restrictions();
 }
