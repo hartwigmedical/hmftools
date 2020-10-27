@@ -37,7 +37,7 @@ public class CopyNumberEvidence {
                 result.add(evidence);
             }
         }
-        return ProtectEvidenceItems.doNotReportInsignificantEvidence(result);
+        return ProtectEvidenceItems.reportHighest(result);
     }
 
     private boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull ReportableGainLoss reportable) {
