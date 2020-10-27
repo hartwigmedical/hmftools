@@ -22,8 +22,8 @@ public class DiseaseOntologyTest {
     @Test
     public void canLoadDoidJsonFile() throws IOException {
         List<DoidNode> doidNodes =
-                DiseaseOntology.readDoidJsonFile("/Users/liekeschoenmaker/hmf/projects/disease_ontology/201015_doid.json").doidNodes();
-        assertEquals(19208, doidNodes.size());
+                DiseaseOntology.readDoidJsonFile(DOID_FILE_JSON).doidNodes();
+        assertEquals(2, doidNodes.size());
 
         DoidNode doidEntry1 = doidNodes.get(0);
         assertEquals(doidEntry1.url(), "http://purl.obolibrary.org/obo/DOID_8718");
