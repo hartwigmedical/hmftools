@@ -2,6 +2,8 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -29,13 +31,18 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 public class ExternalFusionCompare
 {
     private final CohortConfig mConfig;
+    private final EnsemblDataCache mGeneTransCache;
+
     private final BufferedWriter mWriter;
     private final List<String> mSampleResults;
     private final Map<String,Integer> mFieldsMap;
@@ -49,6 +56,12 @@ public class ExternalFusionCompare
     public ExternalFusionCompare(final CohortConfig config, final BufferedWriter writer)
     {
         mConfig = config;
+
+        mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.HG19);
+        mGeneTransCache.setRequiredData(false, false, false, false);
+        mGeneTransCache.setRequireGeneSynonyms();
+        mGeneTransCache.load(true); // only need  genes, not transcript data
+
         mWriter = writer;
         mSampleResults = Lists.newArrayList();
         mFieldsMap = Maps.newHashMap();
@@ -254,13 +267,28 @@ public class ExternalFusionCompare
             }
         }
 
-        final String[] noGeneIds = {"", ""};
-
         for(ExternalFusionData extFusion : unmatchedExternalFusions)
         {
+            // look up geneId data in Ensembl cache, including in synonymns if not found
+            final String[] geneIds = {"", ""};
+            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+            {
+                EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(extFusion.GeneNames[fs]);
+
+                if(geneData == null)
+                {
+                    geneData = mGeneTransCache.getGeneDataBySynonym(extFusion.GeneNames[fs], extFusion.Chromosomes[fs]);
+                }
+
+                if(geneData != null)
+                {
+                    geneIds[fs] = geneData.GeneId;
+                }
+            }
+
             cacheMatchResults(sampleId, getMatchType(MT_EXT_ONLY), -1, extFusion.Chromosomes, extFusion.JunctionPositions,
-                    extFusion.JunctionOrientations, extFusion.JunctionTypes, extFusion.SvType, noGeneIds, extFusion.GeneNames,
-                    0, 0, extFusion.SplitFragments, extFusion.DiscordantFragments, 0, "");
+                extFusion.JunctionOrientations, extFusion.JunctionTypes, extFusion.SvType, geneIds, extFusion.GeneNames,
+                0, 0, extFusion.SplitFragments, extFusion.DiscordantFragments, 0, "");
         }
 
     }
@@ -371,7 +399,7 @@ public class ExternalFusionCompare
             }
             catch(IOException e)
             {
-                ISF_LOGGER.error("failed to load arriba discarded fusion file({}): {}", arribaDiscardedFile, e.toString());
+                ISF_LOGGER.error("failed to load Arriba discarded fusion file({}): {}", arribaDiscardedFile, e.toString());
             }
         }
 

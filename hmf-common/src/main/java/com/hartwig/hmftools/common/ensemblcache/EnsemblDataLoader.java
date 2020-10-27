@@ -31,6 +31,12 @@ public class EnsemblDataLoader
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
             final Map<String, List<EnsemblGeneData>> chrGeneDataMap, RefGenomeVersion version)
     {
+        return loadEnsemblGeneData(dataPath, restrictedGeneIds, chrGeneDataMap, version, false);
+    }
+
+    public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
+            final Map<String, List<EnsemblGeneData>> chrGeneDataMap, RefGenomeVersion version, boolean loadSynonyms)
+    {
         String filename = dataPath;
 
         filename += ENSEMBL_GENE_DATA_FILE;
@@ -60,6 +66,7 @@ public class EnsemblDataLoader
             int geneStartIndex = fieldsIndexMap.get("GeneStart");
             int geneEndIndex = fieldsIndexMap.get("GeneEnd");
             int karyotypeBandIndex = fieldsIndexMap.get("KaryotypeBand");
+            int synonymIndex = fieldsIndexMap.get("Synonyms");
 
             line = fileReader.readLine(); // skip header
 
@@ -84,6 +91,9 @@ public class EnsemblDataLoader
                 EnsemblGeneData geneData = new EnsemblGeneData(
                         geneId, items[geneNameIndex], chromosome, Byte.parseByte(items[strandIndex]),
                         Integer.parseInt(items[geneStartIndex]), Integer.parseInt(items[geneEndIndex]), items[karyotypeBandIndex]);
+
+                if(loadSynonyms)
+                    geneData.addSynonyms(items[synonymIndex]);
 
                 if(!currentChr.equals(chromosome))
                 {

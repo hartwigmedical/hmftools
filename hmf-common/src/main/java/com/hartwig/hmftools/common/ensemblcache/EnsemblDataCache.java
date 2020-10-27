@@ -45,6 +45,7 @@ public class EnsemblDataCache
     private boolean mRequireProteinDomains;
     private boolean mRequireSplicePositions;
     private boolean mCanonicalTranscriptsOnly;
+    private boolean mRequireGeneSynonyms;
 
     private final Map<EnsemblGeneData,Integer> mDownstreamGeneAnnotations;
     private final List<EnsemblGeneData> mAlternativeGeneData;
@@ -65,6 +66,7 @@ public class EnsemblDataCache
         mRequireProteinDomains = false;
         mRequireSplicePositions = false;
         mCanonicalTranscriptsOnly = false;
+        mRequireGeneSynonyms = false;
         mDownstreamGeneAnnotations = Maps.newHashMap();
         mAlternativeGeneData = Lists.newArrayList();
     }
@@ -89,6 +91,8 @@ public class EnsemblDataCache
         mRequireProteinDomains = proteinDomains;
         mCanonicalTranscriptsOnly = canonicalOnly;
     }
+
+    public void setRequireGeneSynonyms() { mRequireGeneSynonyms = true; }
 
     public final Map<String, List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
     public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
@@ -123,6 +127,15 @@ public class EnsemblDataCache
         }
 
         return null;
+    }
+
+    public EnsemblGeneData getGeneDataBySynonym(final String geneName, final String chromosome)
+    {
+        final List<EnsemblGeneData> geneDataList = mChrGeneDataMap.get(chromosome);
+        if(geneDataList == null)
+            return null;
+
+        return geneDataList.stream().filter(x -> x.hasSynonym(geneName)).findFirst().orElse(null);
     }
 
     public void createGeneIdDataMap()
@@ -784,7 +797,7 @@ public class EnsemblDataCache
 
     public boolean load(boolean delayTranscriptLoading)
     {
-        if(!loadEnsemblGeneData(mDataPath, mRestrictedGeneIdList, mChrGeneDataMap, mRefGenomeVersion))
+        if(!loadEnsemblGeneData(mDataPath, mRestrictedGeneIdList, mChrGeneDataMap, mRefGenomeVersion, mRequireGeneSynonyms))
             return false;
 
         if(!delayTranscriptLoading)

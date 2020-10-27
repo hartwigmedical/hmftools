@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.ensemblcache;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 public class EnsemblGeneData
 {
     public final String GeneId; // aka StableId
@@ -9,6 +13,8 @@ public class EnsemblGeneData
     public final int GeneStart;
     public final int GeneEnd;
     public final String KaryotypeBand;
+
+    private String mSynonyms;
 
     public EnsemblGeneData(
             String geneId, String geneName, String chromosome, byte strand, int geneStart, int geneEnd, String karyotypeBand)
@@ -20,10 +26,14 @@ public class EnsemblGeneData
         GeneStart = geneStart;
         GeneEnd = geneEnd;
         KaryotypeBand = karyotypeBand;
+        mSynonyms = "";
     }
 
     public boolean forwardStrand() { return Strand == 1; }
     public boolean reverseStrand() { return Strand == -1; }
+
+    public void addSynonyms(final String synonyms) { mSynonyms = synonyms; }
+    public boolean hasSynonym(final String name) { return mSynonyms.contains(name); }
 
     public int length() { return GeneEnd - GeneStart; }
 
