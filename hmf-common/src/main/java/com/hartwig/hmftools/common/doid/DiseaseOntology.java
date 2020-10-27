@@ -104,7 +104,7 @@ public final class DiseaseOntology {
                     doidDoidEntryBuilder.propertyChainAxioms(doidPropertyChainAxioms);
                 }
             } else {
-                LOGGER.info(" Size of graph elements are not correct {}", graphArray.size());
+                LOGGER.error(" Size {} of graph elements are not correct!", graphArray.size());
             }
         }
         return doidDoidEntryBuilder.build();
