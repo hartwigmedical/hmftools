@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSY;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DOIDENTRY;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DOIDNODE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.FORMSMETADATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENT;
@@ -49,7 +49,7 @@ class ClinicalDAO {
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
         context.truncate(PATIENT).execute();
         context.truncate(BASELINE).execute();
-        context.truncate(DOIDENTRY).execute();
+        context.truncate(DOIDNODE).execute();
         context.truncate(PRETREATMENTDRUG).execute();
         context.truncate(SAMPLE).execute();
         context.truncate(BIOPSY).execute();
@@ -185,7 +185,7 @@ class ClinicalDAO {
     }
 
     private void writeDoidNode(int patientId, @NotNull DoidNode doidEntry) {
-        context.insertInto(DOIDENTRY, DOIDENTRY.PATIENTID, DOIDENTRY.DOID, DOIDENTRY.DOIDTERM)
+        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM)
                 .values(patientId, doidEntry.doid(), doidEntry.doidTerm())
                 .execute();
     }
