@@ -54,9 +54,9 @@ public final class DiseaseOntology {
                     doidGraphsChecker.check(graph.getAsJsonObject());
 
                     // Extract doid graph
-                    DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta"));
+                    DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta")); //TODO
                     List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
-                            extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
+                            extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms")); //TODO
 
                     // Extract doid edges
                     DoidEdges result = new DoidEdges();
@@ -95,10 +95,13 @@ public final class DiseaseOntology {
                     doidDoidEntryBuilder.edges(result);
                     doidDoidEntryBuilder.id(string(graph.getAsJsonObject(), "id"));
                     doidDoidEntryBuilder.meta(graphMetaData);
-                    doidDoidEntryBuilder.equivalentNodesSets(optionalStringList(graph.getAsJsonObject(), "equivalentNodesSets")); // is always empty string list
+                    doidDoidEntryBuilder.equivalentNodesSets(optionalStringList(graph.getAsJsonObject(),
+                            "equivalentNodesSets")); // is always empty string list
                     doidDoidEntryBuilder.logicalDefinitionAxioms(doidLogicalDefinitionAxioms);
-                    doidDoidEntryBuilder.domainRangeAxioms(optionalStringList(graph.getAsJsonObject(), "domainRangeAxioms")); // is always empty string list
-                    doidDoidEntryBuilder.propertyChainAxioms(optionalStringList(graph.getAsJsonObject(), ("propertyChainAxioms"))); // is always empty string list
+                    doidDoidEntryBuilder.domainRangeAxioms(optionalStringList(graph.getAsJsonObject(),
+                            "domainRangeAxioms")); // is always empty string list
+                    doidDoidEntryBuilder.propertyChainAxioms(optionalStringList(graph.getAsJsonObject(),
+                            ("propertyChainAxioms"))); // is always empty string list
                 }
             } else {
                 LOGGER.error(" Size {} of graph elements are not correct!", doidObject.size());
@@ -156,19 +159,22 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidLogicalDefinitionAxioms> extractDoidLogicalDefinitionAxioms(@Nullable JsonArray logicalDefinitionAxiomsArray) {
-        //TODO check
         if (logicalDefinitionAxiomsArray == null) {
             return null;
         }
 
         List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms = Lists.newArrayList();
-        JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
 
         for (JsonElement logicalDefinitionAxioms : logicalDefinitionAxiomsArray) {
             JsonObject logicalDefinitionAxiomsObject = logicalDefinitionAxioms.getAsJsonObject();
+            JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
             doidLogicalDefinitionAxiomsChecker.check(logicalDefinitionAxiomsObject);
 
-            doidLogicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder().build());
+            doidLogicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
+                    .definedClassId(string(logicalDefinitionAxiomsObject, "definedClassId"))
+                    .genusIds(Lists.newArrayList()) //TODO
+                    .restrictions(Lists.newArrayList()) //TODO
+                    .build());
         }
 
         return doidLogicalDefinitionAxioms;
@@ -212,16 +218,14 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidSynonym> extractDoidSynonyms(@Nullable JsonArray synonymArray) {
-        //TODO check
         if (synonymArray == null) {
             return null;
         }
 
-        JsonDatamodelChecker doidSynonymsChecker = DoidDatamodelCheckerFactory.doidSynonymsChecker();
-
         List<DoidSynonym> doidSynonymList = Lists.newArrayList();
         for (JsonElement synonymElement : synonymArray) {
             JsonObject synonym = synonymElement.getAsJsonObject();
+            JsonDatamodelChecker doidSynonymsChecker = DoidDatamodelCheckerFactory.doidSynonymsChecker();
             doidSynonymsChecker.check(synonym);
 
             doidSynonymList.add(ImmutableDoidSynonym.builder()

@@ -53,27 +53,27 @@ final class DoidDatamodelCheckerFactory {
         return new JsonDatamodelChecker("DoidEdges", map);
     }
 
-
-    //TODO below checks!!!
-
-
-
-
-
-
-
     @NotNull
     static JsonDatamodelChecker doidLogicalDefinitionAxiomChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("restrictions", false);
-        map.put("definedClassId", false);
-        map.put("genusIds", false);
+        map.put("definedClassId", true);
+        map.put("genusIds", true); //TODO
+        map.put("restrictions", true); //TODO
 
         return new JsonDatamodelChecker("DoidLogicalDefinitionAxiom", map);
     }
 
+    @NotNull
+    static JsonDatamodelChecker doidSynonymsChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("pred", true);
+        map.put("val", true);
+        map.put("xrefs", true);
+        return new JsonDatamodelChecker("DoidSynonyms", map);
+    }
 
 
+    //TODO below checks!!!
 
     @NotNull
     static JsonDatamodelChecker doidMetadataChecker() {
@@ -96,15 +96,7 @@ final class DoidDatamodelCheckerFactory {
         return new JsonDatamodelChecker("DoidMetadataXref", map);
     }
 
-    @NotNull
 
-    static JsonDatamodelChecker doidSynonymsChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("pred", true);
-        map.put("val", true);
-        map.put("xrefs", true);
-        return new JsonDatamodelChecker("DoidSynonyms", map);
-    }
 
     @NotNull
     static JsonDatamodelChecker doidBasicPropertyValuesChecker() {
