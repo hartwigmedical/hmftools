@@ -61,7 +61,7 @@ public class ProtectEvidenceItems {
     private static List<ProtectEvidenceItem> reportHighestPerEventTreatmentDirection(@NotNull Collection<ProtectEvidenceItem> evidence) {
         Optional<EvidenceLevel> highestOnLabel = highestReportableLevel(true, evidence);
         EvidenceLevel highestOffLabel = highestReportableLevel(false, evidence).orElse(EvidenceLevel.D);
-        Predicate<ProtectEvidenceItem> report = x -> x.onLabel()
+        Predicate<ProtectEvidenceItem> report = x -> x.reported() && x.onLabel()
                 ? x.level().ordinal() == highestOnLabel.orElse(EvidenceLevel.B).ordinal()
                 : x.level().ordinal() == highestOffLabel.ordinal() && (!highestOnLabel.isPresent() || x.level().ordinal() < highestOnLabel.get().ordinal());
 
