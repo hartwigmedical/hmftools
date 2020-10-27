@@ -157,6 +157,22 @@ final class FilterFactory {
 
         // exon are not exist in transcript
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NPM1", "EXON 12 MUTATION"));
+
+        // Hotspots on fusion genes are not supported (COMPLEX events)
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL E255K"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL F317L"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL F486S"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL G398R"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL T334I"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ROS1", "CD74-ROS1 G2032R"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ROS1", "CD74-ROS1 G2101A"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ROS1", "CD74-ROS1 L2026M"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ROS1", "CD74-ROS1 L2155S"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ALK", "EML4-ALK L1152R"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NTRK3", "ETV6-NTRK3 G623R"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "PDGFRA", "FIP1L1-PDGFRA T674I"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NTRK1", "LMNA-NTRK1 G595R AND G667C"));
+
     }
 
     private FilterFactory() {
