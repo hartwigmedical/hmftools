@@ -12,8 +12,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
@@ -39,14 +37,13 @@ public class PurpleDataLoader {
         return load(config.tumorSampleId(),
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
-                config.purpleGeneCnvTsv(),
                 config.purpleDriverCatalogTsv(),
                 config.purpleSomaticVariantVcf());
     }
 
     @NotNull
-    public static PurpleData load(String sample, String qcFile, String purityFile, String geneCopyNumberFile, String driverCatalogFile,
-            String somaticVcf) throws IOException {
+    public static PurpleData load(String sample, String qcFile, String purityFile, String driverCatalogFile, String somaticVcf)
+            throws IOException {
         final PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityFile);
         LOGGER.info("Loaded PURPLE data from {}", new File(purityFile).getParent());
         LOGGER.info(" Purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
@@ -56,10 +53,6 @@ public class PurpleDataLoader {
 
         PurpleQC purpleQC = purityContext.qc();
         LOGGER.info(" QC status: {}", purpleQC.toString());
-
-        //TODO: Hopefully get rid of this
-        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberFile);
-        LOGGER.info(" Gene copy numbers: {}", geneCopyNumbers.size());
 
         //TODO: Move remainder into purple
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogFile);
@@ -83,9 +76,7 @@ public class PurpleDataLoader {
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
                 .somaticVariants(reportableVariants)
                 .copyNumberAlterations(copyNumberAlterations)
-                .geneCopyNumbers(geneCopyNumbers)
                 .build();
-
     }
 
     @NotNull

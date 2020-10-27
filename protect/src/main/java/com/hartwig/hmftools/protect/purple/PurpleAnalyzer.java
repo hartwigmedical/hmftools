@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
@@ -26,11 +25,10 @@ public final class PurpleAnalyzer {
 
     @NotNull
     public static PurpleAnalysis run(@NotNull PurityContext purityContext, @NotNull PurpleQC purpleQC,
-            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> purpleDriverCatalog) {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation,
+            @NotNull List<DriverCatalog> purpleDriverCatalog) {
         FittedPurity bestFit = purityContext.bestFit();
-        List<ReportableGainLoss> reportableGainsAndLosses =
-                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(purpleDriverCatalog, exomeGeneCopyNumbers);
+        List<ReportableGainLoss> reportableGainsAndLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(purpleDriverCatalog);
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(reportableGainsAndLosses, primaryTumorLocation);
@@ -50,7 +48,6 @@ public final class PurpleAnalyzer {
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
                 .hasReliableQuality(purpleQC.pass())
                 .ploidy(bestFit.ploidy())
-                .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)
                 .purpleSignatures(purpleSignatures)
                 .evidenceItems(filteredEvidenceItems)

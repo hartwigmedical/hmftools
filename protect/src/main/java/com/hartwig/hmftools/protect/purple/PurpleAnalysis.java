@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -21,9 +20,6 @@ public abstract class PurpleAnalysis {
     public abstract boolean hasReliableQuality();
 
     public abstract double ploidy();
-
-    @NotNull
-    public abstract List<GeneCopyNumber> exomeGeneCopyNumbers();
 
     @NotNull
     public abstract List<ReportableGainLoss> reportableGainsAndLosses();

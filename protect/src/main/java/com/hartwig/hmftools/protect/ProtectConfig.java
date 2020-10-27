@@ -32,7 +32,6 @@ public interface ProtectConfig {
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
-    String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String BACHELOR_TSV = "bachelor_tsv";
@@ -62,7 +61,6 @@ public interface ProtectConfig {
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV.");
@@ -108,9 +106,6 @@ public interface ProtectConfig {
     String purpleQcFile();
 
     @NotNull
-    String purpleGeneCnvTsv();
-
-    @NotNull
     String purpleDriverCatalogTsv();
 
     @NotNull
@@ -150,7 +145,6 @@ public interface ProtectConfig {
                 .germlineGenesCsv(nonOptionalFile(cmd, GERMLINE_GENES_CSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
-                .purpleGeneCnvTsv(nonOptionalFile(cmd, PURPLE_GENE_CNV_TSV))
                 .purpleDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
                 .bachelorTsv(nonOptionalFile(cmd, BACHELOR_TSV))

@@ -107,7 +107,6 @@ public class ProtectApplication implements AutoCloseable {
                 true,
                 protectConfig.purplePurityTsv(),
                 protectConfig.purpleQcFile(),
-                protectConfig.purpleGeneCnvTsv(),
                 protectConfig.purpleDriverCatalogTsv(),
                 protectConfig.purpleSomaticVariantVcf(),
                 protectConfig.bachelorTsv(),
