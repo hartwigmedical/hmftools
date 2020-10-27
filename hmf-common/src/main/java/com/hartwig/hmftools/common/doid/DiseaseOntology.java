@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.doid;
 
-import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
@@ -54,9 +53,9 @@ public final class DiseaseOntology {
                     doidGraphsChecker.check(graph.getAsJsonObject());
 
                     // Extract doid graph
-                    DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta")); //TODO
+                    DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta"));
                     List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
-                            extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms")); //TODO
+                            extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
 
                     // Extract doid edges
                     DoidEdges result = new DoidEdges();
@@ -114,7 +113,6 @@ public final class DiseaseOntology {
     @Nullable
     private static DoidGraphMetaData createMetaNodes(@Nullable JsonObject metaGraphObject) {
 
-        //TODO check
         JsonArray xrefArray = metaGraphObject.getAsJsonArray("xrefs");
         List<DoidXref> xrefValList = Lists.newArrayList();
         if (xrefArray != null) {
@@ -125,6 +123,8 @@ public final class DiseaseOntology {
                 xrefValList.add(ImmutableDoidXref.builder().val(string(xref.getAsJsonObject(), "val")).build());
             }
         }
+        JsonDatamodelChecker doidGraphMetaDataChecker = DoidDatamodelCheckerFactory.doidGraphMetaDataChecker();
+        doidGraphMetaDataChecker.check(metaGraphObject);
 
         ImmutableDoidGraphMetaData.Builder DoidGraphMetaDataBuilder = ImmutableDoidGraphMetaData.builder();
         DoidGraphMetaDataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metaGraphObject, "basicPropertyValues")));
@@ -136,16 +136,15 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@Nullable JsonArray basicPropertyValueArray) {
-        //TODO check
         if (basicPropertyValueArray == null) {
             return null;
         }
 
         List<DoidBasicPropertyValue> doidBasicPropertyValueList = Lists.newArrayList();
-        JsonDatamodelChecker basicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
 
         for (JsonElement basicPropertyElement : basicPropertyValueArray) {
             JsonObject basicProperty = basicPropertyElement.getAsJsonObject();
+            JsonDatamodelChecker basicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
             basicPropertyValuesChecker.check(basicProperty);
 
             doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder()
@@ -167,17 +166,33 @@ public final class DiseaseOntology {
 
         for (JsonElement logicalDefinitionAxioms : logicalDefinitionAxiomsArray) {
             JsonObject logicalDefinitionAxiomsObject = logicalDefinitionAxioms.getAsJsonObject();
+
             JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
             doidLogicalDefinitionAxiomsChecker.check(logicalDefinitionAxiomsObject);
 
-            LOGGER.info(logicalDefinitionAxiomsObject.getAsJsonArray("restrictions"));
-            for (JsonElement element: logicalDefinitionAxiomsObject.getAsJsonArray("restrictions")) {
-                LOGGER.info(element);
+            JsonArray restrictionArray = optionalJsonArray(logicalDefinitionAxiomsObject, "restrictions");
+            List<DoidRestrictions> doidRestrictionsList = Lists.newArrayList();
+            for (JsonElement restrictionsElement : restrictionArray) {
+                JsonDatamodelChecker doidRestrictionChecker = DoidDatamodelCheckerFactory.doidRestrictionsChecker();
+
+                if (restrictionsElement.isJsonObject()) {
+                    JsonObject restrictionObject = restrictionsElement.getAsJsonObject();
+                    doidRestrictionChecker.check(restrictionObject.getAsJsonObject());
+                    doidRestrictionsList.add(ImmutableDoidRestrictions.builder()
+                            .propertyId(string(restrictionObject, "propertyId"))
+                            .fillerId(string(restrictionObject, "fillerId"))
+                            .build());
+                }
+            }
+
+            List<String> genusIdList = Lists.newArrayList();
+            for (JsonElement genusId : logicalDefinitionAxiomsObject.getAsJsonArray("genusIds")) {
+                genusIdList.add(genusId.toString());
             }
             doidLogicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
                     .definedClassId(string(logicalDefinitionAxiomsObject, "definedClassId"))
-                    .genusIds(Lists.newArrayList()) //TODO
-                    .restrictions(Lists.newArrayList()) //TODO
+                    .genusIds(genusIdList)
+                    .restrictions(doidRestrictionsList)
                     .build());
         }
 
@@ -192,7 +207,6 @@ public final class DiseaseOntology {
 
     @Nullable
     private static DoidMetadata extractDoidMetadata(@Nullable JsonObject metadataObject) {
-        //TODO check
         if (metadataObject == null) {
             return null;
         }
@@ -203,9 +217,8 @@ public final class DiseaseOntology {
         JsonArray xrefArray = metadataObject.getAsJsonArray("xrefs");
         List<DoidXref> xrefValList = Lists.newArrayList();
         if (xrefArray != null) {
-            JsonDatamodelChecker xrefChecker = DoidDatamodelCheckerFactory.doidMetadataXrefChecker();
-
             for (JsonElement xref : xrefArray) {
+                JsonDatamodelChecker xrefChecker = DoidDatamodelCheckerFactory.doidMetadataXrefChecker();
                 xrefChecker.check(xref.getAsJsonObject());
                 xrefValList.add(ImmutableDoidXref.builder().val(string(xref.getAsJsonObject(), "val")).build());
             }
@@ -244,7 +257,6 @@ public final class DiseaseOntology {
 
     @Nullable
     private static DoidDefinition extractDoidDefinition(@Nullable JsonObject definitionObject) {
-        //TODO check
         if (definitionObject == null) {
             return null;
         }
