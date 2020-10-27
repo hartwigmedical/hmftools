@@ -30,7 +30,10 @@ public class DiseaseOntologyTest {
                 .basicPropertyValues(Lists.newArrayList())
                 .build();
         List<DoidNode> doidNodes = doidEntry.doidNodes();
+
         DoidEdges doidEdges = doidEntry.edges();
+        assertEquals(7, doidEdges.size());
+        //TODO add doidEdges
 
         assertEquals("http://purl.obolibrary.org/obo/doid/obo/ext.owl", doidEntry.id());
         assertEquals(doidGraphMetaData, doidEntry.meta());
