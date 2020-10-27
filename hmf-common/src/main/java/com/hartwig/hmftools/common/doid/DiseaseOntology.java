@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.doid;
 
+import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonArray;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalJsonObject;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalString;
@@ -44,11 +45,11 @@ public final class DiseaseOntology {
         JsonDatamodelChecker doidEntryChecker = DoidDatamodelCheckerFactory.doidEntryChecker();
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject doidObject = parser.parse(reader).getAsJsonObject();
-            doidEntryChecker.check(doidObject);
-            JsonDatamodelChecker doidEntryGraphChecker = DoidDatamodelCheckerFactory.doidEntryGraphChecker();
+            if (doidObject.size() == 1) {
+                doidEntryChecker.check(doidObject);
+                JsonDatamodelChecker doidEntryGraphChecker = DoidDatamodelCheckerFactory.doidEntryGraphChecker();
 
-            JsonArray graphArray = doidObject.getAsJsonArray("graphs");
-            if (graphArray.size() == 1) {
+                JsonArray graphArray = doidObject.getAsJsonArray("graphs");
                 for (JsonElement graph : graphArray) {
                     doidEntryGraphChecker.check(graph.getAsJsonObject());
                     JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
@@ -104,9 +105,10 @@ public final class DiseaseOntology {
                     doidDoidEntryBuilder.propertyChainAxioms(doidPropertyChainAxioms);
                 }
             } else {
-                LOGGER.error(" Size {} of graph elements are not correct!", graphArray.size());
+                LOGGER.error(" Size {} of graph elements are not correct!", doidObject.size());
             }
         }
+
         return doidDoidEntryBuilder.build();
     }
 
@@ -128,7 +130,7 @@ public final class DiseaseOntology {
         DoidGraphMetaDataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metaGraphObject, "basicPropertyValues")));
         DoidGraphMetaDataBuilder.subsets(optionalStringList(metaGraphObject, "subsets"));
         DoidGraphMetaDataBuilder.xrefs(xrefValList);
-        DoidGraphMetaDataBuilder.version(string(metaGraphObject, "version"));
+        DoidGraphMetaDataBuilder.version(optionalString(metaGraphObject, "version"));
         return DoidGraphMetaDataBuilder.build();
     }
 

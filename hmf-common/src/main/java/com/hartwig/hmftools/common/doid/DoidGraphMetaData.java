@@ -19,6 +19,6 @@ public abstract class DoidGraphMetaData {
     @Nullable
     public abstract List<DoidBasicPropertyValue> basicPropertyValues();
 
-    @NotNull
+    @Nullable
     public abstract String version();
 }
