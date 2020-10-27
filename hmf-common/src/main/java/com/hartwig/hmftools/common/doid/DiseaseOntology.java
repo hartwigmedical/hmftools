@@ -130,45 +130,47 @@ public final class DiseaseOntology {
         DoidGraphMetaDataBuilder.xrefs(xrefValList);
         DoidGraphMetaDataBuilder.version(string(metaGraphObject, "version"));
         return DoidGraphMetaDataBuilder.build();
-
     }
 
     @Nullable
-    private static List<DoidPropertyChainAxioms> extractDoidPropertyChainAxioms(@Nullable JsonArray propertyChainAxiomsArray) {
-        if (propertyChainAxiomsArray == null) {
+    private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@Nullable JsonArray basicPropertyValueArray) {
+        if (basicPropertyValueArray == null) {
             return null;
         }
 
-        List<DoidPropertyChainAxioms> doidPropertyChainAxioms = Lists.newArrayList();
-        JsonDatamodelChecker doidPropertyChainAxiomsChecker = DoidDatamodelCheckerFactory.doidPropertyChainAxiomsChecker();
+        List<DoidBasicPropertyValue> doidBasicPropertyValueList = Lists.newArrayList();
+        JsonDatamodelChecker basicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
 
-        for (JsonElement propertyChainAxioms : propertyChainAxiomsArray) {
-            JsonObject propertyChainAxiomsObject = propertyChainAxioms.getAsJsonObject();
-            doidPropertyChainAxiomsChecker.check(propertyChainAxiomsObject);
+        for (JsonElement basicPropertyElement : basicPropertyValueArray) {
+            JsonObject basicProperty = basicPropertyElement.getAsJsonObject();
+            basicPropertyValuesChecker.check(basicProperty);
 
-            doidPropertyChainAxioms.add(ImmutableDoidPropertyChainAxioms.builder().build());
+            doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder()
+                    .pred(string(basicProperty, "pred"))
+                    .val(string(basicProperty, "val"))
+                    .build());
         }
 
-        return doidPropertyChainAxioms;
+        return doidBasicPropertyValueList;
     }
 
     @Nullable
-    private static List<DoidDomainRangeAxioms> extractDoidDomainRangeAxioms(@Nullable JsonArray domainRangeAxiomsArray) {
-        if (domainRangeAxiomsArray == null) {
+    private static List<DoidEquivalentNodesSets> extractDoidEquivalentNodesSets(@Nullable JsonArray equivalentNodesSetsArray) {
+        if (equivalentNodesSetsArray == null) {
             return null;
         }
 
-        List<DoidDomainRangeAxioms> doidDomainRangeAxioms = Lists.newArrayList();
-        JsonDatamodelChecker doidDomainRangeAxiomsChecker = DoidDatamodelCheckerFactory.doidDomainRangeAxiomsChecker();
+        List<DoidEquivalentNodesSets> doidEquivalentNodesSets = Lists.newArrayList();
+        JsonDatamodelChecker doidEquivalentNodesSetsChecker = DoidDatamodelCheckerFactory.doidEquivalentNodesSetsChecker();
 
-        for (JsonElement domainRangeAxioms : domainRangeAxiomsArray) {
-            JsonObject domainRangeAxiomsObject = domainRangeAxioms.getAsJsonObject();
-            doidDomainRangeAxiomsChecker.check(domainRangeAxiomsObject);
+        for (JsonElement equivalentNodesSets : equivalentNodesSetsArray) {
+            JsonObject equivalentNodesSetsObject = equivalentNodesSets.getAsJsonObject();
+            doidEquivalentNodesSetsChecker.check(equivalentNodesSetsObject);
 
-            doidDomainRangeAxioms.add(ImmutableDoidDomainRangeAxioms.builder().build());
+            doidEquivalentNodesSets.add(ImmutableDoidEquivalentNodesSets.builder().build());
         }
 
-        return doidDomainRangeAxioms;
+        return doidEquivalentNodesSets;
     }
 
     @Nullable
@@ -191,22 +193,41 @@ public final class DiseaseOntology {
     }
 
     @Nullable
-    private static List<DoidEquivalentNodesSets> extractDoidEquivalentNodesSets(@Nullable JsonArray equivalentNodesSetsArray) {
-        if (equivalentNodesSetsArray == null) {
+    private static List<DoidDomainRangeAxioms> extractDoidDomainRangeAxioms(@Nullable JsonArray domainRangeAxiomsArray) {
+        if (domainRangeAxiomsArray == null) {
             return null;
         }
 
-        List<DoidEquivalentNodesSets> doidEquivalentNodesSets = Lists.newArrayList();
-        JsonDatamodelChecker doidEquivalentNodesSetsChecker = DoidDatamodelCheckerFactory.doidEquivalentNodesSetsChecker();
+        List<DoidDomainRangeAxioms> doidDomainRangeAxioms = Lists.newArrayList();
+        JsonDatamodelChecker doidDomainRangeAxiomsChecker = DoidDatamodelCheckerFactory.doidDomainRangeAxiomsChecker();
 
-        for (JsonElement equivalentNodesSets : equivalentNodesSetsArray) {
-            JsonObject equivalentNodesSetsObject = equivalentNodesSets.getAsJsonObject();
-            doidEquivalentNodesSetsChecker.check(equivalentNodesSetsObject);
+        for (JsonElement domainRangeAxioms : domainRangeAxiomsArray) {
+            JsonObject domainRangeAxiomsObject = domainRangeAxioms.getAsJsonObject();
+            doidDomainRangeAxiomsChecker.check(domainRangeAxiomsObject);
 
-            doidEquivalentNodesSets.add(ImmutableDoidEquivalentNodesSets.builder().build());
+            doidDomainRangeAxioms.add(ImmutableDoidDomainRangeAxioms.builder().build());
         }
 
-        return doidEquivalentNodesSets;
+        return doidDomainRangeAxioms;
+    }
+
+    @Nullable
+    private static List<DoidPropertyChainAxioms> extractDoidPropertyChainAxioms(@Nullable JsonArray propertyChainAxiomsArray) {
+        if (propertyChainAxiomsArray == null) {
+            return null;
+        }
+
+        List<DoidPropertyChainAxioms> doidPropertyChainAxioms = Lists.newArrayList();
+        JsonDatamodelChecker doidPropertyChainAxiomsChecker = DoidDatamodelCheckerFactory.doidPropertyChainAxiomsChecker();
+
+        for (JsonElement propertyChainAxioms : propertyChainAxiomsArray) {
+            JsonObject propertyChainAxiomsObject = propertyChainAxioms.getAsJsonObject();
+            doidPropertyChainAxiomsChecker.check(propertyChainAxiomsObject);
+
+            doidPropertyChainAxioms.add(ImmutableDoidPropertyChainAxioms.builder().build());
+        }
+
+        return doidPropertyChainAxioms;
     }
 
     @VisibleForTesting
@@ -265,28 +286,6 @@ public final class DiseaseOntology {
         }
 
         return doidSynonymList;
-    }
-
-    @Nullable
-    private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@Nullable JsonArray basicPropertyValueArray) {
-        if (basicPropertyValueArray == null) {
-            return null;
-        }
-
-        List<DoidBasicPropertyValue> doidBasicPropertyValueList = Lists.newArrayList();
-        JsonDatamodelChecker basicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
-
-        for (JsonElement basicPropertyElement : basicPropertyValueArray) {
-            JsonObject basicProperty = basicPropertyElement.getAsJsonObject();
-            basicPropertyValuesChecker.check(basicProperty);
-
-            doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder()
-                    .pred(string(basicProperty, "pred"))
-                    .val(string(basicProperty, "val"))
-                    .build());
-        }
-
-        return doidBasicPropertyValueList;
     }
 
     @Nullable
