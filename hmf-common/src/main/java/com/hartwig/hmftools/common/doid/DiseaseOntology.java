@@ -106,34 +106,6 @@ public final class DiseaseOntology {
         return doidDoidEntryBuilder.build();
     }
 
-    @NotNull
-    public static DoidEdges readDoidJsonFileEdges(@NotNull String doidJsonFile) throws IOException {
-        DoidEdges result = new DoidEdges();
-
-        JsonParser parser = new JsonParser();
-        JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
-        reader.setLenient(true);
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
-            JsonObject doidObject = parser.parse(reader).getAsJsonObject();
-
-            JsonArray graphArray = doidObject.getAsJsonArray("graphs");
-            for (JsonElement graph : graphArray) {
-                JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
-                for (JsonElement edgeElement : edgesArray) {
-                    JsonObject edge = edgeElement.getAsJsonObject();
-                    String predicate = string(edge, "pred");
-                    if (predicate.equals("is_a")) {
-                        String child = extractDoid(string(edge, "sub"));
-                        String parent = extractDoid(string(edge, "obj"));
-                        result.isA(child, parent);
-                    }
-                }
-            }
-        }
-
-        return result;
-    }
-
     @Nullable
     private static List<String> createMetaNodes(@Nullable JsonObject metaNodesObject) {
         return Lists.newArrayList();
