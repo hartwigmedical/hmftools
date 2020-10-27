@@ -90,7 +90,14 @@ public final class DiseaseOntology {
                                 .doidTerm(optionalString(node, "lbl"))
                                 .build());
                     }
-                    //TODO return DoidEntry
+                    doidDoidEntryBuilder.doidNodes(doidNodes);
+                    doidDoidEntryBuilder.edges(result);
+                    doidDoidEntryBuilder.id("");
+                    doidDoidEntryBuilder.equivalentNodesSets(doidEquivalentNodesSets);
+                    doidDoidEntryBuilder.meta(Lists.newArrayList());
+                    doidDoidEntryBuilder.logicalDefinitionAxioms(doidLogicalDefinitionAxioms);
+                    doidDoidEntryBuilder.domainRangeAxioms(doidDomainRangeAxioms);
+                    doidDoidEntryBuilder.propertyChainAxioms(doidPropertyChainAxioms);
                 }
             } else {
                 LOGGER.info(" Size of graph elements are not correct {}", graphArray.size());
