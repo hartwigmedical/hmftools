@@ -88,15 +88,13 @@ final class DoidDatamodelCheckerFactory {
         return new JsonDatamodelChecker("DoidBasicPropertyValues", map);
     }
 
+    @NotNull
+    static JsonDatamodelChecker doidMetadataXrefChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("val", true);
 
-
-
-
-
-
-
-
-    //TODO below checks!!!
+        return new JsonDatamodelChecker("DoidMetadataXref", map);
+    }
 
     @NotNull
     static JsonDatamodelChecker doidMetadataChecker() {
@@ -107,21 +105,7 @@ final class DoidDatamodelCheckerFactory {
         map.put("definition", false);
         map.put("subsets", false);
 
-
         return new JsonDatamodelChecker("DoidMetadata", map);
     }
-
-    @NotNull
-    static JsonDatamodelChecker doidMetadataXrefChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("val", true);
-
-        return new JsonDatamodelChecker("DoidMetadataXref", map);
-    }
-
-
-
-
-
 
 }

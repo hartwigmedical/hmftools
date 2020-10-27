@@ -191,7 +191,6 @@ public final class DiseaseOntology {
 
     @Nullable
     private static DoidMetadata extractDoidMetadata(@Nullable JsonObject metadataObject) {
-        //TODO check
         if (metadataObject == null) {
             return null;
         }
@@ -202,9 +201,8 @@ public final class DiseaseOntology {
         JsonArray xrefArray = metadataObject.getAsJsonArray("xrefs");
         List<DoidXref> xrefValList = Lists.newArrayList();
         if (xrefArray != null) {
-            JsonDatamodelChecker xrefChecker = DoidDatamodelCheckerFactory.doidMetadataXrefChecker();
-
             for (JsonElement xref : xrefArray) {
+                JsonDatamodelChecker xrefChecker = DoidDatamodelCheckerFactory.doidMetadataXrefChecker();
                 xrefChecker.check(xref.getAsJsonObject());
                 xrefValList.add(ImmutableDoidXref.builder().val(string(xref.getAsJsonObject(), "val")).build());
             }
