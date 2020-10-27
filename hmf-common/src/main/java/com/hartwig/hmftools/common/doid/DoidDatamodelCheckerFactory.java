@@ -10,25 +10,35 @@ import org.jetbrains.annotations.NotNull;
 final class DoidDatamodelCheckerFactory {
 
     @NotNull
-    static JsonDatamodelChecker doidEntryChecker() {
+    static JsonDatamodelChecker doidObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("graphs", true);
 
-        return new JsonDatamodelChecker("DoidNode", map);
+        return new JsonDatamodelChecker("DoidObject", map);
     }
 
     @NotNull
-    //TODO
-    static JsonDatamodelChecker doidEntryGraphChecker() {
+    static JsonDatamodelChecker doidGraphsChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("nodes", true);
         map.put("edges", true);
         map.put("id", true);
-        map.put("meta", true); //TODO
+        map.put("meta", true);
         map.put("equivalentNodesSets", true);
         map.put("logicalDefinitionAxioms", true);
         map.put("domainRangeAxioms", true);
-        map.put("propertyChainAxioms", true); //TODO
+        map.put("propertyChainAxioms", true);
+
+        return new JsonDatamodelChecker("doidGraphs", map);
+    }
+
+    @NotNull
+    static JsonDatamodelChecker doidNodesChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", false);
+        map.put("lbl", false);
+        map.put("id", true);
+        map.put("meta", false);
 
         return new JsonDatamodelChecker("DoidNode", map);
     }
@@ -42,6 +52,12 @@ final class DoidDatamodelCheckerFactory {
 
         return new JsonDatamodelChecker("DoidEdges", map);
     }
+
+    //TODO below checks!!!
+
+
+
+
 
     @NotNull
     static JsonDatamodelChecker doidEquivalentNodesSetsChecker() {
@@ -74,16 +90,7 @@ final class DoidDatamodelCheckerFactory {
         return new JsonDatamodelChecker("DoidPropertyChainAxioms", map);
     }
 
-    @NotNull
-    static JsonDatamodelChecker doidEntryNodesChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("type", false);
-        map.put("lbl", false);
-        map.put("id", true);
-        map.put("meta", false);
 
-        return new JsonDatamodelChecker("DoidNode", map);
-    }
 
     @NotNull
     static JsonDatamodelChecker doidMetadataChecker() {
