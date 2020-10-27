@@ -24,7 +24,4 @@ public abstract class DoidEntry {
     @Nullable
     public abstract DoidMetadata doidMetadata();
 
-    @Nullable
-    public abstract DoidNodes doidNodes();
-
 }
