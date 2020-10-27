@@ -53,7 +53,7 @@ public final class DiseaseOntology {
                     doidGraphsChecker.check(graph.getAsJsonObject());
 
                     // Extract doid graph
-                    DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta")); //TODO
+                    DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta"));
                     List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
                             extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
 
@@ -113,7 +113,6 @@ public final class DiseaseOntology {
     @Nullable
     private static DoidGraphMetaData createMetaNodes(@Nullable JsonObject metaGraphObject) {
 
-        //TODO check
         JsonArray xrefArray = metaGraphObject.getAsJsonArray("xrefs");
         List<DoidXref> xrefValList = Lists.newArrayList();
         if (xrefArray != null) {
@@ -124,6 +123,8 @@ public final class DiseaseOntology {
                 xrefValList.add(ImmutableDoidXref.builder().val(string(xref.getAsJsonObject(), "val")).build());
             }
         }
+        JsonDatamodelChecker doidGraphMetaDataChecker = DoidDatamodelCheckerFactory.doidGraphMetaDataChecker();
+        doidGraphMetaDataChecker.check(metaGraphObject);
 
         ImmutableDoidGraphMetaData.Builder DoidGraphMetaDataBuilder = ImmutableDoidGraphMetaData.builder();
         DoidGraphMetaDataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metaGraphObject, "basicPropertyValues")));

@@ -44,6 +44,20 @@ final class DoidDatamodelCheckerFactory {
     }
 
     @NotNull
+    static JsonDatamodelChecker doidGraphMetaDataChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+
+        map.put("xrefs", true);
+        map.put("basicPropertyValues", true);
+        map.put("version", false);
+        map.put("subsets", true);
+
+        return new JsonDatamodelChecker("doidGraphMetaDataChecker", map);
+    }
+
+
+
+    @NotNull
     static JsonDatamodelChecker doidEdgeChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("sub", true);
