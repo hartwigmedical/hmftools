@@ -165,29 +165,32 @@ public final class DiseaseOntology {
 
         for (JsonElement logicalDefinitionAxioms : logicalDefinitionAxiomsArray) {
             JsonObject logicalDefinitionAxiomsObject = logicalDefinitionAxioms.getAsJsonObject();
+
             JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
             doidLogicalDefinitionAxiomsChecker.check(logicalDefinitionAxiomsObject);
 
             JsonArray restrictionArray = optionalJsonArray(logicalDefinitionAxiomsObject, "restrictions");
             List<DoidRestrictions> doidRestrictionsList = Lists.newArrayList();
-            if (restrictionArray != null) {
-                for (JsonElement restrictionsElement : restrictionArray) {
-                    JsonDatamodelChecker doidRestrictionChecker = DoidDatamodelCheckerFactory.doidRestrictionsChecker();
+            for (JsonElement restrictionsElement : restrictionArray) {
+                JsonDatamodelChecker doidRestrictionChecker = DoidDatamodelCheckerFactory.doidRestrictionsChecker();
 
-                    if (restrictionsElement.isJsonObject()) {
-                        JsonObject restrictionObject = restrictionsElement.getAsJsonObject();
-                        doidRestrictionChecker.check(restrictionObject.getAsJsonObject());
-                        doidRestrictionsList.add(ImmutableDoidRestrictions.builder()
-                                .propertyId(string(restrictionObject, "propertyId"))
-                                .fillerId(string(restrictionObject, "fillerId"))
-                                .build());
-                    }
+                if (restrictionsElement.isJsonObject()) {
+                    JsonObject restrictionObject = restrictionsElement.getAsJsonObject();
+                    doidRestrictionChecker.check(restrictionObject.getAsJsonObject());
+                    doidRestrictionsList.add(ImmutableDoidRestrictions.builder()
+                            .propertyId(string(restrictionObject, "propertyId"))
+                            .fillerId(string(restrictionObject, "fillerId"))
+                            .build());
                 }
             }
 
+            List<String> genusIdList = Lists.newArrayList();
+            for (JsonElement genusId : logicalDefinitionAxiomsObject.getAsJsonArray("genusIds")) {
+                genusIdList.add(genusId.toString());
+            }
             doidLogicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
                     .definedClassId(string(logicalDefinitionAxiomsObject, "definedClassId"))
-                    .genusIds(Lists.newArrayList()) //TODO
+                    .genusIds(genusIdList)
                     .restrictions(doidRestrictionsList)
                     .build());
         }

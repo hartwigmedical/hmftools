@@ -57,7 +57,7 @@ final class DoidDatamodelCheckerFactory {
     static JsonDatamodelChecker doidLogicalDefinitionAxiomChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("definedClassId", true);
-        map.put("genusIds", true); //TODO
+        map.put("genusIds", true);
         map.put("restrictions", true);
 
         return new JsonDatamodelChecker("DoidLogicalDefinitionAxiom", map);
