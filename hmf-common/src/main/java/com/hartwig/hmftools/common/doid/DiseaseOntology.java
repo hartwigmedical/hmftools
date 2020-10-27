@@ -42,17 +42,16 @@ public final class DiseaseOntology {
         List<DoidNode> doidNodes = Lists.newArrayList();
         ImmutableDoidEntry.Builder doidDoidEntryBuilder = ImmutableDoidEntry.builder();
 
-        JsonDatamodelChecker doidEntryChecker = DoidDatamodelCheckerFactory.doidEntryChecker();
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject doidObject = parser.parse(reader).getAsJsonObject();
             if (doidObject.size() == 1) {
-                doidEntryChecker.check(doidObject);
-                JsonDatamodelChecker doidEntryGraphChecker = DoidDatamodelCheckerFactory.doidEntryGraphChecker();
+                JsonDatamodelChecker doidObjectChecker = DoidDatamodelCheckerFactory.doidObjectChecker();
+                doidObjectChecker.check(doidObject);
 
                 JsonArray graphArray = doidObject.getAsJsonArray("graphs");
                 for (JsonElement graph : graphArray) {
-                    doidEntryGraphChecker.check(graph.getAsJsonObject());
-                    JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
+                    JsonDatamodelChecker doidGraphsChecker = DoidDatamodelCheckerFactory.doidGraphsChecker();
+                    doidGraphsChecker.check(graph.getAsJsonObject());
 
                     // Extract doid graph
                     DoidGraphMetaData graphMetaData = createMetaNodes(optionalJsonObject(graph.getAsJsonObject(), "meta"));
@@ -71,6 +70,9 @@ public final class DiseaseOntology {
                     JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
                     for (JsonElement edgeElement : edgesArray) {
                         JsonObject edge = edgeElement.getAsJsonObject();
+                        JsonDatamodelChecker doidEdgeChecker = DoidDatamodelCheckerFactory.doidEdgeChecker();
+                        doidEdgeChecker.check(edge);
+
                         String predicate = string(edge, "pred");
                         if (predicate.equals("is_a")) {
                             String child = extractDoid(string(edge, "sub"));
@@ -83,7 +85,8 @@ public final class DiseaseOntology {
                     JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
                     for (JsonElement nodeElement : nodeArray) {
                         JsonObject node = nodeElement.getAsJsonObject();
-                        doidEntryNodesChecker.check(node);
+                        JsonDatamodelChecker doidNodesChecker = DoidDatamodelCheckerFactory.doidNodesChecker();
+                        doidNodesChecker.check(node);
                         String url = string(node, "id");
                         doidNodes.add(ImmutableDoidNode.builder()
                                 .doid(extractDoid(url))
@@ -98,8 +101,8 @@ public final class DiseaseOntology {
                     doidDoidEntryBuilder.doidNodes(doidNodes);
                     doidDoidEntryBuilder.edges(result);
                     doidDoidEntryBuilder.id(graphId);
-                    doidDoidEntryBuilder.equivalentNodesSets(doidEquivalentNodesSets);
                     doidDoidEntryBuilder.meta(graphMetaData);
+                    doidDoidEntryBuilder.equivalentNodesSets(doidEquivalentNodesSets);
                     doidDoidEntryBuilder.logicalDefinitionAxioms(doidLogicalDefinitionAxioms);
                     doidDoidEntryBuilder.domainRangeAxioms(doidDomainRangeAxioms);
                     doidDoidEntryBuilder.propertyChainAxioms(doidPropertyChainAxioms);
@@ -115,6 +118,7 @@ public final class DiseaseOntology {
     @Nullable
     private static DoidGraphMetaData createMetaNodes(@Nullable JsonObject metaGraphObject) {
 
+        //TODO check
         JsonArray xrefArray = metaGraphObject.getAsJsonArray("xrefs");
         List<DoidXref> xrefValList = Lists.newArrayList();
         if (xrefArray != null) {
@@ -136,6 +140,7 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@Nullable JsonArray basicPropertyValueArray) {
+        //TODO check
         if (basicPropertyValueArray == null) {
             return null;
         }
@@ -158,6 +163,7 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidEquivalentNodesSets> extractDoidEquivalentNodesSets(@Nullable JsonArray equivalentNodesSetsArray) {
+        //TODO check
         if (equivalentNodesSetsArray == null) {
             return null;
         }
@@ -177,6 +183,7 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidLogicalDefinitionAxioms> extractDoidLogicalDefinitionAxioms(@Nullable JsonArray logicalDefinitionAxiomsArray) {
+        //TODO check
         if (logicalDefinitionAxiomsArray == null) {
             return null;
         }
@@ -196,6 +203,7 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidDomainRangeAxioms> extractDoidDomainRangeAxioms(@Nullable JsonArray domainRangeAxiomsArray) {
+        //TODO check
         if (domainRangeAxiomsArray == null) {
             return null;
         }
@@ -215,6 +223,7 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidPropertyChainAxioms> extractDoidPropertyChainAxioms(@Nullable JsonArray propertyChainAxiomsArray) {
+        //TODO check
         if (propertyChainAxiomsArray == null) {
             return null;
         }
@@ -240,6 +249,7 @@ public final class DiseaseOntology {
 
     @Nullable
     private static DoidMetadata extractDoidMetadata(@Nullable JsonObject metadataObject) {
+        //TODO check
         if (metadataObject == null) {
             return null;
         }
@@ -269,6 +279,7 @@ public final class DiseaseOntology {
 
     @Nullable
     private static List<DoidSynonym> extractDoidSynonyms(@Nullable JsonArray synonymArray) {
+        //TODO check
         if (synonymArray == null) {
             return null;
         }
@@ -292,6 +303,7 @@ public final class DiseaseOntology {
 
     @Nullable
     private static DoidDefinition extractDoidDefinition(@Nullable JsonObject definitionObject) {
+        //TODO check
         if (definitionObject == null) {
             return null;
         }

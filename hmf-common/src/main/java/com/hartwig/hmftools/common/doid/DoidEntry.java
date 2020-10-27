@@ -21,10 +21,10 @@ public abstract class DoidEntry {
     public abstract String id();
 
     @NotNull
-    public abstract List<DoidEquivalentNodesSets> equivalentNodesSets();
+    public abstract DoidGraphMetaData meta();
 
     @NotNull
-    public abstract DoidGraphMetaData meta();
+    public abstract List<DoidEquivalentNodesSets> equivalentNodesSets();
 
     @NotNull
     public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();
