@@ -55,10 +55,11 @@ public final class ViccUtil {
         List<String> lines = Lists.newArrayList();
         String header = new StringJoiner(FIELD_DELIMITER).add("source")
                 .add("gene")
+                .add("transcript")
                 .add("name")
                 .add("type")
                 .add("proteinAnnotation")
-                .add("transcript")
+                .add("biomarkerType")
                 .toString();
         lines.add(header);
 
@@ -66,10 +67,11 @@ public final class ViccUtil {
             for (Feature feature : entry.features()) {
                 lines.add(new StringJoiner(FIELD_DELIMITER).add(entry.source().display())
                         .add(feature.geneSymbol())
+                        .add(entry.transcriptId())
                         .add(feature.name())
                         .add(feature.type().toString())
                         .add(feature.proteinAnnotation())
-                        .add(entry.transcriptId())
+                        .add(feature.biomarkerType())
                         .toString());
             }
         }
