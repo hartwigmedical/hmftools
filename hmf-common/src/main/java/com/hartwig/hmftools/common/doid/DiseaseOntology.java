@@ -28,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 public final class DiseaseOntology {
 
     private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
-    private static final String ID_TO_READ = "http://purl.obolibrary.org/obo/doid.owl";
+    static final String ID_TO_READ = "http://purl.obolibrary.org/obo/doid.owl";
 
     private DiseaseOntology() {
     }
