@@ -350,7 +350,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Paragraph testsArePerformedByAccreditedLab() {
         return createContentParagraph(
-                "The results on this report are based on tests that are performed under ISO/ICE-17025:2005 accreditation.");
+                "The results on this report are based on tests that are performed under ISO/ICE-17025:2017 accreditation.");
     }
 
     @NotNull
