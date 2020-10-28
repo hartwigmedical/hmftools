@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -29,45 +28,15 @@ public class FlagstatChecker implements HealthChecker {
     }
 
     @NotNull
-    private static Double roundToSixDecimals(@NotNull Double value) {
-        BigDecimal bd = BigDecimal.valueOf(value);
-        bd = bd.setScale(6, RoundingMode.HALF_UP);
-        return bd.doubleValue();
-    }
-
-    @NotNull
-    private static String divideTwoStrings(@NotNull String string1, @NotNull String string2) {
-        Double double1 = Double.parseDouble(string1);
-        Double double2 = Double.parseDouble(string2);
-        Double proportion = roundToSixDecimals(double1 / double2);
-        return String.valueOf(proportion);
-    }
-
-    @Nullable
-    private static String valueBySubstring(@NotNull List<String> lines , @NotNull String subString) {
-        List<String> matchLines = new ArrayList<>();
-        for(String line : lines) {
-            if (line.contains(subString)) {
-                matchLines.add(line);
-            }
-        }
-        if (matchLines.size() == 1) {
-            return matchLines.get(0).split(" ")[0];
-        }
-        return null;
-    }
-
-    @NotNull
     @Override
     public List<QCValue> run() throws IOException {
-
         List<QCValue> qcValues = Lists.newArrayList();
 
         List<String> refLines = Files.readAllLines(new File(refFlagstat).toPath());
-        String refTotal = valueBySubstring( refLines, "total");
-        String refMapped = valueBySubstring( refLines, "mapped (");
-        String refDuplicates = valueBySubstring( refLines, "duplicates");
-        if (refTotal == null || refMapped == null || refDuplicates == null){
+        String refTotal = valueBySubstring(refLines, "total");
+        String refMapped = valueBySubstring(refLines, "mapped (");
+        String refDuplicates = valueBySubstring(refLines, "duplicates");
+        if (refTotal == null || refMapped == null || refDuplicates == null) {
             throw new IOException("Unable to parse flagstat file correctly");
         }
         String refMappingProportion = divideTwoStrings(refMapped, refTotal);
@@ -77,10 +46,10 @@ public class FlagstatChecker implements HealthChecker {
 
         if (tumFlagstat != null) {
             List<String> tumLines = Files.readAllLines(new File(tumFlagstat).toPath());
-            String tumTotal = valueBySubstring( tumLines, "total");
-            String tumMapped = valueBySubstring( tumLines, "mapped (");
-            String tumDuplicates = valueBySubstring( tumLines, "duplicates");
-            if (tumTotal == null || tumMapped == null || tumDuplicates == null){
+            String tumTotal = valueBySubstring(tumLines, "total");
+            String tumMapped = valueBySubstring(tumLines, "mapped (");
+            String tumDuplicates = valueBySubstring(tumLines, "duplicates");
+            if (tumTotal == null || tumMapped == null || tumDuplicates == null) {
                 throw new IOException("Unable to parse flagstat file correctly");
             }
             String tumMappingProportion = divideTwoStrings(tumMapped, tumTotal);
@@ -88,6 +57,35 @@ public class FlagstatChecker implements HealthChecker {
             qcValues.add(ImmutableQCValue.of(QCValueType.TUM_PROPORTION_MAPPED, tumMappingProportion));
             qcValues.add(ImmutableQCValue.of(QCValueType.TUM_PROPORTION_DUPLICATE, tumDuplicateProportion));
         }
+
         return qcValues;
+    }
+
+    @NotNull
+    private static String divideTwoStrings(@NotNull String string1, @NotNull String string2) {
+        double double1 = Double.parseDouble(string1);
+        double double2 = Double.parseDouble(string2);
+        double proportion = roundToSixDecimals(double1 / double2);
+        return String.valueOf(proportion);
+    }
+
+    private static double roundToSixDecimals(double value) {
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(6, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
+    @Nullable
+    private static String valueBySubstring(@NotNull List<String> lines, @NotNull String subString) {
+        List<String> matchLines = Lists.newArrayList();
+        for (String line : lines) {
+            if (line.contains(subString)) {
+                matchLines.add(line);
+            }
+        }
+        if (matchLines.size() == 1) {
+            return matchLines.get(0).split(" ")[0];
+        }
+        return null;
     }
 }

@@ -57,13 +57,11 @@ public class MetricsCheckerTest {
 
     @Test(expected = IOException.class)
     public void malformedYieldsIOException() throws IOException {
-        MetricsChecker checker = new MetricsChecker(MALFORMED_WGS_METRICS_FILE, MALFORMED_WGS_METRICS_FILE);
-        checker.run();
+        new MetricsChecker(MALFORMED_WGS_METRICS_FILE, MALFORMED_WGS_METRICS_FILE).run();
     }
 
     @Test(expected = IOException.class)
     public void missingYieldsIOException() throws IOException {
-        MetricsChecker checker = new MetricsChecker(MISSING_WGS_METRICS_FILE, MISSING_WGS_METRICS_FILE);
-        checker.run();
+        new MetricsChecker(MISSING_WGS_METRICS_FILE, MISSING_WGS_METRICS_FILE).run();
     }
 }

@@ -47,7 +47,6 @@ public class MetricsChecker implements HealthChecker {
 
     @NotNull
     private WGSMetrics extractMetrics() throws IOException {
-
         if (tumWgsMetricsFile != null) {
             return WGSMetricsFile.read(refWgsMetricsFile, tumWgsMetricsFile);
         } else {

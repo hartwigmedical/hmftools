@@ -2,6 +2,7 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -14,10 +15,10 @@ import org.junit.Test;
 public class FlagstatCheckerTest {
 
     private static final String FLAGSTAT_DIRECTORY = Resources.getResource("flagstat").getPath();
-    private static final String REF_FLAGSTAT = FLAGSTAT_DIRECTORY + "/reference.flagstat";
-    private static final String TUM_FLAGSTAT = FLAGSTAT_DIRECTORY + "/tumor.flagstat";
-    private static final String MALFORMED_FLAGSTAT = FLAGSTAT_DIRECTORY + "/malformed.flagstat";
-    private static final String MISSING_FLAGSTAT = FLAGSTAT_DIRECTORY + "/doesnotexist.flagstat";
+    private static final String REF_FLAGSTAT = FLAGSTAT_DIRECTORY + File.separator + "reference.flagstat";
+    private static final String TUM_FLAGSTAT = FLAGSTAT_DIRECTORY + File.separator + "tumor.flagstat";
+    private static final String MALFORMED_FLAGSTAT = FLAGSTAT_DIRECTORY + File.separator + "malformed.flagstat";
+    private static final String MISSING_FLAGSTAT = FLAGSTAT_DIRECTORY + File.separator + "doesnotexist.flagstat";
 
     @Test
     public void extractDataFromFlagstatWorksForSomatic() throws IOException {
@@ -40,13 +41,11 @@ public class FlagstatCheckerTest {
 
     @Test(expected = IOException.class)
     public void malformedYieldsIOException() throws IOException {
-        FlagstatChecker checker = new FlagstatChecker(MALFORMED_FLAGSTAT, MALFORMED_FLAGSTAT);
-        checker.run();
+        new FlagstatChecker(MALFORMED_FLAGSTAT, MALFORMED_FLAGSTAT).run();
     }
 
     @Test(expected = IOException.class)
     public void missingYieldsIOException() throws IOException {
-        FlagstatChecker checker = new FlagstatChecker(MISSING_FLAGSTAT, MISSING_FLAGSTAT);
-        checker.run();
+        new FlagstatChecker(MISSING_FLAGSTAT, MISSING_FLAGSTAT).run();
     }
 }

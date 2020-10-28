@@ -50,22 +50,21 @@ public class HealthChecksApplication {
     @Nullable
     private final String tumFlagstatFile;
     @Nullable
-    private final String purpleDirectory;
+    private final String purpleDir;
     @NotNull
     private final String outputDir;
 
     @VisibleForTesting
-    HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample,
-                            @NotNull String refWgsMetricsFile, @Nullable String tumWgsMetricsFile,
-                            @NotNull String refFlagstatFile, @Nullable String tumFlagstatFile,
-                            @Nullable String purpleDirectory, @NotNull String outputDir) {
+    HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample, @NotNull String refWgsMetricsFile,
+            @Nullable String tumWgsMetricsFile, @NotNull String refFlagstatFile, @Nullable String tumFlagstatFile,
+            @Nullable String purpleDir, @NotNull String outputDir) {
         this.refSample = refSample;
         this.tumorSample = tumorSample;
         this.refWgsMetricsFile = refWgsMetricsFile;
         this.tumWgsMetricsFile = tumWgsMetricsFile;
         this.refFlagstatFile = refFlagstatFile;
         this.tumFlagstatFile = tumFlagstatFile;
-        this.purpleDirectory = purpleDirectory;
+        this.purpleDir = purpleDir;
         this.outputDir = outputDir;
     }
 
@@ -90,12 +89,14 @@ public class HealthChecksApplication {
         String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
         boolean writeEvaluationFile = !cmd.hasOption(DO_NOT_WRITE_EVALUATION_FILE);
 
-        new HealthChecksApplication(
-                refSample, tumorSample,
-                refWgsMetricsFile, tumWgsMetricsFile,
-                refFlagstat, tumFlagstat,
-                purpleDir, outputDir
-        ).run(writeEvaluationFile);
+        new HealthChecksApplication(refSample,
+                tumorSample,
+                refWgsMetricsFile,
+                tumWgsMetricsFile,
+                refFlagstat,
+                tumFlagstat,
+                purpleDir,
+                outputDir).run(writeEvaluationFile);
     }
 
     @NotNull
@@ -114,21 +115,16 @@ public class HealthChecksApplication {
     }
 
     @VisibleForTesting
-    void run(@NotNull boolean writeEvaluationFile) throws IOException {
+    void run(boolean writeEvaluationFile) throws IOException {
         List<HealthChecker> checkers;
-        if (tumorSample == null || purpleDirectory == null) {
+        if (tumorSample == null || purpleDir == null) {
             LOGGER.info("Running in SingleSample mode");
-            checkers = Lists.newArrayList(
-                    new MetricsChecker(refWgsMetricsFile, null),
-                    new FlagstatChecker(refFlagstatFile, null)
-            );
+            checkers = Lists.newArrayList(new MetricsChecker(refWgsMetricsFile, null), new FlagstatChecker(refFlagstatFile, null));
         } else {
             LOGGER.info("Running in Somatic mode");
-            checkers = Lists.newArrayList(
-                    new MetricsChecker(refWgsMetricsFile, tumWgsMetricsFile),
+            checkers = Lists.newArrayList(new MetricsChecker(refWgsMetricsFile, tumWgsMetricsFile),
                     new FlagstatChecker(refFlagstatFile, tumFlagstatFile),
-                    new PurpleChecker(tumorSample, purpleDirectory)
-            );
+                    new PurpleChecker(tumorSample, purpleDir));
         }
 
         List<QCValue> qcValues = Lists.newArrayList();
@@ -144,14 +140,14 @@ public class HealthChecksApplication {
             if (writeEvaluationFile) {
                 String evaluationFile = fileOutputBasePath() + ".HealthCheckSucceeded";
                 new FileOutputStream(evaluationFile).close();
-                LOGGER.info("Evaluation file written: " + evaluationFile);
+                LOGGER.info("Evaluation file written to {}", evaluationFile);
             }
             LOGGER.info("Health check evaluation succeeded.");
         } else {
             if (writeEvaluationFile) {
                 String evaluationFile = fileOutputBasePath() + ".HealthCheckFailed";
                 new FileOutputStream(evaluationFile).close();
-                LOGGER.info("Evaluation file written: " + evaluationFile);
+                LOGGER.info("Evaluation file written to {}", evaluationFile);
             }
             LOGGER.info("Health check evaluation failed!");
         }
