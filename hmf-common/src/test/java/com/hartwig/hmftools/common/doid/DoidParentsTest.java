@@ -35,7 +35,7 @@ public class DoidParentsTest {
 
     @NotNull
     private static DoidEdge createParent(@NotNull String child, @NotNull String parent) {
-        final String prefix = "http://purl.obolibrary.org/obo/DOID_";
+        String prefix = "http://purl.obolibrary.org/obo/DOID_";
         return createEdge(prefix + child, "is_a", prefix + parent);
     }
 
