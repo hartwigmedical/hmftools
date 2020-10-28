@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class DoidParentsTest {
@@ -30,16 +31,16 @@ public class DoidParentsTest {
         Set<String> parents305 = victim.parents("305");
         assertEquals(1, parents305.size());
         assertTrue(parents305.contains("162"));
-
     }
 
-
-    private static DoidEdge createParent(String child, String parent) {
+    @NotNull
+    private static DoidEdge createParent(@NotNull String child, @NotNull String parent) {
         final String prefix = "http://purl.obolibrary.org/obo/DOID_";
-        return createEdge(prefix+ child, "is_a", prefix + parent);
+        return createEdge(prefix + child, "is_a", prefix + parent);
     }
 
-    private static DoidEdge createEdge(String subject, String pred, String object) {
+    @NotNull
+    private static DoidEdge createEdge(@NotNull String subject, @NotNull String pred, @NotNull String object) {
         return ImmutableDoidEdge.builder().subject(subject).predicate(pred).object(object).build();
     }
 }
