@@ -28,11 +28,11 @@ public class HealthCheckEvaluationTest {
 
     @Test
     public void tumorCoverageChecksWork() {
-        QCValue tumor30xSucceed = ImmutableQCValue.of(QCValueType.TUMOR_COVERAGE_30X, "0.9");
-        QCValue tumor30xFail = ImmutableQCValue.of(QCValueType.TUMOR_COVERAGE_30X, "0.7");
+        QCValue tumor30xSucceed = ImmutableQCValue.of(QCValueType.TUM_COVERAGE_30X, "0.9");
+        QCValue tumor30xFail = ImmutableQCValue.of(QCValueType.TUM_COVERAGE_30X, "0.7");
 
-        QCValue tumor60xSucceed = ImmutableQCValue.of(QCValueType.TUMOR_COVERAGE_60X, "0.7");
-        QCValue tumor60xFail = ImmutableQCValue.of(QCValueType.TUMOR_COVERAGE_60X, "0.5");
+        QCValue tumor60xSucceed = ImmutableQCValue.of(QCValueType.TUM_COVERAGE_60X, "0.7");
+        QCValue tumor60xFail = ImmutableQCValue.of(QCValueType.TUM_COVERAGE_60X, "0.5");
 
         assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(tumor30xSucceed, tumor60xSucceed)));
         assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(tumor30xSucceed, tumor60xFail)));

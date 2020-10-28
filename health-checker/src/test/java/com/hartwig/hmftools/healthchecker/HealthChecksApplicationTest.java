@@ -12,7 +12,7 @@ public class HealthChecksApplicationTest {
     private static final String BASE_DIR = Resources.getResource("").getPath();
 
     private static final String OUTPUT_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
-    private static final boolean WRITE_OUTPUT = false;
+    private static final boolean WRITE_EVALUATION_FILE = false;
 
     @Test
     public void runHealthCheckerInSomaticMode() throws IOException {
@@ -27,7 +27,7 @@ public class HealthChecksApplicationTest {
                 OUTPUT_DIR
         );
 
-        app.run(WRITE_OUTPUT);
+        app.run(WRITE_EVALUATION_FILE);
     }
 
     @Test
@@ -43,6 +43,6 @@ public class HealthChecksApplicationTest {
                  OUTPUT_DIR
         );
 
-        app.run(WRITE_OUTPUT);
+        app.run(WRITE_EVALUATION_FILE);
     }
 }
