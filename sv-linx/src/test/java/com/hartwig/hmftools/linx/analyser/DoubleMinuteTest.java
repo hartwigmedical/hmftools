@@ -166,6 +166,7 @@ public class DoubleMinuteTest
         assertEquals(1, tester.Analyser.getDoubleMinuteFinder().getDoubleMinutes().size());
         DoubleMinuteData dmData = tester.Analyser.getDoubleMinuteFinder().getDoubleMinutes().get(0);
 
+        assertEquals(1, dmData.ChainIntExtData.size());
         assertEquals(4, (int)dmData.ChainIntExtData.get(dmData.Chains.get(0).id())[SEG_DATA_COUNT]);
 
         assertEquals(1, tester.getClusters().size());

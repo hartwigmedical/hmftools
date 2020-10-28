@@ -78,6 +78,8 @@ public class DoubleMinuteData
     public Map<Integer,double[]> ChainSglInternalData;
     public Map<Integer,double[]> ChainInfInternalData;
 
+    private final List<SvRegion> mDmRegions;
+
     private static final int OPEN_CHAIN_ID = -1;
 
     private boolean mIsDoubleMinute;
@@ -115,6 +117,7 @@ public class DoubleMinuteData
         ChainSglInternalData = Maps.newHashMap();
         ChainInfInternalData = Maps.newHashMap();
 
+        mDmRegions = Lists.newArrayList();
         mIsDoubleMinute = false;
     }
 
@@ -136,6 +139,8 @@ public class DoubleMinuteData
 
             MaxJcn = max(MaxJcn, var.jcn());
         }
+
+        buildDmRegions();
 
         final List<LinkedPair> allLinkedPairs = Lists.newArrayList();
         Chains.forEach(x -> allLinkedPairs.addAll(x.getLinkedPairs()));
@@ -269,20 +274,15 @@ public class DoubleMinuteData
 
                 boolean otherBreakendInSegment = allLinkedPairs.stream()
                         .anyMatch(x -> x.chromosome().equals(otherBreakend.chromosome())
-                                && positionWithin(
-                                otherBreakend.position(), x.getBreakend(SE_START).position(), x.getBreakend(SE_END).position()));
+                        && positionWithin(otherBreakend.position(), x.getBreakend(SE_START).position(), x.getBreakend(SE_END).position()));
 
                 if(!otherBreakendInSegment)
                 {
+                    otherBreakendInSegment =
+                            mDmRegions.stream().anyMatch(x -> x.containsPosition(otherBreakend.chromosome(), otherBreakend.position()));
+
                     // breakend must not be within 1K of any DM SV
-
                     // otherBreakendInSegment = isCloseToDmSV(breakend);
-                    /*
-
-                    if(!otherBreakendInSegment)
-                        otherBreakendInSegment = isBreakendFlankedByDmSV(chrBreakendMap, breakend);
-
-                    */
                 }
 
                 if(!otherBreakendInSegment)
@@ -420,6 +420,80 @@ public class DoubleMinuteData
         return false;
     }
 
+    private void buildDmRegions()
+    {
+        if(SVs.size() == 1)
+        {
+            final SvVarData var = SVs.get(0);
+
+            if(var.type() == DUP)
+            {
+                mDmRegions.add(new SvRegion(var.chromosome(true), var.position(true), var.position(false)));
+            }
+
+            return;
+        }
+
+        for(Map.Entry<String,List<SvBreakend>> entry : Cluster.getChrBreakendMap().entrySet())
+        {
+            final String chromosome = entry.getKey();
+
+            if(SVs.stream().noneMatch(x -> x.chromosome(true).equals(chromosome) || x.chromosome(false).equals(chromosome)))
+                continue;
+
+            SvRegion currentRegion = null;
+            double regionStartCopyNumber = 0;
+
+            for(SvBreakend breakend : entry.getValue())
+            {
+                if(!SVs.contains(breakend.getSV()))
+                    continue;
+
+                if(breakend.orientation() == NEG_ORIENT)
+                {
+                    if(currentRegion != null)
+                        continue;
+
+                    if(getMajorAlleleJcnRatio(breakend) >= ADJACENT_JCN_RATIO)
+                    {
+                        regionStartCopyNumber = breakend.copyNumberLowSide();
+                        currentRegion = new SvRegion(chromosome, breakend.position(), 0);
+                    }
+                }
+                else
+                {
+                    if(currentRegion == null)
+                    {
+                        // last region was ended but now extend it onto this additional closing breakend
+                        if(!mDmRegions.isEmpty())
+                        {
+                            SvRegion lastRegion = mDmRegions.get(mDmRegions.size() - 1);
+                            lastRegion.setEnd(breakend.position());
+                        }
+
+                        continue;
+                    }
+
+                    double lowSideCn = breakend.copyNumberLowSide();
+
+                    if(lowSideCn < regionStartCopyNumber || copyNumbersEqual(regionStartCopyNumber, lowSideCn)
+                    || getMajorAlleleJcnRatio(breakend) >= ADJACENT_JCN_RATIO)
+                    {
+                        regionStartCopyNumber = 0;
+                        currentRegion.setEnd(breakend.position());
+                        mDmRegions.add(currentRegion);
+                        currentRegion = null;
+                    }
+                }
+            }
+        }
+
+        if(LNX_LOGGER.isDebugEnabled())
+        {
+            mDmRegions.forEach(x -> LNX_LOGGER.debug("cluster({}) dmRegion({})", Cluster.id(), x));
+        }
+    }
+
     private static final int MIN_CLOSED_SEG_LENGTH = 1500;
     private static final double MIN_CLOSED_SEG_RATIO = 0.66;
     private static final double LOW_JCN_BUFFER = 4;
@@ -506,10 +580,6 @@ public class DoubleMinuteData
                 min(getMajorAlleleJcnRatio(var.getBreakend(true)), getMajorAlleleJcnRatio(var.getBreakend(false)));
 
         return minRatio >= ADJACENT_JCN_RATIO;
-
-        // double maxAdjacentMaJcn = max(var.getBreakend(true).majorAlleleJcn(var.orientation(true) == NEG_ORIENT),
-        //         var.getBreakend(false).majorAlleleJcn(var.orientation(false) == NEG_ORIENT));
-        // return var.jcn() / max(maxAdjacentMaJcn, 0.01) >= ADJACENT_JCN_RATIO;
     }
 
     protected static double getMajorAlleleJcnRatio(final SvBreakend breakend)

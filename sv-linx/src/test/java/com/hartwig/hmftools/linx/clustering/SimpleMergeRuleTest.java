@@ -278,8 +278,6 @@ public class SimpleMergeRuleTest
 
         tester.clearClustersAndSVs();
 
-        Configurator.setRootLevel(Level.DEBUG);
-
         // now 2 clusters each formed from this rule but kept separated from each other
         var1 = createDel(1, "1", 1000, 2000);
 
