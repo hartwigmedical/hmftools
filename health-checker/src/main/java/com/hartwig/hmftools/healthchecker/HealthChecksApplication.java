@@ -88,7 +88,7 @@ public class HealthChecksApplication {
         String tumWgsMetricsFile = cmd.hasOption(TUM_WGS_METRICS_FILE) ? cmd.getOptionValue(TUM_WGS_METRICS_FILE) : null;
         String tumFlagstat = cmd.hasOption(TUM_FLAGSTAT_FILE) ? cmd.getOptionValue(TUM_FLAGSTAT_FILE) : null;
         String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
-        boolean writeEvaluationFile = cmd.hasOption(DO_NOT_WRITE_EVALUATION_FILE) ? false : true;
+        boolean writeEvaluationFile = !cmd.hasOption(DO_NOT_WRITE_EVALUATION_FILE);
 
         new HealthChecksApplication(
                 refSample, tumorSample,
@@ -137,7 +137,7 @@ public class HealthChecksApplication {
         }
 
         for (QCValue qcValue : qcValues) {
-            LOGGER.info("Metric '{}' has value '{}'", qcValue.type(), qcValue.value());
+            LOGGER.info("QC Metric '{}' has value '{}'", qcValue.type(), qcValue.value());
         }
 
         if (HealthCheckEvaluation.isPass(qcValues)) {
