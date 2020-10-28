@@ -32,9 +32,9 @@ public class MetricsCheckerTest {
                 assertEquals("0.98261", value.value());
             } else if (value.type() == QCValueType.REF_COVERAGE_20X) {
                 assertEquals("0.980701", value.value());
-            } else if (value.type() == QCValueType.TUMOR_COVERAGE_30X) {
+            } else if (value.type() == QCValueType.TUM_COVERAGE_30X) {
                 assertEquals("0.978779", value.value());
-            } else if (value.type() == QCValueType.TUMOR_COVERAGE_60X) {
+            } else if (value.type() == QCValueType.TUM_COVERAGE_60X) {
                 assertEquals("0.950264", value.value());
             }
         }

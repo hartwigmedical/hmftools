@@ -17,19 +17,25 @@ public class FlagstatCheckerTest {
     private static final String REF_FLAGSTAT = FLAGSTAT_DIRECTORY + "/reference.flagstat";
     private static final String TUM_FLAGSTAT = FLAGSTAT_DIRECTORY + "/tumor.flagstat";
     private static final String MALFORMED_FLAGSTAT = FLAGSTAT_DIRECTORY + "/malformed.flagstat";
+    private static final String MISSING_FLAGSTAT = FLAGSTAT_DIRECTORY + "/doesnotexist.flagstat";
 
     @Test
     public void extractDataFromFlagstatWorksForSomatic() throws IOException {
         FlagstatChecker checker = new FlagstatChecker(REF_FLAGSTAT, TUM_FLAGSTAT);
         List<QCValue> values = checker.run();
 
-        assertEquals(2, values.size());
+        assertEquals(4, values.size());
         for (QCValue value : values) {
             if (value.type() == QCValueType.REF_PROPORTION_MAPPED) {
-                assertEquals("0.9932958382082092", value.value());
+                assertEquals("0.993296", value.value());
             } else if (value.type() == QCValueType.TUM_PROPORTION_MAPPED) {
-                assertEquals("0.9968295130748326", value.value());
+                assertEquals("0.99683", value.value());
+            } else if (value.type() == QCValueType.REF_PROPORTION_DUPLICATE) {
+                assertEquals("0.116625", value.value());
+            } else if (value.type() == QCValueType.TUM_PROPORTION_DUPLICATE) {
+                assertEquals("0.163053", value.value());
             }
+
         }
     }
 
@@ -41,7 +47,7 @@ public class FlagstatCheckerTest {
 
     @Test(expected = IOException.class)
     public void missingYieldsIOException() throws IOException {
-        FlagstatChecker checker = new FlagstatChecker("missing", "missing");
+        FlagstatChecker checker = new FlagstatChecker(MISSING_FLAGSTAT, MISSING_FLAGSTAT);
         checker.run();
     }
 }
