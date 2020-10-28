@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 
@@ -23,7 +24,7 @@ public class RefGenomeEnrichment
         mRefGenome = refGenome;
     }
 
-    public boolean isValid() { return mRefGenome != null; }
+    public boolean isValid() { return mRefGenome != null && mRefGenome.getSequenceDictionary() != null; }
 
     public String getMicrohomology(final VariantType variantType, final String ref, final String alt, long position, final String sequence)
     {
@@ -52,7 +53,15 @@ public class RefGenomeEnrichment
 
     public final String getSequence(final String chromosome, final long position, final String ref)
     {
-        int chromosomeLength = mRefGenome.getSequenceDictionary().getSequence(chromosome).getSequenceLength();
+        final SAMSequenceRecord sequence = mRefGenome.getSequenceDictionary().getSequence(chromosome);
+
+        if(sequence == null)
+        {
+            BACH_LOGGER.warn("invalid chr({}) for ref-genome sequence", chromosome);
+            return "";
+        }
+
+        int chromosomeLength = sequence.getSequenceLength();
 
         long start = Math.max(position - 100, 1);
         long end = Math.min(position + ref.length() + 100 - 1, chromosomeLength - 1);
