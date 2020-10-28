@@ -14,6 +14,7 @@ import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 import org.junit.Test;
 
 public class TumorLocationCuratorV2Test {
+
     private static final String DOID_FILE_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
     @Test
