@@ -15,6 +15,7 @@ import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public final class FilterGermlineVariants {
 
     private FilterGermlineVariants() {
@@ -48,7 +49,7 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    public static List<DriverGermlineVariant> filterGermlineVariantsForReporting(@NotNull Set<String> reportableGermlineGenes,
+    private static List<DriverGermlineVariant> filterGermlineVariantsForReporting(@NotNull Set<String> reportableGermlineGenes,
             @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull Set<String> genesWithSomaticInactivationEvent) {
         List<DriverGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
 
@@ -91,7 +92,7 @@ public final class FilterGermlineVariants {
         return variantsInTumor;
     }
 
-    private static boolean isPresentInTumor(@NotNull ReportableGermlineVariant germlineVariant) {
+    public static boolean isPresentInTumor(@NotNull ReportableGermlineVariant germlineVariant) {
         return germlineVariant.adjustedCopyNumber() * germlineVariant.adjustedVaf() >= 0.5;
     }
 

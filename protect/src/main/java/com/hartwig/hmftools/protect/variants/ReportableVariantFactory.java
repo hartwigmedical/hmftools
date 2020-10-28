@@ -2,6 +2,8 @@ package com.hartwig.hmftools.protect.variants;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -12,6 +14,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
+import com.hartwig.hmftools.protect.variants.germline.FilterGermlineVariants;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 
@@ -23,16 +26,22 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    public static List<ReportableVariant> reportableGermlineVariants(List<DriverGermlineVariant> variants) {
-        final List<ReportableVariant> result = Lists.newArrayList();
-        for (DriverGermlineVariant variant : variants) {
-            ReportableVariant reportable = fromGermlineVariant(variant.variant()).driverLikelihood(variant.driverLikelihood())
-                    .notifyClinicalGeneticist(false)
-                    .build();
-            result.add(reportable);
-        }
+    public static List<ReportableVariant> reportableGermlineVariants(Set<String> genesWithSomaticInactivationEvent,
+            List<ReportableGermlineVariant> variants) {
 
-        return result;
+        final Predicate<ReportableGermlineVariant> secondGermlineHit =
+                variant -> variants.stream().anyMatch(x -> !x.equals(variant) && x.gene().equals(variant.gene()));
+
+        final Predicate<ReportableGermlineVariant> report =
+                variant -> FilterGermlineVariants.isPresentInTumor(variant) && (variant.biallelic()
+                        || genesWithSomaticInactivationEvent.contains(variant.gene()) || secondGermlineHit.test(variant) || variant.gene()
+                        .equals("KIT"));
+
+        return variants.stream()
+                .filter(report)
+                .map(x -> fromGermlineVariant(x).driverLikelihood(1).notifyClinicalGeneticist(false).build())
+                .collect(Collectors.toList());
+
     }
 
     @NotNull
