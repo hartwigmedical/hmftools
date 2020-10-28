@@ -87,48 +87,61 @@
       "type" : "CLASS",
       "lbl" : "decubitus ulcer"
     } ],
-    "edges" : [ {
-      "sub" : "http://purl.obolibrary.org/obo/CHEBI_50906",
-      "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/doid#chebi"
-    }, {
-      "sub" : "http://purl.obolibrary.org/obo/SO_0001060",
-      "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/doid#sequence"
-    }, {
-      "sub" : "http://purl.obolibrary.org/obo/SYMP_0000539",
-      "pred" : "http://purl.obolibrary.org/obo/doid#has_symptom",
+    "edges" : [
+      {
+        "sub": "http://purl.obolibrary.org/obo/DOID_8717",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/DOID_8549"
+      },
+      {
+        "sub": "http://purl.obolibrary.org/obo/CHEBI_50906",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/doid#chebi"
+      },
+      {
+        "sub": "http://purl.obolibrary.org/obo/SO_0001060",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/doid#sequence"
+      },
+      {
+        "sub": "http://purl.obolibrary.org/obo/SYMP_0000539",
+        "pred": "http://purl.obolibrary.org/obo/doid#has_symptom",
       "obj" : "http://purl.obolibrary.org/obo/SYMP_0000041"
     }, {
-      "sub" : "http://purl.obolibrary.org/obo/HP_0000118",
-      "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/UPHENO_0001001"
-    }, {
-      "sub" : "http://purl.obolibrary.org/obo/CHEBI_24431",
-      "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/doid#chebi"
-    }, {
-      "sub" : "http://purl.obolibrary.org/obo/NCBITaxon_131567",
-      "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/NCBITaxon_1"
-    }, {
-      "sub" : "http://purl.obolibrary.org/obo/SO_0000110",
-      "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/doid#sequence"
-    }, {
-      "sub" : "http://purl.obolibrary.org/obo/NCBITaxon_10239",
-      "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/NCBITaxon_1"
-    } ],
-    "id" : "http://purl.obolibrary.org/obo/doid/obo/ext.owl",
-    "meta" : {
-      "subsets" : [ ],
-      "xrefs" : [ ],
-      "basicPropertyValues" : [ ]
+        "sub": "http://purl.obolibrary.org/obo/HP_0000118",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/UPHENO_0001001"
+      },
+      {
+        "sub": "http://purl.obolibrary.org/obo/CHEBI_24431",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/doid#chebi"
+      },
+      {
+        "sub": "http://purl.obolibrary.org/obo/NCBITaxon_131567",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/NCBITaxon_1"
+      },
+      {
+        "sub": "http://purl.obolibrary.org/obo/SO_0000110",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/doid#sequence"
+      },
+      {
+        "sub": "http://purl.obolibrary.org/obo/NCBITaxon_10239",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/NCBITaxon_1"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/doid.owl",
+    "meta": {
+      "subsets": [],
+      "xrefs": [],
+      "basicPropertyValues": []
     },
-    "equivalentNodesSets" : [ ],
-    "logicalDefinitionAxioms" : [ ],
-    "domainRangeAxioms" : [ ],
-    "propertyChainAxioms" : [ ]
+    "equivalentNodesSets": [],
+    "logicalDefinitionAxioms": [],
+    "domainRangeAxioms": [],
+    "propertyChainAxioms": []
   } ]
 }

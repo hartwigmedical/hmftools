@@ -184,9 +184,9 @@ class ClinicalDAO {
         writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
     }
 
-    private void writeDoidNode(int patientId, @NotNull DoidNode doidEntry) {
+    private void writeDoidNode(int patientId, @NotNull DoidNode doidNode) {
         context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM)
-                .values(patientId, doidEntry.doid(), doidEntry.doidTerm())
+                .values(patientId, doidNode.doid(), doidNode.doidTerm())
                 .execute();
     }
 

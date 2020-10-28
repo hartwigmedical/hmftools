@@ -9,6 +9,9 @@ import org.jetbrains.annotations.NotNull;
 
 final class DoidDatamodelCheckerFactory {
 
+    private DoidDatamodelCheckerFactory() {
+    }
+
     @NotNull
     static JsonDatamodelChecker doidObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();

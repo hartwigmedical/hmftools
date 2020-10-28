@@ -114,25 +114,28 @@
     }, {
       "sub" : "http://purl.obolibrary.org/obo/NCBITaxon_131567",
       "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/NCBITaxon_1"
-    }, {
-      "sub" : "http://purl.obolibrary.org/obo/SO_0000110",
-      "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/doid#sequence"
-    }, {
-      "sub" : "http://purl.obolibrary.org/obo/NCBITaxon_10239",
-      "pred" : "is_a",
-      "obj" : "http://purl.obolibrary.org/obo/NCBITaxon_1"
-    } ],
-    "id" : "http://purl.obolibrary.org/obo/doid/obo/ext.owl",
-    "meta" : {
-      "subsets" : [ ],
-      "xrefs" : [ ],
-      "basicPropertyValues" : [ ]
+      "obj": "http://purl.obolibrary.org/obo/NCBITaxon_1"
     },
-    "equivalentNodesSets" : [ ],
-    "logicalDefinitionAxioms" : [ ],
-    "domainRangeAxioms" : [ ],
-    "propertyChainAxioms" : [ ]
+      {
+        "sub": "http://purl.obolibrary.org/obo/SO_0000110",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/doid#sequence"
+      },
+      {
+        "sub": "http://purl.obolibrary.org/obo/NCBITaxon_10239",
+        "pred": "is_a",
+        "obj": "http://purl.obolibrary.org/obo/NCBITaxon_1"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/doid.owl",
+    "meta": {
+      "subsets": [],
+      "xrefs": [],
+      "basicPropertyValues": []
+    },
+    "equivalentNodesSets": [],
+    "logicalDefinitionAxioms": [],
+    "domainRangeAxioms": [],
+    "propertyChainAxioms": []
   } ]
 }
