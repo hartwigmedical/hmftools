@@ -51,10 +51,10 @@ final class HealthCheckEvaluation {
                 return checkFlagstatMappingProportion(qcValue.value(), "Tum");
             case REF_PROPORTION_DUPLICATE:
                 // No QC on duplicate rate (only reporting the value)
-                return false;
+                return true;
             case TUM_PROPORTION_DUPLICATE:
                 // No QC on duplicate rate (only reporting the value)
-                return false;
+                return true;
             default: {
                 LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.type());
                 return false;
@@ -65,10 +65,10 @@ final class HealthCheckEvaluation {
     private static boolean checkCoverage(@NotNull String value, @NotNull String name, double minPercentage) {
         double coverage = Double.parseDouble(value);
         if (coverage >= minPercentage) {
-            LOGGER.info("QC PASS - {} coverage percentage of {} is higher than min value {}", name, value, minPercentage);
+            LOGGER.info("QC PASS - {} coverage of {} is higher than min value {}", name, value, minPercentage);
             return true;
         } else {
-            LOGGER.info("QC FAIL - {} coverage percentage of {} is lower than min value {}", name, value, minPercentage);
+            LOGGER.info("QC FAIL - {} coverage of {} is lower than min value {}", name, value, minPercentage);
             return false;
         }
     }
@@ -89,13 +89,13 @@ final class HealthCheckEvaluation {
     private static boolean checkPurpleContamination(@NotNull String value) {
         double contamination = Double.parseDouble(value);
         if (contamination <= MAX_PURPLE_CONTAMINATION) {
-            LOGGER.info("QC PASS - Contamination of {} is below {}", value, MAX_PURPLE_CONTAMINATION);
+            LOGGER.info("QC PASS - Contamination of {} is lower than {}", value, MAX_PURPLE_CONTAMINATION);
             if (contamination > 0) {
                 LOGGER.warn("  But contamination is higher than 0!");
             }
             return true;
         } else {
-            LOGGER.info("QC FAIL - Contamination of {} is above {}", value, MAX_PURPLE_CONTAMINATION);
+            LOGGER.info("QC FAIL - Contamination of {} is higher than {}", value, MAX_PURPLE_CONTAMINATION);
             return false;
         }
     }
@@ -103,10 +103,10 @@ final class HealthCheckEvaluation {
     private static boolean checkFlagstatMappingProportion(@NotNull String value, @NotNull String name) {
         double proportion = Double.parseDouble(value);
         if (proportion >= MIN_MAPPED_PROPORTION) {
-            LOGGER.info("QC PASS - {} proportion of reads mapped {} is higher than min value {}", name, value, MIN_MAPPED_PROPORTION);
+            LOGGER.info("QC PASS - {} mapping percentage {} is higher than min value {}", name, value, MIN_MAPPED_PROPORTION);
             return true;
         } else {
-            LOGGER.info("QC FAIL - {} proportion of reads mapped {} is lower than min value {}", name, value, MIN_MAPPED_PROPORTION);
+            LOGGER.info("QC FAIL - {} mapping percentage {} is lower than min value {}", name, value, MIN_MAPPED_PROPORTION);
             return false;
         }
     }
