@@ -38,39 +38,40 @@ public final class DiseaseOntology {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);
+
+        JsonObject doidObject = parser.parse(reader).getAsJsonObject();
+        JsonDatamodelChecker doidObjectChecker = DoidDatamodelCheckerFactory.doidObjectChecker();
+        doidObjectChecker.check(doidObject);
+
         ImmutableDoidEntry.Builder doidEntryBuilder = ImmutableDoidEntry.builder();
+        JsonArray graphArray = doidObject.getAsJsonArray("graphs");
+        for (JsonElement graphElement : graphArray) {
+            JsonObject graphObject = graphElement.getAsJsonObject();
+            JsonDatamodelChecker doidGraphsChecker = DoidDatamodelCheckerFactory.doidGraphsChecker();
+            doidGraphsChecker.check(graphObject);
 
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
-            JsonObject doidObject = parser.parse(reader).getAsJsonObject();
+            String id = string(graphObject, "id");
+            if (id.equals(ID_TO_READ)) {
+                LOGGER.info("Reading DOID entry with ID '{}'", id);
+                // Add data to doid entry
+                doidEntryBuilder.id(id);
+                doidEntryBuilder.nodes(extractNodes(graphObject.getAsJsonArray("nodes")));
+                doidEntryBuilder.edges(extractEdges(graphObject.getAsJsonArray("edges")));
+                doidEntryBuilder.meta(extractGraphMetaNode(graphObject.getAsJsonObject("meta")));
+                doidEntryBuilder.logicalDefinitionAxioms(extractDoidLogicalDefinitionAxioms(graphObject.getAsJsonArray(
+                        "logicalDefinitionAxioms")));
 
-            JsonDatamodelChecker doidObjectChecker = DoidDatamodelCheckerFactory.doidObjectChecker();
-            doidObjectChecker.check(doidObject);
-
-            JsonArray graphArray = doidObject.getAsJsonArray("graphs");
-            for (JsonElement graphElement : graphArray) {
-                JsonObject graphObject = graphElement.getAsJsonObject();
-                JsonDatamodelChecker doidGraphsChecker = DoidDatamodelCheckerFactory.doidGraphsChecker();
-                doidGraphsChecker.check(graphObject);
-
-                String id = string(graphObject, "id");
-                if (id.equals(ID_TO_READ)) {
-                    LOGGER.info("Reading DOID entry with ID '{}'", id);
-                    // Add data to doid entry
-                    doidEntryBuilder.id(id);
-                    doidEntryBuilder.nodes(extractNodes(graphObject.getAsJsonArray("nodes")));
-                    doidEntryBuilder.edges(extractEdges(graphObject.getAsJsonArray("edges")));
-                    doidEntryBuilder.meta(extractGraphMetaNode(graphObject.getAsJsonObject("meta")));
-                    doidEntryBuilder.logicalDefinitionAxioms(extractDoidLogicalDefinitionAxioms(graphObject.getAsJsonArray(
-                            "logicalDefinitionAxioms")));
-
-                    // Below always seem to be empty string lists
-                    doidEntryBuilder.equivalentNodesSets(optionalStringList(graphObject, "equivalentNodesSets"));
-                    doidEntryBuilder.domainRangeAxioms(optionalStringList(graphObject, "domainRangeAxioms"));
-                    doidEntryBuilder.propertyChainAxioms(optionalStringList(graphObject, ("propertyChainAxioms")));
-                } else {
-                    LOGGER.debug("Skipping DOID entry with ID '{}'", id);
-                }
+                // Below always seem to be empty string lists
+                doidEntryBuilder.equivalentNodesSets(optionalStringList(graphObject, "equivalentNodesSets"));
+                doidEntryBuilder.domainRangeAxioms(optionalStringList(graphObject, "domainRangeAxioms"));
+                doidEntryBuilder.propertyChainAxioms(optionalStringList(graphObject, ("propertyChainAxioms")));
+            } else {
+                LOGGER.debug("Skipping DOID entry with ID '{}'", id);
             }
+        }
+
+        if (reader.peek() != JsonToken.END_DOCUMENT) {
+            LOGGER.warn("More data found in {} after reading main JSON object!", doidJsonFile);
         }
 
         return doidEntryBuilder.build();
