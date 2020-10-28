@@ -143,8 +143,8 @@ public class FeatureDataLoader
         {
             for(final DriverCatalog driver : drivers)
             {
-                if(driver.driverLikelihood() == 0)
-                    continue;
+                // if(driver.driverLikelihood() == 0) // keep these so they show with a zero DL
+                //    continue;
 
                 SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), DRIVER, driver.driverLikelihood());
 
