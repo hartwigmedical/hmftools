@@ -21,10 +21,6 @@ import static com.hartwig.hmftools.linx.chaining.LinkFinder.createAssemblyLinked
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
-import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_DB_LENGTH;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.types.ArmCluster.buildArmClusters;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 
@@ -38,7 +34,6 @@ import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.LinxConfig;
@@ -88,10 +83,9 @@ public class ClusterAnalyser {
         mBfbFinder = new BfbFinder();
 
         if(mConfig.hasMultipleSamples())
-        {
             mChainFinder.initialiseOutput(mConfig);
-            mDmFinder.setOutputDir(mConfig.OutputDataPath, runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES));
-        }
+
+        mDmFinder.initialiseOutput(mConfig);
 
         mChainFinder.setUseAllelePloidies(true); // can probably remove and assume always in place
         mChainFinder.setLogVerbose(mConfig.LogVerbose);

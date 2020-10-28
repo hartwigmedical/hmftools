@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusterClassification.classifyS
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.JCN_UPPER_THRESHOLD;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.MIN_SEGMENT_DEPTH_WINDOW_COUNT;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteFinder.getAdjacentMajorAPRatio;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.LinxConstants.ADJACENT_JCN_RATIO;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 
@@ -31,10 +32,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.LinkedPair;
-import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -273,6 +274,19 @@ public class DoubleMinuteData
 
                 if(!otherBreakendInSegment)
                 {
+                    // breakend must not be within 1K of any DM SV
+
+                    // otherBreakendInSegment = isCloseToDmSV(breakend);
+                    /*
+
+                    if(!otherBreakendInSegment)
+                        otherBreakendInSegment = isBreakendFlankedByDmSV(chrBreakendMap, breakend);
+
+                    */
+                }
+
+                if(!otherBreakendInSegment)
+                {
                     //  check for the other breakend forming an assembled TI with the next breakend
                     boolean inShortLink = assembledBreakends.contains(breakend) ||
                             (index < endIndex - 1 ? inShortAssembledLink(breakend, breakendList.get(index + 1)) : false);
@@ -333,6 +347,30 @@ public class DoubleMinuteData
             segmentData[SEG_DATA_SUM] += breakend.jcn();
             segmentData[SEG_DATA_MAX] = max(segmentData[SEG_DATA_MAX], breakend.jcn());
         }
+    }
+
+    private static final int CLOSE_DM_SV_DISTANCE = 1000;
+
+    private boolean isCloseToDmSV(final SvBreakend breakend)
+    {
+        for(SvVarData dmSV : SVs)
+        {
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                if(dmSV.isSglBreakend() && se == SE_END)
+                    break;
+
+                final SvBreakend otherBreakend = dmSV.getBreakend(se);
+
+                if(!otherBreakend.chromosome().equals(breakend.chromosome()))
+                    continue;
+
+                if(abs(otherBreakend.position() - breakend.position()) <= CLOSE_DM_SV_DISTANCE)
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private static boolean inSglPairCluster(final SvBreakend breakend, final SvBreakend nextBreakend)
@@ -459,16 +497,24 @@ public class DoubleMinuteData
         return min(depthWindowCount1, depthWindowCount2) < MIN_SEGMENT_DEPTH_WINDOW_COUNT;
     }
 
-    public static boolean variantExceedsBothAdjacentJcn(final SvVarData var)
+    protected static boolean variantExceedsBothAdjacentJcn(final SvVarData var)
     {
         if(var.isSglBreakend())
             return false;
 
-        double maxAdjacentMaJcn = max(
-                var.getBreakend(true).majorAlleleJcn(var.orientation(true) == NEG_ORIENT),
-                var.getBreakend(false).majorAlleleJcn(var.orientation(false) == NEG_ORIENT));
+        double minRatio =
+                min(getMajorAlleleJcnRatio(var.getBreakend(true)), getMajorAlleleJcnRatio(var.getBreakend(false)));
 
-        return var.jcn() / max(maxAdjacentMaJcn, 0.01) >= ADJACENT_JCN_RATIO;
+        return minRatio >= ADJACENT_JCN_RATIO;
+
+        // double maxAdjacentMaJcn = max(var.getBreakend(true).majorAlleleJcn(var.orientation(true) == NEG_ORIENT),
+        //         var.getBreakend(false).majorAlleleJcn(var.orientation(false) == NEG_ORIENT));
+        // return var.jcn() / max(maxAdjacentMaJcn, 0.01) >= ADJACENT_JCN_RATIO;
+    }
+
+    protected static double getMajorAlleleJcnRatio(final SvBreakend breakend)
+    {
+        return breakend.jcn() / max(breakend.majorAlleleJcn(breakend.orientation() == NEG_ORIENT), 0.01);
     }
 
     private boolean setValidChains()
@@ -541,6 +587,10 @@ public class DoubleMinuteData
 
             double opposingJcn = intExtJcnTotal + sglInfMaxJcn + foldbackJcn;
 
+            LNX_LOGGER.debug(String.format("cluster(%s) DM chain(%s) maxJcn(%.1f) opposingJcn(%.1f intExtJcnTotal=%.1f sglInfMaxJcn=%.1f foldbackJcn=%.1f)",
+                    Cluster.id(), chain != null ? String.valueOf(chain.id()) : "open",
+                    maxJcn, opposingJcn, intExtJcnTotal, sglInfMaxJcn, foldbackJcn));
+
             if(opposingJcn + LOW_JCN_BUFFER <= maxJcn)
             {
                 hasValidCriteria = true;
@@ -559,6 +609,59 @@ public class DoubleMinuteData
         }
 
         return hasValidCriteria;
+    }
+
+    private static final int MAX_FLANKING_DISTANCE = 5000000;
+
+    private boolean isBreakendFlankedByDmSV(final Map<String,List<SvBreakend>> chrBreakendMap, final SvBreakend breakend)
+    {
+        // variants which are flanked on both sides of both start and end breakend by facing DM candidate variants within 5MB
+        final List<SvBreakend> breakendList = chrBreakendMap.get(breakend.chromosome());
+
+        for(int i = 0; i <= 1; ++i)
+        {
+            boolean searchDown = (i == 0);
+            boolean flankedOnSide = false;
+
+            int index = breakend.getChrPosIndex();
+
+            while(true)
+            {
+                if(searchDown)
+                {
+                    --index;
+                    if(index < 0)
+                        break;
+                }
+                else
+                {
+                    ++index;
+                    if(index >= breakendList.size())
+                        break;
+                }
+
+                final SvBreakend nextBreakend = breakendList.get(index);
+
+                if(abs(breakend.position() - nextBreakend.position()) > MAX_FLANKING_DISTANCE)
+                    break;
+
+                if(!SVs.contains(nextBreakend.getSV()))
+                    continue;
+
+                byte requireOrient = searchDown ? NEG_ORIENT : POS_ORIENT;
+
+                if(nextBreakend.orientation() != requireOrient)
+                    continue;
+
+                flankedOnSide = true;
+                break;
+            }
+
+            if(!flankedOnSide)
+                return false;
+        }
+
+        return true;
     }
 
     public String internalTypeCountsAsStr()

@@ -220,8 +220,6 @@ public class SimpleMergeRuleTest
     {
         LinxTester tester = new LinxTester();
 
-        // Configurator.setRootLevel(Level.DEBUG);
-
         // test 2 overlapping DUPs, too far for proximity, are merged
         SvVarData var1 = createDel(1, "1", 1000, 2000);
 
@@ -279,6 +277,8 @@ public class SimpleMergeRuleTest
         assertTrue(cluster.hasClusterReason(MAJOR_ALLELE_JCN));
 
         tester.clearClustersAndSVs();
+
+        Configurator.setRootLevel(Level.DEBUG);
 
         // now 2 clusters each formed from this rule but kept separated from each other
         var1 = createDel(1, "1", 1000, 2000);

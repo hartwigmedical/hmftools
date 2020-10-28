@@ -15,23 +15,23 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
+import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.getMajorAlleleJcnRatio;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.variantExceedsBothAdjacentJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.isOverlapping;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.ADJACENT_JCN_RATIO;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
@@ -59,6 +60,7 @@ public class DoubleMinuteFinder
 
     private BufferedWriter mFileWriter;
     private boolean mLogCandidates;
+    private boolean mShowCandidates;
 
     protected static final double JCN_UPPER_THRESHOLD = 8;
     private static final double JCN_THRESHOLD = 5;
@@ -75,6 +77,8 @@ public class DoubleMinuteFinder
 
         mProcessedClusters = Lists.newArrayList();
         mDoubleMinutes = Maps.newHashMap();
+        mLogCandidates = false;
+        mShowCandidates = false;
 
         mFileWriter = null;
     }
@@ -82,10 +86,13 @@ public class DoubleMinuteFinder
     public void setGeneTransCache(final EnsemblDataCache geneDataCache) { mGeneTransCache = geneDataCache; }
     public void setCopyNumberAnalyser(CnDataLoader cnAnalyser) { mCnDataLoader = cnAnalyser; }
 
-    public void setOutputDir(final String outputDir, boolean logCandidates)
+    public void initialiseOutput(final LinxConfig config)
     {
-        initialiseWriter(outputDir);
-        mLogCandidates = logCandidates;
+        if(config.hasMultipleSamples())
+            initialiseWriter(config.OutputDataPath);
+
+        mLogCandidates = runAnnotation(config.RequiredAnnotations, DOUBLE_MINUTES);
+        mShowCandidates = runAnnotation(config.RequiredAnnotations, "SHOW_DM");
     }
 
     public final Map<Integer, DoubleMinuteData> getDoubleMinutes() { return mDoubleMinutes; }
@@ -146,7 +153,7 @@ public class DoubleMinuteFinder
 
         candidateDmSVs.stream().filter(x -> x.jcn() >= minJcn).forEach(x -> dmSVs.add(x));
 
-        final List<SvVarData> flankedSVs = addFlankedDmCandidates(cluster, dmSVs, candidateFlankedSVs);
+        final List<SvVarData> flankedSVs = Lists.newArrayList(); // addFlankedDmCandidates(cluster, dmSVs, candidateFlankedSVs);
         dmSVs.addAll(flankedSVs);
 
         // dismiss any single SV which isn't a DUP
@@ -229,7 +236,7 @@ public class DoubleMinuteFinder
 
         boolean isDM = dmData.isDoubleMinute();
 
-        if(!mLogCandidates && !isDM)
+        if(!mLogCandidates && !mShowCandidates && !isDM)
             return;
 
         LNX_LOGGER.debug("cluster({}) dmSVs({}) chains({}) unchainedSVs({}) {}",
@@ -266,105 +273,35 @@ public class DoubleMinuteFinder
 
             cluster.addAnnotation(CLUSTER_ANNOT_DM);
         }
-    }
-
-    private static final int MAX_FLANKING_DISTANCE = 5000000;
-
-    private List<SvVarData> addFlankedDmCandidates(final SvCluster cluster, final List<SvVarData> dmSVs, final List<SvVarData> candidateDmSVs)
-    {
-        // variants which are flanked on both sides of both start and end breakend by facing DM candidate variants within 5MB
-        // and have a JCN greater than or equal to the maximum JCN of all of the flanking DM candidate variants
-        final List<SvVarData> newDmSVs = Lists.newArrayList();
-
-        for(SvVarData var : candidateDmSVs)
+        else if(mShowCandidates)
         {
-            if(dmSVs.contains(var))
-                continue;
+            cluster.setDoubleMinuteData(dmData.SVs, dmData.Chains);
 
-            if(var.isSglBreakend())
-                continue;
-
-            boolean flankedOnSides = true;
-            double maxFlankingJcn = 0;
-
-            for(int se = SE_START; se <= SE_END; ++se)
+            for(SvChain dmChain : dmData.Chains)
             {
-                final SvBreakend breakend = var.getBreakend(se);
-                final List<SvBreakend> breakendList = cluster.getChrBreakendMap().get(breakend.chromosome());
-
-                for(int i = 0; i <= 1; ++i)
+                // cache single DUP chains now since the cluster may not go through the chaining routine
+                if(dmChain.getSvCount() == 1 && dmChain.getSvList().get(0).type() == DUP)
                 {
-                    boolean searchDown = (i == 0);
-                    boolean flankedOnSide = false;
-
-                    int index = breakend.getClusterChrPosIndex();
-
-                    while(true)
+                    final SvVarData dup = dmChain.getSvList().get(0);
+                    if(!cluster.getChains().stream().anyMatch(x -> x.getSvList().size() == 1 && x.getSvList().contains(dup)))
                     {
-                        if(searchDown)
-                        {
-                            --index;
-                            if(index < 0)
-                                break;
-                        }
-                        else
-                        {
-                            ++index;
-                            if(index >= breakendList.size())
-                                break;
-                        }
-
-                        final SvBreakend nextBreakend = breakendList.get(index);
-
-                        if(abs(breakend.position() - nextBreakend.position()) > MAX_FLANKING_DISTANCE)
-                            break;
-
-                        if(!dmSVs.contains(nextBreakend.getSV()))
-                            continue;
-
-                        byte requireOrient = searchDown ? NEG_ORIENT : POS_ORIENT;
-
-                        if(nextBreakend.orientation() != requireOrient)
-                            continue;
-
-                        maxFlankingJcn = max(maxFlankingJcn, nextBreakend.jcn());
-                        flankedOnSide = true;
-                        break;
-                    }
-
-                    if(!flankedOnSide)
-                    {
-                        flankedOnSides = false;
-                        break;
+                        cluster.addChain(dmChain, false);
                     }
                 }
+
+                // all DMs, even if partial or not fully closed will be marked for the visualiser
+                dmChain.setDoubleMinute(true);
             }
-
-            if(flankedOnSides && var.jcn() > maxFlankingJcn || copyNumbersEqual(var.jcn(), maxFlankingJcn))
-                newDmSVs.add(var);
         }
-
-        return newDmSVs;
     }
 
     protected static double getAdjacentMajorAPRatio(final SvVarData var)
     {
         // get the largest ratio of JCN to the adjacent major AP
-        double maxRatio = 0;
+        double maxRatio = getMajorAlleleJcnRatio(var.getBreakend(true));
 
-        for (int se = SE_START; se <= SE_END; ++se)
-        {
-            if(se == SE_END && var.isSglBreakend())
-                continue;
-
-            final SvBreakend breakend = var.getBreakend(se);
-
-            // gets the major allele JCN on the lower side of the breakend (ie opposite to orientation)
-            double adjacentMaJcn = breakend.majorAlleleJcn(breakend.orientation() == -1);
-
-            // if against 0, then just ensure it will pass
-            maxRatio = max(var.jcn() / max(adjacentMaJcn, 0.01), maxRatio);
-        }
+        if(!var.isSglBreakend())
+            maxRatio = max(getMajorAlleleJcnRatio(var.getBreakend(false)), maxRatio);
 
         return maxRatio;
     }
@@ -550,11 +487,9 @@ public class DoubleMinuteFinder
             {
                 final SvVarData var = dmData.SVs.get(0);
 
-                double maxAdjacentMaJcn = max(
-                        var.getBreakend(true).majorAlleleJcn(true),
-                        var.getBreakend(false).majorAlleleJcn(false));
-
-                minMinAmr = var.jcn() / max(maxAdjacentMaJcn, 0.01);
+                minMinAmr = min(
+                        getMajorAlleleJcnRatio(var.getBreakend(true)),
+                        getMajorAlleleJcnRatio(var.getBreakend(false)));
             }
 
             mFileWriter.write(String.format(",%.1f,%s,%d",

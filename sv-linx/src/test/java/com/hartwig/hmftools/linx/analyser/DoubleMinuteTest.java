@@ -3,19 +3,14 @@ package com.hartwig.hmftools.linx.analyser;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.SEG_DATA_COUNT;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
-import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV_DEL_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
-import static com.hartwig.hmftools.linx.types.SvVarData.NONE_SEGMENT_INFERRED;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -95,38 +90,12 @@ public class DoubleMinuteTest
     }
 
     @Test
-    public void testFlankingSvDM()
-    {
-        // SVs flanked by other DM SVs can be valid candidates themselves
-        LinxTester tester = new LinxTester();
-
-        final SvVarData var1 = createTestSv(1,"1","1",1000,2000,-1,-1, INV,8);
-        final SvVarData var2 = createTestSv(2,"1","1",4000,6000,-1,1, DUP,8);
-        final SvVarData var3 = createTestSv(3,"1","1",10000,12000,1,1, INV,8);
-
-        tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3));
-        tester.preClusteringInit();
-
-        tester.Analyser.clusterAndAnalyse();
-
-        SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2, var3));
-        assertTrue(cluster != null);
-        assertEquals(COMPLEX, cluster.getResolvedType());
-        assertTrue(cluster.getAnnotations().contains(DOUBLE_MINUTES));
-        assertEquals(3, cluster.getDoubleMinuteSVs().size());
-
-        assertEquals(1, cluster.getChains().size());
-        SvChain chain = cluster.getChains().get(0);
-        assertEquals(3, chain.getLinkCount());
-        assertTrue(chain.isClosedLoop());
-    }
-
-    @Test
     public void testInvalidOpenBreakendDMs()
     {
         // a cluster is not a DM if it has too high a ratio of open breakends, with simple DELs excluded
         LinxTester tester = new LinxTester();
-        tester.Analyser.getDoubleMinuteFinder().setOutputDir("", true);
+        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
+        tester.Analyser.getDoubleMinuteFinder().initialiseOutput(tester.Config);
 
         // the main DM structure, with open breakends
         SvVarData var1 = createTestSv(tester.nextVarId(),"1","2",1000,100,-1,1, BND,8);
@@ -156,7 +125,8 @@ public class DoubleMinuteTest
     {
         // a cluster is not a DM if it has too many breakends going from within a segment to outside, but  short TIs are excluded
         LinxTester tester = new LinxTester();
-        tester.Analyser.getDoubleMinuteFinder().setOutputDir("", true);
+        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
+        tester.Analyser.getDoubleMinuteFinder().initialiseOutput(tester.Config);
 
         // tester.logVerbose(true);
 
