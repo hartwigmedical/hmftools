@@ -50,8 +50,6 @@ final class HealthCheckEvaluation {
             case TUM_PROPORTION_MAPPED:
                 return checkFlagstatMappingProportion(qcValue.value(), "Tum");
             case REF_PROPORTION_DUPLICATE:
-                // No QC on duplicate rate (only reporting the value)
-                return true;
             case TUM_PROPORTION_DUPLICATE:
                 // No QC on duplicate rate (only reporting the value)
                 return true;
@@ -73,7 +71,7 @@ final class HealthCheckEvaluation {
         }
     }
 
-    private static boolean checkPurpleQCStatus(final String value) {
+    private static boolean checkPurpleQCStatus(@NotNull final String value) {
         if (value.equals(PURPLE_QC_PASS)) {
             LOGGER.info("QC PASS - Purple QC value is {}", value);
             return true;

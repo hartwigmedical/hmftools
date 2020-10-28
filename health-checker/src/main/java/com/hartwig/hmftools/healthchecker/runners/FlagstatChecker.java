@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -14,14 +13,10 @@ import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FlagstatChecker implements HealthChecker {
-
-    private static final Logger LOGGER = LogManager.getLogger(FlagstatChecker.class);
 
     @NotNull
     private final String refFlagstat;
@@ -33,22 +28,23 @@ public class FlagstatChecker implements HealthChecker {
         this.tumFlagstat = tumFlagstat;
     }
 
-    public static double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
+    @NotNull
+    private static Double roundToSixDecimals(@NotNull Double value) {
         BigDecimal bd = BigDecimal.valueOf(value);
-        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        bd = bd.setScale(6, RoundingMode.HALF_UP);
         return bd.doubleValue();
     }
 
-    public static String divideTwoStrings(String string1, String string2) {
+    @NotNull
+    private static String divideTwoStrings(@NotNull String string1, @NotNull String string2) {
         Double double1 = Double.parseDouble(string1);
         Double double2 = Double.parseDouble(string2);
-        Double proportion = round(double1 / double2, 6);
+        Double proportion = roundToSixDecimals(double1 / double2);
         return String.valueOf(proportion);
     }
 
     @Nullable
-    public static String valueBySubstring(List<String> lines , String subString) {
+    private static String valueBySubstring(@NotNull List<String> lines , @NotNull String subString) {
         List<String> matchLines = new ArrayList<>();
         for(String line : lines) {
             if (line.contains(subString)) {

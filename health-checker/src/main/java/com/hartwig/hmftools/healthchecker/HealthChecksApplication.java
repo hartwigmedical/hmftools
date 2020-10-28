@@ -114,7 +114,7 @@ public class HealthChecksApplication {
     }
 
     @VisibleForTesting
-    void run(boolean writeEvaluationFile) throws IOException {
+    void run(@NotNull boolean writeEvaluationFile) throws IOException {
         List<HealthChecker> checkers;
         if (tumorSample == null || purpleDirectory == null) {
             LOGGER.info("Running in SingleSample mode");

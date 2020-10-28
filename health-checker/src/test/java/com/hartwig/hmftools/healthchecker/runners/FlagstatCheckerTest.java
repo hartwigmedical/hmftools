@@ -35,7 +35,6 @@ public class FlagstatCheckerTest {
             } else if (value.type() == QCValueType.TUM_PROPORTION_DUPLICATE) {
                 assertEquals("0.163053", value.value());
             }
-
         }
     }
 
