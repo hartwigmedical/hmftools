@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +29,7 @@ class WGSMetricsLines {
     static WGSMetricsLines fromFile(@NotNull String path) throws IOException {
         List<String> lines = Files.readAllLines(new File(path).toPath());
         if (lines.isEmpty()) {
-            throw new EmptyFileException(path);
+            throw new IOException("WGSMetrics file seems empty on " + path);
         }
         int index = findHeaderLineIndex(lines);
         if (index >= lines.size()) {

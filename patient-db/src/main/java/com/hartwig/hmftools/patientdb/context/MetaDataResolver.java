@@ -15,7 +15,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -173,7 +172,7 @@ final class MetaDataResolver {
     private static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
         List<String> lines = Files.readAllLines(pipelineVersionFile.toPath());
         if (lines.isEmpty()) {
-            throw new EmptyFileException(pipelineVersionFile.toString());
+            throw new IOException("Pipeline version file seems empty on " + pipelineVersionFile.getPath());
         } else {
             if (lines.size() == 1) {
                 return lines.get(0);
