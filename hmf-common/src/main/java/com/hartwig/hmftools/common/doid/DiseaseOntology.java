@@ -68,7 +68,7 @@ public final class DiseaseOntology {
                     doidEntryBuilder.domainRangeAxioms(optionalStringList(graphObject, "domainRangeAxioms"));
                     doidEntryBuilder.propertyChainAxioms(optionalStringList(graphObject, ("propertyChainAxioms")));
                 } else {
-                    LOGGER.info("Skipping DOID entry with ID '{}'", id);
+                    LOGGER.debug("Skipping DOID entry with ID '{}'", id);
                 }
             }
         }
