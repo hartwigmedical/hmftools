@@ -37,8 +37,7 @@ public class TumorLocationCuratorV2Test {
 
     @Test
     public void canResolveDoidNodes() throws IOException {
-        List<DoidNode> doidNodes =
-                DiseaseOntology.readDoidJsonFile(DOID_FILE_JSON).doidNodes();
+        List<DoidNode> doidNodes = DiseaseOntology.readDoidJsonFile(DOID_FILE_JSON).nodes();
         List<String> doids = Lists.newArrayList();
         doids.add("8718");
         assertEquals(Lists.newArrayList(doidNodes.get(0)), TumorLocationCuratorV2.resolveDoidNodes(doidNodes, doids));

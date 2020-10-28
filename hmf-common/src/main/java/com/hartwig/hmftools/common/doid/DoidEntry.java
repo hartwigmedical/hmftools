@@ -12,22 +12,22 @@ import org.jetbrains.annotations.Nullable;
 public abstract class DoidEntry {
 
     @NotNull
-    public abstract List<DoidNode> doidNodes();
-
-    @NotNull
-    public abstract List<DoidEdge> doidEdges();
-
-    @NotNull
     public abstract String id();
+
+    @NotNull
+    public abstract List<DoidNode> nodes();
+
+    @NotNull
+    public abstract List<DoidEdge> edges();
 
     @NotNull
     public abstract DoidGraphMetaData meta();
 
-    @NotNull
-    public abstract List<String> equivalentNodesSets();
-
     @Nullable
     public abstract List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms();
+
+    @NotNull
+    public abstract List<String> equivalentNodesSets();
 
     @NotNull
     public abstract List<String> domainRangeAxioms();

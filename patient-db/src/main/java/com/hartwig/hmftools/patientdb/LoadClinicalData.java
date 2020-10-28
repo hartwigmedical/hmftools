@@ -109,7 +109,7 @@ public final class LoadClinicalData {
             System.exit(1);
         }
 
-        List<DoidNode> doidNodes = DiseaseOntology.readDoidJsonFile(cmd.getOptionValue(DOID_JSON)).doidNodes();
+        List<DoidNode> doidNodes = DiseaseOntology.readDoidJsonFile(cmd.getOptionValue(DOID_JSON)).nodes();
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_CSV));
         TumorLocationCuratorV2 tumorLocationCuratorV2 =
                 new TumorLocationCuratorV2(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), doidNodes);

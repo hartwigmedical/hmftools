@@ -29,9 +29,9 @@ public class DiseaseOntologyTest {
                 .xrefs(Lists.newArrayList())
                 .basicPropertyValues(Lists.newArrayList())
                 .build();
-        List<DoidNode> doidNodes = doidEntry.doidNodes();
+        List<DoidNode> doidNodes = doidEntry.nodes();
 
-        List<DoidEdge> doidEdges = doidEntry.doidEdges();
+        List<DoidEdge> doidEdges = doidEntry.edges();
         assertEquals(9, doidEdges.size());
 
         DoidEdge doidEdge1 = doidEdges.get(0);

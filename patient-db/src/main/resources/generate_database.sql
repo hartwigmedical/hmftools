@@ -1,6 +1,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Can be removed table is removed from prod
+-- TODO Can be removed per 15 nov.
 DROP TABLE IF EXISTS doidEntry;
 
 DROP TABLE IF EXISTS patient;

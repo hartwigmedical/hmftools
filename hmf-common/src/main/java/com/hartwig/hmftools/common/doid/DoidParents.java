@@ -13,7 +13,7 @@ public class DoidParents {
 
     private final ListMultimap<String, String> relationship = ArrayListMultimap.create();
 
-    public DoidParents(List<DoidEdge> edges) {
+    public DoidParents(@NotNull List<DoidEdge> edges) {
         for (DoidEdge edge : edges) {
             if (edge.predicate().equals("is_a")) {
                 isA(DiseaseOntology.extractDoid(edge.subject()), DiseaseOntology.extractDoid(edge.object()));
@@ -43,7 +43,7 @@ public class DoidParents {
         }
     }
 
-    private void inner(@NotNull String child, @NotNull final Set<String> result) {
+    private void inner(@NotNull String child, @NotNull Set<String> result) {
         if (!relationship.containsKey(child)) {
             return;
         }

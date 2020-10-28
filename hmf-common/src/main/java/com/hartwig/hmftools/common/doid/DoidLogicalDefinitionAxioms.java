@@ -18,5 +18,5 @@ public abstract class DoidLogicalDefinitionAxioms {
     public abstract List<String> genusIds();
 
     @NotNull
-    public abstract List<DoidRestrictions> restrictions();
+    public abstract List<DoidRestriction> restrictions();
 }
