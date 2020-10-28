@@ -20,10 +20,15 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class DiseaseOntology {
+
+    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
+    private static final String ID_TO_READ = "http://purl.obolibrary.org/obo/doid.owl";
 
     private DiseaseOntology() {
     }
@@ -47,18 +52,24 @@ public final class DiseaseOntology {
                 JsonDatamodelChecker doidGraphsChecker = DoidDatamodelCheckerFactory.doidGraphsChecker();
                 doidGraphsChecker.check(graphObject);
 
-                // Add data to doid entry
-                doidEntryBuilder.id(string(graphObject, "id"));
-                doidEntryBuilder.nodes(extractNodes(graphObject.getAsJsonArray("nodes")));
-                doidEntryBuilder.edges(extractEdges(graphObject.getAsJsonArray("edges")));
-                doidEntryBuilder.meta(extractGraphMetaNode(graphObject.getAsJsonObject("meta")));
-                doidEntryBuilder.logicalDefinitionAxioms(extractDoidLogicalDefinitionAxioms(graphObject.getAsJsonArray(
-                        "logicalDefinitionAxioms")));
+                String id = string(graphObject, "id");
+                if (id.equals(ID_TO_READ)) {
+                    LOGGER.info("Reading DOID entry with ID '{}'", id);
+                    // Add data to doid entry
+                    doidEntryBuilder.id(id);
+                    doidEntryBuilder.nodes(extractNodes(graphObject.getAsJsonArray("nodes")));
+                    doidEntryBuilder.edges(extractEdges(graphObject.getAsJsonArray("edges")));
+                    doidEntryBuilder.meta(extractGraphMetaNode(graphObject.getAsJsonObject("meta")));
+                    doidEntryBuilder.logicalDefinitionAxioms(extractDoidLogicalDefinitionAxioms(graphObject.getAsJsonArray(
+                            "logicalDefinitionAxioms")));
 
-                // Below always seem to be empty string lists
-                doidEntryBuilder.equivalentNodesSets(optionalStringList(graphObject, "equivalentNodesSets"));
-                doidEntryBuilder.domainRangeAxioms(optionalStringList(graphObject, "domainRangeAxioms"));
-                doidEntryBuilder.propertyChainAxioms(optionalStringList(graphObject, ("propertyChainAxioms")));
+                    // Below always seem to be empty string lists
+                    doidEntryBuilder.equivalentNodesSets(optionalStringList(graphObject, "equivalentNodesSets"));
+                    doidEntryBuilder.domainRangeAxioms(optionalStringList(graphObject, "domainRangeAxioms"));
+                    doidEntryBuilder.propertyChainAxioms(optionalStringList(graphObject, ("propertyChainAxioms")));
+                } else {
+                    LOGGER.info("Skipping DOID entry with ID '{}'", id);
+                }
             }
         }
 
