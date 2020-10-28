@@ -92,59 +92,59 @@ public class DiseaseOntologyTest {
                 doidDefinition2.definitionXrefs());
 
         List<String> subset2 = doidNode2.doidMetadata().subsets();
-        assertEquals(subset2, Lists.newArrayList("http://purl.obolibrary.org/obo/doid#NCIthesaurus"));
+        assertEquals(Lists.newArrayList("http://purl.obolibrary.org/obo/doid#NCIthesaurus"), subset2);
 
         List<DoidXref> doidXrefs = doidNode2.doidMetadata().xrefs();
-        assertEquals(doidXrefs.get(0), ImmutableDoidXref.builder().val("NCI:C50706").build());
-        assertEquals(doidXrefs.get(1), ImmutableDoidXref.builder().val("MESH:D003668").build());
-        assertEquals(doidXrefs.get(2), ImmutableDoidXref.builder().val("ICD9CM:707.0").build());
-        assertEquals(doidXrefs.get(3), ImmutableDoidXref.builder().val("UMLS_CUI:C0011127").build());
-        assertEquals(doidXrefs.get(4), ImmutableDoidXref.builder().val("SNOMEDCT_US_2020_03_01:28103007").build());
-        assertEquals(doidXrefs.get(5), ImmutableDoidXref.builder().val("ICD10CM:L89").build());
+        assertEquals(ImmutableDoidXref.builder().val("NCI:C50706").build(), doidXrefs.get(0));
+        assertEquals(ImmutableDoidXref.builder().val("MESH:D003668").build(), doidXrefs.get(1));
+        assertEquals(ImmutableDoidXref.builder().val("ICD9CM:707.0").build(), doidXrefs.get(2));
+        assertEquals(ImmutableDoidXref.builder().val("UMLS_CUI:C0011127").build(), doidXrefs.get(3));
+        assertEquals(ImmutableDoidXref.builder().val("SNOMEDCT_US_2020_03_01:28103007").build(), doidXrefs.get(4));
+        assertEquals(ImmutableDoidXref.builder().val("ICD10CM:L89").build(), doidXrefs.get(5));
 
         DoidSynonym doid2Synonym1 = doidNode2.doidMetadata().synonyms().get(0);
-        assertEquals(doid2Synonym1.pred(), "hasExactSynonym");
-        assertEquals(doid2Synonym1.val(), "Decubitus ulcer any site");
-        assertEquals(doid2Synonym1.xrefs(), Lists.newArrayList());
+        assertEquals("hasExactSynonym", doid2Synonym1.pred());
+        assertEquals("Decubitus ulcer any site", doid2Synonym1.val());
+        assertEquals(Lists.newArrayList(), doid2Synonym1.xrefs());
 
         DoidSynonym doid2Synonym2 = doidNode2.doidMetadata().synonyms().get(1);
-        assertEquals(doid2Synonym2.pred(), "hasExactSynonym");
-        assertEquals(doid2Synonym2.val(), "pressure ulcer");
-        assertEquals(doid2Synonym2.xrefs(), Lists.newArrayList());
+        assertEquals("hasExactSynonym", doid2Synonym2.pred());
+        assertEquals("pressure ulcer", doid2Synonym2.val());
+        assertEquals(Lists.newArrayList(), doid2Synonym2.xrefs());
 
         DoidSynonym doid2Synonym3 = doidNode2.doidMetadata().synonyms().get(2);
-        assertEquals(doid2Synonym3.pred(), "hasExactSynonym");
-        assertEquals(doid2Synonym3.val(), "pressure sores");
-        assertEquals(doid2Synonym3.xrefs(), Lists.newArrayList());
+        assertEquals("hasExactSynonym", doid2Synonym3.pred());
+        assertEquals("pressure sores", doid2Synonym3.val());
+        assertEquals(Lists.newArrayList(), doid2Synonym3.xrefs());
 
         DoidSynonym doid2Synonym4 = doidNode2.doidMetadata().synonyms().get(3);
-        assertEquals(doid2Synonym4.pred(), "hasExactSynonym");
-        assertEquals(doid2Synonym4.val(), "Decubitus (pressure) ulcer");
-        assertEquals(doid2Synonym4.xrefs(), Lists.newArrayList());
+        assertEquals("hasExactSynonym", doid2Synonym4.pred());
+        assertEquals("Decubitus (pressure) ulcer", doid2Synonym4.val());
+        assertEquals(Lists.newArrayList(), doid2Synonym4.xrefs());
 
         DoidSynonym doid2Synonym5 = doidNode2.doidMetadata().synonyms().get(4);
-        assertEquals(doid2Synonym5.pred(), "hasRelatedSynonym");
-        assertEquals(doid2Synonym5.val(), "bedsore");
-        assertEquals(doid2Synonym5.xrefs(), Lists.newArrayList());
+        assertEquals("hasRelatedSynonym", doid2Synonym5.pred());
+        assertEquals("bedsore", doid2Synonym5.val());
+        assertEquals(Lists.newArrayList(), doid2Synonym5.xrefs());
 
         DoidBasicPropertyValue doid2BasicPropertyValue1 = doidNode2.doidMetadata().basicPropertyValues().get(0);
-        assertEquals(doid2BasicPropertyValue1.pred(), "http://www.geneontology.org/formats/oboInOwl#hasAlternativeId");
-        assertEquals(doid2BasicPropertyValue1.val(), "DOID:8808");
+        assertEquals("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", doid2BasicPropertyValue1.pred());
+        assertEquals("DOID:8808", doid2BasicPropertyValue1.val());
 
         DoidBasicPropertyValue doid2BasicPropertyValue2 = doidNode2.doidMetadata().basicPropertyValues().get(1);
-        assertEquals(doid2BasicPropertyValue2.pred(), "http://www.geneontology.org/formats/oboInOwl#hasAlternativeId");
-        assertEquals(doid2BasicPropertyValue2.val(), "DOID:9129");
+        assertEquals("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", doid2BasicPropertyValue2.pred());
+        assertEquals("DOID:9129", doid2BasicPropertyValue2.val());
 
         DoidBasicPropertyValue doid2BasicPropertyValue3 = doidNode2.doidMetadata().basicPropertyValues().get(2);
-        assertEquals(doid2BasicPropertyValue3.pred(), "http://www.geneontology.org/formats/oboInOwl#hasOBONamespace");
-        assertEquals(doid2BasicPropertyValue3.val(), "disease_ontology");
+        assertEquals("http://www.geneontology.org/formats/oboInOwl#hasOBONamespace", doid2BasicPropertyValue3.pred());
+        assertEquals("disease_ontology", doid2BasicPropertyValue3.val());
 
         DoidBasicPropertyValue doid2BasicPropertyValue4 = doidNode2.doidMetadata().basicPropertyValues().get(3);
-        assertEquals(doid2BasicPropertyValue4.pred(), "http://www.geneontology.org/formats/oboInOwl#hasAlternativeId");
-        assertEquals(doid2BasicPropertyValue4.val(), "DOID:9029");
+        assertEquals("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", doid2BasicPropertyValue4.pred());
+        assertEquals("DOID:9029", doid2BasicPropertyValue4.val());
 
         DoidBasicPropertyValue doid2BasicPropertyValue5 = doidNode2.doidMetadata().basicPropertyValues().get(4);
-        assertEquals(doid2BasicPropertyValue5.pred(), "http://www.geneontology.org/formats/oboInOwl#hasAlternativeId");
-        assertEquals(doid2BasicPropertyValue5.val(), "DOID:9002");
+        assertEquals("http://www.geneontology.org/formats/oboInOwl#hasAlternativeId", doid2BasicPropertyValue5.pred());
+        assertEquals("DOID:9002", doid2BasicPropertyValue5.val());
     }
 }
