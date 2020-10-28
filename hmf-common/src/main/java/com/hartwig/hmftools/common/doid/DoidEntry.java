@@ -15,7 +15,7 @@ public abstract class DoidEntry {
     public abstract List<DoidNode> doidNodes();
 
     @NotNull
-    public abstract DoidEdges edges();
+    public abstract List<DoidEdge> doidEdges();
 
     @NotNull
     public abstract String id();

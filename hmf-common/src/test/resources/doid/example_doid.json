@@ -88,6 +88,10 @@
       "lbl" : "decubitus ulcer"
     } ],
     "edges" : [ {
+      "sub" : "http://purl.obolibrary.org/obo/DOID_8717",
+      "pred" : "is_a",
+      "obj" : "http://purl.obolibrary.org/obo/DOID_8549"
+    }, {
       "sub" : "http://purl.obolibrary.org/obo/CHEBI_50906",
       "pred" : "is_a",
       "obj" : "http://purl.obolibrary.org/obo/doid#chebi"

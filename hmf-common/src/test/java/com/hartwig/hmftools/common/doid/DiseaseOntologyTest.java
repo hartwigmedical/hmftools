@@ -31,9 +31,18 @@ public class DiseaseOntologyTest {
                 .build();
         List<DoidNode> doidNodes = doidEntry.doidNodes();
 
-        DoidEdges doidEdges = doidEntry.edges();
-        assertEquals(7, doidEdges.size());
-        //TODO add doidEdges
+        List<DoidEdge> doidEdges = doidEntry.doidEdges();
+        assertEquals(9, doidEdges.size());
+
+        DoidEdge doidEdge1 = doidEdges.get(0);
+        assertEquals("http://purl.obolibrary.org/obo/DOID_8717", doidEdge1.subject());
+        assertEquals("is_a", doidEdge1.predicate());
+        assertEquals("http://purl.obolibrary.org/obo/DOID_8549", doidEdge1.object());
+
+        DoidEdge doidEdge2 = doidEdges.get(1);
+        assertEquals("http://purl.obolibrary.org/obo/CHEBI_50906", doidEdge2.subject());
+        assertEquals("is_a", doidEdge2.predicate());
+        assertEquals("http://purl.obolibrary.org/obo/doid#chebi", doidEdge2.object());
 
         assertEquals("http://purl.obolibrary.org/obo/doid/obo/ext.owl", doidEntry.id());
         assertEquals(doidGraphMetaData, doidEntry.meta());

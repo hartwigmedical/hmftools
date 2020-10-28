@@ -38,7 +38,6 @@ public final class DiseaseOntology {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);
-        List<DoidNode> doidNodes = Lists.newArrayList();
         ImmutableDoidEntry.Builder doidDoidEntryBuilder = ImmutableDoidEntry.builder();
 
         while (reader.peek() != JsonToken.END_DOCUMENT) {
@@ -57,41 +56,9 @@ public final class DiseaseOntology {
                     List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms =
                             extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
 
-                    // Extract doid edges
-                    DoidEdges result = new DoidEdges();
-                    JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
-                    for (JsonElement edgeElement : edgesArray) {
-                        JsonObject edge = edgeElement.getAsJsonObject();
-                        JsonDatamodelChecker doidEdgeChecker = DoidDatamodelCheckerFactory.doidEdgeChecker();
-                        doidEdgeChecker.check(edge);
-
-                        String predicate = string(edge, "pred");
-                        if (predicate.equals("is_a")) {
-                            String child = extractDoid(string(edge, "sub"));
-                            String parent = extractDoid(string(edge, "obj"));
-                            result.isA(child, parent);
-                        }
-                    }
-
-                    // Extract doid nodes
-                    JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
-                    for (JsonElement nodeElement : nodeArray) {
-                        JsonObject node = nodeElement.getAsJsonObject();
-                        JsonDatamodelChecker doidNodesChecker = DoidDatamodelCheckerFactory.doidNodesChecker();
-                        doidNodesChecker.check(node);
-                        String url = string(node, "id");
-                        doidNodes.add(ImmutableDoidNode.builder()
-                                .doid(extractDoid(url))
-                                .url(url)
-                                .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
-                                .type(optionalString(node, "type"))
-                                .doidTerm(optionalString(node, "lbl"))
-                                .build());
-                    }
-
                     // Add data to doid entry
-                    doidDoidEntryBuilder.doidNodes(doidNodes);
-                    doidDoidEntryBuilder.edges(result);
+                    doidDoidEntryBuilder.doidNodes(extractDoidNode(graph.getAsJsonObject()));
+                    doidDoidEntryBuilder.doidEdges(extractDoidEdges(graph.getAsJsonObject()));
                     doidDoidEntryBuilder.id(string(graph.getAsJsonObject(), "id"));
                     doidDoidEntryBuilder.meta(graphMetaData);
                     doidDoidEntryBuilder.equivalentNodesSets(optionalStringList(graph.getAsJsonObject(),
@@ -108,6 +75,48 @@ public final class DiseaseOntology {
         }
 
         return doidDoidEntryBuilder.build();
+    }
+
+    @NotNull
+    private static List<DoidEdge> extractDoidEdges(@NotNull JsonObject graph) {
+        JsonArray edgesArray = graph.getAsJsonArray("edges");
+        List<DoidEdge> result = Lists.newArrayList();
+
+        for (JsonElement edgeElement : edgesArray) {
+            JsonObject edge = edgeElement.getAsJsonObject();
+            JsonDatamodelChecker doidEdgeChecker = DoidDatamodelCheckerFactory.doidEdgeChecker();
+            doidEdgeChecker.check(edge);
+
+            String predicate = string(edge, "pred");
+            String object = string(edge, "obj");
+            String subject = string(edge, "sub");
+
+            result.add(ImmutableDoidEdge.builder().predicate(predicate).subject(subject).object(object).build());
+        }
+
+        return result;
+    }
+
+    @NotNull
+    private static List<DoidNode> extractDoidNode(@NotNull JsonObject graph) {
+        JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
+        List<DoidNode> result = Lists.newArrayList();
+
+        for (JsonElement nodeElement : nodeArray) {
+            JsonObject node = nodeElement.getAsJsonObject();
+            JsonDatamodelChecker doidNodesChecker = DoidDatamodelCheckerFactory.doidNodesChecker();
+            doidNodesChecker.check(node);
+            String url = string(node, "id");
+            result.add(ImmutableDoidNode.builder()
+                    .doid(extractDoid(url))
+                    .url(url)
+                    .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
+                    .type(optionalString(node, "type"))
+                    .doidTerm(optionalString(node, "lbl"))
+                    .build());
+        }
+
+        return result;
     }
 
     @NotNull

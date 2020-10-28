@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2File;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2Functions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
-import com.hartwig.hmftools.common.doid.DoidEdges;
+import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItemFile;
@@ -116,20 +116,24 @@ public class ProtectApplication implements AutoCloseable {
                 protectConfig.linxDriversTsv(),
                 protectConfig.chordPredictionTxt());
 
-//        printResults(tumorSampleId, analysis);
+        //        printResults(tumorSampleId, analysis);
 
-        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.offLabel.tsv", analysis.offLabelEvidence());
-        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.onLabel.tsv", analysis.tumorSpecificEvidence());
+        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.offLabel.tsv",
+                analysis.offLabelEvidence());
+        EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.onLabel.tsv",
+                analysis.tumorSpecificEvidence());
     }
 
     private static Set<String> doids(@NotNull ProtectConfig config) throws IOException {
         final Set<String> result = Sets.newHashSet();
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
-        final DoidEdges doidEdges = DiseaseOntology.readDoidJsonFile(config.doidJsonFile()).edges();
+        final DoidParents doidParent = new DoidParents(DiseaseOntology.readDoidJsonFile(config.doidJsonFile()).doidEdges());
 
         LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsvV2());
         final List<PatientTumorLocationV2> tumorLocations = PatientTumorLocationV2File.read(config.tumorLocationTsvV2());
-        @Nullable  PatientTumorLocationV2 sampleTumorLocation = PatientTumorLocationV2Functions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
+        @Nullable
+        PatientTumorLocationV2 sampleTumorLocation =
+                PatientTumorLocationV2Functions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
         if (sampleTumorLocation == null) {
             result.add(PAN_CANCER_DOID);
             return result;
@@ -138,7 +142,7 @@ public class ProtectApplication implements AutoCloseable {
         final List<String> initialDoids = sampleTumorLocation.doids();
         for (String initialDoid : initialDoids) {
             result.add(initialDoid);
-            result.addAll(doidEdges.parents(initialDoid));
+            result.addAll(doidParent.parents(initialDoid));
         }
 
         LOGGER.info(" Resolved doids: {}", String.join(";", result));
@@ -164,8 +168,7 @@ public class ProtectApplication implements AutoCloseable {
         // Evidence
         final List<ProtectEvidenceItem> variantEvidence =
                 variantEvidenceFactory.evidence(doids, bachelorData.germlineVariants(), purpleData.somaticVariants());
-        final List<ProtectEvidenceItem> copyNumberEvidence =
-                copyNumberEvidenceFactory.evidence(doids, purpleData.copyNumberAlterations());
+        final List<ProtectEvidenceItem> copyNumberEvidence = copyNumberEvidenceFactory.evidence(doids, purpleData.copyNumberAlterations());
         final List<ProtectEvidenceItem> fusionEvidence = fusionEvidenceFactory.evidence(doids, linxData.fusions());
 
         final List<ProtectEvidenceItem> result = Lists.newArrayList();
@@ -174,7 +177,6 @@ public class ProtectApplication implements AutoCloseable {
         result.addAll(fusionEvidence);
         return result;
     }
-
 
     @Nullable
     private static PatientTumorLocation loadPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String tumorSampleId)
@@ -210,7 +212,7 @@ public class ProtectApplication implements AutoCloseable {
     }
 
     @Override
-    public void close()  {
+    public void close() {
         dbAccess.close();
         LOGGER.info("Complete");
     }
