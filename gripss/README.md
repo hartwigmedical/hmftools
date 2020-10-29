@@ -134,6 +134,7 @@ Note that for DSB and hotspot rescue, neither the rescued variant nor the rescui
   - Only include specified samples in VCF output
   - `tumor` argument is now mandatory
   - `reference` argument is still optional but excluding it will run in [tumor-only mode](#tumor-only-mode)
+  - HardMaxNormalAbsoluteSupport does not trigger unless SoftMaxNormalRelativeSupport does also
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.8)
   - Legs of variant always have same filters
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.7)

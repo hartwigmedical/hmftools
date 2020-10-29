@@ -104,14 +104,33 @@ class StructuralVariantContextTest {
     fun testHardMaxNormalAbsoluteSupportIsRecoveredByHotspot() {
         val config = GripssFilterConfig.default()
         val normalSupport =  config.hardMaxNormalAbsoluteSupport + 1
-        val tumorSupport = ceil(normalSupport / config.hardMaxNormalRelativeSupport).toInt()
+        val tumorSupport = ceil(normalSupport / config.softMaxNormalRelativeSupport).toInt() - 1
         val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
+
         assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
-        assertTrue(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
         assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, contigComparator))
+
+        assertTrue(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
+        assertTrue(sgl.normalSupportRelativeFilter(config.softMaxNormalRelativeSupport, contigComparator))
 
         assertFalse(sgl.isHardFilter(config, contigComparator, true))
         assertTrue(sgl.isHardFilter(config, contigComparator, false))
+    }
+
+    @Test
+    fun testHardMaxNormalRequiresSoftRelativeAsWell() {
+        val config = GripssFilterConfig.default()
+        val normalSupport =  config.hardMaxNormalAbsoluteSupport + 1
+        val tumorSupport = ceil(normalSupport / config.softMaxNormalRelativeSupport).toInt() + 1
+        val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
+        assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
+        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, contigComparator))
+
+        assertTrue(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
+        assertFalse(sgl.normalSupportRelativeFilter(config.softMaxNormalRelativeSupport, contigComparator))
+
+        assertFalse(sgl.isHardFilter(config, contigComparator, true))
+        assertFalse(sgl.isHardFilter(config, contigComparator, false))
     }
 
     @Test

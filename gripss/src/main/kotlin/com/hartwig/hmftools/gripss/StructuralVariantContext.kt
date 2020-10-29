@@ -218,7 +218,11 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             return false
         }
 
-        return (normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) || normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, comparator))
+        if (normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, comparator)) {
+            return true
+        }
+
+        return (normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) && normalSupportRelativeFilter(config.softMaxNormalRelativeSupport, comparator))
     }
 
     fun softFilters(config: GripssFilterConfig, comparator: ContigComparator): Set<String> {
