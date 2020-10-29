@@ -188,8 +188,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
-        val builder = VariantContextBuilder(context).filters()
+        val genotypesToWrite = mutableListOf(tumorGenotype)
+        normalGenotype?.let { x -> genotypesToWrite.add(x) }
 
+        val builder = VariantContextBuilder(context).genotypes(genotypesToWrite).filters()
         builder.log10PError(qual / -10.0)
                 .attribute(TAF, tumorAF)
                 .attribute(LOCAL_LINKED_BY, localLink)

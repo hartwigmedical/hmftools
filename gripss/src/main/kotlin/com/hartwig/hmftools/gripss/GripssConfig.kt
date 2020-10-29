@@ -34,8 +34,8 @@ data class GripssConfig(
         val filterConfig: GripssFilterConfig) {
 
     fun sampleOrdinals(sampleNames: List<String>): Pair<Int, Int> {
-        val tumorOrdinal = sampleOrdinal(sampleNames.size - 1, tumor, sampleNames)
-        val normalOrdinal = sampleOrdinal(sampleNames.size - 2, reference, sampleNames)
+        val tumorOrdinal = sampleOrdinal(tumor, sampleNames)
+        val normalOrdinal = if (reference.isEmpty()) -1 else sampleOrdinal(reference, sampleNames)
 
         if (tumorOrdinal == normalOrdinal) {
             throw ParseException("Tumor and reference must be different")
@@ -43,14 +43,13 @@ data class GripssConfig(
         return Pair(normalOrdinal, tumorOrdinal)
     }
 
-    private fun sampleOrdinal(default: Int, sample: String, allSamples: List<String>): Int {
-        if (sample.isNotEmpty()) {
-            val ordinal = allSamples.indexOf(sample)
-            if (ordinal < 0) {
-                throw IllegalArgumentException("Unable to locate sample $sample in supplied VCF")
-            }
+    private fun sampleOrdinal(sample: String, allSamples: List<String>): Int {
+        val ordinal = allSamples.indexOf(sample)
+        if (ordinal < 0) {
+            throw IllegalArgumentException("Unable to locate sample $sample in supplied VCF")
         }
-        return default
+
+        return ordinal
     }
 
     companion object {
@@ -62,8 +61,8 @@ data class GripssConfig(
             options.addOption(requiredOption(PAIRED_PON_OPTION, "Paired breakpoint pon bedpe file"))
             options.addOption(requiredOption(PAIRED_HOTSPOT_OPTION, "Paired breakpoint hotspot bedpe file"))
             options.addOption(requiredOption(REF_GENOME_OPTION, "Ref genome"))
-            options.addOption(Option(REFERENCE, true, "Optional name of reference sample [first sample in VCF]"))
-            options.addOption(Option(TUMOR, true, "Optional name of tumor sample [second sample in VCF]"))
+            options.addOption(Option(REFERENCE, true, "Optional name of reference sample"))
+            options.addOption(requiredOption(TUMOR, "Name of tumor sample"))
             GripssFilterConfig.createOptions().options.forEach { options.addOption(it) }
             return options
         }
@@ -153,19 +152,19 @@ data class GripssFilterConfig(
         fun createOptions(): Options {
             val defaultConfig = default()
             val options = Options()
-            options.addOption(HARD_MIN_TUMOR_QUAL_OPTION, true,"Hard min tumor qual [${defaultConfig.hardMinTumorQual}]")
-            options.addOption(HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_OPTION, true,"Hard max normal absolute support [${defaultConfig.hardMaxNormalAbsoluteSupport}]")
-            options.addOption(HARD_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, true,"Hard max normal relative support [${defaultConfig.hardMaxNormalRelativeSupport}]")
-            options.addOption(SOFT_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, true,"Soft max normal relative support [${defaultConfig.softMaxNormalRelativeSupport}]")
-            options.addOption(MIN_NORMAL_COVERAGE_OPTION, true,"Min normal coverage [${defaultConfig.minNormalCoverage}]")
-            options.addOption(MIN_TUMOR_AF_OPTION, true,"Min tumor allelic frequency [${defaultConfig.minTumorAF}]")
-            options.addOption(MAX_SHORT_STRAND_BIAS_OPTION, true,"Max short strand bias [${defaultConfig.maxShortStrandBias}]")
-            options.addOption(MIN_QUAL_BREAK_END_OPTION, true,"Min qual break end [${defaultConfig.minQualBreakEnd}]")
-            options.addOption(MIN_QUAL_BREAK_POINT_OPTION, true,"Min qual break point [${defaultConfig.minQualBreakPoint}]")
-            options.addOption(MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, true,"Min qual rescue mobile element insertions [${defaultConfig.minQualRescueMobileElementInsertion}]")
-            options.addOption(MAX_HOM_LENGTH_SHORT_INV_OPTION, true,"Max homology length short inversion [${defaultConfig.maxHomLengthShortInversion}]")
-            options.addOption(MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, true,"Max inexact homology length short del [${defaultConfig.maxInexactHomLengthShortDel}]")
-            options.addOption(MIN_LENGTH_OPTION, true,"Min length [${defaultConfig.minLength}]")
+            options.addOption(HARD_MIN_TUMOR_QUAL_OPTION, true, "Hard min tumor qual [${defaultConfig.hardMinTumorQual}]")
+            options.addOption(HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_OPTION, true, "Hard max normal absolute support [${defaultConfig.hardMaxNormalAbsoluteSupport}]")
+            options.addOption(HARD_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, true, "Hard max normal relative support [${defaultConfig.hardMaxNormalRelativeSupport}]")
+            options.addOption(SOFT_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, true, "Soft max normal relative support [${defaultConfig.softMaxNormalRelativeSupport}]")
+            options.addOption(MIN_NORMAL_COVERAGE_OPTION, true, "Min normal coverage [${defaultConfig.minNormalCoverage}]")
+            options.addOption(MIN_TUMOR_AF_OPTION, true, "Min tumor allelic frequency [${defaultConfig.minTumorAF}]")
+            options.addOption(MAX_SHORT_STRAND_BIAS_OPTION, true, "Max short strand bias [${defaultConfig.maxShortStrandBias}]")
+            options.addOption(MIN_QUAL_BREAK_END_OPTION, true, "Min qual break end [${defaultConfig.minQualBreakEnd}]")
+            options.addOption(MIN_QUAL_BREAK_POINT_OPTION, true, "Min qual break point [${defaultConfig.minQualBreakPoint}]")
+            options.addOption(MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, true, "Min qual rescue mobile element insertions [${defaultConfig.minQualRescueMobileElementInsertion}]")
+            options.addOption(MAX_HOM_LENGTH_SHORT_INV_OPTION, true, "Max homology length short inversion [${defaultConfig.maxHomLengthShortInversion}]")
+            options.addOption(MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, true, "Max inexact homology length short del [${defaultConfig.maxInexactHomLengthShortDel}]")
+            options.addOption(MIN_LENGTH_OPTION, true, "Min length [${defaultConfig.minLength}]")
 
             return options
         }

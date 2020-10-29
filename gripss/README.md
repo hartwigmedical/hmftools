@@ -10,38 +10,31 @@ Details on how to include these are available on the GRIDSS readme [here](https:
 
 ```
 java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripss.GripssApplicationKt \
+   -tumor SAMPLE_T \
+   -reference SAMPLE_N \
    -ref_genome /path/to/Homo_sapiens_assembly.fasta \
    -breakend_pon /path/to/gridss_pon_single_breakend.bed \
    -breakpoint_pon /path/to/gridss_pon_breakpoint.bedpe \
    -breakpoint_hotspot /path/to/KnownFusionPairs.bedpe \
-   -input_vcf /path/to/SAMPLE.gridss.unfiltered.vcf.gz \
-   -output_vcf /path/to/SAMPLE.gridss.somatic.vcf.gz 
+   -input_vcf /path/to/SAMPLE_T.gridss.unfiltered.vcf.gz \
+   -output_vcf /path/to/SAMPLE_T.gridss.somatic.vcf.gz 
 ```
 
 We typically then hard-filter all but PON filtered from the somatic file with the following command:
-
 ```
 java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripss.GripssHardFilterApplicationKt \
-   -input_vcf /path/to/SAMPLE.gridss.somatic.vcf.gz \
-   -output_vcf /path/to/SAMPLE.gridss.somatic.filtered.vcf.gz 
+   -input_vcf /path/to/SAMPLE_T.gridss.somatic.vcf.gz \
+   -output_vcf /path/to/SAMPLE_T.gridss.somatic.filtered.vcf.gz 
 ```
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
 The bed and bedpe files are available to download from [HMFTools-Resources > GRIDSS](https://resources.hartwigmedicalfoundation.nl/) for both GRCH 37 and 38.
 
-## Optional Arguments
-
-Argument | Default | Description 
----|---|---
-reference | first sample in VCF header| Name of reference sample in VCF header
-tumor | second sample in VCF header|Name of tumor sample in VCF header
-
 ## Tumor-only mode
-If there is only one sample in the supplied VCF then all filters that require the normal sample are de-activated. This includes
+The `reference` argument is optional and if not supplied, GRIPSS will run in tumor-only mode in which case  all filters that require the normal sample are de-activated. This includes
 `minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`, `discordantPairSupport`
  
-
 # Algorithm
 
 There are 5 steps in GRIPSS described in detail below:
@@ -137,6 +130,10 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
+- Upcoming
+  - Only include specified samples in VCF output
+  - `tumor` argument is now mandatory
+  - `reference` argument is still optional but excluding it will run in [tumor-only mode](#tumor-only-mode)
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.8)
   - Legs of variant always have same filters
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.7)
