@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocationV2;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
@@ -257,7 +257,14 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
-                .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
+                .patientTumorLocation(ImmutablePatientTumorLocationV2.of(Strings.EMPTY,
+                        "Skin",
+                        "",
+                        "Melanoma",
+                        "",
+                        "",
+                        Lists.newArrayList("1;2"),
+                        false))
                 .refArrivalDate(LocalDate.parse("01-Oct-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)

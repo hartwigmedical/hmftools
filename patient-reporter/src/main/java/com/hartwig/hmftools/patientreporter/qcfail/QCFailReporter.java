@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2Functions;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
@@ -36,8 +36,8 @@ public class QCFailReporter {
             throw new IllegalStateException("QC fail report not supported for non-cancer study samples: " + sampleMetadata.tumorSampleId());
         }
 
-        PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findTumorLocationForSample(reportData.patientTumorLocations(),
+        PatientTumorLocationV2 patientTumorLocation =
+                PatientTumorLocationV2Functions.findTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
         String wgsPurityString = null;

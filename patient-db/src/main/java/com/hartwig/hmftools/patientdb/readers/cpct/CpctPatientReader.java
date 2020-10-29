@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
@@ -38,10 +37,10 @@ public class CpctPatientReader implements EcrfPatientReader {
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public CpctPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull TumorLocationCuratorV2 tumorLocationCuratorV2,
+    public CpctPatientReader(@NotNull TumorLocationCuratorV2 tumorLocationCuratorV2,
             @NotNull Map<Integer, String> hospitals, @NotNull BiopsySiteCurator biopsySiteCurator,
             @NotNull TreatmentCurator treatmentCurator) {
-        this.baselineReader = new BaselineReader(tumorLocationCurator, tumorLocationCuratorV2, hospitals);
+        this.baselineReader = new BaselineReader(tumorLocationCuratorV2, hospitals);
         this.preTreatmentReader = new PreTreatmentReader(treatmentCurator);
         this.biopsyReader = new BiopsyReader(biopsySiteCurator);
         this.biopsyTreatmentReader = new BiopsyTreatmentReader(treatmentCurator);
@@ -52,7 +51,7 @@ public class CpctPatientReader implements EcrfPatientReader {
     public Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples) {
         BaselineData baselineData = baselineReader.read(ecrfPatient);
         PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
-        List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedTumorLocation());
+        List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedTumorLocationV2());
         List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
         List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(ecrfPatient);
         List<TumorMarkerData> tumorMarkers = TumorMarkerReader.read(ecrfPatient);

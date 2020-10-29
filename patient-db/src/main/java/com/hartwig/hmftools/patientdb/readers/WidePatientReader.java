@@ -9,14 +9,12 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableValidationFinding;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
@@ -48,16 +46,13 @@ public class WidePatientReader {
     @NotNull
     private final WideEcrfModel wideEcrfModel;
     @NotNull
-    private final TumorLocationCurator tumorLocationCurator;
-    @NotNull
     private final TumorLocationCuratorV2 tumorLocationCuratorV2;
     @NotNull
     private final TreatmentCurator treatmentCurator;
 
-    public WidePatientReader(@NotNull final WideEcrfModel wideEcrfModel, @NotNull final TumorLocationCurator tumorLocationCurator,
+    public WidePatientReader(@NotNull final WideEcrfModel wideEcrfModel,
             @NotNull final TumorLocationCuratorV2 tumorLocationCuratorV2, @NotNull final TreatmentCurator treatmentCurator) {
         this.wideEcrfModel = wideEcrfModel;
-        this.tumorLocationCurator = tumorLocationCurator;
         this.tumorLocationCuratorV2 = tumorLocationCuratorV2;
         this.treatmentCurator = treatmentCurator;
     }
@@ -91,12 +86,6 @@ public class WidePatientReader {
         String gender = !fiveDays.isEmpty() ? fiveDays.get(0).gender() : null;
         LocalDate informedConsentDate = !fiveDays.isEmpty() ? fiveDays.get(0).informedConsentDate() : null;
 
-        CuratedTumorLocation curatedTumorLocation = tumorLocationCurator.search(limsPrimaryTumorLocation);
-        if (curatedTumorLocation.primaryTumorLocation() == null && limsPrimaryTumorLocation != null
-                && !limsPrimaryTumorLocation.isEmpty()) {
-            LOGGER.warn("Could not curate WIDE primary tumor location v1 '{}'", limsPrimaryTumorLocation);
-        }
-
         CuratedTumorLocationV2 curatedTumorLocationV2 = tumorLocationCuratorV2.search(limsPrimaryTumorLocation);
         if (curatedTumorLocationV2.primaryTumorLocation() == null && limsPrimaryTumorLocation != null
                 && !limsPrimaryTumorLocation.isEmpty()) {
@@ -109,7 +98,6 @@ public class WidePatientReader {
                 .gender(gender)
                 .hospital(null)
                 .birthYear(birthYear)
-                .curatedTumorLocation(curatedTumorLocation)
                 .curatedTumorLocationV2(curatedTumorLocationV2)
                 .deathDate(null)
                 .demographyStatus(FormStatus.undefined())

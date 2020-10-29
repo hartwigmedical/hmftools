@@ -19,7 +19,7 @@ public class CpctPatientReaderTest {
 
     @Test
     public void canLoadEmptyPatient() {
-        CpctPatientReader patientReader = new CpctPatientReader(TestCuratorFactory.tumorLocationCurator(),
+        CpctPatientReader patientReader = new CpctPatientReader(
                 TestCuratorFactory.tumorLocationV2Curator(),
                 Maps.newHashMap(),
                 TestCuratorFactory.biopsySiteCurator(),

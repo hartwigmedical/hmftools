@@ -188,8 +188,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
-        val builder = VariantContextBuilder(context).filters()
+        val genotypesToWrite = mutableListOf(tumorGenotype)
+        normalGenotype?.let { x -> genotypesToWrite.add(x) }
 
+        val builder = VariantContextBuilder(context).genotypes(genotypesToWrite).filters()
         builder.log10PError(qual / -10.0)
                 .attribute(TAF, tumorAF)
                 .attribute(LOCAL_LINKED_BY, localLink)
@@ -216,7 +218,11 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             return false
         }
 
-        return (normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) || normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, comparator))
+        if (normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, comparator)) {
+            return true
+        }
+
+        return (normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) && normalSupportRelativeFilter(config.softMaxNormalRelativeSupport, comparator))
     }
 
     fun softFilters(config: GripssFilterConfig, comparator: ContigComparator): Set<String> {

@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -66,7 +66,7 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable PatientTumorLocation patientTumorLocation,
+    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable PatientTumorLocationV2 patientTumorLocation,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralInsertions, @NotNull String purplePurityTsv,
             @NotNull String purpleQCFile, @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf,
             @NotNull String bachelorTsv, @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
@@ -139,7 +139,7 @@ public class GenomicAnalyzer {
 
     @NotNull
     private PurpleAnalysis analyzePurple(@NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> purpleDriverCatalog) throws IOException {
+            @Nullable PatientTumorLocationV2 patientTumorLocation, @NotNull List<DriverCatalog> purpleDriverCatalog) throws IOException {
         PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
@@ -189,7 +189,7 @@ public class GenomicAnalyzer {
 
     @NotNull
     private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
-            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+            @Nullable PatientTumorLocationV2 patientTumorLocation) throws IOException {
         List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
         List<LinxFusion> linxReportedFusions = linxFusions.stream().filter(x -> x.reported()).collect(Collectors.toList());
 

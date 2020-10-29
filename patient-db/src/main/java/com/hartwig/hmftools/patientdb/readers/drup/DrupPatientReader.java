@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
@@ -27,9 +26,9 @@ public class DrupPatientReader implements EcrfPatientReader {
     @NotNull
     private final BiopsyReader biopsyReader;
 
-    public DrupPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull TumorLocationCuratorV2 tumorLocationCuratorV2,
+    public DrupPatientReader(@NotNull TumorLocationCuratorV2 tumorLocationCuratorV2,
             @NotNull BiopsySiteCurator biopsySiteCurator) {
-        this.baselineReader = new BaselineReader(tumorLocationCurator, tumorLocationCuratorV2);
+        this.baselineReader = new BaselineReader(tumorLocationCuratorV2);
         this.biopsyReader = new BiopsyReader(biopsySiteCurator);
     }
 
@@ -38,7 +37,7 @@ public class DrupPatientReader implements EcrfPatientReader {
     public Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples) {
         BaselineData baselineData = baselineReader.read(ecrfPatient);
         PreTreatmentData noPreTreatmentData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
-        List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedTumorLocation());
+        List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedTumorLocationV2());
 
         MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedSamples, clinicalBiopsies);

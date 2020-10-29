@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2File;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2Functions;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
@@ -137,9 +137,7 @@ public class LoadEvidenceData {
         LOGGER.info("Reading gene fusions from {}", linxFusionTsv);
         final List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
 
-        List<LinxFusion> linxFusionsReported = linxFusions.stream()
-                .filter(x -> x.reported())
-                .collect(Collectors.toList());
+        List<LinxFusion> linxFusionsReported = linxFusions.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
         LOGGER.info(" Loaded {} fusions from {}", linxFusionsReported.size(), linxFusionTsv);
         return linxFusionsReported;
@@ -148,11 +146,11 @@ public class LoadEvidenceData {
     @NotNull
     private static String extractPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String sampleId) throws IOException {
         LOGGER.info("Reading primary tumor location from {}", tumorLocationTsv);
-        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.readRecordsTSV(tumorLocationTsv);
+        List<PatientTumorLocationV2> patientTumorLocations = PatientTumorLocationV2File.read(tumorLocationTsv);
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
-        PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocations, sampleId);
+        PatientTumorLocationV2 patientTumorLocation =
+                PatientTumorLocationV2Functions.findTumorLocationForSample(patientTumorLocations, sampleId);
 
         String patientPrimaryTumorLocation = Strings.EMPTY;
         if (patientTumorLocation != null) {

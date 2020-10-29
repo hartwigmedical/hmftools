@@ -24,6 +24,21 @@ public class CNADriversTest {
     private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
 
     @Test
+    public void testPartialAmp() {
+        List<String> driverGenes = Lists.newArrayList(genePanel.amplificationTargets());
+        GeneCopyNumber partialAmp = createTestCopyNumberBuilder(driverGenes.get(0)).minCopyNumber(0.1).maxCopyNumber(7).build();
+        GeneCopyNumber fullAmp = createTestCopyNumberBuilder(driverGenes.get(1)).minCopyNumber(7).maxCopyNumber(7).build();
+        List<DriverCatalog> drivers = new CNADrivers(Sets.newHashSet(PurpleQCStatus.PASS), genePanel).amplifications(2, Lists.newArrayList(partialAmp, fullAmp));
+        assertEquals(2, drivers.size());
+
+        assertEquals(partialAmp.gene(), drivers.get(0).gene());
+        assertEquals(DriverType.PARTIAL_AMP, drivers.get(0).driver());
+
+        assertEquals(fullAmp.gene(), drivers.get(1).gene());
+        assertEquals(DriverType.AMP, drivers.get(1).driver());
+    }
+
+    @Test
     public void testDeletionsInGermlineAsStillReportable() {
         List<String> driverGenes = Lists.newArrayList(genePanel.deletionTargets());
         GeneCopyNumber somatic = createTestCopyNumberBuilder(driverGenes.get(0)).germlineHet2HomRegions(0).germlineHomRegions(0).build();

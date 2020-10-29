@@ -26,7 +26,6 @@ public final class TestDatamodelFactory {
     @NotNull
     public static ImmutableBaselineData.Builder baselineBuilder() {
         return ImmutableBaselineData.builder()
-                .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
                 .curatedTumorLocationV2(ImmutableCuratedTumorLocationV2.builder().searchTerm(Strings.EMPTY).build())
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())

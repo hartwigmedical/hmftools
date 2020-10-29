@@ -19,7 +19,7 @@ public class DrupPatientReaderTest {
 
     @Test
     public void canReadEmptyPatient() {
-        DrupPatientReader patientReader = new DrupPatientReader(TestCuratorFactory.tumorLocationCurator(),
+        DrupPatientReader patientReader = new DrupPatientReader(
                 TestCuratorFactory.tumorLocationV2Curator(),
                 TestCuratorFactory.biopsySiteCurator());
 

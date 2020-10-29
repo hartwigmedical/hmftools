@@ -23,7 +23,6 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedDrug;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
@@ -43,7 +42,6 @@ public class PatientValidatorTest {
     private static final String HOSPITAL = "Test Hospital";
     private static final BaselineData EMPTY_BASELINE = baselineBuilder().build();
     private static final BaselineData BASELINE_DATA_MISSING_LOCATION_MAPPING = baselineBuilder().hospital(HOSPITAL)
-            .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, "some_location"))
             .curatedTumorLocationV2(ImmutableCuratedTumorLocationV2.builder().searchTerm("some_location").build())
             .build();
 
@@ -100,7 +98,7 @@ public class PatientValidatorTest {
     @Test
     public void reportsMissingBaselineFields() {
         List<ValidationFinding> findings = PatientValidator.validateBaselineData(PATIENT_IDENTIFIER, EMPTY_BASELINE);
-        assertEquals(6, findings.size());
+        assertEquals(5, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 

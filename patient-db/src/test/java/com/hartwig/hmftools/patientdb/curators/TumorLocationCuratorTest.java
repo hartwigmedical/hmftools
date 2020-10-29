@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientdb.curators;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 
 import org.junit.Test;
 
@@ -11,30 +11,30 @@ public class TumorLocationCuratorTest {
 
     @Test
     public void canDetermineUnusedTerms() {
-        TumorLocationCurator curator = TestCuratorFactory.tumorLocationCurator();
-        assertEquals(8, curator.unusedSearchTerms().size());
+        TumorLocationCuratorV2 curator = TestCuratorFactory.tumorLocationV2Curator();
+        assertEquals(5, curator.unusedSearchTerms().size());
 
         curator.search("Breast cancer");
-        assertEquals(7, curator.unusedSearchTerms().size());
+        assertEquals(5, curator.unusedSearchTerms().size());
     }
 
     @Test
     public void canCurateDesmoidTumor() {
         // See DEV-275
-        TumorLocationCurator curator = TestCuratorFactory.tumorLocationCurator();
+        TumorLocationCuratorV2 curator = TestCuratorFactory.tumorLocationV2Curator();
         String desmoidTumor = "desmoïd tumor";
-        CuratedTumorLocation tumorLocation = curator.search(desmoidTumor);
+        CuratedTumorLocationV2 tumorLocation = curator.search(desmoidTumor);
 
         String location = tumorLocation.primaryTumorLocation();
         assertNotNull(location);
-        assertEquals("sarcoma", location.toLowerCase());
+        assertEquals("bone/soft tissue", location.toLowerCase());
     }
 
     @Test
     public void canCurateSearchTermWithChar34() {
         String searchTerm = "Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis \"lung carcinoma\"";
-        TumorLocationCurator curator = TestCuratorFactory.tumorLocationCurator();
-        CuratedTumorLocation tumorLocation = curator.search(searchTerm);
+        TumorLocationCuratorV2 curator = TestCuratorFactory.tumorLocationV2Curator();
+        CuratedTumorLocationV2 tumorLocation = curator.search(searchTerm);
 
         String location = tumorLocation.primaryTumorLocation();
         assertNotNull(location);

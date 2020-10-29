@@ -71,21 +71,27 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         logger.info("Config ${config.filterConfig}")
         val contigComparator = ContigComparator(dictionary)
 
-        val sampleNames =  inputHeader.genotypeSamples!!
-        val sampleOrdinals = config.sampleOrdinals(sampleNames);
-        logger.info("Using ${sampleNames[sampleOrdinals.second]} as tumor sample")
-        if (sampleOrdinals.first != -1) {
-            logger.info("Using ${sampleNames[sampleOrdinals.first]} as reference sample")
+        val inputSampleNames = inputHeader.genotypeSamples!!
+        val inputSampleOrdinals = config.sampleOrdinals(inputSampleNames)
+        val outputSampleNames = mutableListOf<String>()
+
+        if (inputSampleOrdinals.first != -1) {
+            val referenceSample = inputSampleNames[inputSampleOrdinals.first]
+            logger.info("Using $referenceSample as reference sample")
+            outputSampleNames.add(referenceSample)
         } else {
             logger.info("Running in tumor-only mode")
         }
+        val tumorSample = inputSampleNames[inputSampleOrdinals.second]
+        logger.info("Using $tumorSample as tumor sample")
+        outputSampleNames.add(tumorSample)
 
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
         val hotspotStore = LocationStore(contigComparator, listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
         val hotspotFilter = hotspotFilter(hotspotStore)
 
         logger.info("Reading VCF file: ${config.inputVcf}")
-        val variantStore = VariantStore(hardFilterAndRealign(fileReader, sampleOrdinals, hotspotFilter, contigComparator))
+        val variantStore = VariantStore(hardFilterAndRealign(fileReader, inputSampleOrdinals, hotspotFilter, contigComparator))
         val hotspots = variantStore.selectAll().filter(hotspotFilter).map { x -> x.vcfId }.toSet()
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
@@ -125,7 +131,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         logger.info("Writing file: ${config.outputVcf}")
         val combinedLinks = LinkStore(combinedTransitiveAssemblyLinks, dsbLinks)
         val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), allRescues)
-        fileWriter.writeHeader(version.version(), fileReader.fileHeader)
+        fileWriter.writeHeader(version.version(), fileReader.fileHeader, outputSampleNames)
         for (variant in variantStore.selectAll()) {
 
             val localLinkedBy = combinedLinks[variant.vcfId]

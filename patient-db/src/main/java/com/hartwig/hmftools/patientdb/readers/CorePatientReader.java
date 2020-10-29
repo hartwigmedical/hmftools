@@ -4,10 +4,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
@@ -21,13 +19,10 @@ import org.jetbrains.annotations.Nullable;
 public class CorePatientReader {
 
     @NotNull
-    private final TumorLocationCurator tumorLocationCurator;
-    @NotNull
     private final TumorLocationCuratorV2 tumorLocationCuratorV2;
 
-    public CorePatientReader(@NotNull final TumorLocationCurator tumorLocationCurator,
+    public CorePatientReader(
             @NotNull final TumorLocationCuratorV2 tumorLocationCuratorV2) {
-        this.tumorLocationCurator = tumorLocationCurator;
         this.tumorLocationCuratorV2 = tumorLocationCuratorV2;
     }
 
@@ -35,7 +30,7 @@ public class CorePatientReader {
     public Patient read(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
         return new Patient(patientIdentifier,
-                toBaselineData(tumorLocationCurator.search(limsPrimaryTumorLocation),
+                toBaselineData(
                         tumorLocationCuratorV2.search(limsPrimaryTumorLocation)),
                 noPreTreatmentData(),
                 sequencedSamples,
@@ -48,7 +43,7 @@ public class CorePatientReader {
     }
 
     @NotNull
-    private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation,
+    private static BaselineData toBaselineData(
             @NotNull CuratedTumorLocationV2 curatedTumorLocationV2) {
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
@@ -56,7 +51,6 @@ public class CorePatientReader {
                 .gender(null)
                 .hospital(null)
                 .birthYear(null)
-                .curatedTumorLocation(curatedTumorLocation)
                 .curatedTumorLocationV2(curatedTumorLocationV2)
                 .deathDate(null)
                 .demographyStatus(FormStatus.undefined())
