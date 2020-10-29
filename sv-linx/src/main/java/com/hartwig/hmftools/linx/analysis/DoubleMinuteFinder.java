@@ -153,9 +153,6 @@ public class DoubleMinuteFinder
 
         candidateDmSVs.stream().filter(x -> x.jcn() >= minJcn).forEach(x -> dmSVs.add(x));
 
-        final List<SvVarData> flankedSVs = Lists.newArrayList(); // addFlankedDmCandidates(cluster, dmSVs, candidateFlankedSVs);
-        dmSVs.addAll(flankedSVs);
-
         // dismiss any single SV which isn't a DUP
         if(dmSVs.size() == 1)
         {
@@ -231,8 +228,6 @@ public class DoubleMinuteFinder
         dmData.FullyChained = fullyChained;
 
         dmData.annotate(mChrBreakendMap);
-
-        dmData.CandidateFlankedSVs.addAll(flankedSVs);
 
         boolean isDM = dmData.isDoubleMinute();
 
@@ -384,8 +379,7 @@ public class DoubleMinuteFinder
             mFileWriter.write(",NonSegFoldbacks,NonSegFoldbackJcnTotal,SimpleDels");
             mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,FbIntCount,FbIntJcnTotal,FbIntJcnMax");
             mFileWriter.write(",SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
-            mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinAdjMAJcnRatio");
-            mFileWriter.write(",MinMinAdjMAJcnRatio,LowDepthCount,FlankedCandidates");
+            mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinOfMaxAdjMajRatio,MinOfMinAdjMajRatio");
             mFileWriter.newLine();
         }
         catch (final IOException e)
@@ -478,10 +472,6 @@ public class DoubleMinuteFinder
 
             mFileWriter.write(String.format(",%s", dmData.internalTypeCountsAsStr()));
 
-            mFileWriter.write(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f",
-                    maxDMCopyNumber, minDMJcn, dmData.MaxJcn, amplifiedGenesStr, dmData.ChainsCentromere, dmData.MinAdjMAJcnRatio));
-
-            //mFileWriter.write(",MinMinAdjMAJcnRatio,LowDepthCount,FlankedCandidates")
             double minMinAmr = 0;
             if(dmData.SVs.size() == 1)
             {
@@ -492,8 +482,9 @@ public class DoubleMinuteFinder
                         getMajorAlleleJcnRatio(var.getBreakend(false)));
             }
 
-            mFileWriter.write(String.format(",%.1f,%s,%d",
-                    minMinAmr, dmData.LowDepthCount, dmData.CandidateFlankedSVs.size()));
+            mFileWriter.write(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f,%.1f",
+                    maxDMCopyNumber, minDMJcn, dmData.MaxJcn, amplifiedGenesStr, dmData.ChainsCentromere,
+                    dmData.MinAdjMAJcnRatio, minMinAmr));
 
             mFileWriter.newLine();
         }

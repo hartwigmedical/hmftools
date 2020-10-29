@@ -50,7 +50,6 @@ public class DoubleMinuteData
     public double MinAdjMAJcnRatio;
 
     public final List<SvVarData> CandidateSVs;
-    public final List<SvVarData> CandidateFlankedSVs;
     public final List<SvChain> Chains;
     public boolean FullyChained;
 
@@ -96,7 +95,6 @@ public class DoubleMinuteData
         ValidChains = Lists.newArrayList();
         ValidSVs = Lists.newArrayList();
         CandidateSVs = Lists.newArrayList();
-        CandidateFlankedSVs = Lists.newArrayList();
         FullyChained = false;
 
         MinAdjMAJcnRatio = 0;
@@ -347,30 +345,6 @@ public class DoubleMinuteData
             segmentData[SEG_DATA_SUM] += breakend.jcn();
             segmentData[SEG_DATA_MAX] = max(segmentData[SEG_DATA_MAX], breakend.jcn());
         }
-    }
-
-    private static final int CLOSE_DM_SV_DISTANCE = 1000;
-
-    private boolean isCloseToDmSV(final SvBreakend breakend)
-    {
-        for(SvVarData dmSV : SVs)
-        {
-            for(int se = SE_START; se <= SE_END; ++se)
-            {
-                if(dmSV.isSglBreakend() && se == SE_END)
-                    break;
-
-                final SvBreakend otherBreakend = dmSV.getBreakend(se);
-
-                if(!otherBreakend.chromosome().equals(breakend.chromosome()))
-                    continue;
-
-                if(abs(otherBreakend.position() - breakend.position()) <= CLOSE_DM_SV_DISTANCE)
-                    return true;
-            }
-        }
-
-        return false;
     }
 
     private static boolean inSglPairCluster(final SvBreakend breakend, final SvBreakend nextBreakend)
@@ -679,59 +653,6 @@ public class DoubleMinuteData
         }
 
         return hasValidCriteria;
-    }
-
-    private static final int MAX_FLANKING_DISTANCE = 5000000;
-
-    private boolean isBreakendFlankedByDmSV(final Map<String,List<SvBreakend>> chrBreakendMap, final SvBreakend breakend)
-    {
-        // variants which are flanked on both sides of both start and end breakend by facing DM candidate variants within 5MB
-        final List<SvBreakend> breakendList = chrBreakendMap.get(breakend.chromosome());
-
-        for(int i = 0; i <= 1; ++i)
-        {
-            boolean searchDown = (i == 0);
-            boolean flankedOnSide = false;
-
-            int index = breakend.getChrPosIndex();
-
-            while(true)
-            {
-                if(searchDown)
-                {
-                    --index;
-                    if(index < 0)
-                        break;
-                }
-                else
-                {
-                    ++index;
-                    if(index >= breakendList.size())
-                        break;
-                }
-
-                final SvBreakend nextBreakend = breakendList.get(index);
-
-                if(abs(breakend.position() - nextBreakend.position()) > MAX_FLANKING_DISTANCE)
-                    break;
-
-                if(!SVs.contains(nextBreakend.getSV()))
-                    continue;
-
-                byte requireOrient = searchDown ? NEG_ORIENT : POS_ORIENT;
-
-                if(nextBreakend.orientation() != requireOrient)
-                    continue;
-
-                flankedOnSide = true;
-                break;
-            }
-
-            if(!flankedOnSide)
-                return false;
-        }
-
-        return true;
     }
 
     public String internalTypeCountsAsStr()
