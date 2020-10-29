@@ -23,7 +23,7 @@ public abstract class Feature {
     @NotNull
     @Value.Derived
     public String proteinAnnotation() {
-        return ProteinAnnotationExtractor.extractProteinAnnotation(this);
+        return ProteinAnnotationExtractor.proteinAnnotation(this);
     }
 
     @NotNull

@@ -21,18 +21,16 @@ public class PurpleCheckerTest {
         List<QCValue> values = checker.run();
 
         assertEquals(QCValueType.PURPLE_QC_STATUS, values.get(0).type());
-        assertEquals("FAIL_GENDER", values.get(0).value());
+        assertEquals("FAIL_CONTAMINATION", values.get(0).value());
     }
 
     @Test(expected = IOException.class)
     public void malformedYieldsIOException() throws IOException {
-        PurpleChecker checker = new PurpleChecker("malformed", PURPLE_DIRECTORY);
-        checker.run();
+        new PurpleChecker("malformed", PURPLE_DIRECTORY).run();
     }
 
     @Test(expected = IOException.class)
     public void missingYieldsIOException() throws IOException {
-        PurpleChecker checker = new PurpleChecker("missing", PURPLE_DIRECTORY);
-        checker.run();
+        new PurpleChecker("missing", PURPLE_DIRECTORY).run();
     }
 }

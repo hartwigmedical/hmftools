@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.protect;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.commons.cli.CommandLine;
@@ -22,14 +23,15 @@ public interface ProtectConfig {
 
     String DEPRECATED_ACTIONABILITY_DIRECTORY = "deprecated_actionability_dir";
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
+    String DOID_JSON = "doid_json";
 
-    String TUMOR_LOCATION_TSV = "tumor_location_tsv";
+    String TUMOR_LOCATION_TSV_V1 = "tumor_location_tsv_v1";
+    String TUMOR_LOCATION_TSV_V2 = "tumor_location_tsv_v2";
     String GERMLINE_GENES_CSV = "germline_genes_csv";
 
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
-    String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String BACHELOR_TSV = "bachelor_tsv";
@@ -48,16 +50,17 @@ public interface ProtectConfig {
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
+        options.addOption(DOID_JSON, true, "Path to where the DOID definitions.");
 
         options.addOption(DEPRECATED_ACTIONABILITY_DIRECTORY, true, "Path towards the deprecated pre-SERVE actionability directory.");
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
 
-        options.addOption(TUMOR_LOCATION_TSV, true, "Path towards the (curated) tumor location TSV.");
+        options.addOption(TUMOR_LOCATION_TSV_V1, true, "Path towards the (curated) tumor location TSV.");
+        options.addOption(TUMOR_LOCATION_TSV_V2, true, "Path towards the (curated) tumor location TSV.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV.");
@@ -73,6 +76,9 @@ public interface ProtectConfig {
     }
 
     @NotNull
+    String doidJsonFile();
+
+    @NotNull
     String tumorSampleId();
 
     @NotNull
@@ -85,7 +91,10 @@ public interface ProtectConfig {
     String serveActionabilityDir();
 
     @NotNull
-    String tumorLocationTsv();
+    String tumorLocationTsvV1();
+
+    @NotNull
+    String tumorLocationTsvV2();
 
     @NotNull
     String germlineGenesCsv();
@@ -95,9 +104,6 @@ public interface ProtectConfig {
 
     @NotNull
     String purpleQcFile();
-
-    @NotNull
-    String purpleGeneCnvTsv();
 
     @NotNull
     String purpleDriverCatalogTsv();
@@ -124,21 +130,21 @@ public interface ProtectConfig {
     String chordPredictionTxt();
 
     @NotNull
-    static ProtectConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
+    static ProtectConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
         return ImmutableProtectConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
-                .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
+                .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .deprecatedActionabilityDir(nonOptionalDir(cmd, DEPRECATED_ACTIONABILITY_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
-                .tumorLocationTsv(nonOptionalFile(cmd, TUMOR_LOCATION_TSV))
+                .tumorLocationTsvV1(nonOptionalFile(cmd, TUMOR_LOCATION_TSV_V1))
+                .tumorLocationTsvV2(nonOptionalFile(cmd, TUMOR_LOCATION_TSV_V2))
                 .germlineGenesCsv(nonOptionalFile(cmd, GERMLINE_GENES_CSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
-                .purpleGeneCnvTsv(nonOptionalFile(cmd, PURPLE_GENE_CNV_TSV))
                 .purpleDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
                 .bachelorTsv(nonOptionalFile(cmd, BACHELOR_TSV))
@@ -147,6 +153,7 @@ public interface ProtectConfig {
                 .linxViralInsertionTsv(nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV))
                 .linxDriversTsv(nonOptionalFile(cmd, LINX_DRIVERS_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
+                .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .build();
     }
 
@@ -168,6 +175,16 @@ public interface ProtectConfig {
             throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
         }
 
+        return value;
+    }
+
+    @NotNull
+    static String outputDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException, IOException {
+        String value = nonOptionalValue(cmd, param);
+        final File outputDir = new File(value);
+        if (!outputDir.exists() && !outputDir.mkdirs()) {
+            throw new IOException("Unable to write to directory " + value);
+        }
         return value;
     }
 

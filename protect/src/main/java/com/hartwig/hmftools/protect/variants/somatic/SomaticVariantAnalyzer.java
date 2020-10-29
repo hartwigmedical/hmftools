@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public final class SomaticVariantAnalyzer {
 
     private SomaticVariantAnalyzer() {

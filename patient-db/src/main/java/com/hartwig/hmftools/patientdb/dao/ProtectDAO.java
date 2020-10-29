@@ -53,9 +53,8 @@ class ProtectDAO {
                 evidence.level().toString(),
                 evidence.direction().toString(),
                 evidence.url(),
-                String.valueOf(evidence.onLabel()),
-                String.valueOf(evidence.reported()),
-
+                evidence.onLabel(),
+                evidence.reported(),
                 timestamp);
     }
 

@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.apache.logging.log4j.LogManager;
@@ -71,7 +70,7 @@ public final class ChordFileReader {
     private static String findValuesLine(@NotNull String filename) throws IOException {
         List<String> lines = Files.readAllLines(new File(filename).toPath());
         if (lines.isEmpty()) {
-            throw new EmptyFileException(filename);
+            throw new IOException("CHORD file seems empty on " + filename);
         }
         int index = findHeaderLineIndex(lines);
         if (index >= lines.size()) {

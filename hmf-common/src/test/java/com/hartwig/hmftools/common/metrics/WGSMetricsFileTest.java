@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.junit.Test;
@@ -48,7 +47,6 @@ public class WGSMetricsFileTest {
 
     @Test
     public void worksForPv4RefAndTumorInput() throws IOException {
-
         WGSMetrics metrics = WGSMetricsFile.read(PV4_REF_FILE, PV4_TUMOR_FILE);
 
         assertEquals(PV4_REF_MEAN_COVERAGE, metrics.refMeanCoverage(), EPSILON);
@@ -102,8 +100,8 @@ public class WGSMetricsFileTest {
         assertEquals(PV5_TUMOR_COVERAGE_60X, tumorCov60x, EPSILON);
     }
 
-    @Test(expected = EmptyFileException.class)
-    public void emptyFileYieldsEmptyFileException() throws IOException {
+    @Test(expected = IOException.class)
+    public void emptyFileYieldsIOException() throws IOException {
         WGSMetricsFile.read(EMPTY_FILE);
     }
 

@@ -45,7 +45,6 @@ public interface PatientReporterConfig {
     // Params specific for actual patient reports
     String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_QC_FILE = "purple_qc_file";
-    String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String BACHELOR_TSV = "bachelor_tsv";
@@ -93,7 +92,6 @@ public interface PatientReporterConfig {
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV.");
@@ -164,9 +162,6 @@ public interface PatientReporterConfig {
     String purpleQcFile();
 
     @NotNull
-    String purpleGeneCnvTsv();
-
-    @NotNull
     String purpleDriverCatalogTsv();
 
     @NotNull
@@ -227,7 +222,6 @@ public interface PatientReporterConfig {
 
         String purplePurityTsv = Strings.EMPTY;
         String purpleQCFile = Strings.EMPTY;
-        String purpleGeneCnvTsv = Strings.EMPTY;
         String purpleDriverCatalogTsv = Strings.EMPTY;
         String purpleSomaticVariantVcf = Strings.EMPTY;
         String bachelorTsv = Strings.EMPTY;
@@ -247,7 +241,6 @@ public interface PatientReporterConfig {
         } else if (!isQCFail) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
-            purpleGeneCnvTsv = nonOptionalFile(cmd, PURPLE_GENE_CNV_TSV);
             purpleDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_TSV);
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             bachelorTsv = nonOptionalFile(cmd, BACHELOR_TSV);
@@ -279,7 +272,6 @@ public interface PatientReporterConfig {
                 .qcFailReason(qcFailReason)
                 .purplePurityTsv(purplePurityTsv)
                 .purpleQcFile(purpleQCFile)
-                .purpleGeneCnvTsv(purpleGeneCnvTsv)
                 .purpleDriverCatalogTsv(purpleDriverCatalogTsv)
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .bachelorTsv(bachelorTsv)

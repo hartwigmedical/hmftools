@@ -9,28 +9,41 @@ import org.jetbrains.annotations.NotNull;
 
 final class DoidDatamodelCheckerFactory {
 
-    @NotNull
-    static JsonDatamodelChecker doidEntryChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("graphs", true);
-
-        return new JsonDatamodelChecker("DoidEntry", map);
+    private DoidDatamodelCheckerFactory() {
     }
 
     @NotNull
-    //TODO
-    static JsonDatamodelChecker doidEntryGraphChecker() {
+    static JsonDatamodelChecker doidObjectChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("graphs", true);
+
+        return new JsonDatamodelChecker("DoidObject", map);
+    }
+
+    @NotNull
+    static JsonDatamodelChecker doidGraphsChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("nodes", true);
         map.put("edges", true);
         map.put("id", true);
-        map.put("meta", true); //TODO
+        map.put("meta", true);
         map.put("equivalentNodesSets", true);
         map.put("logicalDefinitionAxioms", true);
         map.put("domainRangeAxioms", true);
-        map.put("propertyChainAxioms", true); //TODO
+        map.put("propertyChainAxioms", true);
 
-        return new JsonDatamodelChecker("DoidEntry", map);
+        return new JsonDatamodelChecker("DoidGraphs", map);
+    }
+
+    @NotNull
+    static JsonDatamodelChecker doidNodeChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", false);
+        map.put("lbl", false);
+        map.put("id", true);
+        map.put("meta", false);
+
+        return new JsonDatamodelChecker("DoidNode", map);
     }
 
     @NotNull
@@ -40,62 +53,63 @@ final class DoidDatamodelCheckerFactory {
         map.put("pred", true);
         map.put("obj", true);
 
-        return new JsonDatamodelChecker("DoidEdges", map);
+        return new JsonDatamodelChecker("DoidEdge", map);
     }
 
     @NotNull
-    static JsonDatamodelChecker doidEquivalentNodesSetsChecker() {
+    static JsonDatamodelChecker doidGraphMetaDataChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
 
-        return new JsonDatamodelChecker("DoidEquivalentNodesSets", map);
+        map.put("xrefs", true);
+        map.put("basicPropertyValues", true);
+        map.put("version", false);
+        map.put("subsets", true);
+
+        return new JsonDatamodelChecker("DoidGraphMetaData", map);
     }
 
     @NotNull
     static JsonDatamodelChecker doidLogicalDefinitionAxiomChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("restrictions", false);
-        map.put("definedClassId", false);
-        map.put("genusIds", false);
+        map.put("definedClassId", true);
+        map.put("genusIds", true);
+        map.put("restrictions", true);
 
         return new JsonDatamodelChecker("DoidLogicalDefinitionAxiom", map);
     }
 
     @NotNull
-    static JsonDatamodelChecker doidDomainRangeAxiomsChecker() {
+    static JsonDatamodelChecker doidRestrictionChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
+        map.put("propertyId", true);
+        map.put("fillerId", true);
 
-        return new JsonDatamodelChecker("DoidDomainRangeAxioms", map);
+        return new JsonDatamodelChecker("DoidRestriction", map);
     }
 
     @NotNull
-    static JsonDatamodelChecker doidPropertyChainAxiomsChecker() {
+    static JsonDatamodelChecker doidSynonymChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-
-        return new JsonDatamodelChecker("DoidPropertyChainAxioms", map);
+        map.put("pred", true);
+        map.put("val", true);
+        map.put("xrefs", true);
+        return new JsonDatamodelChecker("DoidSynonym", map);
     }
 
     @NotNull
-    static JsonDatamodelChecker doidEntryNodesChecker() {
+    static JsonDatamodelChecker doidDefinitionChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("type", false);
-        map.put("lbl", false);
-        map.put("id", true);
-        map.put("meta", false);
-
-        return new JsonDatamodelChecker("DoidEntry", map);
+        map.put("xrefs", true);
+        map.put("val", true);
+        return new JsonDatamodelChecker("DoidDefinition", map);
     }
 
     @NotNull
-    static JsonDatamodelChecker doidMetadataChecker() {
+    static JsonDatamodelChecker doidBasicPropertyValueChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("xrefs", false);
-        map.put("synonyms", false);
-        map.put("basicPropertyValues", false);
-        map.put("definition", false);
-        map.put("subsets", false);
-
-
-        return new JsonDatamodelChecker("DoidMetadata", map);
+        map.put("pred", true);
+        map.put("val", true);
+        return new JsonDatamodelChecker("DoidBasicPropertyValue", map);
     }
 
     @NotNull
@@ -107,28 +121,14 @@ final class DoidDatamodelCheckerFactory {
     }
 
     @NotNull
-
-    static JsonDatamodelChecker doidSynonymsChecker() {
+    static JsonDatamodelChecker doidMetadataChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("pred", true);
-        map.put("val", true);
-        map.put("xrefs", true);
-        return new JsonDatamodelChecker("DoidSynonyms", map);
-    }
+        map.put("xrefs", false);
+        map.put("synonyms", false);
+        map.put("basicPropertyValues", false);
+        map.put("definition", false);
+        map.put("subsets", false);
 
-    @NotNull
-    static JsonDatamodelChecker doidBasicPropertyValuesChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("pred", true);
-        map.put("val", true);
-        return new JsonDatamodelChecker("DoidBasicPropertyValues", map);
-    }
-
-    @NotNull
-    static JsonDatamodelChecker doidDefinitionChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("xrefs", true);
-        map.put("val", true);
-        return new JsonDatamodelChecker("DoidDefinition", map);
+        return new JsonDatamodelChecker("DoidMetadata", map);
     }
 }

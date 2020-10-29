@@ -81,17 +81,17 @@ public class ViccTestApplication {
             Files.createDirectory(outputPath);
         }
 
-        String featureTypeTsv = outputDir + "/featureTypes.tsv";
+        String viccFeatureTsv = outputDir + "/viccFeatures.tsv";
 
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
-        LOGGER.debug("Configured '{}' as the feature type output TSV", featureTypeTsv);
+        LOGGER.debug("Configured '{}' as the VICC feature output TSV", viccFeatureTsv);
 
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
 
         ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries, driverGenes);
 
-        ViccUtil.writeFeatureTypes(featureTypeTsv, viccEntries);
+        ViccUtil.writeFeatures(viccFeatureTsv, viccEntries);
         ViccUtil.writeActionability(outputDir, viccExtractionOutput);
     }
 }

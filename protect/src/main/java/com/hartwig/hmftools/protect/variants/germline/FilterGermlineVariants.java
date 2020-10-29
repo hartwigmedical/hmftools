@@ -5,57 +5,62 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
+import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public final class FilterGermlineVariants {
 
     private FilterGermlineVariants() {
     }
 
     @NotNull
-    public static List<DriverGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<ReportableGermlineVariant> germlineVariants,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull List<GeneCopyNumber> allGeneCopyNumbers,
-            @NotNull List<DriverSomaticVariant> somaticDriverVariantsToReport, @NotNull ChordStatus chordStatus) {
-        final Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
-        final Set<String> genesWithSomaticDrivers =
-                somaticDriverVariantsToReport.stream().map(x -> x.variant().gene()).collect(Collectors.toSet());
-        return filterGermlineVariantsForReporting(germlineVariants,
-                reportableGermlineGenes,
-                allGeneCopyNumbers,
-                genesWithSomaticDrivers,
-                chordStatus);
+    public static List<DriverGermlineVariant> filterGermlineVariantsForReporting(@NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull List<DriverSomaticVariant> driverSomaticVariants,
+            @NotNull List<ReportableGainLoss> reportableGainLosses,
+            @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
+            @NotNull List<ReportableGeneDisruption> reportableGeneDisruptions) {
+        Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
+
+        Set<String> genesWithSomaticDriverMutation =
+                driverSomaticVariants.stream().map(x -> x.variant().gene()).collect(Collectors.toSet());
+        Set<String> genesWithCopyLoss = reportableGainLosses.stream()
+                .filter(reportableGainLoss -> reportableGainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
+                        || reportableGainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS)
+                .map(x -> x.gene())
+                .collect(Collectors.toSet());
+        Set<String> genesWithHomozygousDisruption = reportableHomozygousDisruptions.stream().map(x -> x.gene()).collect(Collectors.toSet());
+        Set<String> genesWithGeneDisruption = reportableGeneDisruptions.stream().map(x -> x.gene()).collect(Collectors.toSet());
+
+        Set<String> genesWithSomaticInactivationEvent = Sets.newHashSet();
+        genesWithSomaticInactivationEvent.addAll(genesWithSomaticDriverMutation);
+        genesWithSomaticInactivationEvent.addAll(genesWithCopyLoss);
+        genesWithSomaticInactivationEvent.addAll(genesWithHomozygousDisruption);
+        genesWithSomaticInactivationEvent.addAll(genesWithGeneDisruption);
+
+        return filterGermlineVariantsForReporting(reportableGermlineGenes, germlineVariants, genesWithSomaticInactivationEvent);
     }
 
     @NotNull
-    public static List<DriverGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<ReportableGermlineVariant> germlineVariants,
-            @NotNull Set<String> reportableGermlineGenes, @NotNull List<GeneCopyNumber> allGeneCopyNumbers,
-            @NotNull Set<String> genesWithSomaticDrivers, @NotNull ChordStatus chordStatus) {
+    private static List<DriverGermlineVariant> filterGermlineVariantsForReporting(@NotNull Set<String> reportableGermlineGenes,
+            @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull Set<String> genesWithSomaticInactivationEvent) {
         List<DriverGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
 
-        for (ReportableGermlineVariant germlineVariant : presentInTumorOnly(germlineVariants)) {
+        for (ReportableGermlineVariant germlineVariant : presentInTumor(germlineVariants)) {
             if (reportableGermlineGenes.contains(germlineVariant.gene())) {
                 // TODO: This will be cleaned up in upcoming germline variant reporting logic
                 if (germlineVariant.gene().equals("KIT")) {
                     reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                 } else {
-                    // Only report germline variants on TSGs if there is a 2nd hit or CHORD suggests HRD
+                    // Only report germline variants on TSGs if there is a 2nd reportable hit
                     boolean filterBiallelic = germlineVariant.biallelic();
-
-                    boolean filterMinCopyNumberTumor = false;
-                    GeneCopyNumber geneCopyNumber = lookupGeneCopyNumber(allGeneCopyNumbers, germlineVariant.gene());
-                    if (Math.round(geneCopyNumber.minCopyNumber()) <= 1 && (Math.round(germlineVariant.adjustedCopyNumber()) >= 2)) {
-                        filterMinCopyNumberTumor = true;
-                    }
-
-                    boolean filterSomaticVariantInSameGene = false;
-                    if (genesWithSomaticDrivers.contains(germlineVariant.gene())) {
-                        filterSomaticVariantInSameGene = true;
-                    }
 
                     boolean filterGermlineVariantInSameGene = false;
                     for (ReportableGermlineVariant variant : germlineVariants) {
@@ -64,10 +69,10 @@ public final class FilterGermlineVariants {
                         }
                     }
 
-                    if (filterBiallelic || filterSomaticVariantInSameGene || filterGermlineVariantInSameGene) {
+                    boolean filterSomaticVariantInSameGene = genesWithSomaticInactivationEvent.contains(germlineVariant.gene());
+
+                    if (filterBiallelic || filterGermlineVariantInSameGene || filterSomaticVariantInSameGene) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
-                    } else if (filterMinCopyNumberTumor || chordStatus == ChordStatus.HR_DEFICIENT) {
-                        reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
                     }
                 }
             }
@@ -77,7 +82,7 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    private static List<ReportableGermlineVariant> presentInTumorOnly(@NotNull List<ReportableGermlineVariant> variants) {
+    private static List<ReportableGermlineVariant> presentInTumor(@NotNull List<ReportableGermlineVariant> variants) {
         List<ReportableGermlineVariant> variantsInTumor = Lists.newArrayList();
         for (ReportableGermlineVariant variant : variants) {
             if (isPresentInTumor(variant)) {
@@ -87,7 +92,7 @@ public final class FilterGermlineVariants {
         return variantsInTumor;
     }
 
-    private static boolean isPresentInTumor(@NotNull ReportableGermlineVariant germlineVariant) {
+    public static boolean isPresentInTumor(@NotNull ReportableGermlineVariant germlineVariant) {
         return germlineVariant.adjustedCopyNumber() * germlineVariant.adjustedVaf() >= 0.5;
     }
 
@@ -95,16 +100,5 @@ public final class FilterGermlineVariants {
     private static DriverGermlineVariant reportableGermlineVariantWithDriverLikelihood(@NotNull ReportableGermlineVariant germlineVariant,
             double driverLikelihood) {
         return ImmutableDriverGermlineVariant.builder().variant(germlineVariant).driverLikelihood(driverLikelihood).build();
-    }
-
-    @NotNull
-    private static GeneCopyNumber lookupGeneCopyNumber(@NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull String gene) {
-        for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
-            if (geneCopyNumber.gene().equals(gene)) {
-                return geneCopyNumber;
-            }
-        }
-
-        throw new IllegalStateException("Could not find gene copy number for gene: " + gene);
     }
 }

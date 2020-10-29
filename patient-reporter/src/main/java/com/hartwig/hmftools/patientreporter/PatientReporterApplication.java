@@ -82,7 +82,6 @@ public class PatientReporterApplication {
             AnalysedPatientReport report = reporter.run(sampleMetadata,
                     config.purplePurityTsv(),
                     config.purpleQcFile(),
-                    config.purpleGeneCnvTsv(),
                     config.purpleDriverCatalogTsv(),
                     config.purpleSomaticVariantVcf(),
                     config.bachelorTsv(),

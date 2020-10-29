@@ -70,7 +70,6 @@
         </xsd:sequence>
     </xsd:complexType>
 
-
     <xsd:complexType name="ProgramBlacklist">
         <xsd:sequence>
             <xsd:element name="Exclusion" type="VariantException" minOccurs="0" maxOccurs="unbounded">

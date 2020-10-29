@@ -2,16 +2,17 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.purity.PurpleQCFile;
-import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PurpleChecker implements HealthChecker {
 
@@ -29,20 +30,30 @@ public class PurpleChecker implements HealthChecker {
     @Override
     public List<QCValue> run() throws IOException {
         String path = PurpleQCFile.generateFilename(purpleDirectory, tumorSample);
-        List<QCValue> qcValues = Lists.newArrayList();
 
-        List<String> qc_lines = LineReader.build().readLines(new File(path).toPath(), x -> x.contains("QCStatus"));
-        assert qc_lines.size() == 1;
-        String qcStatus = qc_lines.get(0).split("\t")[1];
+        List<String> purpleQcLines = Files.readAllLines(new File(path).toPath());
+        String qcStatus = valueBySubstring(purpleQcLines, "QCStatus");
+        String contamination = valueBySubstring(purpleQcLines, "Contamination");
 
-        List<String> contamination_lines = LineReader.build().readLines(new File(path).toPath(), x -> x.contains("Contamination"));
-        assert contamination_lines.size() == 1;
-        String contamination = contamination_lines.get(0).split("\t")[1];
+        if (qcStatus == null || contamination == null) {
+            throw new IOException("Unable to parse purple QC file correctly");
+        }
 
-        return Lists.newArrayList(
-            ImmutableQCValue.of(QCValueType.PURPLE_QC_STATUS, qcStatus),
-            ImmutableQCValue.of(QCValueType.PURPLE_CONTAMINATION, contamination)
-        );
+        return Lists.newArrayList(ImmutableQCValue.of(QCValueType.PURPLE_QC_STATUS, qcStatus),
+                ImmutableQCValue.of(QCValueType.PURPLE_CONTAMINATION, contamination));
+    }
 
+    @Nullable
+    private static String valueBySubstring(@NotNull List<String> lines, @NotNull String subString) {
+        List<String> matchLines = Lists.newArrayList();
+        for (String line : lines) {
+            if (line.contains(subString)) {
+                matchLines.add(line);
+            }
+        }
+        if (matchLines.size() == 1) {
+            return matchLines.get(0).split("\t")[1];
+        }
+        return null;
     }
 }

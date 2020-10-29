@@ -17,7 +17,6 @@ public class GenomicAnalyzerTest {
     private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity.tsv";
     private static final String PURPLE_QC_FILE = BASE_DIRECTORY + "/purple/sample.purple.qc";
-    private static final String PURPLE_GENE_CNV_TSV = BASE_DIRECTORY + "/purple/sample.purple.cnv.gene.tsv";
     private static final String PURPLE_DRIVER_CATALOG_TSV = BASE_DIRECTORY + "/purple/sample.driver.catalog.tsv";
     private static final String PURPLE_SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.somatic.vcf";
     private static final String BACHELOR_TSV = BASE_DIRECTORY + "/bachelor/sample.reportable_germline_variants.tsv";
@@ -41,7 +40,6 @@ public class GenomicAnalyzerTest {
                 reportViralInsertions,
                 PURPLE_PURITY_TSV,
                 PURPLE_QC_FILE,
-                PURPLE_GENE_CNV_TSV,
                 PURPLE_DRIVER_CATALOG_TSV,
                 PURPLE_SOMATIC_VARIANT_VCF,
                 BACHELOR_TSV,

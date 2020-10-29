@@ -51,20 +51,32 @@ public final class ViccUtil {
         ActionableSignatureFile.write(actionableSignatureTsv, viccExtractionOutput.actionableSignatures());
     }
 
-    public static void writeFeatureTypes(@NotNull String featureTypeTsv, @NotNull List<ViccEntry> entries) throws IOException {
+    public static void writeFeatures(@NotNull String viccFeatureTsv, @NotNull List<ViccEntry> entries) throws IOException {
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner(FIELD_DELIMITER).add("gene").add("featureName").add("type").add("feature").toString();
+        String header = new StringJoiner(FIELD_DELIMITER).add("source")
+                .add("gene")
+                .add("transcript")
+                .add("name")
+                .add("type")
+                .add("proteinAnnotation")
+                .add("biomarkerType")
+                .toString();
         lines.add(header);
 
         for (ViccEntry entry : entries) {
             for (Feature feature : entry.features()) {
-                StringJoiner featureString = new StringJoiner(FIELD_DELIMITER);
-                featureString.add(feature.geneSymbol()).add(feature.name()).add(feature.type().toString()).add(feature.toString());
-                lines.add(featureString.toString());
+                lines.add(new StringJoiner(FIELD_DELIMITER).add(entry.source().display())
+                        .add(feature.geneSymbol())
+                        .add(entry.transcriptId())
+                        .add(feature.name())
+                        .add(feature.type().toString())
+                        .add(feature.proteinAnnotation())
+                        .add(feature.biomarkerType())
+                        .toString());
             }
         }
 
-        LOGGER.info("Writing {} feature types to {}", lines.size() - 1, featureTypeTsv);
-        Files.write(new File(featureTypeTsv).toPath(), lines);
+        LOGGER.info("Writing {} VICC features to {}", lines.size() - 1, viccFeatureTsv);
+        Files.write(new File(viccFeatureTsv).toPath(), lines);
     }
 }

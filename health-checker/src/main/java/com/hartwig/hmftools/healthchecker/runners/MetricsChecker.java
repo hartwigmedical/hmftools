@@ -38,8 +38,8 @@ public class MetricsChecker implements HealthChecker {
             assert metrics.tumor30xCoveragePercentage() != null;
             assert metrics.tumor60xCoveragePercentage() != null;
 
-            qcValues.add(ImmutableQCValue.of(QCValueType.TUMOR_COVERAGE_30X, String.valueOf(metrics.tumor30xCoveragePercentage())));
-            qcValues.add(ImmutableQCValue.of(QCValueType.TUMOR_COVERAGE_60X, String.valueOf(metrics.tumor60xCoveragePercentage())));
+            qcValues.add(ImmutableQCValue.of(QCValueType.TUM_COVERAGE_30X, String.valueOf(metrics.tumor30xCoveragePercentage())));
+            qcValues.add(ImmutableQCValue.of(QCValueType.TUM_COVERAGE_60X, String.valueOf(metrics.tumor60xCoveragePercentage())));
         }
 
         return qcValues;
@@ -47,7 +47,6 @@ public class MetricsChecker implements HealthChecker {
 
     @NotNull
     private WGSMetrics extractMetrics() throws IOException {
-
         if (tumWgsMetricsFile != null) {
             return WGSMetricsFile.read(refWgsMetricsFile, tumWgsMetricsFile);
         } else {

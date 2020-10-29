@@ -1,5 +1,8 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- TODO Can be removed per 15 nov.
+DROP TABLE IF EXISTS doidEntry;
+
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
@@ -18,9 +21,9 @@ CREATE TABLE protect
     treatment varchar(255) NOT NULL,
     level varchar(255) NOT NULL,
     direction varchar(255) NOT NULL,
-    url varchar(255) NOT NULL,
     onLabel BOOLEAN NOT NULL,
     reported BOOLEAN NOT NULL,
+    url varchar(255) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
@@ -49,8 +52,8 @@ CREATE TABLE baseline
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
-DROP TABLE IF EXISTS doidEntry;
-CREATE TABLE doidEntry
+DROP TABLE IF EXISTS doidNode;
+CREATE TABLE doidNode
 (   id int NOT NULL AUTO_INCREMENT,
     patientId int NOT NULL,
     doid varchar(255) NOT NULL,

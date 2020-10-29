@@ -1,4 +1,4 @@
-QCStatus	FAIL_GENDER
+QCStatus	FAIL_CONTAMINATION
 Method	NORMAL
 CopyNumberSegments	205
 UnsupportedCopyNumberSegments	400

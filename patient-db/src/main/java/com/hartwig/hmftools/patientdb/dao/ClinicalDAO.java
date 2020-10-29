@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BASELINE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.BIOPSY;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DOIDENTRY;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DOIDNODE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.FORMSMETADATA;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENT;
@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMA
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.doid.DoidEntry;
+import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
@@ -49,7 +49,7 @@ class ClinicalDAO {
         context.execute("SET FOREIGN_KEY_CHECKS = 0;");
         context.truncate(PATIENT).execute();
         context.truncate(BASELINE).execute();
-        context.truncate(DOIDENTRY).execute();
+        context.truncate(DOIDNODE).execute();
         context.truncate(PRETREATMENTDRUG).execute();
         context.truncate(SAMPLE).execute();
         context.truncate(BIOPSY).execute();
@@ -160,10 +160,10 @@ class ClinicalDAO {
                         preTreatmentTypes,
                         preTreatmentMechanism).execute();
 
-        List<DoidEntry> doidEntries = patient.curatedTumorLocationV2().doidEntries();
-        if (doidEntries != null) {
-            for (DoidEntry doidEntry : doidEntries) {
-                writeDoidEntry(patientId, doidEntry);
+        List<DoidNode> doidNodes = patient.curatedTumorLocationV2().doidNodes();
+        if (doidNodes != null) {
+            for (DoidNode doidNode : doidNodes) {
+                writeDoidNode(patientId, doidNode);
             }
         }
 
@@ -184,9 +184,9 @@ class ClinicalDAO {
         writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
     }
 
-    private void writeDoidEntry(int patientId, @NotNull DoidEntry doidEntry) {
-        context.insertInto(DOIDENTRY, DOIDENTRY.PATIENTID, DOIDENTRY.DOID, DOIDENTRY.DOIDTERM)
-                .values(patientId, doidEntry.doid(), doidEntry.doidTerm())
+    private void writeDoidNode(int patientId, @NotNull DoidNode doidNode) {
+        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM)
+                .values(patientId, doidNode.doid(), doidNode.doidTerm())
                 .execute();
     }
 

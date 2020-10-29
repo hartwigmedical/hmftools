@@ -54,7 +54,7 @@ public class VariantEvidence {
         result.addAll(hotspotEvidence);
         result.addAll(rangeEvidence);
 
-        return ProtectEvidenceItems.doNotReportInsignificantEvidence(result);
+        return ProtectEvidenceItems.reportHighest(result);
     }
 
     private static boolean rangeMatch(ActionableRange range, ReportableVariant variant) {

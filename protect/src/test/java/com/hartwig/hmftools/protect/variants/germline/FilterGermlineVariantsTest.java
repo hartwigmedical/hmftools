@@ -5,10 +5,12 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.protect.ProtectTestFactory;
+import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 import com.hartwig.hmftools.protect.variants.somatic.ImmutableDriverSomaticVariant;
 
@@ -21,116 +23,81 @@ public class FilterGermlineVariantsTest {
     public void checkForGermlineGenesReportedONCO() {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineGenesReporting();
 
-        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
-        List<DriverSomaticVariant> somaticVariants = Lists.newArrayList();
+        List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
+        List<ReportableGainLoss> reportableGainLosses = Lists.newArrayList();
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
+        List<ReportableGeneDisruption> reportableGeneDisruptions = Lists.newArrayList();
 
-        List<ReportableGermlineVariant> germlineVariantsNotPresentInTumor = createTestGermlineVariantsONCOGeneNotPresentInTumor();
+        List<ReportableGermlineVariant> germlineVariantsNotPresentInTumor = createTestGermlineVariantsOncogeneNotPresentInTumor();
         List<DriverGermlineVariant> filteredGermlineVariantMatchNotPresentInTumor =
-                FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsNotPresentInTumor,
-                        germlineReportingModel,
-                        geneCopyNumbers,
-                        somaticVariants,
-                        ChordStatus.HR_PROFICIENT);
+                FilterGermlineVariants.filterGermlineVariantsForReporting(germlineReportingModel,
+                        germlineVariantsNotPresentInTumor,
+                        driverSomaticVariants,
+                        reportableGainLosses,
+                        reportableHomozygousDisruptions,
+                        reportableGeneDisruptions);
         assertEquals(0, filteredGermlineVariantMatchNotPresentInTumor.size());
 
-        List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsONCOGenePresentInTumor();
+        List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsOncogenePresentInTumor();
         List<DriverGermlineVariant> filteredGermlineVariantMatchPresentInTumor = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsPresentInTumor,
                 germlineReportingModel,
-                geneCopyNumbers,
-                somaticVariants,
-                ChordStatus.HR_PROFICIENT);
+                germlineVariantsPresentInTumor,
+                driverSomaticVariants,
+                reportableGainLosses,
+                reportableHomozygousDisruptions,
+                reportableGeneDisruptions);
         assertEquals(1, filteredGermlineVariantMatchPresentInTumor.size());
     }
 
     @Test
     public void checkForGermlineGenesReportedTSG() {
+        List<ReportableGermlineVariant> germlineVariantsBiallelic = createTestGermlineVariantListTSG(true);
+        List<ReportableGermlineVariant> germlineVariantsNonBiallelic = createTestGermlineVariantListTSG(false);
+        List<ReportableGermlineVariant> germlineVariantsDoubleHit = Lists.newArrayList();
+        germlineVariantsDoubleHit.addAll(createTestGermlineVariantListTSG(false));
+        germlineVariantsDoubleHit.addAll(createTestGermlineVariantListTSG(false));
+
+        List<DriverSomaticVariant> variantOnTSG = createSomaticVariantListForGene(ProtectTestFactory.TSG);
+        List<DriverSomaticVariant> variantOnOncogene = createSomaticVariantListForGene(ProtectTestFactory.ONCOGENE);
+
+        List<ReportableGainLoss> lossOnTSG = createReportableLossOnTSG();
+        List<ReportableGainLoss> gainOnOncogene = createReportableGainOnOncogene();
+
+        List<ReportableHomozygousDisruption> homDisruptionOnTSG = createReportableHomozygousDisruptionListForGene(ProtectTestFactory.TSG);
+        List<ReportableHomozygousDisruption> homDisruptionOnOncogene =
+                createReportableHomozygousDisruptionListForGene(ProtectTestFactory.ONCOGENE);
+
+        List<ReportableGeneDisruption> disruptionOnTSG = createReportableGeneDisruptionListForGene(ProtectTestFactory.TSG);
+        List<ReportableGeneDisruption> disruptionOnOncogene = createReportableGeneDisruptionListForGene(ProtectTestFactory.ONCOGENE);
+
+        assertFilter(true, germlineVariantsBiallelic, variantOnTSG, lossOnTSG, homDisruptionOnTSG, disruptionOnTSG);
+        assertFilter(true, germlineVariantsBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
+        assertFilter(true, germlineVariantsNonBiallelic, variantOnTSG, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
+        assertFilter(true, germlineVariantsNonBiallelic, variantOnOncogene, lossOnTSG, homDisruptionOnOncogene, disruptionOnOncogene);
+        assertFilter(true, germlineVariantsNonBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnTSG, disruptionOnOncogene);
+        assertFilter(true, germlineVariantsNonBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnTSG);
+        assertFilter(true, germlineVariantsDoubleHit, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
+        assertFilter(false, germlineVariantsNonBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
+    }
+
+    private static void assertFilter(boolean expectedToPass, @NotNull List<ReportableGermlineVariant> reportableGermlineVariants,
+            @NotNull List<DriverSomaticVariant> driverSomaticVariant, @NotNull List<ReportableGainLoss> reportableGainLosses,
+            @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
+            @NotNull List<ReportableGeneDisruption> reportableGeneDisruptions) {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineGenesReporting();
 
-        List<ReportableGermlineVariant> germlineVariantsMatch = createTestGermlineVariantsTSGGene(true, 1);
-        List<ReportableGermlineVariant> germlineVariantsNonMatch = createTestGermlineVariantsTSGGene(false, 2);
-
-        List<GeneCopyNumber> geneCopyNumbersMatch = createCopyNumberListForTSG(1);
-        List<GeneCopyNumber> geneCopyNumbersNonMatch = createCopyNumberListForTSG(2);
-
-        List<DriverSomaticVariant> variantsMatch = createSomaticVariantListForGene(ProtectTestFactory.TSG);
-        List<DriverSomaticVariant> variantsNonMatch = createSomaticVariantListForGene("AAAA");
-
-        List<DriverGermlineVariant> filteredGermlineVariantAllMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsMatch,
+        List<DriverGermlineVariant> filteredGermlineVariants = FilterGermlineVariants.filterGermlineVariantsForReporting(
                 germlineReportingModel,
-                geneCopyNumbersMatch,
-                variantsMatch,
-                ChordStatus.HR_PROFICIENT);
-        assertEquals(1, filteredGermlineVariantAllMatch.size()); // all three options matched
-
-        List<DriverGermlineVariant> filteredGermlineVariantNonMatchBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsNonMatch,
-                germlineReportingModel,
-                geneCopyNumbersMatch,
-                variantsMatch,
-                ChordStatus.HR_PROFICIENT);
-        assertEquals(1, filteredGermlineVariantNonMatchBiallelic.size()); // match copy number and variant
-
-        List<DriverGermlineVariant> filteredGermlineVariantNonMatchVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsMatch,
-                germlineReportingModel,
-                geneCopyNumbersMatch,
-                variantsNonMatch,
-                ChordStatus.HR_PROFICIENT);
-        assertEquals(1, filteredGermlineVariantNonMatchVariant.size()); // match biallelic and copy number
-
-        List<DriverGermlineVariant> filteredGermlineVariantNonMatchCopy = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsMatch,
-                germlineReportingModel,
-                geneCopyNumbersNonMatch,
-                variantsMatch,
-                ChordStatus.HR_PROFICIENT);
-        assertEquals(1, filteredGermlineVariantNonMatchCopy.size()); // match biallelic and variant
-
-        List<DriverGermlineVariant> filteredGermlineVariantNonMatch = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsNonMatch,
-                germlineReportingModel,
-                geneCopyNumbersNonMatch,
-                variantsNonMatch,
-                ChordStatus.HR_PROFICIENT);
-        assertEquals(0, filteredGermlineVariantNonMatch.size()); // all option failed
-
-        List<DriverGermlineVariant> filteredGermlineVariantOptionBiallelic = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsMatch,
-                germlineReportingModel,
-                geneCopyNumbersNonMatch,
-                variantsNonMatch,
-                ChordStatus.HR_PROFICIENT);
-        assertEquals(1, filteredGermlineVariantOptionBiallelic.size()); // only match biallelic
-
-        List<DriverGermlineVariant> filteredGermlineVariantOptionVariant = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsNonMatch,
-                germlineReportingModel,
-                geneCopyNumbersNonMatch,
-                variantsMatch,
-                ChordStatus.HR_PROFICIENT);
-        assertEquals(1, filteredGermlineVariantOptionVariant.size()); // only match variant
-
-        List<DriverGermlineVariant> filteredGermlineVariantOptionCopyNumberPartialLoss =
-                FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariantsNonMatch,
-                        germlineReportingModel,
-                        geneCopyNumbersMatch,
-                        variantsNonMatch,
-                        ChordStatus.HR_PROFICIENT);
-        assertEquals(1, filteredGermlineVariantOptionCopyNumberPartialLoss.size()); // only match copy number
-
-        List<DriverGermlineVariant> filteredGermlineVariantOptionCopyNumberHRD = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineVariantsNonMatch,
-                germlineReportingModel,
-                geneCopyNumbersNonMatch,
-                variantsNonMatch,
-                ChordStatus.HR_DEFICIENT);
-        assertEquals(1, filteredGermlineVariantOptionCopyNumberHRD.size()); // only match HRD
+                reportableGermlineVariants,
+                driverSomaticVariant,
+                reportableGainLosses,
+                reportableHomozygousDisruptions,
+                reportableGeneDisruptions);
+        assertEquals(expectedToPass, !filteredGermlineVariants.isEmpty());
     }
 
     @NotNull
-    private static List<ReportableGermlineVariant> createTestGermlineVariantsONCOGeneNotPresentInTumor() {
+    private static List<ReportableGermlineVariant> createTestGermlineVariantsOncogeneNotPresentInTumor() {
         return Lists.newArrayList(ProtectTestFactory.createTestGermlineVariantBuilder()
                 .gene(ProtectTestFactory.ONCOGENE)
                 .adjustedVaf(0.1)
@@ -139,7 +106,7 @@ public class FilterGermlineVariantsTest {
     }
 
     @NotNull
-    private static List<ReportableGermlineVariant> createTestGermlineVariantsONCOGenePresentInTumor() {
+    private static List<ReportableGermlineVariant> createTestGermlineVariantsOncogenePresentInTumor() {
         return Lists.newArrayList(ProtectTestFactory.createTestGermlineVariantBuilder()
                 .gene(ProtectTestFactory.ONCOGENE)
                 .adjustedVaf(0.6)
@@ -148,21 +115,41 @@ public class FilterGermlineVariantsTest {
     }
 
     @NotNull
-    private static List<ReportableGermlineVariant> createTestGermlineVariantsTSGGene(boolean biallelic, double adjustedCopyNumber) {
+    private static List<ReportableGermlineVariant> createTestGermlineVariantListTSG(boolean biallelic) {
         return Lists.newArrayList(ProtectTestFactory.createTestGermlineVariantBuilder()
                 .gene(ProtectTestFactory.TSG)
                 .biallelic(biallelic)
-                .adjustedCopyNumber(adjustedCopyNumber)
-                .adjustedVaf(0.6)
+                .adjustedCopyNumber(1D)
+                .adjustedVaf(biallelic ? 1D : 0.5)
                 .build());
     }
 
     @NotNull
-    private static List<GeneCopyNumber> createCopyNumberListForTSG(int minCopyNumber) {
-        return Lists.newArrayList(ProtectTestFactory.createTestCopyNumberBuilder()
+    private static List<ReportableGainLoss> createReportableLossOnTSG() {
+        return Lists.newArrayList(ProtectTestFactory.createTestReportableGainLossBuilder()
                 .gene(ProtectTestFactory.TSG)
-                .minCopyNumber(minCopyNumber)
+                .copies(0)
+                .interpretation(CopyNumberInterpretation.FULL_LOSS)
                 .build());
+    }
+
+    @NotNull
+    private static List<ReportableGainLoss> createReportableGainOnOncogene() {
+        return Lists.newArrayList(ProtectTestFactory.createTestReportableGainLossBuilder()
+                .gene(ProtectTestFactory.ONCOGENE)
+                .copies(100)
+                .interpretation(CopyNumberInterpretation.GAIN)
+                .build());
+    }
+
+    @NotNull
+    private static List<ReportableHomozygousDisruption> createReportableHomozygousDisruptionListForGene(@NotNull String gene) {
+        return Lists.newArrayList(ProtectTestFactory.createTestReportableHomozygousDisruptionBuilder().gene(gene).build());
+    }
+
+    @NotNull
+    private static List<ReportableGeneDisruption> createReportableGeneDisruptionListForGene(@NotNull String gene) {
+        return Lists.newArrayList(ProtectTestFactory.createTestReportableGeneDisruptionBuilder().gene(gene).build());
     }
 
     @NotNull

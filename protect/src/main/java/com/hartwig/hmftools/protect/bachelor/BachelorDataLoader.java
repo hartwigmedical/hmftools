@@ -4,17 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariantFile;
+import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.purple.PurpleData;
+import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantFactory;
-import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
-import com.hartwig.hmftools.protect.variants.germline.FilterGermlineVariants;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,27 +25,26 @@ public class BachelorDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorDataLoader.class);
 
-    public static BachelorData load(@NotNull PurpleData purpleData, @NotNull String bachelorTsv, @NotNull ChordStatus chordStatus)
+    @NotNull
+    public static BachelorData load(@NotNull String bachelorTsv, @NotNull PurpleData purpleData, @NotNull LinxData linxData)
             throws IOException {
-        List<ReportableVariant> result = Lists.newArrayList();
 
-        List<ReportableGermlineVariant> variants = ReportableGermlineVariantFile.read(bachelorTsv);
+        List<ReportableGermlineVariant> germlineVariants = ReportableGermlineVariantFile.read(bachelorTsv);
 
-        // Every gene is allowed at this stage.
-        Set<String> allowedGenes = variants.stream().map(ReportableGermlineVariant::gene).collect(Collectors.toSet());
+        Set<String> somaticGenes = Sets.newHashSet();
+        linxData.homozygousDisruptions().stream().map(ReportableHomozygousDisruption::gene).forEach(somaticGenes::add);
+        linxData.geneDisruptions().stream().map(ReportableGeneDisruption::gene).forEach(somaticGenes::add);
+        purpleData.somaticVariants().stream().map(ReportableVariant::gene).forEach(somaticGenes::add);
+        purpleData.copyNumberAlterations()
+                .stream()
+                .filter(x -> !x.interpretation().equals(CopyNumberInterpretation.GAIN))
+                .map(ReportableGainLoss::gene)
+                .forEach(somaticGenes::add);
 
-        List<DriverGermlineVariant> driverGermlineVariants = FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
-                allowedGenes,
-                purpleData.geneCopyNumbers(),
-                purpleData.somaticVariants().stream().map(ReportableVariant::gene).collect(Collectors.toSet()),
-                chordStatus);
-
-        result.addAll(ReportableVariantFactory.reportableGermlineVariants(driverGermlineVariants));
+        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableGermlineVariants(somaticGenes, germlineVariants);
 
         LOGGER.info("Loaded BACHELOR data from {}", new File(bachelorTsv).getParent());
-        LOGGER.info(" Reportable germline variants: {}", result.size());
-        return ImmutableBachelorData.builder().addAllGermlineVariants(result).build();
-
+        LOGGER.info(" Reportable germline variants: {}", reportableVariants.size());
+        return ImmutableBachelorData.builder().addAllGermlineVariants(reportableVariants).build();
     }
-
 }

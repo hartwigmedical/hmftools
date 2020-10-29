@@ -29,6 +29,8 @@ public class CopyNumberExtractor {
                 ampsDelsPerFeature.put(feature,
                         ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.DELETION).build());
             }
-        } return ampsDelsPerFeature;
+        }
+
+        return ampsDelsPerFeature;
     }
 }

@@ -32,9 +32,9 @@ public class MetricsCheckerTest {
                 assertEquals("0.98261", value.value());
             } else if (value.type() == QCValueType.REF_COVERAGE_20X) {
                 assertEquals("0.980701", value.value());
-            } else if (value.type() == QCValueType.TUMOR_COVERAGE_30X) {
+            } else if (value.type() == QCValueType.TUM_COVERAGE_30X) {
                 assertEquals("0.978779", value.value());
-            } else if (value.type() == QCValueType.TUMOR_COVERAGE_60X) {
+            } else if (value.type() == QCValueType.TUM_COVERAGE_60X) {
                 assertEquals("0.950264", value.value());
             }
         }
@@ -57,13 +57,11 @@ public class MetricsCheckerTest {
 
     @Test(expected = IOException.class)
     public void malformedYieldsIOException() throws IOException {
-        MetricsChecker checker = new MetricsChecker(MALFORMED_WGS_METRICS_FILE, MALFORMED_WGS_METRICS_FILE);
-        checker.run();
+        new MetricsChecker(MALFORMED_WGS_METRICS_FILE, MALFORMED_WGS_METRICS_FILE).run();
     }
 
     @Test(expected = IOException.class)
     public void missingYieldsIOException() throws IOException {
-        MetricsChecker checker = new MetricsChecker(MISSING_WGS_METRICS_FILE, MISSING_WGS_METRICS_FILE);
-        checker.run();
+        new MetricsChecker(MISSING_WGS_METRICS_FILE, MISSING_WGS_METRICS_FILE).run();
     }
 }

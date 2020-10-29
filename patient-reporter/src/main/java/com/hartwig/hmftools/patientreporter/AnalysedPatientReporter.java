@@ -35,10 +35,10 @@ class AnalysedPatientReporter {
 
     @NotNull
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @NotNull String purpleGeneCnvTsv, @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf,
-            @NotNull String bachelorTsv, @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
-            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt,
-            @NotNull String circosFile, @Nullable String comments, boolean correctedReport) throws IOException {
+            @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
+            @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
+            @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile, @Nullable String comments,
+            boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
@@ -54,7 +54,6 @@ class AnalysedPatientReporter {
                 reportViralInsertions,
                 purplePurityTsv,
                 purpleQCFile,
-                purpleGeneCnvTsv,
                 purpleDriverCatalogTsv,
                 purpleSomaticVariantVcf,
                 bachelorTsv,

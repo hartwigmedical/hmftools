@@ -3,7 +3,6 @@ package com.hartwig.hmftools.protect.purple;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
@@ -25,15 +24,12 @@ public interface PurpleData {
     @NotNull
     MicrosatelliteStatus microsatelliteStatus();
 
-     double tumorMutationalBurdenPerMb();
+    double tumorMutationalBurdenPerMb();
 
     int tumorMutationalLoad();
 
     @NotNull
     TumorMutationalStatus tumorMutationalLoadStatus();
-
-    @NotNull
-    List<GeneCopyNumber> geneCopyNumbers();
 
     @NotNull
     List<ReportableVariant> somaticVariants();

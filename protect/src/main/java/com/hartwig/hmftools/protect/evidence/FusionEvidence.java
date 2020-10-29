@@ -46,7 +46,7 @@ public class FusionEvidence {
         result.addAll(geneEvidence);
         result.addAll(fusionEvidence);
 
-        return ProtectEvidenceItems.doNotReportInsignificantEvidence(result);
+        return ProtectEvidenceItems.reportHighest(result);
     }
 
     private static boolean match(ActionableGene actionable, LinxFusion victim) {

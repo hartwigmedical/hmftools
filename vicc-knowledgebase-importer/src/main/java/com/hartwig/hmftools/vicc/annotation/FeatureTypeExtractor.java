@@ -47,27 +47,31 @@ public final class FeatureTypeExtractor {
 
     public static final Set<String> INTERNAL_FUSION = Sets.newHashSet("is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "ITD");
 
-    public static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO = Sets.newHashSet("MUTATION",
+    public static final Set<String> DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO = Sets.newHashSet("MUTATION",
             "mutant",
             "mut",
             "TRUNCATING MUTATION",
             "Truncating Mutations",
             "feature_truncation",
             "FRAMESHIFT TRUNCATION",
-            "FRAMESHIFT MUTATION", "ALTERATION");
-    public static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_TSG = Sets.newHashSet("inact mut",
+            "FRAMESHIFT MUTATION",
+            "ALTERATION");
+    public static final Set<String> DETAILED_GENE_LEVEL_INFO_WITH_TSG = Sets.newHashSet("inact mut",
             "biallelic inactivation",
             "Loss Of Function Variant",
             "Loss Of Heterozygosity",
             "DELETERIOUS MUTATION",
-            "negative", "BIALLELIC INACTIVATION", "LOSS-OF-FUNCTION");
-    public static final Set<String> DETAILLED_GENE_LEVEL_INFO_WITH_ONCO = Sets.newHashSet("Gain-of-function Mutations",
+            "negative",
+            "BIALLELIC INACTIVATION",
+            "LOSS-OF-FUNCTION");
+    public static final Set<String> DETAILED_GENE_LEVEL_INFO_WITH_ONCO = Sets.newHashSet("Gain-of-function Mutations",
             "Gain-of-Function",
             "act mut",
             "ACTIVATING MUTATION",
             "Oncogenic Mutations",
             "pos",
-            "positive", "oncogenic mutation");
+            "positive",
+            "oncogenic mutation");
 
     public static final Set<String> GENE_LEVEL = Sets.newHashSet("gene_only");
 
@@ -75,7 +79,7 @@ public final class FeatureTypeExtractor {
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
-    //TODO: check if more EXON_DEL_DUP fusies but be added
+    //TODO: check if more EXON_DEL_DUP fusions need to be added
     public static final Set<String> FUSION_PAIR_AND_EXON_RANGE =
             Sets.newHashSet("KIT EXON 11 MUTATION", "KIT Exon 11 mutations", "KIT Exon 11 deletions", "MET EXON 14 SKIPPING MUTATION");
 
@@ -87,13 +91,13 @@ public final class FeatureTypeExtractor {
         return extractType(feature.name(),
                 feature.biomarkerType(),
                 feature.provenanceRule(),
-                ProteinAnnotationExtractor.extractProteinAnnotation(feature),
                 feature.description());
     }
 
     @NotNull
     public static FeatureType extractType(@NotNull String featureName, @Nullable String biomarkerType, @Nullable String provenanceRule,
-            @NotNull String proteinAnnotation, @Nullable String featureDescription) {
+            @Nullable String featureDescription) {
+        String proteinAnnotation = DetermineHotspot.extractProteinAnnotation(featureName);
         String event = Strings.EMPTY;
         if (featureName.toLowerCase().contains("exon")) {
             event = "exon";
@@ -131,7 +135,7 @@ public final class FeatureTypeExtractor {
                 return FeatureType.COMBINED;
             }
         }
-        if (DetermineHotspot.isHotspot(proteinAnnotation)) {
+        if (DetermineHotspot.isHotspot(featureName)) {
             return FeatureType.HOTSPOT;
         } else if (FeatureTypeExtractor.FUSION_PAIR_AND_EXON_RANGE.contains(featureDescription)) {
             return FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON;
@@ -158,10 +162,10 @@ public final class FeatureTypeExtractor {
             return FeatureType.GENE_RANGE_CODON;
         } else if (!DetermineHotspot.isHotspot(proteinAnnotation)) {
             String eventDescription = featureDescription.split(" ", 2)[1].trim();
-            if (FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)
-                    || FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITH_TSG.contains(eventDescription)
-                    || FeatureTypeExtractor.DETAILLED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription)
-                    || FeatureTypeExtractor.GENE_LEVEL.contains(provenanceRule)) {
+            if (FeatureTypeExtractor.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)
+                    || FeatureTypeExtractor.DETAILED_GENE_LEVEL_INFO_WITH_TSG.contains(eventDescription)
+                    || FeatureTypeExtractor.DETAILED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription) || FeatureTypeExtractor.GENE_LEVEL
+                    .contains(provenanceRule)) {
                 return FeatureType.GENE_LEVEL;
             }
         }

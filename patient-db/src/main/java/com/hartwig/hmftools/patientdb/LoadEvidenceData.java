@@ -22,8 +22,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -49,7 +47,6 @@ public class LoadEvidenceData {
     private static final String TUMOR_LOCATION_TSV = "tumor_location_tsv";
 
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
-    private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
 
@@ -65,7 +62,6 @@ public class LoadEvidenceData {
 
         // Params specific for specific sample
         String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
-        String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
         String purpleDriverCatalogTsv = cmd.getOptionValue(PURPLE_DRIVER_CATALOG_TSV);
         String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
 
@@ -73,7 +69,6 @@ public class LoadEvidenceData {
                 knowledgebaseDirectory,
                 tumorLocationTsv,
                 somaticVariantVcf,
-                purpleGeneCnvTsv,
                 purpleDriverCatalogTsv,
                 linxFusionTsv,
                 cmd.getOptionValue(DB_USER),
@@ -90,7 +85,7 @@ public class LoadEvidenceData {
 
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationTsv, sampleId);
         List<SomaticVariant> passSomaticVariants = readPassSomaticVariants(sampleId, somaticVariantVcf);
-        List<ReportableGainLoss> reportableGainLosses = getReportableGainsAndLosses(purpleDriverCatalogTsv, purpleGeneCnvTsv);
+        List<ReportableGainLoss> reportableGainLosses = getReportableGainsAndLosses(purpleDriverCatalogTsv);
         List<LinxFusion> geneFusions = readGeneFusions(linxFusionTsv);
 
         List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
@@ -128,16 +123,11 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> getReportableGainsAndLosses(@NotNull String purpleDriverCatalogTsv,
-            @NotNull String purpleGeneCnvTsv) throws IOException {
-        LOGGER.info("Reading gene copy numbers from {}", purpleGeneCnvTsv);
-        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
-        LOGGER.info(" Loaded {} gene copy numbers", geneCopyNumbers.size());
-
+    private static List<ReportableGainLoss> getReportableGainsAndLosses(@NotNull String purpleDriverCatalogTsv) throws IOException {
         LOGGER.info("Reading purple driver catalog from {}", purpleDriverCatalogTsv);
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(purpleDriverCatalogTsv);
         LOGGER.info(" Loaded {} purple driver catalog records", driverCatalog.size());
-        List<ReportableGainLoss> gainsLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog, geneCopyNumbers);
+        List<ReportableGainLoss> gainsLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(driverCatalog);
         LOGGER.info(" Extracted {} gains and losses from drivers", gainsLosses.size());
         return gainsLosses;
     }
@@ -224,7 +214,6 @@ public class LoadEvidenceData {
         options.addOption(TUMOR_LOCATION_TSV, true, "Path towards the (curated) tumor location TSV.");
 
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
-        options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
 

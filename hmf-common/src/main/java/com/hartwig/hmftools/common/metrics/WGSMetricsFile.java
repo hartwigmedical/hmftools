@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.common.metrics;
 
 import java.io.IOException;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class WGSMetricsFile {
-
-    private static final String METRICS_EXTENSION = ".wgsmetrics";
 
     private static final String MEAN_COVERAGE_COLUMN = "MEAN_COVERAGE";
     private static final String COVERAGE_10X_COLUMN = "PCT_10X";

@@ -24,7 +24,7 @@ public class ReportableVariantConsent {
     }
 
     public boolean notifyClinicalGeneticist(@NotNull ReportableVariant reportable) {
-        return reportable.source().equals(ReportableVariantSource.PURPLE) || germlineReportingModel.notifyAboutGene(reportingLevel,
+        return reportable.source().equals(ReportableVariantSource.BACHELOR) && germlineReportingModel.notifyAboutGene(reportingLevel,
                 reportable.gene());
     }
 }

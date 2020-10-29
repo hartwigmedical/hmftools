@@ -11,7 +11,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -21,214 +20,200 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class DiseaseOntology {
 
+    private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
+
+    static final String ID_TO_READ = "http://purl.obolibrary.org/obo/doid.owl";
+
     private DiseaseOntology() {
     }
 
     @NotNull
-    public static List<DoidEntry> readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
+    public static DoidEntry readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);
-        List<DoidEntry> doids = Lists.newArrayList();
-        JsonDatamodelChecker doidEntryChecker = DoidDatamodelCheckerFactory.doidEntryChecker();
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
-            JsonObject doidObject = parser.parse(reader).getAsJsonObject();
-            doidEntryChecker.check(doidObject);
-            JsonDatamodelChecker doidEntryGraphChecker = DoidDatamodelCheckerFactory.doidEntryGraphChecker();
 
-            JsonArray graphArray = doidObject.getAsJsonArray("graphs");
+        JsonObject doidObject = parser.parse(reader).getAsJsonObject();
+        JsonDatamodelChecker doidObjectChecker = DoidDatamodelCheckerFactory.doidObjectChecker();
+        doidObjectChecker.check(doidObject);
 
-            for (JsonElement graph : graphArray) {
-                DoidEdges result = new DoidEdges();
+        ImmutableDoidEntry.Builder doidEntryBuilder = ImmutableDoidEntry.builder();
+        JsonArray graphArray = doidObject.getAsJsonArray("graphs");
+        for (JsonElement graphElement : graphArray) {
+            JsonObject graphObject = graphElement.getAsJsonObject();
+            JsonDatamodelChecker doidGraphsChecker = DoidDatamodelCheckerFactory.doidGraphsChecker();
+            doidGraphsChecker.check(graphObject);
 
-                doidEntryGraphChecker.check(graph.getAsJsonObject());
-                JsonArray nodeArray = graph.getAsJsonObject().getAsJsonArray("nodes");
+            String id = string(graphObject, "id");
+            if (id.equals(ID_TO_READ)) {
+                LOGGER.info("Reading DOID entry with ID '{}'", id);
+                // Add data to doid entry
+                doidEntryBuilder.id(id);
+                doidEntryBuilder.nodes(extractNodes(graphObject.getAsJsonArray("nodes")));
+                doidEntryBuilder.edges(extractEdges(graphObject.getAsJsonArray("edges")));
+                doidEntryBuilder.meta(extractGraphMetaNode(graphObject.getAsJsonObject("meta")));
+                doidEntryBuilder.logicalDefinitionAxioms(extractDoidLogicalDefinitionAxioms(graphObject.getAsJsonArray(
+                        "logicalDefinitionAxioms")));
 
-                JsonDatamodelChecker doidEntryNodesChecker = DoidDatamodelCheckerFactory.doidEntryNodesChecker();
-
-                JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
-                for (JsonElement edgeElement : edgesArray) {
-                    JsonObject edge = edgeElement.getAsJsonObject();
-                    String predicate = string(edge, "pred");
-                    if (predicate.equals("is_a")) {
-                        String child = extractDoid(string(edge, "sub"));
-                        String parent = extractDoid(string(edge, "obj"));
-                        result.isA(child, parent);
-                    }
-                }
-
-                //createMetaNodes(graph.getAsJsonObject().getAsJsonObject("meta"));
-                List<DoidEquivalentNodesSets> doidEquivalentNodesSets = extractDoidEquivalentNodesSets(graph.getAsJsonObject().getAsJsonArray("equivalentNodesSets"));
-                List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms = extractDoidLogicalDefinitionAxioms(graph.getAsJsonObject().getAsJsonArray("logicalDefinitionAxioms"));
-                List<DoidDomainRangeAxioms> doidDomainRangeAxioms = extractDoidDomainRangeAxioms(graph.getAsJsonObject().getAsJsonArray("domainRangeAxioms"));
-                List<DoidPropertyChainAxioms> doidPropertyChainAxioms =  extractDoidPropertyChainAxioms(graph.getAsJsonObject().getAsJsonArray("propertyChainAxioms"));
-
-
-                for (JsonElement nodeElement : nodeArray) {
-                    JsonObject node = nodeElement.getAsJsonObject();
-                    doidEntryNodesChecker.check(node);
-                    String url = string(node, "id");
-                    doids.add(ImmutableDoidEntry.builder()
-                            .doid(extractDoid(url))
-                            .url(url)
-                            .doidMetadata(extractDoidMetadata(optionalJsonObject(node, "meta")))
-                            .type(optionalString(node, "type"))
-                            .doidTerm(optionalString(node, "lbl"))
-                            .doidNodes(null)
-                            .build());
-                }
-                //TODO return Doid
-            }
-        }
-        return doids;
-    }
-
-    @NotNull
-    public static DoidEdges readDoidJsonFileEdges(@NotNull String doidJsonFile) throws IOException {
-        DoidEdges result = new DoidEdges();
-
-        JsonParser parser = new JsonParser();
-        JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
-        reader.setLenient(true);
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
-            JsonObject doidObject = parser.parse(reader).getAsJsonObject();
-
-            JsonArray graphArray = doidObject.getAsJsonArray("graphs");
-            for (JsonElement graph : graphArray) {
-                JsonArray edgesArray = graph.getAsJsonObject().getAsJsonArray("edges");
-                for (JsonElement edgeElement : edgesArray) {
-                    JsonObject edge = edgeElement.getAsJsonObject();
-                    String predicate = string(edge, "pred");
-                    if (predicate.equals("is_a")) {
-                        String child = extractDoid(string(edge, "sub"));
-                        String parent = extractDoid(string(edge, "obj"));
-                        result.isA(child, parent);
-                    }
-                }
+                // Below always seem to be empty string lists
+                doidEntryBuilder.equivalentNodesSets(optionalStringList(graphObject, "equivalentNodesSets"));
+                doidEntryBuilder.domainRangeAxioms(optionalStringList(graphObject, "domainRangeAxioms"));
+                doidEntryBuilder.propertyChainAxioms(optionalStringList(graphObject, ("propertyChainAxioms")));
+            } else {
+                LOGGER.debug("Skipping DOID entry with ID '{}'", id);
             }
         }
 
-        return result;
+        if (reader.peek() != JsonToken.END_DOCUMENT) {
+            LOGGER.warn("More data found in {} after reading main JSON object!", doidJsonFile);
+        }
+
+        return doidEntryBuilder.build();
     }
 
-    @Nullable
-    private static List<String> createMetaNodes(@Nullable JsonObject metaNodesObject) {
-        return Lists.newArrayList();
-
-    }
-
-    @Nullable
-    private static List<DoidPropertyChainAxioms> extractDoidPropertyChainAxioms(@Nullable JsonArray propertyChainAxiomsArray) {
-        if (propertyChainAxiomsArray == null) {
-            return null;
-        }
-
-        List<DoidPropertyChainAxioms> doidPropertyChainAxioms = Lists.newArrayList();
-        JsonDatamodelChecker doidPropertyChainAxiomsChecker = DoidDatamodelCheckerFactory.doidPropertyChainAxiomsChecker();
-
-        for (JsonElement propertyChainAxioms : propertyChainAxiomsArray) {
-            JsonObject propertyChainAxiomsObject = propertyChainAxioms.getAsJsonObject();
-            doidPropertyChainAxiomsChecker.check(propertyChainAxiomsObject);
-
-            doidPropertyChainAxioms.add(ImmutableDoidPropertyChainAxioms.builder()
-                    .build());
-        }
-
-        return doidPropertyChainAxioms;
-    }
-
-    @Nullable
-    private static List<DoidDomainRangeAxioms> extractDoidDomainRangeAxioms(@Nullable JsonArray domainRangeAxiomsArray) {
-        if (domainRangeAxiomsArray == null) {
-            return null;
-        }
-
-        List<DoidDomainRangeAxioms> doidDomainRangeAxioms = Lists.newArrayList();
-        JsonDatamodelChecker doidDomainRangeAxiomsChecker = DoidDatamodelCheckerFactory.doidDomainRangeAxiomsChecker();
-
-        for (JsonElement domainRangeAxioms : domainRangeAxiomsArray) {
-            JsonObject domainRangeAxiomsObject = domainRangeAxioms.getAsJsonObject();
-            doidDomainRangeAxiomsChecker.check(domainRangeAxiomsObject);
-
-            doidDomainRangeAxioms.add(ImmutableDoidDomainRangeAxioms.builder()
-                    .build());
-        }
-
-        return doidDomainRangeAxioms;
-    }
-
-    @Nullable
-    private static List<DoidLogicalDefinitionAxioms> extractDoidLogicalDefinitionAxioms(@Nullable JsonArray logicalDefinitionAxiomsArray) {
-        if (logicalDefinitionAxiomsArray == null) {
-            return null;
-        }
-
-        List<DoidLogicalDefinitionAxioms> doidLogicalDefinitionAxioms = Lists.newArrayList();
-        JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
-
-        for (JsonElement logicalDefinitionAxioms : logicalDefinitionAxiomsArray) {
-            JsonObject logicalDefinitionAxiomsObject = logicalDefinitionAxioms.getAsJsonObject();
-            doidLogicalDefinitionAxiomsChecker.check(logicalDefinitionAxiomsObject);
-
-            doidLogicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
-                    .build());
-        }
-
-        return doidLogicalDefinitionAxioms;
-    }
-
-    @Nullable
-    private static List<DoidEquivalentNodesSets> extractDoidEquivalentNodesSets(@Nullable JsonArray equivalentNodesSetsArray) {
-        if (equivalentNodesSetsArray == null) {
-            return null;
-        }
-
-        List<DoidEquivalentNodesSets> doidEquivalentNodesSets = Lists.newArrayList();
-        JsonDatamodelChecker doidEquivalentNodesSetsChecker = DoidDatamodelCheckerFactory.doidEquivalentNodesSetsChecker();
-
-        for (JsonElement equivalentNodesSets : equivalentNodesSetsArray) {
-            JsonObject equivalentNodesSetsObject = equivalentNodesSets.getAsJsonObject();
-            doidEquivalentNodesSetsChecker.check(equivalentNodesSetsObject);
-
-            doidEquivalentNodesSets.add(ImmutableDoidEquivalentNodesSets.builder()
-                    .build());
-        }
-
-        return doidEquivalentNodesSets;
-    }
-
-    @Nullable
-    private static List<DoidEdge> extractDoidEdges(@Nullable JsonArray edgesArray) {
-        if (edgesArray == null) {
-            return null;
-        }
-
-        List<DoidEdge> doidEdge = Lists.newArrayList();
-        JsonDatamodelChecker edgesChecker = DoidDatamodelCheckerFactory.doidEdgeChecker();
-
-        for (JsonElement edges : edgesArray) {
-            JsonObject edgesObject = edges.getAsJsonObject();
-            edgesChecker.check(edgesObject);
-
-            doidEdge.add(ImmutableDoidEdge.builder()
-                    .sub(string(edgesObject, "sub"))
-                    .pred(string(edgesObject, "pred"))
-                    .obj(string(edgesObject, "obj"))
-                    .build());
-        }
-
-        return doidEdge;
-    }
-
-    @VisibleForTesting
     @NotNull
     public static String extractDoid(@NotNull String url) {
         return url.replace("http://purl.obolibrary.org/obo/DOID_", "");
+    }
+
+    @NotNull
+    private static List<DoidNode> extractNodes(@NotNull JsonArray nodeArray) {
+        List<DoidNode> nodes = Lists.newArrayList();
+
+        for (JsonElement nodeElement : nodeArray) {
+            JsonObject nodeObject = nodeElement.getAsJsonObject();
+            JsonDatamodelChecker doidNodesChecker = DoidDatamodelCheckerFactory.doidNodeChecker();
+            doidNodesChecker.check(nodeObject);
+
+            String url = string(nodeObject, "id");
+            nodes.add(ImmutableDoidNode.builder()
+                    .doid(extractDoid(url))
+                    .url(url)
+                    .doidMetadata(extractDoidMetadata(optionalJsonObject(nodeObject, "meta")))
+                    .type(optionalString(nodeObject, "type"))
+                    .doidTerm(optionalString(nodeObject, "lbl"))
+                    .build());
+        }
+
+        return nodes;
+    }
+
+    @NotNull
+    private static List<DoidEdge> extractEdges(@NotNull JsonArray edgeArray) {
+        List<DoidEdge> edges = Lists.newArrayList();
+
+        for (JsonElement edgeElement : edgeArray) {
+            JsonObject edgeObject = edgeElement.getAsJsonObject();
+            JsonDatamodelChecker doidEdgeChecker = DoidDatamodelCheckerFactory.doidEdgeChecker();
+            doidEdgeChecker.check(edgeObject);
+
+            String predicate = string(edgeObject, "pred");
+            String object = string(edgeObject, "obj");
+            String subject = string(edgeObject, "sub");
+
+            edges.add(ImmutableDoidEdge.builder().predicate(predicate).subject(subject).object(object).build());
+        }
+
+        return edges;
+    }
+
+    @NotNull
+    private static DoidGraphMetaData extractGraphMetaNode(@Nullable JsonObject metaObject) {
+        JsonDatamodelChecker doidGraphMetaDataChecker = DoidDatamodelCheckerFactory.doidGraphMetaDataChecker();
+        doidGraphMetaDataChecker.check(metaObject);
+
+        JsonArray xrefArray = metaObject.getAsJsonArray("xrefs");
+        List<DoidXref> xrefValList = Lists.newArrayList();
+        if (xrefArray != null) {
+            JsonDatamodelChecker xrefChecker = DoidDatamodelCheckerFactory.doidMetadataXrefChecker();
+
+            for (JsonElement xrefElement : xrefArray) {
+                JsonObject xrefObject = xrefElement.getAsJsonObject();
+
+                xrefChecker.check(xrefObject);
+                xrefValList.add(ImmutableDoidXref.builder().val(string(xrefObject, "val")).build());
+            }
+        }
+
+        ImmutableDoidGraphMetaData.Builder DoidGraphMetaDataBuilder = ImmutableDoidGraphMetaData.builder();
+        DoidGraphMetaDataBuilder.basicPropertyValues(extractBasicPropertyValues(optionalJsonArray(metaObject, "basicPropertyValues")));
+        DoidGraphMetaDataBuilder.subsets(optionalStringList(metaObject, "subsets"));
+        DoidGraphMetaDataBuilder.xrefs(xrefValList);
+        DoidGraphMetaDataBuilder.version(optionalString(metaObject, "version"));
+        return DoidGraphMetaDataBuilder.build();
+    }
+
+    @Nullable
+    private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@Nullable JsonArray basicPropertyValueArray) {
+        if (basicPropertyValueArray == null) {
+            return null;
+        }
+
+        List<DoidBasicPropertyValue> basicPropertyValueList = Lists.newArrayList();
+
+        for (JsonElement basicPropertyElement : basicPropertyValueArray) {
+            JsonObject basicPropertyObject = basicPropertyElement.getAsJsonObject();
+            JsonDatamodelChecker basicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValueChecker();
+            basicPropertyValuesChecker.check(basicPropertyObject);
+
+            basicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder()
+                    .pred(string(basicPropertyObject, "pred"))
+                    .val(string(basicPropertyObject, "val"))
+                    .build());
+        }
+
+        return basicPropertyValueList;
+    }
+
+    @Nullable
+    private static List<DoidLogicalDefinitionAxioms> extractDoidLogicalDefinitionAxioms(@Nullable JsonArray logicalDefinitionAxiomArray) {
+        if (logicalDefinitionAxiomArray == null) {
+            return null;
+        }
+
+        List<DoidLogicalDefinitionAxioms> logicalDefinitionAxioms = Lists.newArrayList();
+
+        for (JsonElement logicalDefinitionAxiomElement : logicalDefinitionAxiomArray) {
+            JsonObject logicalDefinitionAxiomObject = logicalDefinitionAxiomElement.getAsJsonObject();
+
+            JsonDatamodelChecker doidLogicalDefinitionAxiomsChecker = DoidDatamodelCheckerFactory.doidLogicalDefinitionAxiomChecker();
+            doidLogicalDefinitionAxiomsChecker.check(logicalDefinitionAxiomObject);
+
+            List<DoidRestriction> restrictionList = Lists.newArrayList();
+            for (JsonElement restrictionElement : logicalDefinitionAxiomObject.getAsJsonArray("restrictions")) {
+                JsonDatamodelChecker doidRestrictionChecker = DoidDatamodelCheckerFactory.doidRestrictionChecker();
+
+                if (restrictionElement.isJsonObject()) {
+                    JsonObject restrictionObject = restrictionElement.getAsJsonObject();
+                    doidRestrictionChecker.check(restrictionObject.getAsJsonObject());
+
+                    restrictionList.add(ImmutableDoidRestriction.builder()
+                            .propertyId(string(restrictionObject, "propertyId"))
+                            .fillerId(string(restrictionObject, "fillerId"))
+                            .build());
+                }
+            }
+
+            List<String> genusIdList = Lists.newArrayList();
+            for (JsonElement genusIdElement : logicalDefinitionAxiomObject.getAsJsonArray("genusIds")) {
+                genusIdList.add(genusIdElement.getAsString());
+            }
+
+            logicalDefinitionAxioms.add(ImmutableDoidLogicalDefinitionAxioms.builder()
+                    .definedClassId(string(logicalDefinitionAxiomObject, "definedClassId"))
+                    .genusIds(genusIdList)
+                    .restrictions(restrictionList)
+                    .build());
+        }
+
+        return logicalDefinitionAxioms;
     }
 
     @Nullable
@@ -244,10 +229,11 @@ public final class DiseaseOntology {
         List<DoidXref> xrefValList = Lists.newArrayList();
         if (xrefArray != null) {
             JsonDatamodelChecker xrefChecker = DoidDatamodelCheckerFactory.doidMetadataXrefChecker();
+            for (JsonElement xrefElement : xrefArray) {
+                JsonObject xrefObject = xrefElement.getAsJsonObject();
+                xrefChecker.check(xrefObject);
 
-            for (JsonElement xref : xrefArray) {
-                xrefChecker.check(xref.getAsJsonObject());
-                xrefValList.add(ImmutableDoidXref.builder().val(string(xref.getAsJsonObject(), "val")).build());
+                xrefValList.add(ImmutableDoidXref.builder().val(string(xrefObject, "val")).build());
             }
         }
 
@@ -266,43 +252,20 @@ public final class DiseaseOntology {
             return null;
         }
 
-        JsonDatamodelChecker doidSynonymsChecker = DoidDatamodelCheckerFactory.doidSynonymsChecker();
-
-        List<DoidSynonym> doidSynonymList = Lists.newArrayList();
+        List<DoidSynonym> synonymList = Lists.newArrayList();
         for (JsonElement synonymElement : synonymArray) {
-            JsonObject synonym = synonymElement.getAsJsonObject();
-            doidSynonymsChecker.check(synonym);
+            JsonObject synonymObject = synonymElement.getAsJsonObject();
+            JsonDatamodelChecker doidSynonymChecker = DoidDatamodelCheckerFactory.doidSynonymChecker();
+            doidSynonymChecker.check(synonymObject);
 
-            doidSynonymList.add(ImmutableDoidSynonym.builder()
-                    .pred(string(synonym, "pred"))
-                    .val(string(synonym, "val"))
-                    .xrefs(stringList(synonym, "xrefs"))
+            synonymList.add(ImmutableDoidSynonym.builder()
+                    .pred(string(synonymObject, "pred"))
+                    .val(string(synonymObject, "val"))
+                    .xrefs(stringList(synonymObject, "xrefs"))
                     .build());
         }
 
-        return doidSynonymList;
-    }
-
-    @Nullable
-    private static List<DoidBasicPropertyValue> extractBasicPropertyValues(@Nullable JsonArray basicPropertyValueArray) {
-        if (basicPropertyValueArray == null) {
-            return null;
-        }
-
-        List<DoidBasicPropertyValue> doidBasicPropertyValueList = Lists.newArrayList();
-        JsonDatamodelChecker basicPropertyValuesChecker = DoidDatamodelCheckerFactory.doidBasicPropertyValuesChecker();
-
-        for (JsonElement basicPropertyElement : basicPropertyValueArray) {
-            JsonObject basicProperty = basicPropertyElement.getAsJsonObject();
-            basicPropertyValuesChecker.check(basicProperty);
-
-            doidBasicPropertyValueList.add(ImmutableDoidBasicPropertyValue.builder()
-                    .pred(string(basicProperty, "pred"))
-                    .val(string(basicProperty, "val"))
-                    .build());
-        }
-
-        return doidBasicPropertyValueList;
+        return synonymList;
     }
 
     @Nullable

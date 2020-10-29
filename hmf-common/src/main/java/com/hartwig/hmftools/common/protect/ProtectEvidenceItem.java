@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ProtectEvidenceItem {
+public abstract class ProtectEvidenceItem implements Comparable<ProtectEvidenceItem> {
 
     @NotNull
     public abstract String genomicEvent();
@@ -35,4 +35,44 @@ public abstract class ProtectEvidenceItem {
     @NotNull
     public abstract String url();
 
+    @Override
+    public int compareTo(@NotNull final ProtectEvidenceItem o) {
+
+        int reportedCompare = -Boolean.compare(reported(), o.reported());
+        if (reportedCompare != 0) {
+            return reportedCompare;
+        }
+
+        int eventCompare = genomicEvent().compareTo(o.genomicEvent());
+        if (eventCompare != 0) {
+            return eventCompare;
+        }
+
+        int treatmentCompare = treatment().compareTo(o.treatment());
+        if (treatmentCompare != 0) {
+            return treatmentCompare;
+        }
+
+        int onLabelCompare = -Boolean.compare(onLabel(), o.onLabel());
+        if (onLabelCompare != 0) {
+            return onLabelCompare;
+        }
+
+        int levelCompare = level().compareTo(o.level());
+        if (levelCompare != 0) {
+            return levelCompare;
+        }
+
+        int directionCompare = direction().compareTo(o.direction());
+        if (directionCompare != 0) {
+            return directionCompare;
+        }
+
+        int sourceCompare = source().compareTo(o.source());
+        if (sourceCompare != 0) {
+            return directionCompare;
+        }
+
+        return url().compareTo(o.url());
+    }
 }

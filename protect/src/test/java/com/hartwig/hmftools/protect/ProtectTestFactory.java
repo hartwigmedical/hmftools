@@ -14,17 +14,17 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
+import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
-import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
+import com.hartwig.hmftools.protect.homozygousdisruption.ImmutableReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.apache.logging.log4j.util.Strings;
@@ -47,30 +47,6 @@ public final class ProtectTestFactory {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    @NotNull
-    public static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder() {
-        return ImmutableGeneCopyNumber.builder()
-                .start(1)
-                .end(2)
-                .gene(Strings.EMPTY)
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
-                .minRegionStart(0)
-                .minRegionStartSupport(SegmentSupport.NONE)
-                .minRegionEnd(0)
-                .minRegionEndSupport(SegmentSupport.NONE)
-                .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minRegions(1)
-                .germlineHet2HomRegions(0)
-                .germlineHomRegions(0)
-                .somaticRegions(1)
-                .minCopyNumber(0)
-                .maxCopyNumber(0)
-                .transcriptID(Strings.EMPTY)
-                .transcriptVersion(0)
-                .minMinorAlleleCopyNumber(0);
     }
 
     @NotNull
@@ -130,26 +106,33 @@ public final class ProtectTestFactory {
     }
 
     @NotNull
-    public static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
-        return ImmutableReportableVariant.builder()
-                .gene(Strings.EMPTY)
-                .position(0)
+    public static ImmutableReportableGainLoss.Builder createTestReportableGainLossBuilder() {
+        return ImmutableReportableGainLoss.builder()
                 .chromosome(Strings.EMPTY)
-                .ref(Strings.EMPTY)
-                .alt(Strings.EMPTY)
-                .canonicalCodingEffect(CodingEffect.UNDEFINED)
-                .canonicalHgvsCodingImpact(Strings.EMPTY)
-                .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .gDNA(Strings.EMPTY)
-                .hotspot(Hotspot.HOTSPOT)
-                .clonalLikelihood(1D)
-                .alleleReadCount(0)
-                .totalReadCount(0)
-                .alleleCopyNumber(0D)
-                .totalCopyNumber(0)
-                .biallelic(false)
-                .driverLikelihood(0D)
-                .notifyClinicalGeneticist(false);
+                .chromosomeBand(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .copies(0)
+                .interpretation(CopyNumberInterpretation.FULL_LOSS);
+    }
+
+    @NotNull
+    public static ImmutableReportableHomozygousDisruption.Builder createTestReportableHomozygousDisruptionBuilder() {
+        return ImmutableReportableHomozygousDisruption.builder()
+                .chromosome(Strings.EMPTY)
+                .chromosomeBand(Strings.EMPTY)
+                .gene(Strings.EMPTY);
+    }
+
+    @NotNull
+    public static ImmutableReportableGeneDisruption.Builder createTestReportableGeneDisruptionBuilder() {
+        return ImmutableReportableGeneDisruption.builder()
+                .gene(Strings.EMPTY)
+                .location(Strings.EMPTY)
+                .range(Strings.EMPTY)
+                .type(Strings.EMPTY)
+                .firstAffectedExon(0)
+                .junctionCopyNumber(0D)
+                .undisruptedCopyNumber(0D);
     }
 
     @NotNull

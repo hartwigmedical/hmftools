@@ -2,10 +2,12 @@ package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
@@ -17,7 +19,7 @@ public class FlagstatChecker implements HealthChecker {
 
     @NotNull
     private final String refFlagstat;
-    @NotNull
+    @Nullable
     private final String tumFlagstat;
 
     public FlagstatChecker(@NotNull final String refFlagstat, @Nullable final String tumFlagstat) {
@@ -25,34 +27,65 @@ public class FlagstatChecker implements HealthChecker {
         this.tumFlagstat = tumFlagstat;
     }
 
-    public static String divideTwoStrings(String string1, String string2) {
-        return String.valueOf(Double.parseDouble(string1) / Double.parseDouble(string2));
-    }
-
-    public static String flagstatMappingProportion(String flagstatFile) throws IOException {
-        // Example flagstat line: 323329219 + 0 in total (QC-passed reads + QC-failed reads)
-        // List<String> lines = Files.readAllLines(new File(flagstatFile).toPath());
-        List<String> total_line = LineReader.build().readLines(new File(flagstatFile).toPath(), x -> x.contains("in total"));
-        assert total_line.size() == 1;
-        String total = total_line.get(0).split(" ")[0];
-
-        List<String> mapped_line  = LineReader.build().readLines(new File(flagstatFile).toPath(), x -> x.contains("mapped ("));
-        assert mapped_line.size() == 1;
-        String mapped = mapped_line.get(0).split(" ")[0];
-
-        return divideTwoStrings(mapped, total);
-    }
-
     @NotNull
     @Override
     public List<QCValue> run() throws IOException {
+        List<QCValue> qcValues = Lists.newArrayList();
 
-        String refProportion = flagstatMappingProportion(refFlagstat);
-        String tumProportion = flagstatMappingProportion(tumFlagstat);
+        List<String> refLines = Files.readAllLines(new File(refFlagstat).toPath());
+        String refTotal = valueBySubstring(refLines, "total");
+        String refMapped = valueBySubstring(refLines, "mapped (");
+        String refDuplicates = valueBySubstring(refLines, "duplicates");
+        if (refTotal == null || refMapped == null || refDuplicates == null) {
+            throw new IOException("Unable to parse flagstat file correctly");
+        }
+        String refMappingProportion = divideTwoStrings(refMapped, refTotal);
+        String refDuplicateProportion = divideTwoStrings(refDuplicates, refTotal);
+        qcValues.add(ImmutableQCValue.of(QCValueType.REF_PROPORTION_MAPPED, refMappingProportion));
+        qcValues.add(ImmutableQCValue.of(QCValueType.REF_PROPORTION_DUPLICATE, refDuplicateProportion));
 
-        return Lists.newArrayList(
-            ImmutableQCValue.of(QCValueType.REF_PROPORTION_MAPPED, refProportion),
-            ImmutableQCValue.of(QCValueType.TUM_PROPORTION_MAPPED, tumProportion)
-        );
+        if (tumFlagstat != null) {
+            List<String> tumLines = Files.readAllLines(new File(tumFlagstat).toPath());
+            String tumTotal = valueBySubstring(tumLines, "total");
+            String tumMapped = valueBySubstring(tumLines, "mapped (");
+            String tumDuplicates = valueBySubstring(tumLines, "duplicates");
+            if (tumTotal == null || tumMapped == null || tumDuplicates == null) {
+                throw new IOException("Unable to parse flagstat file correctly");
+            }
+            String tumMappingProportion = divideTwoStrings(tumMapped, tumTotal);
+            String tumDuplicateProportion = divideTwoStrings(tumDuplicates, tumTotal);
+            qcValues.add(ImmutableQCValue.of(QCValueType.TUM_PROPORTION_MAPPED, tumMappingProportion));
+            qcValues.add(ImmutableQCValue.of(QCValueType.TUM_PROPORTION_DUPLICATE, tumDuplicateProportion));
+        }
+
+        return qcValues;
+    }
+
+    @NotNull
+    private static String divideTwoStrings(@NotNull String string1, @NotNull String string2) {
+        double double1 = Double.parseDouble(string1);
+        double double2 = Double.parseDouble(string2);
+        double proportion = roundToSixDecimals(double1 / double2);
+        return String.valueOf(proportion);
+    }
+
+    private static double roundToSixDecimals(double value) {
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(6, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
+    @Nullable
+    private static String valueBySubstring(@NotNull List<String> lines, @NotNull String subString) {
+        List<String> matchLines = Lists.newArrayList();
+        for (String line : lines) {
+            if (line.contains(subString)) {
+                matchLines.add(line);
+            }
+        }
+        if (matchLines.size() == 1) {
+            return matchLines.get(0).split(" ")[0];
+        }
+        return null;
     }
 }

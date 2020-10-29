@@ -9,14 +9,17 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DoidLogicalDefinitionAxioms {
+public abstract class DoidGraphMetaData {
 
-    @NotNull
-    public abstract String definedClassId();
+    @Nullable
+    public abstract List<String> subsets();
 
-    @NotNull
-    public abstract List<String> genusIds();
+    @Nullable
+    public abstract List<DoidXref> xrefs();
 
-    @NotNull
-    public abstract List<DoidRestriction> restrictions();
+    @Nullable
+    public abstract List<DoidBasicPropertyValue> basicPropertyValues();
+
+    @Nullable
+    public abstract String version();
 }
