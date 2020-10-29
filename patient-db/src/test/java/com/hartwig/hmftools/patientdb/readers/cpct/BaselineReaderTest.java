@@ -18,7 +18,7 @@ public class BaselineReaderTest {
     public void canReadEmptyBaselineInfo() {
         Map<Integer, String> hospitals = Maps.newHashMap();
         BaselineReader baselineReader =
-                new BaselineReader(TestCuratorFactory.tumorLocationCurator(), TestCuratorFactory.tumorLocationV2Curator(), hospitals);
+                new BaselineReader(TestCuratorFactory.tumorLocationV2Curator(), hospitals);
 
         EcrfPatient cpctPatient = new EcrfPatient("patient", Maps.newHashMap(), Lists.newArrayList());
         BaselineData baselineData = baselineReader.read(cpctPatient);

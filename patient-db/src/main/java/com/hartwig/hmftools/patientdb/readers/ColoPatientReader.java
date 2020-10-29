@@ -3,10 +3,8 @@ package com.hartwig.hmftools.patientdb.readers;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocationV2;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.Patient;
@@ -23,16 +21,12 @@ public class ColoPatientReader {
 
         String patientId = isColo829 ? "COLO829" : Strings.EMPTY;
 
-        CuratedTumorLocation curatedTumorLocation = isColo829
-                ? ImmutableCuratedTumorLocation.of("Skin", "Melanoma", Strings.EMPTY)
-                : ImmutableCuratedTumorLocation.of(Strings.EMPTY, Strings.EMPTY, Strings.EMPTY);
-
         CuratedTumorLocationV2 curatedTumorLocationV2 = isColo829
                 ? ImmutableCuratedTumorLocationV2.builder().primaryTumorLocation("Skin").primaryTumorType("Melanoma").build()
                 : ImmutableCuratedTumorLocationV2.builder().build();
 
         return new Patient(patientId,
-                toBaselineData(curatedTumorLocation, curatedTumorLocationV2),
+                toBaselineData(curatedTumorLocationV2),
                 noPreTreatmentData(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
@@ -44,7 +38,7 @@ public class ColoPatientReader {
     }
 
     @NotNull
-    private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation,
+    private static BaselineData toBaselineData(
             @NotNull CuratedTumorLocationV2 curatedTumorLocationV2) {
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
@@ -52,7 +46,6 @@ public class ColoPatientReader {
                 .gender(null)
                 .hospital(null)
                 .birthYear(null)
-                .curatedTumorLocation(curatedTumorLocation)
                 .curatedTumorLocationV2(curatedTumorLocationV2)
                 .deathDate(null)
                 .demographyStatus(FormStatus.undefined())

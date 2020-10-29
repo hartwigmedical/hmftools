@@ -7,10 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocationV2;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2File;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -26,12 +23,6 @@ final class DumpTumorLocationData {
     private static final Logger LOGGER = LogManager.getLogger(DumpTumorLocationData.class);
 
     private DumpTumorLocationData() {
-    }
-
-    static void writeCuratedTumorLocationsToTSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
-        List<PatientTumorLocation> tumorLocations = toPatientTumorLocations(patients);
-        PatientTumorLocationFile.writeRecordsTSV(outputFile, tumorLocations);
-        LOGGER.info(" Written {} tumor locations to {}", tumorLocations.size(), outputFile);
     }
 
     static void writeCuratedTumorLocationsV2ToTSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
@@ -70,16 +61,5 @@ final class DumpTumorLocationData {
             doids.add(doidNode.doid());
         }
         return doids;
-    }
-
-    @NotNull
-    private static List<PatientTumorLocation> toPatientTumorLocations(@NotNull Collection<Patient> patients) {
-        return patients.stream()
-                .map(patient -> ImmutablePatientTumorLocation.builder()
-                        .patientIdentifier(patient.patientIdentifier())
-                        .primaryTumorLocation(Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().primaryTumorLocation()))
-                        .cancerSubtype(Strings.nullToEmpty(patient.baselineData().curatedTumorLocation().subType()))
-                        .build())
-                .collect(Collectors.toList());
     }
 }

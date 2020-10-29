@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsCoreCohort;

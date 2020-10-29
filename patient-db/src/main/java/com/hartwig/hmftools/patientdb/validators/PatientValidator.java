@@ -57,7 +57,7 @@ public final class PatientValidator {
     @VisibleForTesting
     static List<ValidationFinding> validateBaselineData(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         List<ValidationFinding> findings = Lists.newArrayList();
-        if (baselineData.curatedTumorLocation().searchTerm() == null) {
+        if (baselineData.curatedTumorLocationV2().searchTerm() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     "Primary tumor location empty",
@@ -295,8 +295,8 @@ public final class PatientValidator {
     @VisibleForTesting
     static List<ValidationFinding> validateTumorLocationCuration(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         List<ValidationFinding> findings = Lists.newArrayList();
-        String searchTermV1 = baselineData.curatedTumorLocation().searchTerm();
-        if (searchTermV1 != null && !searchTermV1.isEmpty() && baselineData.curatedTumorLocation().primaryTumorLocation() == null) {
+        String searchTermV1 = baselineData.curatedTumorLocationV2().searchTerm();
+        if (searchTermV1 != null && !searchTermV1.isEmpty() && baselineData.curatedTumorLocationV2().primaryTumorLocation() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientIdentifier,
                     "Failed to curate primary tumor location",

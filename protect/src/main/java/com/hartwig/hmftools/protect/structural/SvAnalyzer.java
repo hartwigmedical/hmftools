@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -22,7 +21,7 @@ public final class SvAnalyzer {
 
     @NotNull
     public static SvAnalysis run(@NotNull LinxData linxData, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation) {
+            @Nullable PatientTumorLocationV2 patientTumorLocation) {
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<LinxFusion, List<EvidenceItem>> evidencePerFusion =
                 actionabilityAnalyzer.evidenceForFusions(linxData.fusions(), primaryTumorLocation);

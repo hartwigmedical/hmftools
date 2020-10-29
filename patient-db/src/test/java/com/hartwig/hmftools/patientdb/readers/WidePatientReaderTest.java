@@ -79,7 +79,6 @@ public class WidePatientReaderTest {
                 .build();
 
         WidePatientReader patientReader = new WidePatientReader(wideEcrfModel,
-                TestCuratorFactory.tumorLocationCurator(),
                 TestCuratorFactory.tumorLocationV2Curator(),
                 TestCuratorFactory.treatmentCurator());
 

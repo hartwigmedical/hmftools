@@ -29,9 +29,6 @@ public abstract class BaselineData {
     public abstract Integer birthYear();
 
     @NotNull
-    public abstract CuratedTumorLocation curatedTumorLocation();
-
-    @NotNull
     public abstract CuratedTumorLocationV2 curatedTumorLocationV2();
 
     @Nullable
