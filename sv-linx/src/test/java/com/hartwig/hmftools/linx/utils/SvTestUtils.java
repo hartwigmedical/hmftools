@@ -217,7 +217,7 @@ public class SvTestUtils
             boolean biallelic, double minCopyNumber)
     {
         LikelihoodMethod method;
-        if(type == DriverType.AMP)
+        if(type == DriverType.AMP || type == DriverType.PARTIAL_AMP)
             method = LikelihoodMethod.AMP;
         else if(type == DriverType.DEL)
             method = LikelihoodMethod.DEL;

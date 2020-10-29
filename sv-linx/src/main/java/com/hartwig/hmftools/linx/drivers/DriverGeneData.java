@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
@@ -40,7 +41,7 @@ public class DriverGeneData
 
     public boolean fullyMatched()
     {
-        if(DriverData.driver() == AMP)
+        if(DriverData.driver() == AMP || DriverData.driver() == DriverType.PARTIAL_AMP)
             return !mEvents.isEmpty();
 
         if(DriverData.driver() == DEL)
