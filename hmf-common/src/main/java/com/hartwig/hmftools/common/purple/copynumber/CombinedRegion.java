@@ -63,6 +63,8 @@ public interface CombinedRegion extends GenomeRegion {
 
     void setInferredTumorBAF(double baf);
 
+    void resetDepthWindowCount();
+
     @NotNull
     SegmentSupport germlineEndSupport();
 

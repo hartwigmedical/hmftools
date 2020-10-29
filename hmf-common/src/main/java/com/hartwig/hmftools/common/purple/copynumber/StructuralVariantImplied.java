@@ -84,6 +84,7 @@ class StructuralVariantImplied {
 
     private void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region,
             @NotNull final Optional<StructuralVariantLegPloidy> start, @NotNull final Optional<StructuralVariantLegPloidy> end) {
+        region.resetDepthWindowCount();
         region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, inferCopyNumberFromStructuralVariants(start, end));
     }
 

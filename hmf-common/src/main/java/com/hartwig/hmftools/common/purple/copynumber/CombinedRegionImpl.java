@@ -185,6 +185,11 @@ class CombinedRegionImpl implements CombinedRegion {
         combined.setObservedBAF(0);
     }
 
+    @Override
+    public void resetDepthWindowCount() {
+        combined.setDepthWindowCount(0);
+    }
+
     private double weightedAverage(long currentWeight, double currentValue, long newWeight, double newValue) {
         if (Doubles.isZero(currentValue)) {
             return newValue;
