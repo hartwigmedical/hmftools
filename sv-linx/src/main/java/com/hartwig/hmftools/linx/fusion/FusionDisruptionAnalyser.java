@@ -82,7 +82,6 @@ public class FusionDisruptionAnalyser
     private final FusionParameters mFusionParams;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
-    private boolean mLogRepeatedGenePairs;
     private List<String> mRestrictedGenes;
     private boolean mFindNeoEpitopes;
 
@@ -99,7 +98,6 @@ public class FusionDisruptionAnalyser
     public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
     public static final String LOG_ALL_POTENTIALS = "log_all_potential_fusions";
-    public static final String LOG_REPEAT_GENE_PAIRS = "log_repeat_gene_pairs";
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
     public static final String NEO_EPITOPES = "neo_epitopes";
@@ -123,7 +121,6 @@ public class FusionDisruptionAnalyser
         mInvalidFusions = Maps.newHashMap();
         mLogReportableOnly = false;
         mLogAllPotentials = false;
-        mLogRepeatedGenePairs = false;
         mFindNeoEpitopes = false;
         mFusionParams = new FusionParameters();
         mFusionParams.RequireUpstreamBiotypes = true;
@@ -151,7 +148,6 @@ public class FusionDisruptionAnalyser
 
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
         options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
-        options.addOption(LOG_REPEAT_GENE_PAIRS, false, "Log sme gene-pair repeatedly if supported by different SVs");
         options.addOption(LOG_INVALID_REASONS, false, "Log reasons for not making a fusion between transcripts");
     }
 
@@ -182,7 +178,6 @@ public class FusionDisruptionAnalyser
         mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
         mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
         mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
-        mLogRepeatedGenePairs = cmdLineArgs.hasOption(LOG_REPEAT_GENE_PAIRS);
 
         if(cmdLineArgs.hasOption(LOG_INVALID_REASONS))
         {
