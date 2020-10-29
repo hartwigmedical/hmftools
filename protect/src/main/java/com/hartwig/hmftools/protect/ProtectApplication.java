@@ -94,7 +94,7 @@ public class ProtectApplication implements AutoCloseable {
         String tumorSampleId = protectConfig.tumorSampleId();
         LOGGER.info("Running PROTECT for {}", tumorSampleId);
 
-        PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsvV1(), tumorSampleId);
+        PatientTumorLocationV2 patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsvV2(), tumorSampleId);
         LOGGER.info("Creating deprecated actionability analyzer from {}", protectConfig.deprecatedActionabilityDir());
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(protectConfig.deprecatedActionabilityDir());
         LOGGER.info("Creating germline reporting model from {}", protectConfig.germlineGenesCsv());
@@ -179,12 +179,12 @@ public class ProtectApplication implements AutoCloseable {
     }
 
     @Nullable
-    private static PatientTumorLocation loadPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String tumorSampleId)
+    private static PatientTumorLocationV2 loadPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String tumorSampleId)
             throws IOException {
-        List<PatientTumorLocation> patientTumorLocationList = PatientTumorLocationFile.readRecordsTSV(tumorLocationTsv);
+        List<PatientTumorLocationV2> patientTumorLocationList = PatientTumorLocationV2File.read(tumorLocationTsv);
         LOGGER.info("Loaded {} patient tumor locations from {}", patientTumorLocationList.size(), tumorLocationTsv);
-        PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocationList, tumorSampleId);
+        PatientTumorLocationV2 patientTumorLocation =
+                PatientTumorLocationV2Functions.findTumorLocationForSample(patientTumorLocationList, tumorSampleId);
         LOGGER.info(" Resolved tumor location to '{}' for {}", patientTumorLocation, tumorSampleId);
         return patientTumorLocation;
     }

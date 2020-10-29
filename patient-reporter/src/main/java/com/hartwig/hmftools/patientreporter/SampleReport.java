@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
@@ -21,7 +22,7 @@ public abstract class SampleReport {
     public abstract SampleMetadata sampleMetadata();
 
     @Nullable
-    public abstract PatientTumorLocation patientTumorLocation();
+    public abstract PatientTumorLocationV2 patientTumorLocation();
 
     @Nullable
     public abstract LocalDate refArrivalDate();
@@ -89,15 +90,31 @@ public abstract class SampleReport {
     @NotNull
     @Value.Derived
     public String primaryTumorLocationString() {
-        PatientTumorLocation type = patientTumorLocation();
-        return type != null ? type.primaryTumorLocation() : Strings.EMPTY;
+        PatientTumorLocationV2 type = patientTumorLocation();
+        if (type != null) {
+            if (!type.primaryTumorSubLocation().equals(Strings.EMPTY)) {
+                return type.primaryTumorLocation() + " (" + type.primaryTumorSubLocation() + ")";
+            } else {
+                return type.primaryTumorLocation();
+            }
+        } else {
+            return Strings.EMPTY;
+        }
     }
 
     @NotNull
     @Value.Derived
     public String cancerSubTypeString() {
-        PatientTumorLocation type = patientTumorLocation();
-        return type != null ? type.cancerSubtype() : Strings.EMPTY;
+        PatientTumorLocationV2 type = patientTumorLocation();
+        if (type != null){
+            if (!type.primaryTumorSubType().equals(Strings.EMPTY)) {
+                return type.primaryTumorSubType();
+            } else {
+                return type.primaryTumorType();
+            }
+        } else {
+            return Strings.EMPTY;
+        }
     }
 
     @NotNull

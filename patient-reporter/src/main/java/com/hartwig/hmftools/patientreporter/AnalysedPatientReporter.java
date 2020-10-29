@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2Functions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
@@ -39,8 +41,8 @@ class AnalysedPatientReporter {
             @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile, @Nullable String comments,
             boolean correctedReport) throws IOException {
-        PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findTumorLocationForSample(reportData.patientTumorLocations(),
+        PatientTumorLocationV2 patientTumorLocation =
+                PatientTumorLocationV2Functions.findTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);

@@ -6,7 +6,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocationV2;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
@@ -54,8 +56,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
-        AnalysedPatientReport colo829Report =
-                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED);
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -221,7 +222,14 @@ public class CFReportWriterTest {
 
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
-                .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY, "Skin", "Melanoma"))
+                .patientTumorLocation(ImmutablePatientTumorLocationV2.of(Strings.EMPTY,
+                        "Skin",
+                        "",
+                        "Melanoma",
+                        "",
+                        "",
+                        Lists.newArrayList("1;2"),
+                        false))
                 .refArrivalDate(LocalDate.parse("10-Jan-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(shallowSeqPurity)
