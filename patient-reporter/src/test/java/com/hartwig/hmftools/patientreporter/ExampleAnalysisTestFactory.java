@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
-import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocationV2;
+import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
@@ -257,7 +257,7 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
-                .patientTumorLocation(ImmutablePatientTumorLocationV2.of(Strings.EMPTY,
+                .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY,
                         "Skin",
                         "",
                         "Melanoma",

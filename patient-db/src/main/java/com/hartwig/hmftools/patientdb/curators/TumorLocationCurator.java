@@ -11,10 +11,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocationV2;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,19 +21,19 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TumorLocationCuratorV2 implements CleanableCurator {
-    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCuratorV2.class);
+public class TumorLocationCurator implements CleanableCurator {
+    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurator.class);
 
     private static final String FIELD_DELIMITER = "\t";
     private static final String DOID_DELIMITER = ";";
 
     @NotNull
-    private final Map<String, CuratedTumorLocationV2> tumorLocationMap = Maps.newHashMap();
+    private final Map<String, CuratedTumorLocation> tumorLocationMap = Maps.newHashMap();
     @NotNull
     private final Set<String> unusedSearchTerms;
 
-    public TumorLocationCuratorV2(@NotNull String tumorLocationV2MappingTsv, @NotNull List<DoidNode> doidNodes) throws IOException {
-        List<String> lines = Files.readAllLines(new File(tumorLocationV2MappingTsv).toPath());
+    public TumorLocationCurator(@NotNull String tumorLocationMappingTsv, @NotNull List<DoidNode> doidNodes) throws IOException {
+        List<String> lines = Files.readAllLines(new File(tumorLocationMappingTsv).toPath());
 
         // Skip header
         for (String line : lines.subList(1, lines.size())) {
@@ -48,7 +47,7 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
             List<String> doids = parts.length > 6 ? Lists.newArrayList(parts[6].split(DOID_DELIMITER)) : Lists.newArrayList();
 
             tumorLocationMap.put(searchTerm,
-                    ImmutableCuratedTumorLocationV2.builder()
+                    ImmutableCuratedTumorLocation.builder()
                             .primaryTumorLocation(primaryTumorLocation)
                             .primaryTumorSubLocation(primaryTumorSubLocation)
                             .primaryTumorType(primaryTumorType)
@@ -80,17 +79,17 @@ public class TumorLocationCuratorV2 implements CleanableCurator {
     }
 
     @NotNull
-    public CuratedTumorLocationV2 search(@Nullable String searchTerm) {
+    public CuratedTumorLocation search(@Nullable String searchTerm) {
         if (searchTerm != null && !searchTerm.isEmpty()) {
             unusedSearchTerms.remove(searchTerm);
-            CuratedTumorLocationV2 result = tumorLocationMap.get(searchTerm);
+            CuratedTumorLocation result = tumorLocationMap.get(searchTerm);
 
             if (result != null) {
                 return result;
             }
         }
 
-        return ImmutableCuratedTumorLocationV2.builder().searchTerm(searchTerm).build();
+        return ImmutableCuratedTumorLocation.builder().searchTerm(searchTerm).build();
     }
 
     @NotNull

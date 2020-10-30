@@ -10,19 +10,19 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class PatientTumorLocationV2Functions {
+public final class PatientTumorLocationFunctions {
 
-    private static final Logger LOGGER = LogManager.getLogger(PatientTumorLocationV2Functions.class);
+    private static final Logger LOGGER = LogManager.getLogger(PatientTumorLocationFunctions.class);
 
-    private PatientTumorLocationV2Functions() {
+    private PatientTumorLocationFunctions() {
     }
 
     @Nullable
-    public static PatientTumorLocationV2 findTumorLocationForSample(@NotNull List<PatientTumorLocationV2> patientTumorLocations,
+    public static PatientTumorLocation findTumorLocationForSample(@NotNull List<PatientTumorLocation> patientTumorLocations,
             @NotNull String sample) {
         String patientIdentifier = toPatientIdentifier(sample);
 
-        List<PatientTumorLocationV2> matchingIdTumorLocations = patientTumorLocations.stream()
+        List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
                 .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
                 .collect(Collectors.toList());
 

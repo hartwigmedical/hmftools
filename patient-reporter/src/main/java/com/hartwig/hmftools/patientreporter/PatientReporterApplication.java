@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2File;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
@@ -146,7 +146,7 @@ public class PatientReporterApplication {
     private static QCFailReportData buildBaseReportData(@NotNull PatientReporterConfig config) throws IOException {
         String tumorLocationTsv = config.tumorLocationTsv();
 
-        List<PatientTumorLocationV2> patientTumorLocations = PatientTumorLocationV2File.read(tumorLocationTsv);
+        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.read(tumorLocationTsv);
         LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationTsv);
 
         String limsDirectory = config.limsDir();

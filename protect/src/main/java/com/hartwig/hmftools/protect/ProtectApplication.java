@@ -11,9 +11,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItemFile;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2File;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2Functions;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -91,7 +91,7 @@ public class ProtectApplication implements AutoCloseable {
         String tumorSampleId = protectConfig.tumorSampleId();
         LOGGER.info("Running PROTECT for {}", tumorSampleId);
 
-        PatientTumorLocationV2 patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsvV2(), tumorSampleId);
+        PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsv(), tumorSampleId);
         LOGGER.info("Creating deprecated actionability analyzer from {}", protectConfig.deprecatedActionabilityDir());
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(protectConfig.deprecatedActionabilityDir());
         LOGGER.info("Creating germline reporting model from {}", protectConfig.germlineGenesCsv());
@@ -126,11 +126,11 @@ public class ProtectApplication implements AutoCloseable {
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
         final DoidParents doidParent = new DoidParents(DiseaseOntology.readDoidJsonFile(config.doidJsonFile()).edges());
 
-        LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsvV2());
-        final List<PatientTumorLocationV2> tumorLocations = PatientTumorLocationV2File.read(config.tumorLocationTsvV2());
+        LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsv());
+        final List<PatientTumorLocation> tumorLocations = PatientTumorLocationFile.read(config.tumorLocationTsv());
         @Nullable
-        PatientTumorLocationV2 sampleTumorLocation =
-                PatientTumorLocationV2Functions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
+        PatientTumorLocation sampleTumorLocation =
+                PatientTumorLocationFunctions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
         if (sampleTumorLocation == null) {
             result.add(PAN_CANCER_DOID);
             return result;
@@ -176,12 +176,12 @@ public class ProtectApplication implements AutoCloseable {
     }
 
     @Nullable
-    private static PatientTumorLocationV2 loadPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String tumorSampleId)
+    private static PatientTumorLocation loadPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String tumorSampleId)
             throws IOException {
-        List<PatientTumorLocationV2> patientTumorLocationList = PatientTumorLocationV2File.read(tumorLocationTsv);
+        List<PatientTumorLocation> patientTumorLocationList = PatientTumorLocationFile.read(tumorLocationTsv);
         LOGGER.info("Loaded {} patient tumor locations from {}", patientTumorLocationList.size(), tumorLocationTsv);
-        PatientTumorLocationV2 patientTumorLocation =
-                PatientTumorLocationV2Functions.findTumorLocationForSample(patientTumorLocationList, tumorSampleId);
+        PatientTumorLocation patientTumorLocation =
+                PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocationList, tumorSampleId);
         LOGGER.info(" Resolved tumor location to '{}' for {}", patientTumorLocation, tumorSampleId);
         return patientTumorLocation;
     }

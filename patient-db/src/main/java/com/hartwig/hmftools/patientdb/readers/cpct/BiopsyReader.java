@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +38,7 @@ class BiopsyReader {
     }
 
     @NotNull
-    List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedTumorLocationV2 curatedTumorLocation) {
+    List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedTumorLocation curatedTumorLocation) {
         List<BiopsyData> biopsies = Lists.newArrayList();
         for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS)) {
@@ -64,13 +64,8 @@ class BiopsyReader {
                             finalSite,
                             location);
 
-                    BiopsyData biopsy = BiopsyData.of(date,
-                            biopsyTaken,
-                            biopsyEvaluable,
-                            curatedBiopsyType,
-                            finalSite,
-                            location,
-                            form.status());
+                    BiopsyData biopsy =
+                            BiopsyData.of(date, biopsyTaken, biopsyEvaluable, curatedBiopsyType, finalSite, location, form.status());
 
                     // The ecrf contains many duplicate forms that are impossible to remove. This is because in the past a new biopsy
                     // form needed to be created for every treatment response.

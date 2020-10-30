@@ -20,7 +20,7 @@ public class DrupPatientReaderTest {
     @Test
     public void canReadEmptyPatient() {
         DrupPatientReader patientReader = new DrupPatientReader(
-                TestCuratorFactory.tumorLocationV2Curator(),
+                TestCuratorFactory.tumorLocationCurator(),
                 TestCuratorFactory.biopsySiteCurator());
 
         EcrfPatient ecrfPatient = new EcrfPatient("empty", Maps.newHashMap(), Lists.newArrayList());

@@ -11,27 +11,27 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PatientTumorLocationV2File {
+public class PatientTumorLocationFile {
 
     private static final String TAB_DELIMITER = "\t";
     private static final String DOID_DELIMITER = ";";
 
-    private PatientTumorLocationV2File() {
+    private PatientTumorLocationFile() {
     }
 
     @NotNull
-    public static List<PatientTumorLocationV2> read(@NotNull String filePath) throws IOException {
+    public static List<PatientTumorLocation> read(@NotNull String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
     @NotNull
     @VisibleForTesting
-    static List<PatientTumorLocationV2> fromLines(@NotNull List<String> lines) {
-        List<PatientTumorLocationV2> patientTumorLocations = Lists.newArrayList();
+    static List<PatientTumorLocation> fromLines(@NotNull List<String> lines) {
+        List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
         // Skip header
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(TAB_DELIMITER);
-            patientTumorLocations.add(ImmutablePatientTumorLocationV2.builder()
+            patientTumorLocations.add(ImmutablePatientTumorLocation.builder()
                     .patientIdentifier(parts[0])
                     .primaryTumorLocation(parts[1])
                     .primaryTumorSubLocation(parts[2])
@@ -46,16 +46,16 @@ public class PatientTumorLocationV2File {
         return patientTumorLocations;
     }
 
-    public static void write(@NotNull String outputPath, @NotNull List<PatientTumorLocationV2> patientTumorLocations) throws IOException {
+    public static void write(@NotNull String outputPath, @NotNull List<PatientTumorLocation> patientTumorLocations) throws IOException {
         Files.write(new File(outputPath).toPath(), toLines(patientTumorLocations));
     }
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull List<PatientTumorLocationV2> patientTumorLocations) {
+    static List<String> toLines(@NotNull List<PatientTumorLocation> patientTumorLocations) {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
-        for (PatientTumorLocationV2 patientTumorLocation : patientTumorLocations) {
+        for (PatientTumorLocation patientTumorLocation : patientTumorLocations) {
             lines.add(toString(patientTumorLocation));
         }
         return lines;
@@ -75,7 +75,7 @@ public class PatientTumorLocationV2File {
     }
 
     @NotNull
-    private static String toString(@NotNull PatientTumorLocationV2 patientTumorLocation) {
+    private static String toString(@NotNull PatientTumorLocation patientTumorLocation) {
         return new StringJoiner(TAB_DELIMITER).add(patientTumorLocation.patientIdentifier())
                 .add(patientTumorLocation.primaryTumorLocation())
                 .add(patientTumorLocation.primaryTumorSubLocation())
