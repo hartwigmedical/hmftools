@@ -18,7 +18,7 @@ public final class TumorLocationAndTypeTable {
         table.setWidth(width);
 
         table.addCell(TableUtil.createLayoutCell().add(new Paragraph("PRIMARY TUMOR LOCATION").addStyle(ReportResources.subTextStyle())));
-        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("CANCER SUBTYPE").addStyle(ReportResources.subTextStyle())));
+        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("PRIMARY TUMOR TYPE").addStyle(ReportResources.subTextStyle())));
         table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(primaryTumorLocation)));
         table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(cancerSubType)));
 
