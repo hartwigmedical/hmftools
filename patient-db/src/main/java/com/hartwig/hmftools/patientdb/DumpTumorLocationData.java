@@ -47,7 +47,8 @@ final class DumpTumorLocationData {
                                 .primaryTumorExtraDetails()))
                         .doids(extractDoids(patient.baselineData().curatedTumorLocation().doidNodes()))
                         .isOverridden(false)
-                        .build()).collect(Collectors.toList());
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @NotNull

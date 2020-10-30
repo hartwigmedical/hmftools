@@ -108,8 +108,7 @@ public final class LoadClinicalData {
         }
 
         List<DoidNode> doidNodes = DiseaseOntology.readDoidJsonFile(cmd.getOptionValue(DOID_JSON)).nodes();
-        TumorLocationCurator tumorLocationCurator =
-                new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), doidNodes);
+        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), doidNodes);
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
@@ -132,11 +131,8 @@ public final class LoadClinicalData {
 
         EcrfModels ecrfModels = loadEcrfModels(cmd);
 
-        Map<String, Patient> patients = loadAndInterpretPatients(sampleDataPerPatient,
-                ecrfModels,
-                tumorLocationCurator,
-                biopsySiteCurator,
-                treatmentCurator);
+        Map<String, Patient> patients =
+                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
 
         LOGGER.info("Writing curated tumor locations");
         DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_V2_TSV), patients.values());
@@ -383,13 +379,11 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull EcrfModels ecrfModels,
-            @NotNull TumorLocationCurator tumorLocationCurator, @NotNull BiopsySiteCurator biopsySiteCurator,
-            @NotNull TreatmentCurator treatmentCurator) {
+            @NotNull EcrfModels ecrfModels, @NotNull TumorLocationCurator tumorLocationCurator,
+            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
-        EcrfPatientReader cpctPatientReader = new CpctPatientReader(
-                tumorLocationCurator,
+        EcrfPatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
                 biopsySiteCurator,
                 treatmentCurator);
@@ -405,10 +399,8 @@ public final class LoadClinicalData {
         LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
         LOGGER.info("Interpreting and curating data for WIDE patients");
-        Map<String, Patient> widePatients = readWidePatients(ecrfModels.wideModel(),
-                sampleDataPerPatient,
-                tumorLocationCurator,
-                treatmentCurator);
+        Map<String, Patient> widePatients =
+                readWidePatients(ecrfModels.wideModel(), sampleDataPerPatient, tumorLocationCurator, treatmentCurator);
         LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
         LOGGER.info("Interpreting and curating data for CORE patients");
@@ -438,12 +430,11 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> readWidePatients(@NotNull WideEcrfModel wideEcrfModel,
-            @NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull TumorLocationCurator tumorLocationCurator, @NotNull TreatmentCurator treatmentCurator) {
+            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull TumorLocationCurator tumorLocationCurator,
+            @NotNull TreatmentCurator treatmentCurator) {
         Map<String, Patient> patientMap = Maps.newHashMap();
 
-        WidePatientReader widePatientReader =
-                new WidePatientReader(wideEcrfModel, tumorLocationCurator, treatmentCurator);
+        WidePatientReader widePatientReader = new WidePatientReader(wideEcrfModel, tumorLocationCurator, treatmentCurator);
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
 

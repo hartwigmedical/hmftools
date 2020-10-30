@@ -62,8 +62,7 @@ class BaselineReader {
     @NotNull
     private final Map<Integer, String> hospitals;
 
-    public BaselineReader(
-            @NotNull final TumorLocationCurator tumorLocationCurator, @NotNull final Map<Integer, String> hospitals) {
+    public BaselineReader(@NotNull final TumorLocationCurator tumorLocationCurator, @NotNull final Map<Integer, String> hospitals) {
         this.tumorLocationCurator = tumorLocationCurator;
         this.hospitals = hospitals;
     }

@@ -64,13 +64,8 @@ class BiopsyReader {
                             finalSite,
                             location);
 
-                    BiopsyData biopsy = BiopsyData.of(date,
-                            biopsyTaken,
-                            biopsyEvaluable,
-                            curatedBiopsyType,
-                            finalSite,
-                            location,
-                            form.status());
+                    BiopsyData biopsy =
+                            BiopsyData.of(date, biopsyTaken, biopsyEvaluable, curatedBiopsyType, finalSite, location, form.status());
 
                     // The ecrf contains many duplicate forms that are impossible to remove. This is because in the past a new biopsy
                     // form needed to be created for every treatment response.

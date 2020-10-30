@@ -52,8 +52,7 @@ public class LoadClinicalDataTest {
         assertEquals(1, cpctEcrfModel.patientCount());
         assertEquals(1298, Lists.newArrayList(cpctEcrfModel.fields()).size());
 
-        EcrfPatientReader cpctPatientReader = new CpctPatientReader(
-                tumorLocationCurator,
+        EcrfPatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
                 biopsySiteCurator,
                 treatmentCurator);

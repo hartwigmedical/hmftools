@@ -21,8 +21,7 @@ public class CorePatientReader {
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
 
-    public CorePatientReader(
-            @NotNull final TumorLocationCurator tumorLocationCurator) {
+    public CorePatientReader(@NotNull final TumorLocationCurator tumorLocationCurator) {
         this.tumorLocationCurator = tumorLocationCurator;
     }
 
@@ -30,8 +29,7 @@ public class CorePatientReader {
     public Patient read(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
         return new Patient(patientIdentifier,
-                toBaselineData(
-                        tumorLocationCurator.search(limsPrimaryTumorLocation)),
+                toBaselineData(tumorLocationCurator.search(limsPrimaryTumorLocation)),
                 noPreTreatmentData(),
                 sequencedSamples,
                 Lists.newArrayList(),
@@ -43,8 +41,7 @@ public class CorePatientReader {
     }
 
     @NotNull
-    private static BaselineData toBaselineData(
-            @NotNull CuratedTumorLocation curatedTumorLocation) {
+    private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation) {
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)

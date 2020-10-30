@@ -40,8 +40,7 @@ class BaselineReader {
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
 
-    public BaselineReader(
-            @NotNull final TumorLocationCurator tumorLocationCurator) {
+    public BaselineReader(@NotNull final TumorLocationCurator tumorLocationCurator) {
         this.tumorLocationCurator = tumorLocationCurator;
     }
 

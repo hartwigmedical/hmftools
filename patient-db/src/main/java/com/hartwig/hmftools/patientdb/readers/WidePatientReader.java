@@ -50,8 +50,8 @@ public class WidePatientReader {
     @NotNull
     private final TreatmentCurator treatmentCurator;
 
-    public WidePatientReader(@NotNull final WideEcrfModel wideEcrfModel,
-            @NotNull final TumorLocationCurator tumorLocationCurator, @NotNull final TreatmentCurator treatmentCurator) {
+    public WidePatientReader(@NotNull final WideEcrfModel wideEcrfModel, @NotNull final TumorLocationCurator tumorLocationCurator,
+            @NotNull final TreatmentCurator treatmentCurator) {
         this.wideEcrfModel = wideEcrfModel;
         this.tumorLocationCurator = tumorLocationCurator;
         this.treatmentCurator = treatmentCurator;

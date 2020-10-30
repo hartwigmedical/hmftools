@@ -38,8 +38,7 @@ public class ColoPatientReader {
     }
 
     @NotNull
-    private static BaselineData toBaselineData(
-            @NotNull CuratedTumorLocation curatedTumorLocation) {
+    private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation) {
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)

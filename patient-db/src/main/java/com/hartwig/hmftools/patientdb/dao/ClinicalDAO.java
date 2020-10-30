@@ -158,7 +158,8 @@ class ClinicalDAO {
                         preTreatmentData.radiotherapyGiven(),
                         preTreatmentData.treatmentName(),
                         preTreatmentTypes,
-                        preTreatmentMechanism).execute();
+                        preTreatmentMechanism)
+                .execute();
 
         List<DoidNode> doidNodes = patient.curatedTumorLocation().doidNodes();
         if (doidNodes != null) {

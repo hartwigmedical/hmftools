@@ -37,9 +37,8 @@ public class CpctPatientReader implements EcrfPatientReader {
     @NotNull
     private final BiopsyTreatmentReader biopsyTreatmentReader;
 
-    public CpctPatientReader(@NotNull TumorLocationCurator tumorLocationCurator,
-            @NotNull Map<Integer, String> hospitals, @NotNull BiopsySiteCurator biopsySiteCurator,
-            @NotNull TreatmentCurator treatmentCurator) {
+    public CpctPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull Map<Integer, String> hospitals,
+            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
         this.baselineReader = new BaselineReader(tumorLocationCurator, hospitals);
         this.preTreatmentReader = new PreTreatmentReader(treatmentCurator);
         this.biopsyReader = new BiopsyReader(biopsySiteCurator);

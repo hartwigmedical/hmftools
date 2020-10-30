@@ -26,8 +26,7 @@ public class DrupPatientReader implements EcrfPatientReader {
     @NotNull
     private final BiopsyReader biopsyReader;
 
-    public DrupPatientReader(@NotNull TumorLocationCurator tumorLocationCurator,
-            @NotNull BiopsySiteCurator biopsySiteCurator) {
+    public DrupPatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull BiopsySiteCurator biopsySiteCurator) {
         this.baselineReader = new BaselineReader(tumorLocationCurator);
         this.biopsyReader = new BiopsyReader(biopsySiteCurator);
     }
