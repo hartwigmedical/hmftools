@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep17;
 import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep19;
 import org.jooq.Record;

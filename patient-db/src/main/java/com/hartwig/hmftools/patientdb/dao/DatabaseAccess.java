@@ -284,11 +284,6 @@ public class DatabaseAccess implements AutoCloseable {
         return structuralVariantFusionDAO.readViralInsertions(sample);
     }
 
-    @NotNull
-    public ChordAnalysis readChordAnalysis(@NotNull String sample) {
-        return chordDAO.readChordAnalysis(sample);
-    }
-
     public void writeCanonicalTranscripts(@NotNull String assembly, @NotNull List<CanonicalTranscript> transcripts) {
         canonicalTranscriptDAO.write(assembly, transcripts);
     }
