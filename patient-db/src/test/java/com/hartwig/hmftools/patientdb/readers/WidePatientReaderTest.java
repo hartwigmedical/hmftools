@@ -79,7 +79,7 @@ public class WidePatientReaderTest {
                 .build();
 
         WidePatientReader patientReader = new WidePatientReader(wideEcrfModel,
-                TestCuratorFactory.tumorLocationV2Curator(),
+                TestCuratorFactory.tumorLocationCurator(),
                 TestCuratorFactory.treatmentCurator());
 
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();

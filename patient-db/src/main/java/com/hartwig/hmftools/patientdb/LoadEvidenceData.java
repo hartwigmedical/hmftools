@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2File;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2Functions;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
@@ -146,11 +146,11 @@ public class LoadEvidenceData {
     @NotNull
     private static String extractPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String sampleId) throws IOException {
         LOGGER.info("Reading primary tumor location from {}", tumorLocationTsv);
-        List<PatientTumorLocationV2> patientTumorLocations = PatientTumorLocationV2File.read(tumorLocationTsv);
+        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.read(tumorLocationTsv);
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
-        PatientTumorLocationV2 patientTumorLocation =
-                PatientTumorLocationV2Functions.findTumorLocationForSample(patientTumorLocations, sampleId);
+        PatientTumorLocation patientTumorLocation =
+                PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocations, sampleId);
 
         String patientPrimaryTumorLocation = Strings.EMPTY;
         if (patientTumorLocation != null) {

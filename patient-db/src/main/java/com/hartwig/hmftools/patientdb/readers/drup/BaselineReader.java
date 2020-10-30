@@ -5,10 +5,10 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocationV2;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -38,17 +38,17 @@ class BaselineReader {
     private static final String FIELD_DEATH_DATE = "FLD.DEATHDTC";
 
     @NotNull
-    private final TumorLocationCuratorV2 tumorLocationCuratorV2;
+    private final TumorLocationCurator tumorLocationCurator;
 
     public BaselineReader(
-            @NotNull final TumorLocationCuratorV2 tumorLocationCuratorV2) {
-        this.tumorLocationCuratorV2 = tumorLocationCuratorV2;
+            @NotNull final TumorLocationCurator tumorLocationCurator) {
+        this.tumorLocationCurator = tumorLocationCurator;
     }
 
     @NotNull
     BaselineData read(@NotNull EcrfPatient patient) {
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
-                .curatedTumorLocationV2(ImmutableCuratedTumorLocationV2.builder().searchTerm(Strings.EMPTY).build())
+                .curatedTumorLocation(ImmutableCuratedTumorLocation.builder().searchTerm(Strings.EMPTY).build())
                 .demographyStatus(FormStatus.undefined())
                 .deathStatus(FormStatus.undefined())
                 .eligibilityStatus(FormStatus.undefined())
@@ -80,7 +80,7 @@ class BaselineReader {
                 if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
                     primaryTumorLocation = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 }
-                builder.curatedTumorLocationV2(tumorLocationCuratorV2.search(primaryTumorLocation));
+                builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
 
                 // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.informedConsentStatus(baselineForm.status());

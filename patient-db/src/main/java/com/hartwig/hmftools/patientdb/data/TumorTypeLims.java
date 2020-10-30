@@ -13,5 +13,5 @@ public abstract class TumorTypeLims {
     public abstract String patientId();
 
     @NotNull
-    public abstract CuratedTumorLocationV2 curatedTumorLocation();
+    public abstract CuratedTumorLocation curatedTumorLocation();
 }

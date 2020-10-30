@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCuratorV2;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocationV2;
+import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.Patient;
@@ -19,11 +19,11 @@ import org.jetbrains.annotations.Nullable;
 public class CorePatientReader {
 
     @NotNull
-    private final TumorLocationCuratorV2 tumorLocationCuratorV2;
+    private final TumorLocationCurator tumorLocationCurator;
 
     public CorePatientReader(
-            @NotNull final TumorLocationCuratorV2 tumorLocationCuratorV2) {
-        this.tumorLocationCuratorV2 = tumorLocationCuratorV2;
+            @NotNull final TumorLocationCurator tumorLocationCurator) {
+        this.tumorLocationCurator = tumorLocationCurator;
     }
 
     @NotNull
@@ -31,7 +31,7 @@ public class CorePatientReader {
             @NotNull List<SampleData> sequencedSamples) {
         return new Patient(patientIdentifier,
                 toBaselineData(
-                        tumorLocationCuratorV2.search(limsPrimaryTumorLocation)),
+                        tumorLocationCurator.search(limsPrimaryTumorLocation)),
                 noPreTreatmentData(),
                 sequencedSamples,
                 Lists.newArrayList(),
@@ -44,14 +44,14 @@ public class CorePatientReader {
 
     @NotNull
     private static BaselineData toBaselineData(
-            @NotNull CuratedTumorLocationV2 curatedTumorLocationV2) {
+            @NotNull CuratedTumorLocation curatedTumorLocation) {
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)
                 .gender(null)
                 .hospital(null)
                 .birthYear(null)
-                .curatedTumorLocationV2(curatedTumorLocationV2)
+                .curatedTumorLocation(curatedTumorLocation)
                 .deathDate(null)
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CuratedTumorLocationV2 {
+public abstract class CuratedTumorLocation {
 
     @Nullable
     public abstract String searchTerm();

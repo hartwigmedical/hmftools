@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
@@ -31,7 +31,7 @@ public class GenomicAnalyzerTest {
         GenomicAnalyzer analyzer =
                 new GenomicAnalyzer(ProtectTestFactory.loadTestActionabilityAnalyzer(), new GermlineReportingModel(Maps.newHashMap()));
 
-        PatientTumorLocationV2 patientTumorLocation = null;
+        PatientTumorLocation patientTumorLocation = null;
         boolean reportViralInsertions = true;
 
         assertNotNull(analyzer.run("sample",

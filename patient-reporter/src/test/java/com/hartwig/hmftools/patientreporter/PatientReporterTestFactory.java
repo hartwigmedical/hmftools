@@ -6,7 +6,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationV2;
+import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
@@ -42,7 +42,7 @@ public final class PatientReporterTestFactory {
 
     @NotNull
     public static ReportData loadTestReportData() {
-        List<PatientTumorLocationV2> patientTumorLocations = Lists.newArrayList();
+        List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
         Lims lims = LimsFactory.empty();
 
         return ImmutableQCFailReportData.of(patientTumorLocations, lims, SIGNATURE_PATH, RVA_LOGO_PATH, COMPANY_LOGO_PATH);
