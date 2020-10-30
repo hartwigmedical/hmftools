@@ -7,12 +7,6 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERT
 
 import java.util.List;
 
-import org.apache.commons.compress.utils.Lists;
-
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-
 public class SglMapping
 {
     public final String Chromosome;

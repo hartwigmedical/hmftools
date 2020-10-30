@@ -17,5 +17,5 @@ public enum ReportableReason
     CHAIN_TERMINATED,
     INVALID_TRAVERSAL,
     CHAIN_LINKS,
-    PROTEIN_DOMAINS;
+    PROTEIN_DOMAINS
 }

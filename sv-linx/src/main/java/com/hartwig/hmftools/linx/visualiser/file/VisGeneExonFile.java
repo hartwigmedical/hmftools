@@ -115,14 +115,14 @@ public class VisGeneExonFile
 
         return new VisGeneExonFile(
                 values[index++],
-                Integer.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
                 values[index++],
                 values[index++],
                 values[index++],
                 values[index++],
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]));
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]));
     }
 
 }

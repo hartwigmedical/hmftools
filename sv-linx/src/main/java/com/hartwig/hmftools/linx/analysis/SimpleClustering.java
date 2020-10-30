@@ -5,6 +5,9 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
@@ -12,6 +15,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.HIGH_JCN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH;
@@ -19,21 +24,16 @@ import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LONG_DEL_DUP_INV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.MAJOR_ALLELE_JCN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.PROXIMITY;
-import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
-import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.linx.types.LinxConstants.ADJACENT_JCN_RATIO;
 import static com.hartwig.hmftools.linx.types.LinxConstants.HIGH_JCN_THRESHOLD;
-import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.LOW_JCN_THRESHOLD;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_MERGE_DISTANCE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -799,7 +799,7 @@ public class SimpleClustering
     protected static boolean variantsHaveDifferentJcn(final SvVarData var1, final SvVarData var2)
     {
         // We identify high confidence subclonal variants using the uncertainty bounds, using the threshold of maximum ploidy < 0.75.
-        // Clonal and subclonal variants are unlikely to have occured at the same time and hence all subclonal variants are excluded from
+        // Clonal and subclonal variants are unlikely to have occurred at the same time and hence all subclonal variants are excluded from
         // clustering with any variant that does not overlap in ploidy uncertainty and does not have a ploidy within 0.5 of the subclonal
         // variants. Proximity clustering is still allowed, since the ploidy estimates for proximate variants are more uncertain.
         boolean var1IsLowJcn = var1.jcn() < LOW_JCN_THRESHOLD;

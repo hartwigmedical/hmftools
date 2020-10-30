@@ -7,18 +7,18 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RAN
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.extractTranscriptExonData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.getProteinDomainPositions;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.setAlternativeTranscriptPhasings;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.Transcript.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.Transcript.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -29,10 +29,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.GeneTestUtils;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.Transcript;
 
 import org.junit.Test;
 
@@ -295,8 +295,8 @@ public class GeneCollectionTest
         int[] exonStarts = new int[]{100, 200, 300, 400, 500};
 
         // coding taking up exactly the first exon
-        Integer codingStart = new Integer(100);
-        Integer codingEnd = new Integer(110);
+        Integer codingStart = 100;
+        Integer codingEnd = 110;
 
         TranscriptData transData = createTransExons(
                 geneId, transId++, POS_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
@@ -315,8 +315,8 @@ public class GeneCollectionTest
         assertEquals(8, trans.totalCodingBases());
 
         //
-        codingStart = new Integer(105);
-        codingEnd = new Integer(405);
+        codingStart = 105;
+        codingEnd = 405;
 
         transData = createTransExons(
                 geneId, transId++, POS_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
@@ -341,8 +341,8 @@ public class GeneCollectionTest
         GeneAnnotation geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, chromosome, 0, POS_ORIENT);
 
         // coding taking up exactly the first exon
-        codingStart = new Integer(500);
-        codingEnd = new Integer(510);
+        codingStart = 500;
+        codingEnd = 510;
 
         transData = createTransExons(
                 geneId, transId++, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
@@ -361,8 +361,8 @@ public class GeneCollectionTest
         assertEquals(8, trans.totalCodingBases());
 
         //
-        codingStart = new Integer(205);
-        codingEnd = new Integer(505);
+        codingStart = 205;
+        codingEnd = 505;
 
         transData = createTransExons(
                 geneId, transId++, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);

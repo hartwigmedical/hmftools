@@ -6,17 +6,15 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.linx.analysis.FoldbackFinder;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 import org.junit.Test;
-
-import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class FoldbackTest
 {

@@ -11,11 +11,11 @@ public class SimConfig {
     final public boolean SeedRandom;
     final public boolean ApplyNoise;
 
-    public static String SIG_FACTOR_FILENAME = "sig_factors_file";
-    public static String SIGNATURES_FILENAME = "signature_file";
-    public static String SIM_SAMPLE_COUNT = "sim_sample_count";
-    public static String SIM_RANDOM_SEED = "sim_seed_random";
-    public static String SIM_APPLY_NOISE = "sim_apply_noise";
+    public static final String SIG_FACTOR_FILENAME = "sig_factors_file";
+    public static final String SIGNATURES_FILENAME = "signature_file";
+    public static final String SIM_SAMPLE_COUNT = "sim_sample_count";
+    public static final String SIM_RANDOM_SEED = "sim_seed_random";
+    public static final String SIM_APPLY_NOISE = "sim_apply_noise";
 
     public static void addCmdLineArgs(Options options)
     {

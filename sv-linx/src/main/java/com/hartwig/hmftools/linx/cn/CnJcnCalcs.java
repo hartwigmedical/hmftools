@@ -7,9 +7,9 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.util.List;
@@ -30,11 +30,11 @@ public class CnJcnCalcs
     private final Map<Integer,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
     private final List<StructuralVariantData> mSvDataList;
 
-    private static double ABS_UNCERTAINTY = 0.15;
-    private static double RELATIVE_UNCERTAINTY = 0.10;
-    private static double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
-    private static double ADDITIONAL_REL_UNCERTAINTY = 0.15;
-    private static double PROPORTION_CNCHANGE_USED_IN_JCN_UNC = 0.5;
+    private static final double ABS_UNCERTAINTY = 0.15;
+    private static final double RELATIVE_UNCERTAINTY = 0.10;
+    private static final double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
+    private static final double ADDITIONAL_REL_UNCERTAINTY = 0.15;
+    private static final double PROPORTION_CNCHANGE_USED_IN_JCN_UNC = 0.5;
 
     public CnJcnCalcs(
             final Map<String,List<SvCNData>> chrCnDataMap,
@@ -128,8 +128,8 @@ public class CnJcnCalcs
         }
     }
 
-    private static double POIS_PROB_LOW = 0.005;
-    private static double POIS_PROB_HIGH = 0.995;
+    private static final double POIS_PROB_LOW = 0.005;
+    private static final double POIS_PROB_HIGH = 0.995;
 
     public static JcnCalcData calcAdjustedJcnValues(double cnChgStart, double cnChgEnd,
             int tumorReadCount, double jcn, double maxCNStart, double maxCNEnd, final int[] startDepthData, final int[] endDepthData)

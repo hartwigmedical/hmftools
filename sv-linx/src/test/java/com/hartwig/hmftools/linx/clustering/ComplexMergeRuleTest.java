@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 
 import static org.junit.Assert.assertEquals;
 
+import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
@@ -31,8 +32,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class ComplexMergeRuleTest
@@ -198,7 +197,7 @@ public class ComplexMergeRuleTest
 
         SvCluster mainCluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2, var4));
 
-        assertTrue(mainCluster != null);
+        assertNotNull(mainCluster);
 
         assertTrue(var4.hasClusterReason(OVERLAP_FOLDBACKS));
         assertTrue(mainCluster.hasClusterReason(OVERLAP_FOLDBACKS));
@@ -264,7 +263,7 @@ public class ComplexMergeRuleTest
         assertTrue(var1.hasClusterReason(FOLDBACKS));
     }
 
-        @Test
+    @Test
     public void testDistancePloidyLinkMatchMerge()
     {
         LinxTester tester = new LinxTester();
@@ -306,14 +305,14 @@ public class ComplexMergeRuleTest
 
         SvCluster mainCluster = tester.findClusterWithSVs(Lists.newArrayList(var0, var1, var2, var6));
 
-        assertTrue(mainCluster != null);
+        assertNotNull(mainCluster);
 
         assertTrue(var6.hasClusterReason(TI_JCN_MATCH));
         assertTrue(mainCluster.hasClusterReason(TI_JCN_MATCH));
     }
 
     @Test
-    public void testSatelittleSglMerge()
+    public void testSatelliteSglMerge()
     {
         LinxTester tester = new LinxTester();
 

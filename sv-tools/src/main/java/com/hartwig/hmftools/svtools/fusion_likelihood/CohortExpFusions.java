@@ -35,10 +35,10 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
@@ -64,10 +64,10 @@ public class CohortExpFusions
 
     private boolean mLogVerbose;
 
-    public static int PRE_GENE_3P_DISTANCE = 10000;
-    public static int SHORT_INV_BUCKET = 100000;
-    public static int MIN_BUCKET_LENGTH = 10;
-    public static int LONG_DDI_BUCKET = 5000000;
+    public static final int PRE_GENE_3P_DISTANCE = 10000;
+    public static final int SHORT_INV_BUCKET = 100000;
+    public static final int MIN_BUCKET_LENGTH = 10;
+    public static final int LONG_DDI_BUCKET = 5000000;
 
     public static final double GENOME_BASE_COUNT = 3e9;
     public static final double MIN_FUSION_RATE = 1e-12;
@@ -711,7 +711,7 @@ public class CohortExpFusions
         }
     }
 
-    public static int PERMITTED_REGION_OVERLAP = 5;
+    public static final int PERMITTED_REGION_OVERLAP = 5;
 
     public boolean testProximatePhaseRegions(
             GeneRangeData gene1, GeneRangeData gene2, GenePhaseRegion region1, GenePhaseRegion region2, boolean trackAllocations)

@@ -72,8 +72,8 @@ public class SvBreakend {
     public void setClusterChrPosIndex(int index) { mClusterChrPosIndex = index; }
     public int getClusterChrPosIndex() { return mClusterChrPosIndex; }
 
-    public static String DIRECTION_CENTROMERE = "C";
-    public static String DIRECTION_TELOMERE = "T";
+    public static final String DIRECTION_CENTROMERE = "C";
+    public static final String DIRECTION_TELOMERE = "T";
 
     public String direction() { return (mOrientation == 1) == (mArm == P_ARM) ? DIRECTION_TELOMERE : DIRECTION_CENTROMERE; }
 

@@ -109,7 +109,7 @@ public class RnaMatchWriter
                         rnaFusion.GeneIds[fs], rnaFusion.GeneNames[fs], rnaFusion.Chromosomes[fs],
                         rnaFusion.Positions[fs], rnaFusion.Orientations[fs], rnaFusion.JunctionTypes[fs], rnaFusion.Strands[fs]));
 
-                final Transcript trans = rnaFusion.getMatchedfTranscripts()[fs];
+                final Transcript trans = rnaFusion.getMatchedTranscripts()[fs];
 
                 if(trans != null)
                 {

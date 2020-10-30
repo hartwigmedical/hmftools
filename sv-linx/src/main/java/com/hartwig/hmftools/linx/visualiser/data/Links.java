@@ -120,14 +120,14 @@ public class Links
 
         for (Link link : links)
         {
-            int minConnectedFrame = segments.stream().filter(x -> Links.connnected(link, x)).mapToInt(Segment::frame).min().orElse(0);
+            int minConnectedFrame = segments.stream().filter(x -> Links.connected(link, x)).mapToInt(Segment::frame).min().orElse(0);
             result.add(ImmutableLink.builder().from(link).frame(minConnectedFrame + 1).build());
         }
 
         return result;
     }
 
-    private static boolean connnected(@NotNull final Link link, @NotNull final Segment segment)
+    private static boolean connected(@NotNull final Link link, @NotNull final Segment segment)
     {
         boolean connectedAtStart = segment.chromosome().equals(link.startChromosome()) && (segment.start() == link.startPosition()
                 || segment.end() == link.startPosition());

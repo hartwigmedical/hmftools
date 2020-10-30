@@ -135,7 +135,6 @@ public class DriverDataCache
         catch(IOException e)
         {
             LNX_LOGGER.error("failed to load driver catalog or purity context: {}", e.toString());
-            return;
         }
     }
 

@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.breakendsAreChained;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,8 +20,8 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -209,7 +208,7 @@ public class RnaFusionData
         mExonsSkipped[fs] = exonsSkipped;
     }
 
-    public final Transcript[] getMatchedfTranscripts() { return mMatchedTranscripts; }
+    public final Transcript[] getMatchedTranscripts() { return mMatchedTranscripts; }
     public final SvBreakend[] getBreakend() { return mBreakends; }
     public final boolean[] isTransViable() { return mTransViable; }
     public final boolean[] isTransCorrectLocation() { return mTransCorrectLocation; }

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
@@ -152,7 +151,7 @@ public class LinxConfig
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
     }
 
-    private final List<DriverGene> loadDriverGenes(final CommandLine cmd)
+    private List<DriverGene> loadDriverGenes(final CommandLine cmd)
     {
         if(DriverGenePanelConfig.isConfigured(cmd))
         {
@@ -174,7 +173,7 @@ public class LinxConfig
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
     public boolean isSingleSample() { return mSampleIds.size() == 1; }
 
-    public static final List<String> sampleListFromConfigStr(final String configSampleStr)
+    public static List<String> sampleListFromConfigStr(final String configSampleStr)
     {
         final List<String> sampleIds = Lists.newArrayList();
 
@@ -255,7 +254,7 @@ public class LinxConfig
         options.addOption(SV_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
-        options.addOption(REF_GENOME_VERSION, true, "Ref genom version - accepts HG19 (default), HG37 or HG38");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts HG19 (default), HG37 or HG38");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, "Driver gene panel file");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");

@@ -257,8 +257,8 @@ public class SvUtilities {
         return (breakend.arm() == P_ARM ? 1 : -1) * breakend.orientation();
     }
 
-    public static double MAX_COPY_NUM_DIFF = 0.5;
-    public static double MAX_COPY_NUM_DIFF_PERC = 0.15;
+    public static final double MAX_COPY_NUM_DIFF = 0.5;
+    public static final double MAX_COPY_NUM_DIFF_PERC = 0.15;
 
     public static boolean copyNumbersEqual(double cn1, double cn2)
     {

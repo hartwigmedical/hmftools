@@ -154,22 +154,22 @@ public class VisFusionFile
 
         return new VisFusionFile(
                 values[index++],
-                Integer.valueOf(values[index++]),
-                Boolean.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
+                Boolean.parseBoolean(values[index++]),
                 values[index++],
                 values[index++],
                 values[index++],
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]),
                 values[index++],
-                Integer.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
                 values[index++],
                 values[index++],
                 values[index++],
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]),
                 values[index++],
-                Integer.valueOf(values[index++]));
+                Integer.parseInt(values[index++]));
     }
 
 }

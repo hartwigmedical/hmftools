@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.linx.types.SvVarData;
-
 import org.apache.commons.compress.utils.Lists;
 
 public class CfBreakendData

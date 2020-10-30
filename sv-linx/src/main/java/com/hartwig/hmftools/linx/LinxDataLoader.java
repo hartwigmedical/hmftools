@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -49,7 +48,7 @@ public class LinxDataLoader
 
     public static final String VCF_FILE = "sv_vcf";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException
+    public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
@@ -136,12 +135,11 @@ public class LinxDataLoader
         catch(IOException e)
         {
             LOGGER.error("failed to load SV data files: {}", e.toString());
-            return;
         }
     }
 
 
-    public static final List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile)
+    public static List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile)
     {
         final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
@@ -168,7 +166,7 @@ public class LinxDataLoader
         return svDataList;
     }
 
-    public static final List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile)
+    public static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile)
     {
         final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
@@ -193,7 +191,7 @@ public class LinxDataLoader
         return svDataList;
     }
 
-    public static final List<StructuralVariantData> loadSvDataFromSvFile(final String sampleId, final String svDataPath)
+    public static List<StructuralVariantData> loadSvDataFromSvFile(final String sampleId, final String svDataPath)
     {
         try
         {

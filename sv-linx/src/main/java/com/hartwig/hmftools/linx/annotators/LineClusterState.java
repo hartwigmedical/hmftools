@@ -179,7 +179,7 @@ public class LineClusterState
         return !breakend.usesStart() && breakend.orientation() == breakend.getOtherBreakend().orientation();
     }
 
-    private static int POLY_AT_BASES_SEARCH = 20;
+    private static final int POLY_AT_BASES_SEARCH = 20;
 
     public static boolean hasLinePolyAorTMotif(final String insSequence, byte orientation, boolean isSource, boolean eitherEnd)
     {

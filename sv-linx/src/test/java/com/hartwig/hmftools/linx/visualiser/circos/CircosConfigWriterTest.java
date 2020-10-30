@@ -16,7 +16,7 @@ public class CircosConfigWriterTest
 
         StringJoiner copyNumberString = new StringJoiner(",");
         for (String relativePosition : positionString.split(",")) {
-            long copyNumber = Math.round(maxTracks * Double.valueOf(relativePosition.replace("r", ""))) + 2;
+            long copyNumber = Math.round(maxTracks * Double.parseDouble(relativePosition.replace("r", ""))) + 2;
             copyNumberString.add(String.valueOf(copyNumber));
         }
 

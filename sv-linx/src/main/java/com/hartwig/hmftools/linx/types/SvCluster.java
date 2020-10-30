@@ -3,10 +3,12 @@ package com.hartwig.hmftools.linx.types;
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -14,39 +16,35 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
-import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowJcn;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.chaining.ChainMetrics.extractChainMetrics;
+import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
-import com.hartwig.hmftools.linx.analysis.ClusteringReason;
-import com.hartwig.hmftools.linx.analysis.ClusterClassification;
-import com.hartwig.hmftools.linx.chaining.ChainMetrics;
-import com.hartwig.hmftools.linx.chaining.SvChain;
-import com.hartwig.hmftools.linx.cn.LohEvent;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.analysis.ClusterClassification;
+import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
+import com.hartwig.hmftools.linx.analysis.ClusteringReason;
+import com.hartwig.hmftools.linx.chaining.ChainMetrics;
+import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 
 public class SvCluster
 {
     private int mId;
 
     private int mConsistencyCount;
-    private boolean mIsConsistent; // follows from telomere to centromere to telomore
+    private boolean mIsConsistent; // follows from telomere to centromere to telomere
     private String mDesc;
     private final int[] mTypeCounts;
 
@@ -86,10 +84,10 @@ public class SvCluster
 
     private ClusterMetrics mMetrics;
 
-    public static String CLUSTER_ANNOT_DM = "DM";
-    public static String CLUSTER_ANNOT_BFB = "BFB";
-    public static String CLUSTER_ANNOT_REP_REPAIR = "REP_REPAIR";
-    public static String CLUSTER_ANNOT_SHATTERING = "CHROMO_THRIP";
+    public static final String CLUSTER_ANNOT_DM = "DM";
+    public static final String CLUSTER_ANNOT_BFB = "BFB";
+    public static final String CLUSTER_ANNOT_REP_REPAIR = "REP_REPAIR";
+    public static final String CLUSTER_ANNOT_SHATTERING = "CHROMO_THRIP";
 
     public SvCluster(final int clusterId)
     {

@@ -4,24 +4,21 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.containsMotif;
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLinePolyAorTMotif;
+import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_T_MOTIF;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.KNOWN;
 import static com.hartwig.hmftools.linx.annotators.LineElementType.SUSPECT;
 import static com.hartwig.hmftools.linx.types.SglMapping.calcCigarLength;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.NEG_STRAND;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInf;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSv;
-import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.POLY_A_MOTIF;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 
 import static org.junit.Assert.assertFalse;
@@ -34,13 +31,9 @@ import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
-
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import com.hartwig.hmftools.linx.utils.LinxTester;
+
+import org.junit.Test;
 
 public class LineTest
 {

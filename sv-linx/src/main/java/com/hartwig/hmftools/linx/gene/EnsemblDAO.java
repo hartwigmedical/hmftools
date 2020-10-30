@@ -278,7 +278,7 @@ public class EnsemblDAO
                         transName, record.get("BioType"), transStart.intValue(), transEnd.intValue()));
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%s,%s",
-                        exonRank.intValue(), exonStart.intValue(), exonEnd.intValue(), exonPhase, exonPhaseEnd,
+                        exonRank, exonStart.intValue(), exonEnd.intValue(), exonPhase, exonPhaseEnd,
                         codingStart != null ? codingStart.intValue() : "NULL",
                         codingEnd != null ? codingEnd.intValue() : "NULL"));
 
@@ -345,7 +345,7 @@ public class EnsemblDAO
 
                 writer.write(String.format("%d,%d,%d,%d,%d,%s",
                         transcriptId.intValue(), translationId.intValue(), proteinId.intValue(),
-                        seqStart.intValue(), seqEnd.intValue(), record.get("HitDescription")));
+                        seqStart, seqEnd, record.get("HitDescription")));
 
                 writer.newLine();
             }

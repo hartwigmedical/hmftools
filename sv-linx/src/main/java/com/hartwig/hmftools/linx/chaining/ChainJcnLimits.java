@@ -16,8 +16,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.JcnCalcData;
-import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.LinkedPair;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ChainJcnLimits
@@ -276,7 +276,7 @@ public class ChainJcnLimits
         return true;
     }
 
-    private static double JCN_INTEGER_PROXIMITY = 0.25;
+    private static final double JCN_INTEGER_PROXIMITY = 0.25;
 
     private static boolean isJcnCloseToInteger(double jcn)
     {

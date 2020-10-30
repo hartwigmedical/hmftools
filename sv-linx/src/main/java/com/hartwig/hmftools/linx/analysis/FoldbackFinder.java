@@ -18,9 +18,9 @@ import java.util.Map;
 
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.DbPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class FoldbackFinder
@@ -221,7 +221,7 @@ public class FoldbackFinder
                     chainData[CHAIN_LINK_COUNT], chainData[CHAIN_ASSEMBLY_LINK_COUNT], chainLength);
         }
 
-        int length = (int)abs(beEnd.position() - beStart.position());
+        int length = abs(beEnd.position() - beStart.position());
 
         // if either variant already has foldback info set, favour
         // a) simple inversions then

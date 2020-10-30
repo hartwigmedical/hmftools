@@ -5,7 +5,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 
 public class GeneCopyNumberRegion
@@ -59,7 +58,7 @@ public class GeneCopyNumberRegion
         }
 
         return minRegion != null ? new GeneCopyNumberRegion(
-                transData.GeneId, transData.TransName, (int)minRegion.StartPos, (int)minRegion.EndPos, minRegion.CopyNumber) : null;
+                transData.GeneId, transData.TransName, minRegion.StartPos, minRegion.EndPos, minRegion.CopyNumber) : null;
     }
 
 }

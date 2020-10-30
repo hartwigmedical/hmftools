@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.linx.chaining;
 
-import static java.lang.Math.max;
-
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -9,23 +10,18 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.LINE_CHAINS;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
-import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnExceedsMajorAlleleJcn;
-import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowJcnThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.CLUSTER_ALLELE_JCN_MIN;
+import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnExceedsMajorAlleleJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatchForSplits;
+import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowJcnThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.identicalChain;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.reconcileChains;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkSkipType.JCN_MISMATCH;
 import static com.hartwig.hmftools.linx.chaining.SvChain.checkIsValid;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 
 import static org.apache.logging.log4j.Level.TRACE;
-
-import static jdk.nashorn.internal.objects.NativeMath.abs;
 
 import java.util.List;
 import java.util.Map;
@@ -33,9 +29,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.Level;
@@ -330,7 +326,6 @@ public class ChainFinder
         if(!isValid())
         {
             LNX_LOGGER.warn("cluster({}) chain finding failed", mClusterId);
-            return;
         }
     }
 

@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
@@ -52,7 +51,7 @@ public class AmpliconData
         return appendStrList(chromosomes, SUBSET_DELIM);
     }
 
-    public static final String extractSampleId(final Map<String,Integer> fieldsIndexMap, final String[] items)
+    public static String extractSampleId(final Map<String,Integer> fieldsIndexMap, final String[] items)
     {
         String sampleId = items[fieldsIndexMap.get("pair")];
 

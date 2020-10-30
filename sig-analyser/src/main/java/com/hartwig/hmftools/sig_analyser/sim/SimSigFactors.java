@@ -15,7 +15,7 @@ public class SimSigFactors {
 
     final public double RateFactor; // a multiplier for expression of this sig
 
-    public static int SIG_FACTOR_CSV_ITEM_COUNT = 6;
+    public static final int SIG_FACTOR_CSV_ITEM_COUNT = 6;
 
     public SimSigFactors(final String[] items)
     {

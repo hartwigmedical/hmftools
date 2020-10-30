@@ -11,13 +11,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class ChainingComplexTest
 {

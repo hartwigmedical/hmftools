@@ -46,7 +46,7 @@ public class LineClusterData
         MatchedClusters = Lists.newArrayList();
     }
 
-    public static int PROXIMATE_DISTANCE = 10000;
+    public static final int PROXIMATE_DISTANCE = 10000;
 
     public void addSvData(final String[] chromosomes, final int[] positions, final LineElementType[] lineTypes)
     {

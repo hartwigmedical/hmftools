@@ -28,10 +28,10 @@ public class LinkedPair
 
     private String mExonMatchData;
 
-    public static String LOCATION_TYPE_UNCLEAR = "Unclear";
-    public static String LOCATION_TYPE_REMOTE = "Remote"; // TI is not on arm with any chain end
-    public static String LOCATION_TYPE_EXTERNAL = "External"; // TI is on arm with a chain end but outside its bounds
-    public static String LOCATION_TYPE_INTERNAL = "Internal";
+    public static final String LOCATION_TYPE_UNCLEAR = "Unclear";
+    public static final String LOCATION_TYPE_REMOTE = "Remote"; // TI is not on arm with any chain end
+    public static final String LOCATION_TYPE_EXTERNAL = "External"; // TI is on arm with a chain end but outside its bounds
+    public static final String LOCATION_TYPE_INTERNAL = "Internal";
 
     public LinkedPair(final SvBreakend first, final SvBreakend second)
     {
@@ -181,7 +181,7 @@ public class LinkedPair
                 mSecondBreakend.usesStart() ? "start" : "end");
     }
 
-    private static final String svToString(final SvVarData var, boolean linkedOnStart)
+    private static String svToString(final SvVarData var, boolean linkedOnStart)
     {
         if(!var.isSglBreakend())
         {

@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.sig_analyser.common;
 
-import static java.lang.Double.max;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
-import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
@@ -21,9 +19,9 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public class CssRoutines
 {
-    public static int CSSR_I1 = 0;
-    public static int CSSR_I2 = 1;
-    public static int CSSR_VAL = 2;
+    public static final int CSSR_I1 = 0;
+    public static final int CSSR_I2 = 1;
+    public static final int CSSR_VAL = 2;
 
     public static int getLeastSimilarEntry(final double[] set1, final double[] set2)
     {

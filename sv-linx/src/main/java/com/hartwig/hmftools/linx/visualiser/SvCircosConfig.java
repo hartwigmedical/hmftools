@@ -286,7 +286,7 @@ public interface SvCircosConfig
     {
         if (cmd.hasOption(opt))
         {
-            final double result = Double.valueOf(cmd.getOptionValue(opt));
+            final double result = Double.parseDouble(cmd.getOptionValue(opt));
             LOGGER.info("Using non default value {} for parameter {}", result, opt);
             return result;
         }
@@ -298,7 +298,7 @@ public interface SvCircosConfig
     {
         if (cmd.hasOption(opt))
         {
-            final int result = Integer.valueOf(cmd.getOptionValue(opt));
+            final int result = Integer.parseInt(cmd.getOptionValue(opt));
             LOGGER.info("Using non default value {} for parameter {}", result, opt);
             return result;
         }

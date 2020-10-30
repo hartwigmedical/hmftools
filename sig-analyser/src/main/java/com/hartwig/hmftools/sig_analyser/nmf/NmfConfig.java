@@ -38,32 +38,31 @@ public class NmfConfig {
     final public boolean LogVerbose;
 
     // command line args
-    public static String NMF_SIG_COUNT = "nmf_sig_count";
-    public static String NMF_RUN_COUNT = "nmf_run_count";
-    public static String NMF_MAX_ITERATIONS = "nmf_max_iterations";
-    public static String NMF_EXIT_LEVEL = "nmf_exit_level";
-    public static String NMF_REF_SIG_FILE = "nmf_ref_sig_file";
-    public static String NMF_USE_REF_SIGS = "nmf_use_ref_sigs";
-    public static String NMF_REF_CONTRIB_FILE = "nmf_ref_contrib_file";
-    public static String NMF_SIG_FLOAT_RATE = "nmf_sig_float_rate";
-    public static String NMF_FIT_ONLY = "nmf_fit_only";
-    public static String NMF_PCAWG_RULES = "nmf_apply_pcawg_rules";
-    public static String NMF_FIT_RESTRICTED = "nmf_fit_restricted";
+    public static final String NMF_SIG_COUNT = "nmf_sig_count";
+    public static final String NMF_RUN_COUNT = "nmf_run_count";
+    public static final String NMF_MAX_ITERATIONS = "nmf_max_iterations";
+    public static final String NMF_EXIT_LEVEL = "nmf_exit_level";
+    public static final String NMF_REF_SIG_FILE = "nmf_ref_sig_file";
+    public static final String NMF_USE_REF_SIGS = "nmf_use_ref_sigs";
+    public static final String NMF_REF_CONTRIB_FILE = "nmf_ref_contrib_file";
+    public static final String NMF_SIG_FLOAT_RATE = "nmf_sig_float_rate";
+    public static final String NMF_FIT_ONLY = "nmf_fit_only";
+    public static final String NMF_PCAWG_RULES = "nmf_apply_pcawg_rules";
+    public static final String NMF_FIT_RESTRICTED = "nmf_fit_restricted";
 
-    public static String NMF_SIG_EXPANSION = "nmf_sig_exp_count";
+    public static final String NMF_SIG_EXPANSION = "nmf_sig_exp_count";
 
-    public static String NMF_LOG_VERBOSE = "nmf_log_verbose";
+    public static final String NMF_LOG_VERBOSE = "nmf_log_verbose";
 
-    public static String NMF_MODEL = "nmf_model";
+    public static final String NMF_MODEL = "nmf_model";
 
     public enum NmfModelMethod {
         STANDARD,
         BRUNET
     }
 
-    public static String NMF_MODEL_STD_STR = "Standard";
-    public static String NMF_MODEL_BRUNET_STR = "Brunet";
-
+    public static final String NMF_MODEL_STD_STR = "Standard";
+    public static final String NMF_MODEL_BRUNET_STR = "Brunet";
 
     public static void addCmdLineArgs(Options options)
     {

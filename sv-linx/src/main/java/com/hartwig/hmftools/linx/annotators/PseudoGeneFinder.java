@@ -2,11 +2,10 @@ package com.hartwig.hmftools.linx.annotators;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_PSEUDOGENE;
 
 import java.util.List;
@@ -17,11 +16,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneData;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
@@ -194,12 +193,12 @@ public class PseudoGeneFinder
                                 // if say X bases have been lost from the start, then set the end to factor this in
                                 if(exonsLost[SE_START] < 0)
                                 {
-                                    exonsLost[SE_END] = -(int)(exonLength + exonsLost[SE_START]);
+                                    exonsLost[SE_END] = -(exonLength + exonsLost[SE_START]);
                                     exonsLost[SE_START] = 0;
                                 }
                                 else if(exonsLost[SE_END] < 0)
                                 {
-                                    exonsLost[SE_START] = (int)(exonLength + exonsLost[SE_END]);
+                                    exonsLost[SE_START] = exonLength + exonsLost[SE_END];
                                     exonsLost[SE_END] = 0;
                                 }
                             }
@@ -245,21 +244,21 @@ public class PseudoGeneFinder
 
                 if(startWithinHomology)
                 {
-                    pseudoMatch.HomologyOffset[SE_START] = (int)(posStart - exonData.ExonStart);
+                    pseudoMatch.HomologyOffset[SE_START] = posStart - exonData.ExonStart;
                 }
                 else
                 {
                     // record a position within the exon as negative
-                    pseudoMatch.PositionMismatch[SE_START] = (int)(exonData.ExonStart - posStart);
+                    pseudoMatch.PositionMismatch[SE_START] = exonData.ExonStart - posStart;
                 }
 
                 if(endWithinHomology)
                 {
-                    pseudoMatch.HomologyOffset[SE_END] = (int)(posEnd - exonData.ExonEnd);
+                    pseudoMatch.HomologyOffset[SE_END] = posEnd - exonData.ExonEnd;
                 }
                 else
                 {
-                    pseudoMatch.PositionMismatch[SE_END] = (int)(posEnd - exonData.ExonEnd);
+                    pseudoMatch.PositionMismatch[SE_END] = posEnd - exonData.ExonEnd;
                 }
 
                 pseudoMatches.add(pseudoMatch);

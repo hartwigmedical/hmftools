@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticGapLength;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
@@ -12,6 +13,8 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.NO_LENGTH;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.reverseSectionOnBreakend;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
+import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DEL_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_TI;
 import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
@@ -25,10 +28,6 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DUPS;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS_TI;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
-import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
-import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
@@ -39,10 +38,10 @@ import com.hartwig.hmftools.linx.chaining.ChainJcnLimits;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.DbPair;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.jetbrains.annotations.NotNull;
@@ -58,7 +57,7 @@ public class PairResolution
     {
         return (resolvedType == RECIP_TRANS || resolvedType == RECIP_TRANS_DEL_DUP || resolvedType == RECIP_TRANS_DUPS
                 || resolvedType == RECIP_INV || resolvedType == RECIP_INV_DEL_DUP || resolvedType == RECIP_INV_DUPS
-                || resolvedType == FB_INV_PAIR || resolvedType == RESOLVED_FOLDBACK || resolvedType == FB_INV_PAIR);
+                || resolvedType == RESOLVED_FOLDBACK || resolvedType == FB_INV_PAIR);
     }
 
     public static boolean isClusterTemplatedInsertionType(final ResolvedType resolvedType)

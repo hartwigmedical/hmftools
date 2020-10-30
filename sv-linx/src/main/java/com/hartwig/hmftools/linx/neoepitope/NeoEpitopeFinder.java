@@ -5,6 +5,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.isIrrelevantSameGene;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
@@ -12,8 +14,6 @@ import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_SYMBO
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertDnaCodonToAminoAcid;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.isStopCodon;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.reverseStrandBases;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -22,11 +22,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.linx.fusion.GeneFusion;
-import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.linx.fusion.GeneFusion;
 
 public class NeoEpitopeFinder
 {
@@ -85,10 +85,10 @@ public class NeoEpitopeFinder
             String downstreamBases = getBaseString(downTrans, downTransData, !isPhased, downstreamPhaseOffset);
             int nmdBaseCount = calcNonMediatedDecayBases(downTrans.gene(), downTransData);
 
-            // upstream strand 1, bases will be retreived from left to right (lower to higher), no need for any conversion
-            // downstream strand 1, bases will be retreived from left to right (lower to higher), no need for any conversion
-            // upstream strand -1, bases will be retreived from left to right (lower to higher), need to reverse and convert
-            // downstream strand -1, bases will be retreived from left to right (lower to higher), need to reverse and convert
+            // upstream strand 1, bases will be retrieved from left to right (lower to higher), no need for any conversion
+            // downstream strand 1, bases will be retrieved from left to right (lower to higher), no need for any conversion
+            // upstream strand -1, bases will be retrieved from left to right (lower to higher), need to reverse and convert
+            // downstream strand -1, bases will be retrieved from left to right (lower to higher), need to reverse and convert
 
             int upStrand = upTrans.gene().Strand;
             int downStrand = downTrans.gene().Strand;

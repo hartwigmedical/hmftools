@@ -13,8 +13,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.LinkedPair;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 
 public class ProposedLinks
 {
@@ -38,9 +38,9 @@ public class ProposedLinks
     private String mJcnMatchType;
     private int mShortestDistance;
 
-    public static String PM_MATCHED = "Matched";
-    public static String PM_NONE = "None";
-    public static String PM_OVERLAP = "Overlap";
+    public static final String PM_MATCHED = "Matched";
+    public static final String PM_NONE = "None";
+    public static final String PM_OVERLAP = "Overlap";
 
     public ProposedLinks(LinkedPair link, ChainingRule rule)
     {
@@ -87,7 +87,7 @@ public class ProposedLinks
             return COMP_DUP_SPLIT;
     }
 
-    public final boolean multiConnection() { return Links.size() > 1; };
+    public final boolean multiConnection() { return Links.size() > 1; }
 
     public double jcn() { return mJcn; }
 

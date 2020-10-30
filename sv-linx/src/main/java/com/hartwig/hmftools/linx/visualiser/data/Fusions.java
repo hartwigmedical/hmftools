@@ -1,15 +1,12 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 
 import org.jetbrains.annotations.NotNull;

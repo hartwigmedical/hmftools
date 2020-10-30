@@ -153,22 +153,22 @@ public class VisSvDataFile
 
         return new VisSvDataFile(
                 values[index++],
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]),
                 StructuralVariantType.valueOf(values[index++]),
                 com.hartwig.hmftools.linx.types.ResolvedType.valueOf(values[index++]),
-                Boolean.valueOf(values[index++]),
+                Boolean.parseBoolean(values[index++]),
                 values[index++],
                 values[index++],
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]),
-                Byte.valueOf(values[index++]),
-                Byte.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]),
+                Byte.parseByte(values[index++]),
+                Byte.parseByte(values[index++]),
                 values[index++],
                 values[index++],
-                Double.valueOf(values[index++]),
-                index < values.length ? Boolean.valueOf(values[index++]) : false);
+                Double.parseDouble(values[index++]),
+                index < values.length ? Boolean.parseBoolean(values[index++]) : false);
     }
 
 }

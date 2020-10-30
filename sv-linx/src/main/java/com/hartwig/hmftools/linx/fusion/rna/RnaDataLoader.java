@@ -12,10 +12,10 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 public class RnaDataLoader
 {
-    public static String RNA_FUSION_SOURCE_ISOFOX = "ISOFOX";
-    public static String RNA_FUSION_SOURCE_MATCHED = "MATCHED";
-    public static String RNA_FUSION_SOURCE_ARRIBA = "ARRIBA";
-    public static String RNA_FUSION_SOURCE_STARFUSION = "STARFUSION";
+    public static final String RNA_FUSION_SOURCE_ISOFOX = "ISOFOX";
+    public static final String RNA_FUSION_SOURCE_MATCHED = "MATCHED";
+    public static final String RNA_FUSION_SOURCE_ARRIBA = "ARRIBA";
+    public static final String RNA_FUSION_SOURCE_STARFUSION = "STARFUSION";
 
     public static String getRnaSourceDelimiter(final String source)
     {

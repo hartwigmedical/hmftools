@@ -49,7 +49,7 @@ public class CnDataLoader
 
     private final List<LohEvent> mLohEventData;
     private final List<HomLossEvent> mHomLossData;
-    private final Map<String,TelomereCentromereCnData> mChrEndsCNMap; // telemore and centromere CN values
+    private final Map<String,TelomereCentromereCnData> mChrEndsCNMap; // telomere and centromere CN values
     private final CnJcnCalcs mCnJcnCalcs;
 
     public static final double MIN_LOH_CN = 0.5;
@@ -271,7 +271,7 @@ public class CnDataLoader
         return isMale && (chromosome.equals("X") || chromosome.equals("Y"));
     }
 
-    private static int REMOTE_SV_DISTANCE = 1000000;
+    private static final int REMOTE_SV_DISTANCE = 1000000;
 
     private void findLohEvents(final String sampleId)
     {
@@ -428,7 +428,7 @@ public class CnDataLoader
 
                         if (lohOnStartTelomere)
                         {
-                            LNX_LOGGER.trace("chr({}) LOH at telemore", chromosome);
+                            LNX_LOGGER.trace("chr({}) LOH at telomere", chromosome);
                         }
                         else
                         {

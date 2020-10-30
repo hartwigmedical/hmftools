@@ -9,7 +9,7 @@ public enum VariantTier {
     LOW_CONFIDENCE,
     UNKNOWN;
 
-    public static String TIER = "TIER";
+    public static final String TIER = "TIER";
 
     @NotNull
     public static VariantTier fromString(@NotNull final String string) {

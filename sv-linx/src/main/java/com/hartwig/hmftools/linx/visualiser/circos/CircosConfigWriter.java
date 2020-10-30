@@ -149,8 +149,7 @@ public class CircosConfigWriter
                         .replaceAll("SUBSTITUTE_CNA_MIDDLE_RADIUS", String.valueOf(copyNumberMiddleRadius))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_MAX", String.valueOf(cnaMaxTracks))
                         .replaceAll("SUBSTITUTE_CNA_GAIN_AXIS_POSITION", cnaAxisPositions(cnaMaxTracks))
-                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", String.valueOf(
-                                copyNumberOuterRadius + "r -" + distanceLabelOffset + "p"))
+                        .replaceAll("SUBSTITUTE_CNA_DISTANCE_RADIUS", copyNumberOuterRadius + "r -" + distanceLabelOffset + "p")
 
                         .replaceAll("SUBSTITUTE_SV_SPACING", String.valueOf(1d / circosData.maxTracks()))
                         .replaceAll("SUBSTITUTE_SV_MAX", String.valueOf(circosData.maxTracks()))
@@ -177,7 +176,7 @@ public class CircosConfigWriter
         StringJoiner builder = new StringJoiner(",");
 
         final double rel = 1d / maxTracks;
-        final Function<Integer, String> relString = i -> String.valueOf(Math.round(i * rel * 10000) / 10000d) + "r";
+        final Function<Integer, String> relString = i -> (Math.round(i * rel * 10000) / 10000D) + "r";
 
         for (int i = 1; i <= Math.min(7, maxTracks); i++)
         {

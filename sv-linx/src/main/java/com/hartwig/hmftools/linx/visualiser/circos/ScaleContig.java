@@ -111,10 +111,10 @@ class ScaleContig
 
         double longDistanceProportion = Math.abs(value - closestToStart) / ((double) Math.abs(closestToEnd - closestToStart));
 
-        int clostestIntToStart = positionMap.get(closestToStart);
-        int clostestIntToEnd = positionMap.get(closestToEnd);
+        int closestIntToStart = positionMap.get(closestToStart);
+        int closestIntToEnd = positionMap.get(closestToEnd);
 
-        return clostestIntToStart + (int) Math.floor(longDistanceProportion * Math.abs(clostestIntToEnd - clostestIntToStart));
+        return closestIntToStart + (int) Math.floor(longDistanceProportion * Math.abs(closestIntToEnd - closestIntToStart));
     }
 
     static int logDistance(long distance)

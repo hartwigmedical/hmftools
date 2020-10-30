@@ -15,5 +15,5 @@ public enum ClusteringReason
     SATELLITE_SGL,
     MAJOR_ALLELE_JCN,
     HIGH_JCN,
-    TI_JCN_MATCH;
+    TI_JCN_MATCH
 }

@@ -26,7 +26,7 @@ public class ClusterMetrics
     public int DBCount;
     public int ShortDBCount;
 
-    // sum of deletion bridges including regions interupted by other SVs (eg unphased)
+    // sum of deletion bridges including regions interrupted by other SVs (eg unphased)
     public long TotalDBLength;
 
     // where (typically long) TIs cross unclustered deleted regions (typically simple DELs)

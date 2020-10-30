@@ -81,11 +81,11 @@ public class SigOptimiser
     private boolean mLogVerbose;
     private boolean mHasChanged;
 
-    private static int MIN_PURE_SAMPLE_COUNT = 5;
-    public static double SMALL_RATIO_PERC_CUTOFF = 0.01; // so for a max bucket ratio of 0.36, a minor bucket ratio of 0.0036 would be ignored
-    private static double DEFAULT_RATIO_RANGE_PERCENTILE = 0.6;
-    public static double BUCKET_RANGE_MAX_PERCENT = 0.20; // max that a range can be as a percentage of its ratio, works up and down
-    public static double SAMPLE_PURE_SIG_PERCENT = 0.8; // used to decide whether a sample can aid in optimising sig ratios and ranges
+    private static final int MIN_PURE_SAMPLE_COUNT = 5;
+    public static final double SMALL_RATIO_PERC_CUTOFF = 0.01; // so for a max bucket ratio of 0.36, a minor bucket ratio of 0.0036 would be ignored
+    private static final double DEFAULT_RATIO_RANGE_PERCENTILE = 0.6;
+    public static final double BUCKET_RANGE_MAX_PERCENT = 0.20; // max that a range can be as a percentage of its ratio, works up and down
+    public static final double SAMPLE_PURE_SIG_PERCENT = 0.8; // used to decide whether a sample can aid in optimising sig ratios and ranges
 
     private static final Logger LOGGER = LogManager.getLogger(SigOptimiser.class);
 

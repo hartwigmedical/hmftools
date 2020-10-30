@@ -3,11 +3,11 @@ package com.hartwig.hmftools.linx.chaining;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 
 import java.util.List;
 
@@ -66,7 +66,7 @@ public class ChainState
     public void add(boolean isStart, double linkJcn) { mBreakendCount[seIndex(isStart)] += linkJcn; }
     public void set(boolean isStart, double linkJcn) { mBreakendCount[seIndex(isStart)] = linkJcn; }
 
-    public double curentCount() { return min(mBreakendCount[SE_START], mBreakendCount[SE_END]); }
+    public double currentCount() { return min(mBreakendCount[SE_START], mBreakendCount[SE_END]); }
     public double breakendCount(boolean isStart) { return mBreakendCount[seIndex(isStart)]; }
 
     public boolean breakendExhausted(boolean isStart)
@@ -78,7 +78,7 @@ public class ChainState
     }
     public boolean breakendExhaustedVsMax(boolean isStart) { return maxUnlinked(isStart) <= mExhaustedLevel; }
 
-    public double unlinked() { return max(Jcn - curentCount(), 0); }
+    public double unlinked() { return max(Jcn - currentCount(), 0); }
     public double unlinked(boolean isStart) { return unlinked(seIndex(isStart)); }
     public double unlinked(int se) { return max(Jcn - mBreakendCount[se],0); }
 

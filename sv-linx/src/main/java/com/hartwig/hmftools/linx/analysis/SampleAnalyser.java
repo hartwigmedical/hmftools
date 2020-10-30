@@ -2,6 +2,9 @@ package com.hartwig.hmftools.linx.analysis;
 
 import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
@@ -9,9 +12,6 @@ import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,8 +19,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxSvAnnotation;
@@ -45,12 +45,12 @@ import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.JcnCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
-import com.hartwig.hmftools.linx.types.ChromosomeArm;
-import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.ArmCluster;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
+import com.hartwig.hmftools.linx.types.LinkedPair;
+import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
@@ -64,7 +64,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 public class SampleAnalyser
 {
-
     private final LinxConfig mConfig;
     private final ClusterAnalyser mAnalyser;
     private final CohortDataWriter mCohortDataWriter;
@@ -488,9 +487,7 @@ public class SampleAnalyser
                 mCnDataLoader.getChrCnDataMap());
     }
 
-
-
-    private final List<LinxSvAnnotation> generateSvDataOutput()
+    private List<LinxSvAnnotation> generateSvDataOutput()
     {
         final List<LinxSvAnnotation> linxSvData = Lists.newArrayList();
 
@@ -542,7 +539,7 @@ public class SampleAnalyser
         return linxSvData;
     }
 
-    private final List<LinxCluster> generateClusterOutput()
+    private List<LinxCluster> generateClusterOutput()
     {
         final List<LinxCluster> clusterData = Lists.newArrayList();
 
@@ -563,7 +560,7 @@ public class SampleAnalyser
         return clusterData;
     }
 
-    private final List<LinxLink> generateLinksOutput()
+    private List<LinxLink> generateLinksOutput()
     {
         final List<LinxLink> linksData = Lists.newArrayList();
 

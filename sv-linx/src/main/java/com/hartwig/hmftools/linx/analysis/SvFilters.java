@@ -2,6 +2,8 @@ package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
@@ -11,12 +13,10 @@ import static com.hartwig.hmftools.linx.analysis.SimpleClustering.hasLowJcn;
 import static com.hartwig.hmftools.linx.annotators.LineClusterState.hasLineRepeatClass;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.hasPolyAorTMotif;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.haveLinkedAssemblies;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_INF;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
 import java.util.Map;
@@ -49,8 +49,8 @@ public class SvFilters
     private static final int SHORT_INV_DISTANCE = 100;
     private static final int ISOLATED_BND_DISTANCE = 5000;
 
-    private static final int PERMITED_SGL_DUP_BE_DISTANCE = 1;
-    private static final int PERMITED_DUP_BE_DISTANCE = 35;
+    private static final int PERMITTED_SGL_DUP_BE_DISTANCE = 1;
+    private static final int PERMITTED_DUP_BE_DISTANCE = 35;
 
     public void applyFilters()
     {
@@ -147,7 +147,7 @@ public class SvFilters
 
                 int distance = nextBreakend.position() - breakend.position();
 
-                if(distance <= PERMITED_SGL_DUP_BE_DISTANCE && (var.type() == SGL || nextVar.type() == SGL))
+                if(distance <= PERMITTED_SGL_DUP_BE_DISTANCE && (var.type() == SGL || nextVar.type() == SGL))
                 {
                     LNX_LOGGER.trace("SV({}) filtered proximate duplicate breakend", var.type() == SGL ? var.id() : nextVar.id());
 
@@ -162,14 +162,14 @@ public class SvFilters
                         removalList.add(nextBreakend);
                     }
                 }
-                else if(distance <= PERMITED_DUP_BE_DISTANCE && var.type() == nextVar.type() && var.isEquivBreakend())
+                else if(distance <= PERMITTED_DUP_BE_DISTANCE && var.type() == nextVar.type() && var.isEquivBreakend())
                 {
                     // 2 non-SGL SVs may be duplicates, so check their other ends
                     SvBreakend otherBe = breakend.getOtherBreakend();
                     SvBreakend nextOtherBe = nextBreakend.getOtherBreakend();
 
                     if(otherBe.chromosome().equals(nextOtherBe.chromosome())
-                    && abs(otherBe.position() - nextOtherBe.position()) <= PERMITED_DUP_BE_DISTANCE)
+                    && abs(otherBe.position() - nextOtherBe.position()) <= PERMITTED_DUP_BE_DISTANCE)
                     {
                         // remove both of the duplicates breakends now
 

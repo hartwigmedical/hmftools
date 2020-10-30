@@ -95,7 +95,6 @@ public class BfbFinder
                     cluster.id(), clusterMaxJcn, maxBFBJcn, sumFbJcn, maxSglJcn, armBfbCopyNumber));
 
             cluster.addAnnotation(CLUSTER_ANNOT_BFB);
-            return;
         }
     }
 

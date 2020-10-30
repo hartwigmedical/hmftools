@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class SampleDataLoader
 {
-    // data input expects all StructuralVariant data fields, followed by additonal svAnnotation fields
+    // data input expects all StructuralVariant data fields, followed by additional svAnnotation fields
 
     private static final int COL_PLOIDY_MIN = 53;
     private static final int COL_PLOIDY_MAX = 54;
@@ -53,7 +53,7 @@ public class SampleDataLoader
             if(items.length < COL_EXPECTED)
                 return svList;
 
-            var.setJcnRecalcData(Double.valueOf(items[COL_PLOIDY_MIN]), Double.valueOf(items[COL_PLOIDY_MAX]));
+            var.setJcnRecalcData(Double.parseDouble(items[COL_PLOIDY_MIN]), Double.parseDouble(items[COL_PLOIDY_MAX]));
         }
 
         return svList;

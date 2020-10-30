@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.Transcript.POST_CODING_PHASE;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -15,7 +18,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
 
 import org.junit.Test;
@@ -66,8 +68,8 @@ public class FusionRulesTest
         String transName2 = "ENST0002";
         int transId2 = 2;
 
-        codingStart = new Integer(100);
-        codingEnd = new Integer(200);
+        codingStart = 100;
+        codingEnd = 200;
         Transcript trans2 = new Transcript(gene2, transId2, transName2, 2, -1, 3, -1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
@@ -78,22 +80,22 @@ public class FusionRulesTest
         // up non-coding
         assertTrue(trans1.nonCoding());
         assertTrue(trans2.isCoding());
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         codingStart = null;
         codingEnd = null;
         trans2 = new Transcript(gene2, transId2, transName2, 2, -1, 3, -1,
                 0, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
-        codingStart = new Integer(100);
-        codingEnd = new Integer(200);
+        codingStart = 100;
+        codingEnd = 200;
         trans1 = new Transcript(gene1, transId1, transName1, 2, -1, 3, -1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
         // down non-coding
         assertTrue(trans1.isCoding());
         assertTrue(trans2.nonCoding());
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // up / down post coding - upstream can be post-coding if can skip exons to form a phase-matched fusion
         trans2 = new Transcript(gene2, transId2, transName2, 2, 0, 3, 0,
@@ -104,14 +106,14 @@ public class FusionRulesTest
 
         assertTrue(trans1.postCoding());
         assertTrue(trans2.isCoding());
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // up promotor
         trans1 = new Transcript(gene1, transId1, transName1, 0, -1, 1, -1,
                 0, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
         assertTrue(trans1.isPromoter());
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // down single exon
         trans1 = new Transcript(gene1, transId1, transName1, 2, -1, 3, -1,
@@ -121,7 +123,7 @@ public class FusionRulesTest
                 10, getCodingBases(codingStart, codingEnd),1, true, 50, 250, codingStart, codingEnd);
 
         assertTrue(trans1.preCoding());
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // up not disruptive
         trans1.setIsDisruptive(false);
@@ -129,7 +131,7 @@ public class FusionRulesTest
         trans2 = new Transcript(gene2, transId2, transName2, 2, -1, 3, -1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // up 5'UTR to down coding
         trans1.setIsDisruptive(true);
@@ -143,7 +145,7 @@ public class FusionRulesTest
 
         assertTrue(trans1.isExonic());
         assertTrue(trans2.isIntronic());
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // unmatched phasing intronic
         trans1 = new Transcript(gene1, transId1, transName1, 2, -1, 3, -1,
@@ -156,7 +158,7 @@ public class FusionRulesTest
         assertTrue(trans2.isCoding());
         assertTrue(trans1.isIntronic());
         assertTrue(trans2.isIntronic());
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // pre-coding to pre-coding same gene
         trans1 = new Transcript(gene1, transId1, transName1, 1, -1, 2, -1,
@@ -167,7 +169,7 @@ public class FusionRulesTest
 
         assertTrue(trans1.preCoding());
         assertTrue(trans2.preCoding());
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // exon to exon phasing - to be phased, the upstream phase needs to be 1 less than the downstream phase
 
@@ -182,19 +184,19 @@ public class FusionRulesTest
 
         assertTrue(trans1.isExonic());
         assertTrue(trans2.isExonic());
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // also invalid exonic fusion
         trans1 = new Transcript(gene1, transId1, transName1, 2, 2, 2, 1,
                 11, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
-        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+        assertNull(checkFusionLogic(trans1, trans2, params));
 
         // valid exonic fusion
         trans1 = new Transcript(gene1, transId1, transName1, 2, 2, 2, 1,
                 12, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
-        assertTrue(checkFusionLogic(trans1, trans2, params) != null);
+        assertNotNull(checkFusionLogic(trans1, trans2, params));
 
         // exon to exon but both pre-coding
         trans1 = new Transcript(gene1, transId1, transName1, 2, -1, 2, -1,
@@ -207,7 +209,7 @@ public class FusionRulesTest
         assertTrue(trans2.isExonic());
         assertTrue(trans1.preCoding());
         assertTrue(trans2.preCoding());
-        assertTrue(checkFusionLogic(trans1, trans2, params) != null);
+        assertNotNull(checkFusionLogic(trans1, trans2, params));
 
         // valid intronic fusion
         trans1 = new Transcript(gene1, transId1, transName1, 2, 1, 3, 2,
@@ -216,7 +218,7 @@ public class FusionRulesTest
         trans2 = new Transcript(gene2, transId2, transName2, 2, 0, 3, 1,
                 11, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
-        assertTrue(checkFusionLogic(trans1, trans2, params) != null);
+        assertNotNull(checkFusionLogic(trans1, trans2, params));
 
         FusionFinder fusionFinder = new FusionFinder(null, null);
         fusionFinder.getKnownFusionCache().addData(new KnownFusionData(KNOWN_PAIR, gene1.GeneName, gene2.GeneName, "", ""));
@@ -248,8 +250,8 @@ public class FusionRulesTest
         int transId1 = 1;
 
         // non-coding combos
-        Integer codingStart = new Integer(100);
-        Integer codingEnd = new Integer(200);
+        Integer codingStart = 100;
+        Integer codingEnd = 200;
 
         Transcript transUp = new Transcript(gene1, transId1, transName1, 2, 1, 3, 1,
                 10, getCodingBases(codingStart, codingEnd),10, true, 50, 250, codingStart, codingEnd);
@@ -269,15 +271,15 @@ public class FusionRulesTest
         assertTrue(transDown.isCoding());
         GeneFusion fusion = checkFusionLogic(transUp, transDown, params);
 
-        assertTrue( fusion != null);
-        assertTrue(!fusion.phaseMatched());
+        assertNotNull(fusion);
+        assertFalse(fusion.phaseMatched());
 
         Map<Integer,Integer> altPhasingsUp = transUp.getAlternativePhasing();
         altPhasingsUp.put(0, 1);
 
         fusion = checkFusionLogic(transUp, transDown, params);
 
-        assertTrue( fusion != null);
+        assertNotNull(fusion);
         assertTrue(fusion.phaseMatched());
         assertEquals(fusion.getExonsSkipped(true), 1);
         assertEquals(fusion.getExonsSkipped(false), 0);
@@ -288,7 +290,7 @@ public class FusionRulesTest
 
         fusion = checkFusionLogic(transUp, transDown, params);
 
-        assertTrue(fusion != null);
+        assertNotNull(fusion);
         assertTrue(fusion.phaseMatched());
         assertEquals(0, fusion.getExonsSkipped(true));
         assertEquals(1, fusion.getExonsSkipped(false));
@@ -308,7 +310,7 @@ public class FusionRulesTest
 
         fusion = checkFusionLogic(transUp, transDown, params);
 
-        assertTrue( fusion != null);
+        assertNotNull(fusion);
         assertTrue( fusion.phaseMatched());
         assertEquals(fusion.getExonsSkipped(true), 3);
         assertEquals(fusion.getExonsSkipped(false), 0);
@@ -324,8 +326,8 @@ public class FusionRulesTest
 
         fusion = checkFusionLogic(transUp, transDown, params);
 
-        assertTrue(fusion != null);
-        assertTrue(!fusion.phaseMatched());
+        assertNotNull(fusion);
+        assertFalse(fusion.phaseMatched());
 
         altPhasingsUp = transUp.getAlternativePhasing();
         altPhasingsDown = transDown.getAlternativePhasing();
@@ -334,10 +336,9 @@ public class FusionRulesTest
 
         fusion = checkFusionLogic(transUp, transDown, params);
 
-        assertTrue( fusion != null);
+        assertNotNull(fusion);
         assertTrue(fusion.phaseMatched());
         assertEquals(2, fusion.getExonsSkipped(true));
         assertEquals(3, fusion.getExonsSkipped(false));
-
     }
 }

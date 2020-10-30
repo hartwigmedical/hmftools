@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 
 import static org.junit.Assert.assertEquals;
 
+import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
 import com.google.common.collect.Lists;
@@ -23,8 +24,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class FilteringTest
@@ -63,11 +62,11 @@ public class FilteringTest
         assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var1, var3, var4, var6)));
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var2));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var5));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
 
         tester.clearClustersAndSVs();
@@ -94,7 +93,7 @@ public class FilteringTest
         assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2, var3)));
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var1));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertEquals(ResolvedType.DUP_BE, cluster.getResolvedType());
     }
 
@@ -145,15 +144,15 @@ public class FilteringTest
         assertTrue(tester.hasClusterWithSVs(Lists.newArrayList(var2, var4, var5)));
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertEquals(ResolvedType.LOW_VAF, cluster.getResolvedType());
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var3));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertEquals(ResolvedType.LOW_VAF, cluster.getResolvedType());
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var6));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertEquals(ResolvedType.LOW_VAF, cluster.getResolvedType());
     }
 

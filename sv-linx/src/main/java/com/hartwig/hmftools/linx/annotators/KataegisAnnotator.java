@@ -24,7 +24,7 @@ public class KataegisAnnotator
     private final String mOutputDir;
     private BufferedWriter mFileWriter;
 
-    private static int PROXIMITY_THRESHOLD = 100000;
+    private static final int PROXIMITY_THRESHOLD = 100000;
 
     public KataegisAnnotator(final String outputDir)
     {

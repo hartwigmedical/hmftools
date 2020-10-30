@@ -2,6 +2,10 @@ package com.hartwig.hmftools.linx.chaining;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.MIN_CHAINING_JCN_LEVEL;
@@ -16,10 +20,6 @@ import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.ChainingRule.FOLDBACK_SPLIT;
 import static com.hartwig.hmftools.linx.chaining.LinkSkipType.CLOSING;
 import static com.hartwig.hmftools.linx.chaining.LinkSkipType.JCN_MISMATCH;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 
 import java.util.List;
 import java.util.Map;
@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.JcnCalcData;
-import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.LinkedPair;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ChainLinkAllocator
@@ -721,7 +721,7 @@ public class ChainLinkAllocator
 
             if (targetChain.jcn() > newSvJcn * 2)
             {
-                // chain will have its ploidy halved a  nyway so just split off the excess
+                // chain will have its ploidy halved anyway so just split off the excess
                 newChain.setJcnData(targetChain.jcn() - newSvJcn * 2, targetChain.jcnUncertainty());
                 targetChain.setJcnData(newSvJcn * 2, targetChain.jcnUncertainty());
             }

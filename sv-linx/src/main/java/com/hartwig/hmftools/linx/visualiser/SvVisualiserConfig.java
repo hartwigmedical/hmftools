@@ -14,12 +14,12 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
@@ -226,7 +226,7 @@ public interface SvVisualiserConfig
                 .fusions(fusions)
                 .copyNumberAlterations(cna)
                 .circosBin(circos)
-                .threads(Integer.valueOf(cmd.getOptionValue(THREADS, "1")))
+                .threads(Integer.parseInt(cmd.getOptionValue(THREADS, "1")))
                 .debug(cmd.hasOption(DEBUG))
                 .clusters(clusterIds)
                 .chromosomes(chromosomes(cmd))

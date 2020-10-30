@@ -19,8 +19,8 @@ import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.loadRnaFusion;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.checkRnaPhasedTranscripts;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.findExonMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.isViableBreakend;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.unsplicedPositionMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.setReferenceFusionData;
+import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.unsplicedPositionMatch;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.NOT_SET;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.UNKNOWN;
@@ -35,14 +35,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.utils.sv.StartEndPair;
-import com.hartwig.hmftools.linx.fusion.GeneFusion;
-import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
 import com.hartwig.hmftools.linx.fusion.FusionParameters;
+import com.hartwig.hmftools.linx.fusion.GeneFusion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -132,7 +132,7 @@ public class RnaFusionMapper
             - for them, find the any transcripts which a) have the exon boundary in the RNA position AND
             - b) are in the correct relative position:
                 - upstream: at or after the RNA boundary down to the start of the next exon
-                - downstream: at or before the RNA bounday up to the start of the preceding exon
+                - downstream: at or before the RNA boundary up to the start of the preceding exon
                 - If a transcript on the downstream gene starts on the 2nd exon, the fusion is allowed to match up to the nearer
                 of a splice acceptor site with same orientation on a previous gene OR 100k bases upstream of the transcript.
                 (is the distance up available for these??)
@@ -392,8 +392,8 @@ public class RnaFusionMapper
 
         boolean isUnspliced = rnaFusion.JunctionTypes[FS_UPSTREAM] == UNKNOWN && rnaFusion.JunctionTypes[FS_DOWNSTREAM] == UNKNOWN;
 
-        final Transcript transUp = rnaFusion.getMatchedfTranscripts()[FS_UPSTREAM];
-        final Transcript transDown = rnaFusion.getMatchedfTranscripts()[FS_DOWNSTREAM];
+        final Transcript transUp = rnaFusion.getMatchedTranscripts()[FS_UPSTREAM];
+        final Transcript transDown = rnaFusion.getMatchedTranscripts()[FS_DOWNSTREAM];
 
         for(final GeneFusion dnaFusion : mDnaFusions)
         {

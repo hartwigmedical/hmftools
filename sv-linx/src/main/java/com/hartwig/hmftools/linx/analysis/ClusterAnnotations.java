@@ -5,27 +5,27 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.chaining.ChainMetrics.extractChainMetrics;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
-import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isFilteredResolvedType;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.types.LinkedPair.LOCATION_TYPE_EXTERNAL;
+import static com.hartwig.hmftools.linx.types.LinkedPair.LOCATION_TYPE_INTERNAL;
+import static com.hartwig.hmftools.linx.types.LinkedPair.LOCATION_TYPE_REMOTE;
+import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_MERGE_DISTANCE;
+import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_REP_REPAIR;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
-import static com.hartwig.hmftools.linx.types.LinkedPair.LOCATION_TYPE_EXTERNAL;
-import static com.hartwig.hmftools.linx.types.LinkedPair.LOCATION_TYPE_INTERNAL;
-import static com.hartwig.hmftools.linx.types.LinkedPair.LOCATION_TYPE_REMOTE;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_MERGE_DISTANCE;
-import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 
 import java.util.List;
 import java.util.Map;
@@ -34,12 +34,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
+import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.ArmCluster;
 import com.hartwig.hmftools.linx.types.ArmGroup;
-import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.chaining.SvChain;
-import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.LinkedPair;
+import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -276,8 +276,8 @@ public class ClusterAnnotations
         return traversedInfo;
     }
 
-    private static int NEXT_SV_DISTANCE = 0;
-    private static int NEXT_CLUSTERED_SV_DISTANCE = 1;
+    private static final int NEXT_SV_DISTANCE = 0;
+    private static final int NEXT_CLUSTERED_SV_DISTANCE = 1;
 
     private static int[] getNextClusterSVData(final SvCluster cluster, final List<SvBreakend> breakendList, final LinkedPair pair)
     {
@@ -295,7 +295,7 @@ public class ClusterAnnotations
             for(int i = lowerIndex - 1; i >= 0; --i)
             {
                 final SvBreakend breakend = breakendList.get(i);
-                int distance = (int)(lowerBreakend.position() - breakend.position());
+                int distance = lowerBreakend.position() - breakend.position();
 
                 if (breakend.getCluster() == cluster)
                 {
@@ -316,7 +316,7 @@ public class ClusterAnnotations
             {
                 final SvBreakend breakend = breakendList.get(i);
 
-                int distance = (int)(breakend.position() - upperBreakend.position());
+                int distance = breakend.position() - upperBreakend.position();
 
                 if (breakend.getCluster() == cluster)
                 {

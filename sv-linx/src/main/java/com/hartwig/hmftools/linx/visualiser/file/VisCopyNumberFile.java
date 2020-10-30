@@ -104,9 +104,9 @@ public class VisCopyNumberFile
         return new VisCopyNumberFile(
                 values[index++],
                 values[index++],
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]),
-                Double.valueOf(values[index++]),
-                Double.valueOf(values[index++]));
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]),
+                Double.parseDouble(values[index++]),
+                Double.parseDouble(values[index++]));
     }
 }

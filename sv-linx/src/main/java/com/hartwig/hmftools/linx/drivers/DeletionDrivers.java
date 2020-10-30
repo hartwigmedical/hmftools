@@ -21,13 +21,10 @@ import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_D
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
@@ -100,7 +97,7 @@ public class DeletionDrivers
                     DriverGeneEvent event = new DriverGeneEvent(LOH);
                     event.setLohEvent(lohEvent);
 
-                    // one or both breakendscan be null if not matched
+                    // one or both breakends can be null if not matched
                     event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_DEL);
                     dgData.addEvent(event);
                 }
@@ -128,7 +125,7 @@ public class DeletionDrivers
                 DriverGeneEvent event = new DriverGeneEvent(DriverEventType.DEL);
                 event.setLohEvent(lohEvent);
 
-                // one or both breakendscan be null if not matched
+                // one or both breakends can be null if not matched
                 event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_DEL);
                 dgData.addEvent(event);
             }
@@ -181,7 +178,7 @@ public class DeletionDrivers
                 DriverGeneEvent event = new DriverGeneEvent(LOH);
                 event.setLohEvent(lohEvent);
 
-                // one or both breakendscan be null if not matched
+                // one or both breakends can be null if not matched
                 event.addSvBreakendPair(lohEvent.getBreakend(true), lohEvent.getBreakend(false), SV_DRIVER_TYPE_DEL);
                 dgData.addEvent(event);
             }
@@ -272,7 +269,7 @@ public class DeletionDrivers
 
                         delDriverGeneIds.add(gene.StableId);
 
-                        LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozyous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
+                        LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozygous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
                                 trans.geneName(), breakend.getCluster().id(), breakend,
                                 formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvJcn));
 
@@ -289,7 +286,7 @@ public class DeletionDrivers
                     }
                     else
                     {
-                        // DUP must be wholy contained within the same gene
+                        // DUP must be wholly contained within the same gene
                         if(!breakend.getSV().getGenesList(!breakend.usesStart()).stream().anyMatch(x -> x.StableId == gene.StableId))
                             continue;
 

@@ -112,11 +112,11 @@ public class VisProteinDomainFile
 
         return new VisProteinDomainFile(
                 values[index++],
-                Integer.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
                 values[index++],
                 values[index++],
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]),
                 values[index++]);
     }
 }

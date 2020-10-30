@@ -65,7 +65,7 @@ public class ChainFinderCompare
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(CHAIN_FINDER_DATA_DIR, true, "Root dfirectory for ChainFinder sample run results");
+        options.addOption(CHAIN_FINDER_DATA_DIR, true, "Root directory for ChainFinder sample run results");
         options.addOption(USE_SAMPLE_DIRECTORIES, false, "All sample ChainFinder results in a single directory");
     }
 
@@ -378,7 +378,7 @@ public class ChainFinderCompare
         }
     }
 
-    private final List<CfBreakendData> loadChainFinderData(final String sampleId, final String chainDataFile)
+    private List<CfBreakendData> loadChainFinderData(final String sampleId, final String chainDataFile)
     {
         try
         {

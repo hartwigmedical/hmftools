@@ -11,15 +11,15 @@ import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.LinkedPair;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ChainUtils
 {
-    public static int CHAIN_LINK_COUNT = 0;
-    public static int CHAIN_ASSEMBLY_LINK_COUNT = 1;
-    public static int CHAIN_LENGTH = 2;
+    public static final int CHAIN_LINK_COUNT = 0;
+    public static final int CHAIN_ASSEMBLY_LINK_COUNT = 1;
+    public static final int CHAIN_LENGTH = 2;
 
     public static int[] breakendsAreChained(final SvChain chain, final SvVarData var1, boolean v1Start, final SvVarData var2, boolean v2Start)
     {
@@ -247,7 +247,7 @@ public class ChainUtils
     public static boolean reverseSectionOnBreakend(final SvChain chain, final SvBreakend breakend)
     {
         // reverses a section of a chain
-        // eg sAe - B - eCs - D if reversed at C's start breaknd will become sCe - B - eAs - D
+        // eg sAe - B - eCs - D if reversed at C's start breakend will become sCe - B - eAs - D
 
         for(int i = 0; i < chain.getLinkedPairs().size(); ++i)
         {
@@ -576,7 +576,7 @@ public class ChainUtils
     }
 
 
-    private static String CHAIN_SEQ_DELIM = " - ";
+    private static final String CHAIN_SEQ_DELIM = " - ";
 
     private static String breakendSeqStr(final SvBreakend breakend)
     {

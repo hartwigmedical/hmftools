@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

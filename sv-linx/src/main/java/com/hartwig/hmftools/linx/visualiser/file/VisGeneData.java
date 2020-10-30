@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class VisGeneData

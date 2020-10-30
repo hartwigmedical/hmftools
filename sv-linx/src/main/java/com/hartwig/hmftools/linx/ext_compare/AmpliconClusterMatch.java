@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
-import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MIN_CLUSTER_JCN_THRESHOLD;
 
 import java.util.List;
 import java.util.Map;
@@ -75,7 +74,7 @@ public class AmpliconClusterMatch
 
                 processedClusters.add(cluster);
 
-                // proceeed from this point until the start of the gene
+                // proceed from this point until the start of the gene
                 DriverAmpData ampData = checkClusterForAmplification(ampRegion, breakendList, breakend, traverseUp, opposingSegments);
 
                 if(ampData == null)
@@ -232,7 +231,7 @@ public class AmpliconClusterMatch
             return opposingSegment;
 
         double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
-        double endCopyNumber = startBreakend.getCopyNumber(!traverseUp);;
+        double endCopyNumber = startBreakend.getCopyNumber(!traverseUp);
 
         int index = startBreakend.getChrPosIndex();
 

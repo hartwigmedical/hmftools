@@ -61,7 +61,7 @@ public class DisruptionFinder
         mWriter = null;
     }
 
-    public static final List<String> disruptionGeneIds(final List<DriverGene> driverGenes, final EnsemblDataCache geneTransCache)
+    public static List<String> disruptionGeneIds(final List<DriverGene> driverGenes, final EnsemblDataCache geneTransCache)
     {
         return driverGenes.stream()
                 .filter(x -> x.reportDisruption())
@@ -161,7 +161,7 @@ public class DisruptionFinder
 
         final List<SvChain> chains = cluster.findChains(var);
 
-        // first test each breakend in turn to see if it forms a TI wholy within an intron and where the other breakends
+        // first test each breakend in turn to see if it forms a TI wholly within an intron and where the other breakends
         // of the TI are non-genic
 
         for(int se = SE_START; se <= SE_END; ++se)
@@ -210,7 +210,7 @@ public class DisruptionFinder
         }
     }
 
-    private static final List<Transcript> getDisruptedTranscripts(final List<GeneAnnotation> genes)
+    private static List<Transcript> getDisruptedTranscripts(final List<GeneAnnotation> genes)
     {
         List<Transcript> transList = Lists.newArrayList();
 
@@ -378,7 +378,7 @@ public class DisruptionFinder
 
     private boolean markNonDisruptiveDups(final List<Transcript> upstreamTransList, final List<Transcript> downstreamTransList)
     {
-        // special case of a DUP around the 1st exon which since it doesn't have a splice acceptor does not change the transcipt
+        // special case of a DUP around the 1st exon which since it doesn't have a splice acceptor does not change the transcript
         boolean foundMatchingTrans = false;
 
         for (final Transcript upTrans : upstreamTransList)

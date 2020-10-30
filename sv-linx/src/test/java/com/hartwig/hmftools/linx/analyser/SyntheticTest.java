@@ -1,26 +1,24 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
-import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
-import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticTiLength;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_OTHER;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_DSB;
+import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_TI_ONLY;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;
+import static com.hartwig.hmftools.linx.types.ResolvedType.FB_INV_PAIR;
+import static com.hartwig.hmftools.linx.types.ResolvedType.INV;
+import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL;
+import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
-
-import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticLength;
-import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getSyntheticTiLength;
-import static com.hartwig.hmftools.linx.types.ResolvedType.DEL;
-import static com.hartwig.hmftools.linx.types.ResolvedType.DUP;
-import static com.hartwig.hmftools.linx.types.ResolvedType.INV;
-import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
-import static com.hartwig.hmftools.linx.types.ResolvedType.SGL;
-import static com.hartwig.hmftools.linx.types.ResolvedType.UNBAL_TRANS;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_OTHER;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_TI_ONLY;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -28,10 +26,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 import org.junit.Test;
-
-import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class SyntheticTest
 {

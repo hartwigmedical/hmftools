@@ -29,13 +29,13 @@ public class BaSampleFitter
 
     private final SampleSigContribOptimiser mSigContribOptimiser;
 
-    private static double DEFAULT_MIN_SIG_PERCENT = 0.01;
+    private static final double DEFAULT_MIN_SIG_PERCENT = 0.01;
     private static final String MIN_SIG_PERCENT = "min_sig_percent";
 
-    public static double DEFAULT_NOISE_PROB = 1e-4;
+    public static final double DEFAULT_NOISE_PROB = 1e-4;
     public static final String NOISE_PROB = "noise_prob";
 
-    public static int DEFAULT_MIN_NOISE_COUNT = 5;
+    public static final int DEFAULT_MIN_NOISE_COUNT = 5;
 
     private static final Logger LOGGER = LogManager.getLogger(BaSampleFitter.class);
 

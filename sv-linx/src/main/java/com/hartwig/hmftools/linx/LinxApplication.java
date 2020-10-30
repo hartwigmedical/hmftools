@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
+import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
@@ -20,23 +20,17 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLi
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
-import com.hartwig.hmftools.linx.ext_compare.AmpliconCompare;
-import com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -55,7 +49,7 @@ public class LinxApplication
 {
     private static final String FILTER_QC_PASS = "filter_qc_pass";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException
+    public static void main(@NotNull final String[] args) throws ParseException
     {
         final VersionInfo version = new VersionInfo("linx.version");
         LNX_LOGGER.info("LINX version: {}", version.version());

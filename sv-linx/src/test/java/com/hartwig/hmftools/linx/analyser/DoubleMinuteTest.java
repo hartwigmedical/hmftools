@@ -9,23 +9,21 @@ import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.SEG_DATA_COUNT
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS_DEL_DUP;
-import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.analysis.DoubleMinuteData;
+import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 import org.junit.Ignore;
 import org.junit.Test;
-
-import com.hartwig.hmftools.linx.utils.LinxTester;
 
 public class DoubleMinuteTest
 {

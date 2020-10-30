@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FIN
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -38,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ExternalToolCompare
 {
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException
+    public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);

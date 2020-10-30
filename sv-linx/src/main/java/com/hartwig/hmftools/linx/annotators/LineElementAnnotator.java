@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.linx.annotators;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -361,7 +359,6 @@ public class LineElementAnnotator {
                         cluster.id(), hasSglLineRepeatClass, hasInsertSites);
 
                 cluster.markAsLine();
-                return;
             }
         }
     }

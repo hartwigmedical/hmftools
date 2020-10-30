@@ -42,7 +42,7 @@ public class GeneFusion
 
     private FusionAnnotations mAnnotations;
 
-    // calculated priority accoriding to scheme for selecting fusions
+    // calculated priority according to scheme for selecting fusions
     private double mPriority;
 
     public GeneFusion(final Transcript upstreamTrans, final Transcript downstreamTrans, boolean phaseMatched)

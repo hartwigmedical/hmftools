@@ -109,7 +109,7 @@ public class AmplificationDrivers
             return opposingSegment;
 
         double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
-        double endCopyNumber = startBreakend.getCopyNumber(!traverseUp);;
+        double endCopyNumber = startBreakend.getCopyNumber(!traverseUp);
 
         int index = startBreakend.getChrPosIndex();
 
@@ -334,7 +334,7 @@ public class AmplificationDrivers
 
                 processedClusters.add(cluster);
 
-                // proceeed from this point until the start of the gene
+                // proceed from this point until the start of the gene
                 DriverAmpData ampData = checkClusterForAmplification(dgData, breakendList, breakend, traverseUp, opposingSegments);
 
                 if(ampData == null)

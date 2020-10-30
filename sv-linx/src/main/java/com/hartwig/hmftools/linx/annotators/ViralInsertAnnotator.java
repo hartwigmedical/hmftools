@@ -2,9 +2,7 @@ package com.hartwig.hmftools.linx.annotators;
 
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -17,11 +15,11 @@ import org.jetbrains.annotations.Nullable;
 
 public class ViralInsertAnnotator
 {
-    final private Map<String, String> mVirualHosts;
+    final private Map<String, String> mViralHosts;
 
     public ViralInsertAnnotator()
     {
-        mVirualHosts = Maps.newHashMap();
+        mViralHosts = Maps.newHashMap();
     }
 
     public void loadViralHostData(final String filename)
@@ -40,17 +38,17 @@ public class ViralInsertAnnotator
 
                 if(items.length < 2)
                 {
-                    LNX_LOGGER.debug("invalid data, entry {}", mVirualHosts.size());
+                    LNX_LOGGER.debug("invalid data, entry {}", mViralHosts.size());
                     break;
                 }
 
                 final String vhId = items[0];
                 final String vhName = items[1];
 
-                mVirualHosts.put(vhId, vhName);
+                mViralHosts.put(vhId, vhName);
             }
 
-            LNX_LOGGER.debug("loaded {} viral host data", mVirualHosts.size());
+            LNX_LOGGER.debug("loaded {} viral host data", mViralHosts.size());
         }
         catch(IOException exception)
         {
@@ -64,7 +62,7 @@ public class ViralInsertAnnotator
     @Nullable
     public String[] matchesViralInsert(final SvVarData svData)
     {
-        if(mVirualHosts.isEmpty())
+        if(mViralHosts.isEmpty())
             return null;
 
         final String insertSeqAlignments = svData.getSvData().insertSequenceAlignments();
@@ -76,7 +74,7 @@ public class ViralInsertAnnotator
             return null;
 
         final String vhId = vhData[0];
-        final String vhName = mVirualHosts.get(vhId);
+        final String vhName = mViralHosts.get(vhId);
 
         if(vhName == null)
             return null;

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.COMMON_ARMS;
@@ -18,12 +18,8 @@ import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsHaveDi
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.variantsViolateLohHomLoss;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.jcnMatch;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_MERGE_DISTANCE;
+import static com.hartwig.hmftools.linx.types.SvVarData.haveSameChrArms;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +27,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.chaining.ChainJcnLimits;
-import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;

@@ -1,20 +1,13 @@
 package com.hartwig.hmftools.linx.analyser;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateReplicationBeforeRepair;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_REP_REPAIR;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
-import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;

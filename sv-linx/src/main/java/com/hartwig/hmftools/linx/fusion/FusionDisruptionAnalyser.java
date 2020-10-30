@@ -3,24 +3,20 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
@@ -36,26 +32,25 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
-import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.chaining.SvChain;
-import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.LinkedPair;
-import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
+import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
+import com.hartwig.hmftools.linx.types.LinkedPair;
+import com.hartwig.hmftools.linx.types.SvBreakend;
+import com.hartwig.hmftools.linx.types.SvCluster;
+import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -145,7 +140,7 @@ public class FusionDisruptionAnalyser
         options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
 
-        options.addOption(RNA_FUSIONS_FILE, true, "Sample RNA fusion data to match vs Linx fusios");
+        options.addOption(RNA_FUSIONS_FILE, true, "Sample RNA fusion data to match vs Linx fusions");
         options.addOption(RNA_FILE_SOURCE, true, "RNA fusion source: ISOFOX, ARRIBA or STARFUSION");
 
         options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
@@ -832,7 +827,7 @@ public class FusionDisruptionAnalyser
         return false;
     }
 
-    private final List<GeneAnnotation> getBreakendGeneList(final SvVarData var, boolean isStart)
+    private List<GeneAnnotation> getBreakendGeneList(final SvVarData var, boolean isStart)
     {
         if(var.isSglBreakend() && !isStart)
         {
@@ -906,7 +901,7 @@ public class FusionDisruptionAnalyser
     }
 
 
-    private final List<GeneFusion> extractUniqueFusions()
+    private List<GeneFusion> extractUniqueFusions()
     {
         final Map<String,List<GeneFusion>> svIdPairFusions = Maps.newHashMap();
         final Map<String,List<GeneFusion>> genePairFusions = Maps.newHashMap();

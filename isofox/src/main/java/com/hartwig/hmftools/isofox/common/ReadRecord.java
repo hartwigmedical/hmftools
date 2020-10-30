@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.isofox.common;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -616,8 +615,8 @@ public class ReadRecord
         return Cigar.containsOperator(CigarOperator.S);
     }
 
-    private static int MIN_SC_BASE_MATCH = 2;
-    public static int MAX_SC_BASE_MATCH = 10;
+    private static final int MIN_SC_BASE_MATCH = 2;
+    public static final int MAX_SC_BASE_MATCH = 10;
 
     private void checkMissedJunctions(final RegionReadData region)
     {

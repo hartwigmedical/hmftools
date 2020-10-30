@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.analysis;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -8,8 +7,8 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
@@ -19,14 +18,11 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUT
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.getMajorAlleleJcnRatio;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.variantExceedsBothAdjacentJcn;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.chaining.ChainFinder.LR_METHOD_DM_CLOSE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.ADJACENT_JCN_RATIO;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -36,16 +32,16 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class DoubleMinuteFinder
@@ -301,7 +297,7 @@ public class DoubleMinuteFinder
         return maxRatio;
     }
 
-    private final List<SvChain> createDMChains(final SvCluster cluster, final List<SvVarData> dmSvList, boolean applyReplication)
+    private List<SvChain> createDMChains(final SvCluster cluster, final List<SvVarData> dmSvList, boolean applyReplication)
     {
         // first extract stand-alone DUPs to avoid them chaining in just because they can
         final List<SvChain> dmChains = Lists.newArrayList();
@@ -494,7 +490,7 @@ public class DoubleMinuteFinder
         }
     }
 
-    private final String getAmplifiedGenesList(final SvChain chain)
+    private String getAmplifiedGenesList(final SvChain chain)
     {
         if(mGeneTransCache == null)
             return "";

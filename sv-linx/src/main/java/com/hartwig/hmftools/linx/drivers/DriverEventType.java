@@ -13,5 +13,5 @@ public enum DriverEventType
     LOH_SV_TELO,
     DEL,
     HOM_DEL_DISRUPTION,
-    HOM_DUP_DISRUPTION;
+    HOM_DUP_DISRUPTION
 }

@@ -15,10 +15,10 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendM
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
-import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
-import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_SIMPLE_DUP_DEL_CUTOFF;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
+import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
+import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,8 +32,8 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class ClusteringPrep
 {
-    private static int DEL_DUP_LENGTH_TRIM_COUNT = 5;
-    private static int MAX_ARM_COUNT = 41; // excluding the 5 short arms
+    private static final int DEL_DUP_LENGTH_TRIM_COUNT = 5;
+    private static final int MAX_ARM_COUNT = 41; // excluding the 5 short arms
 
     public static void populateChromosomeBreakendMap(final List<SvVarData> allVariants, final ClusteringState state)
     {

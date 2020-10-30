@@ -74,7 +74,7 @@ public class Highlights
             if (!line.startsWith(COMMENT) && !line.startsWith(HEADER))
             {
                 final String[] values = line.split(DELIMITER);
-                result.add(GenomeRegions.create(values[0], Long.valueOf(values[1]), Long.valueOf(values[2])));
+                result.add(GenomeRegions.create(values[0], Long.parseLong(values[1]), Long.parseLong(values[2])));
 
             }
         }

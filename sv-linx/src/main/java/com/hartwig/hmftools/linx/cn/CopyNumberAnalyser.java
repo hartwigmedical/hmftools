@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -193,7 +192,7 @@ public class CopyNumberAnalyser
                 {
                     // account for no segments with CN change
                     int chromosomeLength = getChromosomeLength(chromosome);
-                    int windowCount = (int)(chromosomeLength/CN_SEGMENT_WINDOW_SIZE);
+                    int windowCount = chromosomeLength / CN_SEGMENT_WINDOW_SIZE;
 
                     mCnSegmentWriter.write(String.format("%s,%s,%s,%d,%d",
                             sampleId, isMale, chromosome, 0, windowCount));
@@ -222,7 +221,7 @@ public class CopyNumberAnalyser
                     windowEndPos = (int)floor(cnData.StartPos/(double)CN_SEGMENT_WINDOW_SIZE)*CN_SEGMENT_WINDOW_SIZE;
 
                     // account for the distance out the telomere for the last segment
-                    int skippedWindowCount = (int)((windowEndPos - windowStartPos) / CN_SEGMENT_WINDOW_SIZE);
+                    int skippedWindowCount = (windowEndPos - windowStartPos) / CN_SEGMENT_WINDOW_SIZE;
 
                     if(!copyNumbersEqual(prevCopyNumber, cnData.CopyNumber))
                     {
@@ -250,7 +249,7 @@ public class CopyNumberAnalyser
 
                 // account for the last segment out to the telomere
                 final SvCNData lastSegment = cnDataList.get(cnDataList.size() - 1);
-                int skippedWindowCount = (int)((lastSegment.EndPos - lastSegment.StartPos) / CN_SEGMENT_WINDOW_SIZE);
+                int skippedWindowCount = (lastSegment.EndPos - lastSegment.StartPos) / CN_SEGMENT_WINDOW_SIZE;
 
                 if(skippedWindowCount > 0)
                     cnFrequency.put(0, cnFrequency.get(0) + skippedWindowCount);
@@ -380,11 +379,11 @@ public class CopyNumberAnalyser
         }
     }
 
-    private static int P_ARM_INDEX = 0;
-    private static int Q_ARM_INDEX = 1;
+    private static final int P_ARM_INDEX = 0;
+    private static final int Q_ARM_INDEX = 1;
 
-    private static int SEG_LENGTH_INDEX = 0;
-    private static int SEG_CN_INDEX = 1;
+    private static final int SEG_LENGTH_INDEX = 0;
+    private static final int SEG_CN_INDEX = 1;
 
     private CnArmStats[] calcArmStats(final String chromosome, final List<SvCNData> cnDataList, final List<LohEvent> lohEvents)
     {
@@ -622,7 +621,7 @@ public class CopyNumberAnalyser
         closeBufferedWriter(mCnSegmentWriter);
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException
+    public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
         CopyNumberAnalyser.addCmdLineArgs(options);

@@ -89,7 +89,7 @@ public class ArmCluster
     public static final int ARM_CL_SAME_ORIENT = 9;
     public static final int ARM_CL_MAX = ARM_CL_SAME_ORIENT;
 
-    public static final String typeToString(int type)
+    public static String typeToString(int type)
     {
         switch(type)
         {

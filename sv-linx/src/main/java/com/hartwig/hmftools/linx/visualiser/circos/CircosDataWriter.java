@@ -36,8 +36,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
-    private static DecimalFormat RATIO_FORMAT = new DecimalFormat("#.###");
-    private static DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
+    private static final DecimalFormat RATIO_FORMAT = new DecimalFormat("#.###");
+    private static final DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final String SINGLE_BLUE = "(107,174,214)";
     private static final String SINGLE_RED = "(214,144,107)";
     private static final String SINGLE_GREEN = "(107,214,148)";
@@ -45,7 +45,7 @@ public class CircosDataWriter
 
     private static final int MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK = 100000;
 
-    private static final int MIN_KAROTYPE_LENGTH = 10;
+    private static final int MIN_KARYOTYPE_LENGTH = 10;
     private static final String DELIMITER = "\t";
 
     private final String filePrefix;
@@ -246,7 +246,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> exons(@NotNull final Map<String, String> geneColours, @NotNull final List<GenomeRegion> distruptedRegions,
+    private List<String> exons(@NotNull final Map<String, String> geneColours, @NotNull final List<GenomeRegion> disruptedRegions,
             @NotNull final List<Exon> exons)
     {
         final List<String> result = Lists.newArrayList();
@@ -266,11 +266,11 @@ public class CircosDataWriter
             result.add(exonString);
         }
 
-        for (final GenomeRegion distruptedRegion : distruptedRegions)
+        for (final GenomeRegion disruptedRegion : disruptedRegions)
         {
-            final String exonString = new StringJoiner(DELIMITER).add(circosContig(distruptedRegion.chromosome()))
-                    .add(String.valueOf(distruptedRegion.start()))
-                    .add(String.valueOf(distruptedRegion.end()))
+            final String exonString = new StringJoiner(DELIMITER).add(circosContig(disruptedRegion.chromosome()))
+                    .add(String.valueOf(disruptedRegion.start()))
+                    .add(String.valueOf(disruptedRegion.end()))
                     .add(String.valueOf(1))
                     .add("fill_color=(255,255,255,0.6)")
                     .toString();
@@ -510,7 +510,7 @@ public class CircosDataWriter
                     .add(circosContig(contig.chromosome()))
                     .add(HumanChromosome.fromString(contig.chromosome()).toString())
                     .add(String.valueOf(1))
-                    .add(String.valueOf(Math.max(MIN_KAROTYPE_LENGTH, contig.position())))
+                    .add(String.valueOf(Math.max(MIN_KARYOTYPE_LENGTH, contig.position())))
                     .add("chr" + HumanChromosome.fromString(contig.chromosome()).toString())
                     .toString();
             result.add(start);

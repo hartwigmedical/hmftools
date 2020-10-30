@@ -43,11 +43,11 @@ public class ProteinDomains
                 {
                     if (proteinDomain.overlaps(exon))
                     {
-                        final ProteinDomain exonicProtenDomain = ImmutableProteinDomain.builder().from(proteinDomain)
+                        final ProteinDomain exonicProteinDomain = ImmutableProteinDomain.builder().from(proteinDomain)
                                 .start(Math.max(proteinDomain.start(), exon.start()))
                                 .end(Math.min(proteinDomain.end(), exon.end())).build();
 
-                        result.add(exonicProtenDomain);
+                        result.add(exonicProteinDomain);
                     }
                 }
             }

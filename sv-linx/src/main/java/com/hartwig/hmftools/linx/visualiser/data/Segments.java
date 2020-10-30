@@ -140,22 +140,22 @@ public class Segments
                 .map(GenomeRegion::chromosome)
                 .collect(Collectors.toSet());
 
-        final Set<String> requiredCentomeres = Sets.newHashSet();
+        final Set<String> requiredCentromeres = Sets.newHashSet();
         final List<GenomeRegion> segmentSpan = Span.spanRegions(segments);
         for (final GenomeRegion genomeRegion : segmentSpan)
         {
             long centromere = REF_GENOME.centromeres().get(HumanChromosome.fromString(genomeRegion.chromosome()));
             if (genomeRegion.start() < centromere && genomeRegion.end() > centromere)
             {
-                requiredCentomeres.add(genomeRegion.chromosome());
+                requiredCentromeres.add(genomeRegion.chromosome());
             }
         }
 
-        requiredCentomeres.removeAll(existingCentromeres);
-        if (!requiredCentomeres.isEmpty())
+        requiredCentromeres.removeAll(existingCentromeres);
+        if (!requiredCentromeres.isEmpty())
         {
             final String sampleId = segments.get(0).sampleId();
-            for (final String requiredCentromere : requiredCentomeres)
+            for (final String requiredCentromere : requiredCentromeres)
             {
                 result.add(centromere(sampleId, requiredCentromere));
             }

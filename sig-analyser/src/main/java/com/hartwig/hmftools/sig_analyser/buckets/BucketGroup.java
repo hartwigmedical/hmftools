@@ -59,10 +59,10 @@ public class BucketGroup  {
 
     private double mPurity; // for now a percentage of sample buckets that are elevated
 
-    public static String BG_TYPE_BACKGROUND = "BGRD";
-    public static String BG_TYPE_MAJOR = "MAJOR";
-    public static String BG_TYPE_MINOR = "MINOR";
-    public static String BG_TYPE_UNIQUE = "UNIQUE";
+    public static final String BG_TYPE_BACKGROUND = "BGRD";
+    public static final String BG_TYPE_MAJOR = "MAJOR";
+    public static final String BG_TYPE_MINOR = "MINOR";
+    public static final String BG_TYPE_UNIQUE = "UNIQUE";
 
     private static final Logger LOGGER = LogManager.getLogger(BucketGroup.class);
 

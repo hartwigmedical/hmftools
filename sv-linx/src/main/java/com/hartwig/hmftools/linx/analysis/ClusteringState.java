@@ -1,15 +1,12 @@
 package com.hartwig.hmftools.linx.analysis;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.types.SvCluster;
 
 public class ClusteringState
 {

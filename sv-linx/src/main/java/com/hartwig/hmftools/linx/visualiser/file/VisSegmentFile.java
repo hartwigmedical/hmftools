@@ -112,13 +112,13 @@ public class VisSegmentFile
 
         return new VisSegmentFile(
                 values[index++],
-                Integer.valueOf(values[index++]),
-                Integer.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]),
                 values[index++],
                 values[index++],
                 values[index++],
-                Double.valueOf(values[index++]),
-                index < values.length ? Boolean.valueOf(values[index++]) : false);
+                Double.parseDouble(values[index++]),
+                index < values.length ? Boolean.parseBoolean(values[index++]) : false);
     }
 
 }

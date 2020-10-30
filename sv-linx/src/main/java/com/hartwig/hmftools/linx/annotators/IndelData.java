@@ -47,12 +47,12 @@ public class IndelData
 
     public boolean highRepeatCount() { return RepeatCount >= HIGH_REPEAT_COUNT; }
 
-    public boolean microhology() { return IsDelete && highRepeatCount() && !Microhomology.isEmpty(); }
+    public boolean microhomology() { return IsDelete && highRepeatCount() && !Microhomology.isEmpty(); }
 
     public String toString()
     {
         return String.format("indel(%s %s:%d) repeat(%d) microhomology(%s) ploidy(%.2f)",
-                IsDelete ? "DEL" : "INS", Chromosome, Position, RepeatCount, microhology(), Ploidy);
+                IsDelete ? "DEL" : "INS", Chromosome, Position, RepeatCount, microhomology(), Ploidy);
     }
 
     public static final int CSV_REQUIRED_FIELDS = 8;

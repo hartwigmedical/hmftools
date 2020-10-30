@@ -2,26 +2,25 @@ package com.hartwig.hmftools.linx.analysis;
 
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.UNDER_CLUSTERING;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateClusterChains;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateClusterDeletions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateReplicationBeforeRepair;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemplatedInsertions;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportUnderclustering;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
+import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.associateBreakendCnEvents;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.setSimpleVariantLengths;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateClusterChains;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemplatedInsertions;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
-import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.DELETED_TOTAL;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.RANGE_TOTAL;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.createAssemblyLinkedPairs;
+import static com.hartwig.hmftools.linx.types.ArmCluster.buildArmClusters;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
-import static com.hartwig.hmftools.linx.types.ArmCluster.buildArmClusters;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 
 import java.util.List;
@@ -30,13 +29,13 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.LinxConfig;
 
 public class ClusterAnalyser {
 
@@ -90,7 +89,7 @@ public class ClusterAnalyser {
         mChainFinder.setUseAllelePloidies(true); // can probably remove and assume always in place
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
 
-        mRunValidationChecks = false; // emabled in unit tests and after changes to merging-rule flow
+        mRunValidationChecks = false; // enabled in unit tests and after changes to merging-rule flow
 
         mPcClustering = new PerformanceCounter("Clustering");
         mPcChaining = new PerformanceCounter("Chaining");

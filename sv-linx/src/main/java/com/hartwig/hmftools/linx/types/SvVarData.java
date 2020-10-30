@@ -27,10 +27,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.linx.analysis.ClusteringReason;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.cn.SvCNData;
@@ -50,7 +50,7 @@ public class SvVarData
     private SvCluster mCluster;
     private String mClusterReason;
 
-    private final SvBreakend[] mFoldbackBreakends; // either the 2 breakends for this SV, or another SV's breaked
+    private final SvBreakend[] mFoldbackBreakends; // either the 2 breakends for this SV, or another SV's breakend
     private final int[] mFoldbackLength;
     private final String[] mFoldbackInfo;
 
@@ -87,12 +87,12 @@ public class SvVarData
     public static final String SGL_CENTRO_SATELLITE = "Satellite/centr";
     public static final String SGL_TELO_SATELLITE = "Satellite/telo";
 
-    public static String ASSEMBLY_TYPE_TI = "asm";
-    public static String TRANSITIVE_TYPE_TI = "trs";
-    public static String ASSEMBLY_TYPE_EQV = "eqv";
+    public static final String ASSEMBLY_TYPE_TI = "asm";
+    public static final String TRANSITIVE_TYPE_TI = "trs";
+    public static final String ASSEMBLY_TYPE_EQV = "eqv";
 
-    public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
-    public static String RELATION_TYPE_OVERLAP = "OVRL";
+    public static final String RELATION_TYPE_NEIGHBOUR = "NHBR";
+    public static final String RELATION_TYPE_OVERLAP = "OVRL";
 
     public SvVarData(final StructuralVariantData svData)
     {
@@ -277,9 +277,9 @@ public class SvVarData
     public String getNearestSvRelation() { return mNearestSvRelation; }
     public void setNearestSvRelation(final String rel) { mNearestSvRelation = rel; }
 
-    public void setFragileSites(boolean isFragleStart, boolean isFragileEnd)
+    public void setFragileSites(boolean isFragileStart, boolean isFragileEnd)
     {
-        mFragileSite[SE_START] = isFragleStart;
+        mFragileSite[SE_START] = isFragileStart;
         mFragileSite[SE_END] = isFragileEnd;
     }
 

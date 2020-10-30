@@ -1,19 +1,12 @@
 package com.hartwig.hmftools.linx.clustering;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.ClusteringReason.CONSEC_BREAKS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringReason.FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.HIGH_JCN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.HOM_LOSS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH_CHAIN;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LONG_DEL_DUP_INV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.MAJOR_ALLELE_JCN;
-import static com.hartwig.hmftools.linx.analysis.ClusteringReason.OVERLAP_FOLDBACKS;
-import static com.hartwig.hmftools.linx.analysis.ClusteringReason.TI_JCN_MATCH;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -21,26 +14,23 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createIns;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
-import static com.hartwig.hmftools.linx.types.SvVarData.ASSEMBLY_TYPE_EQV;
 
 import static org.junit.Assert.assertEquals;
 
+import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
+import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.SvVarData;
-
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.junit.Test;
-
 import com.hartwig.hmftools.linx.utils.LinxTester;
+
+import org.junit.Test;
 
 public class SimpleMergeRuleTest
 {
@@ -122,7 +112,7 @@ public class SimpleMergeRuleTest
         assertEquals(3, tester.getClusters().size());
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(del1, del2, del3));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertEquals(ResolvedType.COMPLEX, cluster.getResolvedType());
     }
 
@@ -237,7 +227,7 @@ public class SimpleMergeRuleTest
         assertEquals(2, tester.Analyser.getClusters().size());
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3, var4));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
 
         assertTrue(cluster.hasClusterReason(HIGH_JCN));
 
@@ -271,7 +261,7 @@ public class SimpleMergeRuleTest
         assertEquals(4, tester.Analyser.getClusters().size());
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3, var6, var7, var8));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
 
         assertTrue(cluster.hasClusterReason(HIGH_JCN));
         assertTrue(cluster.hasClusterReason(MAJOR_ALLELE_JCN));
@@ -299,11 +289,11 @@ public class SimpleMergeRuleTest
         assertEquals(5, tester.Analyser.getClusters().size());
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3, var4));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertTrue(cluster.hasClusterReason(HIGH_JCN));
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var7, var8));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertTrue(cluster.hasClusterReason(HIGH_JCN));
     }
 
@@ -347,7 +337,7 @@ public class SimpleMergeRuleTest
         assertEquals(3, tester.Analyser.getClusters().size());
 
         SvCluster cluster = tester.findClusterWithSVs(Lists.newArrayList(var1, var2));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertTrue(cluster.hasClusterReason(HOM_LOSS));
 
         // scenario 2: multiple hom-loss events clustered because LOH is clustered
@@ -389,7 +379,7 @@ public class SimpleMergeRuleTest
         assertEquals(2, tester.Analyser.getClusters().size());
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3, var4, var5));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertTrue(cluster.hasClusterReason(HOM_LOSS));
         assertTrue(cluster.hasClusterReason(MAJOR_ALLELE_JCN));
 
@@ -422,7 +412,7 @@ public class SimpleMergeRuleTest
         tester.Analyser.clusterAndAnalyse();
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var2, var3));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertTrue(cluster.hasClusterReason(HOM_LOSS));
 
         // again but with more SVs involved
@@ -459,7 +449,7 @@ public class SimpleMergeRuleTest
         tester.Analyser.clusterAndAnalyse();
 
         cluster = tester.findClusterWithSVs(Lists.newArrayList(var3, var4));
-        assertTrue(cluster != null);
+        assertNotNull(cluster);
         assertTrue(cluster.hasClusterReason(HOM_LOSS));
     }
 

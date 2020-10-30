@@ -1,21 +1,21 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
-import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -27,14 +27,14 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.Transcript;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
-import com.hartwig.hmftools.linx.utils.LinxTester;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 import org.junit.Test;
 
@@ -151,8 +151,8 @@ public class FusionTest
 
         GeneAnnotation upGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
 
-        Integer codingStart = new Integer(350);
-        Integer codingEnd = new Integer(950);
+        Integer codingStart = 350;
+        Integer codingEnd = 950;
 
         Transcript upTrans1 = new Transcript(upGene, 1, "TRANS01", 2, 1, 3, 1,
                 50, 300,5, true, 100, 1000, codingStart, codingEnd);
@@ -160,8 +160,8 @@ public class FusionTest
 
         GeneAnnotation downGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
 
-        codingStart = new Integer(10350);
-        codingEnd = new Integer(10950);
+        codingStart = 10350;
+        codingEnd = 10950;
 
         Transcript downTrans1 = new Transcript(downGene, 11, "TRANS11", 2, 1, 3, 1,
                 50, 300,5, true, 10000, 11000, codingStart, codingEnd);

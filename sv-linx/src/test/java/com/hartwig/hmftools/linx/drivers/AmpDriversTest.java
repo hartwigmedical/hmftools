@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.AMP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
@@ -34,7 +34,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class AmpDriversTest
