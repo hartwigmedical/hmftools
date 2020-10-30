@@ -13,13 +13,9 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DiploidCount implements Comparable<DiploidCount> {
+class DiploidCount implements Comparable<DiploidCount> {
 
     private static final String DELIMITER = "\t";
-
-    final GenomePosition position;
-    int diploid;
-    int count;
 
     @NotNull
     public static Map<GenomePosition, DiploidCount> readDiploidCountAsMap(final String outputFile) throws IOException {
@@ -33,6 +29,10 @@ public class DiploidCount implements Comparable<DiploidCount> {
     public static List<DiploidCount> readDiploidCountAsList(final String outputFile) throws IOException {
         return Files.readAllLines(new File(outputFile).toPath()).stream().map(DiploidCount::new).collect(Collectors.toList());
     }
+
+    private final GenomePosition position;
+    private int diploid;
+    private int count;
 
     private DiploidCount(String line) {
         final String[] values = line.split(DELIMITER);
@@ -53,6 +53,26 @@ public class DiploidCount implements Comparable<DiploidCount> {
 
     void incrementDiploid() {
         diploid++;
+    }
+
+    public int getDiploid() {
+        return diploid;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public String chromosome() {
+        return position.chromosome();
+    }
+
+    public long position() {
+        return position.position();
+    }
+
+    public double proportionIsDiploid(int count) {
+        return 1d * getDiploid() / count;
     }
 
     @NotNull
