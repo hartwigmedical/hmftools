@@ -13,6 +13,7 @@ import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,8 +60,16 @@ class BiopsyReader {
 
                     String location = biopsiesGroup.readItemString(FIELD_LOCATION);
 
-                    CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
-                            curatedTumorLocation.primaryTumorType(),
+                    String subTumorType = Strings.EMPTY;
+                    if (curatedTumorLocation.primaryTumorType() != null) {
+                        subTumorType = curatedTumorLocation.primaryTumorSubType().equals(Strings.EMPTY)
+                                ? curatedTumorLocation.primaryTumorType()
+                                : curatedTumorLocation.primaryTumorSubType();
+                    }
+
+                    CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(
+                            curatedTumorLocation.primaryTumorLocation(),
+                            subTumorType,
                             finalSite,
                             location);
 
@@ -74,8 +83,7 @@ class BiopsyReader {
                     }
                 }
             }
-        }
-        return biopsies;
+        } return biopsies;
     }
 
     private static boolean isEmpty(@NotNull BiopsyData biopsy) {
