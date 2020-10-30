@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.fusion;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;

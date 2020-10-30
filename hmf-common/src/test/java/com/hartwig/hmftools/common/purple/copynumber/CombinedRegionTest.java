@@ -15,6 +15,7 @@ public class CombinedRegionTest {
     private static final double EPSILON = 1e-10;
 
     @Ignore
+    @Test
     public void averageOnLengthUntilNonZeroBafCount() {
         final CombinedRegion region = createCombinedFittedRegion(1, 100_000_000, 3);
         assertAverages(region, 0, 3);

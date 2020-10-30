@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class DndsGeneNameMapTest {
 
-    DndsGeneNameMap victim = new DndsGeneNameMap();
+    private final DndsGeneNameMap victim = new DndsGeneNameMap();
 
     @Test
     public void testPRAMEF11() {
@@ -18,7 +18,6 @@ public class DndsGeneNameMapTest {
 
         assertFalse(victim.isValidHg38Gene("WI2-3308P17.2"));
         assertEquals("WI2-3308P17.2", victim.hg19Gene("PRAMEF11"));
-
     }
 
     @Test

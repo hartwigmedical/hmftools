@@ -17,13 +17,13 @@ public class GeneAnnotation {
     public final String StableId;
     public final int Strand;
 
-    private int mVarId;
+    private final int mVarId;
     private final boolean mIsStart;
     private boolean mUpstream;
 
     private EnsemblGeneData mGeneData;
 
-    private List<Transcript> mTranscripts;
+    private final List<Transcript> mTranscripts;
 
     @NotNull
     private final String mKaryotypeBand;
@@ -36,7 +36,7 @@ public class GeneAnnotation {
     private String mInsertSequence;
 
     public GeneAnnotation(int varId, final boolean isStart, final String geneName, final String stableId,
-            final int strand, final String karyotypeBand)
+            final int strand, @NotNull String karyotypeBand)
     {
         GeneName = geneName;
         StableId = stableId;

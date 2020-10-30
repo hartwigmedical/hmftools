@@ -43,11 +43,13 @@ public class TsgMultiHitTest {
     public void testMultiHitIsNeverLessThanEquivalentMissense() {
         Map<VariantType, Long> counts = countMap(83135, 241917);
 
-        SomaticVariant missense = create(VariantType.SNP, CodingEffect.MISSENSE, false, 0.5);;
-        SomaticVariant frameshift = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.5);;
+        SomaticVariant missense = create(VariantType.SNP, CodingEffect.MISSENSE, false, 0.5);
+        SomaticVariant frameshift = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.5);
 
-        DriverCatalog multiFrameshift = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(frameshift, frameshift), counts, counts, null);
-        DriverCatalog missenseAndFrameshift = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, frameshift), counts, counts, null);
+        DriverCatalog multiFrameshift =
+                TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(frameshift, frameshift), counts, counts, null);
+        DriverCatalog missenseAndFrameshift =
+                TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, frameshift), counts, counts, null);
         DriverCatalog singleFrameshift = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(frameshift), counts, counts, null);
         DriverCatalog multiMissense = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, missense), counts, counts, null);
 

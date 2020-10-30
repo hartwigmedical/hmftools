@@ -106,7 +106,7 @@ public class CobaltChromosomesTest {
     }
 
     @Test
-    public void testKleinfelter() {
+    public void testKlinefelter() {
         MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_Y_COUNT);
         MedianRatio chrY = create("Y", Y_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);

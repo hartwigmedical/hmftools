@@ -34,6 +34,6 @@ public class StartEndPair<A>
 
     public static <A,B> StartEndPair<A> of(A a, A b)
     {
-        return new StartEndPair<A>(a,b);
+        return new StartEndPair<>(a,b);
     }
 }

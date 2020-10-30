@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.pharmacogenetics;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,6 +10,7 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class PGXCallsFileTest {
+
     private static final String FILE = Resources.getResource("pharmacogenetics/sample_calls.txt").getPath();
 
     private static final String GENE_1 = "GENE";

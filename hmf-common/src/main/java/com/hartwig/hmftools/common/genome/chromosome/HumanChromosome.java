@@ -70,13 +70,13 @@ public enum HumanChromosome implements Chromosome {
     }
 
     public static boolean contains(@NotNull final String chromosome) {
-        final String trimedConfig = chromosome.toLowerCase().startsWith("chr") ? chromosome.substring(3) : chromosome;
-        if (isNumeric(trimedConfig)) {
-            final int integerContig = Integer.parseInt(trimedConfig);
+        final String trimmedConfig = chromosome.toLowerCase().startsWith("chr") ? chromosome.substring(3) : chromosome;
+        if (isNumeric(trimmedConfig)) {
+            final int integerContig = Integer.parseInt(trimmedConfig);
             return integerContig >= 1 && integerContig <= 22;
         }
 
-        return trimedConfig.equals("X") || trimedConfig.equals("Y");
+        return trimmedConfig.equals("X") || trimmedConfig.equals("Y");
     }
 
     public int intValue() {

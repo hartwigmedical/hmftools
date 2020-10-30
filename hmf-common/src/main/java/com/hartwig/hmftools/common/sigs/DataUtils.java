@@ -41,7 +41,7 @@ public final class DataUtils {
         return abs(val1-val2) < epsilon;
     }
 
-    public static double DBL_LARGE_EPSILON = 1e-4;
+    public static final double DBL_LARGE_EPSILON = 1e-4;
 
     public static boolean greaterOrEqual(double val1, double val2)
     {

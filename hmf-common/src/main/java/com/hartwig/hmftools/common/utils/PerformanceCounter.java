@@ -156,7 +156,7 @@ public class PerformanceCounter
         if(!mSortTimes || mTimes.isEmpty())
             return 0;
 
-        int medianIndex = (int)floor(mTimes.size()/2);
+        int medianIndex = (int)floor(mTimes.size()/2D);
         return mTimes.get(medianIndex);
     }
 

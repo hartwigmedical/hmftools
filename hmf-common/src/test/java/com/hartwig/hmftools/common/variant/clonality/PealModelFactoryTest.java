@@ -28,16 +28,17 @@ public class PealModelFactoryTest {
     }
 
     @Ignore
+    @Test
     public void testPeakModelling() {
         long startTime = new Date().getTime();
-        final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
+        WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
         List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
 
-        double peakPloidy = victim.peakPloidy(10, ploidies);
+        victim.peakPloidy(10, ploidies);
 
         System.out.println();
         PeakModelFactory factory = new PeakModelFactory(10, 0.05);
-        List<PeakModel> result = factory.model(ploidies);
+        factory.model(ploidies);
         System.out.println(new Date().getTime() - startTime);
     }
 }

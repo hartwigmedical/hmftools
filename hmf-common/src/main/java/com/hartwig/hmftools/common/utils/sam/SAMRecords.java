@@ -32,9 +32,9 @@ public final class SAMRecords {
     public static int rightSoftClip(@NotNull final SAMRecord record) {
         Cigar cigar = record.getCigar();
         if (cigar.numCigarElements() > 0) {
-            CigarElement lastLement = cigar.getCigarElement(cigar.numCigarElements() - 1);
-            if (lastLement.getOperator() == CigarOperator.S) {
-                return lastLement.getLength();
+            CigarElement lastElement = cigar.getCigarElement(cigar.numCigarElements() - 1);
+            if (lastElement.getOperator() == CigarOperator.S) {
+                return lastElement.getLength();
             }
         }
 

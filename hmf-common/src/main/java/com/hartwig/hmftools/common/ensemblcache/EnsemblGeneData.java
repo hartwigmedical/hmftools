@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.common.ensemblcache;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-
 public class EnsemblGeneData
 {
     public final String GeneId; // aka StableId

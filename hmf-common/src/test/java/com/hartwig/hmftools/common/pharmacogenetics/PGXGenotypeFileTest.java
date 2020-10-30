@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.pharmacogenetics;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,6 +10,7 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class PGXGenotypeFileTest {
+
     private static final String FILE = Resources.getResource("pharmacogenetics/sample_genotype.txt").getPath();
 
     private static final String GENE = "GENE";
@@ -19,7 +20,6 @@ public class PGXGenotypeFileTest {
     private static final String URL_PRESCRIPTION_INFO = "link";
     private static final String PANEL_VERSION = "panel";
     private static final String REPO_VERSION = "pilot";
-
 
     @Test
     public void loadPgxGenotypeFile() throws IOException {
@@ -36,5 +36,4 @@ public class PGXGenotypeFileTest {
         assertEquals(PANEL_VERSION, genotype1.panelVersion());
         assertEquals(REPO_VERSION, genotype1.repoVersion());
     }
-
 }

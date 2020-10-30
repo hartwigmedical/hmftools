@@ -622,9 +622,7 @@ public class EnsemblDataCache
         Transcript transcript = new Transcript(geneAnnotation, transData.TransId, transData.TransName,
                 upExonRank, upExonPhase, downExonRank, downExonPhase,
                 codingBases, totalCodingBases,
-                exonMax, transData.IsCanonical, transData.TransStart, transData.TransEnd,
-                transData.CodingStart != null ? transData.CodingStart : null,
-                transData.CodingEnd != null ? transData.CodingEnd : null);
+                exonMax, transData.IsCanonical, transData.TransStart, transData.TransEnd, transData.CodingStart, transData.CodingEnd);
 
         transcript.setBioType(transData.BioType);
 
@@ -638,10 +636,10 @@ public class EnsemblDataCache
         return transcript;
     }
 
-    public static int EXON_RANK_MIN = 0;
-    public static int EXON_RANK_MAX = 1;
-    public static int EXON_PHASE_MIN = 2;
-    public static int EXON_PHASE_MAX = 3;
+    public static final int EXON_RANK_MIN = 0;
+    public static final int EXON_RANK_MAX = 1;
+    public static final int EXON_PHASE_MIN = 2;
+    public static final int EXON_PHASE_MAX = 3;
 
     public int[] getExonRankings(final String geneId, int position)
     {

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.fusion;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.GeneAnnotation.isDownstream;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
@@ -79,7 +78,7 @@ public class Transcript {
             final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
             final int codingBases, final int totalCodingBases,
             final int exonMax, final boolean canonical, int transcriptStart, int transcriptEnd,
-            final Integer codingStart, final Integer codingEnd)
+            @Nullable final Integer codingStart, @Nullable final Integer codingEnd)
     {
         TransId = transId;
         StableId = stableId;
@@ -329,9 +328,7 @@ public class Transcript {
             codingBases += transcript.gene().insertSequence().length();
         }
 
-        int adjustedPhase = (int)(codingBases % 3);
-
-        return adjustedPhase;
+        return codingBases % 3;
     }
 
     public int exonicBasePhase() { return mExonicBasePhase; }
