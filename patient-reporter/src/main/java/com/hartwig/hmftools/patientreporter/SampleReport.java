@@ -105,7 +105,7 @@ public abstract class SampleReport {
     @Value.Derived
     public String cancerSubTypeString() {
         PatientTumorLocation type = patientTumorLocation();
-        if (type != null){
+        if (type != null) {
             if (!type.primaryTumorSubType().equals(Strings.EMPTY)) {
                 return type.primaryTumorSubType();
             } else {
@@ -120,7 +120,8 @@ public abstract class SampleReport {
     @Value.Derived
     public String addressee() {
         if (!hospitalContactData().hospitalPI().equals(Lims.NOT_AVAILABLE_STRING)) {
-            return hospitalContactData().hospitalPI() + ", " + hospitalContactData().hospitalName() + ", " + hospitalContactData().hospitalAddress();
+            return hospitalContactData().hospitalPI() + ", " + hospitalContactData().hospitalName() + ", "
+                    + hospitalContactData().hospitalAddress();
         } else {
             return hospitalContactData().hospitalName() + ", " + hospitalContactData().hospitalAddress();
         }
