@@ -26,7 +26,7 @@ public class FusionConstants
     public static final List<String> REQUIRED_BIOTYPES = Lists.newArrayList(
             BIOTYPE_PROCESSED_TRANS, BIOTYPE_PROTEIN_CODING, BIOTYPE_NONSENSE_MED_DECAY, BIOTYPE_RETAINED_INTRON, BIOTYPE_LINC_RNA);
 
-    public static int FUSION_MAX_CHAIN_LENGTH = 100000;
+    public static int FUSION_MAX_CHAIN_LENGTH = 150000;
     public static int FUSION_MAX_CHAIN_LINKS = 4;
 
 }

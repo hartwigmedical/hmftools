@@ -420,7 +420,7 @@ public class DisruptionFinder
         mRemovedDisruptions.put(transcript, context);
     }
 
-    public boolean pairTraversesGene(LinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
+    public boolean pairTraversesGene(final LinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
     {
         // for this pair to not affect the fusion, the section it traverses cannot cross any gene's splice acceptor
         // with the same strand direction unless that is part of a fully traversed non-coding 5' exon
@@ -457,7 +457,7 @@ public class DisruptionFinder
                             continue;
 
                         if ((geneData.Strand == 1 && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonStart)
-                                || (geneData.Strand == -1 && lowerPos <= exonData.ExonEnd && upperPos >= exonData.ExonEnd))
+                        || (geneData.Strand == -1 && lowerPos <= exonData.ExonEnd && upperPos >= exonData.ExonEnd))
                         {
                             // allow an exon to be fully traversed if the upstream transcript is pre-coding
                             if (isPrecodingUpstream && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonEnd)

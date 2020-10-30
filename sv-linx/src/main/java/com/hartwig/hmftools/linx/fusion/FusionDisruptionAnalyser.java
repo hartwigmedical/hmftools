@@ -82,6 +82,7 @@ public class FusionDisruptionAnalyser
     private final FusionParameters mFusionParams;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
+    private boolean mAllowInvalidTraversal;
     private List<String> mRestrictedGenes;
     private boolean mFindNeoEpitopes;
 
@@ -122,6 +123,7 @@ public class FusionDisruptionAnalyser
         mLogReportableOnly = false;
         mLogAllPotentials = false;
         mFindNeoEpitopes = false;
+        mAllowInvalidTraversal = false;
         mFusionParams = new FusionParameters();
         mFusionParams.RequireUpstreamBiotypes = true;
 
@@ -224,6 +226,8 @@ public class FusionDisruptionAnalyser
 
         cacheSpecialFusionGenes();
     }
+
+    public void setAllowInvalidTraversal(boolean toggle) { mAllowInvalidTraversal = toggle; }
 
     public void cacheSpecialFusionGenes()
     {
@@ -467,11 +471,12 @@ public class FusionDisruptionAnalyser
             if (cluster.getChains().isEmpty())
                 continue;
 
-            List<GeneFusion> chainFusions = Lists.newArrayList();
+            final List<GeneFusion> chainFusions = Lists.newArrayList();
+            final List<ValidTraversalData> validPairs = Lists.newArrayList();
 
             for (final SvChain chain : cluster.getChains())
             {
-                findChainedFusions(cluster, chain, chainFusions);
+                findChainedFusions(cluster, chain, chainFusions, validPairs);
             }
 
             if(chainFusions.isEmpty())
@@ -503,7 +508,8 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private void findChainedFusions(final SvCluster cluster, final SvChain chain, List<GeneFusion> chainFusions)
+    private void findChainedFusions(
+            final SvCluster cluster, final SvChain chain, final List<GeneFusion> chainFusions, final List<ValidTraversalData> validPairs)
     {
         // look for fusions formed by breakends connected in a chain
 
@@ -669,20 +675,23 @@ public class FusionDisruptionAnalyser
                         }
 
                         // any invalid traversal causes this fusion to be entirely skipped from further analysis
-                        if(mDisruptionFinder.pairTraversesGene(pair, fusionDirection, isPrecodingUpstream))
+                        if(validTraversal && !hasValidTraversal(validPairs, pair, fusionDirection, isPrecodingUpstream))
                         {
                             validTraversal = false;
-                            break;
+
+                            if(!mAllowInvalidTraversal)
+                                break;
                         }
                     }
 
-                    if(!validTraversal)
+                    if(!validTraversal && !mAllowInvalidTraversal)
                     {
                         recordInvalidFusion(fusion, "InvalidTraversal");
                         continue;
                     }
 
-                    ++validTraversalFusionCount;
+                    if(validTraversal)
+                        ++validTraversalFusionCount;
 
                     boolean[] transTerminated = { false, false};
 
@@ -749,9 +758,10 @@ public class FusionDisruptionAnalyser
                     fusion.setAnnotations(annotations);
 
                     // accept invalidated chains and transcripts for known fusions
-                    boolean chainLengthOk =  totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
+                    boolean chainLengthOk = totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
+                    boolean traversalOk = validTraversal || mAllowInvalidTraversal;
 
-                    if(validTraversal && (chainLengthOk || allowSuspectChains(fusion.knownType())))
+                    if(chainLengthOk && traversalOk)
                     {
                         if(!hasIdenticalFusion(fusion, chainFusions))
                         {
@@ -765,7 +775,7 @@ public class FusionDisruptionAnalyser
                     }
                 }
 
-                if(validTraversalFusionCount == 0 && lpIndex2 > lpIndex1 && mRnaFusionMapper == null)
+                if(validTraversalFusionCount == 0 && !mAllowInvalidTraversal && lpIndex2 > lpIndex1 && mRnaFusionMapper == null)
                 {
                     // if there are no valid traversals between 2 indices, then any chain sections starting at the lower index
                     // will likewise be invalidated since can skip past this
@@ -778,9 +788,18 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    private static boolean allowSuspectChains(final KnownFusionType type)
+    private boolean hasValidTraversal(
+            final List<ValidTraversalData> validPairs, final LinkedPair pair, int fusionDirection, boolean isPrecodingUpstream)
     {
-        return (type == KNOWN_PAIR || type == EXON_DEL_DUP || type == IG_KNOWN_PAIR || type == IG_PROMISCUOUS);
+        final ValidTraversalData existingData = validPairs.stream()
+                .filter(x -> x.matches(pair, fusionDirection, isPrecodingUpstream)).findFirst().orElse(null);
+
+        if(existingData != null)
+            return existingData.IsValid;
+
+        boolean validTraversal = !mDisruptionFinder.pairTraversesGene(pair, fusionDirection, isPrecodingUpstream);
+        validPairs.add(new ValidTraversalData(pair, validTraversal, fusionDirection, isPrecodingUpstream));
+        return validTraversal;
     }
 
     private void recordInvalidFusion(final GeneFusion fusion, final String reason)
@@ -875,9 +894,9 @@ public class FusionDisruptionAnalyser
         return transcriptTerminated;
     }
 
-    private static boolean persistFusion(final GeneFusion fusion)
+    private boolean persistFusion(final GeneFusion fusion)
     {
-        if(!fusion.validChainTraversal())
+        if(!fusion.validChainTraversal() && !mAllowInvalidTraversal)
             return false;
 
         if(fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())

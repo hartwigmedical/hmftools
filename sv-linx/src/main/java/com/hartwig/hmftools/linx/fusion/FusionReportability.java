@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.linx.fusion.FusionConstants.SHORT_UNPHASED_DI
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.CHAIN_LINKS;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.CHAIN_TERMINATED;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.EXON_SKIPPING;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.INVALID_TRAVERSAL;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.KNOWN_TYPE;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.NEG_SPLICE_ACC_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.NEOEPITOPE;
@@ -96,16 +97,21 @@ public class FusionReportability
         if(!permittedExonSkipping(fusion))
             return EXON_SKIPPING;
 
-        if(fusion.isTerminated())
-        {
-            if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != IG_KNOWN_PAIR && fusion.knownType() != EXON_DEL_DUP)
-                return CHAIN_TERMINATED;
-        }
+        if(fusion.isTerminated() && !allowSuspectChains(fusion.knownType()))
+            return CHAIN_TERMINATED;
+
+        if(!fusion.validChainTraversal() && !allowSuspectChains(fusion.knownType()))
+            return INVALID_TRAVERSAL;
 
         if(fusion.getChainLinks() > FUSION_MAX_CHAIN_LINKS)
             return CHAIN_LINKS;
 
         return OK;
+    }
+
+    private static boolean allowSuspectChains(final KnownFusionType type)
+    {
+        return (type == KNOWN_PAIR || type == EXON_DEL_DUP || type == IG_KNOWN_PAIR);
     }
 
     public static GeneFusion findTopPriorityFusion(final List<GeneFusion> fusions)
@@ -161,7 +167,7 @@ public class FusionReportability
         factor /= 10;
 
         // 2. Chain not terminated (only applicable for chained & known fusions)
-        if(!fusion.isTerminated())
+        if(!fusion.isTerminated() && fusion.validChainTraversal())
             fusionPriorityScore += factor;
 
         factor /= 10;

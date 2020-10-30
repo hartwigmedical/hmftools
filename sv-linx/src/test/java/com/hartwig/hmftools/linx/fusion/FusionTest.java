@@ -250,6 +250,8 @@ public class FusionTest
 
         tester.initialiseFusions(geneTransCache);
 
+        tester.FusionAnalyser.setAllowInvalidTraversal(false);
+
         String geneName1 = "GENE1";
         String geneId1 = "ENSG0001";
         String chromosome = "1";
@@ -476,7 +478,6 @@ public class FusionTest
         SvVarData var5 = createBnd(5, chromosome, 60000, -1, remoteChromosome, 1200, -1);
         SvVarData var6 = createBnd(6, remoteChromosome, 2500, 1, "5", 1000, -1);
         SvVarData var7 = createBnd(7, chromosome, 11525, -1, "5", 2000, 1);
-        // var3 = createDel(2, chromosome, 1750,11525);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -509,6 +510,21 @@ public class FusionTest
         assertEquals(var5.id(), fusion.downstreamTrans().gene().id());
 
         assertFalse(validateFusionAnnotations(fusion, false, false));
+
+        // repeat again but this time allowing for invalid traversal
+        tester.FusionAnalyser.setAllowInvalidTraversal(true);
+
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
+                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+
+        assertEquals(2, tester.FusionAnalyser.getFusions().size());
+
+        final int varId3 = var3.id();
+        final int varId7 = var7.id();
+        fusion = tester.FusionAnalyser.getFusions().stream()
+                .filter(x -> x.upstreamTrans().gene().id() == varId3 && x.downstreamTrans().gene().id() == varId7).findFirst().orElse(null);
+        assertTrue(fusion != null);
+        assertFalse(fusion.validChainTraversal());
     }
 
     private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)
