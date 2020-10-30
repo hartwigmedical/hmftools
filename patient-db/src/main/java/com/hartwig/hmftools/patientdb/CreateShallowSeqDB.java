@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -14,7 +15,6 @@ import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 
@@ -122,7 +122,7 @@ public class CreateShallowSeqDB {
 
     @NotNull
     private static List<LimsShallowSeqData> read(@NotNull String shallowSeqTsv) throws IOException {
-        List<String> linesShallowDB = LineReader.build().readLines(new File(shallowSeqTsv).toPath(), line -> line.length() > 0);
+        List<String> linesShallowDB = Files.readAllLines(new File(shallowSeqTsv).toPath());
         List<LimsShallowSeqData> shallowSeqDataList = Lists.newArrayList();
         for (String line : linesShallowDB.subList(1, linesShallowDB.size())) {
             String[] values = line.split(DELIMITER);

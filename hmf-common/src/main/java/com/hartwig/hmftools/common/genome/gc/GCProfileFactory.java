@@ -2,13 +2,13 @@ package com.hartwig.hmftools.common.genome.gc;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,7 +26,7 @@ public final class GCProfileFactory {
 
     @NotNull
     public static Multimap<Chromosome, GCProfile> loadGCContent(int windowSize, @NotNull final String fileName) throws IOException {
-        return loadGCContent(windowSize, LineReader.build().readLines(new File(fileName).toPath(), x -> true));
+        return loadGCContent(windowSize, Files.readAllLines(new File(fileName).toPath()));
     }
 
     @NotNull

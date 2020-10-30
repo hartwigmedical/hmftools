@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.lims.hospital;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,7 +10,6 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -123,7 +123,8 @@ public final class HospitalModelFactory {
     @VisibleForTesting
     static Map<String, HospitalAddress> readFromHospitalAddress(@NotNull String hospitalAddressTsv) throws IOException {
         Map<String, HospitalAddress> hospitalAddressMap = Maps.newHashMap();
-        List<String> lines = FileReader.build().readLines(new File(hospitalAddressTsv).toPath());
+        List<String> lines = Files.readAllLines(new File(hospitalAddressTsv).toPath());
+
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == HOSPITAL_ADDRESS_FIELD_COUNT) {
@@ -146,16 +147,16 @@ public final class HospitalModelFactory {
     static Map<String, HospitalPersons> readFromHospitalPersons(@NotNull String hospitalPersonsTsv, int expectedFieldCount)
             throws IOException {
         Map<String, HospitalPersons> hospitalPersonsMap = Maps.newHashMap();
-        List<String> lines = FileReader.build().readLines(new File(hospitalPersonsTsv).toPath());
+        List<String> lines = Files.readAllLines(new File(hospitalPersonsTsv).toPath());
+
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == expectedFieldCount) {
                 String requesterName = parts.length > 2 ? parts[HOSPITAL_PERSONS_REQUESTER_NAME_COLUMN] : null;
                 String requesterEmail = parts.length > 2 ? parts[HOSPITAL_PERSONS_REQUESTER_EMAIL_COLUMN] : null;
 
-                HospitalPersons hospitalPersons = ImmutableHospitalPersons.builder()
-                        .hospitalPI(parts[HOSPITAL_PERSONS_PI_COLUMN])
-                        .requesterName(requesterName)
+                HospitalPersons hospitalPersons =
+                        ImmutableHospitalPersons.builder().hospitalPI(parts[HOSPITAL_PERSONS_PI_COLUMN]).requesterName(requesterName)
                         .requesterEmail(requesterEmail)
                         .build();
 
@@ -171,8 +172,8 @@ public final class HospitalModelFactory {
     @VisibleForTesting
     static Map<String, String> readFromSampleToHospitalMapping(@NotNull String sampleHospitalMappingTsv) throws IOException {
         Map<String, String> hospitalPerSampleMap = Maps.newHashMap();
+        List<String> lines = Files.readAllLines(new File(sampleHospitalMappingTsv).toPath());
 
-        List<String> lines = FileReader.build().readLines(new File(sampleHospitalMappingTsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR);
             if (parts.length == FIELD_COUNT_SAMPLE_HOSPITAL_MAPPING) {

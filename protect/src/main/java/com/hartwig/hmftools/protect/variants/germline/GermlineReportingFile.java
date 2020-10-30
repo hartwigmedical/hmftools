@@ -2,11 +2,11 @@ package com.hartwig.hmftools.protect.variants.germline;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +22,7 @@ public final class GermlineReportingFile {
 
     @NotNull
     public static GermlineReportingModel buildFromCsv(@NotNull String germlineGenesCsv) throws IOException {
-        List<String> linesGermlineGenes = LineReader.build().readLines(new File(germlineGenesCsv).toPath(), line -> line.length() > 0);
+        List<String> linesGermlineGenes = Files.readAllLines(new File(germlineGenesCsv).toPath());
 
         Map<String, Boolean> germlineGenesAndNotifyMap = Maps.newHashMap();
 

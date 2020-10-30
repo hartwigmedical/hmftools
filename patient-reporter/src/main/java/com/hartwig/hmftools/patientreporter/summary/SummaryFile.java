@@ -2,11 +2,11 @@ package com.hartwig.hmftools.patientreporter.summary;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +25,7 @@ public final class SummaryFile {
 
     @NotNull
     public static SummaryModel buildFromTsv(@NotNull String sampleSummaryTsv) throws IOException {
-        List<String> linesSampleSummary = LineReader.build().readLines(new File(sampleSummaryTsv).toPath(), line -> line.length() > 0);
+        List<String> linesSampleSummary = Files.readAllLines(new File(sampleSummaryTsv).toPath());
 
         Map<String, String> sampleToSummaryMap = Maps.newHashMap();
 

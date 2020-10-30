@@ -2,13 +2,13 @@ package com.hartwig.hmftools.common.ecrf.formstatus;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,10 +47,10 @@ public final class FormStatusReader {
     @NotNull
     public static FormStatusModel buildModelFromCsv(@NotNull final String pathToCsv) throws IOException {
         Map<FormStatusKey, FormStatus> formStatuses = Maps.newHashMap();
-        List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
-        // No need to read the header line
-        lines.remove(0);
-        for (String line : lines) {
+        List<String> lines = Files.readAllLines(new File(pathToCsv).toPath());
+
+        // Skip header
+        for (String line : lines.subList(1, lines.size())) {
             String[] parts = splitCsvLine(line, FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
                 FormStatusKey formKey = new ImmutableFormStatusKey(removeQuotes(parts[PATIENT_ID_COLUMN].replaceAll("-", "")),

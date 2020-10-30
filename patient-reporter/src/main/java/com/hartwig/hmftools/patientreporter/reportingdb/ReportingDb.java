@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -11,7 +12,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
-import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -136,7 +136,7 @@ public final class ReportingDb {
     @NotNull
     @VisibleForTesting
     static List<ReportingEntry> read(@NotNull String reportingDbTsv) throws IOException {
-        List<String> linesReportDates = LineReader.build().readLines(new File(reportingDbTsv).toPath(), line -> line.length() > 0);
+        List<String> linesReportDates = Files.readAllLines(new File(reportingDbTsv).toPath());
         List<ReportingEntry> reportingEntryList = Lists.newArrayList();
 
         for (String line : linesReportDates.subList(1, linesReportDates.size())) {
