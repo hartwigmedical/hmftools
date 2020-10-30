@@ -65,7 +65,6 @@ public class TumorLocationCurator implements CleanableCurator {
     @NotNull
     @VisibleForTesting
     public static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidNodesToResolve) {
-        LOGGER.info(doidNodes);
         List<DoidNode> resolvedDoidNodes = Lists.newArrayList();
         for (String doid : doidNodesToResolve) {
             for (DoidNode doidNode : doidNodes) {
