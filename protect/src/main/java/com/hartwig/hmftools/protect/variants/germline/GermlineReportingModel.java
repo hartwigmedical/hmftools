@@ -18,6 +18,7 @@ public class GermlineReportingModel {
     @NotNull
     private final Set<String> reportableGenes = Sets.newHashSet();
     private final Set<String> notifiableGenes = Sets.newHashSet();
+    private final Set<String> monoallelicGenes = Sets.newHashSet();
 
     public GermlineReportingModel(@NotNull final Map<String, GermlineReporting> germlineGenesAndNotificationMap) {
         for (Map.Entry<String, GermlineReporting> entry : germlineGenesAndNotificationMap.entrySet()) {
@@ -25,7 +26,16 @@ public class GermlineReportingModel {
             if (entry.getValue().notifyClinicalGeneticus()) {
                 notifiableGenes.add(entry.getKey());
             }
+            if (entry.getValue().condition() == ConditionReportingVariant.MONOALLELIC) {
+                monoallelicGenes.add(entry.getKey());
+            }
         }
+    }
+
+
+    @NotNull
+    public Set<String> monoallelicGenesReportable() {
+        return monoallelicGenes;
     }
 
     @NotNull

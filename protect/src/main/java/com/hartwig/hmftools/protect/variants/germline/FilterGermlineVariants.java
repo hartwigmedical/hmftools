@@ -28,6 +28,7 @@ public final class FilterGermlineVariants {
             @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
             @NotNull List<ReportableGeneDisruption> reportableGeneDisruptions) {
         Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
+        Set<String> monoallelicGenesReportable = germlineReportingModel.monoallelicGenesReportable();
 
         Set<String> genesWithSomaticDriverMutation =
                 driverSomaticVariants.stream().map(x -> x.variant().gene()).collect(Collectors.toSet());
@@ -45,18 +46,21 @@ public final class FilterGermlineVariants {
         genesWithSomaticInactivationEvent.addAll(genesWithHomozygousDisruption);
         genesWithSomaticInactivationEvent.addAll(genesWithGeneDisruption);
 
-        return filterGermlineVariantsForReporting(reportableGermlineGenes, germlineVariants, genesWithSomaticInactivationEvent);
+        return filterGermlineVariantsForReporting(reportableGermlineGenes,
+                germlineVariants,
+                genesWithSomaticInactivationEvent,
+                monoallelicGenesReportable);
     }
 
     @NotNull
     private static List<DriverGermlineVariant> filterGermlineVariantsForReporting(@NotNull Set<String> reportableGermlineGenes,
-            @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull Set<String> genesWithSomaticInactivationEvent) {
+            @NotNull List<ReportableGermlineVariant> germlineVariants, @NotNull Set<String> genesWithSomaticInactivationEvent,
+            @NotNull Set<String> monoallelicGenesReportable) {
         List<DriverGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
 
         for (ReportableGermlineVariant germlineVariant : presentInTumor(germlineVariants)) {
             if (reportableGermlineGenes.contains(germlineVariant.gene())) {
-                // TODO: This will be cleaned up in upcoming germline variant reporting logic
-                if (germlineVariant.gene().equals("KIT")) {
+                if (monoallelicGenesReportable.contains(germlineVariant.gene())) {
                     reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                 } else {
                     // Only report germline variants on TSGs if there is a 2nd reportable hit
