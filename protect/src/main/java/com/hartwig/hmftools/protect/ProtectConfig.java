@@ -26,7 +26,7 @@ public interface ProtectConfig {
     String DOID_JSON = "doid_json";
 
     String TUMOR_LOCATION_TSV = "tumor_location_tsv";
-    String GERMLINE_GENES_CSV = "germline_genes_csv";
+    String GERMLINE_GENES_TSV = "germline_genes_tsv";
 
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
@@ -55,7 +55,7 @@ public interface ProtectConfig {
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
 
         options.addOption(TUMOR_LOCATION_TSV, true, "Path towards the (curated) tumor location TSV.");
-        options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
+        options.addOption(GERMLINE_GENES_TSV, true, "Path towards a TSV containing germline genes which we want to report.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
@@ -92,7 +92,7 @@ public interface ProtectConfig {
     String tumorLocationTsv();
 
     @NotNull
-    String germlineGenesCsv();
+    String germlineGenesTsv();
 
     @NotNull
     String purplePurityTsv();
@@ -136,7 +136,7 @@ public interface ProtectConfig {
                 .deprecatedActionabilityDir(nonOptionalDir(cmd, DEPRECATED_ACTIONABILITY_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .tumorLocationTsv(nonOptionalFile(cmd, TUMOR_LOCATION_TSV))
-                .germlineGenesCsv(nonOptionalFile(cmd, GERMLINE_GENES_CSV))
+                .germlineGenesTsv(nonOptionalFile(cmd, GERMLINE_GENES_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
                 .purpleDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_TSV))

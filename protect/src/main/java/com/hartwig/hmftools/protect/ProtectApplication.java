@@ -94,8 +94,8 @@ public class ProtectApplication implements AutoCloseable {
         PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsv(), tumorSampleId);
         LOGGER.info("Creating deprecated actionability analyzer from {}", protectConfig.deprecatedActionabilityDir());
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(protectConfig.deprecatedActionabilityDir());
-        LOGGER.info("Creating germline reporting model from {}", protectConfig.germlineGenesCsv());
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(protectConfig.germlineGenesCsv());
+        LOGGER.info("Creating germline reporting model from {}", protectConfig.germlineGenesTsv());
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(protectConfig.germlineGenesTsv());
 
         GenomicAnalyzer analyzer = new GenomicAnalyzer(actionabilityAnalyzer, germlineReportingModel);
         GenomicAnalysis analysis = analyzer.run(tumorSampleId,
