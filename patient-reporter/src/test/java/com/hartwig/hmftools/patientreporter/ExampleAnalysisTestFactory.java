@@ -263,7 +263,7 @@ public final class ExampleAnalysisTestFactory {
                         "Melanoma",
                         "",
                         "",
-                        Lists.newArrayList("1;2"),
+                        Lists.newArrayList("8923"),
                         false))
                 .refArrivalDate(LocalDate.parse("01-Oct-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
