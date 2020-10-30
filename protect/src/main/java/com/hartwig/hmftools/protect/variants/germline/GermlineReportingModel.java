@@ -4,11 +4,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GermlineReportingModel {
@@ -17,7 +19,9 @@ public class GermlineReportingModel {
 
     @NotNull
     private final Set<String> reportableGenes = Sets.newHashSet();
-    private final Set<String> notifiableGenes = Sets.newHashSet();;
+    private final Set<String> notifiableGenes = Sets.newHashSet();
+    private final Set<String> monoallelicGenes = Sets.newHashSet();
+    private final Map<String, String> reportableSpecificVariants = Maps.newHashMap();
 
     public GermlineReportingModel(@NotNull final Map<String, GermlineReporting> germlineGenesAndNotificationMap) {
         for (Map.Entry<String, GermlineReporting> entry : germlineGenesAndNotificationMap.entrySet()) {
@@ -25,7 +29,24 @@ public class GermlineReportingModel {
             if (entry.getValue().notifyClinicalGeneticus()) {
                 notifiableGenes.add(entry.getKey());
             }
+            if (entry.getValue().condition() == ConditionReportingVariant.MONOALLELIC) {
+                monoallelicGenes.add(entry.getKey());
+            }
+            if (!entry.getValue().variant().equals(Strings.EMPTY)) {
+                reportableSpecificVariants.put(entry.getKey(), entry.getValue().variant());
+            }
         }
+    }
+
+
+    @NotNull
+    public Map<String, String> reportableSpecificVariants() {
+        return reportableSpecificVariants;
+    }
+
+    @NotNull
+    public Set<String> monoallelicGenesReportable() {
+        return monoallelicGenes;
     }
 
     @NotNull
