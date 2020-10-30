@@ -17,7 +17,7 @@ public class GermlineReportingModel {
 
     @NotNull
     private final Set<String> reportableGenes = Sets.newHashSet();
-    private final Set<String> notifiableGenes = Sets.newHashSet();;
+    private final Set<String> notifiableGenes = Sets.newHashSet();
 
     public GermlineReportingModel(@NotNull final Map<String, GermlineReporting> germlineGenesAndNotificationMap) {
         for (Map.Entry<String, GermlineReporting> entry : germlineGenesAndNotificationMap.entrySet()) {
