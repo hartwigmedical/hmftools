@@ -21,9 +21,13 @@ public class ColoPatientReader {
 
         String patientId = isColo829 ? "COLO829" : Strings.EMPTY;
 
-        CuratedTumorLocation curatedTumorLocation = isColo829
-                ? ImmutableCuratedTumorLocation.builder().primaryTumorLocation("Skin").primaryTumorType("Melanoma").build()
-                : ImmutableCuratedTumorLocation.builder().build();
+        CuratedTumorLocation curatedTumorLocation = isColo829 ? ImmutableCuratedTumorLocation.builder()
+                .primaryTumorLocation("Skin")
+                .primaryTumorSubLocation(Strings.EMPTY)
+                .primaryTumorType("Melanoma")
+                .primaryTumorSubType(Strings.EMPTY)
+                .primaryTumorExtraDetails(Strings.EMPTY)
+                .build() : ImmutableCuratedTumorLocation.builder().build();
 
         return new Patient(patientId,
                 toBaselineData(curatedTumorLocation),
