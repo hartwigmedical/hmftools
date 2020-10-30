@@ -145,7 +145,7 @@ public class LoadEvidenceData {
 
     @NotNull
     private static String extractPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String sampleId) throws IOException {
-        LOGGER.info("Reading primary tumor location from {}", tumorLocationTsv);
+        LOGGER.info("Reading primary tumor locations from {}", tumorLocationTsv);
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.read(tumorLocationTsv);
         LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 

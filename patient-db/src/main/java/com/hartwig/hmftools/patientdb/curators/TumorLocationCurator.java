@@ -15,14 +15,11 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TumorLocationCurator implements CleanableCurator {
-    private static final Logger LOGGER = LogManager.getLogger(TumorLocationCurator.class);
 
     private static final String FIELD_DELIMITER = "\t";
     private static final String DOID_DELIMITER = ";";
@@ -64,9 +61,9 @@ public class TumorLocationCurator implements CleanableCurator {
 
     @NotNull
     @VisibleForTesting
-    public static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidNodesToResolve) {
+    public static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidsToResolve) {
         List<DoidNode> resolvedDoidNodes = Lists.newArrayList();
-        for (String doid : doidNodesToResolve) {
+        for (String doid : doidsToResolve) {
             for (DoidNode doidNode : doidNodes) {
                 if (doidNode.doid().equals(doid)) {
                     resolvedDoidNodes.add(doidNode);
@@ -74,7 +71,6 @@ public class TumorLocationCurator implements CleanableCurator {
             }
         }
         return resolvedDoidNodes;
-
     }
 
     @NotNull

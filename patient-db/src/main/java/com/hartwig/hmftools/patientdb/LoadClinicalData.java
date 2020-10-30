@@ -96,7 +96,7 @@ public final class LoadClinicalData {
     private static final String BIOPSY_MAPPING_CSV = "biopsy_mapping_csv";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
-        LOGGER.info("Running patient-db v{}", VERSION);
+        LOGGER.info("Running Clinical Patient DB v{}", VERSION);
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
@@ -110,6 +110,7 @@ public final class LoadClinicalData {
         TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV), doidNodes);
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
+
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
         List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY), cmd.getOptionValue(PIPELINE_VERSION));
         Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
