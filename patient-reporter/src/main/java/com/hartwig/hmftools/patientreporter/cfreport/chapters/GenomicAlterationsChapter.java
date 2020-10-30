@@ -117,8 +117,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         if (SomaticVariants.hasNotifiableGermlineVariant(reportableVariants)) {
             contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
-                    .add(new Paragraph("\n# Marked variant(s) are also present in the germline of the patient. "
-                            + "Referral to a genetic specialist should be considered.").addStyle(ReportResources.subTextStyle())));
+                    .add(new Paragraph("\n# Marked variant(s) are also present in the germline of the patient. Referral to a genetic "
+                            + "specialist should be advised.").addStyle(ReportResources.subTextStyle())));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
