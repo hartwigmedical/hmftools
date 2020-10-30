@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -74,16 +73,16 @@ public final class ChordFileReader {
         }
         int index = findHeaderLineIndex(lines);
         if (index >= lines.size()) {
-            throw new MalformedFileException(String.format("No value line found after header line in CHORD file %s.", filename));
+            throw new IOException(String.format("No value line found after header line in CHORD file %s.", filename));
         }
         return lines.get(index + 1);
     }
 
-    private static int findHeaderLineIndex(@NotNull List<String> lines) throws MalformedFileException {
+    private static int findHeaderLineIndex(@NotNull List<String> lines) throws IOException {
         Optional<Integer> lineNumbers =
                 IntStream.range(0, lines.size()).filter(index -> lines.get(index).contains("hrd")).boxed().findFirst();
         if (!lineNumbers.isPresent()) {
-            throw new MalformedFileException(String.format("Could not find header line in CHORD file with %s lines.", lines.size()));
+            throw new IOException(String.format("Could not find header line in CHORD file with %s lines.", lines.size()));
         }
         return lineNumbers.get();
     }

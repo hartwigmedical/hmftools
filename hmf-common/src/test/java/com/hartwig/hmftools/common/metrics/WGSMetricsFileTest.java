@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.junit.Test;
 
@@ -110,8 +109,8 @@ public class WGSMetricsFileTest {
         WGSMetricsFile.read(NON_EXISTING_FILE);
     }
 
-    @Test(expected = MalformedFileException.class)
-    public void incorrectRefFileYieldsMalformedFileException() throws IOException {
+    @Test(expected = IOException.class)
+    public void incorrectRefFileYieldsIOException() throws IOException {
         WGSMetricsFile.read(INCORRECT_FILE);
     }
 }

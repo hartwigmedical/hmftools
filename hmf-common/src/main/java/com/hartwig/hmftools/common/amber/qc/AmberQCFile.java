@@ -7,7 +7,6 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -35,14 +34,14 @@ public final class AmberQCFile {
     }
 
     @NotNull
-    private static AmberQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
+    private static AmberQC fromLines(@NotNull final List<String> lines) throws IOException {
         try {
             return ImmutableAmberQC.builder()
                     .meanBAF(Double.parseDouble(getValue(lines.get(1))))
-                    .contamination(lines.size() > 2 ? Double.parseDouble(getValue(lines.get(2))) : 0 )
+                    .contamination(lines.size() > 2 ? Double.parseDouble(getValue(lines.get(2))) : 0)
                     .build();
         } catch (Exception e) {
-            throw new MalformedFileException("Unable to parse amber qc file.");
+            throw new IOException(String.format("Unable to parse amber qc file with %s lines.", lines.size()));
         }
     }
 

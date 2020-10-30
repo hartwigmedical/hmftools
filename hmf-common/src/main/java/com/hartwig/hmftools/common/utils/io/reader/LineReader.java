@@ -9,8 +9,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
-
 import org.jetbrains.annotations.NotNull;
 
 @FunctionalInterface
@@ -24,7 +22,7 @@ public interface LineReader {
         return (filePath, filter) -> {
             final List<String> searchedLines = read(filePath, filter);
             if (searchedLines.isEmpty()) {
-                throw new MalformedFileException(String.format("File %s does not contain lines with value \"%s\"",
+                throw new IOException(String.format("File %s does not contain lines with value \"%s\"",
                         filePath.toString(),
                         filter.toString()));
             }

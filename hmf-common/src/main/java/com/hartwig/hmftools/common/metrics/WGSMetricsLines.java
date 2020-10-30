@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -33,7 +31,7 @@ class WGSMetricsLines {
         }
         int index = findHeaderLineIndex(lines);
         if (index >= lines.size()) {
-            throw new MalformedFileException(String.format("No value line found after header line in WGS Metrics file %s.", path));
+            throw new IOException(String.format("No value line found after header line in WGS Metrics file %s.", path));
         }
 
         String[] headers = lines.get(index).split(VALUE_SEPARATOR);
@@ -45,11 +43,11 @@ class WGSMetricsLines {
         return new WGSMetricsLines(headers, values);
     }
 
-    private static int findHeaderLineIndex(@NotNull final List<String> lines) throws MalformedFileException {
+    private static int findHeaderLineIndex(@NotNull final List<String> lines) throws IOException {
         final Optional<Integer> lineNumbers =
                 IntStream.range(0, lines.size()).filter(index -> lines.get(index).contains("MEAN_COVERAGE")).boxed().findFirst();
         if (!lineNumbers.isPresent()) {
-            throw new MalformedFileException(String.format("Could not find header line in WGS Metrics file with %s lines.", lines.size()));
+            throw new IOException(String.format("Could not find header line in WGS Metrics file with %s lines.", lines.size()));
         }
         return lineNumbers.get();
     }
