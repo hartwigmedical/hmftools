@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class IndexedBases {
 
-    public static byte MATCH_WILDCARD = (byte) '.';
+    public static final byte MATCH_WILDCARD = (byte) '.';
 
     @NotNull
     public static IndexedBases resize(final int position, final int recordIndex, final int recordLeftCoreIndex,

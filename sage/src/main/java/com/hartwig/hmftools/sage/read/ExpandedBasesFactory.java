@@ -59,7 +59,7 @@ public class ExpandedBasesFactory {
             destPos += length;
             srcPos += length;
 
-            // Create skpped reference substitute
+            // Create skipped reference substitute
             for (int j = 0; j < referenceRegionReplacementLength; j++) {
                 dest[destPos++] = IndexedBases.MATCH_WILDCARD;
             }
