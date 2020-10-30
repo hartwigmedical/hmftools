@@ -80,7 +80,6 @@ public final class LoadClinicalData {
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
     private static final String CURATED_TUMOR_LOCATION_TSV = "curated_tumor_location_tsv";
-    private static final String CURATED_TUMOR_LOCATION_V2_TSV = "curated_tumor_location_v2_tsv";
 
     private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
     private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
@@ -92,7 +91,7 @@ public final class LoadClinicalData {
     private static final String LIMS_DIRECTORY = "lims_dir";
 
     private static final String DOID_JSON = "doid_json";
-    private static final String TUMOR_LOCATION_V2_MAPPING_TSV = "tumor_location_v2_mapping_tsv";
+    private static final String TUMOR_LOCATION_MAPPING_TSV = "tumor_location_mapping_tsv";
     private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
     private static final String BIOPSY_MAPPING_CSV = "biopsy_mapping_csv";
 
@@ -108,7 +107,7 @@ public final class LoadClinicalData {
         }
 
         List<DoidNode> doidNodes = DiseaseOntology.readDoidJsonFile(cmd.getOptionValue(DOID_JSON)).nodes();
-        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV), doidNodes);
+        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV), doidNodes);
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
         LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
@@ -135,7 +134,7 @@ public final class LoadClinicalData {
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
 
         LOGGER.info("Writing curated tumor locations");
-        DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_V2_TSV), patients.values());
+        DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
             LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
@@ -548,7 +547,8 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(LIMS_DIRECTORY),
                 cmd.getOptionValue(TREATMENT_MAPPING_CSV),
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV),
-                cmd.getOptionValue(TUMOR_LOCATION_V2_MAPPING_TSV),
+                cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV),
+                cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV),
                 cmd.getOptionValue(DOID_JSON));
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
@@ -590,7 +590,6 @@ public final class LoadClinicalData {
 
         options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, curated tumor locations will be written to csv file");
         options.addOption(CURATED_TUMOR_LOCATION_TSV, true, "Path towards to the TSV of curated tumor locations.");
-        options.addOption(CURATED_TUMOR_LOCATION_V2_TSV, true, "Path towards to the TSV of curated tumor locations v2.");
 
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,
@@ -604,7 +603,7 @@ public final class LoadClinicalData {
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
 
         options.addOption(DOID_JSON, true, "Path towards to the json file of the doid ID of tumor locations.");
-        options.addOption(TUMOR_LOCATION_V2_MAPPING_TSV, true, "Path towards to the TSV of mapping the tumor location.");
+        options.addOption(TUMOR_LOCATION_MAPPING_TSV, true, "Path towards to the TSV of mapping the tumor location.");
         options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the CSV of mapping the treatments.");
         options.addOption(BIOPSY_MAPPING_CSV, true, "Path towards to the CSV of mapping of biopsies.");
 

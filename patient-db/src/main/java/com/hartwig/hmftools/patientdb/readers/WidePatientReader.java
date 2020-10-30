@@ -89,7 +89,7 @@ public class WidePatientReader {
         CuratedTumorLocation curatedTumorLocation = tumorLocationCurator.search(limsPrimaryTumorLocation);
         if (curatedTumorLocation.primaryTumorLocation() == null && limsPrimaryTumorLocation != null
                 && !limsPrimaryTumorLocation.isEmpty()) {
-            LOGGER.warn("Could not curate WIDE primary tumor location v2 '{}'", limsPrimaryTumorLocation);
+            LOGGER.warn("Could not curate WIDE primary tumor location '{}'", limsPrimaryTumorLocation);
         }
 
         return ImmutableBaselineData.builder()

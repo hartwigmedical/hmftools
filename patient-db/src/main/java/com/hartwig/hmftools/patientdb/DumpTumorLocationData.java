@@ -28,7 +28,7 @@ final class DumpTumorLocationData {
     static void writeCuratedTumorLocationsToTSV(@NotNull String outputFile, @NotNull Collection<Patient> patients) throws IOException {
         List<PatientTumorLocation> tumorLocations = toPatientTumorLocations(patients);
         PatientTumorLocationFile.write(outputFile, tumorLocations);
-        LOGGER.info(" Written {} v2 tumor locations to {}", tumorLocations.size(), outputFile);
+        LOGGER.info(" Written {} tumor locations to {}", tumorLocations.size(), outputFile);
     }
 
     @NotNull

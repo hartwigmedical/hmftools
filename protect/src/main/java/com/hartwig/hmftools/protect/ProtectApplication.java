@@ -91,7 +91,7 @@ public class ProtectApplication implements AutoCloseable {
         String tumorSampleId = protectConfig.tumorSampleId();
         LOGGER.info("Running PROTECT for {}", tumorSampleId);
 
-        PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsvV2(), tumorSampleId);
+        PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsv(), tumorSampleId);
         LOGGER.info("Creating deprecated actionability analyzer from {}", protectConfig.deprecatedActionabilityDir());
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(protectConfig.deprecatedActionabilityDir());
         LOGGER.info("Creating germline reporting model from {}", protectConfig.germlineGenesCsv());
@@ -126,8 +126,8 @@ public class ProtectApplication implements AutoCloseable {
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
         final DoidParents doidParent = new DoidParents(DiseaseOntology.readDoidJsonFile(config.doidJsonFile()).edges());
 
-        LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsvV2());
-        final List<PatientTumorLocation> tumorLocations = PatientTumorLocationFile.read(config.tumorLocationTsvV2());
+        LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsv());
+        final List<PatientTumorLocation> tumorLocations = PatientTumorLocationFile.read(config.tumorLocationTsv());
         @Nullable
         PatientTumorLocation sampleTumorLocation =
                 PatientTumorLocationFunctions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
