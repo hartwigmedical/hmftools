@@ -56,7 +56,7 @@ public interface PatientReporterConfig {
     String CIRCOS_FILE = "circos_file";
 
     String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
-    String GERMLINE_GENES_CSV = "germline_genes_csv";
+    String GERMLINE_GENES_TSV = "germline_genes_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
 
     // Some additional optional params and flags
@@ -103,7 +103,7 @@ public interface PatientReporterConfig {
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
-        options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
+        options.addOption(GERMLINE_GENES_TSV, true, "Path towards a TSV containing germline genes which we want to report.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
@@ -192,7 +192,7 @@ public interface PatientReporterConfig {
     String knowledgebaseDir();
 
     @NotNull
-    String germlineGenesCsv();
+    String germlineGenesTsv();
 
     @NotNull
     String sampleSummaryTsv();
@@ -232,7 +232,7 @@ public interface PatientReporterConfig {
         String chordPredictionTxt = Strings.EMPTY;
         String circosFile = Strings.EMPTY;
         String knowledgebaseDirectory = Strings.EMPTY;
-        String germlineGenesCsv = Strings.EMPTY;
+        String germlineGenesTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
 
         if (qcFailReason.isDeepWGSDataAvailable()) {
@@ -251,7 +251,7 @@ public interface PatientReporterConfig {
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
             circosFile = nonOptionalFile(cmd, CIRCOS_FILE);
             knowledgebaseDirectory = nonOptionalDir(cmd, KNOWLEDGEBASE_DIRECTORY);
-            germlineGenesCsv = nonOptionalFile(cmd, GERMLINE_GENES_CSV);
+            germlineGenesTsv = nonOptionalFile(cmd, GERMLINE_GENES_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
         }
 
@@ -282,7 +282,7 @@ public interface PatientReporterConfig {
                 .chordPredictionTxt(chordPredictionTxt)
                 .circosFile(circosFile)
                 .knowledgebaseDir(knowledgebaseDirectory)
-                .germlineGenesCsv(germlineGenesCsv)
+                .germlineGenesTsv(germlineGenesTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .correctedReport(cmd.hasOption(CORRECTED_REPORT))

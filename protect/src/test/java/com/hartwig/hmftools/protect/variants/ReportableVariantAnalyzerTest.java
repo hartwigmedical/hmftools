@@ -11,9 +11,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.protect.ProtectTestFactory;
+import com.hartwig.hmftools.protect.variants.germline.ConditionReportingVariant;
 import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReporting;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.variants.germline.ImmutableDriverGermlineVariant;
+import com.hartwig.hmftools.protect.variants.germline.ImmutableGermlineReporting;
 import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 import com.hartwig.hmftools.protect.variants.somatic.ImmutableDriverSomaticVariant;
 
@@ -39,13 +42,13 @@ public class ReportableVariantAnalyzerTest {
         List<DriverSomaticVariant> somaticVariantsToReport = Lists.newArrayList(variant1, variant2);
         List<DriverGermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
 
-        ReportableVariantAnalysis reportableVariantsAnalysis =
-                ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantsToReport,
-                        germlineVariantsToReport,
-                        ProtectTestFactory.createTestEmptyGermlineGenesReporting(),
-                        LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
-                        ProtectTestFactory.loadTestActionabilityAnalyzer(),
-                        null);
+        ReportableVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(
+                somaticVariantsToReport,
+                germlineVariantsToReport,
+                ProtectTestFactory.createTestEmptyGermlineGenesReporting(),
+                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
+                ProtectTestFactory.loadTestActionabilityAnalyzer(),
+                null);
 
         List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
 
@@ -66,13 +69,13 @@ public class ReportableVariantAnalyzerTest {
         List<DriverGermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
-        ReportableVariantAnalysis reportableVariantsAnalysis =
-                ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantsToReport,
-                        germlineVariantsToReport,
-                        germlineReportingModel,
-                        LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
-                        ProtectTestFactory.loadTestActionabilityAnalyzer(),
-                        null);
+        ReportableVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(
+                somaticVariantsToReport,
+                germlineVariantsToReport,
+                germlineReportingModel,
+                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
+                ProtectTestFactory.loadTestActionabilityAnalyzer(),
+                null);
 
         List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
 
@@ -99,13 +102,13 @@ public class ReportableVariantAnalyzerTest {
         List<DriverGermlineVariant> germlineVariantsToReport = createBiallelicGermlineVariantsOnOncoAndTSG();
         GermlineReportingModel germlineReportingModel = createGermlineReportingModelWithOncoAndTSG();
 
-        ReportableVariantAnalysis reportableVariantsAnalysis =
-                ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(somaticVariantsToReport,
-                        germlineVariantsToReport,
-                        germlineReportingModel,
-                        LimsGermlineReportingLevel.NO_REPORTING,
-                        ProtectTestFactory.loadTestActionabilityAnalyzer(),
-                        null);
+        ReportableVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(
+                somaticVariantsToReport,
+                germlineVariantsToReport,
+                germlineReportingModel,
+                LimsGermlineReportingLevel.NO_REPORTING,
+                ProtectTestFactory.loadTestActionabilityAnalyzer(),
+                null);
 
         List<ReportableVariant> reportableVariants = reportableVariantsAnalysis.variantsToReport();
 
@@ -125,9 +128,19 @@ public class ReportableVariantAnalyzerTest {
 
     @NotNull
     private static GermlineReportingModel createGermlineReportingModelWithOncoAndTSG() {
-        Map<String, Boolean> germlineGenesReportingMap = Maps.newHashMap();
-        germlineGenesReportingMap.put(ONCO, true);
-        germlineGenesReportingMap.put(TSG, false);
+        Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
+        GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
+                .notifyClinicalGeneticus(true)
+                .condition(ConditionReportingVariant.BIALLELIC)
+                .variant("")
+                .build();
+        GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
+                .notifyClinicalGeneticus(false)
+                .condition(ConditionReportingVariant.BIALLELIC)
+                .variant("")
+                .build();
+        germlineGenesReportingMap.put(ONCO, germlineReportingTrue);
+        germlineGenesReportingMap.put(TSG, germlineReportingFalse);
         return new GermlineReportingModel(germlineGenesReportingMap);
     }
 

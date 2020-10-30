@@ -25,7 +25,10 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.protect.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.structural.ImmutableReportableGeneDisruption;
+import com.hartwig.hmftools.protect.variants.germline.ConditionReportingVariant;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReporting;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.protect.variants.germline.ImmutableGermlineReporting;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -152,21 +155,32 @@ public final class ProtectTestFactory {
 
     @NotNull
     public static GermlineReportingModel createTestGermlineGenesReporting() {
-        Map<String, Boolean> germlineGenesReportingMap = Maps.newHashMap();
-        germlineGenesReportingMap.put(ONCOGENE, true);
-        germlineGenesReportingMap.put(TSG, false);
+        Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
+        GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
+                .notifyClinicalGeneticus(true)
+                .condition(ConditionReportingVariant.BIALLELIC)
+                .variant("")
+                .build();
+        GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
+                .notifyClinicalGeneticus(false)
+                .condition(ConditionReportingVariant.BIALLELIC)
+                .variant("")
+                .build();
+        germlineGenesReportingMap.put(ONCOGENE, germlineReportingTrue);
+        germlineGenesReportingMap.put(TSG, germlineReportingFalse);
         return new GermlineReportingModel(germlineGenesReportingMap);
     }
 
     @NotNull
     public static GermlineReportingModel createTestEmptyGermlineGenesReporting() {
-        Map<String, Boolean> germlineGenesReportingMap = Maps.newHashMap();
+        Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
         return new GermlineReportingModel(germlineGenesReportingMap);
     }
 
     @NotNull
     public static ImmutableDriverCatalog.Builder createTestDriverCatalogBuilder() {
-        return ImmutableDriverCatalog.builder().biallelic(false)
+        return ImmutableDriverCatalog.builder()
+                .biallelic(false)
                 .category(DriverCategory.ONCO)
                 .gene(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)

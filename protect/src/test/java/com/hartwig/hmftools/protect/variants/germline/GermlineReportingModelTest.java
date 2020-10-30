@@ -11,15 +11,26 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GermlineReportingModelTest {
 
     @Test
     public void testBehaviour() {
-        Map<String, Boolean> notifyMap = Maps.newHashMap();
-        notifyMap.put("Report", false);
-        notifyMap.put("Notify", true);
+        Map<String, GermlineReporting> notifyMap = Maps.newHashMap();
+        GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
+                .notifyClinicalGeneticus(true)
+                .condition(ConditionReportingVariant.BIALLELIC)
+                .variant("")
+                .build();
+        GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
+                .notifyClinicalGeneticus(false)
+                .condition(ConditionReportingVariant.BIALLELIC)
+                .variant("")
+                .build();
+        notifyMap.put("Report", germlineReportingFalse);
+        notifyMap.put("Notify", germlineReportingTrue);
 
         GermlineReportingModel victim = new GermlineReportingModel(notifyMap);
         assertTrue(victim.notifyAboutGene(REPORT_WITH_NOTIFICATION, "Notify"));

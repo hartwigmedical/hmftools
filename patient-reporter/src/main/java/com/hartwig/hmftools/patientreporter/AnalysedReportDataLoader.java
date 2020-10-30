@@ -20,7 +20,7 @@ final class AnalysedReportDataLoader {
             @NotNull String germlineGenesCsv, @NotNull String sampleSummaryTsv) throws IOException {
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(germlineGenesCsv);
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
 
         return ImmutableAnalysedReportData.builder()

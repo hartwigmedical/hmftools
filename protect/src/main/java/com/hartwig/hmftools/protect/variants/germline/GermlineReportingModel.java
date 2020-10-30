@@ -19,10 +19,10 @@ public class GermlineReportingModel {
     private final Set<String> reportableGenes = Sets.newHashSet();
     private final Set<String> notifiableGenes = Sets.newHashSet();;
 
-    public GermlineReportingModel(@NotNull final Map<String, Boolean> germlineGenesAndNotificationMap) {
-        for (Map.Entry<String, Boolean> entry : germlineGenesAndNotificationMap.entrySet()) {
+    public GermlineReportingModel(@NotNull final Map<String, GermlineReporting> germlineGenesAndNotificationMap) {
+        for (Map.Entry<String, GermlineReporting> entry : germlineGenesAndNotificationMap.entrySet()) {
             reportableGenes.add(entry.getKey());
-            if (entry.getValue()) {
+            if (entry.getValue().notifyClinicalGeneticus()) {
                 notifiableGenes.add(entry.getKey());
             }
         }
