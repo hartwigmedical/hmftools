@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
+import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import com.hartwig.hmftools.cup.feature.FeatureAnnotation;
 import com.hartwig.hmftools.cup.rna.RnaExpression;
 import com.hartwig.hmftools.cup.sample.SampleTraits;
@@ -47,6 +48,7 @@ public class SampleAnalyser
     private final RnaExpression mRnaExpression;
 
     private BufferedWriter mSampleDataWriter;
+    private BufferedWriter mSampleSimilarityWriter;
 
     public SampleAnalyser(final CommandLine cmd)
     {
@@ -63,6 +65,8 @@ public class SampleAnalyser
         mRnaExpression = new RnaExpression(mConfig, mSampleDataCache, cmd);
 
         mSampleDataWriter = null;
+        mSampleSimilarityWriter = null;
+
     }
 
     private void loadSampleData(final CommandLine cmd)
@@ -129,6 +133,7 @@ public class SampleAnalyser
         }
 
         closeBufferedWriter(mSampleDataWriter);
+        closeBufferedWriter(mSampleSimilarityWriter);
 
         CUP_LOGGER.info("CUP analysis complete");
     }
@@ -145,34 +150,15 @@ public class SampleAnalyser
         return true;
     }
 
-    private void initialiseOutputFiles()
-    {
-        try
-        {
-            final String outputFilename = mSampleDataCache.isSingleSample() ?
-                    mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.data.csv"
-                    : mConfig.formOutputFilename("SAMPLE_DATA");
-
-            mSampleDataWriter = createBufferedWriter(outputFilename, false);
-
-            mSampleDataWriter.write("SampleId,CancerType,PrimaryLocation,CancerSubtype,Category,ResultType,DataType,Value,RefCancerType,RefValue");
-            mSampleDataWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
-        }
-    }
-
     private void processSample(final SampleData sample)
     {
         final List<SampleResult> allResults = Lists.newArrayList();
+        final List<SampleSimilarity> similarities = Lists.newArrayList();
 
         final List<SampleResult> traitsResults = mSampleTraits.processSample(sample);
         allResults.addAll(traitsResults);
 
-        final List<SampleResult> snvResults = mSnvSignatures.processSample(sample);
-        allResults.addAll(snvResults);
+        mSnvSignatures.processSample(sample, allResults, similarities);
 
         final List<SampleResult> svResults = mSvAnnotation.processSample(sample);
         allResults.addAll(svResults);
@@ -194,6 +180,37 @@ public class SampleAnalyser
             allResults.add(classifierScoreResult);
 
         writeSampleData(sample, allResults);
+        writeSampleSimilarities(sample, similarities);
+    }
+
+    private void initialiseOutputFiles()
+    {
+        try
+        {
+            final String sampleDataFilename = mSampleDataCache.isSingleSample() ?
+                    mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.data.csv"
+                    : mConfig.formOutputFilename("SAMPLE_DATA");
+
+            mSampleDataWriter = createBufferedWriter(sampleDataFilename, false);
+
+            mSampleDataWriter.write("SampleId,Category,ResultType,DataType,Value,RefCancerType,RefValue");
+
+            mSampleDataWriter.newLine();
+
+            final String sampleSimilarityFilename = mSampleDataCache.isSingleSample() ?
+                    mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.similarities.csv"
+                    : mConfig.formOutputFilename("SAMPLE_SIMILARITIES");
+
+            mSampleSimilarityWriter = createBufferedWriter(sampleSimilarityFilename, false);
+
+            mSampleSimilarityWriter.write("SampleId,MatchType,Score,MatchSampleId");
+            mSampleSimilarityWriter.write(",MatchCancerType,MatchPrimaryLocation,MatchCancerSubtype");
+            mSampleSimilarityWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
+        }
     }
 
     private void writeSampleData(final SampleData sampleData, final List<SampleResult> results)
@@ -205,9 +222,8 @@ public class SampleAnalyser
         {
             for(SampleResult result : results)
             {
-                final String sampleStr = String.format("%s,%s,%s,%s,%s,%s,%s,%s",
-                        sampleData.Id, sampleData.CancerType, sampleData.OriginalCancerType, sampleData.CancerSubtype,
-                        result.Category, result.ResultType, result.DataType, result.Value.toString());
+                final String sampleStr = String.format("%s,%s,%s,%s,%s",
+                        sampleData.Id, result.Category, result.ResultType, result.DataType, result.Value.toString());
 
                 for(Map.Entry<String,Double> cancerValues : result.CancerTypeValues.entrySet())
                 {
@@ -220,6 +236,36 @@ public class SampleAnalyser
         catch(IOException e)
         {
             CUP_LOGGER.error("failed to write sample data: {}", e.toString());
+        }
+    }
+
+    private void writeSampleSimilarities(final SampleData sampleData, final List<SampleSimilarity> similarities)
+    {
+        if(similarities.isEmpty() || mSampleDataWriter == null)
+            return;
+
+        try
+        {
+            for(SampleSimilarity similarity : similarities)
+            {
+                final SampleData refSample = mSampleDataCache.findRefSampleData(similarity.MatchedSampleId);
+
+                if(refSample == null)
+                {
+                    CUP_LOGGER.error("refSample({}) not found", similarity.MatchedSampleId);
+                    continue;
+                }
+
+                mSampleSimilarityWriter.write(String.format("%s,%s,%.3f,%s,%s,%s,%s",
+                        sampleData.Id, similarity.MatchType, similarity.Score,
+                        refSample.Id, refSample.CancerType, refSample.OriginalCancerType, refSample.CancerSubtype));
+
+                mSampleSimilarityWriter.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write sample similarity: {}", e.toString());
         }
     }
 

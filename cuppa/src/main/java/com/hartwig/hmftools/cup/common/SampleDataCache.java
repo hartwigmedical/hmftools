@@ -43,6 +43,18 @@ public class SampleDataCache
         return samples != null ? samples.size() : 0;
     }
 
+    public SampleData findRefSampleData(final String sampleId)
+    {
+        for(List<SampleData> sampleDataList : RefCancerSampleData.values())
+        {
+            final SampleData refSample = sampleDataList.stream().filter(x -> x.Id.equals(sampleId)).findFirst().orElse(null);
+            if(refSample != null)
+                return refSample;
+        }
+
+        return null;
+    }
+
     public void loadSampleData(final String specificSampleData, final String sampleDataFile)
     {
         if(specificSampleData != null)

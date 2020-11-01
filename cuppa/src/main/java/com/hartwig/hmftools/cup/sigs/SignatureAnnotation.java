@@ -17,6 +17,8 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIM
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_SIMILARITY_CUTOFF;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXPONENT;
@@ -42,6 +44,7 @@ import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
+import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
 public class SignatureAnnotation
 {
@@ -178,25 +181,23 @@ public class SignatureAnnotation
         return true;
     }
 
-    public List<SampleResult> processSample(final SampleData sample)
+    public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        final List<SampleResult> results = Lists.newArrayList();
-
         if(!mIsValid || mRefSampleCounts == null)
-            return results;
+            return;
 
         Integer sampleCountsIndex = mSampleCountsIndex.get(sample.Id);
 
         if(sampleCountsIndex == null)
         {
             CUP_LOGGER.info("sample({}) has no SNV data", sample.Id);
-            return results;
+            return;
         }
 
         final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
         int snvTotal = (int)sumVector(sampleCounts);
 
-        addCssResults(sample, sampleCounts, snvTotal, results);
+        addCssResults(sample, sampleCounts, snvTotal, results, similarities);
         addPosFreqCssResults(sample, results);
 
         addSigContributionResults(sample, results);
@@ -229,13 +230,15 @@ public class SignatureAnnotation
                 sample.CancerType, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal, false);
 
         results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_HIGH", snvTotal, cancerPrevsHigh));
-
-        return results;
     }
 
-    private void addCssResults(final SampleData sample, final double[] sampleCounts, int snvTotal, final List<SampleResult> results)
+    private void addCssResults(
+            final SampleData sample, final double[] sampleCounts, int snvTotal,
+            final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
         int refSampleCount = mRefSampleCounts.Cols;
+
+        final List<SampleSimilarity> topMatches = Lists.newArrayList();
 
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
 
@@ -260,6 +263,8 @@ public class SignatureAnnotation
 
             if(css < SNV_CSS_THRESHOLD)
                 continue;
+
+            recordCssSimilarity(topMatches, sample.Id, refSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString());
 
             double cssWeight = pow(SNV_CSS_DIFF_EXPONENT, -100 * (1 - css));
 
@@ -287,6 +292,34 @@ public class SignatureAnnotation
 
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+
+        similarities.addAll(topMatches);
+    }
+
+    private void recordCssSimilarity(
+            final List<SampleSimilarity> topMatches, final String sample, final String otherSampleId, double css, final String type)
+    {
+        if(css < SNV_CSS_SIMILARITY_CUTOFF)
+            return;
+
+        if(topMatches.size() < SNV_CSS_SIMILARITY_MAX_MATCHES)
+        {
+            topMatches.add(new SampleSimilarity(sample, otherSampleId, type, css));
+            return;
+        }
+
+        if(css < topMatches.get(topMatches.size() - 1).Score)
+            return;
+
+        for(int i = 0; i < topMatches.size(); ++i)
+        {
+            if(css > topMatches.get(i).Score)
+            {
+                topMatches.add(i, new SampleSimilarity(sample, otherSampleId, type, css));
+                topMatches.remove(topMatches.size() - 1);
+                return;
+            }
+        }
     }
 
     private void addPosFreqCssResults(final SampleData sample, final List<SampleResult> results)

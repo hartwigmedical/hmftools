@@ -3,6 +3,10 @@ package com.hartwig.hmftools.cup.common;
 public class CupConstants
 {
     public static final double SNV_CSS_THRESHOLD = 0.01;
+
+    public static final double SNV_CSS_SIMILARITY_CUTOFF = 0.8;
+    public static final int SNV_CSS_SIMILARITY_MAX_MATCHES = 5;
+
     public static final double SNV_POS_FREQ_CSS_THRESHOLD = 0.01;
     public static final double RNA_GENE_EXP_CSS_THRESHOLD = 0.01;
 
