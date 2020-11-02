@@ -80,14 +80,14 @@ public final class ExampleAnalysisTestFactory {
         List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
+        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(reportGermline);
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline);
 
         String summaryWithoutGermline = "Melanoma sample showing:\n"
                 + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
@@ -180,7 +180,7 @@ public final class ExampleAnalysisTestFactory {
         List<ViralInsertion> viralInsertions = createTestViralInsertions();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true);
         String clinicalSummary = Strings.EMPTY;
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
@@ -222,7 +222,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true);
 
         ReportData reportData = PatientReporterTestFactory.loadTestReportData();
         return ImmutableQCFailReport.builder()
@@ -248,7 +248,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample) {
+    private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample, boolean reportGermline) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(Strings.EMPTY)
                 .refSampleBarcode("FR12123488")
@@ -266,7 +266,9 @@ public final class ExampleAnalysisTestFactory {
                         Strings.EMPTY,
                         Lists.newArrayList("8923"),
                         false))
-                .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
+                .germlineReportingLevel(reportGermline
+                        ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
+                        : LimsGermlineReportingLevel.NO_REPORTING)
                 .reportViralInsertions(true)
                 .refArrivalDate(LocalDate.parse("01-Oct-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
@@ -520,7 +522,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableVariant> createCOLO829SomaticVariants() {
+    private static List<ReportableVariant> createCOLO829SomaticVariants(boolean forceCDKN2AVariantToBeGermline) {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("BRAF")
@@ -542,7 +544,7 @@ public final class ExampleAnalysisTestFactory {
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
-                .source(ReportableVariantSource.SOMATIC)
+                .source(forceCDKN2AVariantToBeGermline ? ReportableVariantSource.GERMLINE : ReportableVariantSource.SOMATIC)
                 .gene("CDKN2A")
                 .chromosome("9")
                 .position(21971153)
@@ -626,26 +628,25 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static List<ReportableVariant> createAllSomaticVariants() {
-        ReportableVariant variant1 =
-                ImmutableReportableVariant.builder()
-                        .source(ReportableVariantSource.SOMATIC)
-                        .gene("TP63")
-                        .chromosome("3")
+        ReportableVariant variant1 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
+                .gene("TP63")
+                .chromosome("3")
                 .position(189604330)
                 .ref("G")
                 .alt("T")
-                        .canonicalCodingEffect(CodingEffect.MISSENSE)
-                        .canonicalHgvsCodingImpact("c.1497G>T")
-                        .canonicalHgvsProteinImpact("p.Met499Ile")
-                        .alleleReadCount(48)
-                        .totalReadCount(103)
-                        .alleleCopyNumber(2.1)
-                        .totalCopyNumber(4.1)
-                        .hotspot(Hotspot.NON_HOTSPOT)
-                        .clonalLikelihood(0.47)
-                        .driverLikelihood(0.1)
-                        .biallelic(false)
-                        .build();
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .canonicalHgvsCodingImpact("c.1497G>T")
+                .canonicalHgvsProteinImpact("p.Met499Ile")
+                .alleleReadCount(48)
+                .totalReadCount(103)
+                .alleleCopyNumber(2.1)
+                .totalCopyNumber(4.1)
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .clonalLikelihood(0.47)
+                .driverLikelihood(0.1)
+                .biallelic(false)
+                .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
