@@ -3,6 +3,7 @@ package com.hartwig.hmftools.protect.variants.germline;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -22,7 +23,8 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlinesGenesReportedBialleic() {
-        GermlineReportingModel germlineReportingModelBiallic = ProtectTestFactory.createTestGermlineGenesReportingBiallelic();
+        GermlineReportingModel germlineReportingModelBiallic =
+                ProtectTestFactory.createTestGermlineGenesReporting(true, false, true, true, Strings.EMPTY, Strings.EMPTY);
 
         List<ReportableGermlineVariant> germlineVariantsNotPresentInTumor = createTestGermlineVariantsNotPresentInTumor();
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
@@ -123,7 +125,8 @@ public class FilterGermlineVariantsTest {
     @Test
     public void checkForGermlinesGenesReportedMonoallelic() {
 
-        GermlineReportingModel germlineReportingModelMonoallelic = ProtectTestFactory.createTestGermlineGenesReportingMonoallelic();
+        GermlineReportingModel germlineReportingModelMonoallelic =
+                ProtectTestFactory.createTestGermlineGenesReporting(true, false, false, false, "ABC", Strings.EMPTY);
 
         List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsPresentInTumor();
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
@@ -239,7 +242,8 @@ public class FilterGermlineVariantsTest {
     @Test
     public void checkForGermlinesGenesReportedMonoallelicSpecificVariant() {
 
-        GermlineReportingModel germlineReportingModelMonoallelic = ProtectTestFactory.createTestGermlineGenesReportingMonoallelic();
+        GermlineReportingModel germlineReportingModelMonoallelic =
+                ProtectTestFactory.createTestGermlineGenesReporting(true, false, false, false, "ABC", Strings.EMPTY);
 
         List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsPresentInTumor();
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
