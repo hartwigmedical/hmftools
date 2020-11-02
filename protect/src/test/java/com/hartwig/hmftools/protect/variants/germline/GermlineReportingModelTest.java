@@ -22,11 +22,11 @@ public class GermlineReportingModelTest {
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
                 .condition(ConditionReportingVariant.BIALLELIC)
-                .variant("")
+                .variant("p.Arg876Cys")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
-                .condition(ConditionReportingVariant.BIALLELIC)
+                .condition(ConditionReportingVariant.MONOALLELIC)
                 .variant("")
                 .build();
         notifyMap.put("Report", germlineReportingFalse);
@@ -40,9 +40,16 @@ public class GermlineReportingModelTest {
         assertTrue(victim.reportableGermlineGenes().contains("Report"));
         assertTrue(victim.reportableGermlineGenes().contains("Notify"));
 
+        assertTrue(victim.monoallelicGenesReportable().contains("Report"));
+
+        assertTrue(victim.reportableSpecificVariants().containsKey("Notify"));
+        assertTrue(victim.reportableSpecificVariants().containsValue("p.Arg876Cys"));
+
         assertFalse(victim.notifiableGenes(REPORT_WITH_NOTIFICATION).contains("Report"));
         assertTrue(victim.notifiableGenes(REPORT_WITH_NOTIFICATION).contains("Notify"));
         assertFalse(victim.notifiableGenes(REPORT_WITHOUT_NOTIFICATION).contains("Notify"));
+
+
 
         assertFalse(victim.notifyAboutGene(REPORT_WITH_NOTIFICATION, "DoesNotExist"));
     }

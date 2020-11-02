@@ -58,15 +58,19 @@ public final class FilterGermlineVariants {
     @NotNull
     private static List<DriverGermlineVariant> determineReportableVariants(@NotNull Map<String, String> reportableSpecificVariants,
             @NotNull ReportableGermlineVariant germlineVariant, @NotNull List<DriverGermlineVariant> reportableGermlineVariants) {
+        boolean containsInReportableSpecificVariants = false;
         for (Map.Entry<String, String> entry : reportableSpecificVariants.entrySet()) {
             if (entry.getValue().contains(germlineVariant.gene())) {
                 if (entry.getKey().equals(germlineVariant.hgvsProtein())) {
                     reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
+                    containsInReportableSpecificVariants = true;
 
                 }
-            } else {
-                reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
             }
+        }
+
+        if (!containsInReportableSpecificVariants) {
+            reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
         }
         return reportableGermlineVariants;
     }
@@ -83,7 +87,7 @@ public final class FilterGermlineVariants {
                     reportableGermlineVariants =
                             determineReportableVariants(reportableSpecificVariants, germlineVariant, reportableGermlineVariants);
                 } else {
-                    // Only report germline variants on TSGs if there is a 2nd reportable hit
+                    // Only report germline variants on genes with BIALLELIC condition when a 2nd reportable hit is present
                     boolean filterBiallelic = germlineVariant.biallelic();
 
                     boolean filterGermlineVariantInSameGene = false;
