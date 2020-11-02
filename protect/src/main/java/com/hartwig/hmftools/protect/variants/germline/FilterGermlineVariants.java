@@ -56,7 +56,7 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    private static List<DriverGermlineVariant> determineReportableVariants(@NotNull Map<String, String> reportableSpecificVariants,
+    public static List<DriverGermlineVariant> determineReportableVariants(@NotNull Map<String, String> reportableSpecificVariants,
             @NotNull ReportableGermlineVariant germlineVariant, @NotNull List<DriverGermlineVariant> reportableGermlineVariants) {
         boolean containsInReportableSpecificVariants = false;
         for (Map.Entry<String, String> entry : reportableSpecificVariants.entrySet()) {
