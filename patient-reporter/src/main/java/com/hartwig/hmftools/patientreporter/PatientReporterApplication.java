@@ -97,8 +97,8 @@ public class PatientReporterApplication {
                     config.comments(),
                     config.correctedReport());
 
-            String outputFilePathReport = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-            reportWriter.writeAnalysedPatientReport(report, outputFilePathReport);
+            String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+            reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
             if (!config.onlyCreatePDF()) {
                 LOGGER.debug("Updating additional files and databases");
