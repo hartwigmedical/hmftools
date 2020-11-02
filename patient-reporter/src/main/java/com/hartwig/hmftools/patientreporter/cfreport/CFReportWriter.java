@@ -53,7 +53,7 @@ public class CFReportWriter implements ReportWriter {
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
         GenomicAnalysis analysis = report.genomicAnalysis();
         ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(analysis),
-                new TherapyDetailsChapterOffLabel(analysis), new GenomicAlterationsChapter(analysis),
+                new TherapyDetailsChapterOffLabel(analysis), new GenomicAlterationsChapter(report.sampleReport(), analysis),
                 new TumorCharacteristicsChapter(analysis), new CircosChapter(report), new ExplanationChapter(),
                 new DetailsAndDisclaimerChapter(report) };
 

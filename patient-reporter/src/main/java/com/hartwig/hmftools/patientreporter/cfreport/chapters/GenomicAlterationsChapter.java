@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
@@ -27,7 +28,6 @@ import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
@@ -35,9 +35,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
     private static final boolean DISPLAY_CLONAL_COLUMN = false;
 
     @NotNull
+    private final SampleReport sampleReport;
+    @NotNull
     private final GenomicAnalysis genomicAnalysis;
 
-    public GenomicAlterationsChapter(@NotNull final GenomicAnalysis genomicAnalysis) {
+    public GenomicAlterationsChapter(@NotNull final SampleReport sampleReport, @NotNull final GenomicAnalysis genomicAnalysis) {
+        this.sampleReport = sampleReport;
         this.genomicAnalysis = genomicAnalysis;
     }
 
@@ -56,7 +59,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createFusionsTable(genomicAnalysis.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
-        reportDocument.add(createViralInsertionTable(genomicAnalysis.viralInsertions()));
+        reportDocument.add(createViralInsertionTable(genomicAnalysis.viralInsertions(), sampleReport.reportViralInsertions()));
     }
 
     @NotNull
@@ -230,10 +233,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createViralInsertionTable(@Nullable List<ViralInsertion> viralInsertions) {
+    private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertions, boolean reportViralInsertions) {
         String title = "Tumor specific viral insertions";
 
-        if (viralInsertions == null) {
+        if (!reportViralInsertions) {
             return TableUtil.createNAReportTable(title);
         } else if (viralInsertions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
