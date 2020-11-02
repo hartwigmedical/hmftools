@@ -83,7 +83,9 @@ public class CountBamLinesApplication implements AutoCloseable {
                 config.minMappingQuality(),
                 executorService,
                 readerFactory);
-        final Multimap<Chromosome, CobaltCount> readCounts = countSupplier.fromBam(config.referenceBamPath(), config.tumorBamPath());
+        final Multimap<Chromosome, CobaltCount> readCounts = config.tumorOnly()
+                ? countSupplier.tumorOnly(config.tumorBamPath())
+                : countSupplier.pairedTumorNormal(config.referenceBamPath(), config.tumorBamPath());
 
         final RatioSupplier ratioSupplier = new RatioSupplier(config.reference(), config.tumor(), config.outputDirectory());
         final Multimap<Chromosome, CobaltRatio> ratios = ratioSupplier.generateRatios(gcProfiles, readCounts);

@@ -49,7 +49,7 @@ public class CountSupplier {
     }
 
     @NotNull
-    public Multimap<Chromosome, CobaltCount> fromBam(@NotNull final String referenceBam, @NotNull final String tumorBam)
+    public Multimap<Chromosome, CobaltCount> pairedTumorNormal(@NotNull final String referenceBam, @NotNull final String tumorBam)
             throws IOException, ExecutionException, InterruptedException {
         final File tumorFile = new File(tumorBam);
         final File referenceFile = new File(referenceBam);
@@ -71,8 +71,30 @@ public class CountSupplier {
         final Multimap<Chromosome, ReadCount> referenceCounts = fromFutures(referenceFutures);
 
         LOGGER.info("Read Count Complete");
-        return CobaltCountFactory.merge(referenceCounts, tumorCounts);
+        return CobaltCountFactory.pairedTumorNormal(referenceCounts, tumorCounts);
     }
+
+    @NotNull
+    public Multimap<Chromosome, CobaltCount> tumorOnly(@NotNull final String tumorBam)
+            throws IOException, ExecutionException, InterruptedException {
+        final File tumorFile = new File(tumorBam);
+
+        final String chromosomeLengthFileName = ChromosomeLengthFile.generateFilename(outputDirectory, tumor);
+        final List<ChromosomeLength> lengths;
+        try (SamReader reader = readerFactory.open(tumorFile)) {
+            lengths = ChromosomeLengthFactory.create(reader.getFileHeader());
+        }
+        ChromosomeLengthFile.write(chromosomeLengthFileName, lengths);
+
+        LOGGER.info("Calculating Read Count from {}", tumorFile.toString());
+        final List<Future<ChromosomeReadCount>> tumorFutures = createFutures(readerFactory, tumorFile, lengths);
+
+        final Multimap<Chromosome, ReadCount> tumorCounts = fromFutures(tumorFutures);
+
+        LOGGER.info("Read Count Complete");
+        return CobaltCountFactory.tumorOnly(tumorCounts);
+    }
+
 
     @NotNull
     private List<Future<ChromosomeReadCount>> createFutures(final SamReaderFactory readerFactory, final File file,
