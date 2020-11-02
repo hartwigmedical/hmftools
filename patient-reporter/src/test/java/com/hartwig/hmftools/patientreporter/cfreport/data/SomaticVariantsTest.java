@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
@@ -16,6 +17,20 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class SomaticVariantsTest {
+
+    @Test
+    public void canFilterForGermlineConsent() {
+        ReportableVariant somaticVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.SOMATIC).build();
+        ReportableVariant germlineVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.GERMLINE).build();
+
+        assertEquals(2,
+                SomaticVariants.filterForGermlineConsent(Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION).size());
+
+        assertEquals(1,
+                SomaticVariants.filterForGermlineConsent(Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.NO_REPORTING).size());
+    }
 
     @Test
     public void canExtractCodingFromHGVSCodingImpactField() {
