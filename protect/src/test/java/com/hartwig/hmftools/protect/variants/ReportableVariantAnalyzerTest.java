@@ -10,7 +10,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.protect.ProtectTestFactory;
-import com.hartwig.hmftools.protect.variants.germline.ConditionReportingVariant;
 import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReporting;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
@@ -128,12 +127,12 @@ public class ReportableVariantAnalyzerTest {
         Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
-                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
+                .reportBiallelicOnly(true)
                 .variant("")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
-                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
+                .reportBiallelicOnly(true)
                 .variant("")
                 .build();
         germlineGenesReportingMap.put(ONCO, germlineReportingTrue);

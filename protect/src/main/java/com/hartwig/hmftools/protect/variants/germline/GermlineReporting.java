@@ -11,8 +11,7 @@ public abstract class GermlineReporting {
 
     public abstract boolean notifyClinicalGeneticus();
 
-    @NotNull
-    public abstract ConditionReportingVariant condition();
+    public abstract boolean reportBiallelicOnly();
 
     @NotNull
     public abstract String variant();

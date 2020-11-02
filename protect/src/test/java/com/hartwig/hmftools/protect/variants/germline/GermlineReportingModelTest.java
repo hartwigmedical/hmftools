@@ -20,12 +20,12 @@ public class GermlineReportingModelTest {
         Map<String, GermlineReporting> notifyMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
-                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
+                .reportBiallelicOnly(true)
                 .variant("p.Arg876Cys")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
-                .condition(ConditionReportingVariant.ALL)
+                .reportBiallelicOnly(false)
                 .variant("")
                 .build();
         notifyMap.put("Report", germlineReportingFalse);

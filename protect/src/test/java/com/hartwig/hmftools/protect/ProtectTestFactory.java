@@ -25,7 +25,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.protect.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.structural.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.protect.variants.germline.ConditionReportingVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReporting;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.variants.germline.ImmutableGermlineReporting;
@@ -158,12 +157,12 @@ public final class ProtectTestFactory {
         Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
-                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
+                .reportBiallelicOnly(true)
                 .variant("")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
-                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
+                .reportBiallelicOnly(true)
                 .variant("")
                 .build();
         germlineGenesReportingMap.put(ONCOGENE, germlineReportingTrue);
@@ -176,12 +175,12 @@ public final class ProtectTestFactory {
         Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
-                .condition(ConditionReportingVariant.ALL)
+                .reportBiallelicOnly(false)
                 .variant("")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
-                .condition(ConditionReportingVariant.ALL)
+                .reportBiallelicOnly(false)
                 .variant("")
                 .build();
         germlineGenesReportingMap.put(ONCOGENE, germlineReportingTrue);

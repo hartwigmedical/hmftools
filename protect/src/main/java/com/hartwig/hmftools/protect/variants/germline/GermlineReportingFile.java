@@ -33,18 +33,18 @@ public final class GermlineReportingFile {
                 if (parts.length == 3) {
                     String gene = parts[0].trim();
                     String notifyGene = parts[1].trim().toLowerCase();
-                    ConditionReportingVariant conditon = ConditionReportingVariant.fromConditionString(parts[2].trim());
+                    boolean reportBiallelicOnly = parts[1].trim().toLowerCase().equals("Biallelic") ? true : false;
                     String variant = Strings.EMPTY;
                     germlineGenesAndNotifyMap =
-                            extractGermlineInfo(germlineGenesAndNotifyMap, notifyGene, gene, conditon, variant);
+                            extractGermlineInfo(germlineGenesAndNotifyMap, notifyGene, gene, reportBiallelicOnly, variant);
 
                 } else if (parts.length == 4) {
                     String gene = parts[0].trim();
                     String notifyGene = parts[1].trim().toLowerCase();
-                    ConditionReportingVariant conditon = ConditionReportingVariant.fromConditionString(parts[2].trim());
+                    boolean reportBiallelicOnly = parts[1].trim().toLowerCase().equals("Biallelic") ? true : false;
                     String variant = parts[3].trim();
                     germlineGenesAndNotifyMap =
-                            extractGermlineInfo(germlineGenesAndNotifyMap, notifyGene, gene, conditon, variant);
+                            extractGermlineInfo(germlineGenesAndNotifyMap, notifyGene, gene, reportBiallelicOnly, variant);
                 } else {
                     LOGGER.warn("Suspicious line detected in germline reporting genes: {}", line);
                 }
@@ -55,7 +55,7 @@ public final class GermlineReportingFile {
 
         @NotNull
         public static Map<String, GermlineReporting> extractGermlineInfo(@NotNull Map<String, GermlineReporting> germlineGenesAndNotifyMap,
-                @NotNull String notifyGene, @NotNull String gene, @NotNull ConditionReportingVariant condition,
+                @NotNull String notifyGene, @NotNull String gene, boolean condition,
                 @NotNull String variant) {
             GermlineReporting reporting;
 
@@ -63,7 +63,7 @@ public final class GermlineReportingFile {
                 case "true":
                     reporting = ImmutableGermlineReporting.builder()
                             .notifyClinicalGeneticus(true)
-                            .condition(condition)
+                            .reportBiallelicOnly(condition)
                             .variant(variant)
                             .build();
 
@@ -72,7 +72,7 @@ public final class GermlineReportingFile {
                 case "false":
                     reporting = ImmutableGermlineReporting.builder()
                             .notifyClinicalGeneticus(false)
-                            .condition(condition)
+                            .reportBiallelicOnly(condition)
                             .variant(variant)
                             .build();
                     germlineGenesAndNotifyMap.put(gene, reporting);
