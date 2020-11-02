@@ -11,10 +11,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
-import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -104,41 +102,6 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    static List<ReportableVariant> mergeVariantLists(@NotNull List<DriverSomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel) {
-        List<ReportableVariant> allReportableVariants = Lists.newArrayList();
-        for (DriverSomaticVariant somaticDriverVariant : somaticVariantsReport) {
-            double adjustedDriverLikelihood = somaticDriverVariant.driverLikelihood();
-            for (DriverGermlineVariant germlineVariant : germlineVariantsToReport) {
-                if (germlineVariant.variant().gene().equals(somaticDriverVariant.variant().gene())) {
-                    adjustedDriverLikelihood = Math.max(adjustedDriverLikelihood, germlineVariant.driverLikelihood());
-                }
-            }
-
-            allReportableVariants.add(fromSomaticVariant(somaticDriverVariant.variant()).driverLikelihood(adjustedDriverLikelihood)
-                    .build());
-        }
-
-        for (DriverGermlineVariant driverGermlineVariant : germlineVariantsToReport) {
-            double adjustedDriverLikelihood = driverGermlineVariant.driverLikelihood();
-            for (DriverSomaticVariant somaticVariant : somaticVariantsReport) {
-                if (somaticVariant.variant().gene().equals(driverGermlineVariant.variant().gene())) {
-                    adjustedDriverLikelihood = Math.max(adjustedDriverLikelihood, somaticVariant.driverLikelihood());
-                }
-            }
-
-            allReportableVariants.add(fromGermlineVariant(driverGermlineVariant.variant()).driverLikelihood(adjustedDriverLikelihood)
-                    .build());
-        }
-
-        return allReportableVariants;
-    }
-
-    private static boolean isPresentInTumor(@NotNull ReportableGermlineVariant germlineVariant) {
-        return calcAlleleCopyNumber(germlineVariant.adjustedCopyNumber(), germlineVariant.adjustedVaf()) >= 0.5;
-    }
-
-    @NotNull
     private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant) {
         return ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.GERMLINE)
@@ -178,6 +141,10 @@ public final class ReportableVariantFactory {
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
                 .biallelic(variant.biallelic());
+    }
+
+    private static boolean isPresentInTumor(@NotNull ReportableGermlineVariant germlineVariant) {
+        return calcAlleleCopyNumber(germlineVariant.adjustedCopyNumber(), germlineVariant.adjustedVaf()) >= 0.5;
     }
 
     private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {

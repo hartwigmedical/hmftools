@@ -21,6 +21,7 @@ public class GermlineReportingModelTest {
                 .reportBiallelicOnly(true)
                 .reportableHgvsProtein("p.Arg876Cys")
                 .build();
+
         GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
                 .gene("Report")
                 .notifyClinicalGeneticist(false)
