@@ -87,7 +87,7 @@ public final class FilterGermlineVariants {
                     reportableGermlineVariants =
                             determineReportableVariants(reportableSpecificVariants, germlineVariant, reportableGermlineVariants);
                 } else {
-                    // Only report germline variants on TSGs if there is a 2nd reportable hit
+                    // Only report germline variants on genes with BIALLELIC condition when a 2nd reportable hit is present
                     boolean filterBiallelic = germlineVariant.biallelic();
 
                     boolean filterGermlineVariantInSameGene = false;
