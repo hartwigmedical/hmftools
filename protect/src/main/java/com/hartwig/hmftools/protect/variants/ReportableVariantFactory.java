@@ -79,24 +79,24 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<ReportableVariant> germline,
-            @NotNull List<ReportableVariant> somatic) {
+    public static List<ReportableVariant> mergeVariantLists(@NotNull List<ReportableVariant> list1,
+            @NotNull List<ReportableVariant> list2) {
         List<ReportableVariant> result = Lists.newArrayList();
 
         Map<String, Double> maxLikelihood = Maps.newHashMap();
-        for (ReportableVariant variant : germline) {
+        for (ReportableVariant variant : list1) {
             maxLikelihood.merge(variant.gene(), variant.driverLikelihood(), Math::max);
         }
 
-        for (ReportableVariant variant : somatic) {
+        for (ReportableVariant variant : list2) {
             maxLikelihood.merge(variant.gene(), variant.driverLikelihood(), Math::max);
         }
 
-        for (ReportableVariant variant : germline) {
+        for (ReportableVariant variant : list1) {
             result.add(ImmutableReportableVariant.builder().from(variant).driverLikelihood(maxLikelihood.get(variant.gene())).build());
         }
 
-        for (ReportableVariant variant : somatic) {
+        for (ReportableVariant variant : list2) {
             result.add(ImmutableReportableVariant.builder().from(variant).driverLikelihood(maxLikelihood.get(variant.gene())).build());
         }
 
@@ -104,7 +104,7 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<DriverSomaticVariant> somaticVariantsReport,
+    static List<ReportableVariant> mergeVariantLists(@NotNull List<DriverSomaticVariant> somaticVariantsReport,
             @NotNull List<DriverGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (DriverSomaticVariant somaticDriverVariant : somaticVariantsReport) {

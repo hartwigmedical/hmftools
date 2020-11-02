@@ -64,7 +64,9 @@ public class ProtectApplication implements AutoCloseable {
         }
     }
 
+    @NotNull
     private final DatabaseAccess dbAccess;
+    @NotNull
     private final ProtectConfig protectConfig;
 
     public ProtectApplication(final Options options, final String... args) throws ParseException, SQLException, IOException {
@@ -108,14 +110,13 @@ public class ProtectApplication implements AutoCloseable {
                 protectConfig.linxDriversTsv(),
                 protectConfig.chordPredictionTxt());
 
-        //        printResults(tumorSampleId, analysis);
-
         EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.offLabel.tsv",
                 analysis.offLabelEvidence());
         EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.onLabel.tsv",
                 analysis.tumorSpecificEvidence());
     }
 
+    @NotNull
     private static Set<String> doids(@NotNull ProtectConfig config) throws IOException {
         final Set<String> result = Sets.newHashSet();
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
@@ -124,8 +125,7 @@ public class ProtectApplication implements AutoCloseable {
         LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsv());
         final List<PatientTumorLocation> tumorLocations = PatientTumorLocationFile.read(config.tumorLocationTsv());
         @Nullable
-        PatientTumorLocation sampleTumorLocation =
-                PatientTumorLocationFunctions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
+        PatientTumorLocation sampleTumorLocation = PatientTumorLocationFunctions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
         if (sampleTumorLocation == null) {
             result.add(PAN_CANCER_DOID);
             return result;
@@ -182,25 +182,6 @@ public class ProtectApplication implements AutoCloseable {
                 PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocationList, tumorSampleId);
         LOGGER.info(" Resolved tumor location to '{}' for {}", patientTumorLocation, tumorSampleId);
         return patientTumorLocation;
-    }
-
-    private static void printResults(@NotNull String tumorSampleId, @NotNull GenomicAnalysis analysis) {
-        LOGGER.info("Printing genomic analysis results for {}:", tumorSampleId);
-        LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
-        LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
-        LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());
-        LOGGER.info(" Tumor mutational burden: {}", analysis.tumorMutationalBurden());
-        LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());
-        LOGGER.info(" Number of gains and losses to report: {}", analysis.gainsAndLosses().size());
-        LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
-        LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
-        LOGGER.info(" Viral insertions to report: {}", analysis.viralInsertions() != null ? analysis.viralInsertions().size() : "0");
-
-        LOGGER.info("Printing actionability results for {}", tumorSampleId);
-        LOGGER.info(" Tumor-specific evidence items found: {}", analysis.tumorSpecificEvidence().size());
-        LOGGER.info(" Clinical trials matched to molecular profile: {}", analysis.clinicalTrials().size());
-        LOGGER.info(" Off-label evidence items found: {}", analysis.offLabelEvidence().size());
-
     }
 
     @Override

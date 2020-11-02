@@ -9,9 +9,6 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.protect.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,12 +19,11 @@ public final class ReportableVariantAnalyzer {
     }
 
     @NotNull
-    public static ReportableVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<DriverSomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
-        List<ReportableVariant> allReportableVariants = ReportableVariantFactory.mergeSomaticAndGermlineVariants(somaticVariantsReport,
-                germlineVariantsToReport,
-                germlineReportingModel);
+    public static ReportableVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<ReportableVariant> reportableSomaticVariants,
+            @NotNull List<ReportableVariant> reportableGermlineVariants, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @Nullable PatientTumorLocation patientTumorLocation) {
+        List<ReportableVariant> allReportableVariants =
+                ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         // Extract somatic evidence for high drivers variants only (See DEV-824)

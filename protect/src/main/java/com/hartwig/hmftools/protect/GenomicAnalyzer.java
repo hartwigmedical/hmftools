@@ -3,17 +3,19 @@ package com.hartwig.hmftools.protect;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
-import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
@@ -34,13 +36,11 @@ import com.hartwig.hmftools.protect.purple.PurpleAnalyzer;
 import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.structural.SvAnalysis;
 import com.hartwig.hmftools.protect.structural.SvAnalyzer;
+import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantAnalysis;
 import com.hartwig.hmftools.protect.variants.ReportableVariantAnalyzer;
-import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
-import com.hartwig.hmftools.protect.variants.germline.FilterGermlineVariants;
+import com.hartwig.hmftools.protect.variants.ReportableVariantFactory;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
-import com.hartwig.hmftools.protect.variants.somatic.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.protect.viralinsertion.ViralInsertion;
 import com.hartwig.hmftools.protect.viralinsertion.ViralInsertionAnalyzer;
 
@@ -72,31 +72,29 @@ public class GenomicAnalyzer {
             @NotNull String chordPredictionTxt) throws IOException {
         List<DriverCatalog> purpleDriverCatalog = readDriverCatalog(purpleDriverCatalogTsv);
         PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, patientTumorLocation, purpleDriverCatalog);
-        List<DriverSomaticVariant> driverSomaticVariants =
+        List<ReportableVariant> reportableSomaticVariants =
                 analyzeSomaticVariants(tumorSampleId, purpleSomaticVariantVcf, purpleDriverCatalog);
-
-        ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
-        ChordStatus chordStatus = chordAnalysis.hrStatus();
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxBreakendTsv, patientTumorLocation);
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv);
 
-        List<DriverGermlineVariant> driverGermlineVariants = analyzeGermlineVariants(bachelorTsv,
-                driverSomaticVariants,
+        List<ReportableVariant> reportableGermlineVariants = analyzeGermlineVariants(bachelorTsv,
+                reportableSomaticVariants,
                 purpleAnalysis.reportableGainsAndLosses(),
                 reportableHomozygousDisruptions,
                 svAnalysis.reportableDisruptions());
 
-        ReportableVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(
-                driverSomaticVariants,
-                driverGermlineVariants,
-                germlineReportingModel,
+        ReportableVariantAnalysis reportableVariantAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(
+                reportableSomaticVariants,
+                reportableGermlineVariants,
                 actionabilityAnalyzer,
                 patientTumorLocation);
 
+        ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
+
         List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
-        allEvidenceItems.addAll(reportableVariantsAnalysis.evidenceItems());
+        allEvidenceItems.addAll(reportableVariantAnalysis.evidenceItems());
         allEvidenceItems.addAll(purpleAnalysis.evidenceItems());
         allEvidenceItems.addAll(svAnalysis.evidenceItems());
 
@@ -111,14 +109,14 @@ public class GenomicAnalyzer {
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
                 .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItemsFiltered))
                 .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
-                .reportableVariants(reportableVariantsAnalysis.variantsToReport())
+                .reportableVariants(reportableVariantAnalysis.variantsToReport())
                 .microsatelliteIndelsPerMb(purpleAnalysis.purpleSignatures().microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purpleAnalysis.purpleSignatures().microsatelliteStatus())
                 .tumorMutationalLoad(purpleAnalysis.purpleSignatures().tumorMutationalLoad())
                 .tumorMutationalLoadStatus(purpleAnalysis.purpleSignatures().tumorMutationalLoadStatus())
                 .tumorMutationalBurden(purpleAnalysis.purpleSignatures().tumorMutationalBurdenPerMb())
                 .chordHrdValue(chordAnalysis.hrdValue())
-                .chordHrdStatus(chordStatus)
+                .chordHrdStatus(chordAnalysis.hrStatus())
                 .gainsAndLosses(purpleAnalysis.reportableGainsAndLosses())
                 .geneFusions(svAnalysis.reportableFusions())
                 .geneDisruptions(svAnalysis.reportableDisruptions())
@@ -152,32 +150,37 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    private static List<DriverSomaticVariant> analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
+    private static List<ReportableVariant> analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
             @NotNull List<DriverCatalog> purpleDriverCatalog) throws IOException {
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
-        return SomaticVariantAnalyzer.run(variants, purpleDriverCatalog);
+        return ReportableVariantFactory.reportableSomaticVariants(variants, purpleDriverCatalog);
     }
 
     @NotNull
-    private List<DriverGermlineVariant> analyzeGermlineVariants(@NotNull String bachelorTsv,
-            @NotNull List<DriverSomaticVariant> driverSomaticVariants, @NotNull List<ReportableGainLoss> reportableGainLosses,
+    private List<ReportableVariant> analyzeGermlineVariants(@NotNull String bachelorTsv,
+            @NotNull List<ReportableVariant> reportableSomaticVariants, @NotNull List<ReportableGainLoss> reportableGainLosses,
             @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
             @NotNull List<ReportableGeneDisruption> reportableGeneDisruptions) throws IOException {
         List<ReportableGermlineVariant> germlineVariants = ReportableGermlineVariantFile.read(bachelorTsv);
 
         LOGGER.info("Loaded {} reportable germline variants from {}", germlineVariants.size(), bachelorTsv);
 
-        List<DriverGermlineVariant> driverGermlineVariants = FilterGermlineVariants.filterGermlineVariantsForReporting(
-                germlineReportingModel,
-                germlineVariants,
-                driverSomaticVariants,
-                reportableGainLosses,
-                reportableHomozygousDisruptions,
-                reportableGeneDisruptions);
-        LOGGER.info(" Filtered to {} driver germline variants", driverGermlineVariants.size());
-        return driverGermlineVariants;
+        Set<String> somaticGenes = Sets.newHashSet();
+        reportableHomozygousDisruptions.stream().map(ReportableHomozygousDisruption::gene).forEach(somaticGenes::add);
+        reportableGeneDisruptions.stream().map(ReportableGeneDisruption::gene).forEach(somaticGenes::add);
+        reportableSomaticVariants.stream().map(ReportableVariant::gene).forEach(somaticGenes::add);
+        reportableGainLosses.stream()
+                .filter(x -> !x.interpretation().equals(CopyNumberInterpretation.GAIN))
+                .map(ReportableGainLoss::gene)
+                .forEach(somaticGenes::add);
+
+        List<ReportableVariant> reportableVariants =
+                ReportableVariantFactory.reportableGermlineVariants(germlineVariants, somaticGenes, germlineReportingModel);
+
+        LOGGER.info(" Filtered to {} driver germline variants", reportableVariants.size());
+        return reportableVariants;
     }
 
     @NotNull
