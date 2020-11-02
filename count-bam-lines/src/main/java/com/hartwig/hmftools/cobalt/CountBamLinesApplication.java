@@ -59,15 +59,6 @@ public class CountBamLinesApplication implements AutoCloseable {
         final CommandLine cmd = createCommandLine(args, options);
         config = CobaltConfig.createConfig(cmd);
 
-        final File outputDir = new File(config.outputDirectory());
-        if (!outputDir.exists() && !outputDir.mkdirs()) {
-            throw new IOException("Unable to write directory " + config.outputDirectory());
-        }
-
-        if (!new File(config.gcProfilePath()).exists()) {
-            throw new IOException("Unable to locate gc profile file " + config.gcProfilePath());
-        }
-
         if (!config.refGenomePath().isEmpty() && !new File(config.gcProfilePath()).exists()) {
             throw new IOException("Unable to locate ref genome file " + config.refGenomePath());
         }
