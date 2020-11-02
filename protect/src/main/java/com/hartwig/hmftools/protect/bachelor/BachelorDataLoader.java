@@ -16,6 +16,7 @@ import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantFactory;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,9 +27,8 @@ public class BachelorDataLoader {
     private static final Logger LOGGER = LogManager.getLogger(BachelorDataLoader.class);
 
     @NotNull
-    public static BachelorData load(@NotNull String bachelorTsv, @NotNull PurpleData purpleData, @NotNull LinxData linxData)
-            throws IOException {
-
+    public static BachelorData load(@NotNull String bachelorTsv, @NotNull PurpleData purpleData, @NotNull LinxData linxData,
+            @NotNull GermlineReportingModel germlineReportingModel) throws IOException {
         List<ReportableGermlineVariant> germlineVariants = ReportableGermlineVariantFile.read(bachelorTsv);
 
         Set<String> somaticGenes = Sets.newHashSet();
@@ -41,7 +41,8 @@ public class BachelorDataLoader {
                 .map(ReportableGainLoss::gene)
                 .forEach(somaticGenes::add);
 
-        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableGermlineVariants(germlineVariants, somaticGenes);
+        List<ReportableVariant> reportableVariants =
+                ReportableVariantFactory.reportableGermlineVariants(germlineVariants, somaticGenes, germlineReportingModel);
 
         LOGGER.info("Loaded BACHELOR data from {}", new File(bachelorTsv).getParent());
         LOGGER.info(" Reportable germline variants: {}", reportableVariants.size());

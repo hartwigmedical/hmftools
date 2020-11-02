@@ -142,7 +142,7 @@ public class ProtectApplication implements AutoCloseable {
     }
 
     @NotNull
-    private static List<ProtectEvidenceItem> protectEvidence(ProtectConfig config) throws IOException {
+    private static List<ProtectEvidenceItem> protectEvidence(@NotNull ProtectConfig config) throws IOException {
         final Set<String> doids = doids(config);
 
         // Serve Data
@@ -152,10 +152,13 @@ public class ProtectApplication implements AutoCloseable {
         final CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(actionableEvents.genes());
         final FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());
 
+        // Additiopnal configuration
+        final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
+
         // External Data
         final LinxData linxData = LinxDataLoader.load(config);
         final PurpleData purpleData = PurpleDataLoader.load(config);
-        final BachelorData bachelorData = BachelorDataLoader.load(config.bachelorTsv(), purpleData, linxData);
+        final BachelorData bachelorData = BachelorDataLoader.load(config.bachelorTsv(), purpleData, linxData, germlineReportingModel);
 
         // Evidence
         final List<ProtectEvidenceItem> variantEvidence =

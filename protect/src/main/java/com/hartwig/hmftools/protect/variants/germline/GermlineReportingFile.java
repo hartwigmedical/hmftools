@@ -30,7 +30,7 @@ public final class GermlineReportingFile {
                     .gene(parts[0])
                     .notifyClinicalGeneticist(Boolean.parseBoolean(parts[1]))
                     .reportBiallelicOnly(parts[1].equalsIgnoreCase("Biallelic"))
-                    .reportableSpecificVariant(parts.length > 3 ? parts[3] : null)
+                    .reportableHgvsProtein(parts.length > 3 ? parts[3] : null)
                     .build());
         }
 

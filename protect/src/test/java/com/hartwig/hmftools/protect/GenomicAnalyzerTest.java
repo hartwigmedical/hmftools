@@ -26,7 +26,7 @@ public class GenomicAnalyzerTest {
     @Test
     public void canRunOnTestRun() throws IOException {
         GenomicAnalyzer analyzer = new GenomicAnalyzer(ProtectTestFactory.loadTestActionabilityAnalyzer(),
-                ProtectTestFactory.createTestEmptyGermlineGenesReporting());
+                ProtectTestFactory.createEmptyGermlineReportingModel());
 
         PatientTumorLocation patientTumorLocation = null;
 

@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.protect.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.structural.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.variants.germline.ImmutableGermlineReportingEntry;
 
@@ -153,26 +152,18 @@ public final class ProtectTestFactory {
     }
 
     @NotNull
-    public static GermlineReportingModel createTestGermlineGenesReporting(boolean notifyClinicalGeneticist1,
-            boolean notifyClinicalGeneticist2, boolean reportBiallelicOnly1, boolean reportBiallelicOnly2,
-            @Nullable String specificVariant1, @Nullable String specificVariant2) {
-        GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
-                .gene(ONCOGENE)
-                .notifyClinicalGeneticist(notifyClinicalGeneticist1)
-                .reportBiallelicOnly(reportBiallelicOnly1)
-                .reportableSpecificVariant(specificVariant1)
-                .build();
-        GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
-                .gene(TSG)
-                .notifyClinicalGeneticist(notifyClinicalGeneticist2)
-                .reportBiallelicOnly(reportBiallelicOnly2)
-                .reportableSpecificVariant(specificVariant2)
-                .build();
-        return new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
+    public static GermlineReportingModel createTestGermlineModel(@NotNull String gene, boolean reportBiallelicOnly,
+            @Nullable String specificHgvsProtein) {
+        return new GermlineReportingModel(Lists.newArrayList(ImmutableGermlineReportingEntry.builder()
+                .gene(gene)
+                .notifyClinicalGeneticist(false)
+                .reportBiallelicOnly(reportBiallelicOnly)
+                .reportableHgvsProtein(specificHgvsProtein)
+                .build()));
     }
 
     @NotNull
-    public static GermlineReportingModel createTestEmptyGermlineGenesReporting() {
+    public static GermlineReportingModel createEmptyGermlineReportingModel() {
         return new GermlineReportingModel(Lists.newArrayList());
     }
 

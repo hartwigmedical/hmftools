@@ -17,5 +17,5 @@ public abstract class GermlineReportingEntry {
     public abstract boolean reportBiallelicOnly();
 
     @Nullable
-    public abstract String reportableSpecificVariant();
+    public abstract String reportableHgvsProtein();
 }

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.protect.variants;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -13,7 +12,7 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
-import com.hartwig.hmftools.protect.variants.germline.FilterGermlineVariants;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 
@@ -26,23 +25,48 @@ public final class ReportableVariantFactory {
 
     @NotNull
     public static List<ReportableVariant> reportableGermlineVariants(@NotNull List<ReportableGermlineVariant> variants,
-            @NotNull Set<String> genesWithSomaticInactivationEvent) {
-        final Predicate<ReportableGermlineVariant> secondGermlineHit =
-                variant -> variants.stream().anyMatch(x -> !x.equals(variant) && x.gene().equals(variant.gene()));
+            @NotNull Set<String> genesWithSomaticInactivationEvent, @NotNull GermlineReportingModel germlineReportingModel) {
+        List<ReportableVariant> reportableVariants = Lists.newArrayList();
 
-        final Predicate<ReportableGermlineVariant> report =
-                variant -> FilterGermlineVariants.isPresentInTumor(variant) && (variant.biallelic()
-                        || genesWithSomaticInactivationEvent.contains(variant.gene()) || secondGermlineHit.test(variant) || variant.gene()
-                        .equals("KIT"));
+        for (ReportableGermlineVariant variant : variants) {
+            GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
+            if (reportingEntry != null && isPresentInTumor(variant)) {
+                boolean includeVariant;
+                String specificHgvsProtein = reportingEntry.reportableHgvsProtein();
+                if (specificHgvsProtein != null) {
+                    includeVariant = variant.hgvsProtein().equals(specificHgvsProtein);
+                } else if (reportingEntry.reportBiallelicOnly()) {
+                    boolean filterBiallelic = variant.biallelic();
 
-        return variants.stream().filter(report).map(x -> fromGermlineVariant(x).driverLikelihood(1).build()).collect(Collectors.toList());
+                    boolean filterGermlineVariantInSameGene = false;
+                    for (ReportableGermlineVariant otherVariant : variants) {
+                        if (variant != otherVariant && otherVariant.gene().equals(variant.gene())) {
+                            filterGermlineVariantInSameGene = true;
+                        }
+                    }
+
+                    boolean filterSomaticVariantInSameGene = genesWithSomaticInactivationEvent.contains(variant.gene());
+
+                    includeVariant = filterBiallelic || filterGermlineVariantInSameGene || filterSomaticVariantInSameGene;
+                } else {
+                    includeVariant = true;
+                }
+
+                if (includeVariant) {
+                    reportableVariants.add(fromGermlineVariant(variant).driverLikelihood(1D).build());
+                }
+            }
+        }
+
+        return reportableVariants;
     }
 
     @NotNull
-    public static List<ReportableVariant> reportableSomaticVariants(List<DriverCatalog> driverCatalog, List<SomaticVariant> variants) {
-        final Map<String, DriverCatalog> driverCatalogMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
+    public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
+            @NotNull List<DriverCatalog> driverCatalog) {
+        Map<String, DriverCatalog> driverCatalogMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
 
-        final List<ReportableVariant> result = Lists.newArrayList();
+        List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
                 DriverCatalog geneDriver = driverCatalogMap.get(variant.gene());
@@ -110,12 +134,17 @@ public final class ReportableVariantFactory {
         return allReportableVariants;
     }
 
+    private static boolean isPresentInTumor(@NotNull ReportableGermlineVariant germlineVariant) {
+        return calcAlleleCopyNumber(germlineVariant.adjustedCopyNumber(), germlineVariant.adjustedVaf()) >= 0.5;
+    }
+
     @NotNull
     private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant) {
         return ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.GERMLINE)
                 .gene(variant.gene())
-                .position(variant.position())
                 .chromosome(variant.chromosome())
+                .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
                 .canonicalCodingEffect(variant.codingEffect())
@@ -127,16 +156,16 @@ public final class ReportableVariantFactory {
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .source(ReportableVariantSource.GERMLINE)
                 .biallelic(variant.biallelic());
     }
 
     @NotNull
     private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull SomaticVariant variant) {
         return ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene(variant.gene())
-                .position(variant.position())
                 .chromosome(variant.chromosome())
+                .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
                 .canonicalCodingEffect(variant.canonicalCodingEffect())
@@ -147,7 +176,6 @@ public final class ReportableVariantFactory {
                 .totalCopyNumber(variant.adjustedCopyNumber())
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
-                .source(ReportableVariantSource.SOMATIC)
                 .clonalLikelihood(variant.clonalLikelihood())
                 .biallelic(variant.biallelic());
     }

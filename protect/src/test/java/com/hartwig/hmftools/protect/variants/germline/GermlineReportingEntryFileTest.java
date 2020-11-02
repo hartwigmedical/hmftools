@@ -10,11 +10,11 @@ import org.junit.Test;
 
 public class GermlineReportingEntryFileTest {
 
-    private static final String GERMLINE_GENES_REPORTING_TSV = Resources.getResource("germline/germline_genes_reporting.tsv").getPath();
+    private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline/germline_reporting.tsv").getPath();
 
     @Test
-    public void canLoadGermlineGenesReportingTsv() throws IOException {
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_GENES_REPORTING_TSV);
+    public void canLoadGermlineReportingTsv() throws IOException {
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_REPORTING_TSV);
 
         assertEquals(3, germlineReportingModel.reportableGermlineGenes().size());
     }

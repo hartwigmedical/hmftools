@@ -12,19 +12,23 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GermlineReportingModel {
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineReportingModel.class);
 
     @NotNull
+    private final List<GermlineReportingEntry> entries;
+    @NotNull
     private final Set<String> reportableGenes = Sets.newHashSet();
     private final Set<String> notifiableGenes = Sets.newHashSet();
     private final Set<String> monoallelicGenes = Sets.newHashSet();
     private final Map<String, String> reportableSpecificVariants = Maps.newHashMap();
 
-    public GermlineReportingModel(@NotNull final List<GermlineReportingEntry> germlineReportingEntries) {
-        for (GermlineReportingEntry entry : germlineReportingEntries) {
+    public GermlineReportingModel(@NotNull final List<GermlineReportingEntry> entries) {
+        this.entries = entries;
+        for (GermlineReportingEntry entry : entries) {
             reportableGenes.add(entry.gene());
             if (entry.notifyClinicalGeneticist()) {
                 notifiableGenes.add(entry.gene());
@@ -32,10 +36,20 @@ public class GermlineReportingModel {
             if (!entry.reportBiallelicOnly()) {
                 monoallelicGenes.add(entry.gene());
             }
-            if (entry.reportableSpecificVariant() != null) {
-                reportableSpecificVariants.put(entry.gene(), entry.reportableSpecificVariant());
+            if (entry.reportableHgvsProtein() != null) {
+                reportableSpecificVariants.put(entry.gene(), entry.reportableHgvsProtein());
             }
         }
+    }
+
+    @Nullable
+    public GermlineReportingEntry entryForGene(@NotNull String gene) {
+        for (GermlineReportingEntry entry : entries) {
+            if (entry.gene().equals(gene)) {
+                return entry;
+            }
+        }
+        return null;
     }
 
     @NotNull

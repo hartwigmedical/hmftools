@@ -19,13 +19,13 @@ public class GermlineReportingModelTest {
                 .gene("Notify")
                 .notifyClinicalGeneticist(true)
                 .reportBiallelicOnly(true)
-                .reportableSpecificVariant("p.Arg876Cys")
+                .reportableHgvsProtein("p.Arg876Cys")
                 .build();
         GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
                 .gene("Report")
                 .notifyClinicalGeneticist(false)
                 .reportBiallelicOnly(false)
-                .reportableSpecificVariant(null)
+                .reportableHgvsProtein(null)
                 .build();
 
         GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
