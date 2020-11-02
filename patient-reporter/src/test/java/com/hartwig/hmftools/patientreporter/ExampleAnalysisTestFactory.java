@@ -80,7 +80,7 @@ public final class ExampleAnalysisTestFactory {
         List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
-        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(reportGermline);
+        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
@@ -141,10 +141,6 @@ public final class ExampleAnalysisTestFactory {
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(qcForNumber)
-                .germlineReportingLevel(reportGermline
-                        ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
-                        : LimsGermlineReportingLevel.NO_REPORTING)
-                .reportViralInsertions(true)
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
@@ -213,8 +209,6 @@ public final class ExampleAnalysisTestFactory {
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(QsFormNumber.FOR_209.display())
-                .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
-                .reportViralInsertions(true)
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
@@ -266,12 +260,14 @@ public final class ExampleAnalysisTestFactory {
                 .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY,
                         "Skin",
-                        "",
+                        Strings.EMPTY,
                         "Melanoma",
-                        "",
-                        "",
+                        Strings.EMPTY,
+                        Strings.EMPTY,
                         Lists.newArrayList("8923"),
                         false))
+                .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
+                .reportViralInsertions(true)
                 .refArrivalDate(LocalDate.parse("01-Oct-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
@@ -524,7 +520,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableVariant> createCOLO829SomaticVariants(boolean reportGermlineVariant) {
+    private static List<ReportableVariant> createCOLO829SomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("BRAF")

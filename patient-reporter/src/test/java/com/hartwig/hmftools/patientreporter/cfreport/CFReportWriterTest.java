@@ -9,6 +9,7 @@ import java.util.Locale;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -223,12 +224,14 @@ public class CFReportWriterTest {
                 .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY,
                         "Skin",
-                        "",
+                        Strings.EMPTY,
                         "Melanoma",
-                        "",
-                        "",
+                        Strings.EMPTY,
+                        Strings.EMPTY,
                         Lists.newArrayList("1;2"),
                         false))
+                .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
+                .reportViralInsertions(true)
                 .refArrivalDate(LocalDate.parse("10-Jan-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(shallowSeqPurity)

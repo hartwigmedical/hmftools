@@ -64,6 +64,8 @@ public final class SampleReportFactory {
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(patientTumorLocation)
+                .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode))
+                .reportViralInsertions(lims.reportViralInsertions(tumorSampleBarcode))
                 .refArrivalDate(arrivalDateRefSample)
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .shallowSeqPurityString(lims.purityShallowSeq(tumorSampleBarcode))

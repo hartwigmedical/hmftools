@@ -60,8 +60,6 @@ class AnalysedPatientReporter {
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity()))
-                .germlineReportingLevel(reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode()))
-                .reportViralInsertions(reportData.limsModel().reportViralInsertions(sampleMetadata.tumorSampleBarcode()))
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(genomicAnalysis)
                 .circosPath(circosFile)

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 
@@ -22,6 +23,11 @@ public abstract class SampleReport {
 
     @Nullable
     public abstract PatientTumorLocation patientTumorLocation();
+
+    @NotNull
+    public abstract LimsGermlineReportingLevel germlineReportingLevel();
+
+    public abstract boolean reportViralInsertions();
 
     @Nullable
     public abstract LocalDate refArrivalDate();
