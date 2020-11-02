@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
+import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSampleCounts;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
-public class RefSignatures
+public class RefSomatics
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -39,7 +39,7 @@ public class RefSignatures
     public static final String REF_SIG_TYPE_CONTRIB = "SigContrib";
     public static final String REF_SIG_TYPE_SNV_COUNT = "SnvCount";
 
-    public RefSignatures(final RefDataConfig config, final SampleDataCache sampleDataCache)
+    public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;

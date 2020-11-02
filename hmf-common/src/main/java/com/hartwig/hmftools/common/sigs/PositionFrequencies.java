@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.sig_analyser.loaders;
+package com.hartwig.hmftools.common.sigs;
 
+import static com.hartwig.hmftools.common.sigs.SigUtils.SU_LOGGER;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -70,7 +70,7 @@ public class PositionFrequencies
         }
         catch(IOException e)
         {
-            SIG_LOGGER.error("failed to initialise position frequencies file: {}", e.toString());
+            SU_LOGGER.error("failed to initialise position frequencies file: {}", e.toString());
             return null;
         }
     }
@@ -92,7 +92,7 @@ public class PositionFrequencies
         }
         catch(IOException e)
         {
-            SIG_LOGGER.error("failed to write position frequency results: {}", e.toString());
+            SU_LOGGER.error("failed to write position frequency results: {}", e.toString());
         }
     }
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
@@ -25,11 +26,16 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
+import com.hartwig.hmftools.cup.sigs.SomaticDataLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
@@ -75,7 +81,8 @@ public class FeatureDataLoader
     }
 
     public static boolean loadFeaturesFromFile(
-            final String sampleId, final String sampleDataDir, final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
+            final String sampleId, final String sampleDataDir, final String sampleVcfFile,
+            final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
         try
         {
@@ -94,7 +101,10 @@ public class FeatureDataLoader
             final List<DriverCatalog> drivers = Files.exists(Paths.get(driverCatalogFilename)) ?
                     DriverCatalogFile.read(driverCatalogFilename) : Lists.newArrayList();
 
-            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts);
+            final List<SomaticVariant> indels = checkIndels(sampleId, sampleDataDir, null) ?
+                    SomaticDataLoader.loadSomaticVariants(sampleId, sampleVcfFile, Lists.newArrayList(VariantType.INDEL)) : null;
+
+            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indels);
         }
         catch(IOException e)
         {
@@ -103,6 +113,31 @@ public class FeatureDataLoader
         }
 
         return true;
+    }
+
+    private static boolean checkIndels(final String sampleId, final String sampleDataDir, final DatabaseAccess dbAccess)
+    {
+        PurityContext purityContext = null;
+
+        if(dbAccess != null)
+        {
+            purityContext = dbAccess.readPurityContext(sampleId);
+        }
+        else
+        {
+            try
+            {
+                purityContext = PurityContextFile.read(sampleDataDir, sampleId);
+            }
+            catch (Exception e)
+            {
+                CUP_LOGGER.error("sample({}) failed to load purity file( from dir{}): {}",
+                        sampleId, sampleDataDir, e.toString());
+                return false;
+            }
+        }
+
+        return purityContext.microsatelliteStatus() == MSS;
     }
 
     public static boolean loadFeaturesFromDatabase(
@@ -120,7 +155,10 @@ public class FeatureDataLoader
             final List<LinxFusion> fusions = dbAccess.readFusions(sampleId);
             final List<LinxViralInsertion> viralInserts = dbAccess.readViralInsertions(sampleId);
 
-            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts);
+            final List<SomaticVariant> indels = checkIndels(sampleId, null, dbAccess) ?
+                    dbAccess.readSomaticVariants(sampleId, VariantType.INDEL) : null;
+
+            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indels);
 
             ++i;
             if(i >= nextLog)
@@ -134,8 +172,8 @@ public class FeatureDataLoader
     }
 
     private static void mapFeatureData(
-            final String sampleId, final Map<String,List<SampleFeatureData>> sampleDrivers,
-            final List<DriverCatalog> drivers, final List<LinxFusion> fusions, final List<LinxViralInsertion> viralInserts)
+            final String sampleId, final Map<String,List<SampleFeatureData>> sampleDrivers, final List<DriverCatalog> drivers,
+            final List<LinxFusion> fusions, final List<LinxViralInsertion> viralInserts, final List<SomaticVariant> indels)
     {
         final List<SampleFeatureData> featuresList = Lists.newArrayList();
 
@@ -143,9 +181,6 @@ public class FeatureDataLoader
         {
             for(final DriverCatalog driver : drivers)
             {
-                // if(driver.driverLikelihood() == 0) // keep these so they show with a zero DL
-                //    continue;
-
                 SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), DRIVER, driver.driverLikelihood());
 
                 if(driver.driver() == DriverType.AMP)
@@ -196,8 +231,23 @@ public class FeatureDataLoader
             featuresList.addAll(viralInsertDataList);
         }
 
+        if(indels != null)
+        {
+            final List<SampleFeatureData> indelFeatures = indels.stream()
+                    .filter(x -> x.gene().equals(INDEL_ALB) || x.gene().equals(INDEL_SFTPB) || x.gene().equals(INDEL_SLC34A2))
+                    .map(x -> new SampleFeatureData(sampleId, String.format("INDEL_%s", x.gene()), FeatureType.INDEL, 1))
+                    .filter(x -> !x.Name.equals(OTHER.toString()))
+                    .collect(Collectors.toList());
+
+            featuresList.addAll(indelFeatures);
+        }
+
         sampleDrivers.put(sampleId, featuresList);
     }
+
+    private static final String INDEL_ALB = "ALB";
+    private static final String INDEL_SFTPB = "SFTPB";
+    private static final String INDEL_SLC34A2 = "SLC34A2";
 
     public static boolean loadRefPrevalenceData(
             final String filename, final Map<String,FeaturePrevCounts> genePrevalenceTotals,

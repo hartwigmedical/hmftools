@@ -37,6 +37,7 @@ public class SampleAnalyserConfig
     public final String SampleSnvCountsFile;
     public final String SampleSnvPosFreqFile;
     public final String SampleSigContribFile;
+    public final String SampleSomaticVcf;
     public final String SampleSvFile;
     public final String SampleRnaExpFile;
 
@@ -56,6 +57,7 @@ public class SampleAnalyserConfig
     private static final String SAMPLE_SNV_COUNTS_FILE = "sample_snv_counts_file";
     private static final String SAMPLE_SNV_POS_FREQ_FILE = "sample_snv_pos_freq_file";
     private static final String SAMPLE_SIG_CONTRIB_FILE = "sample_sig_contrib_file";
+    private static final String SAMPLE_SOMATIC_VCF = "sample_somatic_vcf";
     private static final String SAMPLE_SV_FILE = "sample_sv_file";
     private static final String SAMPLE_RNA_EXP_FILE = "sample_rna_exp_file";
 
@@ -92,6 +94,7 @@ public class SampleAnalyserConfig
         SampleSigContribFile = cmd.getOptionValue(SAMPLE_SIG_CONTRIB_FILE, "");
         SampleSvFile = cmd.getOptionValue(SAMPLE_SV_FILE, "");
         SampleRnaExpFile = cmd.getOptionValue(SAMPLE_RNA_EXP_FILE, "");
+        SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
 
         RefSampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
         RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
@@ -141,6 +144,7 @@ public class SampleAnalyserConfig
         options.addOption(SAMPLE_TRAITS_FILE, true, "Cohort sample traits file");
         options.addOption(SAMPLE_SV_FILE, true, "Cohort SV data");
         options.addOption(SAMPLE_RNA_EXP_FILE, true, "Sample RNA gene expression TPMs");
+        options.addOption(SAMPLE_SOMATIC_VCF, true, "Sample somatic VCF");
 
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Reference sample data");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Reference SNV sample counts");

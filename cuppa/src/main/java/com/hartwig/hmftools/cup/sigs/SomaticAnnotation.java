@@ -8,7 +8,10 @@ import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
+import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
@@ -16,6 +19,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
+import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_SIMILARITY_MAX_MATCHES;
@@ -24,29 +28,32 @@ import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRE
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSampleCounts;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSignaturePercentileData;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadRefSnvPosFrequences;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSampleCountsFromFile;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSamplePosFreqFromFile;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromCohortFile;
-import static com.hartwig.hmftools.cup.sigs.SignatureDataLoader.loadSigContribsFromDatabase;
+import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSampleCounts;
+import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSignaturePercentileData;
+import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSnvPosFrequences;
+import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSampleCountsFromFile;
+import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSamplePosFreqFromFile;
+import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSigContribsFromCohortFile;
+import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSigContribsFromDatabase;
+import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSomaticVariants;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
-public class SignatureAnnotation
+public class SomaticAnnotation
 {
     private final SampleAnalyserConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -71,7 +78,7 @@ public class SignatureAnnotation
 
     private static final int SNV_POS_FREQ_SNV_TOTAL_THRESHOLD = 20000;
 
-    public SignatureAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
+    public SomaticAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -123,6 +130,14 @@ public class SignatureAnnotation
         {
             final String sampleId = mSampleDataCache.SampleIds.get(0);
 
+            /*
+            if(!mConfig.SampleSomaticVcf.isEmpty())
+            {
+                final List<SomaticVariant> somaticVariants = loadSomaticVariants(sampleId, mConfig.SampleSomaticVcf);
+                populateSomaticCounts(somaticVariants);
+            }
+            */
+
             final String snvCountsFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
                     mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.snv_counts.csv";
 
@@ -136,13 +151,68 @@ public class SignatureAnnotation
         }
         else if(mConfig.DbAccess != null)
         {
-            CUP_LOGGER.error("DB retrieval of sample SNV counts unsupported at present");
+            CUP_LOGGER.error("somatic variants from DB not supported");
+
+            /*
+            final String sampleId = mSampleDataCache.SampleIds.get(0);
+            final List<SomaticVariant> somaticVariants = loadSomaticVariants(sampleId, mConfig.DbAccess);
+            populateSomaticCounts(somaticVariants);
+
+            return mSampleCounts != null && mSamplePosFrequencies != null;
+            */
+
             return false;
         }
         else
         {
             CUP_LOGGER.error("no sample SNV count source specified");
             return false;
+        }
+    }
+
+    private void populateSomaticCounts(final List<SomaticVariant> variants)
+    {
+        // PositionFrequencies
+        //             SigMatrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex
+
+        PositionFrequencies positionFrequencies = new PositionFrequencies(null, POS_FREQ_BUCKET_SIZE);
+        final Map<String,Integer> bucketNameMap = Maps.newHashMap();
+        populateBucketMap(bucketNameMap);
+
+        for(final SomaticVariant variant : variants)
+        {
+            if(variant.isFiltered())
+                continue;
+
+            if(variant.type() == INDEL)
+            {
+
+                continue;
+            }
+
+            if(variant.alt().length() != 1)
+                continue;
+
+            String rawContext = variant.trinucleotideContext();
+
+            if(rawContext.contains("N"))
+                continue;
+
+            // check filters
+            positionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
+
+            final String bucketName = contextFromVariant(variant);
+            Integer bucketIndex = bucketNameMap.get(bucketName);
+
+            if(bucketIndex == null)
+            {
+                CUP_LOGGER.error("invalid bucketName({}) from var({}>{}) context={})",
+                        bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
+
+                return;
+            }
+
+            // ++sampleCounts[bucketIndex][sampleIndex];
         }
     }
 

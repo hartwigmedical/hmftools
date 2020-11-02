@@ -16,6 +16,8 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SampleTraitsDataLoader

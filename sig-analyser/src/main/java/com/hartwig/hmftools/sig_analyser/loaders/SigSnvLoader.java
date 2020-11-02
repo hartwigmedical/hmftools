@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
+import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
+import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 
@@ -12,6 +14,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -27,7 +30,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
 
 public class SigSnvLoader
 {
@@ -49,7 +51,7 @@ public class SigSnvLoader
         mSampleIds = Lists.newArrayList();
 
         mBucketStringToIndex = Maps.newHashMap();
-        buildBucketMap();
+        populateBucketMap(mBucketStringToIndex);
 
         mPositionFrequencies = Lists.newArrayList();
     }
@@ -69,45 +71,6 @@ public class SigSnvLoader
     public final List<PositionFrequencies> getPositionFrequencies() { return mPositionFrequencies; }
 
     public SigMatrix getSampleBucketCounts() { return mSampleBucketCounts; }
-
-    private void buildBucketMap()
-    {
-        char[] refBases = {'C', 'T'};
-        char[] bases = {'A','C', 'G', 'T'};
-        int index = 0;
-
-        for(int i = 0; i < refBases.length; ++i)
-        {
-            char ref = refBases[i];
-
-            for(int j = 0; j < bases.length; ++j)
-            {
-                char alt = bases[j];
-
-                if(ref != alt)
-                {
-                    String baseChange = String.format("%c>%c", ref, alt);
-
-                    for (int k = 0; k < bases.length; ++k)
-                    {
-                        char before = bases[k];
-
-                        for (int l = 0; l < bases.length; ++l)
-                        {
-                            char after = bases[l];
-
-                            String context = String.format("%c%c%c", before, ref, after);
-
-                            String bucketName = baseChange + "_" + context;
-
-                            mBucketStringToIndex.put(bucketName, index);
-                            ++index;
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     public void loadData(final DatabaseAccess dbAccess, final String vcfFile, boolean writePosFreqData)
     {
@@ -217,16 +180,6 @@ public class SigSnvLoader
 
     private void processSampleVariants(final String sampleId, List<SomaticVariant> variants, int sampleIndex)
     {
-        /* required fields
-        - chromosome
-        - position
-        - ref
-        - alt
-        - trinucleotideContext
-        - variantCopyNumber
-        - subclonalLikelihood
-        */
-
         double[][] sampleCounts = mSampleBucketCounts.getData();
 
         for(final SomaticVariant variant : variants)
@@ -251,45 +204,19 @@ public class SigSnvLoader
                 positionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
             }
 
-            // convert base change to standard set and the context accordingly
-            String baseChange;
-            String context;
-            if(variant.ref().charAt(0) == 'A' || variant.ref().charAt(0) == 'G')
-            {
-                baseChange = String.format("%c>%c", convertBase(variant.ref().charAt(0)), convertBase(variant.alt().charAt(0)));
-
-                // convert the context as well
-                context = String.format("%c%c%c",
-                        convertBase(rawContext.charAt(2)), convertBase(rawContext.charAt(1)), convertBase(rawContext.charAt(0)));
-            }
-            else
-            {
-                baseChange = variant.ref() + ">" + variant.alt();
-                context = rawContext;
-            }
-
-            String bucketName = baseChange + "_" + context;
+            final String bucketName = contextFromVariant(variant);
             Integer bucketIndex = mBucketStringToIndex.get(bucketName);
 
             if(bucketIndex == null)
             {
-                LOGGER.error("sample({}) invalid bucketName({}) from baseChange({} raw={}>{}) context({} raw={}",
-                        sampleId, bucketName, baseChange, variant.ref(), variant.alt(), context, rawContext);
+                LOGGER.error("sample({}) invalid bucketName({}) from var({}>{}) context={})",
+                        sampleId, bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
 
                 return;
             }
 
             ++sampleCounts[bucketIndex][sampleIndex];
         }
-    }
-
-    public static char convertBase(char base)
-    {
-        if(base == 'A') return 'T';
-        if(base == 'T') return 'A';
-        if(base == 'C') return 'G';
-        if(base == 'G') return 'C';
-        return base;
     }
 
     public static String getBucketNameByIndex(final Map<String,Integer> bucketNameIndexMap, int index)

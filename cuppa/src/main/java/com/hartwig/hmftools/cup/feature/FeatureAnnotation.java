@@ -283,7 +283,7 @@ public class FeatureAnnotation
         }
 
         final String sampleId = mSampleDataCache.SampleIds.get(0);
-        return loadFeaturesFromFile(sampleId, mConfig.SampleDataDir, mSampleFeatures);
+        return loadFeaturesFromFile(sampleId, mConfig.SampleDataDir, mConfig.SampleSomaticVcf, mSampleFeatures);
     }
 
     private void formGenePrevalenceTotals()

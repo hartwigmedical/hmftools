@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
+import static com.hartwig.hmftools.common.sigs.SnvSigUtils.convertBase;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
-import static com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader.convertBase;
 import static com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader.getBucketNameByIndex;
 
 import java.io.BufferedWriter;

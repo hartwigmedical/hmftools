@@ -23,7 +23,7 @@ import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import com.hartwig.hmftools.cup.feature.FeatureAnnotation;
 import com.hartwig.hmftools.cup.rna.RnaExpression;
 import com.hartwig.hmftools.cup.sample.SampleTraits;
-import com.hartwig.hmftools.cup.sigs.SignatureAnnotation;
+import com.hartwig.hmftools.cup.sigs.SomaticAnnotation;
 import com.hartwig.hmftools.cup.svs.SvAnnotation;
 
 import org.apache.commons.cli.CommandLine;
@@ -42,7 +42,7 @@ public class SampleAnalyser
     private final SampleDataCache mSampleDataCache;
 
     private final FeatureAnnotation mFeatures;
-    private final SignatureAnnotation mSnvSignatures;
+    private final SomaticAnnotation mSomatics;
     private final SampleTraits mSampleTraits;
     private final SvAnnotation mSvAnnotation;
     private final RnaExpression mRnaExpression;
@@ -58,7 +58,7 @@ public class SampleAnalyser
 
         loadSampleData(cmd);
 
-        mSnvSignatures = new SignatureAnnotation(mConfig, mSampleDataCache);
+        mSomatics = new SomaticAnnotation(mConfig, mSampleDataCache);
         mFeatures = new FeatureAnnotation(mConfig, mSampleDataCache);
         mSampleTraits = new SampleTraits(mConfig, mSampleDataCache);
         mSvAnnotation = new SvAnnotation(mConfig, mSampleDataCache);
@@ -140,10 +140,10 @@ public class SampleAnalyser
 
     private boolean checkAnnotators()
     {
-        if(!mSvAnnotation.isValid() || !mFeatures.isValid() || !mSnvSignatures.isValid() || !mSampleTraits.isValid() || !mRnaExpression.isValid())
+        if(!mSvAnnotation.isValid() || !mFeatures.isValid() || !mSomatics.isValid() || !mSampleTraits.isValid() || !mRnaExpression.isValid())
         {
             CUP_LOGGER.error("invalid init: traits({}) sigs({}) SVs({}) features({}) rna({{}})",
-                    mSampleTraits.isValid(), mSnvSignatures.isValid(), mSvAnnotation.isValid(), mFeatures.isValid(), mRnaExpression.isValid());
+                    mSampleTraits.isValid(), mSomatics.isValid(), mSvAnnotation.isValid(), mFeatures.isValid(), mRnaExpression.isValid());
             return false;
         }
 
@@ -158,7 +158,7 @@ public class SampleAnalyser
         final List<SampleResult> traitsResults = mSampleTraits.processSample(sample);
         allResults.addAll(traitsResults);
 
-        mSnvSignatures.processSample(sample, allResults, similarities);
+        mSomatics.processSample(sample, allResults, similarities);
 
         final List<SampleResult> svResults = mSvAnnotation.processSample(sample);
         allResults.addAll(svResults);

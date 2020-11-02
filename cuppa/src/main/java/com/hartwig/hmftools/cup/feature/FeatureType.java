@@ -4,5 +4,6 @@ public enum FeatureType
 {
     DRIVER,
     FUSION,
-    VIRUS
+    VIRUS,
+    INDEL;
 }

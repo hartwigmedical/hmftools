@@ -3,7 +3,9 @@ package com.hartwig.hmftools.cup.sigs;
 import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.sigs.RefSignatures.populateRefPercentileData;
+import static com.hartwig.hmftools.cup.sigs.RefSomatics.populateRefPercentileData;
+
+import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,9 +17,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class SignatureDataLoader
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.readers.LineIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
+import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
+import htsjdk.variant.vcf.VCFCodec;
+
+public class SomaticDataLoader
 {
     public static SigMatrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
@@ -132,5 +144,48 @@ public class SignatureDataLoader
         SigMatrix refSnvPosFrequences = loadMatrixDataFile(filename, refCancerTypes);
         refSnvPosFrequences.cacheTranspose();
         return refSnvPosFrequences;
+    }
+
+    public static List<SomaticVariant> loadSomaticVariants(final String sampleId, final DatabaseAccess dbAccess)
+    {
+        final List<SomaticVariant> somaticVariants = dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
+        somaticVariants.addAll(dbAccess.readSomaticVariants(sampleId, VariantType.INDEL));
+        return somaticVariants;
+    }
+
+    public static List<SomaticVariant> loadSomaticVariants(final String sampleId, final String vcfFile, final List<VariantType> types)
+    {
+        CompoundFilter filter = new CompoundFilter(true);
+        filter.add(new PassingVariantFilter());
+
+        SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
+        final List<SomaticVariant> variantList = Lists.newArrayList();
+
+        try
+        {
+            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
+
+            for (VariantContext variant : reader.iterator())
+            {
+                if (filter.test(variant))
+                {
+                    final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
+
+                    if(somaticVariant == null)
+                        continue;
+
+                    if(!types.isEmpty() && !types.contains(variant.getType()))
+                        continue;
+
+                    variantList.add(somaticVariant);
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error(" failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+        }
+
+        return variantList;
     }
 }

@@ -40,7 +40,7 @@ import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sig_analyser.common.CommonUtils;
 import com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder;
-import com.hartwig.hmftools.sig_analyser.loaders.PositionFrequencies;
+import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader;
 
 import org.apache.commons.cli.CommandLine;
