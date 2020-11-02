@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -140,6 +141,10 @@ public final class ExampleAnalysisTestFactory {
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(qcForNumber)
+                .germlineReportingLevel(reportGermline
+                        ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
+                        : LimsGermlineReportingLevel.NO_REPORTING)
+                .reportViralInsertions(true)
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
@@ -208,6 +213,8 @@ public final class ExampleAnalysisTestFactory {
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(QsFormNumber.FOR_209.display())
+                .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
+                .reportViralInsertions(true)
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)

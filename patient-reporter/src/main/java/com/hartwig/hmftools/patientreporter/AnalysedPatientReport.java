@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
 
 import org.immutables.value.Value;
@@ -20,6 +21,11 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     @Override
     public abstract String qsFormNumber();
+
+    @NotNull
+    public abstract LimsGermlineReportingLevel germlineReportingLevel();
+
+    public abstract boolean reportViralInsertions();
 
     @NotNull
     public abstract String clinicalSummary();

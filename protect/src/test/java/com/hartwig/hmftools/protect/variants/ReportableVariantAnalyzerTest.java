@@ -9,7 +9,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.protect.ProtectTestFactory;
 import com.hartwig.hmftools.protect.variants.germline.ConditionReportingVariant;
 import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
@@ -46,7 +45,6 @@ public class ReportableVariantAnalyzerTest {
                 somaticVariantsToReport,
                 germlineVariantsToReport,
                 ProtectTestFactory.createTestEmptyGermlineGenesReporting(),
-                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 ProtectTestFactory.loadTestActionabilityAnalyzer(),
                 null);
 
@@ -73,7 +71,6 @@ public class ReportableVariantAnalyzerTest {
                 somaticVariantsToReport,
                 germlineVariantsToReport,
                 germlineReportingModel,
-                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 ProtectTestFactory.loadTestActionabilityAnalyzer(),
                 null);
 
@@ -81,14 +78,14 @@ public class ReportableVariantAnalyzerTest {
 
         assertEquals(3, reportableVariants.size());
         assertEquals(TSG, reportableVariants.get(0).gene());
-        assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
+//        assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
 
         assertEquals(ONCO, reportableVariants.get(1).gene());
-        assertTrue(reportableVariants.get(1).notifyClinicalGeneticist());
+        //        assertTrue(reportableVariants.get(1).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(1).biallelic());
 
         assertEquals(TSG, reportableVariants.get(2).gene());
-        assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
+        //        assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
         assertFalse(reportableVariants.get(2).biallelic());
     }
 
@@ -106,7 +103,6 @@ public class ReportableVariantAnalyzerTest {
                 somaticVariantsToReport,
                 germlineVariantsToReport,
                 germlineReportingModel,
-                LimsGermlineReportingLevel.NO_REPORTING,
                 ProtectTestFactory.loadTestActionabilityAnalyzer(),
                 null);
 
@@ -114,15 +110,15 @@ public class ReportableVariantAnalyzerTest {
 
         assertEquals(3, reportableVariants.size());
         assertEquals(TSG, reportableVariants.get(0).gene());
-        assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
+        //        assertFalse(reportableVariants.get(0).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(0).biallelic());
 
         assertEquals(ONCO, reportableVariants.get(1).gene());
-        assertFalse(reportableVariants.get(1).notifyClinicalGeneticist());
+        //        assertFalse(reportableVariants.get(1).notifyClinicalGeneticist());
         assertTrue(reportableVariants.get(1).biallelic());
 
         assertEquals(TSG, reportableVariants.get(2).gene());
-        assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
+        //        assertFalse(reportableVariants.get(2).notifyClinicalGeneticist());
         assertFalse(reportableVariants.get(2).biallelic());
     }
 

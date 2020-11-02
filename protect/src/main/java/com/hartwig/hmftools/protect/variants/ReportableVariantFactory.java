@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
@@ -28,7 +27,6 @@ public final class ReportableVariantFactory {
     @NotNull
     public static List<ReportableVariant> reportableGermlineVariants(Set<String> genesWithSomaticInactivationEvent,
             List<ReportableGermlineVariant> variants) {
-
         final Predicate<ReportableGermlineVariant> secondGermlineHit =
                 variant -> variants.stream().anyMatch(x -> !x.equals(variant) && x.gene().equals(variant.gene()));
 
@@ -88,8 +86,7 @@ public final class ReportableVariantFactory {
 
     @NotNull
     static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<DriverSomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingLevel germlineReportingChoice) {
+            @NotNull List<DriverGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (DriverSomaticVariant somaticDriverVariant : somaticVariantsReport) {
             double adjustedDriverLikelihood = somaticDriverVariant.driverLikelihood();
@@ -113,8 +110,7 @@ public final class ReportableVariantFactory {
             }
 
             allReportableVariants.add(fromGermlineVariant(driverGermlineVariant.variant()).driverLikelihood(adjustedDriverLikelihood)
-                    .notifyClinicalGeneticist(germlineReportingModel.notifyAboutGene(germlineReportingChoice,
-                            driverGermlineVariant.variant().gene()))
+                    .notifyClinicalGeneticist(true)
                     .build());
         }
 

@@ -14,6 +14,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ReportableVariant implements Variant {
 
     @NotNull
+    public abstract ReportableVariantSource source();
+
+    @NotNull
     public String genomicEvent() {
         String description = canonicalCodingEffect() == CodingEffect.SPLICE ? canonicalHgvsCodingImpact() : canonicalHgvsProteinImpact();
         return this.gene() + " " + description;
@@ -79,6 +82,4 @@ public abstract class ReportableVariant implements Variant {
 
     @Deprecated
     public abstract boolean notifyClinicalGeneticist();
-
-    public abstract ReportableVariantSource source();
 }

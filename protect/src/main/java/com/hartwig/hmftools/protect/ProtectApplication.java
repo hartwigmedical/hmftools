@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItemFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -100,8 +99,6 @@ public class ProtectApplication implements AutoCloseable {
         GenomicAnalyzer analyzer = new GenomicAnalyzer(actionabilityAnalyzer, germlineReportingModel);
         GenomicAnalysis analysis = analyzer.run(tumorSampleId,
                 patientTumorLocation,
-                LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
-                true,
                 protectConfig.purplePurityTsv(),
                 protectConfig.purpleQcFile(),
                 protectConfig.purpleDriverCatalogTsv(),

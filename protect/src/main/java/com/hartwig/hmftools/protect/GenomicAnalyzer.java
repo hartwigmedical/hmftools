@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
@@ -67,10 +66,10 @@ public class GenomicAnalyzer {
 
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable PatientTumorLocation patientTumorLocation,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralInsertions, @NotNull String purplePurityTsv,
-            @NotNull String purpleQCFile, @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf,
-            @NotNull String bachelorTsv, @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
-            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt) throws IOException {
+            @NotNull String purplePurityTsv, @NotNull String purpleQCFile, @NotNull String purpleDriverCatalogTsv,
+            @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
+            @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
+            @NotNull String chordPredictionTxt) throws IOException {
         List<DriverCatalog> purpleDriverCatalog = readDriverCatalog(purpleDriverCatalogTsv);
         PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, patientTumorLocation, purpleDriverCatalog);
         List<DriverSomaticVariant> driverSomaticVariants =
@@ -81,20 +80,18 @@ public class GenomicAnalyzer {
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxBreakendTsv, patientTumorLocation);
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
-        List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv, reportViralInsertions);
+        List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv);
 
         List<DriverGermlineVariant> driverGermlineVariants = analyzeGermlineVariants(bachelorTsv,
                 driverSomaticVariants,
                 purpleAnalysis.reportableGainsAndLosses(),
                 reportableHomozygousDisruptions,
-                svAnalysis.reportableDisruptions(),
-                germlineReportingLevel);
+                svAnalysis.reportableDisruptions());
 
         ReportableVariantAnalysis reportableVariantsAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(
                 driverSomaticVariants,
                 driverGermlineVariants,
                 germlineReportingModel,
-                germlineReportingLevel,
                 actionabilityAnalyzer,
                 patientTumorLocation);
 
@@ -167,24 +164,20 @@ public class GenomicAnalyzer {
     private List<DriverGermlineVariant> analyzeGermlineVariants(@NotNull String bachelorTsv,
             @NotNull List<DriverSomaticVariant> driverSomaticVariants, @NotNull List<ReportableGainLoss> reportableGainLosses,
             @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
-            @NotNull List<ReportableGeneDisruption> reportableGeneDisruptions, @NotNull LimsGermlineReportingLevel germlineChoice)
-            throws IOException {
+            @NotNull List<ReportableGeneDisruption> reportableGeneDisruptions) throws IOException {
         List<ReportableGermlineVariant> germlineVariants = ReportableGermlineVariantFile.read(bachelorTsv);
 
         LOGGER.info("Loaded {} reportable germline variants from {}", germlineVariants.size(), bachelorTsv);
 
-        if (germlineChoice != LimsGermlineReportingLevel.NO_REPORTING) {
-            LOGGER.info(" Patient has given the following germline consent: '{}'", germlineChoice);
-            return FilterGermlineVariants.filterGermlineVariantsForReporting(germlineReportingModel,
-                    germlineVariants,
-                    driverSomaticVariants,
-                    reportableGainLosses,
-                    reportableHomozygousDisruptions,
-                    reportableGeneDisruptions);
-        } else {
-            LOGGER.info(" No consent has been given for germline reporting. No germline variants will be reported!");
-            return Lists.newArrayList();
-        }
+        List<DriverGermlineVariant> driverGermlineVariants = FilterGermlineVariants.filterGermlineVariantsForReporting(
+                germlineReportingModel,
+                germlineVariants,
+                driverSomaticVariants,
+                reportableGainLosses,
+                reportableHomozygousDisruptions,
+                reportableGeneDisruptions);
+        LOGGER.info(" Filtered to {} driver germline variants", driverGermlineVariants.size());
+        return driverGermlineVariants;
     }
 
     @NotNull
@@ -217,19 +210,13 @@ public class GenomicAnalyzer {
     }
 
     @Nullable
-    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv, boolean reportViralInsertions)
-            throws IOException {
+    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv) throws IOException {
         List<LinxViralInsertion> viralInsertionList = LinxViralInsertion.read(linxViralInsertionTsv);
         LOGGER.info("Loaded {} viral insertions from {}", viralInsertionList.size(), linxViralInsertionTsv);
 
-        if (reportViralInsertions) {
-            List<ViralInsertion> reportableViralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(viralInsertionList);
-            LOGGER.info(" Patient has given consent for viral insertion reporting. Found {} reportable viral insertions.",
-                    reportableViralInsertions.size());
-            return reportableViralInsertions;
-        } else {
-            LOGGER.info(" No consent has been given for viral insertions. No viral insertions will be reported!");
-            return null;
-        }
+        List<ViralInsertion> reportableViralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(viralInsertionList);
+        LOGGER.info(" Viral insertions have been consolidated into {} reportable viral insertions.", reportableViralInsertions.size());
+
+        return reportableViralInsertions;
     }
 }

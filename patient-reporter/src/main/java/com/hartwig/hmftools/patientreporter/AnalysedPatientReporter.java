@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.hartwig.hmftools.protect.GenomicAnalyzer;
@@ -44,14 +43,10 @@ class AnalysedPatientReporter {
                         sampleMetadata.tumorSampleId());
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
-        LimsGermlineReportingLevel germlineChoice = reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode());
-        boolean reportViralInsertions = reportData.limsModel().reportViralInsertions(sampleMetadata.tumorSampleBarcode());
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.actionabilityAnalyzer(), reportData.germlineReportingModel());
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
                 patientTumorLocation,
-                germlineChoice,
-                reportViralInsertions,
                 purplePurityTsv,
                 purpleQCFile,
                 purpleDriverCatalogTsv,
@@ -68,6 +63,8 @@ class AnalysedPatientReporter {
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity()))
+                .germlineReportingLevel(reportData.limsModel().germlineReportingChoice(sampleMetadata.tumorSampleBarcode()))
+                .reportViralInsertions(reportData.limsModel().reportViralInsertions(sampleMetadata.tumorSampleBarcode()))
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(genomicAnalysis)
                 .circosPath(circosFile)

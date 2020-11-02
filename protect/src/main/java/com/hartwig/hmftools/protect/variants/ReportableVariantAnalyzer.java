@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.protect.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
@@ -25,12 +24,10 @@ public final class ReportableVariantAnalyzer {
     @NotNull
     public static ReportableVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<DriverSomaticVariant> somaticVariantsReport,
             @NotNull List<DriverGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingLevel germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation) {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
         List<ReportableVariant> allReportableVariants = ReportableVariantFactory.mergeSomaticAndGermlineVariants(somaticVariantsReport,
                 germlineVariantsToReport,
-                germlineReportingModel,
-                germlineReportingChoice);
+                germlineReportingModel);
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         // Extract somatic evidence for high drivers variants only (See DEV-824)
