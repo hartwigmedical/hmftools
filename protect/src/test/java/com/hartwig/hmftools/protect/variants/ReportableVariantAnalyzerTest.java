@@ -19,6 +19,7 @@ import com.hartwig.hmftools.protect.variants.germline.ImmutableGermlineReporting
 import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 import com.hartwig.hmftools.protect.variants.somatic.ImmutableDriverSomaticVariant;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -127,12 +128,12 @@ public class ReportableVariantAnalyzerTest {
         Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
-                .condition(ConditionReportingVariant.BIALLELIC)
+                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
                 .variant("")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
-                .condition(ConditionReportingVariant.BIALLELIC)
+                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
                 .variant("")
                 .build();
         germlineGenesReportingMap.put(ONCO, germlineReportingTrue);
@@ -148,6 +149,7 @@ public class ReportableVariantAnalyzerTest {
                         .biallelic(true)
                         .adjustedVaf(0)
                         .adjustedCopyNumber(0)
+                        .hgvsProtein(Strings.EMPTY)
                         .build())
                 .driverLikelihood(1.0)
                 .build();
@@ -157,6 +159,7 @@ public class ReportableVariantAnalyzerTest {
                         .biallelic(false)
                         .adjustedVaf(0)
                         .adjustedCopyNumber(0)
+                        .hgvsProtein(Strings.EMPTY)
                         .build())
                 .driverLikelihood(0.5)
                 .build();

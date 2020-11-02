@@ -157,12 +157,12 @@ public final class ProtectTestFactory {
         Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
-                .condition(ConditionReportingVariant.BIALLELIC)
+                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
                 .variant("")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
-                .condition(ConditionReportingVariant.BIALLELIC)
+                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
                 .variant("")
                 .build();
         germlineGenesReportingMap.put(ONCOGENE, germlineReportingTrue);
@@ -175,12 +175,12 @@ public final class ProtectTestFactory {
         Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
-                .condition(ConditionReportingVariant.MONOALLELIC)
+                .condition(ConditionReportingVariant.ALL)
                 .variant("")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
-                .condition(ConditionReportingVariant.MONOALLELIC)
+                .condition(ConditionReportingVariant.ALL)
                 .variant("")
                 .build();
         germlineGenesReportingMap.put(ONCOGENE, germlineReportingTrue);

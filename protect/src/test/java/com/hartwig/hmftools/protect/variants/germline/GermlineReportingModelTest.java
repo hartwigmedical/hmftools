@@ -11,7 +11,6 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GermlineReportingModelTest {
@@ -21,12 +20,12 @@ public class GermlineReportingModelTest {
         Map<String, GermlineReporting> notifyMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
-                .condition(ConditionReportingVariant.BIALLELIC)
+                .condition(ConditionReportingVariant.BIALLELIC_ONLY)
                 .variant("p.Arg876Cys")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
-                .condition(ConditionReportingVariant.MONOALLELIC)
+                .condition(ConditionReportingVariant.ALL)
                 .variant("")
                 .build();
         notifyMap.put("Report", germlineReportingFalse);
