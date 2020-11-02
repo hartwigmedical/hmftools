@@ -27,7 +27,7 @@ public class RefDataBuilder
     private final SampleDataCache mSampleDataCache;
 
     private final RefSampleTraits mSampleTraits;
-    private final RefSomatics mSignatures;
+    private final RefSomatics mSomatics;
     private final RefSvData mSvAnnotation;
     private final RefFeatures mFeatures;
     private final RefRnaExpression mRnaExpression;
@@ -41,7 +41,7 @@ public class RefDataBuilder
         loadSampleData(cmd);
 
         mSampleTraits = new RefSampleTraits(mConfig, mSampleDataCache);
-        mSignatures = new RefSomatics(mConfig, mSampleDataCache);
+        mSomatics = new RefSomatics(mConfig, mSampleDataCache);
         mSvAnnotation = new RefSvData(mConfig, mSampleDataCache);
         mFeatures = new RefFeatures(mConfig, mSampleDataCache);
         mRnaExpression = new RefRnaExpression(mConfig, mSampleDataCache, cmd);
@@ -60,7 +60,7 @@ public class RefDataBuilder
         CUP_LOGGER.info("CUP building ref data sets");
 
         mSampleTraits.buildRefDataSets();
-        mSignatures.buildRefDataSets();
+        mSomatics.buildRefDataSets();
         mSvAnnotation.buildRefDataSets();
         mFeatures.buildRefDataSets();
         mRnaExpression.buildRefDataSets();

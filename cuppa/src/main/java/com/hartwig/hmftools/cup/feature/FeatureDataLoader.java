@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_AMP
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_DEL;
 import static com.hartwig.hmftools.cup.feature.ViralInsertionType.OTHER;
 import static com.hartwig.hmftools.cup.feature.ViralInsertionType.fromVirusName;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,9 +26,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsVariant;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
@@ -38,6 +42,9 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.cup.sigs.SomaticDataLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
+
+import org.jooq.Record;
+import org.jooq.Result;
 
 public class FeatureDataLoader
 {
@@ -101,10 +108,10 @@ public class FeatureDataLoader
             final List<DriverCatalog> drivers = Files.exists(Paths.get(driverCatalogFilename)) ?
                     DriverCatalogFile.read(driverCatalogFilename) : Lists.newArrayList();
 
-            final List<SomaticVariant> indels = checkIndels(sampleId, sampleDataDir, null) ?
-                    SomaticDataLoader.loadSomaticVariants(sampleId, sampleVcfFile, Lists.newArrayList(VariantType.INDEL)) : null;
+            final List<String> indelGenes = checkIndels(sampleId, sampleDataDir, null) ?
+                    loadSpecificIndels(sampleId, sampleVcfFile) : null;
 
-            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indels);
+            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indelGenes);
         }
         catch(IOException e)
         {
@@ -155,10 +162,9 @@ public class FeatureDataLoader
             final List<LinxFusion> fusions = dbAccess.readFusions(sampleId);
             final List<LinxViralInsertion> viralInserts = dbAccess.readViralInsertions(sampleId);
 
-            final List<SomaticVariant> indels = checkIndels(sampleId, null, dbAccess) ?
-                    dbAccess.readSomaticVariants(sampleId, VariantType.INDEL) : null;
+            final List<String> indelGenes = checkIndels(sampleId, null, dbAccess) ? loadSpecificIndels(sampleId, dbAccess) : null;
 
-            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indels);
+            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indelGenes);
 
             ++i;
             if(i >= nextLog)
@@ -171,9 +177,43 @@ public class FeatureDataLoader
         return true;
     }
 
+    private static final int INDEL_MAX_REPEAT_COUNT = 6;
+
+    private static List<String> loadSpecificIndels(final String sampleId, final String vcfFile)
+    {
+        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariants(sampleId, vcfFile, Lists.newArrayList(VariantType.INDEL));
+
+        return variants.stream()
+                .filter(x -> x.repeatCount() <= INDEL_MAX_REPEAT_COUNT)
+                .filter(x -> x.filter().equals("PASS"))
+                .map(x -> x.gene())
+                .collect(Collectors.toList());
+    }
+
+    private static List<String> loadSpecificIndels(final String sampleId, final DatabaseAccess dbAccess)
+    {
+        final List<String> geneMatches = Lists.newArrayList();
+
+        Result<Record> result = dbAccess.context().select()
+                .from(SOMATICVARIANT)
+                .where(SOMATICVARIANT.SAMPLEID.eq(sampleId))
+                .and(SOMATICVARIANT.FILTER.eq("PASS"))
+                .and(SOMATICVARIANT.GENE.in(INDEL_ALB, INDEL_SFTPB, INDEL_SLC34A2))
+                .and(SOMATICVARIANT.REPEATCOUNT.lessOrEqual(INDEL_MAX_REPEAT_COUNT))
+                .and(SOMATICVARIANT.TYPE.eq(VariantType.INDEL.toString()))
+                .fetch();
+
+        for (Record record : result)
+        {
+            geneMatches.add(record.getValue(SOMATICVARIANT.GENE));
+        }
+
+        return geneMatches;
+    }
+
     private static void mapFeatureData(
             final String sampleId, final Map<String,List<SampleFeatureData>> sampleDrivers, final List<DriverCatalog> drivers,
-            final List<LinxFusion> fusions, final List<LinxViralInsertion> viralInserts, final List<SomaticVariant> indels)
+            final List<LinxFusion> fusions, final List<LinxViralInsertion> viralInserts, final List<String> indelGenes)
     {
         final List<SampleFeatureData> featuresList = Lists.newArrayList();
 
@@ -231,11 +271,10 @@ public class FeatureDataLoader
             featuresList.addAll(viralInsertDataList);
         }
 
-        if(indels != null)
+        if(indelGenes != null)
         {
-            final List<SampleFeatureData> indelFeatures = indels.stream()
-                    .filter(x -> x.gene().equals(INDEL_ALB) || x.gene().equals(INDEL_SFTPB) || x.gene().equals(INDEL_SLC34A2))
-                    .map(x -> new SampleFeatureData(sampleId, String.format("INDEL_%s", x.gene()), FeatureType.INDEL, 1))
+            final List<SampleFeatureData> indelFeatures = indelGenes.stream()
+                    .map(x -> new SampleFeatureData(sampleId, String.format("INDEL_%s", x), FeatureType.INDEL, 1))
                     .filter(x -> !x.Name.equals(OTHER.toString()))
                     .collect(Collectors.toList());
 

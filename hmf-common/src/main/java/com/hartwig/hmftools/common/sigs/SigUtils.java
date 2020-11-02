@@ -225,7 +225,8 @@ public final class SigUtils
                 }
             }
 
-            SU_LOGGER.info("loaded matrix(rows={} cols={}) from file({}), invalid rows({})", rowCount, colCount, filename, invalidRowCount);
+            SU_LOGGER.info("loaded matrix(rows={} cols={}) from file({}) {}",
+                    rowCount, colCount, filename, invalidRowCount > 0 ? String.format(", invalidRowCount(%d)", invalidRowCount) : "");
 
             return matrix;
 
