@@ -30,8 +30,10 @@ public final class ReportableVariantAnalyzer {
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
                 filterHighDriverLikelihood(actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation));
 
-        return ImmutableReportableVariantAnalysis.of(allReportableVariants,
-                ReportableEvidenceItemFactory.toReportableFlatList(evidencePerVariant));
+        return ImmutableReportableVariantAnalysis.builder()
+                .variantsToReport(allReportableVariants)
+                .evidenceItems(ReportableEvidenceItemFactory.toReportableFlatList(evidencePerVariant))
+                .build();
     }
 
     @NotNull
