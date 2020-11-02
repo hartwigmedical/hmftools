@@ -234,9 +234,28 @@ public class FilterGermlineVariantsTest {
     }
 
     @Test
-    public void checkForGermlineGenesReportedMonoallelicSpecificVariant() {
+    public void checkForGermlineGenesReportedMonoallelicSpecificVariantNonMatch() {
         GermlineReportingModel germlineReportingModelMonoallelic =
                 ProtectTestFactory.createTestGermlineGenesReporting(true, false, false, false, "123", null);
+
+        List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsPresentInTumor("DEF");
+        List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
+        List<ReportableGainLoss> reportableGainLosses = Lists.newArrayList();
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
+        List<ReportableGeneDisruption> reportableGeneDisruptions = Lists.newArrayList();
+
+        assertFilter(1, germlineReportingModelMonoallelic,
+                germlineVariantsPresentInTumor,
+                driverSomaticVariants,
+                reportableGainLosses,
+                reportableHomozygousDisruptions,
+                reportableGeneDisruptions);
+    }
+
+    @Test
+    public void checkForGermlineGenesReportedMonoallelicSpecificVariantMatch() {
+        GermlineReportingModel germlineReportingModelMonoallelic =
+                ProtectTestFactory.createTestGermlineGenesReporting(true, false, false, false, "DEF", null);
 
         List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsPresentInTumor("DEF");
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
