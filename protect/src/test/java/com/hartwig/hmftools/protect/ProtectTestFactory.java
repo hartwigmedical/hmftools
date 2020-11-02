@@ -176,7 +176,7 @@ public final class ProtectTestFactory {
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(true)
                 .reportBiallelicOnly(false)
-                .variant("")
+                .variant("ABC")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
                 .notifyClinicalGeneticus(false)
