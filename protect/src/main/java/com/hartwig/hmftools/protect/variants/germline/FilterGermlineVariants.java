@@ -14,14 +14,10 @@ import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDis
 import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 @Deprecated
 public final class FilterGermlineVariants {
-    private static final Logger LOGGER = LogManager.getLogger(FilterGermlineVariants.class);
 
     private FilterGermlineVariants() {
     }
@@ -68,9 +64,9 @@ public final class FilterGermlineVariants {
             if (entry.getKey().contains(germlineVariant.gene())) {
                 if (entry.getValue().equals(germlineVariant.hgvsProtein())) {
                     reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
-                } else {
-                    genesNonSpecificVariants.add(entry.getKey());
                 }
+            } else {
+                genesNonSpecificVariants.add(entry.getKey());
             }
         }
         if (genesNonSpecificVariants.contains(germlineVariant.gene())) {

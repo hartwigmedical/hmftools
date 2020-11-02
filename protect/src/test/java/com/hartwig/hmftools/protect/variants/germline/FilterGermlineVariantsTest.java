@@ -244,7 +244,7 @@ public class FilterGermlineVariantsTest {
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> reportableGeneDisruptions = Lists.newArrayList();
 
-        assertFilter(1, germlineReportingModelMonoallelic,
+        assertFilter(0, germlineReportingModelMonoallelic,
                 germlineVariantsPresentInTumor,
                 driverSomaticVariants,
                 reportableGainLosses,
