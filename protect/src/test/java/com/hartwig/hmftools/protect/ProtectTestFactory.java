@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.protect;
 
 import java.io.IOException;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
@@ -153,45 +152,42 @@ public final class ProtectTestFactory {
     }
 
     @NotNull
-    public static GermlineReportingModel createTestGermlineGenesReportingBialleic() {
-        Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
+    public static GermlineReportingModel createTestGermlineGenesReportingBiallelic() {
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(true)
+                .gene(ONCOGENE)
+                .notifyClinicalGeneticist(true)
                 .reportBiallelicOnly(true)
-                .variant("")
+                .reportableSpecificVariant(null)
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(false)
+                .gene(TSG)
+                .notifyClinicalGeneticist(false)
                 .reportBiallelicOnly(true)
-                .variant("")
+                .reportableSpecificVariant(null)
                 .build();
-        germlineGenesReportingMap.put(ONCOGENE, germlineReportingTrue);
-        germlineGenesReportingMap.put(TSG, germlineReportingFalse);
-        return new GermlineReportingModel(germlineGenesReportingMap);
+        return new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
     }
 
     @NotNull
-    public static GermlineReportingModel createTestGermlineGenesReportingMonoalleic() {
-        Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
+    public static GermlineReportingModel createTestGermlineGenesReportingMonoallelic() {
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(true)
+                .gene(ONCOGENE)
+                .notifyClinicalGeneticist(true)
                 .reportBiallelicOnly(false)
-                .variant("ABC")
+                .reportableSpecificVariant("ABC")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(false)
+                .gene(TSG)
+                .notifyClinicalGeneticist(false)
                 .reportBiallelicOnly(false)
-                .variant("")
+                .reportableSpecificVariant(null)
                 .build();
-        germlineGenesReportingMap.put(ONCOGENE, germlineReportingTrue);
-        germlineGenesReportingMap.put(TSG, germlineReportingFalse);
-        return new GermlineReportingModel(germlineGenesReportingMap);
+        return new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
     }
 
     @NotNull
     public static GermlineReportingModel createTestEmptyGermlineGenesReporting() {
-        Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
-        return new GermlineReportingModel(germlineGenesReportingMap);
+        return new GermlineReportingModel(Lists.newArrayList());
     }
 
     @NotNull

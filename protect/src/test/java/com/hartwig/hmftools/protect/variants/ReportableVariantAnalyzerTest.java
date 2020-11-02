@@ -5,10 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.protect.ProtectTestFactory;
 import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReporting;
@@ -124,20 +122,20 @@ public class ReportableVariantAnalyzerTest {
 
     @NotNull
     private static GermlineReportingModel createGermlineReportingModelWithOncoAndTSG() {
-        Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
+
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(true)
+                .gene(ONCO)
+                .notifyClinicalGeneticist(true)
                 .reportBiallelicOnly(true)
-                .variant("")
+                .reportableSpecificVariant(null)
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(false)
+                .gene(TSG)
+                .notifyClinicalGeneticist(false)
                 .reportBiallelicOnly(true)
-                .variant("")
+                .reportableSpecificVariant(null)
                 .build();
-        germlineGenesReportingMap.put(ONCO, germlineReportingTrue);
-        germlineGenesReportingMap.put(TSG, germlineReportingFalse);
-        return new GermlineReportingModel(germlineGenesReportingMap);
+        return new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
     }
 
     @NotNull

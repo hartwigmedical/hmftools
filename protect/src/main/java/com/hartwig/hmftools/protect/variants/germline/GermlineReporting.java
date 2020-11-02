@@ -9,10 +9,13 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GermlineReporting {
 
-    public abstract boolean notifyClinicalGeneticus();
+    @NotNull
+    public abstract String gene();
+
+    public abstract boolean notifyClinicalGeneticist();
 
     public abstract boolean reportBiallelicOnly();
 
-    @NotNull
-    public abstract String variant();
+    @Nullable
+    public abstract String reportableSpecificVariant();
 }

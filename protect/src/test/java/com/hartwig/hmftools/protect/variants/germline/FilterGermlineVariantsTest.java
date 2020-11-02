@@ -3,7 +3,6 @@ package com.hartwig.hmftools.protect.variants.germline;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -23,7 +22,7 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlinesGenesReportedBialleic() {
-        GermlineReportingModel germlineReportingModelBiallic = ProtectTestFactory.createTestGermlineGenesReportingBialleic();
+        GermlineReportingModel germlineReportingModelBiallic = ProtectTestFactory.createTestGermlineGenesReportingBiallelic();
 
         List<ReportableGermlineVariant> germlineVariantsNotPresentInTumor = createTestGermlineVariantsNotPresentInTumor();
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
@@ -124,7 +123,7 @@ public class FilterGermlineVariantsTest {
     @Test
     public void checkForGermlinesGenesReportedMonoallelic() {
 
-        GermlineReportingModel germlineReportingModelMonoallelic = ProtectTestFactory.createTestGermlineGenesReportingMonoalleic();
+        GermlineReportingModel germlineReportingModelMonoallelic = ProtectTestFactory.createTestGermlineGenesReportingMonoallelic();
 
         List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsPresentInTumor();
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
@@ -240,8 +239,7 @@ public class FilterGermlineVariantsTest {
     @Test
     public void checkForGermlinesGenesReportedMonoallelicSpecificVariant() {
 
-
-        GermlineReportingModel germlineReportingModelMonoallelic = ProtectTestFactory.createTestGermlineGenesReportingMonoalleic();
+        GermlineReportingModel germlineReportingModelMonoallelic = ProtectTestFactory.createTestGermlineGenesReportingMonoallelic();
 
         List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsPresentInTumor();
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();

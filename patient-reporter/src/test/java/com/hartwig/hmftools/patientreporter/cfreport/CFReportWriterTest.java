@@ -7,7 +7,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -267,7 +266,7 @@ public class CFReportWriterTest {
 
     @NotNull
     private static CFReportWriter testCFReportWriter() {
-        GermlineReportingModel emptyGermlineReportingModel = new GermlineReportingModel(Maps.newHashMap());
+        GermlineReportingModel emptyGermlineReportingModel = new GermlineReportingModel(Lists.newArrayList());
         return new CFReportWriter(WRITE_TO_PDF, emptyGermlineReportingModel);
     }
 

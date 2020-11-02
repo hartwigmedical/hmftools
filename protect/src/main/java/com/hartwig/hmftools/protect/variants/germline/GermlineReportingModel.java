@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.protect.variants.germline;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,7 +11,6 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GermlineReportingModel {
@@ -23,21 +23,20 @@ public class GermlineReportingModel {
     private final Set<String> monoallelicGenes = Sets.newHashSet();
     private final Map<String, String> reportableSpecificVariants = Maps.newHashMap();
 
-    public GermlineReportingModel(@NotNull final Map<String, GermlineReporting> germlineGenesAndNotificationMap) {
-        for (Map.Entry<String, GermlineReporting> entry : germlineGenesAndNotificationMap.entrySet()) {
-            reportableGenes.add(entry.getKey());
-            if (entry.getValue().notifyClinicalGeneticus()) {
-                notifiableGenes.add(entry.getKey());
+    public GermlineReportingModel(@NotNull final List<GermlineReporting> germlineReportingEntries) {
+        for (GermlineReporting entry : germlineReportingEntries) {
+            reportableGenes.add(entry.gene());
+            if (entry.notifyClinicalGeneticist()) {
+                notifiableGenes.add(entry.gene());
             }
-            if (!entry.getValue().reportBiallelicOnly()) {
-                monoallelicGenes.add(entry.getKey());
+            if (!entry.reportBiallelicOnly()) {
+                monoallelicGenes.add(entry.gene());
             }
-            if (!entry.getValue().variant().equals(Strings.EMPTY)) {
-                reportableSpecificVariants.put(entry.getKey(), entry.getValue().variant());
+            if (entry.reportableSpecificVariant() != null) {
+                reportableSpecificVariants.put(entry.gene(), entry.reportableSpecificVariant());
             }
         }
     }
-
 
     @NotNull
     public Map<String, String> reportableSpecificVariants() {

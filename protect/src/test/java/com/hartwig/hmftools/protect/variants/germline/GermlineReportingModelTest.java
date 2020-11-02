@@ -7,9 +7,7 @@ import static com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel.REPORT
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Map;
-
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 
 import org.junit.Test;
 
@@ -17,21 +15,20 @@ public class GermlineReportingModelTest {
 
     @Test
     public void testBehaviour() {
-        Map<String, GermlineReporting> notifyMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(true)
+                .gene("Notify")
+                .notifyClinicalGeneticist(true)
                 .reportBiallelicOnly(true)
-                .variant("p.Arg876Cys")
+                .reportableSpecificVariant("p.Arg876Cys")
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(false)
+                .gene("Report")
+                .notifyClinicalGeneticist(false)
                 .reportBiallelicOnly(false)
-                .variant("")
+                .reportableSpecificVariant(null)
                 .build();
-        notifyMap.put("Report", germlineReportingFalse);
-        notifyMap.put("Notify", germlineReportingTrue);
 
-        GermlineReportingModel victim = new GermlineReportingModel(notifyMap);
+        GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
         assertTrue(victim.notifyAboutGene(REPORT_WITH_NOTIFICATION, "Notify"));
         assertFalse(victim.notifyAboutGene(REPORT_WITHOUT_NOTIFICATION, "Notify"));
         assertFalse(victim.notifyAboutGene(NO_REPORTING, "Notify"));
@@ -47,8 +44,6 @@ public class GermlineReportingModelTest {
         assertFalse(victim.notifiableGenes(REPORT_WITH_NOTIFICATION).contains("Report"));
         assertTrue(victim.notifiableGenes(REPORT_WITH_NOTIFICATION).contains("Notify"));
         assertFalse(victim.notifiableGenes(REPORT_WITHOUT_NOTIFICATION).contains("Notify"));
-
-
 
         assertFalse(victim.notifyAboutGene(REPORT_WITH_NOTIFICATION, "DoesNotExist"));
     }
