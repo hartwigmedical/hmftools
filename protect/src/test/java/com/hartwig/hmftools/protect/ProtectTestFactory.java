@@ -153,35 +153,19 @@ public final class ProtectTestFactory {
     }
 
     @NotNull
-    public static GermlineReportingModel createTestGermlineGenesReportingBialleic() {
+    public static GermlineReportingModel createTestGermlineGenesReporting(boolean notifyClinicalGeneticus1,
+            boolean notifyClinicalGeneticus2, boolean reportBiallelicOnly1, boolean reportBiallelicOnly2, @NotNull String specificVariant1,
+            @NotNull String specificVariant2) {
         Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
         GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(true)
-                .reportBiallelicOnly(true)
-                .variant("")
+                .notifyClinicalGeneticus(notifyClinicalGeneticus1)
+                .reportBiallelicOnly(reportBiallelicOnly1)
+                .variant(specificVariant1)
                 .build();
         GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(false)
-                .reportBiallelicOnly(true)
-                .variant("")
-                .build();
-        germlineGenesReportingMap.put(ONCOGENE, germlineReportingTrue);
-        germlineGenesReportingMap.put(TSG, germlineReportingFalse);
-        return new GermlineReportingModel(germlineGenesReportingMap);
-    }
-
-    @NotNull
-    public static GermlineReportingModel createTestGermlineGenesReportingMonoalleic() {
-        Map<String, GermlineReporting> germlineGenesReportingMap = Maps.newHashMap();
-        GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(true)
-                .reportBiallelicOnly(false)
-                .variant("ABC")
-                .build();
-        GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
-                .notifyClinicalGeneticus(false)
-                .reportBiallelicOnly(false)
-                .variant("")
+                .notifyClinicalGeneticus(notifyClinicalGeneticus2)
+                .reportBiallelicOnly(reportBiallelicOnly2)
+                .variant(specificVariant2)
                 .build();
         germlineGenesReportingMap.put(ONCOGENE, germlineReportingTrue);
         germlineGenesReportingMap.put(TSG, germlineReportingFalse);

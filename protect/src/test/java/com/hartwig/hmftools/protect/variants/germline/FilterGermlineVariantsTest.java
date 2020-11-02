@@ -23,7 +23,8 @@ public class FilterGermlineVariantsTest {
 
     @Test
     public void checkForGermlinesGenesReportedBialleic() {
-        GermlineReportingModel germlineReportingModelBiallic = ProtectTestFactory.createTestGermlineGenesReportingBialleic();
+        GermlineReportingModel germlineReportingModelBiallic =
+                ProtectTestFactory.createTestGermlineGenesReporting(true, false, true, true, Strings.EMPTY, Strings.EMPTY);
 
         List<ReportableGermlineVariant> germlineVariantsNotPresentInTumor = createTestGermlineVariantsNotPresentInTumor();
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
@@ -120,18 +121,19 @@ public class FilterGermlineVariantsTest {
         assertEquals(sizeExpected, filteredGermlineVariants.size());
     }
 
-
     @Test
     public void checkForGermlinesGenesReportedMonoallelic() {
 
-        GermlineReportingModel germlineReportingModelMonoallelic = ProtectTestFactory.createTestGermlineGenesReportingMonoalleic();
+        GermlineReportingModel germlineReportingModelMonoallelic =
+                ProtectTestFactory.createTestGermlineGenesReporting(true, false, false, false, "ABC", Strings.EMPTY);
 
         List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsPresentInTumor();
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
         List<ReportableGainLoss> reportableGainLosses = Lists.newArrayList();
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> reportableGeneDisruptions = Lists.newArrayList();
-        assertFilter(1, germlineReportingModelMonoallelic,
+        assertFilter(1,
+                germlineReportingModelMonoallelic,
                 germlineVariantsPresentInTumor,
                 driverSomaticVariants,
                 reportableGainLosses,
@@ -235,13 +237,11 @@ public class FilterGermlineVariantsTest {
         return Lists.newArrayList(ProtectTestFactory.createTestReportableGeneDisruptionBuilder().gene(gene).build());
     }
 
-
-
     @Test
     public void checkForGermlinesGenesReportedMonoallelicSpecificVariant() {
 
-
-        GermlineReportingModel germlineReportingModelMonoallelic = ProtectTestFactory.createTestGermlineGenesReportingMonoalleic();
+        GermlineReportingModel germlineReportingModelMonoallelic =
+                ProtectTestFactory.createTestGermlineGenesReporting(true, false, false, false, "ABC", Strings.EMPTY);
 
         List<ReportableGermlineVariant> germlineVariantsPresentInTumor = createTestGermlineVariantsPresentInTumor();
         List<DriverSomaticVariant> driverSomaticVariants = Lists.newArrayList();
@@ -249,8 +249,8 @@ public class FilterGermlineVariantsTest {
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> reportableGeneDisruptions = Lists.newArrayList();
 
-
-        assertFilter(1, germlineReportingModelMonoallelic,
+        assertFilter(1,
+                germlineReportingModelMonoallelic,
                 germlineVariantsPresentInTumor,
                 driverSomaticVariants,
                 reportableGainLosses,
@@ -258,6 +258,5 @@ public class FilterGermlineVariantsTest {
                 reportableGeneDisruptions);
 
     }
-
 
 }
