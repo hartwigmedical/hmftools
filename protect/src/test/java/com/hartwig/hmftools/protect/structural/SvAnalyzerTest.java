@@ -21,8 +21,10 @@ public class SvAnalyzerTest {
     @Test
     public void canAnalyzeFusionsDisruptions() {
         List<LinxFusion> testFusions = Lists.newArrayList(createTestFusionBuilder().geneStart("X").geneEnd("Y").build());
-        List<LinxBreakend> testDisruptions =
-                Lists.newArrayList(createTestDisruptionBuilder().gene(DISRUPTED_GENE).junctionCopyNumber(1.0).undisruptedCopyNumber(1.0).build());
+        List<LinxBreakend> testDisruptions = Lists.newArrayList(createTestDisruptionBuilder().gene(DISRUPTED_GENE)
+                .junctionCopyNumber(1.0)
+                .undisruptedCopyNumber(1.0)
+                .build());
 
         SvAnalysis analysis = SvAnalyzer.run(testFusions, testDisruptions, ProtectTestFactory.loadTestActionabilityAnalyzer(), null);
 

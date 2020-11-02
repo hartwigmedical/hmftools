@@ -16,6 +16,6 @@ public class GermlineReportingFileTest {
     public void canLoadGermlineReportingTsv() throws IOException {
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_REPORTING_TSV);
 
-        assertEquals(3, germlineReportingModel.reportableGermlineGenes().size());
+        assertEquals(3, germlineReportingModel.entries().size());
     }
 }

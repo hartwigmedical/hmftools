@@ -90,15 +90,15 @@ public class ReportableVariantFactoryTest {
     }
 
     @Test
-    public void specificHgvsProteinConfigurationWorks() {
-        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, "weirdProtein");
-        List<ReportableGermlineVariant> variantMatch = Lists.newArrayList(create(GENE, 1, "weirdProtein", 0.4, false));
+    public void exclusiveHgvsProteinFilterWorks() {
+        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, "proteinMatch");
+        List<ReportableGermlineVariant> variantMatch = Lists.newArrayList(create(GENE, 1, "proteinMatch", 0.4, false));
 
         List<ReportableVariant> victimsMatch = reportableGermlineVariants(variantMatch, Collections.emptySet(), germlineReportingModel);
         assertEquals(1, victimsMatch.size());
         assertEquals(GENE, victimsMatch.get(0).gene());
 
-        List<ReportableGermlineVariant> variantsNonMatch = Lists.newArrayList(create(GENE, 1, "weirdProtein2", 0.4, false));
+        List<ReportableGermlineVariant> variantsNonMatch = Lists.newArrayList(create(GENE, 1, "weirdProtein", 0.4, false));
         List<ReportableVariant> victimsNonMatch =
                 reportableGermlineVariants(variantsNonMatch, Collections.emptySet(), germlineReportingModel);
         assertEquals(0, victimsNonMatch.size());

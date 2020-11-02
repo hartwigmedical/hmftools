@@ -30,9 +30,9 @@ public final class ReportableVariantFactory {
             GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
             if (reportingEntry != null && isPresentInTumor(variant)) {
                 boolean includeVariant;
-                String specificHgvsProtein = reportingEntry.reportableHgvsProtein();
-                if (specificHgvsProtein != null) {
-                    includeVariant = variant.hgvsProtein().equals(specificHgvsProtein);
+                String exclusiveHgvsProteinFilter = reportingEntry.exclusiveHgvsProteinFilter();
+                if (exclusiveHgvsProteinFilter != null) {
+                    includeVariant = variant.hgvsProtein().equals(exclusiveHgvsProteinFilter);
                 } else if (reportingEntry.reportBiallelicOnly()) {
                     boolean filterBiallelic = variant.biallelic();
 

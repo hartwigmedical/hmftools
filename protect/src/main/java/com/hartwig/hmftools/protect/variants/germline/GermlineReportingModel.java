@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.protect.variants.germline;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 
 import org.apache.logging.log4j.LogManager;
@@ -20,26 +16,15 @@ public class GermlineReportingModel {
 
     @NotNull
     private final List<GermlineReportingEntry> entries;
-    @NotNull
-    private final Set<String> reportableGenes = Sets.newHashSet();
-    private final Set<String> notifiableGenes = Sets.newHashSet();
-    private final Set<String> monoallelicGenes = Sets.newHashSet();
-    private final Map<String, String> reportableSpecificVariants = Maps.newHashMap();
 
     public GermlineReportingModel(@NotNull final List<GermlineReportingEntry> entries) {
         this.entries = entries;
-        for (GermlineReportingEntry entry : entries) {
-            reportableGenes.add(entry.gene());
-            if (entry.notifyClinicalGeneticist()) {
-                notifiableGenes.add(entry.gene());
-            }
-            if (!entry.reportBiallelicOnly()) {
-                monoallelicGenes.add(entry.gene());
-            }
-            if (entry.reportableHgvsProtein() != null) {
-                reportableSpecificVariants.put(entry.gene(), entry.reportableHgvsProtein());
-            }
-        }
+    }
+
+    @NotNull
+    @VisibleForTesting
+    List<GermlineReportingEntry> entries() {
+        return entries;
     }
 
     @Nullable
@@ -52,36 +37,13 @@ public class GermlineReportingModel {
         return null;
     }
 
-    @NotNull
-    public Map<String, String> reportableSpecificVariants() {
-        return reportableSpecificVariants;
-    }
-
-    @NotNull
-    public Set<String> monoallelicGenesReportable() {
-        return monoallelicGenes;
-    }
-
-    @NotNull
-    public Set<String> reportableGermlineGenes() {
-        return reportableGenes;
-    }
-
-    @NotNull
-    Set<String> notifiableGenes(@NotNull LimsGermlineReportingLevel reportingLevel) {
-        if (reportingLevel.equals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)) {
-            return notifiableGenes;
+    public boolean notifyAboutGene(@NotNull String gene, @NotNull LimsGermlineReportingLevel reportingLevel) {
+        GermlineReportingEntry entry = entryForGene(gene);
+        if (entry == null) {
+            LOGGER.warn("Requested notification status for a gene that is not amongst set of reportable germline genes: {}", gene);
+            return false;
         }
 
-        return Collections.emptySet();
-    }
-
-    public boolean notifyAboutGene(@NotNull LimsGermlineReportingLevel reportingLevel, @NotNull String germlineGene) {
-        boolean reportableContains = reportableGenes.contains(germlineGene);
-        if (!reportableContains) {
-            LOGGER.warn("Requested notification status for a gene that is not amongst set of reportable germline genes: {}", germlineGene);
-        }
-
-        return reportingLevel.equals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) &&  notifiableGenes.contains(germlineGene);
+        return reportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION && entry.notifyClinicalGeneticist();
     }
 }

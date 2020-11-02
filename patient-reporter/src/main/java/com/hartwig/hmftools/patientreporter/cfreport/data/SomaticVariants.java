@@ -74,8 +74,8 @@ public final class SomaticVariants {
 
     private static boolean notifyAboutVariant(@NotNull ReportableVariant variant, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        return variant.source() == ReportableVariantSource.GERMLINE && germlineReportingModel.notifyAboutGene(germlineReportingLevel,
-                variant.gene());
+        return variant.source() == ReportableVariantSource.GERMLINE && germlineReportingModel.notifyAboutGene(variant.gene(),
+                germlineReportingLevel);
     }
 
     @NotNull
