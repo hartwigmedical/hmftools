@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.EventFilter;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -48,7 +49,7 @@ final class TherapyDetailsChapterFunctions {
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
-        List<EvidenceItem> filtered = EvidenceItems.removeEvidenceOnFilteredGermlineVariants(evidence, variants, germlineReportingLevel);
+        List<EvidenceItem> filtered = EventFilter.removeEvidenceOnFilteredGermlineVariants(evidence, variants, germlineReportingLevel);
         for (EvidenceItem item : EvidenceItems.sort(filtered)) {
             contentTable.addCell(TableUtil.createContentCell(item.event()));
             contentTable.addCell(TableUtil.createContentCell(createTreatmentMatchParagraph(item.scope() == EvidenceScope.SPECIFIC)));

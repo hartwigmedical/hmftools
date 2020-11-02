@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
+import com.hartwig.hmftools.patientreporter.cfreport.data.EventFilter;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -80,7 +81,7 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Match"),
                         TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("CCMO"), TableUtil.createHeaderCell("Source") });
 
-        List<ClinicalTrial> filtered = ClinicalTrials.removeTrialsOnFilteredGermlineVariants(trials, variants, germlineReportingLevel);
+        List<ClinicalTrial> filtered = EventFilter.removeEvidenceOnFilteredGermlineVariants(trials, variants, germlineReportingLevel);
 
         for (ClinicalTrial trial : ClinicalTrials.sort(filtered)) {
             String trialName = trial.acronym();

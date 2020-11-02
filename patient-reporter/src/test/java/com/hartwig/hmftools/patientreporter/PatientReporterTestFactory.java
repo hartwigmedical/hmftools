@@ -25,7 +25,7 @@ public final class PatientReporterTestFactory {
 
     private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
 
-    private static final String GERMLINE_GENES_REPORTING_TSV = Resources.getResource("germline/germline_genes_reporting.tsv").getPath();
+    private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline/germline_reporting.tsv").getPath();
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
 
     private PatientReporterTestFactory() {
@@ -51,7 +51,7 @@ public final class PatientReporterTestFactory {
     @NotNull
     public static AnalysedReportData loadTestAnalysedReportData() {
         try {
-            GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_GENES_REPORTING_TSV);
+            GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_REPORTING_TSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
 
             return ImmutableAnalysedReportData.builder()
