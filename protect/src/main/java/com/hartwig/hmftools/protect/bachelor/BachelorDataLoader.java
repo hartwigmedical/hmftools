@@ -41,7 +41,7 @@ public class BachelorDataLoader {
                 .map(ReportableGainLoss::gene)
                 .forEach(somaticGenes::add);
 
-        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableGermlineVariants(somaticGenes, germlineVariants);
+        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableGermlineVariants(germlineVariants, somaticGenes);
 
         LOGGER.info("Loaded BACHELOR data from {}", new File(bachelorTsv).getParent());
         LOGGER.info(" Reportable germline variants: {}", reportableVariants.size());

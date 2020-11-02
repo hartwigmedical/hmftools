@@ -102,6 +102,7 @@ public final class ProtectTestFactory {
                 .alt(Strings.EMPTY)
                 .codingEffect(CodingEffect.UNDEFINED)
                 .hgvsCoding(Strings.EMPTY)
+                .hgvsProtein(Strings.EMPTY)
                 .alleleReadCount(0)
                 .totalReadCount(0)
                 .biallelic(false);

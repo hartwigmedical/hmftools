@@ -3,9 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
@@ -13,7 +11,6 @@ import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.hartwig.hmftools.protect.GenomicAnalyzer;
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -105,11 +102,11 @@ class AnalysedPatientReporter {
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
 
         GenomicAnalysis analysis = report.genomicAnalysis();
-        List<ReportableVariant> variantsWithNotify =
-                analysis.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
+        //        List<ReportableVariant> variantsWithNotify =
+        //                analysis.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
-        LOGGER.info("  Variants for which to notify clinical geneticist: {}", variantsWithNotify.size());
+        //        LOGGER.info("  Variants for which to notify clinical geneticist: {}", variantsWithNotify.size());
         LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
         LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());
         LOGGER.info(" Tumor mutational burden: {}", analysis.tumorMutationalBurden());

@@ -19,12 +19,12 @@ public class ReportableVariantConsent {
     }
 
     public boolean consentToReport(@NotNull ReportableVariant reportable) {
-        return reportable.source().equals(ReportableVariantSource.PURPLE) || germlineReportingModel.reportableGermlineGenes()
+        return reportable.source().equals(ReportableVariantSource.SOMATIC) || germlineReportingModel.reportableGermlineGenes()
                 .contains(reportable.gene());
     }
 
     public boolean notifyClinicalGeneticist(@NotNull ReportableVariant reportable) {
-        return reportable.source().equals(ReportableVariantSource.BACHELOR) && germlineReportingModel.notifyAboutGene(reportingLevel,
+        return reportable.source().equals(ReportableVariantSource.GERMLINE) && germlineReportingModel.notifyAboutGene(reportingLevel,
                 reportable.gene());
     }
 }

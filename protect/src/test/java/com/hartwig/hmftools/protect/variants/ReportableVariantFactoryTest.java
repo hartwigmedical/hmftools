@@ -19,20 +19,20 @@ public class ReportableVariantFactoryTest {
 
     @Test
     public void testSingleHitNotIncluded() {
-        List<ReportableVariant> victims = reportableGermlineVariants(Collections.emptySet(), Lists.newArrayList(create("Gene", false)));
+        List<ReportableVariant> victims = reportableGermlineVariants(Lists.newArrayList(create("Gene", false)), Collections.emptySet());
         assertEquals(0, victims.size());
     }
 
     @Test
     public void testBiallelic() {
-        List<ReportableVariant> victims = reportableGermlineVariants(Collections.emptySet(), Lists.newArrayList(create("Gene", true)));
+        List<ReportableVariant> victims = reportableGermlineVariants(Lists.newArrayList(create("Gene", true)), Collections.emptySet());
         assertEquals(1, victims.size());
         assertEquals("Gene", victims.get(0).gene());
     }
 
     @Test
     public void testKit() {
-        List<ReportableVariant> victims = reportableGermlineVariants(Collections.emptySet(), Lists.newArrayList(create("KIT", false)));
+        List<ReportableVariant> victims = reportableGermlineVariants(Lists.newArrayList(create("KIT", false)), Collections.emptySet());
         assertEquals(1, victims.size());
         assertEquals("KIT", victims.get(0).gene());
     }
@@ -40,7 +40,7 @@ public class ReportableVariantFactoryTest {
     @Test
     public void testDoubleGermlineHit() {
         List<ReportableVariant> victims =
-                reportableGermlineVariants(Collections.emptySet(), Lists.newArrayList(create(1, "Gene", false), create(2, "Gene", false)));
+                reportableGermlineVariants(Lists.newArrayList(create(1, "Gene", false), create(2, "Gene", false)), Collections.emptySet());
         assertEquals(2, victims.size());
         assertEquals("Gene", victims.get(0).gene());
         assertEquals("Gene", victims.get(1).gene());
@@ -49,7 +49,7 @@ public class ReportableVariantFactoryTest {
     @Test
     public void testSomaticHit() {
         List<ReportableVariant> victims =
-                reportableGermlineVariants(Collections.singleton("Gene"), Lists.newArrayList(create("Gene", false)));
+                reportableGermlineVariants(Lists.newArrayList(create("Gene", false)), Collections.singleton("Gene"));
         assertEquals(1, victims.size());
         assertEquals("Gene", victims.get(0).gene());
     }

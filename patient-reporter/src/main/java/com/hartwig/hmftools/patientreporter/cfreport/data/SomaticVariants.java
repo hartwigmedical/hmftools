@@ -36,11 +36,12 @@ public final class SomaticVariants {
     }
 
     public static boolean hasNotifiableGermlineVariant(@NotNull List<ReportableVariant> variants) {
-        for (ReportableVariant variant : variants) {
-            if (variant.notifyClinicalGeneticist()) {
-                return true;
-            }
-        }
+        // TODO Reimplement
+        //        for (ReportableVariant variant : variants) {
+        //            if (variant.notifyClinicalGeneticist()) {
+        //                return true;
+        //            }
+        //        }
 
         return false;
     }
@@ -49,9 +50,10 @@ public final class SomaticVariants {
     public static String geneDisplayString(@NotNull ReportableVariant variant) {
         String geneSuffix = Strings.EMPTY;
 
-        if (variant.notifyClinicalGeneticist()) {
-            geneSuffix += "#";
-        }
+        // TODO Reimplement
+        //        if (variant.notifyClinicalGeneticist()) {
+        //            geneSuffix += "#";
+        //        }
 
         return geneSuffix.isEmpty() ? variant.gene() : variant.gene() + " " + geneSuffix;
     }

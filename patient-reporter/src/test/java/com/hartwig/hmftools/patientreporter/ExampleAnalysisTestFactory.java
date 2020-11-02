@@ -526,6 +526,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<ReportableVariant> createCOLO829SomaticVariants(boolean reportGermlineVariant) {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("BRAF")
                 .position(140453136)
                 .chromosome("7")
@@ -534,7 +535,6 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
-                .notifyClinicalGeneticist(false)
                 .gDNA("7:140453136")
                 .alleleReadCount(150)
                 .totalReadCount(221)
@@ -544,10 +544,10 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(false)
                 .driverLikelihood(1D)
                 .clonalLikelihood(1D)
-                .source(ReportableVariantSource.PURPLE)
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("CDKN2A")
                 .position(21971153)
                 .chromosome("9")
@@ -556,7 +556,6 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .canonicalHgvsCodingImpact("c.203_204delCG")
                 .canonicalHgvsProteinImpact("p.Ala68fs")
-                .notifyClinicalGeneticist(reportGermlineVariant)
                 .gDNA("9:21971153")
                 .alleleReadCount(99)
                 .totalReadCount(99)
@@ -566,10 +565,10 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(true)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.9)
-                .source(ReportableVariantSource.PURPLE)
                 .build();
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("TERT")
                 .position(1295228)
                 .chromosome("5")
@@ -578,7 +577,6 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalCodingEffect(CodingEffect.NONE)
                 .canonicalHgvsCodingImpact("c.-125_-124delCCinsTT")
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .notifyClinicalGeneticist(false)
                 .gDNA("5:1295228")
                 .alleleReadCount(56)
                 .totalReadCount(65)
@@ -588,10 +586,10 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(true)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.85)
-                .source(ReportableVariantSource.PURPLE)
                 .build();
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("SF3B1")
                 .position(198266779)
                 .chromosome("2")
@@ -600,7 +598,6 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.2153C>T")
                 .canonicalHgvsProteinImpact("p.Pro718Leu")
-                .notifyClinicalGeneticist(false)
                 .gDNA("2:198266779")
                 .alleleReadCount(74)
                 .totalReadCount(111)
@@ -610,10 +607,10 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(false)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.5)
-                .source(ReportableVariantSource.PURPLE)
                 .build();
 
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("TP63")
                 .position(189604330)
                 .chromosome("3")
@@ -622,7 +619,6 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
-                .notifyClinicalGeneticist(false)
                 .gDNA("3:189604330")
                 .alleleReadCount(47)
                 .totalReadCount(112)
@@ -632,7 +628,6 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(false)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.1)
-                .source(ReportableVariantSource.PURPLE)
                 .build();
 
         return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
@@ -641,6 +636,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<ReportableVariant> createAllSomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("TP63")
                 .position(189604330)
                 .chromosome("3")
@@ -649,7 +645,6 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
-                .notifyClinicalGeneticist(false)
                 .gDNA("3:189604330")
                 .alleleReadCount(48)
                 .totalReadCount(103)
@@ -659,10 +654,10 @@ public final class ExampleAnalysisTestFactory {
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(0.47)
                 .driverLikelihood(0.1)
-                .source(ReportableVariantSource.PURPLE)
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("KIT")
                 .position(81627197)
                 .chromosome("3")
@@ -671,7 +666,6 @@ public final class ExampleAnalysisTestFactory {
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
-                .notifyClinicalGeneticist(true)
                 .gDNA("3:81627197")
                 .alleleReadCount(48)
                 .totalReadCount(103)
@@ -681,7 +675,6 @@ public final class ExampleAnalysisTestFactory {
                 .biallelic(true)
                 .clonalLikelihood(0.68)
                 .driverLikelihood(0.1)
-                .source(ReportableVariantSource.PURPLE)
                 .build();
 
         return Lists.newArrayList(variant1, variant2);

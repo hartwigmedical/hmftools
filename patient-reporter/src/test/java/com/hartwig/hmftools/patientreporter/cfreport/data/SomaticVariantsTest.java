@@ -44,6 +44,7 @@ public class SomaticVariantsTest {
     @NotNull
     private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
         return ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
                 .position(0)
                 .chromosome(Strings.EMPTY)
@@ -60,8 +61,6 @@ public class SomaticVariantsTest {
                 .alleleCopyNumber(0D)
                 .totalCopyNumber(0)
                 .biallelic(false)
-                .driverLikelihood(0D)
-                .source(ReportableVariantSource.PURPLE)
-                .notifyClinicalGeneticist(false);
+                .driverLikelihood(0D);
     }
 }

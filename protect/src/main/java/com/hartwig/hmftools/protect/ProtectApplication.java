@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -28,7 +27,6 @@ import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
@@ -184,11 +182,8 @@ public class ProtectApplication implements AutoCloseable {
     }
 
     private static void printResults(@NotNull String tumorSampleId, @NotNull GenomicAnalysis analysis) {
-        List<ReportableVariant> variantsWithNotify =
-                analysis.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
         LOGGER.info("Printing genomic analysis results for {}:", tumorSampleId);
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
-        LOGGER.info("  Variants for which to notify clinical geneticist: {}", variantsWithNotify.size());
         LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
         LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());
         LOGGER.info(" Tumor mutational burden: {}", analysis.tumorMutationalBurden());
