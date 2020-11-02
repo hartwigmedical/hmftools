@@ -12,14 +12,20 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
+import static org.apache.commons.math3.distribution.PoissonDistribution.DEFAULT_EPSILON;
+import static org.apache.commons.math3.distribution.PoissonDistribution.DEFAULT_MAX_ITERATIONS;
+
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.Well19937c;
 
 public class CnJcnCalcs
 {
@@ -73,13 +79,6 @@ public class CnJcnCalcs
             {
                 svData = getSvDataById(svId);
             }
-
-            /*
-            if(svId == SPECIFIC_SV_ID)
-            {
-                LNX_LOGGER.debug("spec SV({})", svId);
-            }
-            */
 
             final SvCNData cnStartPrevData = getCNSegment(cnStartData.Chromosome,  cnStartData.getIndex() - 1);
 
@@ -217,8 +216,14 @@ public class CnJcnCalcs
         if(Double.isNaN(estJcn) || estJcn <= 0 || Double.isNaN(estUncertainty) || estUncertainty <= 0)
             return new JcnCalcData(0,0, false);
 
+        // round to help with consistency
+        // estJcn = roundJcn(estJcn);
+        // estUncertainty = roundJcn(estUncertainty);
+
         return new JcnCalcData(estJcn, estUncertainty, true);
     }
+
+    private static double roundJcn(double jcn) { return round(jcn / 0.0001) * 0.0001; }
 
     private static double calcCopyNumberSideUncertainty(double copyNumber, final int[] depthData)
     {
@@ -241,6 +246,7 @@ public class CnJcnCalcs
         if(expectedVal <= 0)
             return 0;
 
+        // PoissonDistribution poisson = new PoissonDistribution(new Well19937c(1), expectedVal, DEFAULT_EPSILON, DEFAULT_MAX_ITERATIONS);
         PoissonDistribution poisson = new PoissonDistribution(expectedVal);
 
         int maxIterations = 20;

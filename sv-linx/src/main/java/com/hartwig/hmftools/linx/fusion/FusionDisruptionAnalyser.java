@@ -119,8 +119,12 @@ public class FusionDisruptionAnalyser
         mLogAllPotentials = false;
         mFindNeoEpitopes = false;
         mAllowInvalidTraversal = false;
+
         mFusionParams = new FusionParameters();
         mFusionParams.RequireUpstreamBiotypes = true;
+
+        LNX_LOGGER.debug("fusion: allowInvalidTranversal({}) requirePhaseMatch({}) allowExonSkipping({}) requireUpstreamBiotypes({})",
+                mAllowInvalidTraversal, mFusionParams.RequirePhaseMatch, mFusionParams.AllowExonSkipping, mFusionParams.RequireUpstreamBiotypes);
 
         mRnaFusionMapper = null;
 
@@ -367,9 +371,10 @@ public class FusionDisruptionAnalyser
             {
                 if(fusion.knownType() != KnownFusionType.NONE)
                 {
-                    LNX_LOGGER.debug("fusion({}-{}) reportable({}) knownType({}) cluster({} sv={}) SVs({} & {})",
-                            fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans().gene().GeneName, fusion.reportable(),
+                    LNX_LOGGER.debug("fusion({}:{}-{}) reportable({}) knownType({}) cluster({} sv={} chain={}) SVs({} & {})",
+                            fusion.id(), fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans().gene().GeneName, fusion.reportable(),
                             fusion.knownTypeStr(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
+                            fusion.getAnnotations().chainInfo() != null ? fusion.getAnnotations().chainInfo().chainId() : -1,
                             fusion.upstreamTrans().gene().id(), fusion.downstreamTrans().gene().id());
                 }
             }
