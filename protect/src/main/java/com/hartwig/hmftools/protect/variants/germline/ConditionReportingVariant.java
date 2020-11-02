@@ -5,8 +5,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public enum ConditionReportingVariant {
-    BIALLELIC("Biallelic"),
-    MONOALLELIC("Monoallelic"), // will reported both biallelic and monoallelic variants
+    BIALLELIC_ONLY("Biallelic"),
+    ALL("Monoallelic"),
     UNKNOWN("unknown");
 
     private static final Logger LOGGER = LogManager.getLogger(ConditionReportingVariant.class);

@@ -8,8 +8,8 @@ public class ConditionReportingVariantTest {
 
     @Test
     public void canConvertConditionReportingVariant() {
-        assertEquals(ConditionReportingVariant.BIALLELIC, ConditionReportingVariant.fromConditionString("Biallelic"));
-        assertEquals(ConditionReportingVariant.MONOALLELIC, ConditionReportingVariant.fromConditionString("Monoallelic"));
+        assertEquals(ConditionReportingVariant.BIALLELIC_ONLY, ConditionReportingVariant.fromConditionString("Biallelic"));
+        assertEquals(ConditionReportingVariant.ALL, ConditionReportingVariant.fromConditionString("Monoallelic"));
         assertEquals(ConditionReportingVariant.UNKNOWN, ConditionReportingVariant.fromConditionString("test"));
     }
 

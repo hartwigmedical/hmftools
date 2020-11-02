@@ -29,7 +29,7 @@ public class GermlineReportingModel {
             if (entry.getValue().notifyClinicalGeneticus()) {
                 notifiableGenes.add(entry.getKey());
             }
-            if (entry.getValue().condition() == ConditionReportingVariant.MONOALLELIC) {
+            if (entry.getValue().condition() == ConditionReportingVariant.ALL) {
                 monoallelicGenes.add(entry.getKey());
             }
             if (!entry.getValue().variant().equals(Strings.EMPTY)) {
