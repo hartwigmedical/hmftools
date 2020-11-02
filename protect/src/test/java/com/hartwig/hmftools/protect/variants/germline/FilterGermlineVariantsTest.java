@@ -47,6 +47,7 @@ public class FilterGermlineVariantsTest {
                 reportableHomozygousDisruptions,
                 reportableGeneDisruptions);
         assertEquals(0, filteredGermlineVariantMatchPresentInTumor.size());
+        //test must be 1??
     }
 
     @Test
@@ -70,13 +71,13 @@ public class FilterGermlineVariantsTest {
         List<ReportableGeneDisruption> disruptionOnTSG = createReportableGeneDisruptionListForGene(ProtectTestFactory.TSG);
         List<ReportableGeneDisruption> disruptionOnOncogene = createReportableGeneDisruptionListForGene(ProtectTestFactory.ONCOGENE);
 
-        assertFilter(false, germlineVariantsBiallelic, variantOnTSG, lossOnTSG, homDisruptionOnTSG, disruptionOnTSG);
-        assertFilter(false, germlineVariantsBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
-        assertFilter(false, germlineVariantsNonBiallelic, variantOnTSG, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
-        assertFilter(false, germlineVariantsNonBiallelic, variantOnOncogene, lossOnTSG, homDisruptionOnOncogene, disruptionOnOncogene);
-        assertFilter(false, germlineVariantsNonBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnTSG, disruptionOnOncogene);
-        assertFilter(false, germlineVariantsNonBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnTSG);
-        assertFilter(false, germlineVariantsDoubleHit, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
+        assertFilter(true, germlineVariantsBiallelic, variantOnTSG, lossOnTSG, homDisruptionOnTSG, disruptionOnTSG);
+        assertFilter(true, germlineVariantsBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
+        assertFilter(true, germlineVariantsNonBiallelic, variantOnTSG, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
+        assertFilter(true, germlineVariantsNonBiallelic, variantOnOncogene, lossOnTSG, homDisruptionOnOncogene, disruptionOnOncogene);
+        assertFilter(true, germlineVariantsNonBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnTSG, disruptionOnOncogene);
+        assertFilter(true, germlineVariantsNonBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnTSG);
+        assertFilter(true, germlineVariantsDoubleHit, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
         assertFilter(false, germlineVariantsNonBiallelic, variantOnOncogene, gainOnOncogene, homDisruptionOnOncogene, disruptionOnOncogene);
     }
 
