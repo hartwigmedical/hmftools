@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cli.Configs;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -46,7 +47,7 @@ public interface CobaltConfig {
     static Options createOptions() {
         final Options options = new Options();
         options.addOption(TUMOR_ONLY, false, "Tumor only mode");
-        options.addOption(TUMOR_ONLY_DIPLOID_BED, false, "Diploid regions for tumor-only mode");
+        options.addOption(TUMOR_ONLY_DIPLOID_BED, true, "Diploid regions for tumor-only mode");
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
@@ -131,7 +132,7 @@ public interface CobaltConfig {
                 throw new ParseException(REFERENCE + " not applicable to tumor only mode");
             }
 
-            reference = Strings.EMPTY;
+            reference = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
             referenceBamPath = Strings.EMPTY;
             diploidBed = Configs.readableFile(cmd, TUMOR_ONLY_DIPLOID_BED);
 

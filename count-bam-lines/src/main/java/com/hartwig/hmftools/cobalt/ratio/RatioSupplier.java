@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.cobalt.diploid.DiploidRatioBuilder;
 import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFactory;
@@ -22,6 +23,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.tribble.bed.BEDFeature;
+
 public class RatioSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(GCRatioSupplier.class);
@@ -37,7 +40,24 @@ public class RatioSupplier {
     }
 
     @NotNull
-    public Multimap<Chromosome, CobaltRatio> generateRatios(@NotNull final Multimap<Chromosome, GCProfile> gcProfiles,
+    public Multimap<Chromosome, CobaltRatio> tumorOnly(final List<BEDFeature> bedFile,
+            @NotNull final Multimap<Chromosome, GCProfile> gcProfiles, @NotNull final Multimap<Chromosome, CobaltCount> readCounts)
+            throws IOException {
+        LOGGER.info("Applying ratio gc normalization");
+        final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, readCounts);
+        final ListMultimap<Chromosome, ReadRatio> tumorGCRatio = gcRatioSupplier.tumorRatios();
+
+        final ListMultimap<Chromosome, ReadRatio> diploidRatio = new DiploidRatioBuilder(bedFile).build();
+
+        LOGGER.info("Persisting gc read count to {}", outputDirectory);
+        final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, tumor);
+        GCMedianReadCountFile.write(tumorGCMedianFilename, gcRatioSupplier.tumorGCMedianReadCount());
+
+        return CobaltRatioFactory.merge(readCounts, diploidRatio, tumorGCRatio, diploidRatio);
+    }
+
+    @NotNull
+    public Multimap<Chromosome, CobaltRatio> tumorNormalPair(@NotNull final Multimap<Chromosome, GCProfile> gcProfiles,
             @NotNull final Multimap<Chromosome, CobaltCount> readCounts) throws IOException {
         LOGGER.info("Applying ratio gc normalization");
         final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, readCounts);
@@ -54,7 +74,8 @@ public class RatioSupplier {
         }
 
         LOGGER.info("Applying ratio diploid normalization");
-        final ListMultimap<Chromosome, ReadRatio> referenceGCDiploidRatio = new DiploidRatioSupplier(chromosomes, referenceGCRatio).result();
+        final ListMultimap<Chromosome, ReadRatio> referenceGCDiploidRatio =
+                new DiploidRatioSupplier(chromosomes, referenceGCRatio).result();
 
         LOGGER.info("Persisting gc read count and reference ratio medians to {}", outputDirectory);
         final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, tumor);

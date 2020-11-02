@@ -13,21 +13,23 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.Locatable;
+import htsjdk.tribble.bed.BEDFeature;
 
-class DiploidRatioBuilder implements Consumer<Locatable> {
+public class DiploidRatioBuilder implements Consumer<Locatable> {
     private static final int WINDOW_SIZE = 1000;
 
     private final ListMultimap<Chromosome, ReadRatio> result = ArrayListMultimap.create();
     private final List<ReadRatio> contigResult = Lists.newArrayList();
 
-    private final SAMSequenceDictionary dictionary;
     private String contig = "";
     private int start = 0;
 
-    DiploidRatioBuilder(SAMSequenceDictionary dictionary) {
-        this.dictionary = dictionary;
+    public DiploidRatioBuilder() {
+    }
+
+    public DiploidRatioBuilder(@NotNull List<BEDFeature> bedFeatures) {
+        bedFeatures.forEach(this);
     }
 
     @Override
@@ -38,31 +40,28 @@ class DiploidRatioBuilder implements Consumer<Locatable> {
             start = 1;
         }
 
-        createRatio(bed.getContig(), start, bed.getStart(), -1);
-        createRatio(bed.getContig(), bed.getStart(), bed.getEnd(), 1);
-
+        createRatio(bed.getContig(), bed.getStart(), bed.getEnd());
         start = bed.getEnd() + 1;
     }
 
-    private void createRatio(String contig, int start, int end, int ratio) {
+    private void createRatio(String contig, int start, int end) {
         int position = start;
         while (position < end) {
-            contigResult.add(create(contig, position, ratio));
+            contigResult.add(create(contig, position));
             position += WINDOW_SIZE;
         }
     }
 
     @NotNull
-    private static ReadRatio create(String contig, int position, int ratio) {
-        return ImmutableReadRatio.builder().chromosome(contig).position(position).ratio(ratio).build();
+    private static ReadRatio create(String contig, int position) {
+        return ImmutableReadRatio.builder().chromosome(contig).position(position).ratio(1).build();
     }
 
     private void finaliseCurrent() {
         if (start > 0) {
-            createRatio(contig, start, dictionary.getSequence(contig).getEnd(), -1);
+            result.putAll(HumanChromosome.fromString(contig), contigResult);
         }
 
-        result.putAll(HumanChromosome.fromString(contig), contigResult);
         contigResult.clear();
     }
 

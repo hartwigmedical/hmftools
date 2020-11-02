@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import org.jetbrains.annotations.NotNull;
 
 public final class CobaltRatioFile {
+    public static final String TUMOR_ONLY_REFERENCE_SAMPLE = "DIPLOID";
 
     private static final DecimalFormat FORMAT = new DecimalFormat("#.####");
 
