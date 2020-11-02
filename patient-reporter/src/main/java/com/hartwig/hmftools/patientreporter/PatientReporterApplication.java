@@ -17,6 +17,8 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -50,8 +52,9 @@ public class PatientReporterApplication {
 
         LOGGER.info("Running patient reporter v{}", VERSION);
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineGenesTsv());
 
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(germlineReportingModel);
         if (config.qcFail()) {
             LOGGER.info("Generating qc-fail report");
             QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config));

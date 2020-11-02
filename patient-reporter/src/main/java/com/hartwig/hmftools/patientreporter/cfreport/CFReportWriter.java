@@ -21,6 +21,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChap
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -38,22 +39,26 @@ public class CFReportWriter implements ReportWriter {
     private static final Logger LOGGER = LogManager.getLogger(CFReportWriter.class);
 
     private final boolean writeToFile;
+    @NotNull
+    private final GermlineReportingModel germlineReportingModel;
 
     @NotNull
-    public static CFReportWriter createProductionReportWriter() {
-        return new CFReportWriter(true);
+    public static CFReportWriter createProductionReportWriter(@NotNull GermlineReportingModel germlineReportingModel) {
+        return new CFReportWriter(true, germlineReportingModel);
     }
 
     @VisibleForTesting
-    CFReportWriter(final boolean writeToFile) {
+    CFReportWriter(final boolean writeToFile, @NotNull final GermlineReportingModel germlineReportingModel) {
         this.writeToFile = writeToFile;
+        this.germlineReportingModel = germlineReportingModel;
     }
 
     @Override
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
         GenomicAnalysis analysis = report.genomicAnalysis();
         ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(analysis),
-                new TherapyDetailsChapterOffLabel(analysis), new GenomicAlterationsChapter(report.sampleReport(), analysis),
+                new TherapyDetailsChapterOffLabel(analysis),
+                new GenomicAlterationsChapter(germlineReportingModel, report.sampleReport(), analysis),
                 new TumorCharacteristicsChapter(analysis), new CircosChapter(report), new ExplanationChapter(),
                 new DetailsAndDisclaimerChapter(report) };
 

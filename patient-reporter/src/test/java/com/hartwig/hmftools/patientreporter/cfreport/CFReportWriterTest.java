@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -26,6 +27,7 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +52,7 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForCOLO829() throws IOException {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
     }
 
@@ -58,7 +60,7 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
     }
 
@@ -73,7 +75,7 @@ public class CFReportWriterTest {
                 true,
                 true);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
     }
 
@@ -88,7 +90,7 @@ public class CFReportWriterTest {
                 false,
                 false);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
     }
 
@@ -103,7 +105,7 @@ public class CFReportWriterTest {
                 false,
                 false);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
     }
 
@@ -112,7 +114,7 @@ public class CFReportWriterTest {
         AnalysedPatientReport patientReport =
                 ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_FULL", FULL_TABLES_COMMENT_STRING);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
     }
 
@@ -121,7 +123,7 @@ public class CFReportWriterTest {
         AnalysedPatientReport patientReport =
                 ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CORE01_FULL", null);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
     }
 
@@ -130,7 +132,7 @@ public class CFReportWriterTest {
         AnalysedPatientReport patientReport =
                 ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("WIDE01_FULL", FULL_TABLES_COMMENT_STRING);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
     }
 
@@ -139,7 +141,7 @@ public class CFReportWriterTest {
         AnalysedPatientReport patientReport =
                 ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_NO_TUMOR", FULL_TABLES_COMMENT_STRING, false, 1D);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
     }
 
@@ -150,7 +152,7 @@ public class CFReportWriterTest {
                 true,
                 0.19);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
     }
 
@@ -259,8 +261,14 @@ public class CFReportWriterTest {
 
         String filename = testReportFilePath(patientReport);
 
-        CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
+        CFReportWriter writer = testCFReportWriter();
         writer.writeQCFailReport(patientReport, filename);
+    }
+
+    @NotNull
+    private static CFReportWriter testCFReportWriter() {
+        GermlineReportingModel emptyGermlineReportingModel = new GermlineReportingModel(Maps.newHashMap());
+        return new CFReportWriter(WRITE_TO_PDF, emptyGermlineReportingModel);
     }
 
     @NotNull
