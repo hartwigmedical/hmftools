@@ -9,10 +9,10 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.protect.ProtectTestFactory;
 import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReporting;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.variants.germline.ImmutableDriverGermlineVariant;
-import com.hartwig.hmftools.protect.variants.germline.ImmutableGermlineReporting;
+import com.hartwig.hmftools.protect.variants.germline.ImmutableGermlineReportingEntry;
 import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 import com.hartwig.hmftools.protect.variants.somatic.ImmutableDriverSomaticVariant;
 
@@ -123,13 +123,13 @@ public class ReportableVariantAnalyzerTest {
     @NotNull
     private static GermlineReportingModel createGermlineReportingModelWithOncoAndTSG() {
 
-        GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
+        GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
                 .gene(ONCO)
                 .notifyClinicalGeneticist(true)
                 .reportBiallelicOnly(true)
                 .reportableSpecificVariant(null)
                 .build();
-        GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
+        GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
                 .gene(TSG)
                 .notifyClinicalGeneticist(false)
                 .reportBiallelicOnly(true)

@@ -8,7 +8,7 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class GermlineReportingFileTest {
+public class GermlineReportingEntryFileTest {
 
     private static final String GERMLINE_GENES_REPORTING_TSV = Resources.getResource("germline/germline_genes_reporting.tsv").getPath();
 

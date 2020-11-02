@@ -20,13 +20,13 @@ public final class GermlineReportingFile {
     public static GermlineReportingModel buildFromTsv(@NotNull String germlineReportingTsv) throws IOException {
         List<String> lines = Files.readAllLines(new File(germlineReportingTsv).toPath());
 
-        List<GermlineReporting> germlineReportingEntries = Lists.newArrayList();
+        List<GermlineReportingEntry> germlineReportingEntries = Lists.newArrayList();
 
         // Skip header
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(SEPARATOR);
 
-            germlineReportingEntries.add(ImmutableGermlineReporting.builder()
+            germlineReportingEntries.add(ImmutableGermlineReportingEntry.builder()
                     .gene(parts[0])
                     .notifyClinicalGeneticist(Boolean.parseBoolean(parts[1]))
                     .reportBiallelicOnly(parts[1].equalsIgnoreCase("Biallelic"))

@@ -24,9 +24,9 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.protect.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.structural.ImmutableReportableGeneDisruption;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReporting;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.protect.variants.germline.ImmutableGermlineReporting;
+import com.hartwig.hmftools.protect.variants.germline.ImmutableGermlineReportingEntry;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -156,13 +156,13 @@ public final class ProtectTestFactory {
     public static GermlineReportingModel createTestGermlineGenesReporting(boolean notifyClinicalGeneticist1,
             boolean notifyClinicalGeneticist2, boolean reportBiallelicOnly1, boolean reportBiallelicOnly2,
             @Nullable String specificVariant1, @Nullable String specificVariant2) {
-        GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
+        GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
                 .gene(ONCOGENE)
                 .notifyClinicalGeneticist(notifyClinicalGeneticist1)
                 .reportBiallelicOnly(reportBiallelicOnly1)
                 .reportableSpecificVariant(specificVariant1)
                 .build();
-        GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
+        GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
                 .gene(TSG)
                 .notifyClinicalGeneticist(notifyClinicalGeneticist2)
                 .reportBiallelicOnly(reportBiallelicOnly2)

@@ -15,13 +15,13 @@ public class GermlineReportingModelTest {
 
     @Test
     public void testBehaviour() {
-        GermlineReporting germlineReportingTrue = ImmutableGermlineReporting.builder()
+        GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
                 .gene("Notify")
                 .notifyClinicalGeneticist(true)
                 .reportBiallelicOnly(true)
                 .reportableSpecificVariant("p.Arg876Cys")
                 .build();
-        GermlineReporting germlineReportingFalse = ImmutableGermlineReporting.builder()
+        GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
                 .gene("Report")
                 .notifyClinicalGeneticist(false)
                 .reportBiallelicOnly(false)

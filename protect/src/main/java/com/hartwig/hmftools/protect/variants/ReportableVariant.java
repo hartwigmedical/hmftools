@@ -17,6 +17,7 @@ public abstract class ReportableVariant implements Variant {
     public abstract ReportableVariantSource source();
 
     @NotNull
+    @Value.Derived
     public String genomicEvent() {
         String description = canonicalCodingEffect() == CodingEffect.SPLICE ? canonicalHgvsCodingImpact() : canonicalHgvsProteinImpact();
         return this.gene() + " " + description;
@@ -60,7 +61,10 @@ public abstract class ReportableVariant implements Variant {
     public abstract int alleleReadCount();
 
     @NotNull
-    public abstract String gDNA();
+    @Value.Derived
+    public String gDNA() {
+        return chromosome() + ":" + position();
+    }
 
     public abstract double totalCopyNumber();
 
@@ -74,6 +78,7 @@ public abstract class ReportableVariant implements Variant {
     public abstract double driverLikelihood();
 
     @NotNull
+    @Value.Derived
     public DriverInterpretation driverLikelihoodInterpretation() {
         return DriverInterpretation.interpret(driverLikelihood());
     }

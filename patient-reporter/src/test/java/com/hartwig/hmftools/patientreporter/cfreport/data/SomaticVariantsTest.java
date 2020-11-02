@@ -46,21 +46,20 @@ public class SomaticVariantsTest {
         return ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
-                .position(0)
                 .chromosome(Strings.EMPTY)
+                .position(0)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .gDNA(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .totalCopyNumber(0)
+                .alleleCopyNumber(0D)
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
-                .alleleReadCount(0)
-                .totalReadCount(0)
-                .alleleCopyNumber(0D)
-                .totalCopyNumber(0)
-                .biallelic(false)
-                .driverLikelihood(0D);
+                .driverLikelihood(0D)
+                .biallelic(false);
     }
 }

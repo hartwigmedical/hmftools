@@ -23,8 +23,8 @@ public class GermlineReportingModel {
     private final Set<String> monoallelicGenes = Sets.newHashSet();
     private final Map<String, String> reportableSpecificVariants = Maps.newHashMap();
 
-    public GermlineReportingModel(@NotNull final List<GermlineReporting> germlineReportingEntries) {
-        for (GermlineReporting entry : germlineReportingEntries) {
+    public GermlineReportingModel(@NotNull final List<GermlineReportingEntry> germlineReportingEntries) {
+        for (GermlineReportingEntry entry : germlineReportingEntries) {
             reportableGenes.add(entry.gene());
             if (entry.notifyClinicalGeneticist()) {
                 notifiableGenes.add(entry.gene());

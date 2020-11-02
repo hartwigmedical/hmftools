@@ -52,7 +52,7 @@ public class PatientReporterApplication {
 
         LOGGER.info("Running patient reporter v{}", VERSION);
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineGenesTsv());
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(germlineReportingModel);
         if (config.qcFail()) {
@@ -169,7 +169,7 @@ public class PatientReporterApplication {
     private static AnalysedReportData buildAnalysedReportData(@NotNull PatientReporterConfig config) throws IOException {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.knowledgebaseDir(),
-                config.germlineGenesTsv(),
+                config.germlineReportingTsv(),
                 config.sampleSummaryTsv());
     }
 

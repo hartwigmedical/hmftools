@@ -123,7 +123,6 @@ public final class ReportableVariantFactory {
                 .canonicalHgvsProteinImpact(variant.hgvsProtein())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .gDNA(toGDNA(variant.chromosome(), variant.position()))
                 .totalCopyNumber(variant.adjustedCopyNumber())
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
@@ -145,18 +144,12 @@ public final class ReportableVariantFactory {
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .gDNA(toGDNA(variant.chromosome(), variant.position()))
                 .totalCopyNumber(variant.adjustedCopyNumber())
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
                 .source(ReportableVariantSource.SOMATIC)
                 .clonalLikelihood(variant.clonalLikelihood())
                 .biallelic(variant.biallelic());
-    }
-
-    @NotNull
-    private static String toGDNA(@NotNull String chromosome, long position) {
-        return chromosome + ":" + position;
     }
 
     private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {
