@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum ConditionReportingVariant {
     BIALLELIC_ONLY("Biallelic"),
-    ALL("Monoallelic"), // will reported both biallelic and monoallelic variants
+    ALL("Monoallelic"),
     UNKNOWN("unknown");
 
     private static final Logger LOGGER = LogManager.getLogger(ConditionReportingVariant.class);
