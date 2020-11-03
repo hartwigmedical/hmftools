@@ -47,12 +47,14 @@ final class ActionableEvidenceFactory {
         DIRECTIONS_TO_IGNORE.add("N/a");
         DIRECTIONS_TO_IGNORE.add("Uncertain significance");
         DIRECTIONS_TO_IGNORE.add("Pathogenic");
+        DIRECTIONS_TO_IGNORE.add("Likely pathogenic");
         DIRECTIONS_TO_IGNORE.add("Better outcome");
         DIRECTIONS_TO_IGNORE.add("No benefit");
         DIRECTIONS_TO_IGNORE.add("Increased toxicity");
         DIRECTIONS_TO_IGNORE.add("Increased toxicity (myelosupression)");
         DIRECTIONS_TO_IGNORE.add("Increased toxicity (ototoxicity)");
         DIRECTIONS_TO_IGNORE.add("Increased toxicity (hyperbilirubinemia)");
+        DIRECTIONS_TO_IGNORE.add("Increased toxicity (haemolytic anemia)");
         DIRECTIONS_TO_IGNORE.add("Unknown");
     }
 

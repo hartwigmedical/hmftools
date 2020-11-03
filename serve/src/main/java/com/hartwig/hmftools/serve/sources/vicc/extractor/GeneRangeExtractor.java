@@ -34,85 +34,6 @@ public class GeneRangeExtractor {
     }
 
     @NotNull
-    private static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene,
-            @NotNull MutationTypeFilter specificMutationType, @NotNull Feature feature) {
-        for (DriverGene driverGene : driverGenes) {
-            if (driverGene.gene().equals(gene)) {
-                if (driverGene.likelihoodType() == DriverCategory.ONCO) {
-                    if (specificMutationType == MutationTypeFilter.UNKNOWN) {
-                        return MutationTypeFilter.MISSENSE_ANY;
-                    } else {
-                        return specificMutationType;
-                    }
-                } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
-                    if (specificMutationType == MutationTypeFilter.UNKNOWN) {
-                        //TODO which inactivation event for TSG?
-                        if (feature.biomarkerType() != null && feature.biomarkerType().contains("inactivation")) {
-                            return MutationTypeFilter.MISSENSE_ANY;
-                        } else {
-                            return MutationTypeFilter.ANY;
-                        }
-                    } else {
-                        return specificMutationType;
-                    }
-                }
-            }
-        }
-        LOGGER.warn("Gene {} is not present in driver catalog", gene);
-        return MutationTypeFilter.UNKNOWN;
-    }
-
-    private void extractGeneRangesPerFeature(@NotNull String exonNumber, @NotNull Feature feature,
-            @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
-            @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature,
-            @NotNull MutationTypeFilter specificMutationType) {
-        int exonNumberList = Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-
-        geneRangeAnnotation.add(extractExonGenomicPositions(feature,
-                canonicalTranscript,
-                exonNumberList,
-                driverGenes,
-                exonNumber,
-                specificMutationType));
-        geneRangesPerFeature.put(feature, geneRangeAnnotation);
-    }
-
-    private void extractGeneRangesPerFeatureMultipleExons(@NotNull String[] exonNumbers, @NotNull Feature feature,
-            @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
-            @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature,
-            @NotNull MutationTypeFilter specificMutationType) {
-        for (String exon : exonNumbers) {
-            int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-            geneRangeAnnotation.add(extractExonGenomicPositions(feature,
-                    canonicalTranscript,
-                    exonNumberList,
-                    driverGenes,
-                    exon,
-                    specificMutationType));
-        }
-        geneRangesPerFeature.put(feature, geneRangeAnnotation);
-    }
-
-    @NotNull
-    private MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull Feature feature) {
-        String featureEvent = feature.name().toLowerCase();
-        String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
-        if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
-            return MutationTypeFilter.SPLICE;
-        } else if (extractSpecificInfoOfEvent.equals("deletions")) {
-            return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
-        } else if (extractSpecificInfoOfEvent.equals("insertions")) {
-            return MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
-        } else if (extractSpecificInfoOfEvent.equals("deletion/insertion") || extractSpecificInfoOfEvent.equals("insertions/deletions")) {
-            return MutationTypeFilter.MISSENSE_INFRAME_ANY;
-        } else if (extractSpecificInfoOfEvent.equals("frameshift")) {
-            return MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
-        } else {
-            return MutationTypeFilter.UNKNOWN;
-        }
-    }
-
-    @NotNull
     public Map<Feature, List<GeneRangeAnnotation>> extractGeneRanges(@NotNull ViccEntry viccEntry, @NotNull List<DriverGene> driverGenes) {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         List<GeneRangeAnnotation> geneRangeAnnotation = Lists.newArrayList();
@@ -123,8 +44,8 @@ public class GeneRangeExtractor {
             if (featureType == FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
                 String transcriptIdVicc = viccEntry.transcriptId();
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-                    if (feature.proteinAnnotation().matches("[0-9]+")) {
-                        String exonNumber = feature.proteinAnnotation();
+                    if (feature.name().matches("[0-9]+")) {
+                        String exonNumber = feature.name();
                         extractGeneRangesPerFeature(exonNumber,
                                 feature,
                                 canonicalTranscript,
@@ -145,8 +66,8 @@ public class GeneRangeExtractor {
             if (featureType == FeatureType.GENE_RANGE_EXON) {
                 String transcriptIdVicc = viccEntry.transcriptId();
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-                    if (feature.proteinAnnotation().matches("[0-9]+")) {
-                        String exonNumber = feature.proteinAnnotation();
+                    if (feature.name().matches("[0-9]+")) {
+                        String exonNumber = feature.name();
                         extractGeneRangesPerFeature(exonNumber,
                                 feature,
                                 canonicalTranscript,
@@ -181,35 +102,38 @@ public class GeneRangeExtractor {
                                 geneRangesPerFeature,
                                 extractSpecificMutationTypeFilter(feature));
                     } else if (feature.name().contains("-")) {
-                        String exons = ""; //feature.proteinAnnotation();
+                        String exons = feature.name();
                         List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
 
                         if (exons.equals("mutation")) {
                             exons = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
                         }
-                        //                        int startExon =
-                        //                                Integer.parseInt(exons.split("-")[0]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-                        //                        int endExon =
-                        //                                Integer.parseInt(exons.split("-")[1]) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-                        //                        HmfExonRegion hmfExonRegionStart = exonRegions.get(startExon);
-                        //                        HmfExonRegion hmfExonRegionEnd = exonRegions.get(endExon);
-                        //                        long start = hmfExonRegionStart.start();
-                        //                        long end = hmfExonRegionEnd.end();
-                        //                        String chromosome = hmfExonRegionStart.chromosome();
-                        //
-                        //                        geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
-                        //                                .gene(feature.geneSymbol())
-                        //                                .start(start)
-                        //                                .end(end)
-                        //                                .chromosome(chromosome)
-                        //                                .rangeInfo(exons)
-                        //                                .mutationType(extractMutationFilter(driverGenes,
-                        //                                        feature.geneSymbol(),
-                        //                                        extractSpecificMutationTypeFilter(feature),
-                        //                                        feature))
-                        //                                .build());
-                        //                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
-                    } else if (feature.proteinAnnotation().equals("mutation") && !feature.name().contains("-")) {
+
+                        if (isInteger(exons.split("-")[0]) && isInteger(exons.split("-")[1])) {
+                            // HmfExonRegion start with count 0 so exonNumber is one below
+                            int startExon = Integer.parseInt(exons.split("-")[0]) - 1;
+                            // HmfExonRegion start with count 0 so exonNumber is one below
+                            int endExon = Integer.parseInt(exons.split("-")[1]) - 1;
+                            HmfExonRegion hmfExonRegionStart = exonRegions.get(startExon);
+                            HmfExonRegion hmfExonRegionEnd = exonRegions.get(endExon);
+                            long start = hmfExonRegionStart.start();
+                            long end = hmfExonRegionEnd.end();
+                            String chromosome = hmfExonRegionStart.chromosome();
+
+                            geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                                    .gene(feature.geneSymbol())
+                                    .start(start)
+                                    .end(end)
+                                    .chromosome(chromosome)
+                                    .rangeInfo(exons)
+                                    .mutationType(extractMutationFilter(driverGenes,
+                                            feature.geneSymbol(),
+                                            extractSpecificMutationTypeFilter(feature),
+                                            feature))
+                                    .build());
+                            geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                        }
+                    } else if (feature.name().equals("mutation") && !feature.name().contains("-")) {
                         String exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
                         extractGeneRangesPerFeature(exonNumber,
                                 feature,
@@ -218,7 +142,7 @@ public class GeneRangeExtractor {
                                 geneRangeAnnotation,
                                 geneRangesPerFeature,
                                 extractSpecificMutationTypeFilter(feature));
-                    } else if (feature.proteinAnnotation().equals("exon")) {
+                    } else if (feature.name().equals("exon")) {
                         String exonNumber = feature.name()
                                 .substring((feature.name().toLowerCase().indexOf("exon")))
                                 .replace("exon ", "")
@@ -231,7 +155,7 @@ public class GeneRangeExtractor {
                                 geneRangeAnnotation,
                                 geneRangesPerFeature,
                                 extractSpecificMutationTypeFilter(feature));
-                    } else if (feature.proteinAnnotation().equals("proximal")) {
+                    } else if (feature.name().equals("proximal")) {
                         String exonNumber = feature.name().substring((feature.name().toLowerCase().indexOf("exon"))).replace("exon ", "");
                         extractGeneRangesPerFeature(exonNumber,
                                 feature,
@@ -240,7 +164,7 @@ public class GeneRangeExtractor {
                                 geneRangeAnnotation,
                                 geneRangesPerFeature,
                                 extractSpecificMutationTypeFilter(feature));
-                    } else if (feature.proteinAnnotation().equals("(Partial")) {
+                    } else if (feature.name().equals("(Partial")) {
                         String[] exons = feature.name()
                                 .substring((feature.name().toLowerCase().indexOf("exons")))
                                 .replace("exons ", "")
@@ -266,20 +190,20 @@ public class GeneRangeExtractor {
                 }
             } else if (featureType == FeatureType.GENE_RANGE_CODON) {
                 //TODO remove EX and T148HFSX9 from gene range codon featureType
-                if (!feature.proteinAnnotation().equals("T148HFSX9") && !feature.proteinAnnotation().equals("EX")) {
-                    if (!feature.proteinAnnotation().contains("_")) {
+                if (!feature.name().equals("T148HFSX9") && !feature.name().equals("EX")) {
+                    if (!feature.name().contains("_")) {
                         geneRangesPerFeature = determineRanges(viccEntry,
                                 feature,
-                                feature.proteinAnnotation(),
+                                feature.name(),
                                 geneRangeAnnotation,
                                 geneRangesPerFeature,
                                 canonicalTranscript,
                                 driverGenes,
                                 extractSpecificMutationTypeFilter(feature));
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
-                    } else if (feature.proteinAnnotation().contains("_")) { //example L485_P490 BRAF
-                        int startCodon = Integer.parseInt(feature.proteinAnnotation().split("_")[0].replaceAll("\\D+", ""));
-                        int endCodon = Integer.parseInt(feature.proteinAnnotation().split("_")[1].replaceAll("\\D+", ""));
+                    } else if (feature.name().contains("_")) { //example L485_P490 BRAF
+                        int startCodon = Integer.parseInt(feature.name().split("_")[0].replaceAll("\\D+", ""));
+                        int endCodon = Integer.parseInt(feature.name().split("_")[1].replaceAll("\\D+", ""));
                         geneRangesPerFeature = determineRangesMulti(viccEntry,
                                 feature,
                                 startCodon,
@@ -296,6 +220,85 @@ public class GeneRangeExtractor {
         }
         return geneRangesPerFeature;
 
+    }
+
+    @NotNull
+    private static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene,
+            @NotNull MutationTypeFilter specificMutationType, @NotNull Feature feature) {
+        for (DriverGene driverGene : driverGenes) {
+            if (driverGene.gene().equals(gene)) {
+                if (driverGene.likelihoodType() == DriverCategory.ONCO) {
+                    if (specificMutationType == MutationTypeFilter.UNKNOWN) {
+                        return MutationTypeFilter.MISSENSE_ANY;
+                    } else {
+                        return specificMutationType;
+                    }
+                } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
+                    if (specificMutationType == MutationTypeFilter.UNKNOWN) {
+                        //TODO which inactivation event for TSG?
+                        if (feature.biomarkerType() != null && feature.biomarkerType().contains("inactivation")) {
+                            return MutationTypeFilter.MISSENSE_ANY;
+                        } else {
+                            return MutationTypeFilter.ANY;
+                        }
+                    } else {
+                        return specificMutationType;
+                    }
+                }
+            }
+        }
+        LOGGER.warn("Gene {} is not present in driver catalog", gene);
+        return MutationTypeFilter.UNKNOWN;
+    }
+
+    private static void extractGeneRangesPerFeature(@NotNull String exonNumber, @NotNull Feature feature,
+            @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
+            @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature,
+            @NotNull MutationTypeFilter specificMutationType) {
+        int exonNumberList = Integer.parseInt(exonNumber) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+
+        geneRangeAnnotation.add(extractExonGenomicPositions(feature,
+                canonicalTranscript,
+                exonNumberList,
+                driverGenes,
+                exonNumber,
+                specificMutationType));
+        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+    }
+
+    private static void extractGeneRangesPerFeatureMultipleExons(@NotNull String[] exonNumbers, @NotNull Feature feature,
+            @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
+            @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature,
+            @NotNull MutationTypeFilter specificMutationType) {
+        for (String exon : exonNumbers) {
+            int exonNumberList = Integer.parseInt(exon) - 1; // HmfExonRegion start with count 0 so exonNumber is one below
+            geneRangeAnnotation.add(extractExonGenomicPositions(feature,
+                    canonicalTranscript,
+                    exonNumberList,
+                    driverGenes,
+                    exon,
+                    specificMutationType));
+        }
+        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+    }
+
+    @NotNull
+    private static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull Feature feature) {
+        String featureEvent = feature.name().toLowerCase();
+        String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
+        if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
+            return MutationTypeFilter.SPLICE;
+        } else if (extractSpecificInfoOfEvent.equals("deletions")) {
+            return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
+        } else if (extractSpecificInfoOfEvent.equals("insertions")) {
+            return MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
+        } else if (extractSpecificInfoOfEvent.equals("deletion/insertion") || extractSpecificInfoOfEvent.equals("insertions/deletions")) {
+            return MutationTypeFilter.MISSENSE_INFRAME_ANY;
+        } else if (extractSpecificInfoOfEvent.equals("frameshift")) {
+            return MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
+        } else {
+            return MutationTypeFilter.UNKNOWN;
+        }
     }
 
     @NotNull
@@ -318,18 +321,19 @@ public class GeneRangeExtractor {
                 .build();
     }
 
+    @NotNull
     private static Map<Feature, List<GeneRangeAnnotation>> determineRanges(@NotNull ViccEntry viccEntry, @NotNull Feature feature,
-            @NotNull String proteinAnnotation, @NotNull List<GeneRangeAnnotation> geneRangeAnnotation,
+            @NotNull String featureName, @NotNull List<GeneRangeAnnotation> geneRangeAnnotation,
             @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature, @NotNull HmfTranscriptRegion canonicalTranscript,
             @NotNull List<DriverGene> driverGenes, @NotNull MutationTypeFilter specificMutationType) {
         String transcriptIdVicc = viccEntry.transcriptId();
 
         if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
             String geneSymbol = feature.geneSymbol();
-            if (!proteinAnnotation.isEmpty()) {
-                int codonNumber = Integer.parseInt(proteinAnnotation.replaceAll("\\D+", ""));
+            if (!featureName.isEmpty()) {
+                int codonNumber = Integer.parseInt(featureName.replaceAll("\\D+", ""));
                 List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
-                if (genomeRegions.size() == 1) {
+                if (genomeRegions != null && genomeRegions.size() == 1) {
                     long start = genomeRegions.get(0).start();
                     long end = genomeRegions.get(0).end();
                     String chromosome = genomeRegions.get(0).chromosome();
@@ -339,7 +343,7 @@ public class GeneRangeExtractor {
                             .start(start)
                             .end(end)
                             .chromosome(chromosome)
-                            .rangeInfo(proteinAnnotation)
+                            .rangeInfo(featureName)
                             .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotation);
@@ -357,6 +361,7 @@ public class GeneRangeExtractor {
         return geneRangesPerFeature;
     }
 
+    @NotNull
     private static Map<Feature, List<GeneRangeAnnotation>> determineRangesMulti(@NotNull ViccEntry viccEntry, @NotNull Feature feature,
             int startCodon, int endCodon, @NotNull List<GeneRangeAnnotation> geneRangeAnnotation,
             @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature, @NotNull HmfTranscriptRegion canonicalTranscript,
@@ -398,5 +403,15 @@ public class GeneRangeExtractor {
                     feature);
         }
         return geneRangesPerFeature;
+    }
+
+    private static boolean isInteger(@NotNull String string) {
+        try {
+            Integer.parseInt(string);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
     }
 }
