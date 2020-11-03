@@ -39,6 +39,9 @@ public class GeneRangeExtractor {
         List<GeneRangeAnnotation> geneRangeAnnotation = Lists.newArrayList();
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+            if (canonicalTranscript == null) {
+                break;
+            }
             FeatureType featureType = feature.type();
 
             if (featureType == FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
@@ -46,9 +49,7 @@ public class GeneRangeExtractor {
                 if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
                     if (feature.name().matches("[0-9]+")) {
                         String exonNumber = feature.name();
-                        extractGeneRangesPerFeature(exonNumber,
-                                feature,
-                                canonicalTranscript,
+                        extractGeneRangesPerFeature(exonNumber, feature, canonicalTranscript,
                                 driverGenes,
                                 geneRangeAnnotation,
                                 geneRangesPerFeature,
@@ -201,7 +202,8 @@ public class GeneRangeExtractor {
                                 driverGenes,
                                 extractSpecificMutationTypeFilter(feature));
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
-                    } else if (feature.name().contains("_")) { //example L485_P490 BRAF
+                    } else if (feature.name().contains("_") && isInteger(feature.name().split("_")[0].replaceAll("\\D+", "")) && isInteger(
+                            feature.name().split("_")[1].replaceAll("\\D+", ""))) { //example L485_P490 BRAF
                         int startCodon = Integer.parseInt(feature.name().split("_")[0].replaceAll("\\D+", ""));
                         int endCodon = Integer.parseInt(feature.name().split("_")[1].replaceAll("\\D+", ""));
                         geneRangesPerFeature = determineRangesMulti(viccEntry,
@@ -296,9 +298,9 @@ public class GeneRangeExtractor {
             return MutationTypeFilter.MISSENSE_INFRAME_ANY;
         } else if (extractSpecificInfoOfEvent.equals("frameshift")) {
             return MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
-        } else {
-            return MutationTypeFilter.UNKNOWN;
         }
+
+        return MutationTypeFilter.UNKNOWN;
     }
 
     @NotNull
@@ -323,14 +325,14 @@ public class GeneRangeExtractor {
 
     @NotNull
     private static Map<Feature, List<GeneRangeAnnotation>> determineRanges(@NotNull ViccEntry viccEntry, @NotNull Feature feature,
-            @NotNull String featureName, @NotNull List<GeneRangeAnnotation> geneRangeAnnotation,
+            @NotNull String featureName, @NotNull List<GeneRangeAnnotation> geneRangeAnnotations,
             @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature, @NotNull HmfTranscriptRegion canonicalTranscript,
             @NotNull List<DriverGene> driverGenes, @NotNull MutationTypeFilter specificMutationType) {
         String transcriptIdVicc = viccEntry.transcriptId();
 
         if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
             String geneSymbol = feature.geneSymbol();
-            if (!featureName.isEmpty()) {
+            if (!featureName.isEmpty() && isInteger(featureName.replaceAll("\\D+", ""))) {
                 int codonNumber = Integer.parseInt(featureName.replaceAll("\\D+", ""));
                 List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
                 if (genomeRegions != null && genomeRegions.size() == 1) {
@@ -338,7 +340,7 @@ public class GeneRangeExtractor {
                     long end = genomeRegions.get(0).end();
                     String chromosome = genomeRegions.get(0).chromosome();
 
-                    geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
+                    geneRangeAnnotations.add(ImmutableGeneRangeAnnotation.builder()
                             .gene(geneSymbol)
                             .start(start)
                             .end(end)
@@ -346,7 +348,7 @@ public class GeneRangeExtractor {
                             .rangeInfo(featureName)
                             .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
                             .build());
-                    geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                    geneRangesPerFeature.put(feature, geneRangeAnnotations);
                 }
 
             } else {

@@ -28,17 +28,16 @@ final class FusionClassifier {
     private FusionClassifier() {
     }
 
-    public static boolean isFusionPair(@NotNull String featureName, @Nullable String biomarkerType, @Nullable String featureDescription) {
-        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureDescription)) {
+    public static boolean isFusionPair(@NotNull String featureName, @NotNull String gene, @Nullable String biomarkerType) {
+        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene)) {
             return extractFusionEvent(featureName, biomarkerType) == FusionEvent.FUSION_PAIR;
         }
 
         return false;
     }
 
-    public static boolean isPromiscuousFusion(@NotNull String featureName, @Nullable String biomarkerType,
-            @Nullable String featureDescription) {
-        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureDescription)) {
+    public static boolean isPromiscuousFusion(@NotNull String featureName, @NotNull String gene, @Nullable String biomarkerType) {
+        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene)) {
             return extractFusionEvent(featureName, biomarkerType) == FusionEvent.FUSION_PROMISCUOUS;
         }
 
@@ -46,7 +45,7 @@ final class FusionClassifier {
     }
 
     @Nullable
-    private static FusionEvent extractFusionEvent(@NotNull String featureName, @Nullable String biomarkerType) {
+    public static FusionEvent extractFusionEvent(@NotNull String featureName, @Nullable String biomarkerType) {
         if (IGNORED.contains(featureName)) {
             return null;
         }

@@ -31,23 +31,15 @@ public final class GeneRangeClassifier {
     public static final Set<String> DETAILED_GENE_LEVEL_INFO_WITH_ONCO = Sets.newHashSet("Gain-of-function Mutations",
             "Gain-of-Function",
             "act mut",
-            "ACTIVATING MUTATION",
-            "Oncogenic Mutations",
-            "pos",
-            "positive",
-            "oncogenic mutation");
+            "ACTIVATING MUTATION", "Oncogenic Mutations", "pos", "positive", "oncogenic mutation");
 
     public static final String GENE_LEVEL = "gene_only";
 
     private GeneRangeClassifier() {
     }
 
-    public static boolean isGeneLevelEvent(@Nullable String featureDescription, @Nullable String provenanceRule) {
-        if (featureDescription == null) {
-            return false;
-        }
-
-        String[] parts = featureDescription.split(" ");
+    public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String provenanceRule) {
+        String[] parts = featureName.split(" ");
         if (parts.length < 2) {
             return false;
         }
@@ -57,8 +49,8 @@ public final class GeneRangeClassifier {
                 eventDescription) || DETAILED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription) || GENE_LEVEL.equals(provenanceRule);
     }
 
-    public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String featureDescription) {
-        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureDescription) || CombinedClassifier.isCombinedEvent(featureName)) {
+    public static boolean isGeneRangeExonEvent(@NotNull String featureName, @NotNull String gene) {
+        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName)) {
             return false;
         }
 
