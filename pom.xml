@@ -69,7 +69,7 @@
         <purple.version>2.51</purple.version>
         <sage.version>2.4</sage.version>
         <health-checker.version>3.2</health-checker.version>
-        <patient-reporter.version>7.16</patient-reporter.version>
+        <patient-reporter.version>7.17</patient-reporter.version>
         <patient-db.version>3.49</patient-db.version>
         <gripss.version>1.8</gripss.version>
         <paddle.version>0.1</paddle.version>
