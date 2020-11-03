@@ -166,8 +166,7 @@ public class SampleAnalyser
         final List<SampleResult> driverResults = mFeatures.processSample(sample);
         allResults.addAll(driverResults);
 
-        final List<SampleResult> rnaResults = mRnaExpression.processSample(sample);
-        allResults.addAll(rnaResults);
+        mRnaExpression.processSample(sample, allResults, similarities);
 
         SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults);
 

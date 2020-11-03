@@ -21,13 +21,14 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SI
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
-import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_SIMILARITY_CUTOFF;
-import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_SIMILARITY_MAX_MATCHES;
+import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
+import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
+import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSignaturePercentileData;
 import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSnvPosFrequences;
@@ -334,7 +335,9 @@ public class SomaticAnnotation
             if(css < SNV_CSS_THRESHOLD)
                 continue;
 
-            recordCssSimilarity(topMatches, sample.Id, refSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString());
+            recordCssSimilarity(
+                    topMatches, sample.Id, refSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
+                    CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
 
             double cssWeight = pow(SNV_CSS_DIFF_EXPONENT, -100 * (1 - css));
 
@@ -364,32 +367,6 @@ public class SomaticAnnotation
                 sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         similarities.addAll(topMatches);
-    }
-
-    private void recordCssSimilarity(
-            final List<SampleSimilarity> topMatches, final String sample, final String otherSampleId, double css, final String type)
-    {
-        if(css < SNV_CSS_SIMILARITY_CUTOFF)
-            return;
-
-        if(topMatches.size() < SNV_CSS_SIMILARITY_MAX_MATCHES)
-        {
-            topMatches.add(new SampleSimilarity(sample, otherSampleId, type, css));
-            return;
-        }
-
-        if(css < topMatches.get(topMatches.size() - 1).Score)
-            return;
-
-        for(int i = 0; i < topMatches.size(); ++i)
-        {
-            if(css > topMatches.get(i).Score)
-            {
-                topMatches.add(i, new SampleSimilarity(sample, otherSampleId, type, css));
-                topMatches.remove(topMatches.size() - 1);
-                return;
-            }
-        }
     }
 
     private void addPosFreqCssResults(final SampleData sample, final List<SampleResult> results)

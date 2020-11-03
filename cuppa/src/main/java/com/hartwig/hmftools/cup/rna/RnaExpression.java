@@ -8,18 +8,18 @@ import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
-import static com.hartwig.hmftools.cup.common.CategoryType.SV;
-import static com.hartwig.hmftools.cup.common.ClassifierType.RNA_GENE_EXPRESSION;
-import static com.hartwig.hmftools.cup.common.ClassifierType.RNA_GENE_EXPRESSION_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENE_EXPRESSION_CANCER;
+import static com.hartwig.hmftools.cup.common.ClassifierType.GENE_EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXPONENT;
+import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
+import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
-import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
+import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.rna.RefRnaExpression.loadRefPercentileData;
 import static com.hartwig.hmftools.cup.rna.RefRnaExpression.populateGeneIdList;
 
@@ -33,8 +33,7 @@ import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
-import com.hartwig.hmftools.cup.svs.SvData;
-import com.hartwig.hmftools.cup.svs.SvDataType;
+import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -54,11 +53,14 @@ public class RnaExpression
     private SigMatrix mSampleRnaExpression;
     private final Map<String,Integer> mSampleIndexMap;
 
-    private final boolean mIncludePairwiseCss;
-    private static final String INCLUDE_PAIRWISE_CSS = "rna_pairwise_css";
+    private final boolean mRunPairwiseCss;
+    private final boolean mRunCancerCss;
+    private final boolean mRunGenePrevalence;
 
-    private final boolean mExcludeCancerCss;
-    private static final String EXCLUDE_CANCER_CSS = "rna_exclude_cancer_css";
+    private static final String RNA_METHODS = "rna_methods";
+    private static final String RNA_METHOD_PAIRWISE_CSS = "pairwise_css";
+    private static final String RNA_METHOD_CANCER_CSS = "cancer_css";
+    private static final String RNA_METHOD_GENE_PREV = "gene_prevalence";
 
     private boolean mIsValid;
 
@@ -77,8 +79,11 @@ public class RnaExpression
         mRefGeneCancerPercentiles = Maps.newHashMap();
         mGeneIdNameMap = Maps.newHashMap();
 
-        mIncludePairwiseCss = cmd.hasOption(INCLUDE_PAIRWISE_CSS);
-        mExcludeCancerCss = cmd.hasOption(EXCLUDE_CANCER_CSS);
+        final String rnaMethods = cmd.getOptionValue(RNA_METHODS);
+
+        mRunPairwiseCss = rnaMethods != null && rnaMethods.contains(RNA_METHOD_PAIRWISE_CSS);
+        mRunCancerCss = rnaMethods == null || rnaMethods.contains(RNA_METHOD_CANCER_CSS);
+        mRunGenePrevalence = rnaMethods != null && rnaMethods.contains(RNA_METHOD_GENE_PREV);
 
         mIsValid = true;
 
@@ -106,36 +111,31 @@ public class RnaExpression
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(INCLUDE_PAIRWISE_CSS, false, "Run RNA gene expression sample pairwise CSS");
-        options.addOption(EXCLUDE_CANCER_CSS, false, "Exclude RNA gene expression cancer CSS");
+        options.addOption(RNA_METHODS, true, "Types of RNA gene expression methods");
     }
 
     public boolean isValid() { return mIsValid; }
 
-    public List<SampleResult> processSample(final SampleData sample)
+    public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        final List<SampleResult> results = Lists.newArrayList();
-
         if(mSampleIndexMap.isEmpty())
-            return results;
+            return;
 
         Integer sampleCountsIndex = mSampleIndexMap.get(sample.Id);
 
         if(sampleCountsIndex == null)
-            return results;
+            return;
 
         final double[] sampleGeneTPMs = mSampleRnaExpression.getCol(sampleCountsIndex);
 
-        if(!mExcludeCancerCss)
+        if(mRunCancerCss)
             addCancerCssResults(sample, sampleGeneTPMs, results);
 
-        if(mIncludePairwiseCss && mSampleRnaExpression.Cols == mSampleDataCache.RefSampleCancerTypeMap.size())
-            addSampleCssResults(sample, sampleGeneTPMs, results);
+        if(mRunPairwiseCss && mSampleRnaExpression.Cols == mSampleDataCache.RefSampleCancerTypeMap.size())
+            addSampleCssResults(sample, sampleGeneTPMs, results, similarities);
 
-        if(!mRefGeneCancerPercentiles.isEmpty())
+        if(mRunGenePrevalence && !mRefGeneCancerPercentiles.isEmpty())
             addPrevalenceResults(sample, sampleGeneTPMs, results);
-
-        return results;
     }
 
     private void addCancerCssResults(final SampleData sample, final double[] sampleGeneTPMs, final List<SampleResult> results)
@@ -178,12 +178,15 @@ public class RnaExpression
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, RNA_GENE_EXPRESSION.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, CLASSIFIER, LIKELIHOOD, GENE_EXPRESSION_CANCER.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
-    private void addSampleCssResults(final SampleData sample, final double[] sampleTPMs, final List<SampleResult> results)
+    private void addSampleCssResults(
+            final SampleData sample, final double[] sampleTPMs, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
+
+        final List<SampleSimilarity> topMatches = Lists.newArrayList();
 
         for(Map.Entry<String,Integer> entry : mSampleIndexMap.entrySet())
         {
@@ -211,6 +214,10 @@ public class RnaExpression
             if(css < RNA_GENE_EXP_CSS_THRESHOLD)
                 continue;
 
+            recordCssSimilarity(
+                    topMatches, sample.Id, refSampleId, css, GENE_EXPRESSION_PAIRWISE.toString(),
+                    CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+
             double cssWeight = pow(RNA_GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
 
             int cancerTypeCount = mSampleDataCache.getCancerSampleCount(refCancerType);
@@ -233,7 +240,9 @@ public class RnaExpression
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, RNA_GENE_EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, CLASSIFIER, LIKELIHOOD, GENE_EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+
+        similarities.addAll(topMatches);
     }
 
     private double[] adjustRefTpmTotals(final double[] refGeneTpmTotals, final double[] sampleGeneTPMs)

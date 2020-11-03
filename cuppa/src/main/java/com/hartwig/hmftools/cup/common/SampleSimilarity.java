@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.cup.common;
 
+import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
+import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
+
+import java.util.List;
+
 public class SampleSimilarity
 {
     public final String SampleId;
@@ -13,5 +18,32 @@ public class SampleSimilarity
         MatchedSampleId = matchedSampleId;
         MatchType = matchType;
         Score = score;
+    }
+
+    public static void recordCssSimilarity(
+            final List<SampleSimilarity> topMatches, final String sample, final String otherSampleId, double css, final String type,
+            int maxMatches, double matchCssCutoff)
+    {
+        if(css < matchCssCutoff)
+            return;
+
+        if(topMatches.size() < maxMatches)
+        {
+            topMatches.add(new SampleSimilarity(sample, otherSampleId, type, css));
+            return;
+        }
+
+        if(css < topMatches.get(topMatches.size() - 1).Score)
+            return;
+
+        for(int i = 0; i < topMatches.size(); ++i)
+        {
+            if(css > topMatches.get(i).Score)
+            {
+                topMatches.add(i, new SampleSimilarity(sample, otherSampleId, type, css));
+                topMatches.remove(topMatches.size() - 1);
+                return;
+            }
+        }
     }
 }
