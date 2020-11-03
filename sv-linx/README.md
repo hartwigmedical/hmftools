@@ -814,9 +814,7 @@ For each single SV and for every facing pair of SVs in the same chain identify a
 - 5’ gene partner transcript must have one of the following ensembl biotypes: ‘protein_coding’, ’retained_intron’, ’processed_transcript’, ’nonsense_mediated_decay’, ’lincRNA’
 - The upstream breakend must fall within the 5’ partner transcript and be disruptive to the transcript. 
 - The downstream breakend must fall either within the 5’ gene or within 100kb upstream. 
-- The chain must not be disrupted by an intermediate splice acceptor / splice donor. Exceptions:
-  - A traversal can be valid even if there are intermediate splice acceptors as long as upstream partner, downstream partner and all intermediaries are 5’ non-coding)
-  - To allow for alternative splicing, splice donors/acceptors can be skipped within the same gene if there is no in-frame valid fusion without skipping and if the fusion is intergenic. LINX reports the number of exons skipped on both the 5’ and 3’ transcript.
+- The combined length of all segments in the chain must be less than 150kb.
 - The SV or chain must join appropriate contexts of the 5’ and 3’ genes (see table below) and for coding regions must be inframe after allowing for any skipped exons. For exonic to exonic fusions exact base phasing is also checked as splice acceptor to splice donor phasing. The following table shows allowed contexts:
 
 ![Fusion Configurations](src/main/resources/readme/fusion_configurations.png)
@@ -865,7 +863,7 @@ Knowledge-base match | GENE PAIR | GENE PAIR | Breakends within EXON RANGE | INT
 Maximum chain links | 4 | 4 | 4 | 4 | 4
 Maximum upstream distance for 3’ partner | 100kb | 10kb | NA | 100kb | 10kb
 Phasing | INFRAME or SKIPPED EXONS* | NA  | INFRAME or SKIPPED EXONS**,# | INFRAME or SKIPPED EXONS | INFRAME##
-Allow chain disruption | TRUE | TRUE | TRUE | FALSE | FALSE
+Allow early chain termination or disruption by intermediate splice acceptor or donor | TRUE | TRUE | TRUE | FALSE | FALSE
 
 '* 5’UTR to coding regions are also allowed for KNOWN_PAIR fusions (>1Mb length)
 '** The breakend and the fused exon must both be in the specified ranges on both 5’ and 3’ side
