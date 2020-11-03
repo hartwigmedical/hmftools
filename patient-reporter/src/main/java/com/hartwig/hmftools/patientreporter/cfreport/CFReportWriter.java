@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
@@ -41,6 +42,11 @@ public class CFReportWriter implements ReportWriter {
     private final boolean writeToFile;
     @NotNull
     private final GermlineReportingModel germlineReportingModel;
+
+    @NotNull
+    public static CFReportWriter createProductionReportWriterNoConsent() {
+        return new CFReportWriter(true, new GermlineReportingModel(Lists.newArrayList()));
+    }
 
     @NotNull
     public static CFReportWriter createProductionReportWriter(@NotNull GermlineReportingModel germlineReportingModel) {
