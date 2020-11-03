@@ -1,10 +1,23 @@
 package com.hartwig.hmftools.vicc.annotation;
 
+import java.util.Set;
+
+import com.google.common.collect.Sets;
+
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class CombinedClassifier {
 
+    //TODO: check if more EXON_DEL_DUP fusions need to be added
+    private static final Set<String> FUSION_PAIR_AND_EXON_RANGE =
+            Sets.newHashSet("KIT EXON 11 MUTATION", "KIT Exon 11 mutations", "KIT Exon 11 deletions", "MET EXON 14 SKIPPING MUTATION");
+
     private CombinedClassifier() {
+    }
+
+    public static boolean isFusionPairAndGeneRangeExon(@Nullable String featureDescription) {
+        return FUSION_PAIR_AND_EXON_RANGE.contains(featureDescription);
     }
 
     public static boolean isCombinedEvent(@NotNull String featureName) {

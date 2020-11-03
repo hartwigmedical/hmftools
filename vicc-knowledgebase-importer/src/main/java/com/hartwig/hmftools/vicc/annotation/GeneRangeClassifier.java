@@ -57,7 +57,11 @@ public final class GeneRangeClassifier {
                 eventDescription) || DETAILED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription) || GENE_LEVEL.equals(provenanceRule);
     }
 
-    public static boolean isGeneRangeExonEvent(@NotNull String featureName) {
+    public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String featureDescription) {
+        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureDescription) || CombinedClassifier.isCombinedEvent(featureName)) {
+            return false;
+        }
+
         String lowerCaseFeatureName = featureName.toLowerCase();
         if (lowerCaseFeatureName.contains("exon")) {
             return lowerCaseFeatureName.contains("deletion") || lowerCaseFeatureName.contains("insertion") || lowerCaseFeatureName.contains(

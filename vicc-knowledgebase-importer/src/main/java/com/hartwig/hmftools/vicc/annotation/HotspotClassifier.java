@@ -182,7 +182,7 @@ final class HotspotClassifier {
         String trimmedName = featureName.trim();
         if (trimmedName.contains(" ")) {
             String[] parts = trimmedName.split(" ");
-            return FusionClassifier.isFusionPair(parts[0], null);
+            return FusionClassifier.isFusionPair(parts[0], null, null);
         }
         return false;
     }

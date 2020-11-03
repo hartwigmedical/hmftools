@@ -21,10 +21,7 @@ public final class FeatureTypeExtractor {
 
     @NotNull
     public static FeatureType extractType(@NotNull Feature feature) {
-        return extractType(feature.name(),
-                feature.biomarkerType(),
-                feature.provenanceRule(),
-                feature.description());
+        return extractType(feature.name(), feature.biomarkerType(), feature.provenanceRule(), feature.description());
     }
 
     @NotNull
@@ -34,13 +31,14 @@ public final class FeatureTypeExtractor {
 
         evaluations.put(FeatureType.HOTSPOT, HotspotClassifier.isHotspot(featureName));
         evaluations.put(FeatureType.GENE_RANGE_CODON, GeneRangeClassifier.isGeneRangeCodonEvent(featureName));
-        evaluations.put(FeatureType.GENE_RANGE_EXON, GeneRangeClassifier.isGeneRangeExonEvent(featureName));
+        evaluations.put(FeatureType.GENE_RANGE_EXON, GeneRangeClassifier.isGeneRangeExonEvent(featureName, featureDescription));
         evaluations.put(FeatureType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(featureDescription, provenanceRule));
         evaluations.put(FeatureType.AMPLIFICATION, CopyNumberClassifier.isAmplification(featureName, biomarkerType));
         evaluations.put(FeatureType.DELETION, CopyNumberClassifier.isDeletion(featureName, biomarkerType));
-        evaluations.put(FeatureType.FUSION_PAIR, FusionClassifier.isFusionPair(featureName, biomarkerType));
-        evaluations.put(FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON, FusionClassifier.isFusionPairAndGeneRangeExon(featureDescription));
-        evaluations.put(FeatureType.FUSION_PROMISCUOUS, FusionClassifier.isPromiscuousFusion(featureName, biomarkerType));
+        evaluations.put(FeatureType.FUSION_PAIR, FusionClassifier.isFusionPair(featureName, biomarkerType, featureDescription));
+        evaluations.put(FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON, CombinedClassifier.isFusionPairAndGeneRangeExon(featureDescription));
+        evaluations.put(FeatureType.FUSION_PROMISCUOUS,
+                FusionClassifier.isPromiscuousFusion(featureName, biomarkerType, featureDescription));
         evaluations.put(FeatureType.SIGNATURE, SignatureClassifier.isSignature(featureName));
         evaluations.put(FeatureType.COMBINED, CombinedClassifier.isCombinedEvent(featureName));
 
