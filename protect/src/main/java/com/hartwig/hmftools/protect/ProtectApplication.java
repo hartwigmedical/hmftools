@@ -125,7 +125,8 @@ public class ProtectApplication implements AutoCloseable {
         LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsv());
         final List<PatientTumorLocation> tumorLocations = PatientTumorLocationFile.read(config.tumorLocationTsv());
         @Nullable
-        PatientTumorLocation sampleTumorLocation = PatientTumorLocationFunctions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
+        PatientTumorLocation sampleTumorLocation =
+                PatientTumorLocationFunctions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
         if (sampleTumorLocation == null) {
             result.add(PAN_CANCER_DOID);
             return result;
@@ -152,7 +153,7 @@ public class ProtectApplication implements AutoCloseable {
         final CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(actionableEvents.genes());
         final FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());
 
-        // Additiopnal configuration
+        // Additional configuration
         final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
 
         // External Data

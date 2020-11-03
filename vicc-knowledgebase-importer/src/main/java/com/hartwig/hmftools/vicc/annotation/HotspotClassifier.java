@@ -13,29 +13,36 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-final class DetermineHotspot {
+final class HotspotClassifier {
 
     private static final Set<String> CAPITALIZED_STRINGS_TO_UNCAPITALIZE = Sets.newHashSet("DELINS", "DEL", "INS", "DUP", "FS");
 
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
-    private DetermineHotspot() {
+    private HotspotClassifier() {
     }
 
     public static boolean isHotspot(@NotNull String featureName) {
         String proteinAnnotation = extractProteinAnnotation(featureName);
 
+        boolean isHotspot;
         if (isFrameshift(proteinAnnotation)) {
-            return isValidFrameshift(proteinAnnotation);
+            isHotspot = isValidFrameshift(proteinAnnotation);
         } else if (proteinAnnotation.contains(HGVS_RANGE_INDICATOR)) {
-            return isValidRangeMutation(proteinAnnotation);
+            isHotspot = isValidRangeMutation(proteinAnnotation);
         } else if (proteinAnnotation.contains(HGVS_DELETION + HGVS_INSERTION)) {
-            return isValidComplexDeletionInsertion(proteinAnnotation);
+            isHotspot = isValidComplexDeletionInsertion(proteinAnnotation);
         } else if (proteinAnnotation.startsWith("*")) {
-            return true;
+            isHotspot = true;
         } else {
-            return isValidSingleCodonMutation(proteinAnnotation);
+            isHotspot = isValidSingleCodonMutation(proteinAnnotation);
         }
+
+        if (isHotspot) {
+            return !isHotspotOnFusionGene(featureName);
+        }
+
+        return false;
     }
 
     @NotNull
@@ -169,6 +176,15 @@ final class DetermineHotspot {
         String newAminoAcid = proteinAnnotation.substring(firstNotDigit);
         // X is a wildcard that we don't support, and "/" indicates logical OR that we don't support.
         return !newAminoAcid.equals("X") && !newAminoAcid.contains("/");
+    }
+
+    private static boolean isHotspotOnFusionGene(@NotNull String featureName) {
+        String trimmedName = featureName.trim();
+        if (trimmedName.contains(" ")) {
+            String[] parts = trimmedName.split(" ");
+            return FusionClassifier.extractFusionEvent(parts[0], null) != null;
+        }
+        return false;
     }
 
     private static boolean isLong(@NotNull String value) {

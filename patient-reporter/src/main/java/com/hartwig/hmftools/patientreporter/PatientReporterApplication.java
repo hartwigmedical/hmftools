@@ -36,7 +36,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //                public static final String VERSION = "7.16";
+    //                public static final String VERSION = "7.17";
 
     public static void main(@NotNull String[] args) throws IOException {
         Options options = PatientReporterConfig.createOptions();
@@ -52,64 +52,75 @@ public class PatientReporterApplication {
 
         LOGGER.info("Running patient reporter v{}", VERSION);
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
 
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(germlineReportingModel);
         if (config.qcFail()) {
             LOGGER.info("Generating qc-fail report");
-            QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config));
-            QCFailReport report = reporter.run(config.qcFailReason(),
-                    sampleMetadata,
-                    config.purplePurityTsv(),
-                    config.purpleQcFile(),
-                    config.comments(),
-                    config.correctedReport());
-
-            String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-            reportWriter.writeQCFailReport(report, outputFilePath);
-
-            if (!config.onlyCreatePDF()) {
-                LOGGER.debug("Updating additional files and databases");
-
-                writeReportDataToJson(config.outputDirData(),
-                        report.sampleReport().tumorSampleId(),
-                        report.sampleReport().tumorSampleBarcode(),
-                        report);
-
-                ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
-            }
+            generateQCFail(config, sampleMetadata);
         } else {
             LOGGER.info("Generating patient report");
-            AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(config));
+            generateAnalysedReport(config, sampleMetadata);
+        }
+    }
 
-            AnalysedPatientReport report = reporter.run(sampleMetadata,
-                    config.purplePurityTsv(),
-                    config.purpleQcFile(),
-                    config.purpleDriverCatalogTsv(),
-                    config.purpleSomaticVariantVcf(),
-                    config.bachelorTsv(),
-                    config.linxFusionTsv(),
-                    config.linxBreakendTsv(),
-                    config.linxViralInsertionTsv(),
-                    config.linxDriversTsv(),
-                    config.chordPredictionTxt(),
-                    config.circosFile(),
-                    config.comments(),
-                    config.correctedReport());
+    private static void generateQCFail(@NotNull PatientReporterConfig config, @NotNull SampleMetadata sampleMetadata) throws IOException {
+        QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config));
+        QCFailReport report = reporter.run(config.qcFailReason(),
+                sampleMetadata,
+                config.purplePurityTsv(),
+                config.purpleQcFile(),
+                config.comments(),
+                config.correctedReport());
 
-            String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-            reportWriter.writeAnalysedPatientReport(report, outputFilePath);
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriterNoConsent();
+        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+        reportWriter.writeQCFailReport(report, outputFilePath);
 
-            if (!config.onlyCreatePDF()) {
-                LOGGER.debug("Updating additional files and databases");
+        if (!config.onlyCreatePDF()) {
+            LOGGER.debug("Updating additional files and databases");
 
-                writeReportDataToJson(config.outputDirData(),
-                        report.sampleReport().sampleMetadata().tumorSampleId(),
-                        report.sampleReport().sampleMetadata().tumorSampleBarcode(),
-                        report);
+            writeReportDataToJson(config.outputDirData(),
+                    report.sampleReport().tumorSampleId(),
+                    report.sampleReport().tumorSampleBarcode(),
+                    report);
 
-                ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
-            }
+            ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+        }
+    }
+
+    private static void generateAnalysedReport(@NotNull PatientReporterConfig config, @NotNull SampleMetadata sampleMetadata)
+            throws IOException {
+        AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(config));
+
+        AnalysedPatientReport report = reporter.run(sampleMetadata,
+                config.purplePurityTsv(),
+                config.purpleQcFile(),
+                config.purpleDriverCatalogTsv(),
+                config.purpleSomaticVariantVcf(),
+                config.bachelorTsv(),
+                config.linxFusionTsv(),
+                config.linxBreakendTsv(),
+                config.linxViralInsertionTsv(),
+                config.linxDriversTsv(),
+                config.chordPredictionTxt(),
+                config.circosFile(),
+                config.comments(),
+                config.correctedReport());
+
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(germlineReportingModel);
+
+        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+        reportWriter.writeAnalysedPatientReport(report, outputFilePath);
+
+        if (!config.onlyCreatePDF()) {
+            LOGGER.debug("Updating additional files and databases");
+
+            writeReportDataToJson(config.outputDirData(),
+                    report.sampleReport().sampleMetadata().tumorSampleId(),
+                    report.sampleReport().sampleMetadata().tumorSampleBarcode(),
+                    report);
+
+            ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
         }
     }
 

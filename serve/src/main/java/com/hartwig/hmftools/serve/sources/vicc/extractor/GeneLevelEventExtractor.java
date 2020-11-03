@@ -11,7 +11,7 @@ import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.curation.FusionCuration;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
-import com.hartwig.hmftools.vicc.annotation.FeatureTypeExtractor;
+import com.hartwig.hmftools.vicc.annotation.GeneRangeClassifier;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -29,37 +29,37 @@ public class GeneLevelEventExtractor {
     @NotNull
     public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String eventDescription = feature.description().split(" ", 2)[1].trim();
-        if (FeatureTypeExtractor.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription) || feature.provenanceRule() != null) {
+        if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription) || feature.provenanceRule() != null) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
 
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(FeatureTypeExtractor.GENE_LEVEL)) {
+                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_LEVEL)) {
                                 return GeneLevelEvent.ACTIVATION;
                             } else {
                                 return GeneLevelEvent.ACTIVATION;
                             }
-                        } else if (FeatureTypeExtractor.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
+                        } else if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
                             return GeneLevelEvent.ACTIVATION;
                         }
                     } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(FeatureTypeExtractor.GENE_LEVEL)) {
+                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_LEVEL)) {
                                 return GeneLevelEvent.INACTIVATION;
                             } else {
                                 return GeneLevelEvent.INACTIVATION;
                             }
-                        } else if (FeatureTypeExtractor.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
+                        } else if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
                             return GeneLevelEvent.INACTIVATION;
                         }
                     }
                 }
             }
             LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
-        } else if (FeatureTypeExtractor.DETAILED_GENE_LEVEL_INFO_WITH_TSG.contains(eventDescription)) {
+        } else if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITH_TSG.contains(eventDescription)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (FeatureTypeExtractor.DETAILED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription)) {
+        } else if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription)) {
             return GeneLevelEvent.ACTIVATION;
         } else {
             LOGGER.warn("Unknown event {}", feature);
@@ -84,7 +84,7 @@ public class GeneLevelEventExtractor {
 
             } else if (feature.type() == FeatureType.FUSION_PROMISCUOUS) {
 
-                String curatedPromiscuousFusion = FusionCuration.curatedFusions(feature.geneSymbol(), feature);
+                String curatedPromiscuousFusion = FusionCuration.curateFusion(feature.geneSymbol(), feature);
                 //TODO: check if this is needed
                 // if (function.equals("Likely Loss-of-function")) {
                 //            gene = Strings.EMPTY;

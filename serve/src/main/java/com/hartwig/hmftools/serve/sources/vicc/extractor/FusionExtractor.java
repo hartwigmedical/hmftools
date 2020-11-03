@@ -32,11 +32,10 @@ public class FusionExtractor {
             Integer exonUp = null;
             Integer exonDown = null;
             if (feature.type() == FeatureType.FUSION_PAIR) {
-
                 if (fusion.contains("fusion")) {
                     fusion = fusion.substring(0, fusion.lastIndexOf(" "));
                 }
-                String curatedFusion = FusionCuration.curatedFusions(fusion, feature);
+                String curatedFusion = FusionCuration.curateFusion(fusion, feature);
                 String[] fusionArray = curatedFusion.split("-");
 
                 if (fusionArray.length == 2) {
@@ -62,10 +61,10 @@ public class FusionExtractor {
                         fusionGeneStart = "ITD";
                         fusionGeneEnd = "ITD";
                     } else {
-                        LOGGER.warn("Fusion {} is not yet curated!", curatedFusion);
+                        LOGGER.warn("Fusion '{}' has not yet been curated!", fusion);
                     }
                 } else {
-                    LOGGER.warn("Fusion name {} is too long!", curatedFusion);
+                    LOGGER.warn("Too many parts in fusion name: {}!", fusion);
                 }
 
                 fusionsPerFeature.put(feature,

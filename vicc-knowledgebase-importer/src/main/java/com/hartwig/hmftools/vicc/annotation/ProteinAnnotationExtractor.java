@@ -13,6 +13,6 @@ public final class ProteinAnnotationExtractor {
     @NotNull
     public static String proteinAnnotation(@NotNull Feature feature) {
         String featureName = feature.name();
-        return DetermineHotspot.isHotspot(featureName) ? DetermineHotspot.extractProteinAnnotation(featureName) : Strings.EMPTY;
+        return HotspotClassifier.isHotspot(featureName) ? HotspotClassifier.extractProteinAnnotation(featureName) : Strings.EMPTY;
     }
 }

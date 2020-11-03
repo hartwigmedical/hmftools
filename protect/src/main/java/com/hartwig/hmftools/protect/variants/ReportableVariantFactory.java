@@ -3,11 +3,11 @@ package com.hartwig.hmftools.protect.variants;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
@@ -62,7 +62,13 @@ public final class ReportableVariantFactory {
     @NotNull
     public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog) {
-        Map<String, DriverCatalog> driverCatalogMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
+        Map<String, DriverCatalog> driverCatalogMap = Maps.newHashMap();
+
+        for (DriverCatalog entry : driverCatalog) {
+            if (entry.driver() == DriverType.MUTATION) {
+                driverCatalogMap.put(entry.gene(), entry);
+            }
+        }
 
         List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
