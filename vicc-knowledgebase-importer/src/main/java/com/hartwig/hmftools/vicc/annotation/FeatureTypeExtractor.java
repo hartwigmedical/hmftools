@@ -21,11 +21,11 @@ public final class FeatureTypeExtractor {
 
     @NotNull
     public static FeatureType extractType(@NotNull Feature feature) {
-        return extractType(feature.geneSymbol(), feature.name(), feature.biomarkerType(), feature.provenanceRule());
+        return extractType(feature.name(), feature.geneSymbol(), feature.biomarkerType(), feature.provenanceRule());
     }
 
     @NotNull
-    public static FeatureType extractType(@NotNull String featureName, @NotNull String gene, @Nullable String biomarkerType,
+    public static FeatureType extractType(@NotNull String featureName, @Nullable String gene, @Nullable String biomarkerType,
             @Nullable String provenanceRule) {
         Map<FeatureType, Boolean> evaluations = Maps.newHashMap();
 

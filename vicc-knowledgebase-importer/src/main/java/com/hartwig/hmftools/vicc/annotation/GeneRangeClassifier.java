@@ -49,7 +49,7 @@ public final class GeneRangeClassifier {
                 eventDescription) || DETAILED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription) || GENE_LEVEL.equals(provenanceRule);
     }
 
-    public static boolean isGeneRangeExonEvent(@NotNull String featureName, @NotNull String gene) {
+    public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String gene) {
         if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName)) {
             return false;
         }

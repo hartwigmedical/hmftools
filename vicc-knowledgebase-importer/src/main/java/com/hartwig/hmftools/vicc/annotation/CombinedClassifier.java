@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class CombinedClassifier {
 
@@ -24,7 +25,7 @@ final class CombinedClassifier {
     private CombinedClassifier() {
     }
 
-    public static boolean isFusionPairAndGeneRangeExon(@NotNull String featureName, @NotNull String gene) {
+    public static boolean isFusionPairAndGeneRangeExon(@NotNull String featureName, @Nullable String gene) {
         Set<String> entries = FUSION_PAIR_AND_EXON_RANGES_PER_GENE.get(gene);
         if (entries != null) {
             return entries.contains(featureName);
