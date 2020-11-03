@@ -147,7 +147,7 @@ public class ChainFinder
         mUseAlleleJCNs = false;
 
         mDiagnostics = new ChainDiagnostics(
-                mLinkAllocator.getSvConnectionsMap(), mLinkAllocator.getSvCompletedConnections(), mChains, mUniqueChains,
+                mLinkAllocator.getSvConnections(), mLinkAllocator.getSvCompletedConnections(), mChains, mUniqueChains,
                 mSvBreakendPossibleLinks, mDoubleMinuteSVs, mLinkAllocator.getUniquePairs());
     }
 
@@ -697,7 +697,7 @@ public class ChainFinder
         if(mComplexDupCandidates.keySet().contains(var))
             return;
 
-        if(mLinkAllocator.getSvConnectionsMap().get(var) == null)
+        if(mLinkAllocator.getSvConnections().get(var) == null)
             return;
 
         final SvVarData otherSV = higherJcnBreakend.getSV();

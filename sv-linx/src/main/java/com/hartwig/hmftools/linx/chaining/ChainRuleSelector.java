@@ -58,7 +58,7 @@ public class ChainRuleSelector
     // references from chain-finder
     private final Map<SvBreakend, List<LinkedPair>> mSvBreakendPossibleLinks;
     private final ChainJcnLimits mJcnLimits;
-    private final Map<SvVarData, ChainState> mSvConnectionsMap;
+    private final SvChainConnections mSvConnectionsMap;
     private final Map<SvVarData,List<LinkedPair>> mComplexDupCandidates;
     private final List<SvVarData> mFoldbacks;
     private final List<LinkedPair> mAdjacentMatchingPairs;
@@ -78,7 +78,7 @@ public class ChainRuleSelector
         mLinkAllocator = linkAllocator;
         mJcnLimits = jcnLimits;
         mSvBreakendPossibleLinks = svBreakendPossibleLinks;
-        mSvConnectionsMap = linkAllocator.getSvConnectionsMap();
+        mSvConnectionsMap = linkAllocator.getSvConnections();
         mFoldbacks = foldbacks;
         mComplexDupCandidates = complexDupCandidates;
         mAdjacentMatchingPairs = adjacentMatchingPairs;
@@ -165,6 +165,9 @@ public class ChainRuleSelector
                     break;
             }
 
+            if(proposedLinks.isEmpty())
+                continue;
+
             mLinkAllocator.removeSkippedPairs(proposedLinks);
 
             // the top-priority rule acts like an annotation - whether the link violates the cluster ploidy across
@@ -174,11 +177,9 @@ public class ChainRuleSelector
 
             // the last rule 'nearest' can throw up multiple possible links but since they're not conflicting and ordered
             // from shortest to longest, there's no need to cull any more
-            //if(i > 0 && rule != NEAREST)
             cullByPriority(proposedLinks);
 
-            // if the proposed links have been reduced to a single-top priority rule, which also meets the ploidy-support restriction
-            // then take it
+            // if a single-top priority rule is left, also meeting the ploidy-support restriction, then take it
             if(proposedLinks.size() == 1 && linksHaveJcnSupport)
                 return proposedLinks;
         }
@@ -609,7 +610,7 @@ public class ChainRuleSelector
 
                     // where there is a choice to be made between which breakends are used as is usually the case of foldbacks,
                     // choose the breakend with the most unlinked ploidy, which implies its other end is already chained
-                    final ChainState fbConn = mLinkAllocator.getSvConnectionsMap().get(foldback);
+                    final ChainState fbConn = mLinkAllocator.getSvConnections().get(foldback);
 
                     final SvBreakend fbBreakend = fbConn.unlinked(foldbackStart.usesStart()) > fbConn.unlinked(foldbackEnd.usesStart())
                             ? foldbackStart : foldbackEnd;
@@ -707,7 +708,7 @@ public class ChainRuleSelector
                 if(breakend.getSV() != breakend2.getSV())
                     continue;
 
-                final ChainState svConn = mLinkAllocator.getSvConnectionsMap().get(breakend.getSV());
+                final ChainState svConn = mLinkAllocator.getSvConnections().get(breakend.getSV());
 
                 if(svConn == null)
                     continue;
@@ -879,7 +880,6 @@ public class ChainRuleSelector
                 return proposedLinks;
         }
 
-        // double currentMaxPloidy = 0;
         List<LinkedPair> addedLinks = Lists.newArrayList();
 
         for(ChainState svConn : mSvConnectionsMap.values())
@@ -897,9 +897,6 @@ public class ChainRuleSelector
 
                 if(breakendPloidy == 0)
                     continue;
-
-                // if(!copyNumbersEqual(breakendPloidy, currentMaxPloidy) && breakendPloidy < currentMaxPloidy)
-                //    continue;
 
                 final SvBreakend breakend = var.getBreakend(isStart);
                 final List<LinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
@@ -938,9 +935,6 @@ public class ChainRuleSelector
                         continue;
                     }
 
-                    // LNX_LOGGER.trace("pair({}) with {} ploidy({} & {})",
-                    //        pair.toString(), ploidyMatch, formatPloidy(breakendPloidy), formatPloidy(otherBreakendPloidy));
-
                     if(bestProposedLink != null && bestProposedLink.topRule() == JCN_OVERLAP && ploidyMatch != PM_MATCHED)
                     {
                         // no better and longer so keep searching for a better match
@@ -957,9 +951,6 @@ public class ChainRuleSelector
 
                     if(ploidyMatch == PM_MATCHED) // no need to keep searching through this breakend
                         break;
-
-                    // if(!copyNumbersEqual(proposedLink.ploidy(), currentMaxPloidy))
-                    //    currentMaxPloidy = proposedLink.ploidy();
                 }
 
                 if(bestProposedLink != null)

@@ -76,6 +76,8 @@ public class CnDataLoader
         mCnJcnCalcs = new CnJcnCalcs(mChrCnDataMap, mSvIdCnDataMap, mSvDataList);
     }
 
+    public void establishCaches() { mCnJcnCalcs.establishReadCountCache(); }
+
     public final Map<Integer, JcnCalcData> getSvJcnCalcMap() { return mCnJcnCalcs.getSvJcnCalcMap(); }
     public final List<LohEvent> getLohData() { return mLohEventData; }
     public final List<HomLossEvent> getHomLossData() { return mHomLossData; }

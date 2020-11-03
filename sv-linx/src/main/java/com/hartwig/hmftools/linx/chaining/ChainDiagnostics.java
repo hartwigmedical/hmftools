@@ -37,13 +37,13 @@ public class ChainDiagnostics
     private boolean mHasReplication;
     private final List<SvChain> mChains;
     private final List<SvChain> mUniqueChains;
-    private final Map<SvVarData, ChainState> mSvConnectionsMap;
+    private final SvChainConnections mSvConnections;
     private final List<ChainState> mSvCompletedConnections;
     private final Map<SvBreakend, List<LinkedPair>> mSvBreakendPossibleLinks;
     private final List<SvVarData> mDoubleMinuteSVs;
     private final List<LinkedPair> mUniquePairs;
 
-    public ChainDiagnostics(final Map<SvVarData, ChainState> svConnMap, final List<ChainState> svCompleteConns,
+    public ChainDiagnostics(final SvChainConnections svConnMap, final List<ChainState> svCompleteConns,
             final List<SvChain> chains, final List<SvChain> uniqueChains,
             final Map<SvBreakend, List<LinkedPair>> svBreakendPossibleLinks,
             final List<SvVarData> doubleMinuteSVs, final List<LinkedPair> uniquePairs)
@@ -61,7 +61,7 @@ public class ChainDiagnostics
         mLastProgressIndex = 0;
         mSampleId = "";
 
-        mSvConnectionsMap = svConnMap;
+        mSvConnections = svConnMap;
         mSvCompletedConnections = svCompleteConns;
         mChains = chains;
         mUniqueChains = uniqueChains;
@@ -95,7 +95,7 @@ public class ChainDiagnostics
         mClusterId = clusterId;
         mHasReplication = hasReplication;
 
-        mClusterCount = mSvConnectionsMap.size();
+        mClusterCount = mSvConnections.size();
     }
 
     public void setPriorityData(List<SvVarData> complexDups, final List<SvVarData> foldbacks)
@@ -121,7 +121,7 @@ public class ChainDiagnostics
 
         List<ChainState> svConnections = Lists.newArrayList();
         svConnections.addAll(mSvCompletedConnections);
-        svConnections.addAll(mSvConnectionsMap.values());
+        svConnections.addAll(mSvConnections.values());
 
         int invalidBreakends = findMultiConnectionBreakends(svConnections);
 
@@ -180,7 +180,7 @@ public class ChainDiagnostics
             if(connectionCount - foldbackCons - compDupCons > 1)
             {
                 LNX_LOGGER.debug("cluster({} count={}) breakend({}) rep({}) conns({}) foldbacks({}) compDups({}) asmb({})",
-                        mClusterId, mSvConnectionsMap.keySet().size(), svConn.SV.getBreakend(useStart).toString(),
+                        mClusterId, mSvConnections.size(), svConn.SV.getBreakend(useStart).toString(),
                         svConn.Jcn, connectionCount, foldbackCons, compDupCons, assembledLinks);
 
                 logCsv("MULTI_CONN", svConn.SV,
@@ -205,10 +205,10 @@ public class ChainDiagnostics
 
     public void chainingComplete()
     {
-        mUnlinkedBreakendCount = mSvConnectionsMap.values().stream()
+        mUnlinkedBreakendCount = mSvConnections.values().stream()
                 .mapToInt(x -> (x.breakendCount(true) == 0 ? 1 : 0) + (x.breakendCount(false) == 0 ? 1 : 0)).sum();
 
-        mUnlinkedSvCount = (int) mSvConnectionsMap.values().stream()
+        mUnlinkedSvCount = (int) mSvConnections.values().stream()
                 .filter(x -> x.breakendCount(true) == 0 && x.breakendCount(false) == 0).count();
 
         if(!LNX_LOGGER.isDebugEnabled())
@@ -216,10 +216,10 @@ public class ChainDiagnostics
 
         if(mHasReplication)
         {
-            double unlinkedJcnBreakends = mSvConnectionsMap.values().stream()
+            double unlinkedJcnBreakends = mSvConnections.values().stream()
                 .mapToDouble(x -> x.unlinked(true) + x.unlinked(false)).sum();
 
-            double unlinkedJcnSVs = mSvConnectionsMap.values().stream().mapToDouble(x -> x.unlinked()).sum();
+            double unlinkedJcnSVs = mSvConnections.values().stream().mapToDouble(x -> x.unlinked()).sum();
 
             LNX_LOGGER.debug("cluster({}) chaining finished: chains({} unique={} links={}) SVs({}) unlinked SVs({} jcn={}) breakends({} jcn={})",
                     mClusterId, mChains.size(), mUniqueChains.size(), mUniquePairs.size(), mClusterCount,
@@ -284,14 +284,14 @@ public class ChainDiagnostics
         if(!LNX_LOGGER.isDebugEnabled())
             return;
 
-        if(!mHasReplication || mSvConnectionsMap.size() < 100)
+        if(!mHasReplication || mSvConnections.size() < 100)
             return;
 
         if(linkIndex >= mLastProgressIndex + 100)
         {
             mLastProgressIndex = linkIndex;
             LNX_LOGGER.debug("cluster({}) chaining progress: index({}) SVs(incomplete={} complete={}) partialChains({})",
-                    mClusterId, linkIndex, mSvConnectionsMap.size(), mSvCompletedConnections.size(), mChains.size());
+                    mClusterId, linkIndex, mSvConnections.size(), mSvCompletedConnections.size(), mChains.size());
         }
     }
 

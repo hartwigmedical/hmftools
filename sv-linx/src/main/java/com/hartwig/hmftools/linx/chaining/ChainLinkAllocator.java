@@ -45,7 +45,7 @@ public class ChainLinkAllocator
     private int mNextChainId;
 
     // chaining state for each SV
-    private final Map<SvVarData, ChainState> mSvConnectionsMap;
+    private final SvChainConnections mSvConnections;
     private final List<ChainState> mSvCompletedConnections; // fully exhausted SVs are moved into this collection
 
     // references
@@ -65,7 +65,7 @@ public class ChainLinkAllocator
         mChains = chains;
         mDoubleMinuteSVs = doubleMinuteSVs;
 
-        mSvConnectionsMap = Maps.newHashMap();
+        mSvConnections = new SvChainConnections();
         mSvCompletedConnections = Lists.newArrayList();
         mUniquePairs = Lists.newArrayList();
         mSkippedPairs = Maps.newHashMap();
@@ -73,7 +73,7 @@ public class ChainLinkAllocator
         mNextChainId = 0;
     }
 
-    public final Map<SvVarData, ChainState> getSvConnectionsMap() { return mSvConnectionsMap; }
+    public final SvChainConnections getSvConnections() { return mSvConnections; }
     public final List<ChainState> getSvCompletedConnections() { return mSvCompletedConnections; }
 
     public final List<LinkedPair> getUniquePairs() { return mUniquePairs; }
@@ -103,7 +103,7 @@ public class ChainLinkAllocator
 
         mUniquePairs.clear();
         mSkippedPairs.clear();
-        mSvConnectionsMap.clear();
+        mSvConnections.clear();
         mSvCompletedConnections.clear();
     }
 
@@ -133,7 +133,7 @@ public class ChainLinkAllocator
                 continue;
             }
 
-            mSvConnectionsMap.put(var, new ChainState(var, uniformClusterJcn));
+            mSvConnections.add(var, new ChainState(var, uniformClusterJcn));
         }
     }
 
@@ -910,7 +910,7 @@ public class ChainLinkAllocator
                 final SvBreakend otherPairBreakend = newPair.getOtherBreakend(breakend);
                 final SvVarData var = breakend.getSV();
 
-                ChainState svConn = mSvConnectionsMap.get(var);
+                ChainState svConn = mSvConnections.get(var);
 
                 if (otherPairBreakend == null || breakend == null)
                 {
@@ -977,7 +977,7 @@ public class ChainLinkAllocator
         {
             final SvVarData var = breakend.getSV();
 
-            ChainState svConn = mSvConnectionsMap.get(var);
+            ChainState svConn = mSvConnections.get(var);
 
             if (svConn != null)
             {
@@ -1100,14 +1100,14 @@ public class ChainLinkAllocator
         if (svConn.breakendExhausted(true) && (svConn.SV.isSglBreakend() || svConn.breakendExhausted(false)))
         {
             LNX_LOGGER.trace("SV({}) both breakends exhausted", svConn.toString());
-            mSvConnectionsMap.remove(svConn.SV);
+            mSvConnections.remove(svConn.SV);
             mSvCompletedConnections.add(svConn);
         }
     }
 
     protected double getUnlinkedBreakendCount(final SvBreakend breakend)
     {
-        ChainState svConn = mSvConnectionsMap.get(breakend.getSV());
+        ChainState svConn = mSvConnections.get(breakend.getSV());
         if (svConn == null)
             return 0;
 
@@ -1126,7 +1126,7 @@ public class ChainLinkAllocator
     {
         // gather up data about how much unallocated ploidy is available for this breakend
         // and whether it is tied to any chains
-        ChainState svConn = mSvConnectionsMap.get(breakend.getSV());
+        ChainState svConn = mSvConnections.get(breakend.getSV());
         if (svConn == null)
             return new BreakendJcn(0, true);
 
@@ -1187,7 +1187,7 @@ public class ChainLinkAllocator
 
     protected double getMaxUnlinkedBreakendCount(final SvBreakend breakend)
     {
-        ChainState svConn = mSvConnectionsMap.get(breakend.getSV());
+        ChainState svConn = mSvConnections.get(breakend.getSV());
         if (svConn == null)
             return 0;
 

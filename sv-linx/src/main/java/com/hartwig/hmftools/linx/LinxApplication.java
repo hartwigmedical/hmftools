@@ -123,6 +123,10 @@ public class LinxApplication
         SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess);
 
         CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
+
+        if(config.hasMultipleSamples())
+            cnDataLoader.establishCaches();
+
         sampleAnalyser.setCnDataLoader(cnDataLoader);
 
         DriverGeneAnnotator driverGeneAnnotator = null;

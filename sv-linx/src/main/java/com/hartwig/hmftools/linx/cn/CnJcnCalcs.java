@@ -12,20 +12,14 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
-import static org.apache.commons.math3.distribution.PoissonDistribution.DEFAULT_EPSILON;
-import static org.apache.commons.math3.distribution.PoissonDistribution.DEFAULT_MAX_ITERATIONS;
-
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.random.Well19937c;
 
 public class CnJcnCalcs
 {
@@ -36,11 +30,16 @@ public class CnJcnCalcs
     private final Map<Integer,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
     private final List<StructuralVariantData> mSvDataList;
 
+    private static final int READ_COUNT_PROB_MAX = 2000;
+    private static final List<int[]> mReadCountProbilities = Lists.newArrayListWithCapacity(READ_COUNT_PROB_MAX + 1);
+
     private static final double ABS_UNCERTAINTY = 0.15;
     private static final double RELATIVE_UNCERTAINTY = 0.10;
     private static final double ADDITIONAL_ABS_UNCERTAINTY = 0.4;
     private static final double ADDITIONAL_REL_UNCERTAINTY = 0.15;
     private static final double PROPORTION_CNCHANGE_USED_IN_JCN_UNC = 0.5;
+    public static final double READ_COUNT_PROB_LOW = 0.005;
+    public static final double READ_COUNT_PROB_HIGH = 0.995;
 
     public CnJcnCalcs(
             final Map<String,List<SvCNData>> chrCnDataMap,
@@ -55,6 +54,30 @@ public class CnJcnCalcs
     }
 
     public final Map<Integer, JcnCalcData> getSvJcnCalcMap() { return mSvJcnCalcMap; }
+
+    public final SvCNData getCNSegment(final String chromosome, int index)
+    {
+        final List<SvCNData> cnDataList = mChrCnDataMap.get(chromosome);
+
+        if(cnDataList == null || cnDataList.isEmpty())
+            return null;
+
+        if(index < 0 || index >= cnDataList.size())
+            return null;
+
+        return cnDataList.get(index);
+    }
+
+    private StructuralVariantData getSvDataById(int svId)
+    {
+        for (final StructuralVariantData svData : mSvDataList)
+        {
+            if(svData.id() == svId)
+                return svData;
+        }
+
+        return null;
+    }
 
     public void calculateAdjustedJcn(final String sampleId)
     {
@@ -127,9 +150,6 @@ public class CnJcnCalcs
         }
     }
 
-    private static final double POIS_PROB_LOW = 0.005;
-    private static final double POIS_PROB_HIGH = 0.995;
-
     public static JcnCalcData calcAdjustedJcnValues(double cnChgStart, double cnChgEnd,
             int tumorReadCount, double jcn, double maxCNStart, double maxCNEnd, final int[] startDepthData, final int[] endDepthData)
     {
@@ -153,8 +173,8 @@ public class CnJcnCalcs
 
         if(tumorReadCount > 0)
         {
-            double poissonRCLow = calcPoisonReadCount(tumorReadCount, POIS_PROB_LOW);
-            double poissonRCHigh = calcPoisonReadCount(tumorReadCount, POIS_PROB_HIGH);
+            double poissonRCLow = calcPoissonObservedGivenProb(tumorReadCount, true);
+            double poissonRCHigh = calcPoissonObservedGivenProb(tumorReadCount, false);
 
             double rcAdjustedJcn = jcn * ((poissonRCLow + poissonRCHigh) * 0.5) / tumorReadCount;
 
@@ -236,12 +256,33 @@ public class CnJcnCalcs
         return uncertainty;
     }
 
-    private static double calcPoisonReadCount(int readCount, double requiredProb)
+    public void establishReadCountCache()
     {
-        return calcPoissonObservedGivenProb(readCount, requiredProb);
+        mReadCountProbilities.add(0, new int[] {0, 0});
+
+        for(int i = 1; i <= READ_COUNT_PROB_MAX; ++i)
+        {
+            int probCountLow = calcPoissonObservedGivenProb(i, READ_COUNT_PROB_LOW);
+            int probCountHigh = calcPoissonObservedGivenProb(i, READ_COUNT_PROB_HIGH);
+            mReadCountProbilities.add(i, new int[] {probCountLow, probCountHigh});
+        }
     }
 
-    private static int calcPoissonObservedGivenProb(int expectedVal, double requiredProb)
+    private static int calcPoissonObservedGivenProb(int expectedVal, boolean useLow)
+    {
+        if(expectedVal <= 0)
+            return 0;
+
+        if(expectedVal < mReadCountProbilities.size())
+        {
+            final int[] counts = mReadCountProbilities.get(expectedVal);
+            return useLow ? counts[0] : counts[1];
+        }
+
+        return calcPoissonObservedGivenProb(expectedVal, useLow ? READ_COUNT_PROB_LOW : READ_COUNT_PROB_HIGH);
+    }
+
+    public static int calcPoissonObservedGivenProb(int expectedVal, double requiredProb)
     {
         if(expectedVal <= 0)
             return 0;
@@ -313,30 +354,5 @@ public class CnJcnCalcs
 
         return testValue;
     }
-
-    public final SvCNData getCNSegment(final String chromosome, int index)
-    {
-        final List<SvCNData> cnDataList = mChrCnDataMap.get(chromosome);
-
-        if(cnDataList == null || cnDataList.isEmpty())
-            return null;
-
-        if(index < 0 || index >= cnDataList.size())
-            return null;
-
-        return cnDataList.get(index);
-    }
-
-    private StructuralVariantData getSvDataById(int svId)
-    {
-        for (final StructuralVariantData svData : mSvDataList)
-        {
-            if(svData.id() == svId)
-                return svData;
-        }
-
-        return null;
-    }
-
 
 }
