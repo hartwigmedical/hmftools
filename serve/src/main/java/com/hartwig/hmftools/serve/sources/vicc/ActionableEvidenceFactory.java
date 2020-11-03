@@ -26,9 +26,35 @@ final class ActionableEvidenceFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
 
-    private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet("Responsive", "Sensitivity", "Sensitive");
-    private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet("Resistant");
-    private static final Set<String> DIRECTIONS_TO_IGNORE = Sets.newHashSet("Not applicable", "Conflicting", "No benefit", "NA");
+    private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
+    private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
+    private static final Set<String> DIRECTIONS_TO_IGNORE = Sets.newHashSet();
+
+    static {
+        RESPONSIVE_DIRECTIONS.add("Responsive");
+        RESPONSIVE_DIRECTIONS.add("Sensitivity");
+        RESPONSIVE_DIRECTIONS.add("Sensitive");
+
+        RESISTANT_DIRECTIONS.add("Resistant");
+
+        DIRECTIONS_TO_IGNORE.add("Positive");
+        DIRECTIONS_TO_IGNORE.add("Negative");
+        DIRECTIONS_TO_IGNORE.add("Adverse response");
+        DIRECTIONS_TO_IGNORE.add("No responsive");
+        DIRECTIONS_TO_IGNORE.add("Not applicable");
+        DIRECTIONS_TO_IGNORE.add("Conflicting");
+        DIRECTIONS_TO_IGNORE.add("Na");
+        DIRECTIONS_TO_IGNORE.add("N/a");
+        DIRECTIONS_TO_IGNORE.add("Uncertain significance");
+        DIRECTIONS_TO_IGNORE.add("Pathogenic");
+        DIRECTIONS_TO_IGNORE.add("Better outcome");
+        DIRECTIONS_TO_IGNORE.add("No benefit");
+        DIRECTIONS_TO_IGNORE.add("Increased toxicity");
+        DIRECTIONS_TO_IGNORE.add("Increased toxicity (myelosupression)");
+        DIRECTIONS_TO_IGNORE.add("Increased toxicity (ototoxicity)");
+        DIRECTIONS_TO_IGNORE.add("Increased toxicity (hyperbilirubinemia)");
+        DIRECTIONS_TO_IGNORE.add("Unknown");
+    }
 
     private ActionableEvidenceFactory() {
     }

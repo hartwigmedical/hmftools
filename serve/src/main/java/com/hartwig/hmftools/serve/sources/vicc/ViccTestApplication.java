@@ -39,14 +39,6 @@ public class ViccTestApplication {
             Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
     private static final Integer MAX_VICC_ENTRIES = null;
 
-    @NotNull
-    private static Options createOptions() {
-        Options options = new Options();
-        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
-
-        return options;
-    }
-
     public static void main(String[] args) throws IOException, ParseException {
         Configurator.setRootLevel(Level.DEBUG);
 
@@ -93,5 +85,13 @@ public class ViccTestApplication {
 
         ViccUtil.writeFeatures(viccFeatureTsv, viccEntries);
         ViccUtil.writeActionability(outputDir, viccExtractionOutput);
+    }
+
+    @NotNull
+    private static Options createOptions() {
+        Options options = new Options();
+        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
+
+        return options;
     }
 }
