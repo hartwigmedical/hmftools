@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.allowSuspectChains;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
@@ -77,7 +78,6 @@ public class FusionDisruptionAnalyser
     private final FusionParameters mFusionParams;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
-    private boolean mAllowInvalidTraversal;
     private List<String> mRestrictedGenes;
     private boolean mFindNeoEpitopes;
 
@@ -96,7 +96,6 @@ public class FusionDisruptionAnalyser
     public static final String LOG_ALL_POTENTIALS = "log_all_potential_fusions";
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
-    public static final String SKIP_INVALID_TRAVERSAL = "skip_invalid_traversal";
     public static final String NEO_EPITOPES = "neo_epitopes";
 
     public FusionDisruptionAnalyser(final CommandLine cmdLineArgs, final LinxConfig config,
@@ -119,7 +118,6 @@ public class FusionDisruptionAnalyser
         mLogReportableOnly = false;
         mLogAllPotentials = false;
         mFindNeoEpitopes = false;
-        mAllowInvalidTraversal = true;
 
         mFusionParams = new FusionParameters();
         mFusionParams.RequireUpstreamBiotypes = true;
@@ -139,7 +137,6 @@ public class FusionDisruptionAnalyser
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
-        options.addOption(SKIP_INVALID_TRAVERSAL, false, "Don't allow fusion chains to traverse a splice acceptor");
         options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
 
@@ -178,8 +175,6 @@ public class FusionDisruptionAnalyser
         mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
         mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
         mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
-
-        mAllowInvalidTraversal = !cmdLineArgs.hasOption(SKIP_INVALID_TRAVERSAL);
 
         if(cmdLineArgs.hasOption(LOG_INVALID_REASONS))
         {
@@ -224,13 +219,11 @@ public class FusionDisruptionAnalyser
         if(cmdLineArgs.hasOption(CHECK_FUSIONS) && !mFusionFinder.hasValidConfigData())
             mValidState = false;
 
-        LNX_LOGGER.debug("fusion config: allowInvalidTraversal({}) requirePhaseMatch({}) allowExonSkipping({}) requireUpstreamBiotypes({})",
-                mAllowInvalidTraversal, mFusionParams.RequirePhaseMatch, mFusionParams.AllowExonSkipping, mFusionParams.RequireUpstreamBiotypes);
+        LNX_LOGGER.debug("fusion config: requirePhaseMatch({}) allowExonSkipping({}) requireUpstreamBiotypes({})",
+                mFusionParams.RequirePhaseMatch, mFusionParams.AllowExonSkipping, mFusionParams.RequireUpstreamBiotypes);
 
         cacheSpecialFusionGenes();
     }
-
-    public void setAllowInvalidTraversal(boolean toggle) { mAllowInvalidTraversal = toggle; }
 
     public void cacheSpecialFusionGenes()
     {
@@ -655,6 +648,7 @@ public class FusionDisruptionAnalyser
                     // check any traversed genes
                     long totalLinkLength = 0;
                     boolean validTraversal = true;
+                    boolean allowInvalidTraversal = allowSuspectChains(fusion.knownType());
                     boolean allTraversalAssembled = true;
 
                     for(LinkedPair pair : traversedPairs)
@@ -683,12 +677,12 @@ public class FusionDisruptionAnalyser
                         {
                             validTraversal = false;
 
-                            if(!mAllowInvalidTraversal)
+                            if(!allowInvalidTraversal)
                                 break;
                         }
                     }
 
-                    if(!validTraversal && !mAllowInvalidTraversal)
+                    if(!validTraversal && !allowInvalidTraversal)
                     {
                         recordInvalidFusion(fusion, "InvalidTraversal");
                         continue;
@@ -763,7 +757,7 @@ public class FusionDisruptionAnalyser
 
                     // accept invalidated chains and transcripts for known fusions
                     boolean chainLengthOk = totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
-                    boolean traversalOk = validTraversal || mAllowInvalidTraversal;
+                    boolean traversalOk = validTraversal || allowInvalidTraversal;
 
                     if(chainLengthOk && traversalOk)
                     {
@@ -779,10 +773,10 @@ public class FusionDisruptionAnalyser
                     }
                 }
 
-                if(validTraversalFusionCount == 0 && !mAllowInvalidTraversal && lpIndex2 > lpIndex1 && mRnaFusionMapper == null)
+                if(validTraversalFusionCount == 0 && lpIndex2 > lpIndex1 && mRnaFusionMapper == null)
                 {
-                    // if there are no valid traversals between 2 indices, then any chain sections starting at the lower index
-                    // will likewise be invalidated since can skip past this
+                    // there were fusions between these 2 SV breakends but none had valid traversal
+                    // this means than any any link further along the chain will also not be valid
                     LNX_LOGGER.trace("cluster({}) chain({}) no valid traversals between({} -> {})",
                             cluster.id(), chain.id(), lpIndex1, lpIndex2);
 
@@ -900,7 +894,7 @@ public class FusionDisruptionAnalyser
 
     private boolean persistFusion(final GeneFusion fusion)
     {
-        if(!fusion.validChainTraversal() && !mAllowInvalidTraversal)
+        if(!fusion.validChainTraversal() && !allowSuspectChains(fusion.knownType()))
             return false;
 
         if(fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())

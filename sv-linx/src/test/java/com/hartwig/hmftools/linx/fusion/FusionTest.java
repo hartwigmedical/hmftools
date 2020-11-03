@@ -250,8 +250,6 @@ public class FusionTest
 
         tester.initialiseFusions(geneTransCache);
 
-        tester.FusionAnalyser.setAllowInvalidTraversal(false);
-
         String geneName1 = "GENE1";
         String geneId1 = "ENSG0001";
         String chromosome = "1";
@@ -437,9 +435,10 @@ public class FusionTest
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
-        assertEquals(1, tester.FusionAnalyser.getFusions().size());
+        assertEquals(3, tester.FusionAnalyser.getFusions().size());
 
-        fusion = tester.FusionAnalyser.getFusions().get(0);
+        fusion = tester.FusionAnalyser.getFusions().stream().filter(x -> x.reportable()).findFirst().orElse(null);
+        assertTrue(fusion != null);
         assertEquals(var3.id(), fusion.upstreamTrans().gene().id());
         assertEquals(var3.id(), fusion.downstreamTrans().gene().id());
 
@@ -501,19 +500,17 @@ public class FusionTest
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
-        // invalid fusions are no longer cached
-        assertEquals(1, tester.FusionAnalyser.getFusions().size());
+        assertEquals(2, tester.FusionAnalyser.getFusions().size());
+        assertEquals(1, tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).count());
 
-        fusion = tester.FusionAnalyser.getFusions().get(0);
+        fusion = tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).findFirst().orElse(null);
         assertTrue(!fusion.phaseMatched());
         assertEquals(var3.id(), fusion.upstreamTrans().gene().id());
         assertEquals(var5.id(), fusion.downstreamTrans().gene().id());
 
         assertFalse(validateFusionAnnotations(fusion, false, false));
 
-        // repeat again but this time allowing for invalid traversal
-        tester.FusionAnalyser.setAllowInvalidTraversal(true);
-
+        // repeat again but this time allowing for invalid traversal in a known pair
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
@@ -521,9 +518,12 @@ public class FusionTest
 
         final int varId3 = var3.id();
         final int varId7 = var7.id();
+
         fusion = tester.FusionAnalyser.getFusions().stream()
                 .filter(x -> x.upstreamTrans().gene().id() == varId3 && x.downstreamTrans().gene().id() == varId7).findFirst().orElse(null);
+
         assertTrue(fusion != null);
+        assertEquals(KNOWN_PAIR, fusion.knownType());
         assertFalse(fusion.validChainTraversal());
     }
 

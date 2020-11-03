@@ -109,7 +109,7 @@ public class FusionReportability
         return OK;
     }
 
-    private static boolean allowSuspectChains(final KnownFusionType type)
+    public static boolean allowSuspectChains(final KnownFusionType type)
     {
         return (type == KNOWN_PAIR || type == EXON_DEL_DUP || type == IG_KNOWN_PAIR);
     }
