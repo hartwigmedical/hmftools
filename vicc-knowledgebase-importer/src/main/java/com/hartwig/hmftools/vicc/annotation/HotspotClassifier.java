@@ -45,15 +45,6 @@ final class HotspotClassifier {
         return false;
     }
 
-    private static boolean isHotspotOnFusionGene(@NotNull String featureName) {
-        String trimmedName = featureName.trim();
-        if (trimmedName.contains(" ")) {
-            String[] parts = trimmedName.split(" ");
-            return FusionClassifier.isFusionPair(parts[0], null);
-        }
-        return false;
-    }
-
     @NotNull
     public static String extractProteinAnnotation(@NotNull String featureName) {
         String trimmedName = featureName.trim();
@@ -185,6 +176,15 @@ final class HotspotClassifier {
         String newAminoAcid = proteinAnnotation.substring(firstNotDigit);
         // X is a wildcard that we don't support, and "/" indicates logical OR that we don't support.
         return !newAminoAcid.equals("X") && !newAminoAcid.contains("/");
+    }
+
+    private static boolean isHotspotOnFusionGene(@NotNull String featureName) {
+        String trimmedName = featureName.trim();
+        if (trimmedName.contains(" ")) {
+            String[] parts = trimmedName.split(" ");
+            return FusionClassifier.isFusionPair(parts[0], null);
+        }
+        return false;
     }
 
     private static boolean isLong(@NotNull String value) {
