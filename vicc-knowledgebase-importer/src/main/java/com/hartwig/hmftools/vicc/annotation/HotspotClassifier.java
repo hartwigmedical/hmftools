@@ -25,17 +25,33 @@ final class HotspotClassifier {
     public static boolean isHotspot(@NotNull String featureName) {
         String proteinAnnotation = extractProteinAnnotation(featureName);
 
+        boolean isHotspot;
         if (isFrameshift(proteinAnnotation)) {
-            return isValidFrameshift(proteinAnnotation);
+            isHotspot = isValidFrameshift(proteinAnnotation);
         } else if (proteinAnnotation.contains(HGVS_RANGE_INDICATOR)) {
-            return isValidRangeMutation(proteinAnnotation);
+            isHotspot = isValidRangeMutation(proteinAnnotation);
         } else if (proteinAnnotation.contains(HGVS_DELETION + HGVS_INSERTION)) {
-            return isValidComplexDeletionInsertion(proteinAnnotation);
+            isHotspot = isValidComplexDeletionInsertion(proteinAnnotation);
         } else if (proteinAnnotation.startsWith("*")) {
-            return true;
+            isHotspot = true;
         } else {
-            return isValidSingleCodonMutation(proteinAnnotation);
+            isHotspot = isValidSingleCodonMutation(proteinAnnotation);
         }
+
+        if (isHotspot) {
+            return !isHotspotOnFusionGene(featureName);
+        }
+
+        return false;
+    }
+
+    private static boolean isHotspotOnFusionGene(@NotNull String featureName) {
+        String trimmedName = featureName.trim();
+        if (trimmedName.contains(" ")) {
+            String[] parts = trimmedName.split(" ");
+            return FusionClassifier.isFusionPair(parts[0], null);
+        }
+        return false;
     }
 
     @NotNull

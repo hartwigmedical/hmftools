@@ -10,24 +10,6 @@ import org.junit.Test;
 public class HotspotClassifierTest {
 
     @Test
-    public void canConvertFeatureNameToProteinAnnotation() {
-        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("E709K"));
-        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("EGFR E709K "));
-        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("EGFR:E709K"));
-        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("EGFR:p.E709K"));
-        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("EGFR p.E709K"));
-        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("E709K (c.2100A>c)"));
-
-        assertEquals("G778_P780dup", HotspotClassifier.extractProteinAnnotation("G778_P780DUP"));
-        assertEquals("V560del", HotspotClassifier.extractProteinAnnotation("KIT:p.V560DEL"));
-        assertEquals("V560fs", HotspotClassifier.extractProteinAnnotation("KIT:p.V560FS"));
-        assertEquals("V560fs", HotspotClassifier.extractProteinAnnotation("KIT:p.V560FS*"));
-        assertEquals("V560insAYVM", HotspotClassifier.extractProteinAnnotation("KIT:p.V560INSAYVM"));
-        assertEquals("V560insINS", HotspotClassifier.extractProteinAnnotation("KIT:p.V560INSINS"));
-        assertEquals("V560delinsDEL", HotspotClassifier.extractProteinAnnotation("KIT:p.V560DELINSDEL"));
-    }
-
-    @Test
     public void canAssessWhetherProteinAnnotationIsHotspot() {
         assertTrue(HotspotClassifier.isHotspot("K5N"));
         assertTrue(HotspotClassifier.isHotspot("L2230V"));
@@ -50,6 +32,9 @@ public class HotspotClassifierTest {
         assertFalse(HotspotClassifier.isHotspot("L2"));
         assertFalse(HotspotClassifier.isHotspot("L20Pdel5"));
         assertFalse(HotspotClassifier.isHotspot("fs"));
+
+        // Hotspots on fusion genes are ignored
+        assertFalse(HotspotClassifier.isHotspot("EML4-ALK L1152R"));
 
         // Splice variants are ignored by hotspot extractor:
         assertFalse(HotspotClassifier.isHotspot("963_D1010splice"));
@@ -77,4 +62,21 @@ public class HotspotClassifierTest {
         assertFalse(HotspotClassifier.isHotspot("V600E/K"));
     }
 
+    @Test
+    public void canConvertFeatureNameToProteinAnnotation() {
+        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("E709K"));
+        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("EGFR E709K "));
+        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("EGFR:E709K"));
+        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("EGFR:p.E709K"));
+        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("EGFR p.E709K"));
+        assertEquals("E709K", HotspotClassifier.extractProteinAnnotation("E709K (c.2100A>c)"));
+
+        assertEquals("G778_P780dup", HotspotClassifier.extractProteinAnnotation("G778_P780DUP"));
+        assertEquals("V560del", HotspotClassifier.extractProteinAnnotation("KIT:p.V560DEL"));
+        assertEquals("V560fs", HotspotClassifier.extractProteinAnnotation("KIT:p.V560FS"));
+        assertEquals("V560fs", HotspotClassifier.extractProteinAnnotation("KIT:p.V560FS*"));
+        assertEquals("V560insAYVM", HotspotClassifier.extractProteinAnnotation("KIT:p.V560INSAYVM"));
+        assertEquals("V560insINS", HotspotClassifier.extractProteinAnnotation("KIT:p.V560INSINS"));
+        assertEquals("V560delinsDEL", HotspotClassifier.extractProteinAnnotation("KIT:p.V560DELINSDEL"));
+    }
 }

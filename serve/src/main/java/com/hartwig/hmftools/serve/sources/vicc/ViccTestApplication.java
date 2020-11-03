@@ -40,7 +40,7 @@ public class ViccTestApplication {
     private static final Integer MAX_VICC_ENTRIES = null;
 
     public static void main(String[] args) throws IOException, ParseException {
-        Configurator.setRootLevel(Level.DEBUG);
+        Configurator.setRootLevel(Level.WARN);
 
         Options options = ViccTestApplication.createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
