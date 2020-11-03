@@ -2,7 +2,7 @@ package com.hartwig.hmftools.vicc.annotation;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CombinedClassifier {
+final class CombinedClassifier {
 
     private CombinedClassifier() {
     }

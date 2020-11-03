@@ -6,7 +6,7 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class SignatureClassifier {
+final class SignatureClassifier {
 
     public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
