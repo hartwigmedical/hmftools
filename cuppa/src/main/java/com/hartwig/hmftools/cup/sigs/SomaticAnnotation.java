@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
@@ -48,7 +48,7 @@ import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -56,7 +56,7 @@ import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
 public class SomaticAnnotation
 {
-    private final SampleAnalyserConfig mConfig;
+    private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
     private SigMatrix mRefSampleCounts;
@@ -79,7 +79,7 @@ public class SomaticAnnotation
 
     private static final int SNV_POS_FREQ_SNV_TOTAL_THRESHOLD = 20000;
 
-    public SomaticAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
+    public SomaticAnnotation(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;

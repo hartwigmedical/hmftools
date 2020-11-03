@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.common;
 
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CANCER_SUBTYPE_OTHER;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OVARY;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PROSTATE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UTERUS;

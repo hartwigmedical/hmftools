@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.sample;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -22,9 +22,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.purple.purity.PurpleQCFile;
-import com.hartwig.hmftools.cup.SampleAnalyserConfig;
-import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -33,7 +31,7 @@ import org.apache.commons.compress.utils.Lists;
 
 public class SampleTraits
 {
-    private final SampleAnalyserConfig mConfig;
+    private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
     private final Map<String,SampleTraitsData> mSampleTraitsData;
@@ -43,7 +41,7 @@ public class SampleTraits
 
     private boolean mIsValid;
 
-    public SampleTraits(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
+    public SampleTraits(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;

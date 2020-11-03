@@ -13,7 +13,7 @@ import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SampleAnalyserConfig
+public class CuppaConfig
 {
     // reference data
     public final String RefSampleDataFile;
@@ -44,6 +44,7 @@ public class SampleAnalyserConfig
     // database access
     public final DatabaseAccess DbAccess;
 
+    public final boolean WriteSimilarities;
     public final String OutputDir;
     public final String OutputFileId;
 
@@ -73,16 +74,17 @@ public class SampleAnalyserConfig
     private static final String REF_RNA_CANCER_EXP_FILE = "ref_rna_cancer_exp_file";
     private static final String REF_RNA_GENE_CANCER_PERC_FILE = "ref_rna_gene_cancer_file";
 
+    public static final String WRITE_SIMS = "write_similarities";
     public static final String OUTPUT_FILE_ID = "output_file_id";
     public static final String LOG_DEBUG = "log_debug";
 
-    public static final Logger CUP_LOGGER = LogManager.getLogger(SampleAnalyserConfig.class);
+    public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
 
     public static final String CANCER_SUBTYPE_OTHER = "Other";
     public static final String DATA_DELIM = ",";
     public static final String SUBSET_DELIM = ";";
 
-    public SampleAnalyserConfig(final CommandLine cmd)
+    public CuppaConfig(final CommandLine cmd)
     {
         SampleDataDir = cmd.getOptionValue(SAMPLE_DATA_DIR, "");
 
@@ -110,6 +112,7 @@ public class SampleAnalyserConfig
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
+        WriteSimilarities = Boolean.parseBoolean(cmd.getOptionValue(WRITE_SIMS, "true"));
 
         DbAccess = createDatabaseAccess(cmd);
     }
@@ -157,6 +160,8 @@ public class SampleAnalyserConfig
         options.addOption(REF_FEAT_AVG_FILE, true, "Reference features per sample file");
         options.addOption(REF_RNA_CANCER_EXP_FILE, true, "Reference RNA gene expression file");
         options.addOption(REF_RNA_GENE_CANCER_PERC_FILE, true, "Reference RNA gene cancer percentiles file");
+
+        options.addOption(WRITE_SIMS, true, "Cohort-only - write top-20 CSS similarities to file");
 
         addDatabaseCmdLineArgs(options);
         RnaExpression.addCmdLineArgs(options);

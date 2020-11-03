@@ -2,8 +2,8 @@ package com.hartwig.hmftools.cup.sample;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.WGD;
 
@@ -14,10 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.cup.SampleAnalyserConfig;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SampleTraitsDataLoader

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.cup.common;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CANCER_SUBTYPE_OTHER;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SUBSET_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
 
 import java.io.File;

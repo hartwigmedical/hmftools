@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -17,14 +17,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
-import com.hartwig.hmftools.cup.svs.SvDataType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

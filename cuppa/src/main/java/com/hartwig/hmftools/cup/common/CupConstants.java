@@ -12,7 +12,7 @@ public class CupConstants
 
     public static final double SNV_CSS_DIFF_EXPONENT = 8;
     public static final double SNV_POS_FREQ_DIFF_EXPONENT = 10;
-    public static final double RNA_GENE_EXP_DIFF_EXPONENT = 10;
+    public static final double RNA_GENE_EXP_DIFF_EXPONENT = 30;
 
     public static final int POS_FREQ_BUCKET_SIZE = 500000;
     public static final int POS_FREQ_MAX_SAMPLE_COUNT = 20000;

@@ -2,11 +2,11 @@ package com.hartwig.hmftools.cup;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SAMPLE_DATA_FILE;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SPECIFIC_SAMPLE_DATA;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
 
@@ -35,9 +35,9 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-public class SampleAnalyser
+public class CupAnalyser
 {
-    private final SampleAnalyserConfig mConfig;
+    private final CuppaConfig mConfig;
 
     private final SampleDataCache mSampleDataCache;
 
@@ -50,9 +50,9 @@ public class SampleAnalyser
     private BufferedWriter mSampleDataWriter;
     private BufferedWriter mSampleSimilarityWriter;
 
-    public SampleAnalyser(final CommandLine cmd)
+    public CupAnalyser(final CommandLine cmd)
     {
-        mConfig = new SampleAnalyserConfig(cmd);
+        mConfig = new CuppaConfig(cmd);
 
         mSampleDataCache = new SampleDataCache();
 
@@ -196,15 +196,18 @@ public class SampleAnalyser
 
             mSampleDataWriter.newLine();
 
-            final String sampleSimilarityFilename = mSampleDataCache.isSingleSample() ?
-                    mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.similarities.csv"
-                    : mConfig.formOutputFilename("SAMPLE_SIMILARITIES");
+            if(mConfig.WriteSimilarities)
+            {
+                final String sampleSimilarityFilename = mSampleDataCache.isSingleSample() ?
+                        mConfig.OutputDir + mSampleDataCache.SpecificSample.Id + ".cup.similarities.csv"
+                        : mConfig.formOutputFilename("SAMPLE_SIMILARITIES");
 
-            mSampleSimilarityWriter = createBufferedWriter(sampleSimilarityFilename, false);
+                mSampleSimilarityWriter = createBufferedWriter(sampleSimilarityFilename, false);
 
-            mSampleSimilarityWriter.write("SampleId,MatchType,Score,MatchSampleId");
-            mSampleSimilarityWriter.write(",MatchCancerType,MatchPrimaryLocation,MatchCancerSubtype");
-            mSampleSimilarityWriter.newLine();
+                mSampleSimilarityWriter.write("SampleId,MatchType,Score,MatchSampleId");
+                mSampleSimilarityWriter.write(",MatchCancerType,MatchPrimaryLocation,MatchCancerSubtype");
+                mSampleSimilarityWriter.newLine();
+            }
         }
         catch(IOException e)
         {
@@ -240,7 +243,7 @@ public class SampleAnalyser
 
     private void writeSampleSimilarities(final SampleData sampleData, final List<SampleSimilarity> similarities)
     {
-        if(similarities.isEmpty() || mSampleDataWriter == null)
+        if(similarities.isEmpty() || mSampleSimilarityWriter == null)
             return;
 
         try
@@ -271,7 +274,7 @@ public class SampleAnalyser
     public static void main(@NotNull final String[] args) throws ParseException
     {
         Options options = new Options();
-        SampleAnalyserConfig.addCmdLineArgs(options);
+        CuppaConfig.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
@@ -280,8 +283,8 @@ public class SampleAnalyser
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        SampleAnalyser sampleAnalyser = new SampleAnalyser(cmd);
-        sampleAnalyser.run();
+        CupAnalyser cupAnalyser = new CupAnalyser(cmd);
+        cupAnalyser.run();
     }
 
     @NotNull

@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PAN;
@@ -31,14 +31,14 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 
 public class FeatureAnnotation
 {
-    private final SampleAnalyserConfig mConfig;
+    private final CuppaConfig mConfig;
     private final Map<String,List<SampleFeatureData>> mSampleFeatures;
     private final Map<String,List<FeaturePrevData>> mCancerFeaturePrevalence;
     private final SampleDataCache mSampleDataCache;
@@ -47,7 +47,7 @@ public class FeatureAnnotation
     private final Map<String,FeaturePrevCounts> mGenePrevalenceTotals;
     private final Map<String,Double> mCancerFeatureAvg;
 
-    public FeatureAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
+    public FeatureAnnotation(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleFeatures = Maps.newHashMap();

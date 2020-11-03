@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.feature;
 
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.SUBSET_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 
 import java.util.Map;
 

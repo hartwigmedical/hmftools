@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.cup.sigs;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.sigs.RefSomatics.populateRefPercentileData;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;

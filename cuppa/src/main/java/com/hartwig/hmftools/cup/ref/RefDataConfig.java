@@ -2,13 +2,11 @@ package com.hartwig.hmftools.cup.ref;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SAMPLE_DATA_FILE;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.REF_SNV_COUNTS_FILE;
+import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
+import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
-
-import java.io.File;
 
 import com.hartwig.hmftools.cup.rna.RefRnaExpression;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.svs;
 
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.svs.SvDataType.typeIndex;
 
 import java.util.Map;

@@ -20,14 +20,14 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
-import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 
 public class SvAnnotation
 {
-    private final SampleAnalyserConfig mConfig;
+    private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
     private final Map<String,SvData> mSampleSvData;
@@ -36,7 +36,7 @@ public class SvAnnotation
 
     private boolean mIsValid;
 
-    public SvAnnotation(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache)
+    public SvAnnotation(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;

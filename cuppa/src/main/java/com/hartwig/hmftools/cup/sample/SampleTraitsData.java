@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.sample;
 
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 
 import java.util.Map;
 

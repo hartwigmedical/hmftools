@@ -2,15 +2,11 @@ package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
-import static com.hartwig.hmftools.common.sigs.Percentiles.buildPercentiles;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.cup.SampleAnalyserConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
-import static com.hartwig.hmftools.cup.feature.FeatureType.VIRUS;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

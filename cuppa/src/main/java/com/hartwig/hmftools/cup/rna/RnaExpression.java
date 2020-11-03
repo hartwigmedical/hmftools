@@ -29,7 +29,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
-import com.hartwig.hmftools.cup.SampleAnalyserConfig;
+import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -40,7 +40,7 @@ import org.apache.commons.cli.Options;
 
 public class RnaExpression
 {
-    private final SampleAnalyserConfig mConfig;
+    private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
     private SigMatrix mRefCancerTypeGeneExpression;
@@ -64,7 +64,7 @@ public class RnaExpression
 
     private boolean mIsValid;
 
-    public RnaExpression(final SampleAnalyserConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RnaExpression(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -242,7 +242,7 @@ public class RnaExpression
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, GENE_EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
-        similarities.addAll(topMatches);
+        // similarities.addAll(topMatches);
     }
 
     private double[] adjustRefTpmTotals(final double[] refGeneTpmTotals, final double[] sampleGeneTPMs)
