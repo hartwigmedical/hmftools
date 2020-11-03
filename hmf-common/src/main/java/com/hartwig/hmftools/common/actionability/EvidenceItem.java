@@ -7,9 +7,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class EvidenceItem {
+public abstract class EvidenceItem implements WithEvent {
 
     @NotNull
+    @Override
     public abstract String event();
 
     @NotNull

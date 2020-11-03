@@ -4,10 +4,13 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
+import com.hartwig.hmftools.patientreporter.cfreport.data.EventFilter;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
+import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
@@ -29,9 +32,13 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
 
     @NotNull
     private final GenomicAnalysis genomicAnalysis;
+    @NotNull
+    private final LimsGermlineReportingLevel germlineReportingLevel;
 
-    public TherapyDetailsChapterOnLabel(@NotNull final GenomicAnalysis patientReport) {
-        this.genomicAnalysis = patientReport;
+    public TherapyDetailsChapterOnLabel(@NotNull final GenomicAnalysis genomicAnalysis,
+            @NotNull final LimsGermlineReportingLevel germlineReportingLevel) {
+        this.genomicAnalysis = genomicAnalysis;
+        this.germlineReportingLevel = germlineReportingLevel;
     }
 
     @NotNull
@@ -45,11 +52,13 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
         Table chapterTable = new Table(1);
 
         chapterTable.addCell(new Cell().add(TherapyDetailsChapterFunctions.createEvidenceTable("Tumor type specific evidence",
-                genomicAnalysis.tumorSpecificEvidence())).setPadding(0).setBorder(Border.NO_BORDER));
+                genomicAnalysis.tumorSpecificEvidence(),
+                genomicAnalysis.reportableVariants(),
+                germlineReportingLevel)).setPadding(0).setBorder(Border.NO_BORDER));
 
-        chapterTable.addCell(new Cell().add(createClinicalTrialsTable(genomicAnalysis.clinicalTrials()))
-                .setPadding(0)
-                .setBorder(Border.NO_BORDER));
+        chapterTable.addCell(new Cell().add(createClinicalTrialsTable(genomicAnalysis.clinicalTrials(),
+                genomicAnalysis.reportableVariants(),
+                germlineReportingLevel)).setPadding(0).setBorder(Border.NO_BORDER));
 
         chapterTable.addFooterCell(new Cell().add(TherapyDetailsChapterFunctions.createChapterFootnote())
                 .setPadding(0)
@@ -59,7 +68,8 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
     }
 
     @NotNull
-    private static Table createClinicalTrialsTable(@NotNull List<ClinicalTrial> trials) {
+    private static Table createClinicalTrialsTable(@NotNull List<ClinicalTrial> trials, @NotNull List<ReportableVariant> variants,
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         String title = "Tumor type specific clinical trials (NL)";
 
         if (trials.isEmpty()) {
@@ -71,7 +81,9 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Match"),
                         TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("CCMO"), TableUtil.createHeaderCell("Source") });
 
-        for (ClinicalTrial trial : ClinicalTrials.sort(trials)) {
+        List<ClinicalTrial> filtered = EventFilter.removeEvidenceOnFilteredGermlineVariants(trials, variants, germlineReportingLevel);
+
+        for (ClinicalTrial trial : ClinicalTrials.sort(filtered)) {
             String trialName = trial.acronym();
             contentTable.addCell(TableUtil.createContentCell(trial.event()));
             contentTable.addCell(TableUtil.createContentCell(TherapyDetailsChapterFunctions.createTreatmentMatchParagraph(

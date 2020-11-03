@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
@@ -16,6 +17,20 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class SomaticVariantsTest {
+
+    @Test
+    public void canFilterForGermlineConsent() {
+        ReportableVariant somaticVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.SOMATIC).build();
+        ReportableVariant germlineVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.GERMLINE).build();
+
+        assertEquals(2,
+                SomaticVariants.filterForGermlineConsent(Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION).size());
+
+        assertEquals(1,
+                SomaticVariants.filterForGermlineConsent(Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.NO_REPORTING).size());
+    }
 
     @Test
     public void canExtractCodingFromHGVSCodingImpactField() {
@@ -44,24 +59,22 @@ public class SomaticVariantsTest {
     @NotNull
     private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
         return ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
-                .position(0)
                 .chromosome(Strings.EMPTY)
+                .position(0)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .gDNA(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .totalCopyNumber(0)
+                .alleleCopyNumber(0D)
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
-                .alleleReadCount(0)
-                .totalReadCount(0)
-                .alleleCopyNumber(0D)
-                .totalCopyNumber(0)
-                .biallelic(false)
                 .driverLikelihood(0D)
-                .source(ReportableVariantSource.PURPLE)
-                .notifyClinicalGeneticist(false);
+                .biallelic(false);
     }
 }

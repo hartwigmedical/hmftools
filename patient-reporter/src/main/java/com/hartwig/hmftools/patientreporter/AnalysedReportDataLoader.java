@@ -17,10 +17,10 @@ final class AnalysedReportDataLoader {
 
     @NotNull
     static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String knowledgebaseDir,
-            @NotNull String germlineGenesCsv, @NotNull String sampleSummaryTsv) throws IOException {
+            @NotNull String germlineReportingTsv, @NotNull String sampleSummaryTsv) throws IOException {
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(germlineGenesCsv);
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(germlineReportingTsv);
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
 
         return ImmutableAnalysedReportData.builder()

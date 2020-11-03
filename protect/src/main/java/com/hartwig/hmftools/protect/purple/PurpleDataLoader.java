@@ -57,7 +57,7 @@ public class PurpleDataLoader {
         //TODO: Move remainder into purple
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogFile);
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVcf);
-        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableSomaticVariants(driverCatalog, variants);
+        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableSomaticVariants(variants, driverCatalog);
         LOGGER.info(" Reportable somatic variants: {}", reportableVariants.size());
 
         List<ReportableGainLoss> copyNumberAlterations = driverCatalog.stream()

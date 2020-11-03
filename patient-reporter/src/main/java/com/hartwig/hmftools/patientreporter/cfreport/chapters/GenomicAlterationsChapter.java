@@ -2,8 +2,10 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
@@ -17,6 +19,7 @@ import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.viralinsertion.ViralInsertion;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
@@ -27,7 +30,6 @@ import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
@@ -35,9 +37,16 @@ public class GenomicAlterationsChapter implements ReportChapter {
     private static final boolean DISPLAY_CLONAL_COLUMN = false;
 
     @NotNull
+    private final GermlineReportingModel germlineReportingModel;
+    @NotNull
+    private final SampleReport sampleReport;
+    @NotNull
     private final GenomicAnalysis genomicAnalysis;
 
-    public GenomicAlterationsChapter(@NotNull final GenomicAnalysis genomicAnalysis) {
+    public GenomicAlterationsChapter(@NotNull final GermlineReportingModel germlineReportingModel, @NotNull final SampleReport sampleReport,
+            @NotNull final GenomicAnalysis genomicAnalysis) {
+        this.germlineReportingModel = germlineReportingModel;
+        this.sampleReport = sampleReport;
         this.genomicAnalysis = genomicAnalysis;
     }
 
@@ -51,16 +60,21 @@ public class GenomicAlterationsChapter implements ReportChapter {
     public void render(@NotNull Document reportDocument) {
         boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
 
-        reportDocument.add(createTumorVariantsTable(genomicAnalysis.reportableVariants(), hasReliablePurity));
+        reportDocument.add(createTumorVariantsTable(genomicAnalysis.reportableVariants(),
+                hasReliablePurity,
+                germlineReportingModel,
+                sampleReport.germlineReportingLevel()));
+
         reportDocument.add(createGainsAndLossesTable(genomicAnalysis.gainsAndLosses(), hasReliablePurity));
         reportDocument.add(createFusionsTable(genomicAnalysis.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
-        reportDocument.add(createViralInsertionTable(genomicAnalysis.viralInsertions()));
+        reportDocument.add(createViralInsertionTable(genomicAnalysis.viralInsertions(), sampleReport.reportViralInsertions()));
     }
 
     @NotNull
-    private static Table createTumorVariantsTable(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurity) {
+    private static Table createTumorVariantsTable(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurity,
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         String title = "Tumor specific variants";
         if (reportableVariants.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
@@ -90,8 +104,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Driver").setTextAlignment(TextAlignment.CENTER) });
         }
 
-        for (ReportableVariant variant : SomaticVariants.sort(reportableVariants)) {
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant)));
+        List<ReportableVariant> filteredVariants = SomaticVariants.filterForGermlineConsent(reportableVariants, germlineReportingLevel);
+
+        for (ReportableVariant variant : SomaticVariants.sort(filteredVariants)) {
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant,
+                    germlineReportingModel,
+                    germlineReportingLevel)));
             contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
             contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsCodingImpact()));
             contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsProteinImpact()));
@@ -115,7 +133,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     .setTextAlignment(TextAlignment.CENTER);
         }
 
-        if (SomaticVariants.hasNotifiableGermlineVariant(reportableVariants)) {
+        if (SomaticVariants.hasNotifiableGermlineVariant(filteredVariants, germlineReportingModel, germlineReportingLevel)) {
             contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                     .add(new Paragraph("\n# Marked variant(s) are also present in the germline of the patient. Referral to a genetic "
                             + "specialist should be advised.").addStyle(ReportResources.subTextStyle())));
@@ -230,10 +248,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createViralInsertionTable(@Nullable List<ViralInsertion> viralInsertions) {
+    private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertions, boolean reportViralInsertions) {
         String title = "Tumor specific viral insertions";
 
-        if (viralInsertions == null) {
+        if (!reportViralInsertions) {
             return TableUtil.createNAReportTable(title);
         } else if (viralInsertions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);

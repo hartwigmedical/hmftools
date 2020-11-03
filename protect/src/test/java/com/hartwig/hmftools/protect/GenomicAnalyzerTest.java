@@ -4,11 +4,8 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.junit.Test;
 
@@ -28,16 +25,13 @@ public class GenomicAnalyzerTest {
 
     @Test
     public void canRunOnTestRun() throws IOException {
-        GenomicAnalyzer analyzer =
-                new GenomicAnalyzer(ProtectTestFactory.loadTestActionabilityAnalyzer(), new GermlineReportingModel(Maps.newHashMap()));
+        GenomicAnalyzer analyzer = new GenomicAnalyzer(ProtectTestFactory.loadTestActionabilityAnalyzer(),
+                ProtectTestFactory.createEmptyGermlineReportingModel());
 
         PatientTumorLocation patientTumorLocation = null;
-        boolean reportViralInsertions = true;
 
         assertNotNull(analyzer.run("sample",
                 patientTumorLocation,
-                LimsGermlineReportingLevel.NO_REPORTING,
-                reportViralInsertions,
                 PURPLE_PURITY_TSV,
                 PURPLE_QC_FILE,
                 PURPLE_DRIVER_CATALOG_TSV,

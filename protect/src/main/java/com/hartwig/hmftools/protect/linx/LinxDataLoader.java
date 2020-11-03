@@ -57,5 +57,4 @@ public class LinxDataLoader {
                 .addAllHomozygousDisruptions(reportableHomozygousDisruptions)
                 .build();
     }
-
 }

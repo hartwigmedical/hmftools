@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
 
@@ -22,6 +23,11 @@ public abstract class SampleReport {
 
     @Nullable
     public abstract PatientTumorLocation patientTumorLocation();
+
+    @NotNull
+    public abstract LimsGermlineReportingLevel germlineReportingLevel();
+
+    public abstract boolean reportViralInsertions();
 
     @Nullable
     public abstract LocalDate refArrivalDate();
@@ -89,12 +95,12 @@ public abstract class SampleReport {
     @NotNull
     @Value.Derived
     public String primaryTumorLocationString() {
-        PatientTumorLocation type = patientTumorLocation();
-        if (type != null) {
-            if (!type.primaryTumorSubLocation().equals(Strings.EMPTY)) {
-                return type.primaryTumorLocation() + " (" + type.primaryTumorSubLocation() + ")";
+        PatientTumorLocation entry = patientTumorLocation();
+        if (entry != null) {
+            if (!entry.primaryTumorSubLocation().isEmpty()) {
+                return entry.primaryTumorLocation() + " (" + entry.primaryTumorSubLocation() + ")";
             } else {
-                return type.primaryTumorLocation();
+                return entry.primaryTumorLocation();
             }
         } else {
             return Strings.EMPTY;
@@ -103,13 +109,13 @@ public abstract class SampleReport {
 
     @NotNull
     @Value.Derived
-    public String cancerSubTypeString() {
-        PatientTumorLocation type = patientTumorLocation();
-        if (type != null) {
-            if (!type.primaryTumorSubType().equals(Strings.EMPTY)) {
-                return type.primaryTumorSubType();
+    public String primaryTumorTypeString() {
+        PatientTumorLocation entry = patientTumorLocation();
+        if (entry != null) {
+            if (!entry.primaryTumorSubType().isEmpty()) {
+                return entry.primaryTumorSubType();
             } else {
-                return type.primaryTumorType();
+                return entry.primaryTumorType();
             }
         } else {
             return Strings.EMPTY;

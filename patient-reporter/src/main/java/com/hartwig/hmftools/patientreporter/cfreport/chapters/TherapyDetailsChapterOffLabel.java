@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
@@ -12,9 +13,13 @@ public class TherapyDetailsChapterOffLabel implements ReportChapter {
 
     @NotNull
     private final GenomicAnalysis genomicAnalysis;
+    @NotNull
+    private final LimsGermlineReportingLevel germlineReportingLevel;
 
-    public TherapyDetailsChapterOffLabel(@NotNull final GenomicAnalysis genomicAnalysis) {
+    public TherapyDetailsChapterOffLabel(@NotNull final GenomicAnalysis genomicAnalysis,
+            @NotNull final LimsGermlineReportingLevel germlineReportingLevel) {
         this.genomicAnalysis = genomicAnalysis;
+        this.germlineReportingLevel = germlineReportingLevel;
     }
 
     @NotNull
@@ -28,7 +33,9 @@ public class TherapyDetailsChapterOffLabel implements ReportChapter {
         Table chapterTable = new Table(1);
 
         chapterTable.addCell(new Cell().add(TherapyDetailsChapterFunctions.createEvidenceTable("Evidence on other tumor types",
-                genomicAnalysis.offLabelEvidence())).setPadding(0).setBorder(Border.NO_BORDER));
+                genomicAnalysis.offLabelEvidence(),
+                genomicAnalysis.reportableVariants(),
+                germlineReportingLevel)).setPadding(0).setBorder(Border.NO_BORDER));
 
         chapterTable.addFooterCell(new Cell().add(TherapyDetailsChapterFunctions.createChapterFootnote())
                 .setPadding(0)

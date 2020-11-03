@@ -81,7 +81,7 @@ public class VariantEvidenceAnalyzer {
     }
 
     @NotNull
-    private static String eventString(@NotNull Variant variant) {
+    public static String eventString(@NotNull Variant variant) {
         String description = variant.canonicalCodingEffect() == CodingEffect.SPLICE
                 ? variant.canonicalHgvsCodingImpact()
                 : variant.canonicalHgvsProteinImpact();

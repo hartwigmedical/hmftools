@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -16,7 +15,6 @@ import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItemFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -29,7 +27,6 @@ import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
@@ -67,7 +64,9 @@ public class ProtectApplication implements AutoCloseable {
         }
     }
 
+    @NotNull
     private final DatabaseAccess dbAccess;
+    @NotNull
     private final ProtectConfig protectConfig;
 
     public ProtectApplication(final Options options, final String... args) throws ParseException, SQLException, IOException {
@@ -94,14 +93,12 @@ public class ProtectApplication implements AutoCloseable {
         PatientTumorLocation patientTumorLocation = loadPatientTumorLocation(protectConfig.tumorLocationTsv(), tumorSampleId);
         LOGGER.info("Creating deprecated actionability analyzer from {}", protectConfig.deprecatedActionabilityDir());
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(protectConfig.deprecatedActionabilityDir());
-        LOGGER.info("Creating germline reporting model from {}", protectConfig.germlineGenesTsv());
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(protectConfig.germlineGenesTsv());
+        LOGGER.info("Creating germline reporting model from {}", protectConfig.germlineReportingTsv());
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(protectConfig.germlineReportingTsv());
 
         GenomicAnalyzer analyzer = new GenomicAnalyzer(actionabilityAnalyzer, germlineReportingModel);
         GenomicAnalysis analysis = analyzer.run(tumorSampleId,
                 patientTumorLocation,
-                LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
-                true,
                 protectConfig.purplePurityTsv(),
                 protectConfig.purpleQcFile(),
                 protectConfig.purpleDriverCatalogTsv(),
@@ -113,14 +110,13 @@ public class ProtectApplication implements AutoCloseable {
                 protectConfig.linxDriversTsv(),
                 protectConfig.chordPredictionTxt());
 
-        //        printResults(tumorSampleId, analysis);
-
         EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.offLabel.tsv",
                 analysis.offLabelEvidence());
         EvidenceItemFile.write(protectConfig.outputDir() + File.separator + protectConfig.tumorSampleId() + ".old.onLabel.tsv",
                 analysis.tumorSpecificEvidence());
     }
 
+    @NotNull
     private static Set<String> doids(@NotNull ProtectConfig config) throws IOException {
         final Set<String> result = Sets.newHashSet();
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
@@ -129,8 +125,7 @@ public class ProtectApplication implements AutoCloseable {
         LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsv());
         final List<PatientTumorLocation> tumorLocations = PatientTumorLocationFile.read(config.tumorLocationTsv());
         @Nullable
-        PatientTumorLocation sampleTumorLocation =
-                PatientTumorLocationFunctions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
+        PatientTumorLocation sampleTumorLocation = PatientTumorLocationFunctions.findTumorLocationForSample(tumorLocations, config.tumorSampleId());
         if (sampleTumorLocation == null) {
             result.add(PAN_CANCER_DOID);
             return result;
@@ -147,7 +142,7 @@ public class ProtectApplication implements AutoCloseable {
     }
 
     @NotNull
-    private static List<ProtectEvidenceItem> protectEvidence(ProtectConfig config) throws IOException {
+    private static List<ProtectEvidenceItem> protectEvidence(@NotNull ProtectConfig config) throws IOException {
         final Set<String> doids = doids(config);
 
         // Serve Data
@@ -157,10 +152,13 @@ public class ProtectApplication implements AutoCloseable {
         final CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(actionableEvents.genes());
         final FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());
 
+        // Additiopnal configuration
+        final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
+
         // External Data
         final LinxData linxData = LinxDataLoader.load(config);
         final PurpleData purpleData = PurpleDataLoader.load(config);
-        final BachelorData bachelorData = BachelorDataLoader.load(config.bachelorTsv(), purpleData, linxData);
+        final BachelorData bachelorData = BachelorDataLoader.load(config.bachelorTsv(), purpleData, linxData, germlineReportingModel);
 
         // Evidence
         final List<ProtectEvidenceItem> variantEvidence =
@@ -184,28 +182,6 @@ public class ProtectApplication implements AutoCloseable {
                 PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocationList, tumorSampleId);
         LOGGER.info(" Resolved tumor location to '{}' for {}", patientTumorLocation, tumorSampleId);
         return patientTumorLocation;
-    }
-
-    private static void printResults(@NotNull String tumorSampleId, @NotNull GenomicAnalysis analysis) {
-        List<ReportableVariant> variantsWithNotify =
-                analysis.reportableVariants().stream().filter(ReportableVariant::notifyClinicalGeneticist).collect(Collectors.toList());
-        LOGGER.info("Printing genomic analysis results for {}:", tumorSampleId);
-        LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
-        LOGGER.info("  Variants for which to notify clinical geneticist: {}", variantsWithNotify.size());
-        LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
-        LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());
-        LOGGER.info(" Tumor mutational burden: {}", analysis.tumorMutationalBurden());
-        LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());
-        LOGGER.info(" Number of gains and losses to report: {}", analysis.gainsAndLosses().size());
-        LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
-        LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
-        LOGGER.info(" Viral insertions to report: {}", analysis.viralInsertions() != null ? analysis.viralInsertions().size() : "0");
-
-        LOGGER.info("Printing actionability results for {}", tumorSampleId);
-        LOGGER.info(" Tumor-specific evidence items found: {}", analysis.tumorSpecificEvidence().size());
-        LOGGER.info(" Clinical trials matched to molecular profile: {}", analysis.clinicalTrials().size());
-        LOGGER.info(" Off-label evidence items found: {}", analysis.offLabelEvidence().size());
-
     }
 
     @Override

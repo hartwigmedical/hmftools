@@ -7,12 +7,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.protect.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.protect.variants.germline.DriverGermlineVariant;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.protect.variants.somatic.DriverSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,22 +19,21 @@ public final class ReportableVariantAnalyzer {
     }
 
     @NotNull
-    public static ReportableVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<DriverSomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingLevel germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+    public static ReportableVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<ReportableVariant> reportableSomaticVariants,
+            @NotNull List<ReportableVariant> reportableGermlineVariants, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
-        List<ReportableVariant> allReportableVariants = ReportableVariantFactory.mergeSomaticAndGermlineVariants(somaticVariantsReport,
-                germlineVariantsToReport,
-                germlineReportingModel,
-                germlineReportingChoice);
+        List<ReportableVariant> allReportableVariants =
+                ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         // Extract somatic evidence for high drivers variants only (See DEV-824)
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
                 filterHighDriverLikelihood(actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation));
 
-        return ImmutableReportableVariantAnalysis.of(allReportableVariants,
-                ReportableEvidenceItemFactory.toReportableFlatList(evidencePerVariant));
+        return ImmutableReportableVariantAnalysis.builder()
+                .variantsToReport(allReportableVariants)
+                .evidenceItems(ReportableEvidenceItemFactory.toReportableFlatList(evidencePerVariant))
+                .build();
     }
 
     @NotNull

@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -86,7 +87,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline);
 
         String summaryWithoutGermline = "Melanoma sample showing:\n"
                 + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
@@ -179,7 +180,7 @@ public final class ExampleAnalysisTestFactory {
         List<ViralInsertion> viralInsertions = createTestViralInsertions();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true);
         String clinicalSummary = Strings.EMPTY;
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
@@ -221,7 +222,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true);
 
         ReportData reportData = PatientReporterTestFactory.loadTestReportData();
         return ImmutableQCFailReport.builder()
@@ -247,7 +248,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample) {
+    private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample, boolean reportGermline) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(Strings.EMPTY)
                 .refSampleBarcode("FR12123488")
@@ -259,12 +260,16 @@ public final class ExampleAnalysisTestFactory {
                 .sampleMetadata(sampleMetadata)
                 .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY,
                         "Skin",
-                        "",
+                        Strings.EMPTY,
                         "Melanoma",
-                        "",
-                        "",
+                        Strings.EMPTY,
+                        Strings.EMPTY,
                         Lists.newArrayList("8923"),
                         false))
+                .germlineReportingLevel(reportGermline
+                        ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
+                        : LimsGermlineReportingLevel.NO_REPORTING)
+                .reportViralInsertions(true)
                 .refArrivalDate(LocalDate.parse("01-Oct-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
@@ -517,115 +522,105 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableVariant> createCOLO829SomaticVariants(boolean reportGermlineVariant) {
+    private static List<ReportableVariant> createCOLO829SomaticVariants(boolean forceCDKN2AVariantToBeGermline) {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("BRAF")
-                .position(140453136)
                 .chromosome("7")
+                .position(140453136)
                 .ref("T")
                 .alt("A")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
-                .notifyClinicalGeneticist(false)
-                .gDNA("7:140453136")
                 .alleleReadCount(150)
                 .totalReadCount(221)
                 .alleleCopyNumber(4.08)
                 .totalCopyNumber(6.0)
                 .hotspot(Hotspot.HOTSPOT)
-                .biallelic(false)
                 .driverLikelihood(1D)
                 .clonalLikelihood(1D)
-                .source(ReportableVariantSource.PURPLE)
+                .biallelic(false)
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
+                .source(forceCDKN2AVariantToBeGermline ? ReportableVariantSource.GERMLINE : ReportableVariantSource.SOMATIC)
                 .gene("CDKN2A")
-                .position(21971153)
                 .chromosome("9")
+                .position(21971153)
                 .ref("CCG")
                 .alt("C")
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .canonicalHgvsCodingImpact("c.203_204delCG")
                 .canonicalHgvsProteinImpact("p.Ala68fs")
-                .notifyClinicalGeneticist(reportGermlineVariant)
-                .gDNA("9:21971153")
                 .alleleReadCount(99)
                 .totalReadCount(99)
                 .alleleCopyNumber(1.99)
                 .totalCopyNumber(1.99)
                 .hotspot(Hotspot.NEAR_HOTSPOT)
-                .biallelic(true)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.9)
-                .source(ReportableVariantSource.PURPLE)
+                .biallelic(true)
                 .build();
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("TERT")
-                .position(1295228)
                 .chromosome("5")
+                .position(1295228)
                 .ref("GG")
                 .alt("AA")
                 .canonicalCodingEffect(CodingEffect.NONE)
                 .canonicalHgvsCodingImpact("c.-125_-124delCCinsTT")
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .notifyClinicalGeneticist(false)
-                .gDNA("5:1295228")
                 .alleleReadCount(56)
                 .totalReadCount(65)
                 .alleleCopyNumber(1.74)
                 .totalCopyNumber(2.0)
                 .hotspot(Hotspot.HOTSPOT)
-                .biallelic(true)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.85)
-                .source(ReportableVariantSource.PURPLE)
+                .biallelic(true)
                 .build();
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("SF3B1")
-                .position(198266779)
                 .chromosome("2")
+                .position(198266779)
                 .ref("C")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.2153C>T")
                 .canonicalHgvsProteinImpact("p.Pro718Leu")
-                .notifyClinicalGeneticist(false)
-                .gDNA("2:198266779")
                 .alleleReadCount(74)
                 .totalReadCount(111)
                 .alleleCopyNumber(2.01)
                 .totalCopyNumber(3.02)
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .biallelic(false)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.5)
-                .source(ReportableVariantSource.PURPLE)
+                .biallelic(false)
                 .build();
 
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("TP63")
-                .position(189604330)
                 .chromosome("3")
+                .position(189604330)
                 .ref("G")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
-                .notifyClinicalGeneticist(false)
-                .gDNA("3:189604330")
                 .alleleReadCount(47)
                 .totalReadCount(112)
                 .alleleCopyNumber(1.67)
                 .totalCopyNumber(3.98)
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .biallelic(false)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.1)
-                .source(ReportableVariantSource.PURPLE)
+                .biallelic(false)
                 .build();
 
         return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
@@ -634,47 +629,43 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<ReportableVariant> createAllSomaticVariants() {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("TP63")
-                .position(189604330)
                 .chromosome("3")
+                .position(189604330)
                 .ref("G")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
-                .notifyClinicalGeneticist(false)
-                .gDNA("3:189604330")
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .alleleCopyNumber(2.1)
                 .totalCopyNumber(4.1)
-                .biallelic(false)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(0.47)
                 .driverLikelihood(0.1)
-                .source(ReportableVariantSource.PURPLE)
+                .biallelic(false)
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
                 .gene("KIT")
-                .position(81627197)
                 .chromosome("3")
+                .position(81627197)
                 .ref("G")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
-                .notifyClinicalGeneticist(true)
-                .gDNA("3:81627197")
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .alleleCopyNumber(1.3)
                 .totalCopyNumber(2.5)
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .biallelic(true)
                 .clonalLikelihood(0.68)
                 .driverLikelihood(0.1)
-                .source(ReportableVariantSource.PURPLE)
+                .biallelic(true)
                 .build();
 
         return Lists.newArrayList(variant1, variant2);

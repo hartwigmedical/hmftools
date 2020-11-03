@@ -7,13 +7,15 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class GermlineReporting {
-
-    public abstract boolean notifyClinicalGeneticus();
+public abstract class GermlineReportingEntry {
 
     @NotNull
-    public abstract ConditionReportingVariant condition();
+    public abstract String gene();
 
-    @NotNull
-    public abstract String variant();
+    public abstract boolean notifyClinicalGeneticist();
+
+    public abstract boolean reportBiallelicOnly();
+
+    @Nullable
+    public abstract String exclusiveHgvsProteinFilter();
 }

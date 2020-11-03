@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +24,6 @@ public final class PatientReporterTestFactory {
 
     private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
 
-    private static final String GERMLINE_GENES_REPORTING_TSV = Resources.getResource("germline/germline_genes_reporting.tsv").getPath();
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
 
     private PatientReporterTestFactory() {
@@ -51,13 +49,12 @@ public final class PatientReporterTestFactory {
     @NotNull
     public static AnalysedReportData loadTestAnalysedReportData() {
         try {
-            GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_GENES_REPORTING_TSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(loadTestReportData())
                     .actionabilityAnalyzer(loadTestActionabilityAnalyzer())
-                    .germlineReportingModel(germlineReportingModel)
+                    .germlineReportingModel(new GermlineReportingModel(Lists.newArrayList()))
                     .summaryModel(summaryModel)
                     .build();
         } catch (IOException exception) {

@@ -72,6 +72,6 @@ public abstract class GenomicAnalysis {
     @NotNull
     public abstract List<ReportableHomozygousDisruption> homozygousDisruptions();
 
-    @Nullable
+    @NotNull
     public abstract List<ViralInsertion> viralInsertions();
 }

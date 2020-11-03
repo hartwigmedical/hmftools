@@ -11,68 +11,125 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.germline.ImmutableReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
+import com.hartwig.hmftools.protect.ProtectTestFactory;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ReportableVariantFactoryTest {
 
+    private static final String GENE = "Gene";
+
     @Test
-    public void testSingleHitNotIncluded() {
-        List<ReportableVariant> victims = reportableGermlineVariants(Collections.emptySet(), Lists.newArrayList(create("Gene", false)));
+    public void singleHitNotIncluded() {
+        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
+        List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, false));
+
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(0, victims.size());
     }
 
     @Test
-    public void testBiallelic() {
-        List<ReportableVariant> victims = reportableGermlineVariants(Collections.emptySet(), Lists.newArrayList(create("Gene", true)));
+    public void singleHitIncludedWhenAllowed() {
+        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, false, null);
+        List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, false));
+
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(1, victims.size());
-        assertEquals("Gene", victims.get(0).gene());
+        assertEquals(GENE, victims.get(0).gene());
     }
 
     @Test
-    public void testKit() {
-        List<ReportableVariant> victims = reportableGermlineVariants(Collections.emptySet(), Lists.newArrayList(create("KIT", false)));
+    public void biallelicIncluded() {
+        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
+        List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, true));
+
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(1, victims.size());
-        assertEquals("KIT", victims.get(0).gene());
+        assertEquals(GENE, victims.get(0).gene());
     }
 
     @Test
-    public void testDoubleGermlineHit() {
-        List<ReportableVariant> victims = reportableGermlineVariants(Collections.emptySet(), Lists.newArrayList(create(1, "Gene", false), create(2, "Gene", false)));
+    public void biallelicExcludedWhenNotInGermlineList() {
+        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createEmptyGermlineReportingModel();
+        List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, true));
+
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
+        assertEquals(0, victims.size());
+    }
+
+    @Test
+    public void biallelicExcludedWhenNotInTumor() {
+        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
+        List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, 1, "protein", 0.1, true));
+
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
+        assertEquals(0, victims.size());
+    }
+
+    @Test
+    public void singleHitIncludedOnExtraGermlineHit() {
+        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
+        List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, 1, false), create(GENE, 2, false));
+
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(2, victims.size());
-        assertEquals("Gene", victims.get(0).gene());
-        assertEquals("Gene", victims.get(1).gene());
+        assertEquals(GENE, victims.get(0).gene());
+        assertEquals(GENE, victims.get(1).gene());
     }
 
     @Test
-    public void testSomaticHit() {
-        List<ReportableVariant> victims = reportableGermlineVariants(Collections.singleton("Gene"), Lists.newArrayList(create("Gene", false)));
+    public void singleHitIncludedOnExtraSomaticHit() {
+        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
+        List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, false));
+
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.singleton(GENE), germlineReportingModel);
         assertEquals(1, victims.size());
-        assertEquals("Gene", victims.get(0).gene());
+        assertEquals(GENE, victims.get(0).gene());
     }
 
+    @Test
+    public void exclusiveHgvsProteinFilterWorks() {
+        GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, "proteinMatch");
+        List<ReportableGermlineVariant> variantMatch = Lists.newArrayList(create(GENE, 1, "proteinMatch", 0.4, false));
+
+        List<ReportableVariant> victimsMatch = reportableGermlineVariants(variantMatch, Collections.emptySet(), germlineReportingModel);
+        assertEquals(1, victimsMatch.size());
+        assertEquals(GENE, victimsMatch.get(0).gene());
+
+        List<ReportableGermlineVariant> variantsNonMatch = Lists.newArrayList(create(GENE, 1, "weirdProtein", 0.4, false));
+        List<ReportableVariant> victimsNonMatch =
+                reportableGermlineVariants(variantsNonMatch, Collections.emptySet(), germlineReportingModel);
+        assertEquals(0, victimsNonMatch.size());
+    }
 
     @NotNull
     private static ReportableGermlineVariant create(@NotNull String gene, boolean biallelic) {
-        return create(1, gene, biallelic);
+        return create(gene, 1, biallelic);
     }
 
     @NotNull
-    private static ReportableGermlineVariant create(int position, @NotNull String gene, boolean biallelic) {
+    private static ReportableGermlineVariant create(@NotNull String gene, int position, boolean biallelic) {
+        return create(gene, position, "protein", 0.4, biallelic);
+    }
+
+    @NotNull
+    private static ReportableGermlineVariant create(@NotNull String gene, int position, @NotNull String hgvsProtein, double adjustedVaf,
+            boolean biallelic) {
         return ImmutableReportableGermlineVariant.builder()
                 .gene(gene)
-                .biallelic(biallelic)
                 .chromosome("1")
+                .biallelic(biallelic)
                 .position(position)
                 .ref("C")
                 .alt("G")
                 .codingEffect(CodingEffect.MISSENSE)
                 .hgvsCoding("coding")
-                .hgvsProtein("protein")
+                .hgvsProtein(hgvsProtein)
                 .alleleReadCount(1)
                 .totalReadCount(10)
-                .adjustedVaf(0.4)
+                .adjustedVaf(adjustedVaf)
                 .adjustedCopyNumber(2)
                 .build();
     }

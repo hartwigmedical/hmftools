@@ -32,7 +32,7 @@ public class VariantEvidence {
     @NotNull
     public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<ReportableVariant> germline,
             @NotNull List<ReportableVariant> somatic) {
-        List<ReportableVariant> variants = ReportableVariantFactory.mergeSomaticAndGermlineVariants(germline, somatic);
+        List<ReportableVariant> variants = ReportableVariantFactory.mergeVariantLists(germline, somatic);
         return variants.stream().flatMap(x -> evidence(doid, x).stream()).collect(Collectors.toList());
     }
 
