@@ -279,7 +279,7 @@ public class FeatureAnnotation
         }
         else if(mConfig.DbAccess != null)
         {
-            return loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures);
+            return loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures, false);
         }
 
         final String sampleId = mSampleDataCache.SampleIds.get(0);

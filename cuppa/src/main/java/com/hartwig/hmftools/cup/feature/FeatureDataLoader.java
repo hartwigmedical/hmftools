@@ -12,7 +12,10 @@ import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_AMP
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_DEL;
 import static com.hartwig.hmftools.cup.feature.ViralInsertionType.OTHER;
 import static com.hartwig.hmftools.cup.feature.ViralInsertionType.fromVirusName;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRIVERCATALOG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVFUSION;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.VIRALINSERTION;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,9 +26,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsVariant;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -35,6 +42,8 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -144,25 +153,34 @@ public class FeatureDataLoader
             }
         }
 
-        return purityContext.microsatelliteStatus() == MSS;
+        return purityContext != null && purityContext.microsatelliteStatus() == MSS;
     }
 
     public static boolean loadFeaturesFromDatabase(
-            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
+            final DatabaseAccess dbAccess, final List<String> sampleIds,
+            final Map<String,List<SampleFeatureData>> sampleFeaturesMap, boolean skipZeroDriverLikelihood)
     {
         if(dbAccess == null)
             return false;
+
+        final Map<String,List<DriverCatalog>> sampleDriverMap = getAllDrivers(dbAccess, skipZeroDriverLikelihood);
+
+        final Map<String,List<LinxFusion>> sampleFusionMap = getAllFusions(dbAccess);
+
+        final Map<String,List<LinxViralInsertion>> sampleVirusMap = getAllViruses(dbAccess);
+
+        final Map<String,List<String>> sampleIndelMap = getAllIndels(dbAccess);
 
         int i = 0;
         int nextLog = 100;
 
         for(final String sampleId : sampleIds)
         {
-            final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
-            final List<LinxFusion> fusions = dbAccess.readFusions(sampleId);
-            final List<LinxViralInsertion> viralInserts = dbAccess.readViralInsertions(sampleId);
+            final List<DriverCatalog> drivers = sampleDriverMap.get(sampleId);
+            final List<LinxFusion> fusions = sampleFusionMap.get(sampleId);
+            final List<LinxViralInsertion> viralInserts = sampleVirusMap.get(sampleId);
 
-            final List<String> indelGenes = checkIndels(sampleId, null, dbAccess) ? loadSpecificIndels(sampleId, dbAccess) : null;
+            final List<String> indelGenes = checkIndels(sampleId, null, dbAccess) ? sampleIndelMap.get(sampleId) : null;
 
             mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indelGenes);
 
@@ -170,11 +188,150 @@ public class FeatureDataLoader
             if(i >= nextLog)
             {
                 nextLog += 100;
-                CUP_LOGGER.info("loaded {} sample feature data sets", i);
+                CUP_LOGGER.debug("loaded {} sample feature data sets", i);
             }
         }
 
         return true;
+    }
+
+    private static final Map<String,List<LinxFusion>> getAllFusions(final DatabaseAccess dbAccess)
+    {
+        final Map<String,List<LinxFusion>> sampleFusionMap = Maps.newHashMap();
+
+        Result<Record> result = dbAccess.context().select().from(SVFUSION).where(SVFUSION.REPORTED.eq((byte)1)).fetch();
+
+        for (Record record : result)
+        {
+            final String sampleId = record.getValue(SVFUSION.SAMPLEID);
+
+            LinxFusion fusion = ImmutableLinxFusion.builder()
+                    .fivePrimeBreakendId(record.getValue(SVFUSION.FIVEPRIMEBREAKENDID).intValue())
+                    .threePrimeBreakendId(record.getValue(SVFUSION.THREEPRIMEBREAKENDID).intValue())
+                    .name(record.getValue(SVFUSION.NAME))
+                    .reported(record.getValue(SVFUSION.REPORTED) == 1)
+                    .reportedType(record.getValue(SVFUSION.REPORTEDTYPE))
+                    .likelihood(FusionLikelihoodType.valueOf(record.getValue(SVFUSION.LIKELIHOOD)))
+                    .phased(FusionPhasedType.valueOf(record.getValue(SVFUSION.PHASED)))
+                    .chainLength(record.getValue(SVFUSION.CHAINLENGTH))
+                    .chainLinks(record.getValue(SVFUSION.CHAINLINKS))
+                    .chainTerminated(record.getValue(SVFUSION.CHAINTERMINATED) == 1)
+                    .domainsKept(record.getValue(SVFUSION.DOMAINSKEPT))
+                    .domainsLost(record.getValue(SVFUSION.DOMAINSLOST))
+                    .skippedExonsUp(record.getValue(SVFUSION.SKIPPEDEXONSUP))
+                    .skippedExonsDown(record.getValue(SVFUSION.SKIPPEDEXONSDOWN))
+                    .fusedExonUp(record.getValue(SVFUSION.FUSEDEXONUP))
+                    .fusedExonDown(record.getValue(SVFUSION.FUSEDEXONDOWN))
+                    .geneStart("")
+                    .geneContextStart("")
+                    .geneTranscriptStart("")
+                    .geneEnd("")
+                    .geneContextEnd("")
+                    .geneTranscriptEnd("")
+                    .junctionCopyNumber(0.0)
+                    .build();
+
+            final List<LinxFusion> fusions = sampleFusionMap.get(sampleId);
+            if(fusions == null)
+                sampleFusionMap.put(sampleId, Lists.newArrayList(fusion));
+            else
+                fusions.add(fusion);
+        }
+
+        return sampleFusionMap;
+    }
+
+    private static final Map<String,List<LinxViralInsertion>> getAllViruses(final DatabaseAccess dbAccess)
+    {
+        final Map<String,List<LinxViralInsertion>> sampleVirusMap = Maps.newHashMap();
+
+        Result<Record> result = dbAccess.context().select().from(VIRALINSERTION).fetch();
+
+        for (Record record : result)
+        {
+            final String sampleId = record.getValue(VIRALINSERTION.SAMPLEID);
+
+            LinxViralInsertion viralInsertion = new LinxViralInsertion(
+                    sampleId, record.getValue(VIRALINSERTION.SVID),
+                    record.getValue(VIRALINSERTION.VIRUSID), record.getValue(VIRALINSERTION.VIRUSNAME));
+
+            final List<LinxViralInsertion> viralInsertions = sampleVirusMap.get(sampleId);
+            if(viralInsertions == null)
+                sampleVirusMap.put(sampleId, Lists.newArrayList(viralInsertion));
+            else
+                viralInsertions.add(viralInsertion);
+        }
+
+        return sampleVirusMap;
+    }
+
+    private static final Map<String,List<String>> getAllIndels(final DatabaseAccess dbAccess)
+    {
+        final Map<String,List<String>> sampleIndelMap = Maps.newHashMap();
+
+        Result<Record> result = dbAccess.context().select()
+                .from(SOMATICVARIANT)
+                .where(SOMATICVARIANT.FILTER.eq("PASS"))
+                .and(SOMATICVARIANT.GENE.in(INDEL_ALB, INDEL_SFTPB, INDEL_SLC34A2))
+                .and(SOMATICVARIANT.REPEATCOUNT.lessOrEqual(INDEL_MAX_REPEAT_COUNT))
+                .and(SOMATICVARIANT.TYPE.eq(VariantType.INDEL.toString()))
+                .fetch();
+
+        for (Record record : result)
+        {
+            final String sampleId = record.getValue(SOMATICVARIANT.SAMPLEID);
+            final String gene = record.getValue(SOMATICVARIANT.GENE);
+
+            final List<String> genes = sampleIndelMap.get(sampleId);
+            if(genes == null)
+                sampleIndelMap.put(sampleId, Lists.newArrayList(gene));
+            else
+                genes.add(gene);
+        }
+
+        return sampleIndelMap;
+    }
+
+    private static final Map<String,List<DriverCatalog>> getAllDrivers(final DatabaseAccess dbAccess, boolean skipZeroDriverLikelihood)
+    {
+        final Map<String,List<DriverCatalog>> sampleDriverMap = Maps.newHashMap();
+
+        final Result<Record> result = dbAccess.context().select().from(DRIVERCATALOG).fetch();
+
+        for (Record record : result)
+        {
+            final String sampleId = record.getValue(DRIVERCATALOG.SAMPLEID);
+
+            DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
+                    .gene(record.getValue(DRIVERCATALOG.GENE))
+                    .chromosome(record.getValue(DRIVERCATALOG.CHROMOSOME))
+                    .chromosomeBand(record.getValue(DRIVERCATALOG.CHROMOSOMEBAND))
+                    .driver(DriverType.valueOf(record.getValue(DRIVERCATALOG.DRIVER)))
+                    .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
+                    .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
+                    .driverLikelihood(record.getValue(DRIVERCATALOG.DRIVERLIKELIHOOD))
+                    .dndsLikelihood(record.getValue(DRIVERCATALOG.DNDSLIKELIHOOD))
+                    .missense(record.getValue(DRIVERCATALOG.MISSENSE))
+                    .nonsense(record.getValue(DRIVERCATALOG.NONSENSE))
+                    .splice(record.getValue(DRIVERCATALOG.SPLICE))
+                    .inframe(record.getValue(DRIVERCATALOG.INFRAME))
+                    .frameshift(record.getValue(DRIVERCATALOG.FRAMESHIFT))
+                    .biallelic(record.getValue(DRIVERCATALOG.BIALLELIC) != 0)
+                    .minCopyNumber(record.getValue(DRIVERCATALOG.MINCOPYNUMBER))
+                    .maxCopyNumber(record.getValue(DRIVERCATALOG.MAXCOPYNUMBER))
+                    .build();
+
+            if(skipZeroDriverLikelihood && driverCatalog.driverLikelihood() <= 0)
+                continue;
+
+            final List<DriverCatalog> drivers = sampleDriverMap.get(sampleId);
+            if(drivers == null)
+                sampleDriverMap.put(sampleId, Lists.newArrayList(driverCatalog));
+            else
+                drivers.add(driverCatalog);
+        }
+
+        return sampleDriverMap;
     }
 
     private static final int INDEL_MAX_REPEAT_COUNT = 6;
@@ -188,27 +345,6 @@ public class FeatureDataLoader
                 .filter(x -> x.filter().equals("PASS"))
                 .map(x -> x.gene())
                 .collect(Collectors.toList());
-    }
-
-    private static List<String> loadSpecificIndels(final String sampleId, final DatabaseAccess dbAccess)
-    {
-        final List<String> geneMatches = Lists.newArrayList();
-
-        Result<Record> result = dbAccess.context().select()
-                .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                .and(SOMATICVARIANT.FILTER.eq("PASS"))
-                .and(SOMATICVARIANT.GENE.in(INDEL_ALB, INDEL_SFTPB, INDEL_SLC34A2))
-                .and(SOMATICVARIANT.REPEATCOUNT.lessOrEqual(INDEL_MAX_REPEAT_COUNT))
-                .and(SOMATICVARIANT.TYPE.eq(VariantType.INDEL.toString()))
-                .fetch();
-
-        for (Record record : result)
-        {
-            geneMatches.add(record.getValue(SOMATICVARIANT.GENE));
-        }
-
-        return geneMatches;
     }
 
     private static void mapFeatureData(

@@ -76,7 +76,7 @@ public class SvDataLoader
             if(i >= nextLog)
             {
                 nextLog += 100;
-                CUP_LOGGER.info("loaded {} sample SV data sets", i);
+                CUP_LOGGER.debug("loaded {} sample SV data sets", i);
             }
         }
 

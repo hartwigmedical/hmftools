@@ -43,7 +43,7 @@ public class RefFeatures
         CUP_LOGGER.info("building feature reference data");
 
         final Map<String,List<SampleFeatureData>> sampleFeaturesMap = Maps.newHashMap();
-        loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleFeaturesMap);
+        loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleFeaturesMap, true);
 
         final Map<String,Map<String,Double>> cancerFeatureCounts = Maps.newHashMap();
         final Map<String,FeatureType> featureTypes = Maps.newHashMap();

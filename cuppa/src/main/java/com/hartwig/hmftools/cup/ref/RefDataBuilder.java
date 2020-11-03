@@ -61,8 +61,8 @@ public class RefDataBuilder
 
         mSampleTraits.buildRefDataSets();
         mSomatics.buildRefDataSets();
-        mSvAnnotation.buildRefDataSets();
         mFeatures.buildRefDataSets();
+        mSvAnnotation.buildRefDataSets();
         mRnaExpression.buildRefDataSets();
 
         CUP_LOGGER.info("CUP ref data building complete");
