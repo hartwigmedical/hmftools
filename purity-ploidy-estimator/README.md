@@ -123,8 +123,8 @@ Argument | Default | Description
 ---|---|---
 threads | 2 | Number of threads to use.
 somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
-structural_vcf | None | Optional location of structural variants vcf. GZ files supported.
-sv_recovery_vcf | None | Optional location of structural variants recovery vcf. GZ files supported.
+structural_vcf | None | Optional location of high confidence structural variants vcf. GZ files supported.
+sv_recovery_vcf | None | Optional location of low confidence structural variants vcf which may be recovered by PURPLE. GZ files supported.
 circos | None | Optional path to circos binary. When supplied, circos graphs will be written to <output_dir>/plot
 db_enabled | None | This parameter has no arguments. Optionally include if you wish to persist results to a database. Database initialization script can be found [here](https://github.com/hartwigmedical/hmftools/blob/master/patient-db/src/main/resources/generate_database.sql).
 db_user | None | Database username. Mandatory if db_enabled.
