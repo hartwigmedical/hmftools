@@ -60,6 +60,8 @@ public final class ViccUtil {
                 .add("type")
                 .add("proteinAnnotation")
                 .add("biomarkerType")
+                .add("provenanceRule")
+                .add("description")
                 .toString();
         lines.add(header);
 
@@ -72,6 +74,8 @@ public final class ViccUtil {
                         .add(feature.type().toString())
                         .add(feature.proteinAnnotation())
                         .add(feature.biomarkerType())
+                        .add(feature.provenanceRule())
+                        .add(feature.description())
                         .toString());
             }
         }

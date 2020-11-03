@@ -13,13 +13,13 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-final class DetermineHotspot {
+final class HotspotClassifier {
 
     private static final Set<String> CAPITALIZED_STRINGS_TO_UNCAPITALIZE = Sets.newHashSet("DELINS", "DEL", "INS", "DUP", "FS");
 
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
-    private DetermineHotspot() {
+    private HotspotClassifier() {
     }
 
     public static boolean isHotspot(@NotNull String featureName) {

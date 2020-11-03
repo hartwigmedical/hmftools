@@ -53,14 +53,14 @@ final class FilterFactory {
         FEATURE_KEYWORDS_TO_FILTER.add("ERBB2 (S310,L755,V777)");
         FEATURE_KEYWORDS_TO_FILTER.add("RET (618,620,634,768,791,891,918,C634W,M918T)");
 
-        // Determine not a specific mutation in a domein
+        // Determine not a specific mutation in a domain
         FEATURE_KEYWORDS_TO_FILTER.add("NOTCH1 activating mutation in Cterm-PEST domain");
         FEATURE_KEYWORDS_TO_FILTER.add("NOTCH2 activating mutation (missense in TAD or truncating in Cterm-PEST domain)");
         FEATURE_KEYWORDS_TO_FILTER.add("MET kinase domain mutation");
         FEATURE_KEYWORDS_TO_FILTER.add("Truncating Mutations Upstream of Transactivation Domain");
         FEATURE_KEYWORDS_TO_FILTER.add("Truncating Mutations in the PEST Domain");
 
-        // 2 seperate hotspots in one event
+        // 2 separate hotspots in one event
         FEATURE_KEYWORDS_TO_FILTER.add("BRAF V600E/K");
         FEATURE_KEYWORDS_TO_FILTER.add("D835H/Y");
         FEATURE_KEYWORDS_TO_FILTER.add("G12/G13");
@@ -68,7 +68,6 @@ final class FilterFactory {
         FEATURE_KEYWORDS_TO_FILTER.add("S310F/Y");
         FEATURE_KEYWORDS_TO_FILTER.add("S893A/T");
         FEATURE_KEYWORDS_TO_FILTER.add("S34Y/F");
-
 
         // TODO All of below needs some further investigation & explanation
         FEATURE_KEYWORDS_TO_FILTER.add("EXPRESSION");
@@ -155,24 +154,25 @@ final class FilterFactory {
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_K558del"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_W557del"));
 
-        // exon are not exist in transcript
+        // exon 12 does not exist in canonical transcript of NPM1
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NPM1", "EXON 12 MUTATION"));
 
-        // Hotspots on fusion genes are not supported (COMPLEX events)
+        // Hotspots on fusion genes are not supported (COMBINED events)
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL E255K"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL F317L"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL F486S"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL G398R"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ABL1", "BCR-ABL T334I"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ALK", "EML4-ALK L1152R"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "PDGFRA", "FIP1L1-PDGFRA T674I"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NTRK1", "LMNA-NTRK1 G595R AND G667C"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NTRK3", "ETV6-NTRK3 G623R"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "PML", "PML-RARA A216V"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "PML", "PML-RARA L218P"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ROS1", "CD74-ROS1 G2032R"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ROS1", "CD74-ROS1 G2101A"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ROS1", "CD74-ROS1 L2026M"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ROS1", "CD74-ROS1 L2155S"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ALK", "EML4-ALK L1152R"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NTRK3", "ETV6-NTRK3 G623R"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "PDGFRA", "FIP1L1-PDGFRA T674I"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NTRK1", "LMNA-NTRK1 G595R AND G667C"));
-
     }
 
     private FilterFactory() {
