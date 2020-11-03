@@ -118,7 +118,7 @@ public class FusionDisruptionAnalyser
         mLogReportableOnly = false;
         mLogAllPotentials = false;
         mFindNeoEpitopes = false;
-        mAllowInvalidTraversal = false;
+        mAllowInvalidTraversal = true;
 
         mFusionParams = new FusionParameters();
         mFusionParams.RequireUpstreamBiotypes = true;
