@@ -21,11 +21,11 @@ public final class FeatureTypeExtractor {
 
     @NotNull
     public static FeatureType extractType(@NotNull Feature feature) {
-        return extractType(feature.name(), feature.geneSymbol(), feature.biomarkerType(), feature.provenanceRule());
+        return extractType(feature.name(), feature.geneSymbol(), feature.provenanceRule());
     }
 
     @NotNull
-    public static FeatureType extractType(@NotNull String featureName, @Nullable String gene, @Nullable String biomarkerType,
+    public static FeatureType extractType(@NotNull String featureName, @Nullable String gene,
             @Nullable String provenanceRule) {
         Map<FeatureType, Boolean> evaluations = Maps.newHashMap();
 
@@ -33,8 +33,8 @@ public final class FeatureTypeExtractor {
         evaluations.put(FeatureType.GENE_RANGE_CODON, GeneRangeClassifier.isGeneRangeCodonEvent(featureName));
         evaluations.put(FeatureType.GENE_RANGE_EXON, GeneRangeClassifier.isGeneRangeExonEvent(featureName, gene));
         evaluations.put(FeatureType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(featureName, provenanceRule));
-        evaluations.put(FeatureType.AMPLIFICATION, CopyNumberClassifier.isAmplification(featureName, biomarkerType));
-        evaluations.put(FeatureType.DELETION, CopyNumberClassifier.isDeletion(featureName, biomarkerType));
+        evaluations.put(FeatureType.AMPLIFICATION, CopyNumberClassifier.isAmplification(featureName));
+        evaluations.put(FeatureType.DELETION, CopyNumberClassifier.isDeletion(featureName));
         evaluations.put(FeatureType.FUSION_PAIR, FusionClassifier.isFusionPair(featureName, gene));
         evaluations.put(FeatureType.PROMISCUOUS_FUSION, FusionClassifier.isPromiscuousFusion(featureName, gene));
         evaluations.put(FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON, CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene));

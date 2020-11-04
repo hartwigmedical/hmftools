@@ -8,10 +8,19 @@ import org.junit.Test;
 public class CopyNumberClassifierTest {
 
     @Test
-    public void canAssessWhetherFeatureIsCopyNumber() {
-        assertTrue(CopyNumberClassifier.isAmplification("ALK  amp", "xx"));
-        assertTrue(CopyNumberClassifier.isDeletion("CDKN2A del", "xx"));
+    public void canAssessWhetherFeatureIsAmplification() {
+        assertTrue(CopyNumberClassifier.isAmplification("ALK over exp"));
+        assertTrue(CopyNumberClassifier.isAmplification("ALK  amp"));
 
-        assertFalse(CopyNumberClassifier.isAmplification("NPM1-ALK  amp", "xx"));
+        assertFalse(CopyNumberClassifier.isAmplification("MET amplification + mutation"));
+        assertFalse(CopyNumberClassifier.isAmplification("NPM1-ALK  amp"));
+    }
+
+    @Test
+    public void canAssessWhetherFeatureIsDeletion() {
+        assertTrue(CopyNumberClassifier.isDeletion("CDKN2A del"));
+
+        assertFalse(CopyNumberClassifier.isDeletion("MET deletion + mutation"));
+        assertFalse(CopyNumberClassifier.isDeletion("EGFR inframe deletion"));
     }
 }
