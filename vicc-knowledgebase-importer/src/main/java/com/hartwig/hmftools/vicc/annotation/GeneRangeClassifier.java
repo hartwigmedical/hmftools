@@ -87,11 +87,7 @@ public final class GeneRangeClassifier {
     }
 
     public static boolean isGeneRangeCodonEvent(@NotNull String featureName) {
-        if (featureName.length() > 1 && featureName.substring(featureName.length() - 1).equals("X")) {
-            return true;
-        } else {
-            return featureName.length() >= 1 && isValidSingleCodonRange(featureName);
-        }
+        return HotspotClassifier.extractProteinAnnotation(featureName).endsWith("X") || isValidSingleCodonRange(featureName);
     }
 
     private static boolean isValidSingleCodonRange(@NotNull String featureName) {

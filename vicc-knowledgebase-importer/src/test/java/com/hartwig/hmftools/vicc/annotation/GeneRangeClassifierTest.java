@@ -11,4 +11,9 @@ public class GeneRangeClassifierTest {
         assertTrue(GeneRangeClassifier.isGeneLevelEvent("AKT1 act mut", "default_feature"));
     }
 
+    @Test
+    public void canClassifyGeneRangeCodonEvents() {
+        assertTrue(GeneRangeClassifier.isGeneRangeCodonEvent("EGFR E709X "));
+    }
+
 }

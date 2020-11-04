@@ -14,7 +14,6 @@ final class CombinedClassifier {
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXON_RANGES_PER_GENE = Maps.newHashMap();
 
     static {
-        //TODO: check if more EXON_DEL_DUP fusions need to be added
         Set<String> kitSet = Sets.newHashSet("EXON 11 MUTATION", "Exon 11 mutations", "Exon 11 deletions");
         Set<String> metSet = Sets.newHashSet("EXON 14 SKIPPING MUTATION");
 
