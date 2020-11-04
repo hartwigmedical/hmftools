@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 final class CopyNumberClassifier {
 
-    private static final Set<String> AMPLIFICATIONS = Sets.newHashSet("Amplification",
+    private static final Set<String> AMPLIFICATION_KEYWORDS = Sets.newHashSet("Amplification",
             "amplification",
             "AMPLIFICATION",
             "amp",
@@ -19,7 +19,7 @@ final class CopyNumberClassifier {
             "OVEREXPRESSION",
             "Overexpression");
 
-    private static final Set<String> DELETIONS = Sets.newHashSet("Deletion",
+    private static final Set<String> DELETION_KEYWORDS = Sets.newHashSet("Deletion",
             "deletion",
             "DELETION",
             "del",
@@ -47,17 +47,23 @@ final class CopyNumberClassifier {
 
     @Nullable
     private static CopyNumberType extractAmplificationDeletionType(@NotNull String featureName, @Nullable String biomarkerType) {
-        String correctedFeatureName;
-        if (featureName.contains(" ") && !featureName.equals("Copy Number Loss")) {
-            correctedFeatureName = featureName.split(" ", 2)[1];
-        } else {
-            correctedFeatureName = featureName;
+        if (featureName.contains(" ")) {
+            // Never consider something an amp or del when the first part has a dash.
+            if (featureName.split(" ")[0].contains("-")) {
+                return null;
+            }
+
+        }
+        for (String keyword : AMPLIFICATION_KEYWORDS) {
+            if (featureName.contains(keyword)) {
+                return CopyNumberType.AMPLIFICATION;
+            }
         }
 
-        if (AMPLIFICATIONS.contains(correctedFeatureName)) {
-            return CopyNumberType.AMPLIFICATION;
-        } else if (DELETIONS.contains(correctedFeatureName)) {
-            return CopyNumberType.DELETION;
+        for (String keyword : DELETION_KEYWORDS) {
+            if (featureName.contains(keyword)) {
+                return CopyNumberType.DELETION;
+            }
         }
 
         return null;
