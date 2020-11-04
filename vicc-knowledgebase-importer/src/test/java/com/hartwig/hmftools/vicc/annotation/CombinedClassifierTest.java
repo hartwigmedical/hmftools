@@ -9,6 +9,10 @@ public class CombinedClassifierTest {
     @Test
     public void canAssessWhetherFeatureIsCombinedEvent() {
         assertTrue(CombinedClassifier.isCombinedEvent("Ex19 del L858R", "EGFR"));
+
+        assertTrue(CombinedClassifier.isCombinedEvent("KIT inframe deletion (416-422),inframe insertion (416-422)", "EGFR"));
+        assertTrue(CombinedClassifier.isCombinedEvent("CSF3R frameshift variant (D771),frameshift variant (S783)", "CSF3R"));
+
         assertTrue(CombinedClassifier.isCombinedEvent("BCR-ABL F486S", "ABL"));
         assertTrue(CombinedClassifier.isCombinedEvent("NPM1-ALK  amp", "ALK"));
     }
