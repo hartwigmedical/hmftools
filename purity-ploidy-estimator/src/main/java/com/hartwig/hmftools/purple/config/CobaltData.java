@@ -48,7 +48,8 @@ public interface CobaltData {
     }
 
     @NotNull
-    static CobaltData createCobaltData(@NotNull final CommonConfig commonConfig) throws ParseException, IOException {
+    static CobaltData createCobaltData(@NotNull final CommonConfig commonConfig, @NotNull final Gender amberGender)
+            throws ParseException, IOException {
         final String cobaltDirectory = commonConfig.cobaltDirectory();
         final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, commonConfig.tumorSample());
         if (!new File(cobaltFilename).exists()) {
@@ -66,7 +67,9 @@ public interface CobaltData {
         }
 
         LOGGER.info("Reading cobalt ratios from {}", cobaltFilename);
-        final ListMultimap<Chromosome, CobaltRatio> ratios = CobaltRatioFile.read(cobaltFilename);
+        final ListMultimap<Chromosome, CobaltRatio> ratios = commonConfig.tumorOnly()
+                ? CobaltRatioFile.readTumorOnly(cobaltFilename, amberGender)
+                : CobaltRatioFile.read(cobaltFilename);
 
         LOGGER.info("Reading cobalt reference segments from {}", referenceSegmentFile);
         final Multimap<Chromosome, PCFPosition> referenceSegments =

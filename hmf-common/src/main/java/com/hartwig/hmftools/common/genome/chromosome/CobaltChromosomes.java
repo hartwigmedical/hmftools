@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.jetbrains.annotations.NotNull;
 
 public class CobaltChromosomes {
-
     static final int MIN_Y_COUNT = 1000;
     static final double TWO_X_CUTOFF = 0.65;
     static final double TWO_Y_CUTOFF = 0.75;
@@ -47,11 +46,9 @@ public class CobaltChromosomes {
      * XYY -> X = 0.5, Y = 1
      * TRISOMY_[X,21,13,18,15] -> CHR >= 1.5
      */
-
     public CobaltChromosomes(final Collection<MedianRatio> unfiltered) {
-        final List<MedianRatio> ratios = unfiltered.stream()
-                .filter(x -> !isContig(x.chromosome(), "Y") || x.count() >= MIN_Y_COUNT)
-                .collect(Collectors.toList());
+        final List<MedianRatio> ratios =
+                unfiltered.stream().filter(x -> !isContig(x.chromosome(), "Y") || x.count() >= MIN_Y_COUNT).collect(Collectors.toList());
 
         this.chromosomeMap = Maps.newHashMap();
         this.aberrations = Sets.newHashSet();
@@ -214,11 +211,7 @@ public class CobaltChromosomes {
     }
 
     private double contigRatio(@NotNull final String contig, @NotNull final Collection<MedianRatio> ratios) {
-        return ratios.stream()
-                .filter(x -> isContig(x.chromosome(), contig))
-                .mapToDouble(MedianRatio::medianRatio)
-                .findFirst()
-                .orElse(0);
+        return ratios.stream().filter(x -> isContig(x.chromosome(), contig)).mapToDouble(MedianRatio::medianRatio).findFirst().orElse(0);
     }
 
     private boolean noAberrations() {

@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -83,10 +85,21 @@ public class ConfigSupplier {
 
     public ConfigSupplier(@NotNull final String version, @NotNull CommandLine cmd, @NotNull Options opt)
             throws ParseException, IOException {
+        final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final String gcProfile = parameter(cmd, GC_PROFILE, missingJoiner);
-        final String refSample = cmd.getOptionValue(REF_SAMPLE, "");
+        final String refSample;
+        if (isTumorOnly) {
+            if (cmd.hasOption(REF_SAMPLE)) {
+                throw new ParseException(REF_SAMPLE + " not supported in tumor only mode");
+            }
+            else {
+                refSample = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
+            }
+        } else {
+            refSample = parameter(cmd, REF_SAMPLE, missingJoiner);
+        }
         final String tumorSample = parameter(cmd, TUMOR_SAMPLE, missingJoiner);
         final String outputDirectory = parameter(cmd, OUTPUT_DIRECTORY, missingJoiner);
         final String amberDirectory = parameter(cmd, AMBER, missingJoiner);
@@ -110,10 +123,14 @@ public class ConfigSupplier {
                 .amberDirectory(amberDirectory)
                 .cobaltDirectory(cobaltDirectory)
                 .gcProfile(gcProfile)
-                .tumorOnly(cmd.hasOption(TUMOR_ONLY))
+                .tumorOnly(isTumorOnly)
                 .build();
 
-        LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
+        if (isTumorOnly) {
+            LOGGER.info("Tumor Sample: {}", commonConfig.tumorSample());
+        } else {
+            LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
+        }
         LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
 
         smoothingConfig = ImmutableSmoothingConfig.builder()
@@ -131,9 +148,8 @@ public class ConfigSupplier {
         refGenomeData = RefGenomeData.createRefGenomeConfig(cmd);
         driverCatalogConfig = DriverCatalogConfig.createConfig(cmd, refGenomeData);
 
-        cobaltData = CobaltData.createCobaltData(commonConfig);
         amberData = AmberData.createAmberData(commonConfig);
-
+        cobaltData = CobaltData.createCobaltData(commonConfig, amberData.gender());
         somaticFitConfig = SomaticFitConfig.createSomaticConfig(cmd, amberData);
     }
 

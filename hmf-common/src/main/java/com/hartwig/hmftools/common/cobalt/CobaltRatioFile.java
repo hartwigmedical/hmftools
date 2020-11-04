@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -14,8 +15,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class CobaltRatioFile {
     public static final String TUMOR_ONLY_REFERENCE_SAMPLE = "DIPLOID";
@@ -42,7 +46,21 @@ public final class CobaltRatioFile {
 
     @NotNull
     public static ListMultimap<Chromosome, CobaltRatio> read(@NotNull final String filename) throws IOException {
-        return fromLines(Files.readAllLines(new File(filename).toPath()));
+        return fromRatios(Files.readAllLines(new File(filename).toPath())
+                .stream()
+                .skip(1)
+                .map(x -> fromLine(null, x))
+                .collect(Collectors.toList()));
+    }
+
+    @NotNull
+    public static ListMultimap<Chromosome, CobaltRatio> readTumorOnly(@NotNull final String filename, @NotNull final Gender gender)
+            throws IOException {
+        return fromRatios(Files.readAllLines(new File(filename).toPath())
+                .stream()
+                .skip(1)
+                .map(x -> fromLine(gender, x))
+                .collect(Collectors.toList()));
     }
 
     public static void write(@NotNull final String fileName, @NotNull Multimap<Chromosome, CobaltRatio> ratios) throws IOException {
@@ -88,31 +106,49 @@ public final class CobaltRatioFile {
     }
 
     @NotNull
-    private static ListMultimap<Chromosome, CobaltRatio> fromLines(@NotNull final List<String> lines) {
+    private static ListMultimap<Chromosome, CobaltRatio> fromRatios(@NotNull final List<CobaltRatio> ratios) {
         final ListMultimap<Chromosome, CobaltRatio> result = ArrayListMultimap.create();
-        for (int i = 1; i < lines.size(); i++) {
-            String line = lines.get(i);
-            final CobaltRatio ratio = fromLine(line);
+        for (CobaltRatio ratio : ratios) {
             result.put(HumanChromosome.fromString(ratio.chromosome()), ratio);
         }
         return result;
     }
 
     @NotNull
-    private static CobaltRatio fromLine(@NotNull final String ratioLine) {
+    private static CobaltRatio fromLine(@Nullable final Gender gender, @NotNull final String ratioLine) {
         final String[] values = ratioLine.split(DELIMITER);
 
         final String chromosome = values[0].trim();
         final long position = Long.parseLong(values[1].trim());
+        final double initialReferenceGCRatio = Double.parseDouble(values[4].trim());
+        final double initialReferenceGCDiploidRatio = Double.parseDouble(values[6].trim());
 
         return ImmutableCobaltRatio.builder()
                 .chromosome(chromosome)
                 .position(position)
                 .referenceReadCount(Integer.parseInt(values[2].trim()))
                 .tumorReadCount(Integer.parseInt(values[3].trim()))
-                .referenceGCRatio(Double.parseDouble(values[4].trim()))
+                .referenceGCRatio(genderAdjustedDiploidRatio(gender, chromosome, initialReferenceGCRatio))
                 .tumorGCRatio(Double.parseDouble(values[5].trim()))
-                .referenceGCDiploidRatio(Double.parseDouble(values[6].trim()))
+                .referenceGCDiploidRatio(genderAdjustedDiploidRatio(gender, chromosome, initialReferenceGCDiploidRatio))
                 .build();
     }
+
+    static double genderAdjustedDiploidRatio(@Nullable final Gender gender, @NotNull final String contig, double initialRatio) {
+        if (gender == null || Doubles.lessOrEqual(initialRatio, 0) || !HumanChromosome.contains(contig)) {
+            return initialRatio;
+        }
+
+        HumanChromosome chromosome = HumanChromosome.fromString(contig);
+        if (chromosome.equals(HumanChromosome._X)) {
+            return gender.equals(Gender.FEMALE) ? 1 : 0.5;
+        }
+
+        if (chromosome.equals(HumanChromosome._Y)) {
+            return gender.equals(Gender.FEMALE) ? 0 : 0.5;
+        }
+
+        return initialRatio;
+    }
+
 }
