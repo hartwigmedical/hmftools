@@ -9,17 +9,17 @@ import org.jetbrains.annotations.Nullable;
 
 final class FusionClassifier {
 
-    private static final Set<String> FUSION_PAIR_KEYWORDS = Sets.newHashSet("Fusion",
-            "Disruptive Inframe Deletion",
+    private static final Set<String> FUSION_KEYWORDS = Sets.newHashSet("Disruptive Inframe Deletion",
             "Gene Fusion",
+            "Fusion",
             "fusion",
-            "EGFR-KDD",
+            "FUSION",
+            "Fusions",
+            "FUSIONS",
             "Transcript Regulatory Region Fusion",
-            "FGFR3 - BAIAP2L1 Fusion",
-            "FLT3-ITD");
-
-    private static final Set<String> PROMISCUOUS_FUSION_KEYWORDS =
-            Sets.newHashSet("REARRANGEMENT", "Fusions", "fusion", "rearrange", "Transcript Fusion", "FUSION", "FUSIONS");
+            "Transcript Fusion",
+            "REARRANGEMENT",
+            "rearrange");
 
     private static final Set<String> INTERNAL_FUSION_PAIRS =
             Sets.newHashSet("is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "EGFR-KDD", "ITD");
@@ -53,27 +53,37 @@ final class FusionClassifier {
 
         if (INTERNAL_FUSION_PAIRS.contains(featureName) || isTypicalFusionPair(featureName)) {
             return FusionEvent.FUSION_PAIR;
-        } else if (PROMISCUOUS_FUSION_KEYWORDS.contains(featureName)) {
+        } else if (hasFusionKeyword(featureName)) {
             if (featureName.contains("-")) {
                 return FusionEvent.FUSION_PAIR;
             } else {
                 return FusionEvent.PROMISCUOUS_FUSION;
             }
-        } else if (biomarkerType != null) {
-            if (PROMISCUOUS_FUSION_KEYWORDS.contains(biomarkerType)) {
-                if (featureName.contains("-")) {
-                    return FusionEvent.FUSION_PAIR;
-                } else {
-                    return FusionEvent.PROMISCUOUS_FUSION;
-                }
-            }
-
-            if (FUSION_PAIR_KEYWORDS.contains(biomarkerType)) {
-                return FusionEvent.FUSION_PAIR;
-            }
         }
+        //        else if (biomarkerType != null) {
+        //            if (FUSION_KEYWORDS.contains(biomarkerType)) {
+        //                if (featureName.contains("-")) {
+        //                    return FusionEvent.FUSION_PAIR;
+        //                } else {
+        //                    return FusionEvent.PROMISCUOUS_FUSION;
+        //                }
+        //            }
+        //
+        //            if (FUSION_PAIR_KEYWORDS.contains(biomarkerType)) {
+        //                return FusionEvent.FUSION_PAIR;
+        //            }
+        //        }
 
         return null;
+    }
+
+    private static boolean hasFusionKeyword(@NotNull String featureName) {
+        for (String keyword : FUSION_KEYWORDS) {
+            if (featureName.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isTypicalFusionPair(@NotNull String featureName) {

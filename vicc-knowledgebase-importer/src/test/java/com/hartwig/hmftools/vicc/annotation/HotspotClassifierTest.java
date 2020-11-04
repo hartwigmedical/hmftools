@@ -20,6 +20,7 @@ public class HotspotClassifierTest {
         assertTrue(HotspotClassifier.isHotspot("G10dup"));
         assertTrue(HotspotClassifier.isHotspot("G10fs"));
         assertTrue(HotspotClassifier.isHotspot("G10fs*"));
+        assertTrue(HotspotClassifier.isHotspot("G10fs*4"));
         assertTrue(HotspotClassifier.isHotspot("*10L"));
 
         // Just plain wrong protein annotations
@@ -78,5 +79,8 @@ public class HotspotClassifierTest {
         assertEquals("V560insAYVM", HotspotClassifier.extractProteinAnnotation("KIT:p.V560INSAYVM"));
         assertEquals("V560insINS", HotspotClassifier.extractProteinAnnotation("KIT:p.V560INSINS"));
         assertEquals("V560delinsDEL", HotspotClassifier.extractProteinAnnotation("KIT:p.V560DELINSDEL"));
+
+        assertEquals("S978fs", HotspotClassifier.extractProteinAnnotation("S978FS*4"));
+        assertEquals("S978fs", HotspotClassifier.extractProteinAnnotation("S978fs*123"));
     }
 }

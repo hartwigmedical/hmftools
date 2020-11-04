@@ -7,8 +7,13 @@ import org.junit.Test;
 public class FusionClassifierTest {
 
     @Test
-    public void canAssessWhetherFeatureIsFusion() {
+    public void canAssessWhetherFeatureIsFusionPair() {
         assertTrue(FusionClassifier.isFusionPair("ABL1-BCR fusion", "ABL1", "splice"));
+    }
+
+    @Test
+    public void canAssessWhetherFeatureIsPromiscuousFusion() {
+        assertTrue(FusionClassifier.isPromiscuousFusion("BRAF fusion", "BRAF", "default_feature"));
     }
 
 }

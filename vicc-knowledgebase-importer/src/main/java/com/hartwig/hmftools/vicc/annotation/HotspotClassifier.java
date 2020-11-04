@@ -77,8 +77,9 @@ final class HotspotClassifier {
         }
 
         // Cut out the trailing stop gained in case a stop gained is following on a frameshift
-        if (proteinAnnotation.endsWith("fs*")) {
-            proteinAnnotation = proteinAnnotation.substring(0, proteinAnnotation.length() - 1);
+        int trailingStopGained = proteinAnnotation.indexOf("fs*");
+        if (trailingStopGained > 0) {
+            proteinAnnotation = proteinAnnotation.substring(0, trailingStopGained + 2);
         }
 
         return proteinAnnotation;
