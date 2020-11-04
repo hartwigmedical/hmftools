@@ -56,8 +56,7 @@ final class CombinedClassifier {
         if (featureName.trim().contains(" ")) {
             String[] parts = featureName.trim().split(" ");
             if (parts[0].contains("-")) {
-                return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1])
-                        || CopyNumberClassifier.isDeletion(parts[1]);
+                return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1]);
             }
         }
 
