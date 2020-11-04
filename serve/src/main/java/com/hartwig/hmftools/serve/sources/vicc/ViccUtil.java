@@ -80,8 +80,7 @@ public final class ViccUtil {
         }
 
         for (FeatureTypeEntry feature : typeEntries) {
-            lines.add(new StringJoiner(FIELD_DELIMITER).add(feature.source())
-                    .add(feature.gene())
+            lines.add(new StringJoiner(FIELD_DELIMITER).add(feature.source()).add(feature.gene()).add(feature.transcript())
                     .add(feature.type())
                     .add(feature.name())
                     .add(feature.biomarkerType())
