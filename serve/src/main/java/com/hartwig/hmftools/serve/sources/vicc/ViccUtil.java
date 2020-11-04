@@ -57,7 +57,9 @@ public final class ViccUtil {
 
     public static void writeFeatures(@NotNull String viccFeatureTsv, @NotNull List<ViccEntry> entries) throws IOException {
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner(FIELD_DELIMITER).add("source").add("gene").add("transcript")
+        String header = new StringJoiner(FIELD_DELIMITER).add("source")
+                .add("gene")
+                .add("transcript")
                 .add("type")
                 .add("name")
                 .add("biomarkerType")
@@ -80,7 +82,9 @@ public final class ViccUtil {
         }
 
         for (FeatureTypeEntry feature : typeEntries) {
-            lines.add(new StringJoiner(FIELD_DELIMITER).add(feature.source()).add(feature.gene()).add(feature.transcript())
+            lines.add(new StringJoiner(FIELD_DELIMITER).add(feature.source())
+                    .add(feature.gene())
+                    .add(feature.transcript())
                     .add(feature.type())
                     .add(feature.name())
                     .add(feature.biomarkerType())
