@@ -61,7 +61,7 @@ public final class ViccUtil {
                 .add("gene")
                 .add("transcript")
                 .add("type")
-                .add("name")
+                .add("feature")
                 .toString();
         lines.add(header);
 

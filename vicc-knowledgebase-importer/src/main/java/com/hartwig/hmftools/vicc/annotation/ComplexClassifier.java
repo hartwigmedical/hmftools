@@ -71,14 +71,13 @@ public final class ComplexClassifier {
         complexEventsPerGene.put("DPYD", dpydSet);
 
         Set<String> egfrSet = Sets.newHashSet("EGFR L698_S1037dup",
+                "EGFR inframe deletion (30-336)",
                 "EGFR inframe insertion (769-770)",
+                "EGFR inframe deletion (6-273)",
                 "T34_A289del",
                 "H773insLGNP",
-                "EGFR inframe deletion (L747),inframe insertion (P753PS)",
-                "EGFR inframe deletion (30-336)",
                 "EGFR T34_A289del",
-                "G983_A1210del",
-                "EGFR inframe deletion (6-273)");
+                "G983_A1210del");
         complexEventsPerGene.put("EGFR", egfrSet);
 
         Set<String> eif1axSet = Sets.newHashSet("A113_splice");
@@ -103,7 +102,6 @@ public final class ComplexClassifier {
                 "KIT (627-664,664-714,449-514)",
                 "KIT (788-828,829-860,550-592)",
                 "T574insTQLPYD",
-                "KIT inframe deletion (416-422),inframe insertion (416-422)",
                 "E554_I571del",
                 "KIT V560_Y578del",
                 "K550_G592del",
@@ -129,10 +127,6 @@ public final class ComplexClassifier {
 
         Set<String> mlh1Set = Sets.newHashSet("C.790+1G>A");
         complexEventsPerGene.put("MLH1", mlh1Set);
-
-        Set<String> notch1Set = Sets.newHashSet("NOTCH1 splice donor variant (2245-2536),splice acceptor variant (2245-2536),"
-                + "stop gained (2245-2536),stop lost (2245-2536),frameshift variant (2245-2536)");
-        complexEventsPerGene.put("NOTCH1", notch1Set);
 
         Set<String> notch2Set = Sets.newHashSet("2010_2471trunc", "1_2009trunc");
         complexEventsPerGene.put("NOTCH2", notch2Set);

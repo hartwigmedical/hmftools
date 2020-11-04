@@ -59,6 +59,9 @@ final class CombinedClassifier {
         } else if (featureName.contains("frameshift")) {
             int countFrameshift = featureName.split("frameshift").length - 1;
             return countFrameshift > 1;
+        } else if (featureName.contains("splice")) {
+            int countSplice = featureName.split("splice").length - 1;
+            return countSplice > 1;
         } else if (featureName.trim().contains(" ")) {
             String[] parts = featureName.trim().replace("  ", " ").split(" ");
             if (parts[0].contains("-")) {
