@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cup.feature;
 
-import static java.lang.Math.max;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
@@ -312,7 +311,7 @@ public class FeatureAnnotation
                     double noPrevValue = isDriverType ? noDriverPrevalence : noNonDriverPrevalence;
                     featurePrevData.Prevalence += noPrevValue;
                     genePrevTotals.PositiveTotal += featurePrevData.Prevalence;
-                    genePrevTotals.NegitiveTotal += 1 - featurePrevData.Prevalence;
+                    genePrevTotals.NegativeTotal += 1 - featurePrevData.Prevalence;
                 }
                 else
                 {

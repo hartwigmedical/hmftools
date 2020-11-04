@@ -16,13 +16,13 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
-import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
-import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
+import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
+import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXPONENT;
@@ -36,7 +36,6 @@ import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSampleCountsFr
 import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSamplePosFreqFromFile;
 import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSigContribsFromDatabase;
-import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSomaticVariants;
 
 import java.util.List;
 import java.util.Map;
@@ -455,7 +454,6 @@ public class SomaticAnnotation
         REPORTABLE_SIGS.put("Sig10", "SIG_10_POLE");
         REPORTABLE_SIGS.put("Sig11", "SIG_11");
         REPORTABLE_SIGS.put("Sig17", "SIG_17");
-
     }
 
     private static final String SIG_NAME_2 = "Sig2";
