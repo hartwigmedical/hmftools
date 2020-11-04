@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFro
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefCancerFeatureAvg;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefPrevalenceData;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
+import static com.hartwig.hmftools.cup.feature.FeatureType.INDEL;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_AMP;
@@ -82,6 +83,13 @@ public class FeatureClassifier implements CuppaClassifier
         if(sampleFeatures == null || sampleFeatures.isEmpty())
             return;
 
+        if(!mConfig.IncludeIndels)
+        {
+            final List<SampleFeatureData> noIndelFeatures = sampleFeatures.stream().filter(x -> x.Type != INDEL).collect(Collectors.toList());
+            sampleFeatures.clear();
+            sampleFeatures.addAll(noIndelFeatures);
+        }
+
         addDriverPrevalence(sample, sampleFeatures, results);
 
         calcCancerTypeProbability(sample, sampleFeatures, results);
@@ -118,64 +126,6 @@ public class FeatureClassifier implements CuppaClassifier
             SampleResult result = new SampleResult(sample.Id, FEATURE, PREVALENCE, feature.Type.toString(), featureName, cancerTypeValues);
             results.add(result);
         }
-    }
-
-    private List<SampleFeatureData> cullMultiChromosomalEvents(final List<SampleFeatureData> features, final String cancerType)
-    {
-        final List<SampleFeatureData> newFeatures = Lists.newArrayList(features);
-        final List<SampleFeatureData> excessFeatures = Lists.newArrayList();
-
-        for(final SampleFeatureData feature : features)
-        {
-            if(feature.Type != DRIVER)
-                continue;
-
-            final String driverType = feature.getExtraInfo(DRIVER_TYPE);
-            if(driverType == null || (!driverType.equals(DRIVER_TYPE_AMP) && !driverType.equals(DRIVER_TYPE_DEL)))
-                continue;
-
-            final String chromosome = feature.getExtraInfo(DRIVER_CHROMOSOME);
-
-            // find any other matches of this driver on the same chromosome
-            final List<SampleFeatureData> matchingDrivers = newFeatures.stream()
-                    .filter(x -> x != feature)
-                    .filter(x -> x.Type == DRIVER)
-                    .filter(x -> x.getExtraInfo(DRIVER_TYPE).equals(driverType))
-                    .filter(x -> !excessFeatures.contains(x))
-                    .filter(x -> x.getExtraInfo(DRIVER_CHROMOSOME).equals(chromosome))
-                    .collect(Collectors.toList());
-
-            if(matchingDrivers.isEmpty())
-                continue;
-
-            matchingDrivers.add(feature);
-
-            final List<FeaturePrevData> driverPrevalences = mCancerFeaturePrevalence.get(cancerType);
-
-            // find the highest prevalence
-            SampleFeatureData topDriver = null;
-            double maxPrev = 0;
-            for(SampleFeatureData matchedDriver : matchingDrivers)
-            {
-                final FeaturePrevData driverPrevalence = driverPrevalences.stream()
-                        .filter(x -> x.Gene.equals(matchedDriver.Name)).findFirst().orElse(null);
-
-                if(driverPrevalence != null && driverPrevalence.Prevalence > maxPrev)
-                {
-                    topDriver = matchedDriver;
-                    maxPrev = driverPrevalence.Prevalence;
-                }
-            }
-
-            if(topDriver != null)
-            {
-                final SampleFeatureData topFeature = topDriver;
-                matchingDrivers.stream().filter(x -> x != topFeature).forEach(x -> excessFeatures.add(x));
-            }
-        }
-
-        excessFeatures.forEach(x -> newFeatures.remove(x));
-        return newFeatures;
     }
 
     private double getFeaturesPerSampleRatio(final String cancerType)
@@ -311,7 +261,7 @@ public class FeatureClassifier implements CuppaClassifier
 
                 if(featurePrevData != null)
                 {
-                    isDriverType = featurePrevData.Type == DRIVER;
+                    isDriverType = (featurePrevData.Type == DRIVER || featurePrevData.Type == INDEL);
 
                     double noPrevValue = isDriverType ? noDriverPrevalence : noNonDriverPrevalence;
                     featurePrevData.Prevalence += noPrevValue;

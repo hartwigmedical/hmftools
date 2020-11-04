@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
+import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
@@ -174,6 +175,7 @@ public class CupAnalyser
             classifier.processSample(sample, allResults, similarities);
         }
 
+        // combine all features into a single classifier
         SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults);
 
         if(combinedFeatureResult != null)
@@ -230,6 +232,9 @@ public class CupAnalyser
         {
             for(SampleResult result : results)
             {
+                if(mConfig.WriteClassifiersOnly && result.Category != CLASSIFIER)
+                    continue;
+
                 final String sampleStr = String.format("%s,%s,%s,%s,%s",
                         sampleData.Id, result.Category, result.ResultType, result.DataType, result.Value.toString());
 

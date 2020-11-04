@@ -74,6 +74,11 @@ public class CuppaConfig
     public final DatabaseAccess DbAccess;
 
     public final boolean WriteSimilarities;
+    public final boolean WriteClassifiersOnly;
+
+    // overrides
+    public final boolean IncludeIndels;
+
     public final String OutputDir;
     public final String OutputFileId;
 
@@ -108,7 +113,11 @@ public class CuppaConfig
     private static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
     private static final String REF_RNA_GENE_EXP_CANCER_PERC_FILE = "ref_gene_exp_cancer_perc_file";
 
+    public static final String INCLUDE_INDELS = "include_indels";
+
     public static final String WRITE_SIMS = "write_similarities";
+    public static final String WRITE_CLASSIFIERS_ONLY = "write_classifiers_only";
+
     public static final String OUTPUT_FILE_ID = "output_file_id";
     public static final String LOG_DEBUG = "log_debug";
 
@@ -176,6 +185,8 @@ public class CuppaConfig
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
 
         WriteSimilarities = Boolean.parseBoolean(cmd.getOptionValue(WRITE_SIMS, "true"));
+        WriteClassifiersOnly = cmd.hasOption(WRITE_CLASSIFIERS_ONLY);
+        IncludeIndels = cmd.hasOption(INCLUDE_INDELS);
 
         DbAccess = createDatabaseAccess(cmd);
     }
@@ -240,6 +251,9 @@ public class CuppaConfig
         options.addOption(REF_RNA_GENE_EXP_CANCER_PERC_FILE, true, "Reference RNA cancer percentiles gene expression file, default: " + REF_FILE_GENE_EXP_PERC);
 
         options.addOption(WRITE_SIMS, true, "Cohort-only - write top-20 CSS similarities to file");
+        options.addOption(WRITE_CLASSIFIERS_ONLY, false, "Cohort-only - only write classifier data");
+
+        options.addOption(INCLUDE_INDELS, false, "Include specific INDEL as features");
 
         addDatabaseCmdLineArgs(options);
         RnaExpression.addCmdLineArgs(options);
