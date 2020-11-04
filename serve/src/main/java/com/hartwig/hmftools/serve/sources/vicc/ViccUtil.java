@@ -62,7 +62,6 @@ public final class ViccUtil {
                 .add("transcript")
                 .add("type")
                 .add("name")
-                .add("biomarkerType")
                 .add("provenanceRule")
                 .toString();
         lines.add(header);
@@ -76,7 +75,6 @@ public final class ViccUtil {
                         entry.transcriptId(),
                         feature.type().toString(),
                         feature.name(),
-                        feature.biomarkerType(),
                         feature.provenanceRule()));
             }
         }
@@ -87,7 +85,6 @@ public final class ViccUtil {
                     .add(feature.transcript())
                     .add(feature.type())
                     .add(feature.name())
-                    .add(feature.biomarkerType())
                     .add(feature.provenanceRule())
                     .toString());
         }
@@ -109,19 +106,15 @@ public final class ViccUtil {
         @NotNull
         private final String name;
         @Nullable
-        private final String biomarkerType;
-        @Nullable
         private final String provenanceRule;
 
         public FeatureTypeEntry(@NotNull final String source, @Nullable final String gene, @Nullable final String transcript,
-                @NotNull final String type, @NotNull final String name, @Nullable final String biomarkerType,
-                @Nullable final String provenanceRule) {
+                @NotNull final String type, @NotNull final String name, @Nullable final String provenanceRule) {
             this.source = source;
             this.gene = gene;
             this.transcript = transcript;
             this.type = type;
             this.name = name;
-            this.biomarkerType = biomarkerType;
             this.provenanceRule = provenanceRule;
         }
 
@@ -151,11 +144,6 @@ public final class ViccUtil {
         }
 
         @Nullable
-        public String biomarkerType() {
-            return biomarkerType;
-        }
-
-        @Nullable
         public String provenanceRule() {
             return provenanceRule;
         }
@@ -170,13 +158,12 @@ public final class ViccUtil {
             }
             final FeatureTypeEntry that = (FeatureTypeEntry) o;
             return source.equals(that.source) && Objects.equals(gene, that.gene) && Objects.equals(transcript, that.transcript)
-                    && type.equals(that.type) && name.equals(that.name) && Objects.equals(biomarkerType, that.biomarkerType)
-                    && Objects.equals(provenanceRule, that.provenanceRule);
+                    && type.equals(that.type) && name.equals(that.name) && Objects.equals(provenanceRule, that.provenanceRule);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(source, gene, transcript, type, name, biomarkerType, provenanceRule);
+            return Objects.hash(source, gene, transcript, type, name, provenanceRule);
         }
     }
 }

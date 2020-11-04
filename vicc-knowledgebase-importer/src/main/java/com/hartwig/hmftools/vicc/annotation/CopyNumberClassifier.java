@@ -24,16 +24,16 @@ final class CopyNumberClassifier {
     private CopyNumberClassifier() {
     }
 
-    public static boolean isAmplification(@NotNull String featureName) {
-        if (CombinedClassifier.isCombinedEvent(featureName)) {
+    public static boolean isAmplification(@NotNull String featureName, @Nullable String gene) {
+        if (CombinedClassifier.isCombinedEvent(featureName, gene)) {
             return false;
         }
 
         return extractAmplificationDeletionType(featureName) == CopyNumberType.AMPLIFICATION;
     }
 
-    public static boolean isDeletion(@NotNull String featureName) {
-        if (CombinedClassifier.isCombinedEvent(featureName)) {
+    public static boolean isDeletion(@NotNull String featureName, @Nullable String gene) {
+        if (CombinedClassifier.isCombinedEvent(featureName, gene)) {
             return false;
         } else {
             for (String skipTerm : KEYWORDS_TO_SKIP_FOR_DELETION) {

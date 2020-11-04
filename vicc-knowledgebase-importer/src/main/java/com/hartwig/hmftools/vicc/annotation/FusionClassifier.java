@@ -22,7 +22,7 @@ final class FusionClassifier {
     }
 
     public static boolean isFusionPair(@NotNull String featureName, @Nullable String gene) {
-        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) && !CombinedClassifier.isCombinedEvent(featureName)) {
+        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) && !CombinedClassifier.isCombinedEvent(featureName, gene)) {
             return extractFusionEvent(featureName) == FusionEvent.FUSION_PAIR;
         }
 
@@ -30,7 +30,7 @@ final class FusionClassifier {
     }
 
     public static boolean isPromiscuousFusion(@NotNull String featureName, @Nullable String gene) {
-        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) && !CombinedClassifier.isCombinedEvent(featureName)) {
+        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) && !CombinedClassifier.isCombinedEvent(featureName, gene)) {
             return extractFusionEvent(featureName) == FusionEvent.PROMISCUOUS_FUSION;
         }
 

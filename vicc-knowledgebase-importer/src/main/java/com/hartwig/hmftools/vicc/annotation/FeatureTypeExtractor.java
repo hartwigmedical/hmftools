@@ -32,14 +32,14 @@ public final class FeatureTypeExtractor {
         evaluations.put(FeatureType.HOTSPOT, HotspotClassifier.isHotspot(featureName));
         evaluations.put(FeatureType.GENE_RANGE_CODON, GeneRangeClassifier.isGeneRangeCodonEvent(featureName));
         evaluations.put(FeatureType.GENE_RANGE_EXON, GeneRangeClassifier.isGeneRangeExonEvent(featureName, gene));
-        evaluations.put(FeatureType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(featureName, provenanceRule));
-        evaluations.put(FeatureType.AMPLIFICATION, CopyNumberClassifier.isAmplification(featureName));
-        evaluations.put(FeatureType.DELETION, CopyNumberClassifier.isDeletion(featureName));
+        evaluations.put(FeatureType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(featureName, gene, provenanceRule));
+        evaluations.put(FeatureType.AMPLIFICATION, CopyNumberClassifier.isAmplification(featureName, gene));
+        evaluations.put(FeatureType.DELETION, CopyNumberClassifier.isDeletion(featureName, gene));
         evaluations.put(FeatureType.FUSION_PAIR, FusionClassifier.isFusionPair(featureName, gene));
         evaluations.put(FeatureType.PROMISCUOUS_FUSION, FusionClassifier.isPromiscuousFusion(featureName, gene));
         evaluations.put(FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON, CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene));
         evaluations.put(FeatureType.SIGNATURE, SignatureClassifier.isSignature(featureName));
-        evaluations.put(FeatureType.COMBINED, CombinedClassifier.isCombinedEvent(featureName));
+        evaluations.put(FeatureType.COMBINED, CombinedClassifier.isCombinedEvent(featureName, gene));
         evaluations.put(FeatureType.COMPLEX, ComplexClassifier.isComplexEvent(featureName, gene));
 
         Set<FeatureType> positiveTypes = Sets.newHashSet();

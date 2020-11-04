@@ -13,12 +13,16 @@ final class CombinedClassifier {
 
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXON_RANGES_PER_GENE = Maps.newHashMap();
 
+    private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = Maps.newHashMap();
+
     static {
         Set<String> kitSet = Sets.newHashSet("EXON 11 MUTATION", "Exon 11 mutations", "Exon 11 deletions");
         Set<String> metSet = Sets.newHashSet("EXON 14 SKIPPING MUTATION");
 
         FUSION_PAIR_AND_EXON_RANGES_PER_GENE.put("KIT", kitSet);
         FUSION_PAIR_AND_EXON_RANGES_PER_GENE.put("MET", metSet);
+
+        COMBINED_EVENTS_PER_GENE.put("EGFR", Sets.newHashSet("Ex19 del L858R"));
     }
 
     private CombinedClassifier() {
@@ -33,7 +37,14 @@ final class CombinedClassifier {
         return false;
     }
 
-    public static boolean isCombinedEvent(@NotNull String featureName) {
+    public static boolean isCombinedEvent(@NotNull String featureName, @Nullable String gene) {
+        Set<String> entriesForGene = COMBINED_EVENTS_PER_GENE.get(gene);
+        if (entriesForGene != null) {
+            if (entriesForGene.contains(featureName)) {
+                return true;
+            }
+        }
+
         if (featureName.contains("+") && !featureName.toLowerCase().contains("c.") && !featureName.contains(">")) {
             return true;
         } else if (featureName.contains("insertion")) {
@@ -56,7 +67,8 @@ final class CombinedClassifier {
         if (featureName.trim().contains(" ")) {
             String[] parts = featureName.trim().split(" ");
             if (parts[0].contains("-")) {
-                return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1]);
+                // Hotspots or amplifications on fusion genes are considered combined.
+                return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1], gene);
             }
         }
 

@@ -112,7 +112,7 @@ public final class ComplexClassifier {
                 "KIT inframe deletion (V560)");
         complexEventsPerGene.put("KIT", kitSet);
 
-        Set<String> krasSet = Sets.newHashSet("KRAS (12,13)", "KRAS (12,13,59,61,117,146)");
+        Set<String> krasSet = Sets.newHashSet("KRAS (12,13)", "KRAS (12,13,59,61,117,146)", "LCS6-variant");
         complexEventsPerGene.put("KRAS", krasSet);
 
         Set<String> map2k1Set = Sets.newHashSet("MAP2K1 inframe deletion (56-60)");
@@ -144,7 +144,7 @@ public final class ComplexClassifier {
         Set<String> ntrk1Set = Sets.newHashSet("TRKAIII Splice Variant");
         complexEventsPerGene.put("NTRK1", ntrk1Set);
 
-        Set<String> pdgfraSet = Sets.newHashSet("PDGFRA inframe deletion (I843)", "C456_R481del", "Y375_K455del");
+        Set<String> pdgfraSet = Sets.newHashSet("PDGFRA inframe deletion (I843)", "C456_R481del", "Y375_K455del", "DI842-843VM");
         complexEventsPerGene.put("PDGFRA", pdgfraSet);
 
         Set<String> pik3r1Set = Sets.newHashSet("X582_splice", "X475_splice", "X434_splice");

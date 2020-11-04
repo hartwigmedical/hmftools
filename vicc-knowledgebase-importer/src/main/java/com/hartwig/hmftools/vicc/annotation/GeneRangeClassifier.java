@@ -42,8 +42,8 @@ public final class GeneRangeClassifier {
     private GeneRangeClassifier() {
     }
 
-    public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String provenanceRule) {
-        if (CombinedClassifier.isCombinedEvent(featureName)) {
+    public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String gene, @Nullable String provenanceRule) {
+        if (CombinedClassifier.isCombinedEvent(featureName, gene)) {
             return false;
         }
 
@@ -73,7 +73,7 @@ public final class GeneRangeClassifier {
     }
 
     public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName)) {
+        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName, gene)) {
             return false;
         }
 
