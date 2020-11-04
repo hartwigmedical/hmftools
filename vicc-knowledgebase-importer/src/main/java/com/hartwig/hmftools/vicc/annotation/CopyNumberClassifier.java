@@ -47,7 +47,6 @@ final class CopyNumberClassifier {
 
     @Nullable
     private static CopyNumberType extractAmplificationDeletionType(@NotNull String featureName, @Nullable String biomarkerType) {
-        //TODO: fix combi events
         String correctedFeatureName;
         if (featureName.contains(" ") && !featureName.equals("Copy Number Loss")) {
             correctedFeatureName = featureName.split(" ", 2)[1];
