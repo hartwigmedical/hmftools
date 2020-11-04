@@ -54,9 +54,9 @@ final class CopyNumberClassifier {
             correctedFeatureName = featureName;
         }
 
-        if (AMPLIFICATIONS.contains(correctedFeatureName) || AMPLIFICATIONS.contains(biomarkerType)) {
+        if (AMPLIFICATIONS.contains(correctedFeatureName)) {
             return CopyNumberType.AMPLIFICATION;
-        } else if (DELETIONS.contains(correctedFeatureName) || DELETIONS.contains(biomarkerType)) {
+        } else if (DELETIONS.contains(correctedFeatureName)) {
             return CopyNumberType.DELETION;
         }
 

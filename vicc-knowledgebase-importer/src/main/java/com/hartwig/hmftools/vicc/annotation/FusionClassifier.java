@@ -9,22 +9,14 @@ import org.jetbrains.annotations.Nullable;
 
 final class FusionClassifier {
 
-    private static final Set<String> FUSION_KEYWORDS = Sets.newHashSet("Disruptive Inframe Deletion",
-            "Gene Fusion",
-            "Fusion",
-            "fusion",
-            "FUSION",
-            "Fusions",
-            "FUSIONS",
-            "Transcript Regulatory Region Fusion",
-            "Transcript Fusion",
-            "REARRANGEMENT",
-            "rearrange");
+    private static final Set<String> FUSION_KEYWORDS =
+            Sets.newHashSet("Fusion", "fusion", "FUSION", "Fusions", "FUSIONS", "REARRANGEMENT", "rearrange");
 
-    private static final Set<String> INTERNAL_FUSION_PAIRS =
-            Sets.newHashSet("is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD", "ITD");
+    private static final Set<String> EXON_DEL_DUP_FUSION_PAIRS =
+            Sets.newHashSet("EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD", "ITD");
 
-    private static final Set<String> FEATURE_NAMES_TO_SKIP = Sets.newHashSet("3' EXON DELETION", "p61BRAF-V600E", "LOSS-OF-FUNCTION");
+    private static final Set<String> FEATURE_NAMES_TO_SKIP =
+            Sets.newHashSet("p61BRAF-V600E", "LOSS-OF-FUNCTION", "LCS6-variant", "DI842-843VM");
 
     private FusionClassifier() {
     }
@@ -51,7 +43,7 @@ final class FusionClassifier {
             return null;
         }
 
-        if (INTERNAL_FUSION_PAIRS.contains(featureName) || isTypicalFusionPair(featureName)) {
+        if (EXON_DEL_DUP_FUSION_PAIRS.contains(featureName) || isTypicalFusionPair(featureName)) {
             return FusionEvent.FUSION_PAIR;
         } else if (hasFusionKeyword(featureName)) {
             if (featureName.contains("-")) {
