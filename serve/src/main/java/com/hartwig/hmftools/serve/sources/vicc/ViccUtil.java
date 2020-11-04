@@ -62,7 +62,6 @@ public final class ViccUtil {
                 .add("transcript")
                 .add("type")
                 .add("name")
-                .add("provenanceRule")
                 .toString();
         lines.add(header);
 
@@ -74,8 +73,7 @@ public final class ViccUtil {
                         feature.geneSymbol(),
                         entry.transcriptId(),
                         feature.type().toString(),
-                        feature.name(),
-                        feature.provenanceRule()));
+                        feature.name()));
             }
         }
 
@@ -85,7 +83,6 @@ public final class ViccUtil {
                     .add(feature.transcript())
                     .add(feature.type())
                     .add(feature.name())
-                    .add(feature.provenanceRule())
                     .toString());
         }
 
@@ -105,17 +102,14 @@ public final class ViccUtil {
         private final String type;
         @NotNull
         private final String name;
-        @Nullable
-        private final String provenanceRule;
 
         public FeatureTypeEntry(@NotNull final String source, @Nullable final String gene, @Nullable final String transcript,
-                @NotNull final String type, @NotNull final String name, @Nullable final String provenanceRule) {
+                @NotNull final String type, @NotNull final String name) {
             this.source = source;
             this.gene = gene;
             this.transcript = transcript;
             this.type = type;
             this.name = name;
-            this.provenanceRule = provenanceRule;
         }
 
         @NotNull
@@ -143,11 +137,6 @@ public final class ViccUtil {
             return name;
         }
 
-        @Nullable
-        public String provenanceRule() {
-            return provenanceRule;
-        }
-
         @Override
         public boolean equals(final Object o) {
             if (this == o) {
@@ -158,12 +147,12 @@ public final class ViccUtil {
             }
             final FeatureTypeEntry that = (FeatureTypeEntry) o;
             return source.equals(that.source) && Objects.equals(gene, that.gene) && Objects.equals(transcript, that.transcript)
-                    && type.equals(that.type) && name.equals(that.name) && Objects.equals(provenanceRule, that.provenanceRule);
+                    && type.equals(that.type) && name.equals(that.name);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(source, gene, transcript, type, name, provenanceRule);
+            return Objects.hash(source, gene, transcript, type, name);
         }
     }
 }
