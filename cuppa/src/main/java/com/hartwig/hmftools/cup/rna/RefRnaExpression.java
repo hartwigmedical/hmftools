@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_CANCER;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
+import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,6 +24,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
@@ -28,7 +32,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
-public class RefRnaExpression
+public class RefRnaExpression implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -63,11 +67,12 @@ public class RefRnaExpression
         options.addOption(TPM_LOG_CUTOFF, true, "RNA TPM cut-off in log scale (default=0, not applied)");
     }
 
+    public CategoryType categoryType() { return GENE_EXP; }
+
+    public static boolean requiresBuild(final RefDataConfig config) { return !config.RefRnaGeneExpFile.isEmpty(); }
+
     public void buildRefDataSets()
     {
-        if(mConfig.RefRnaGeneExpFile.isEmpty())
-            return;
-
         CUP_LOGGER.debug("loading RNA gene expression data");
 
         loadRefRnaGeneExpression(mConfig.RefRnaGeneExpFile);
@@ -80,8 +85,8 @@ public class RefRnaExpression
 
         CUP_LOGGER.debug("writing RNA gene expression reference data");
 
-        writeMatrixData(mGeneCancerExpressionData, mCancerTypes, "cup_ref_ct_rna_gene_exp.csv");
-        writeMatrixData(mGeneSampleExpressionData, mSampleIds, "cup_ref_rna_gene_exp.csv");
+        writeMatrixData(mGeneCancerExpressionData, mCancerTypes, REF_FILE_GENE_EXP_CANCER);
+        writeMatrixData(mGeneSampleExpressionData, mSampleIds, REF_FILE_GENE_EXP_SAMPLE);
     }
 
     private int getCancerTypeIndex(final String cancerType)

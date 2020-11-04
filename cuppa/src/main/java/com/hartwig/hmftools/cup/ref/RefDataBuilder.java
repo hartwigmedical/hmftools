@@ -4,8 +4,12 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 
+import java.util.List;
+
+import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
+import com.hartwig.hmftools.cup.rna.RefClassifier;
 import com.hartwig.hmftools.cup.rna.RefRnaExpression;
 import com.hartwig.hmftools.cup.sample.RefSampleTraits;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
@@ -16,6 +20,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
@@ -26,11 +31,7 @@ public class RefDataBuilder
 
     private final SampleDataCache mSampleDataCache;
 
-    private final RefSampleTraits mSampleTraits;
-    private final RefSomatics mSomatics;
-    private final RefSvData mSvAnnotation;
-    private final RefFeatures mFeatures;
-    private final RefRnaExpression mRnaExpression;
+    private final List<RefClassifier> mClassifiers;
 
     public RefDataBuilder(final CommandLine cmd)
     {
@@ -40,11 +41,22 @@ public class RefDataBuilder
 
         loadSampleData(cmd);
 
-        mSampleTraits = new RefSampleTraits(mConfig, mSampleDataCache);
-        mSomatics = new RefSomatics(mConfig, mSampleDataCache);
-        mSvAnnotation = new RefSvData(mConfig, mSampleDataCache);
-        mFeatures = new RefFeatures(mConfig, mSampleDataCache);
-        mRnaExpression = new RefRnaExpression(mConfig, mSampleDataCache, cmd);
+        mClassifiers = Lists.newArrayList();
+
+        if(RefSampleTraits.requiresBuild(mConfig))
+            mClassifiers.add(new RefSampleTraits(mConfig, mSampleDataCache));
+
+        if(RefSomatics.requiresBuild(mConfig))
+            mClassifiers.add(new RefSomatics(mConfig, mSampleDataCache));
+
+        if(RefSvData.requiresBuild(mConfig))
+            mClassifiers.add(new RefSvData(mConfig, mSampleDataCache));
+
+        if(RefFeatures.requiresBuild(mConfig))
+            mClassifiers.add(new RefFeatures(mConfig, mSampleDataCache));
+
+        if(RefRnaExpression.requiresBuild(mConfig))
+            mClassifiers.add(new RefRnaExpression(mConfig, mSampleDataCache, cmd));
     }
 
     private void loadSampleData(final CommandLine cmd)
@@ -59,11 +71,10 @@ public class RefDataBuilder
     {
         CUP_LOGGER.info("CUP building ref data sets");
 
-        mSampleTraits.buildRefDataSets();
-        mSomatics.buildRefDataSets();
-        mFeatures.buildRefDataSets();
-        mSvAnnotation.buildRefDataSets();
-        mRnaExpression.buildRefDataSets();
+        for(RefClassifier classifier : mClassifiers)
+        {
+            classifier.buildRefDataSets();
+        }
 
         CUP_LOGGER.info("CUP ref data building complete");
     }

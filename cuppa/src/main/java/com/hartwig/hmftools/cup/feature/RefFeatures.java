@@ -5,6 +5,10 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 
@@ -17,10 +21,12 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
+import com.hartwig.hmftools.cup.rna.RefClassifier;
 
-public class RefFeatures
+public class RefFeatures implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -30,6 +36,10 @@ public class RefFeatures
         mConfig = config;
         mSampleDataCache = sampleDataCache;
     }
+
+    public CategoryType categoryType() { return FEATURE; }
+
+    public static boolean requiresBuild(final RefDataConfig config) { return config.DbAccess != null; }
 
     public void buildRefDataSets()
     {
@@ -107,7 +117,7 @@ public class RefFeatures
         // output: CancerType,Gene,Type,SamplePerc
         try
         {
-            final String filename = mConfig.OutputDir + "cup_ref_feature_prev.csv";
+            final String filename = mConfig.OutputDir + REF_FILE_FEATURE_PREV;
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("CancerType,Feature,Type,SamplePerc");
@@ -143,7 +153,7 @@ public class RefFeatures
         // CancerType,AvgFeatures
         try
         {
-            final String filename = mConfig.OutputDir + "cup_ref_avg_drivers.csv";
+            final String filename = mConfig.OutputDir + REF_FILE_DRIVER_AVG;
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("CancerType,SvDataType");

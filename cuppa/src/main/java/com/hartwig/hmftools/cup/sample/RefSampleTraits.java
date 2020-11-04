@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
+import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
 
 import java.io.BufferedWriter;
@@ -22,10 +25,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
+import com.hartwig.hmftools.cup.rna.RefClassifier;
 
-public class RefSampleTraits
+public class RefSampleTraits implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -44,6 +49,9 @@ public class RefSampleTraits
         mPercentilesWriter = null;
         mRatesWriter = null;
     }
+
+    public CategoryType categoryType() { return SNV; }
+    public static boolean requiresBuild(final RefDataConfig config) { return !config.RefSampleTraitsFile.isEmpty() || config.DbAccess != null; }
 
     public void buildRefDataSets()
     {
@@ -100,7 +108,7 @@ public class RefSampleTraits
     {
         try
         {
-            final String percFilename = mConfig.OutputDir + "cup_ref_sample_trait_percentiles.csv";
+            final String percFilename = mConfig.OutputDir + REF_FILE_TRAIT_PERC;
             mPercentilesWriter = createBufferedWriter(percFilename, false);
 
             mPercentilesWriter.write("CancerType,TraitType");
@@ -112,7 +120,7 @@ public class RefSampleTraits
 
             mPercentilesWriter.newLine();
 
-            final String ratesFilename = mConfig.OutputDir + "cup_ref_sample_trait_rates.csv";
+            final String ratesFilename = mConfig.OutputDir + REF_FILE_TRAIT_RATES;
             mRatesWriter = createBufferedWriter(ratesFilename, false);
 
             mRatesWriter.write("CancerType,WGDPerc,GenderFemalePerc");

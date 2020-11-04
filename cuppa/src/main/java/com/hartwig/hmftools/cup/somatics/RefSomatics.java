@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 
 import java.io.BufferedWriter;
@@ -20,10 +22,12 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
+import com.hartwig.hmftools.cup.rna.RefClassifier;
 
-public class RefSomatics
+public class RefSomatics implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -52,6 +56,13 @@ public class RefSomatics
         loadRefSigContributions(mConfig.RefSigContribsFile);
         mSampleNames = Lists.newArrayList();
         mSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mSampleNames);
+    }
+
+    public CategoryType categoryType() { return SNV; }
+
+    public static boolean requiresBuild(final RefDataConfig config)
+    {
+        return !config.RefSigContribsFile.isEmpty() && !config.RefSnvCountsFile.isEmpty();
     }
 
     public void buildRefDataSets()

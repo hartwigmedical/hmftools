@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
+import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
 
 import java.io.BufferedWriter;
@@ -21,10 +24,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
+import com.hartwig.hmftools.cup.rna.RefClassifier;
 
-public class RefSvData
+public class RefSvData implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -37,6 +42,13 @@ public class RefSvData
         mSampleDataCache = sampleDataCache;
 
         mCancerSvData = Maps.newHashMap();
+    }
+
+    public CategoryType categoryType() { return SV; }
+
+    public static boolean requiresBuild(final RefDataConfig config)
+    {
+        return config.DbAccess != null || !config.RefSampleSvDataFile.isEmpty();
     }
 
     public void buildRefDataSets()
@@ -59,7 +71,7 @@ public class RefSvData
 
         try
         {
-            final String filename = mConfig.OutputDir + "cup_ref_sv_percentiles.csv";
+            final String filename = mConfig.OutputDir + REF_FILE_SV_PERC;
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("CancerType,SvDataType");
