@@ -288,17 +288,19 @@ While these steps are specific to Strelka, these principles can be applied to ot
 
 ## Tumor-Only Mode
 Whilst PURPLE is primarily designed to be run with paired normal / tumor data, it is possible to run with tumor data only by including the `tumor_only` flag. 
-This will prevent PURPLE from using the somatic variants as an input to the fit. 
-
 It is important to first run AMBER and COBALT in tumor only mode. 
 
-AMBER has native support for tumor only as described in the [readme](../amber#tumor-only-mode).
+[AMBER]((../amber#tumor-only-mode)) and [COBALT](../count-bam-lines#tumor-only-mode) have native support for tumor only as described in their respective readme files.
 
-COBALT does not have native support for tumor only mode but this can be circumvented by using another sample's normal data. 
-It is important that the substituted bam is of the same sex as the sample.   
+Tumor only mode impacts PURPLE in the following ways:
+  - Somatic variants are excluded from fitting
+  - X and Y chromosomes are excluded from fitting
+  - Gender is determined only from AMBER
+  - COBALT allosome reference ratios are adjusted accoring to AMBER gender
+  - No chromosomal aberrations are detected 
 
 
-## Algorithm`
+## Algorithm
 
 There are 11 key steps in the PURPLE pipeline described in detail below:
 1. Sex determination
@@ -1029,6 +1031,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Support for COBALT tumor only mode
 - [2.51](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.51) 
   - Correctly identify SV genotypes in tumor-only mode
   - Allow overwrites of MH field in somatic VCF
