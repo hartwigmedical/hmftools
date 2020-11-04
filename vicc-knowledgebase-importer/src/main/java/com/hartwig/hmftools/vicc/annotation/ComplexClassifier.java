@@ -21,7 +21,7 @@ public final class ComplexClassifier {
     public static boolean isComplexEvent(@NotNull String featureName, @Nullable String gene) {
         Set<String> entriesForGene = COMPLEX_EVENTS_PER_GENE.get(gene);
         if (entriesForGene != null) {
-            return !entriesForGene.contains(featureName);
+            return entriesForGene.contains(featureName);
         }
         return false;
     }

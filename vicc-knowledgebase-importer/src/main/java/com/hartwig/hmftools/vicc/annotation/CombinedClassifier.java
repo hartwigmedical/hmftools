@@ -53,8 +53,8 @@ final class CombinedClassifier {
             return countSplice > 1;
         }
 
-        if (featureName.contains(" ")) {
-            String[] parts = featureName.split(" ");
+        if (featureName.trim().contains(" ")) {
+            String[] parts = featureName.trim().split(" ");
             return HotspotClassifier.isHotspot(parts[1]) && parts[0].contains("-");
         }
 
