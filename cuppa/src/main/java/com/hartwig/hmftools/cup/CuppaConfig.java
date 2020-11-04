@@ -1,21 +1,48 @@
 package com.hartwig.hmftools.cup;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_CANCER;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_PERC;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_POS_FREQ_COUNTS;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
+import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
+import java.util.Arrays;
+import java.util.List;
+
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.rna.RnaExpression;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class CuppaConfig
 {
+    public final List<CategoryType> IncludedCategories;
+
     // reference data
+    public final String RefDataDir;
+
     public final String RefSampleDataFile;
     public final String RefSnvCountsFile;
     public final String RefSvPercFile;
@@ -24,9 +51,11 @@ public class CuppaConfig
     public final String RefTraitPercFile;
     public final String RefTraitRateFile;
     public final String RefSnvPosFreqFile;
-    public final String RefFeatureAvgFile;
-    public final String RefRnaCancerExpFile;
-    public final String RefRnaGeneCancerPercFile;
+    public final String RefDriverAvgFile;
+
+    public final String RefGeneExpCancerFile;
+    public final String RefGeneExpSampleFile;
+    public final String RefGeneExpPercFile;
 
     // sample data, if not sourced from the database
     public final String SampleDataDir;
@@ -49,6 +78,8 @@ public class CuppaConfig
     public final String OutputFileId;
 
     // config strings
+    public static final String CATEGORIES = "categories";
+
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
 
     public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
@@ -60,19 +91,22 @@ public class CuppaConfig
     private static final String SAMPLE_SIG_CONTRIB_FILE = "sample_sig_contrib_file";
     private static final String SAMPLE_SOMATIC_VCF = "sample_somatic_vcf";
     private static final String SAMPLE_SV_FILE = "sample_sv_file";
-    private static final String SAMPLE_RNA_EXP_FILE = "sample_rna_exp_file";
+    private static final String SAMPLE_RNA_EXP_FILE = "sample_gene_exp_file";
+
+    public static final String REF_DATA_DIR = "ref_data_dir";
 
     public static final String REF_SAMPLE_DATA_FILE = "ref_sample_data_file";
     public static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
+    private static final String REF_SNV_POS_FREQ_FILE = "ref_snv_pos_freq_file";
     private static final String REF_SIG_CONTRIB_FILE = "ref_sig_contrib_file";
     private static final String REF_FEAT_PREV_FILE = "ref_feature_prev_file";
+    private static final String REF_DRIVER_AVG_FILE = "ref_feature_avg_file";
     private static final String REF_TRAIT_PERC_FILE = "ref_trait_perc_file";
     private static final String REF_TRAIT_RATE_FILE = "ref_trait_rate_file";
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
-    private static final String REF_SNV_POS_FREQ_FILE = "ref_snv_pos_freq_file";
-    private static final String REF_FEAT_AVG_FILE = "ref_feature_avg_file";
-    private static final String REF_RNA_CANCER_EXP_FILE = "ref_rna_cancer_exp_file";
-    private static final String REF_RNA_GENE_CANCER_PERC_FILE = "ref_rna_gene_cancer_file";
+    private static final String REF_RNA_GENE_EXP_CANCER_FILE = "ref_gene_exp_cancer_file";
+    private static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
+    private static final String REF_RNA_GENE_EXP_CANCER_PERC_FILE = "ref_gene_exp_cancer_perc_file";
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String OUTPUT_FILE_ID = "output_file_id";
@@ -86,7 +120,31 @@ public class CuppaConfig
 
     public CuppaConfig(final CommandLine cmd)
     {
-        SampleDataDir = cmd.getOptionValue(SAMPLE_DATA_DIR, "");
+        IncludedCategories = Lists.newArrayList();
+
+        if(cmd.hasOption(CATEGORIES))
+        {
+            if(cmd.getOptionValue(CATEGORIES).equals("ALL"))
+            {
+                // will run all classifiers
+            }
+            else
+            {
+                final String[] categories = cmd.getOptionValue(CATEGORIES).split(";");
+                Arrays.stream(categories).forEach(x -> IncludedCategories.add(CategoryType.valueOf(x)));
+            }
+        }
+        else
+        {
+            IncludedCategories.add(SNV);
+            IncludedCategories.add(SV);
+            IncludedCategories.add(FEATURE);
+            IncludedCategories.add(SAMPLE_TRAIT);
+        }
+
+        CUP_LOGGER.info("running classifiers: {}", IncludedCategories.toString());
+
+        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
 
         SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
         SampleTraitsFile = cmd.getOptionValue(SAMPLE_TRAITS_FILE, "");
@@ -98,29 +156,42 @@ public class CuppaConfig
         SampleRnaExpFile = cmd.getOptionValue(SAMPLE_RNA_EXP_FILE, "");
         SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
 
-        RefSampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
-        RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
-        RefSigContributionFile = cmd.getOptionValue(REF_SIG_CONTRIB_FILE, "");
-        RefFeaturePrevFile = cmd.getOptionValue(REF_FEAT_PREV_FILE, "");
-        RefTraitPercFile = cmd.getOptionValue(REF_TRAIT_PERC_FILE, "");
-        RefSvPercFile = cmd.getOptionValue(REF_SV_PERC_FILE, "");
-        RefTraitRateFile = cmd.getOptionValue(REF_TRAIT_RATE_FILE, "");
-        RefSnvPosFreqFile = cmd.getOptionValue(REF_SNV_POS_FREQ_FILE, "");
-        RefFeatureAvgFile = cmd.getOptionValue(REF_FEAT_AVG_FILE, "");
-        RefRnaCancerExpFile = cmd.getOptionValue(REF_RNA_CANCER_EXP_FILE, "");
-        RefRnaGeneCancerPercFile = cmd.getOptionValue(REF_RNA_GENE_CANCER_PERC_FILE, "");
+        RefDataDir = checkAddDirSeparator(cmd.getOptionValue(REF_DATA_DIR, ""));
+
+        RefSampleDataFile = getRefDataFile(cmd, REF_SAMPLE_DATA_FILE, REF_FILE_SAMPLE_DATA);
+        RefSnvCountsFile = getRefDataFile(cmd, REF_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS);
+        RefSigContributionFile = getRefDataFile(cmd, REF_SIG_CONTRIB_FILE, REF_FILE_SIG_PERC);
+        RefFeaturePrevFile = getRefDataFile(cmd, REF_FEAT_PREV_FILE, REF_FILE_FEATURE_PREV);
+        RefTraitPercFile = getRefDataFile(cmd, REF_TRAIT_PERC_FILE, REF_FILE_TRAIT_PERC);
+        RefTraitRateFile = getRefDataFile(cmd, REF_TRAIT_RATE_FILE, REF_FILE_TRAIT_RATES);
+        RefSvPercFile = getRefDataFile(cmd, REF_SV_PERC_FILE, REF_FILE_SV_PERC);
+        RefSnvPosFreqFile = getRefDataFile(cmd, REF_SNV_POS_FREQ_FILE, REF_FILE_POS_FREQ_COUNTS);
+        RefDriverAvgFile = getRefDataFile(cmd, REF_DRIVER_AVG_FILE, REF_FILE_DRIVER_AVG);
+
+        RefGeneExpCancerFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_CANCER_FILE, REF_FILE_GENE_EXP_CANCER);
+        RefGeneExpSampleFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_SAMPLE_FILE, REF_FILE_GENE_EXP_SAMPLE);
+        RefGeneExpPercFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_CANCER_PERC_FILE, REF_FILE_GENE_EXP_PERC);
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
+
         WriteSimilarities = Boolean.parseBoolean(cmd.getOptionValue(WRITE_SIMS, "true"));
 
         DbAccess = createDatabaseAccess(cmd);
+    }
+
+    private String getRefDataFile(final CommandLine cmd, final String configStr, final String defaultFilename)
+    {
+        final String fileName = cmd.getOptionValue(configStr, defaultFilename);
+        return RefDataDir + fileName;
     }
 
     public boolean isValid()
     {
         return !OutputDir.isEmpty();
     }
+
+    public boolean runClassifier(final CategoryType type) { return IncludedCategories.isEmpty() || IncludedCategories.contains(type); }
 
     public String formOutputFilename(final String fileId)
     {
@@ -134,6 +205,10 @@ public class CuppaConfig
 
     public static void addCmdLineArgs(Options options)
     {
+        options.addOption(
+                CATEGORIES, true,
+                "Categories to run analysis on, separated by ';' from: SNV, SV, SAMPLE_TRAIT, GENE_EXP and FEATURE");
+
         options.addOption(SPECIFIC_SAMPLE_DATA, true, "Specific sample in form 'SampleId;CancerType;CancerSubtype' (last 2 optional)");
         options.addOption(SAMPLE_DATA_DIR, true, "Directory containing standard sample files from pipeline");
 
@@ -149,17 +224,20 @@ public class CuppaConfig
         options.addOption(SAMPLE_RNA_EXP_FILE, true, "Sample RNA gene expression TPMs");
         options.addOption(SAMPLE_SOMATIC_VCF, true, "Sample somatic VCF");
 
-        options.addOption(REF_SAMPLE_DATA_FILE, true, "Reference sample data");
-        options.addOption(REF_SNV_COUNTS_FILE, true, "Reference SNV sample counts");
-        options.addOption(REF_SIG_CONTRIB_FILE, true, "SNV signatures");
-        options.addOption(REF_FEAT_PREV_FILE, true, "Reference driver prevalence");
-        options.addOption(REF_SV_PERC_FILE, true, "Reference SV percentiles file");
-        options.addOption(REF_TRAIT_PERC_FILE, true, "Reference traits percentiles file");
-        options.addOption(REF_TRAIT_RATE_FILE, true, "Reference traits rates file");
-        options.addOption(REF_SNV_POS_FREQ_FILE, true, "Reference SNV position frequency file");
-        options.addOption(REF_FEAT_AVG_FILE, true, "Reference features per sample file");
-        options.addOption(REF_RNA_CANCER_EXP_FILE, true, "Reference RNA gene expression file");
-        options.addOption(REF_RNA_GENE_CANCER_PERC_FILE, true, "Reference RNA gene cancer percentiles file");
+        options.addOption(REF_DATA_DIR, true, "Reference data directory");
+
+        options.addOption(REF_SAMPLE_DATA_FILE, true, "Reference sample data, default: " + REF_FILE_SAMPLE_DATA);
+        options.addOption(REF_SNV_COUNTS_FILE, true, "Reference SNV sample counts, default: " + REF_FILE_SNV_COUNTS);
+        options.addOption(REF_SIG_CONTRIB_FILE, true, "SNV signatures, default: " + REF_FILE_SIG_PERC);
+        options.addOption(REF_FEAT_PREV_FILE, true, "Reference driver prevalence, default: " + REF_FILE_FEATURE_PREV);
+        options.addOption(REF_SV_PERC_FILE, true, "Reference SV percentiles file, default: " + REF_FILE_SV_PERC);
+        options.addOption(REF_TRAIT_PERC_FILE, true, "Reference traits percentiles file, default: " + REF_FILE_TRAIT_PERC);
+        options.addOption(REF_TRAIT_RATE_FILE, true, "Reference traits rates file, default: " + REF_FILE_TRAIT_RATES);
+        options.addOption(REF_SNV_POS_FREQ_FILE, true, "Reference SNV position frequency file, default: " + REF_FILE_POS_FREQ_COUNTS);
+        options.addOption(REF_DRIVER_AVG_FILE, true, "Reference features per sample file, default: " + REF_FILE_DRIVER_AVG);
+        options.addOption(REF_RNA_GENE_EXP_CANCER_FILE, true, "Reference RNA cancer gene expression file, default: " + REF_FILE_GENE_EXP_CANCER);
+        options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Reference RNA sample gene expression file, default: " + REF_FILE_GENE_EXP_SAMPLE);
+        options.addOption(REF_RNA_GENE_EXP_CANCER_PERC_FILE, true, "Reference RNA cancer percentiles gene expression file, default: " + REF_FILE_GENE_EXP_PERC);
 
         options.addOption(WRITE_SIMS, true, "Cohort-only - write top-20 CSS similarities to file");
 

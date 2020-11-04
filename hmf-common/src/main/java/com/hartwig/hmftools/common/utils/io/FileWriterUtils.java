@@ -24,7 +24,7 @@ public final class FileWriterUtils
         if(outputDir == null)
             return null;
 
-        return checkOutputDir(outputDir);
+        return checkAddDirSeparator(outputDir);
     }
 
     public static boolean checkCreateOutputDir(final String outputDirPath)
@@ -36,7 +36,7 @@ public final class FileWriterUtils
         return outputDir.mkdirs();
     }
 
-    public static String checkOutputDir(@NotNull final String outputDir)
+    public static String checkAddDirSeparator(@NotNull final String outputDir)
     {
         if(outputDir.endsWith(File.separator))
             return outputDir;

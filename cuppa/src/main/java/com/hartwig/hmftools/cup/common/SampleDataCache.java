@@ -79,8 +79,7 @@ public class SampleDataCache
             SpecificSample = new SampleData(sampleId, cancerType, cancerSubtype, cancerType);
             SampleDataList.add(SpecificSample);
         }
-
-        if(sampleDataFile != null)
+        else if(sampleDataFile != null)
         {
             try
             {
@@ -95,8 +94,8 @@ public class SampleDataCache
                 {
                     SampleData sample = SampleData.from(fieldsIndexMap, line);
 
-                    if(SpecificSample != null && SpecificSample.Id.equals(sample.Id))
-                        continue;
+                    // if(SpecificSample != null && SpecificSample.Id.equals(sample.Id))
+                    //    continue;
 
                     SampleDataList.add(sample);
                 }

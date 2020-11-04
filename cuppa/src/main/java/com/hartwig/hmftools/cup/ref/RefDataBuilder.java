@@ -8,7 +8,7 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
 import com.hartwig.hmftools.cup.rna.RefRnaExpression;
 import com.hartwig.hmftools.cup.sample.RefSampleTraits;
-import com.hartwig.hmftools.cup.sigs.RefSomatics;
+import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.cup.svs.RefSvData;
 
 import org.apache.commons.cli.CommandLine;

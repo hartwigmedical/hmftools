@@ -32,11 +32,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.CuppaConfig;
+import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
+import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
-public class FeatureAnnotation
+public class FeatureClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
     private final Map<String,List<SampleFeatureData>> mSampleFeatures;
@@ -47,7 +50,7 @@ public class FeatureAnnotation
     private final Map<String,FeaturePrevCounts> mGenePrevalenceTotals;
     private final Map<String,Double> mCancerFeatureAvg;
 
-    public FeatureAnnotation(final CuppaConfig config, final SampleDataCache sampleDataCache)
+    public FeatureClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleFeatures = Maps.newHashMap();
@@ -57,34 +60,31 @@ public class FeatureAnnotation
         mSampleDataCache = sampleDataCache;
         mIsValid = true;
 
-        if(config.RefFeaturePrevFile.isEmpty() && config.RefFeatureAvgFile.isEmpty())
+        if(config.RefFeaturePrevFile.isEmpty() && config.RefDriverAvgFile.isEmpty())
             return;
 
         mIsValid &= loadRefPrevalenceData(config.RefFeaturePrevFile, mGenePrevalenceTotals, mCancerFeaturePrevalence);
-        mIsValid &= loadRefCancerFeatureAvg(config.RefFeatureAvgFile, mCancerFeatureAvg);
+        mIsValid &= loadRefCancerFeatureAvg(config.RefDriverAvgFile, mCancerFeatureAvg);
         formGenePrevalenceTotals();
         mIsValid &= loadSampleFeatures();
     }
 
+    public CategoryType categoryType() { return FEATURE; }
     public boolean isValid() { return mIsValid; }
 
-    public final List<SampleResult> processSample(final SampleData sample)
+    public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        final List<SampleResult> results = Lists.newArrayList();
-
         if(!mIsValid || mGenePrevalenceTotals.isEmpty())
-            return results;
+            return;
 
         final List<SampleFeatureData> sampleFeatures = mSampleFeatures.get(sample.Id);
 
         if(sampleFeatures == null || sampleFeatures.isEmpty())
-            return results;
+            return;
 
         addDriverPrevalence(sample, sampleFeatures, results);
 
         calcCancerTypeProbability(sample, sampleFeatures, results);
-
-        return results;
     }
 
     private void addDriverPrevalence(final SampleData sample, final List<SampleFeatureData> sampleFeatures, final List<SampleResult> results)

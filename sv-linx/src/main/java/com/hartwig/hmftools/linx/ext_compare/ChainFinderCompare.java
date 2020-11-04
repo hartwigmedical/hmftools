@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkOutputDir;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -52,7 +52,7 @@ public class ChainFinderCompare
 
     public ChainFinderCompare(final String outputDir, final CommandLine cmd)
     {
-        mDataDirectory = checkOutputDir(cmd.getOptionValue(CHAIN_FINDER_DATA_DIR));
+        mDataDirectory = checkAddDirSeparator(cmd.getOptionValue(CHAIN_FINDER_DATA_DIR));
         mUseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRECTORIES);
         mSampleData = null;
         mSvDataWriter = null;

@@ -2,10 +2,10 @@ package com.hartwig.hmftools.cup.common;
 
 public enum CategoryType
 {
-    SNV_SIG,
+    SNV,
     SV,
     SAMPLE_TRAIT,
-    GENE_EXP,
     FEATURE,
+    GENE_EXP,
     CLASSIFIER
 }

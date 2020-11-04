@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.ext_compare;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkOutputDir;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -53,7 +53,7 @@ public class AmpliconCompare
 
     public AmpliconCompare(final String outputDir, final CommandLine cmd)
     {
-        mAmpliconDataFile = checkOutputDir(cmd.getOptionValue(AMPLICON_DATA_FILE));
+        mAmpliconDataFile = checkAddDirSeparator(cmd.getOptionValue(AMPLICON_DATA_FILE));
         mSampleAmpData = Maps.newHashMap();
         mResultsWriter = null;
         mSampleId = "";

@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.cup.sigs;
+package com.hartwig.hmftools.cup.somatics;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.sigs.RefSomatics.populateRefPercentileData;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateRefPercentileData;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 

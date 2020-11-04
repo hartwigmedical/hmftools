@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.sample;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -23,13 +24,16 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.cup.CuppaConfig;
+import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
+import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
 import org.apache.commons.compress.utils.Lists;
 
-public class SampleTraits
+public class SampleTraits implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -75,6 +79,7 @@ public class SampleTraits
         }
     }
 
+    public CategoryType categoryType() { return SAMPLE_TRAIT; }
     public boolean isValid() { return mIsValid; }
 
     private boolean loadSampleTraitsData()
@@ -118,19 +123,17 @@ public class SampleTraits
         return true;
     }
 
-    public List<SampleResult> processSample(final SampleData sample)
+    public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        final List<SampleResult> results = Lists.newArrayList();
-
         if(!mIsValid || mRefTraitRates.isEmpty())
-            return results;
+            return;
 
         final SampleTraitsData sampleTraits = mSampleTraitsData.get(sample.Id);
 
         if(sampleTraits == null)
         {
             mIsValid = false;
-            return results;
+            return;
         }
 
         for(Map.Entry<SampleTraitType, Map<String, Double>> entry : mRefTraitRates.entrySet())
@@ -203,8 +206,6 @@ public class SampleTraits
         final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(
                 sample.CancerType, cancerSampleCount, cancerTypeCount, indelPercentiles, indelMb, false);
         results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_HIGH", indelMb, cancerPrevsHigh));
-
-        return results;
     }
 
     private static boolean isReportableType(final SampleTraitType type)

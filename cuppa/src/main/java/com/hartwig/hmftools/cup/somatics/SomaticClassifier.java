@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.sigs;
+package com.hartwig.hmftools.cup.somatics;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -14,8 +14,9 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
-import static com.hartwig.hmftools.cup.common.CategoryType.SNV_SIG;
+import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
@@ -29,14 +30,14 @@ import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXP
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
-import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSampleCounts;
-import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSignaturePercentileData;
-import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadRefSnvPosFrequences;
-import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSampleCountsFromFile;
-import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSamplePosFreqFromFile;
-import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSigContribsFromCohortFile;
-import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSigContribsFromDatabase;
-import static com.hartwig.hmftools.cup.sigs.SomaticDataLoader.loadSomaticVariants;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSnvPosFrequences;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSampleCountsFromFile;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSamplePosFreqFromFile;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromDatabase;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
 
 import java.util.List;
 import java.util.Map;
@@ -49,12 +50,14 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.cup.CuppaConfig;
+import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
-public class SomaticAnnotation
+public class SomaticClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -79,7 +82,7 @@ public class SomaticAnnotation
 
     private static final int SNV_POS_FREQ_SNV_TOTAL_THRESHOLD = 20000;
 
-    public SomaticAnnotation(final CuppaConfig config, final SampleDataCache sampleDataCache)
+    public SomaticClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -115,6 +118,7 @@ public class SomaticAnnotation
         mIsValid &= loadSigContributions();
     }
 
+    public CategoryType categoryType() { return SNV; }
     public boolean isValid() { return mIsValid; }
 
     private boolean loadSampleCounts()
@@ -295,12 +299,12 @@ public class SomaticAnnotation
         final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
                 sample.CancerType, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal,  true);
 
-        results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_LOW", snvTotal, cancerPrevsLow));
+        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_LOW", snvTotal, cancerPrevsLow));
 
         final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(
                 sample.CancerType, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal, false);
 
-        results.add(new SampleResult(sample.Id, SNV_SIG, LIKELIHOOD, "SNV_COUNT_HIGH", snvTotal, cancerPrevsHigh));
+        results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_HIGH", snvTotal, cancerPrevsHigh));
     }
 
     private void addCssResults(
@@ -335,9 +339,12 @@ public class SomaticAnnotation
             if(css < SNV_CSS_THRESHOLD)
                 continue;
 
-            recordCssSimilarity(
-                    topMatches, sample.Id, refSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
-                    CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+            if(mConfig.WriteSimilarities)
+            {
+                recordCssSimilarity(
+                        topMatches, sample.Id, refSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
+                        CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+            }
 
             double cssWeight = pow(SNV_CSS_DIFF_EXPONENT, -100 * (1 - css));
 
@@ -510,7 +517,7 @@ public class SomaticAnnotation
                 double percentile = getPercentile(refSigPercentiles, sampleSigContrib, true);
                 cancerResults.put(cancerType, percentile);
 
-                results.add(new SampleResult(sample.Id, SNV_SIG, PERCENTILE, signatureDisplayName(sigName), round(sampleSigContrib), cancerResults));
+                results.add(new SampleResult(sample.Id, SNV, PERCENTILE, signatureDisplayName(sigName), round(sampleSigContrib), cancerResults));
             }
         }
     }

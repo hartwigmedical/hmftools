@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -21,11 +22,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.cup.CuppaConfig;
+import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
+import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
-public class SvAnnotation
+public class SvClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -36,7 +40,7 @@ public class SvAnnotation
 
     private boolean mIsValid;
 
-    public SvAnnotation(final CuppaConfig config, final SampleDataCache sampleDataCache)
+    public SvClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -58,27 +62,26 @@ public class SvAnnotation
         return (type == LINE || type == TELOMERIC_SGL || type == SIMPLE_DUP_32B_200B || type == MAX_COMPLEX_SIZE);
     }
 
+    public CategoryType categoryType() { return SV; }
     public boolean isValid() { return mIsValid; }
 
-    public List<SampleResult> processSample(final SampleData sample)
+    public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        final List<SampleResult> results = Lists.newArrayList();
-
         if(!mIsValid || mRefSvTypePercentiles.isEmpty())
-            return results;
+            return;
 
         boolean loadDbData = false;
         if(mSampleSvData.isEmpty() && mConfig.DbAccess != null)
         {
             loadDbData = true;
             if(!loadSvDataFromDatabase(mConfig.DbAccess, Lists.newArrayList(sample.Id), mSampleSvData))
-                return results;
+                return;
         }
 
         final SvData svData = mSampleSvData.get(sample.Id);
 
         if(svData == null)
-            return results;
+            return;
 
         for(Map.Entry<SvDataType,Map<String,double[]>> entry : mRefSvTypePercentiles.entrySet())
         {
@@ -114,8 +117,6 @@ public class SvAnnotation
 
         if(loadDbData)
             mSampleSvData.clear();
-
-        return results;
     }
 
     private SampleResult calcPrevalenceResult(

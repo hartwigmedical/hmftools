@@ -9,6 +9,7 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENE_EXPRESSION_CANCER;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENE_EXPRESSION_PAIRWISE;
@@ -30,6 +31,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
+import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -38,7 +41,7 @@ import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-public class RnaExpression
+public class RnaExpression implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -49,6 +52,9 @@ public class RnaExpression
     private final Map<String,Map<String,double[]>> mRefGeneCancerPercentiles;
     private final Map<String,String> mGeneIdNameMap;
     private final List<String> mGeneIdList;
+
+    private SigMatrix mRefSampleGeneExpression;
+    private final Map<String,Integer> mRefSampleGeneExpIndexMap;
 
     private SigMatrix mSampleRnaExpression;
     private final Map<String,Integer> mSampleIndexMap;
@@ -69,8 +75,8 @@ public class RnaExpression
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mSampleRnaExpression = null;
-        mSampleIndexMap = Maps.newHashMap();
+        mRefSampleGeneExpression = null;
+        mRefSampleGeneExpIndexMap = Maps.newHashMap();
 
         mRefCancerTypeGeneExpression = null;
         mRefCancerTypes = Lists.newArrayList();
@@ -78,6 +84,9 @@ public class RnaExpression
 
         mRefGeneCancerPercentiles = Maps.newHashMap();
         mGeneIdNameMap = Maps.newHashMap();
+
+        mSampleRnaExpression = null;
+        mSampleIndexMap = Maps.newHashMap();
 
         final String rnaMethods = cmd.getOptionValue(RNA_METHODS);
 
@@ -87,26 +96,69 @@ public class RnaExpression
 
         mIsValid = true;
 
-        if(mConfig.SampleRnaExpFile.isEmpty() && mConfig.RefRnaCancerExpFile.isEmpty())
+        if(mConfig.SampleRnaExpFile.isEmpty())
             return;
 
-        mSampleRnaExpression = loadMatrixDataFile(mConfig.SampleRnaExpFile, mSampleIndexMap, Lists.newArrayList("GeneId","GeneName"));
-        mRefCancerTypeGeneExpression = loadMatrixDataFile(mConfig.RefRnaCancerExpFile, mRefCancerTypes, Lists.newArrayList("GeneId","GeneName"));
-
-        if(!mConfig.RefRnaGeneCancerPercFile.isEmpty())
-        {
-            mIsValid &= loadRefPercentileData(mConfig.RefRnaGeneCancerPercFile, mRefGeneCancerPercentiles, mGeneIdNameMap);
-            populateGeneIdList(mConfig.RefRnaCancerExpFile, mGeneIdList);
-        }
-
-        if(mSampleRnaExpression == null || mRefCancerTypeGeneExpression ==  null)
-        {
-            mIsValid = false;
+        if(mRunPairwiseCss && mConfig.RefGeneExpSampleFile.isEmpty())
             return;
+
+        if(mRunCancerCss && mConfig.RefGeneExpCancerFile.isEmpty())
+            return;
+
+        if(mRunGenePrevalence && mConfig.RefGeneExpPercFile.isEmpty())
+            return;
+
+        if(!mConfig.RefGeneExpSampleFile.isEmpty())
+        {
+            mRefSampleGeneExpression =
+                    loadMatrixDataFile(mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, Lists.newArrayList("GeneId", "GeneName"));
+
+            if(mRefSampleGeneExpression ==  null)
+            {
+                mIsValid = false;
+                return;
+            }
+
+            mRefSampleGeneExpression.cacheTranspose();
         }
 
-        mSampleRnaExpression.cacheTranspose();
-        mRefCancerTypeGeneExpression.cacheTranspose();
+        if(!mConfig.RefGeneExpCancerFile.isEmpty())
+        {
+            mRefCancerTypeGeneExpression =
+                    loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, Lists.newArrayList("GeneId", "GeneName"));
+
+            if(mRefCancerTypeGeneExpression ==  null)
+            {
+                mIsValid = false;
+                return;
+            }
+
+            mRefCancerTypeGeneExpression.cacheTranspose();
+        }
+
+        if(!mConfig.RefGeneExpPercFile.isEmpty())
+        {
+            mIsValid &= loadRefPercentileData(mConfig.RefGeneExpPercFile, mRefGeneCancerPercentiles, mGeneIdNameMap);
+            populateGeneIdList(mConfig.RefGeneExpCancerFile, mGeneIdList);
+        }
+
+        if(mConfig.SampleRnaExpFile.equals(mConfig.RefGeneExpSampleFile))
+        {
+            mSampleRnaExpression = mRefSampleGeneExpression;
+            mSampleIndexMap.putAll(mRefSampleGeneExpIndexMap);
+        }
+        else
+        {
+            mSampleRnaExpression = loadMatrixDataFile(mConfig.SampleRnaExpFile, mSampleIndexMap, Lists.newArrayList("GeneId", "GeneName"));
+
+            if(mSampleRnaExpression == null || mRefCancerTypeGeneExpression ==  null)
+            {
+                mIsValid = false;
+                return;
+            }
+
+            mSampleRnaExpression.cacheTranspose();
+        }
     }
 
     public static void addCmdLineArgs(Options options)
@@ -114,6 +166,7 @@ public class RnaExpression
         options.addOption(RNA_METHODS, true, "Types of RNA gene expression methods");
     }
 
+    public CategoryType categoryType() { return GENE_EXP; }
     public boolean isValid() { return mIsValid; }
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
@@ -214,9 +267,12 @@ public class RnaExpression
             if(css < RNA_GENE_EXP_CSS_THRESHOLD)
                 continue;
 
-            recordCssSimilarity(
-                    topMatches, sample.Id, refSampleId, css, GENE_EXPRESSION_PAIRWISE.toString(),
-                    CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+            if(mConfig.WriteSimilarities)
+            {
+                recordCssSimilarity(
+                        topMatches, sample.Id, refSampleId, css, GENE_EXPRESSION_PAIRWISE.toString(),
+                        CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+            }
 
             double cssWeight = pow(RNA_GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
 
@@ -242,7 +298,7 @@ public class RnaExpression
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, GENE_EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
-        // similarities.addAll(topMatches);
+        similarities.addAll(topMatches);
     }
 
     private double[] adjustRefTpmTotals(final double[] refGeneTpmTotals, final double[] sampleGeneTPMs)

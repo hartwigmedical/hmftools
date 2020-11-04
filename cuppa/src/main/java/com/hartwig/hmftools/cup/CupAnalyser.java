@@ -3,10 +3,14 @@ package com.hartwig.hmftools.cup;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_DATA_FILE;
-import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
+import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
+import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
 
@@ -16,15 +20,16 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-import com.hartwig.hmftools.cup.feature.FeatureAnnotation;
+import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.RnaExpression;
 import com.hartwig.hmftools.cup.sample.SampleTraits;
-import com.hartwig.hmftools.cup.sigs.SomaticAnnotation;
-import com.hartwig.hmftools.cup.svs.SvAnnotation;
+import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
+import com.hartwig.hmftools.cup.svs.SvClassifier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -41,11 +46,7 @@ public class CupAnalyser
 
     private final SampleDataCache mSampleDataCache;
 
-    private final FeatureAnnotation mFeatures;
-    private final SomaticAnnotation mSomatics;
-    private final SampleTraits mSampleTraits;
-    private final SvAnnotation mSvAnnotation;
-    private final RnaExpression mRnaExpression;
+    private final List<CuppaClassifier> mClassifiers;
 
     private BufferedWriter mSampleDataWriter;
     private BufferedWriter mSampleSimilarityWriter;
@@ -58,21 +59,31 @@ public class CupAnalyser
 
         loadSampleData(cmd);
 
-        mSomatics = new SomaticAnnotation(mConfig, mSampleDataCache);
-        mFeatures = new FeatureAnnotation(mConfig, mSampleDataCache);
-        mSampleTraits = new SampleTraits(mConfig, mSampleDataCache);
-        mSvAnnotation = new SvAnnotation(mConfig, mSampleDataCache);
-        mRnaExpression = new RnaExpression(mConfig, mSampleDataCache, cmd);
+        mClassifiers = Lists.newArrayList();
+
+        if(mConfig.runClassifier(SNV))
+            mClassifiers.add(new SomaticClassifier(mConfig, mSampleDataCache));
+
+        if(mConfig.runClassifier(FEATURE))
+            mClassifiers.add(new FeatureClassifier(mConfig, mSampleDataCache));
+
+        if(mConfig.runClassifier(SAMPLE_TRAIT))
+            mClassifiers.add(new SampleTraits(mConfig, mSampleDataCache));
+
+        if(mConfig.runClassifier(SV))
+            mClassifiers.add(new SvClassifier(mConfig, mSampleDataCache));
+
+        if(mConfig.runClassifier(GENE_EXP))
+            mClassifiers.add(new RnaExpression(mConfig, mSampleDataCache, cmd));
 
         mSampleDataWriter = null;
         mSampleSimilarityWriter = null;
-
     }
 
     private void loadSampleData(final CommandLine cmd)
     {
-        mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), cmd.getOptionValue(SAMPLE_DATA_FILE));
-        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE), true);
+        mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), mConfig.SampleDataFile);
+        mSampleDataCache.loadReferenceSampleData(mConfig.RefSampleDataFile, true);
 
         // mark any samples included in the ref data set so they can be excluded from self-comparison
         mSampleDataCache.SampleDataList.stream()
@@ -93,13 +104,13 @@ public class CupAnalyser
             return;
         }
 
-        if(!checkAnnotators())
+        if(!allClassifiersValid())
             return;
 
         if(mSampleDataCache.isMultiSample())
         {
-            CUP_LOGGER.info("loaded {} samples and {} cancer types",
-                    mSampleDataCache.SampleIds.size(), mSampleDataCache.RefCancerSampleData.size());
+            CUP_LOGGER.info("loaded {} samples, {} ref samples and {} ref cancer types",
+                    mSampleDataCache.SampleIds.size(), mSampleDataCache.RefSampleCancerTypeMap.size(), mSampleDataCache.RefCancerSampleData.size());
         }
 
         initialiseOutputFiles();
@@ -120,7 +131,7 @@ public class CupAnalyser
 
                 processSample(sample);
 
-                if(!checkAnnotators())
+                if(!allClassifiersValid())
                     break;
 
                 ++sampleCount;
@@ -138,16 +149,19 @@ public class CupAnalyser
         CUP_LOGGER.info("CUP analysis complete");
     }
 
-    private boolean checkAnnotators()
+    private boolean allClassifiersValid()
     {
-        if(!mSvAnnotation.isValid() || !mFeatures.isValid() || !mSomatics.isValid() || !mSampleTraits.isValid() || !mRnaExpression.isValid())
+        boolean allInvalid = true;
+        for(CuppaClassifier classifier : mClassifiers)
         {
-            CUP_LOGGER.error("invalid init: traits({}) sigs({}) SVs({}) features({}) rna({{}})",
-                    mSampleTraits.isValid(), mSomatics.isValid(), mSvAnnotation.isValid(), mFeatures.isValid(), mRnaExpression.isValid());
-            return false;
+            if(!classifier.isValid())
+            {
+                allInvalid = false;
+                CUP_LOGGER.error("invalid classifier({})", classifier.categoryType());
+            }
         }
 
-        return true;
+        return allInvalid;
     }
 
     private void processSample(final SampleData sample)
@@ -155,18 +169,10 @@ public class CupAnalyser
         final List<SampleResult> allResults = Lists.newArrayList();
         final List<SampleSimilarity> similarities = Lists.newArrayList();
 
-        final List<SampleResult> traitsResults = mSampleTraits.processSample(sample);
-        allResults.addAll(traitsResults);
-
-        mSomatics.processSample(sample, allResults, similarities);
-
-        final List<SampleResult> svResults = mSvAnnotation.processSample(sample);
-        allResults.addAll(svResults);
-
-        final List<SampleResult> driverResults = mFeatures.processSample(sample);
-        allResults.addAll(driverResults);
-
-        mRnaExpression.processSample(sample, allResults, similarities);
+        for(CuppaClassifier classifier : mClassifiers)
+        {
+            classifier.processSample(sample, allResults, similarities);
+        }
 
         SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults);
 
@@ -211,7 +217,7 @@ public class CupAnalyser
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to write SNV sample CSS output: {}", e.toString());
+            CUP_LOGGER.error("failed to write CUPPA output: {}", e.toString());
         }
     }
 
