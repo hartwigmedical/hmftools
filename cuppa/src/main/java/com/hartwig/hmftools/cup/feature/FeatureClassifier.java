@@ -225,6 +225,10 @@ public class FeatureClassifier implements CuppaClassifier
             for(final String gene : genes)
             {
                 double maxLikelihood = sampleFeatures.stream().filter(x -> x.Name.equals(gene)).mapToDouble(x -> x.Likelihood).max().orElse(0);
+
+                if(maxLikelihood == 0)
+                    continue;
+
                 final FeaturePrevCounts genePrevTotals = mGenePrevalenceTotals.get(gene);
 
                 if(genePrevTotals == null)
