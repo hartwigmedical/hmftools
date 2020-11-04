@@ -10,7 +10,7 @@ import org.junit.Test;
 public class HotspotClassifierTest {
 
     @Test
-    public void canAssessWhetherProteinAnnotationIsHotspot() {
+    public void canAssessWhetherFeatureIsHotspot() {
         assertTrue(HotspotClassifier.isHotspot("K5N"));
         assertTrue(HotspotClassifier.isHotspot("L2230V"));
         assertTrue(HotspotClassifier.isHotspot("V5del"));

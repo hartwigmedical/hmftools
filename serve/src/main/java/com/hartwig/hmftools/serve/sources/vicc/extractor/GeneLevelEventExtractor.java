@@ -82,7 +82,7 @@ public class GeneLevelEventExtractor {
                                 .event(extractGeneLevelEvent(feature, driverGenes))
                                 .build());
 
-            } else if (feature.type() == FeatureType.FUSION_PROMISCUOUS) {
+            } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
 
                 String curatedPromiscuousFusion = FusionCuration.curateFusion(feature.geneSymbol(), feature);
                 //TODO: check if this is needed
