@@ -43,6 +43,14 @@ public final class GeneRangeClassifier {
     }
 
     public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String provenanceRule) {
+        if (CombinedClassifier.isCombinedEvent(featureName)) {
+            return false;
+        }
+
+        if (featureName.toLowerCase().contains("exon")) {
+            return false;
+        }
+
         for (String keyword : GENERIC_GENE_LEVEL_KEYWORDS) {
             if (featureName.contains(keyword)) {
                 return true;
