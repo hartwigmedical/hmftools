@@ -55,7 +55,10 @@ final class CombinedClassifier {
 
         if (featureName.trim().contains(" ")) {
             String[] parts = featureName.trim().split(" ");
-            return HotspotClassifier.isHotspot(parts[1]) && parts[0].contains("-");
+            if (parts[0].contains("-")) {
+                return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1])
+                        || CopyNumberClassifier.isDeletion(parts[1]);
+            }
         }
 
         return featureName.equals("p61BRAF-V600E");

@@ -9,5 +9,6 @@ public class CombinedClassifierTest {
     @Test
     public void canAssessWhetherFeatureIsCombinedEvent() {
         assertTrue(CombinedClassifier.isCombinedEvent("BCR-ABL F486S"));
+        assertTrue(CombinedClassifier.isCombinedEvent("NPM1-ALK amp"));
     }
 }

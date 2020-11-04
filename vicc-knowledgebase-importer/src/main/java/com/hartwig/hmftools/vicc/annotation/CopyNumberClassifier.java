@@ -17,7 +17,7 @@ final class CopyNumberClassifier {
     private static final Set<String> DELETION_KEYWORDS =
             Sets.newHashSet("Deletion", "deletion", "DELETION", "del", "undexpression", "UNDEREXPRESSION", "loss", "LOSS");
 
-    private static final Set<String> DELETION_KEY_PHRASES = Sets.newHashSet("dec exp");
+    private static final Set<String> DELETION_KEY_PHRASES = Sets.newHashSet("dec exp", "Copy Number Loss");
 
     private static final Set<String> KEYWORDS_TO_SKIP_FOR_DELETION = Sets.newHashSet("exon", "EXON", "Exon", "Ex19", "inframe");
 
