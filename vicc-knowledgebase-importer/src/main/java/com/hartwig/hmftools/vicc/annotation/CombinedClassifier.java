@@ -65,7 +65,7 @@ final class CombinedClassifier {
         }
 
         if (featureName.trim().contains(" ")) {
-            String[] parts = featureName.trim().split(" ");
+            String[] parts = featureName.trim().replace("  ", " ").split(" ");
             if (parts[0].contains("-")) {
                 // Hotspots or amplifications on fusion genes are considered combined.
                 return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1], gene);
