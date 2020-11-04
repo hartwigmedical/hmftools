@@ -8,9 +8,13 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.actionability.ClinicalTrial;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
 import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.data.EventFilter;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.hartwig.hmftools.protect.GenomicAnalyzer;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
@@ -104,9 +108,24 @@ class AnalysedPatientReporter {
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
 
         GenomicAnalysis analysis = report.genomicAnalysis();
+
+        List<ClinicalTrial> filteredClinicalTrials = EventFilter.removeEvidenceOnFilteredGermlineVariants(analysis.clinicalTrials(),
+                analysis.reportableVariants(),
+                report.sampleReport().germlineReportingLevel());
+
+        List<EvidenceItem> filteredTumorSpecificEvidence = EventFilter.removeEvidenceOnFilteredGermlineVariants(analysis.tumorSpecificEvidence(),
+                analysis.reportableVariants(),
+                report.sampleReport().germlineReportingLevel());
+
+        List<EvidenceItem> filteredOffLabelEvidence = EventFilter.removeEvidenceOnFilteredGermlineVariants(analysis.offLabelEvidence(),
+                analysis.reportableVariants(),
+                report.sampleReport().germlineReportingLevel());
+
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
-        LOGGER.info("   Number of variants also present in germline: {}", germlineOnly(analysis.reportableVariants()).size());
+        if (report.sampleReport().germlineReportingLevel() != LimsGermlineReportingLevel.NO_REPORTING) {
+            LOGGER.info("   Number of variants also present in germline: {}", germlineOnly(analysis.reportableVariants()).size());
+        }
         LOGGER.info(" Number of gains and losses to report: {}", analysis.gainsAndLosses().size());
         LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
@@ -118,9 +137,9 @@ class AnalysedPatientReporter {
         LOGGER.info(" Tumor mutational burden: {}", analysis.tumorMutationalBurden());
 
         LOGGER.info("Printing actionability results for {}", report.sampleReport().tumorSampleId());
-        LOGGER.info(" Tumor-specific evidence items found: {}", analysis.tumorSpecificEvidence().size());
-        LOGGER.info(" Clinical trials matched to molecular profile: {}", analysis.clinicalTrials().size());
-        LOGGER.info(" Off-label evidence items found: {}", analysis.offLabelEvidence().size());
+        LOGGER.info(" Tumor-specific evidence items found: {}", filteredTumorSpecificEvidence.size());
+        LOGGER.info(" Clinical trials matched to molecular profile: {}", filteredClinicalTrials.size());
+        LOGGER.info(" Off-label evidence items found: {}", filteredOffLabelEvidence.size());
     }
 
     @NotNull
