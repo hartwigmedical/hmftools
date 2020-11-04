@@ -77,7 +77,6 @@ public final class ComplexClassifier {
                 "EGFR inframe deletion (L747),inframe insertion (P753PS)",
                 "EGFR inframe deletion (30-336)",
                 "EGFR T34_A289del",
-                "Ex19 del L858R",
                 "G983_A1210del",
                 "EGFR inframe deletion (6-273)");
         complexEventsPerGene.put("EGFR", egfrSet);
