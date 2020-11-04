@@ -13,7 +13,8 @@ public class GeneRangeClassifierTest {
 
     @Test
     public void canClassifyGeneRangeCodonEvents() {
+        assertTrue(GeneRangeClassifier.isGeneRangeCodonEvent("GNAS (R201)"));
+        assertTrue(GeneRangeClassifier.isGeneRangeCodonEvent("E709X"));
         assertTrue(GeneRangeClassifier.isGeneRangeCodonEvent("EGFR E709X "));
     }
-
 }

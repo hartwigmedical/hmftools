@@ -87,35 +87,40 @@ public final class GeneRangeClassifier {
     }
 
     public static boolean isGeneRangeCodonEvent(@NotNull String featureName) {
-        return HotspotClassifier.extractProteinAnnotation(featureName).endsWith("X") || isValidSingleCodonRange(featureName);
+        String proteinAnnotation = HotspotClassifier.extractProteinAnnotation(featureName);
+
+        return proteinAnnotation.endsWith("X") || isValidSingleCodonRange(proteinAnnotation);
     }
 
     private static boolean isValidSingleCodonRange(@NotNull String featureName) {
+        // Feature codon ranges occasionally come with parentheses
+        String strippedFeature = featureName.replace("(", "").replace(")", "");
+
         // Features are expected to look something like V600 (1 char - N digits)
-        if (featureName.length() < 3) {
+        if (strippedFeature.length() < 3) {
             return false;
         }
 
-        if (!Character.isLetter(featureName.charAt(0))) {
+        if (!Character.isLetter(strippedFeature.charAt(0))) {
             return false;
         }
 
-        if (!Character.isDigit(featureName.charAt(1))) {
+        if (!Character.isDigit(strippedFeature.charAt(1))) {
             return false;
         }
 
-        if (featureName.contains("*")) {
+        if (strippedFeature.contains("*")) {
             return false;
         }
 
-        if (featureName.contains("/")) {
+        if (strippedFeature.contains("/")) {
             return false;
         }
 
-        if (featureName.contains("fs")) {
+        if (strippedFeature.contains("fs")) {
             return false;
         }
 
-        return Character.isDigit(featureName.substring(featureName.length() - 1).charAt(0));
+        return Character.isDigit(strippedFeature.substring(strippedFeature.length() - 1).charAt(0));
     }
 }
