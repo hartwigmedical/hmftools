@@ -37,12 +37,10 @@ public final class GeneRangeClassifier {
             "positive",
             "oncogenic mutation");
 
-    public static final String GENE_ONLY = "gene_only";
-
     private GeneRangeClassifier() {
     }
 
-    public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String gene, @Nullable String provenanceRule) {
+    public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String gene) {
         if (CombinedClassifier.isCombinedEvent(featureName, gene)) {
             return false;
         }
@@ -69,7 +67,7 @@ public final class GeneRangeClassifier {
             }
         }
 
-        return provenanceRule != null && provenanceRule.equals(GENE_ONLY);
+        return featureName.trim().equals(gene);
     }
 
     public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String gene) {

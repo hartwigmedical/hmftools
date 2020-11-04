@@ -8,7 +8,9 @@ public class GeneRangeClassifierTest {
 
     @Test
     public void canClassifyGeneLevelEvents() {
-        assertTrue(GeneRangeClassifier.isGeneLevelEvent("AKT1 act mut", "AKT1", "default_feature"));
+        assertTrue(GeneRangeClassifier.isGeneLevelEvent("AKT1 act mut", "AKT1"));
+        assertTrue(GeneRangeClassifier.isGeneLevelEvent("AKT1", "AKT1"));
+        assertTrue(GeneRangeClassifier.isGeneLevelEvent("biallelic inactivation", "TP53"));
     }
 
     @Test

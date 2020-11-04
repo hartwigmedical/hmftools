@@ -21,18 +21,17 @@ public final class FeatureTypeExtractor {
 
     @NotNull
     public static FeatureType extractType(@NotNull Feature feature) {
-        return extractType(feature.name(), feature.geneSymbol(), feature.provenanceRule());
+        return extractType(feature.name(), feature.geneSymbol());
     }
 
     @NotNull
-    public static FeatureType extractType(@NotNull String featureName, @Nullable String gene,
-            @Nullable String provenanceRule) {
+    public static FeatureType extractType(@NotNull String featureName, @Nullable String gene) {
         Map<FeatureType, Boolean> evaluations = Maps.newHashMap();
 
         evaluations.put(FeatureType.HOTSPOT, HotspotClassifier.isHotspot(featureName));
         evaluations.put(FeatureType.GENE_RANGE_CODON, GeneRangeClassifier.isGeneRangeCodonEvent(featureName));
         evaluations.put(FeatureType.GENE_RANGE_EXON, GeneRangeClassifier.isGeneRangeExonEvent(featureName, gene));
-        evaluations.put(FeatureType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(featureName, gene, provenanceRule));
+        evaluations.put(FeatureType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(featureName, gene));
         evaluations.put(FeatureType.AMPLIFICATION, CopyNumberClassifier.isAmplification(featureName, gene));
         evaluations.put(FeatureType.DELETION, CopyNumberClassifier.isDeletion(featureName, gene));
         evaluations.put(FeatureType.FUSION_PAIR, FusionClassifier.isFusionPair(featureName, gene));

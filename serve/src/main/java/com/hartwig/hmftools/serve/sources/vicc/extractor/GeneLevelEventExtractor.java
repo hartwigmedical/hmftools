@@ -23,6 +23,8 @@ public class GeneLevelEventExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
+    private static final String GENE_ONLY = "gene_only";
+
     public GeneLevelEventExtractor() {
     }
 
@@ -35,7 +37,7 @@ public class GeneLevelEventExtractor {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
 
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_ONLY)) {
+                            if (feature.provenanceRule().equals(GENE_ONLY)) {
                                 return GeneLevelEvent.ACTIVATION;
                             } else {
                                 return GeneLevelEvent.ACTIVATION;
@@ -45,7 +47,7 @@ public class GeneLevelEventExtractor {
                         }
                     } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_ONLY)) {
+                            if (feature.provenanceRule().equals(GENE_ONLY)) {
                                 return GeneLevelEvent.INACTIVATION;
                             } else {
                                 return GeneLevelEvent.INACTIVATION;
