@@ -599,7 +599,7 @@ public final class ExampleAnalysisTestFactory {
                 .totalCopyNumber(3.02)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .driverLikelihood(0.14)
+                .driverLikelihood(0.15)
                 .biallelic(false)
                 .build();
 
