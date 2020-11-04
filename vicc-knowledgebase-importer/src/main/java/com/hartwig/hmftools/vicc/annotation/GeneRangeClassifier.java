@@ -37,7 +37,7 @@ public final class GeneRangeClassifier {
             "positive",
             "oncogenic mutation");
 
-    public static final String GENE_LEVEL = "gene_only";
+    public static final String GENE_ONLY = "gene_only";
 
     private GeneRangeClassifier() {
     }
@@ -61,7 +61,7 @@ public final class GeneRangeClassifier {
             }
         }
 
-        return false;
+        return provenanceRule != null && provenanceRule.equals(GENE_ONLY);
     }
 
     public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String gene) {

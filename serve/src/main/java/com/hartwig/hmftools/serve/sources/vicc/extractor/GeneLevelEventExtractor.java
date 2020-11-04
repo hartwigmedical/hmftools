@@ -35,7 +35,7 @@ public class GeneLevelEventExtractor {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
 
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_LEVEL)) {
+                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_ONLY)) {
                                 return GeneLevelEvent.ACTIVATION;
                             } else {
                                 return GeneLevelEvent.ACTIVATION;
@@ -45,7 +45,7 @@ public class GeneLevelEventExtractor {
                         }
                     } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_LEVEL)) {
+                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_ONLY)) {
                                 return GeneLevelEvent.INACTIVATION;
                             } else {
                                 return GeneLevelEvent.INACTIVATION;
