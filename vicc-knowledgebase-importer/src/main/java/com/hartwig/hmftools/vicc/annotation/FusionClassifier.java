@@ -29,24 +29,24 @@ final class FusionClassifier {
     private FusionClassifier() {
     }
 
-    public static boolean isFusionPair(@NotNull String featureName, @Nullable String gene, @Nullable String biomarkerType) {
+    public static boolean isFusionPair(@NotNull String featureName, @Nullable String gene) {
         if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) && !CombinedClassifier.isCombinedEvent(featureName)) {
-            return extractFusionEvent(featureName, biomarkerType) == FusionEvent.FUSION_PAIR;
+            return extractFusionEvent(featureName) == FusionEvent.FUSION_PAIR;
         }
 
         return false;
     }
 
-    public static boolean isPromiscuousFusion(@NotNull String featureName, @Nullable String gene, @Nullable String biomarkerType) {
+    public static boolean isPromiscuousFusion(@NotNull String featureName, @Nullable String gene) {
         if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) && !CombinedClassifier.isCombinedEvent(featureName)) {
-            return extractFusionEvent(featureName, biomarkerType) == FusionEvent.PROMISCUOUS_FUSION;
+            return extractFusionEvent(featureName) == FusionEvent.PROMISCUOUS_FUSION;
         }
 
         return false;
     }
 
     @Nullable
-    public static FusionEvent extractFusionEvent(@NotNull String featureName, @Nullable String biomarkerType) {
+    public static FusionEvent extractFusionEvent(@NotNull String featureName) {
         if (FEATURE_NAMES_TO_SKIP.contains(featureName)) {
             return null;
         }
@@ -60,19 +60,6 @@ final class FusionClassifier {
                 return FusionEvent.PROMISCUOUS_FUSION;
             }
         }
-        //        else if (biomarkerType != null) {
-        //            if (FUSION_KEYWORDS.contains(biomarkerType)) {
-        //                if (featureName.contains("-")) {
-        //                    return FusionEvent.FUSION_PAIR;
-        //                } else {
-        //                    return FusionEvent.PROMISCUOUS_FUSION;
-        //                }
-        //            }
-        //
-        //            if (FUSION_PAIR_KEYWORDS.contains(biomarkerType)) {
-        //                return FusionEvent.FUSION_PAIR;
-        //            }
-        //        }
 
         return null;
     }

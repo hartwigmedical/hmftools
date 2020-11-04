@@ -35,8 +35,8 @@ public final class FeatureTypeExtractor {
         evaluations.put(FeatureType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(featureName, provenanceRule));
         evaluations.put(FeatureType.AMPLIFICATION, CopyNumberClassifier.isAmplification(featureName, biomarkerType));
         evaluations.put(FeatureType.DELETION, CopyNumberClassifier.isDeletion(featureName, biomarkerType));
-        evaluations.put(FeatureType.FUSION_PAIR, FusionClassifier.isFusionPair(featureName, gene, biomarkerType));
-        evaluations.put(FeatureType.PROMISCUOUS_FUSION, FusionClassifier.isPromiscuousFusion(featureName, gene, biomarkerType));
+        evaluations.put(FeatureType.FUSION_PAIR, FusionClassifier.isFusionPair(featureName, gene));
+        evaluations.put(FeatureType.PROMISCUOUS_FUSION, FusionClassifier.isPromiscuousFusion(featureName, gene));
         evaluations.put(FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON, CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene));
         evaluations.put(FeatureType.SIGNATURE, SignatureClassifier.isSignature(featureName));
         evaluations.put(FeatureType.COMBINED, CombinedClassifier.isCombinedEvent(featureName));

@@ -57,8 +57,7 @@ public final class ViccUtil {
 
     public static void writeFeatures(@NotNull String viccFeatureTsv, @NotNull List<ViccEntry> entries) throws IOException {
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner(FIELD_DELIMITER).add("source")
-                .add("gene")
+        String header = new StringJoiner(FIELD_DELIMITER).add("source").add("gene").add("transcript")
                 .add("type")
                 .add("name")
                 .add("biomarkerType")
@@ -72,6 +71,7 @@ public final class ViccUtil {
             for (Feature feature : entry.features()) {
                 typeEntries.add(new FeatureTypeEntry(entry.source().display(),
                         feature.geneSymbol(),
+                        entry.transcriptId(),
                         feature.type().toString(),
                         feature.name(),
                         feature.biomarkerType(),
@@ -99,6 +99,8 @@ public final class ViccUtil {
         private final String source;
         @Nullable
         private final String gene;
+        @Nullable
+        private final String transcript;
         @NotNull
         private final String type;
         @NotNull
@@ -108,10 +110,12 @@ public final class ViccUtil {
         @Nullable
         private final String provenanceRule;
 
-        public FeatureTypeEntry(@NotNull final String source, @Nullable final String gene, @NotNull final String type,
-                @NotNull final String name, @Nullable final String biomarkerType, @Nullable final String provenanceRule) {
+        public FeatureTypeEntry(@NotNull final String source, @Nullable final String gene, @Nullable final String transcript,
+                @NotNull final String type, @NotNull final String name, @Nullable final String biomarkerType,
+                @Nullable final String provenanceRule) {
             this.source = source;
             this.gene = gene;
+            this.transcript = transcript;
             this.type = type;
             this.name = name;
             this.biomarkerType = biomarkerType;
@@ -126,6 +130,11 @@ public final class ViccUtil {
         @Nullable
         public String gene() {
             return gene;
+        }
+
+        @Nullable
+        public String transcript() {
+            return transcript;
         }
 
         @NotNull
@@ -157,13 +166,14 @@ public final class ViccUtil {
                 return false;
             }
             final FeatureTypeEntry that = (FeatureTypeEntry) o;
-            return source.equals(that.source) && Objects.equals(gene, that.gene) && type.equals(that.type) && name.equals(that.name)
-                    && Objects.equals(biomarkerType, that.biomarkerType) && Objects.equals(provenanceRule, that.provenanceRule);
+            return source.equals(that.source) && Objects.equals(gene, that.gene) && Objects.equals(transcript, that.transcript)
+                    && type.equals(that.type) && name.equals(that.name) && Objects.equals(biomarkerType, that.biomarkerType)
+                    && Objects.equals(provenanceRule, that.provenanceRule);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(source, gene, type, name, biomarkerType, provenanceRule);
+            return Objects.hash(source, gene, transcript, type, name, biomarkerType, provenanceRule);
         }
     }
 }
