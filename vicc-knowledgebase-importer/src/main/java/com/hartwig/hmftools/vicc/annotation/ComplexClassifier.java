@@ -66,9 +66,8 @@ public final class ComplexClassifier {
             // Some hotspots contain multiple stop codons.
             return true;
         } else {
-            String lowerFeature = featureName.toLowerCase();
-            int fsLocation = lowerFeature.indexOf("fs");
-            return fsLocation > 1 && !isInteger(lowerFeature.substring(fsLocation - 1, fsLocation));
+            int fsLocation = featureName.indexOf("fs");
+            return fsLocation > 1 && !isInteger(featureName.substring(fsLocation - 1, fsLocation));
         }
     }
 
