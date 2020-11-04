@@ -135,8 +135,7 @@ public class SummaryChapter implements ReportChapter {
 
         int therapyEventCount = EvidenceItems.uniqueEventCount(filteredTumorSpecificEvidence);
         int therapyCount = EvidenceItems.uniqueTherapyCount(filteredTumorSpecificEvidence);
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with therapy " + "indication").addStyle(
-                ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with therapy indication").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createTreatmentIndicationCell(therapyEventCount, therapyCount, "treatment(s)"));
 
         List<ClinicalTrial> filteredTrials = EventFilter.removeEvidenceOnFilteredGermlineVariants(analysis().clinicalTrials(),

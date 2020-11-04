@@ -124,7 +124,9 @@ class AnalysedPatientReporter {
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
         if (report.sampleReport().germlineReportingLevel() != LimsGermlineReportingLevel.NO_REPORTING) {
-            LOGGER.info("   Number of variants also present in germline: {}", germlineOnly(analysis.reportableVariants()).size());
+            LOGGER.info("  Number of variants also present in germline: {}", germlineOnly(analysis.reportableVariants()).size());
+        } else {
+            LOGGER.info("  Germline variants and evidence will be removed since no consent has been given");
         }
         LOGGER.info(" Number of gains and losses to report: {}", analysis.gainsAndLosses().size());
         LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
