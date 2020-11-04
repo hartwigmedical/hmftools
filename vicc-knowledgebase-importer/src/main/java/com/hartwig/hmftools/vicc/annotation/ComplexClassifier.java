@@ -15,17 +15,16 @@ public final class ComplexClassifier {
 
     public static boolean isComplexEvent(@NotNull String featureName, @Nullable String gene) {
         Set<String> entriesForGene = COMPLEX_EVENTS_PER_GENE.get(gene);
-        if (entriesForGene != null) {
-            return entriesForGene.contains(featureName.trim());
-        }
-
-        if (featureName.trim().endsWith(".")) {
+        if (entriesForGene != null && entriesForGene.contains(featureName.trim())) {
+            return true;
+        } else if (featureName.trim().endsWith(".")) {
             // Not sure what a dot means!
             return true;
         } else if (featureName.split("\\*").length > 2) {
             // Some hotspots contain multiple stop codons.
             return true;
         } else {
+            // Some frameshifts also change the amino acid itself in the position of the frameshift.
             int fsLocation = featureName.indexOf("fs");
             return fsLocation > 1 && !isInteger(featureName.substring(fsLocation - 1, fsLocation));
         }
@@ -68,8 +67,8 @@ public final class ComplexClassifier {
         Set<String> dnmt3bSet = Sets.newHashSet("DNMT3B7");
         complexEventsPerGene.put("DNMT3B", dnmt3bSet);
 
-        Set<String> dypdSet = Sets.newHashSet("DPYD splice donor variant");
-        complexEventsPerGene.put("DYPD", dypdSet);
+        Set<String> dpydSet = Sets.newHashSet("DPYD splice donor variant");
+        complexEventsPerGene.put("DPYD", dpydSet);
 
         Set<String> egfrSet = Sets.newHashSet("EGFR L698_S1037dup",
                 "EGFR inframe insertion (769-770)",

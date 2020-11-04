@@ -22,7 +22,7 @@ final class FusionClassifier {
             "rearrange");
 
     private static final Set<String> INTERNAL_FUSION_PAIRS =
-            Sets.newHashSet("is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "EGFR-KDD", "ITD");
+            Sets.newHashSet("is_deletion", "EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD", "ITD");
 
     private static final Set<String> FEATURE_NAMES_TO_SKIP = Sets.newHashSet("3' EXON DELETION", "p61BRAF-V600E", "LOSS-OF-FUNCTION");
 
