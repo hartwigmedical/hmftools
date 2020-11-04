@@ -12,6 +12,9 @@ import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
+import static com.hartwig.hmftools.cup.common.ClassifierType.COMBINED;
+import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
+import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
 
@@ -19,8 +22,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -181,7 +186,28 @@ public class CupAnalyser
         if(combinedFeatureResult != null)
             allResults.add(combinedFeatureResult);
 
-        SampleResult classifierScoreResult = calcClassifierScoreResult(sample, allResults);
+        if(mConfig.runClassifier(GENE_EXP) && (mConfig.IncludedCategories.isEmpty() || mConfig.IncludedCategories.size() > 1))
+        {
+            final List<SampleResult> dnaResults = allResults.stream()
+                    .filter(x -> x.Category == CLASSIFIER && isDna(ClassifierType.valueOf(x.DataType)))
+                    .collect(Collectors.toList());
+
+            SampleResult dnaScoreResult = calcClassifierScoreResult(sample, dnaResults, "DNA_COMBINED");
+
+            final List<SampleResult> rnaResults = allResults.stream()
+                    .filter(x -> x.Category == CLASSIFIER && isRna(ClassifierType.valueOf(x.DataType)))
+                    .collect(Collectors.toList());
+
+            SampleResult rnaScoreResult = calcClassifierScoreResult(sample, rnaResults, "RNA_COMBINED");
+
+            if(dnaScoreResult != null)
+                allResults.add(dnaScoreResult);
+
+            if(rnaScoreResult != null)
+                allResults.add(rnaScoreResult);
+        }
+
+        SampleResult classifierScoreResult = calcClassifierScoreResult(sample, allResults, COMBINED.toString());
 
         if(classifierScoreResult != null)
             allResults.add(classifierScoreResult);

@@ -321,6 +321,9 @@ public class SomaticClassifier implements CuppaClassifier
         {
             final String refSampleId = mRefSampleNames.get(s);
 
+            if(!mSampleDataCache.hasRefSample(refSampleId))
+                continue;
+
             if(refSampleId.equals(sample.Id))
                 continue;
 

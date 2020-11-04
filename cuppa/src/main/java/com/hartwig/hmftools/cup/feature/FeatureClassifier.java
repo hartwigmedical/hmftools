@@ -83,13 +83,6 @@ public class FeatureClassifier implements CuppaClassifier
         if(sampleFeatures == null || sampleFeatures.isEmpty())
             return;
 
-        if(!mConfig.IncludeIndels)
-        {
-            final List<SampleFeatureData> noIndelFeatures = sampleFeatures.stream().filter(x -> x.Type != INDEL).collect(Collectors.toList());
-            sampleFeatures.clear();
-            sampleFeatures.addAll(noIndelFeatures);
-        }
-
         addDriverPrevalence(sample, sampleFeatures, results);
 
         calcCancerTypeProbability(sample, sampleFeatures, results);

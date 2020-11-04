@@ -133,7 +133,7 @@ public class CupCalcs
         }
     }
 
-    public static SampleResult calcClassifierScoreResult(final SampleData sample, final List<SampleResult> results)
+    public static SampleResult calcClassifierScoreResult(final SampleData sample, final List<SampleResult> results, final String dataType)
     {
         final List<SampleResult> classifierResults = results.stream()
                 .filter(x -> x.Category == CLASSIFIER)
@@ -159,7 +159,7 @@ public class CupCalcs
 
         convertToPercentages(cancerTypeValues);
 
-        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, COMBINED.toString(), "", cancerTypeValues);
+        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, dataType, "", cancerTypeValues);
     }
 
 }

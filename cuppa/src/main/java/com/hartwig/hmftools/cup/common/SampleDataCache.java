@@ -43,6 +43,8 @@ public class SampleDataCache
         return samples != null ? samples.size() : 0;
     }
 
+    public boolean hasRefSample(final String sampleId) { return RefSampleCancerTypeMap.containsKey(sampleId); }
+
     public SampleData findRefSampleData(final String sampleId)
     {
         for(List<SampleData> sampleDataList : RefCancerSampleData.values())

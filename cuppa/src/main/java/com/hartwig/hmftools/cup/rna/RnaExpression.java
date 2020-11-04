@@ -2,14 +2,13 @@ package com.hartwig.hmftools.cup.rna;
 
 import static java.lang.Math.exp;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENE_EXPRESSION_CANCER;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENE_EXPRESSION_PAIRWISE;
@@ -48,6 +47,7 @@ public class RnaExpression implements CuppaClassifier
 
     private SigMatrix mRefCancerTypeGeneExpression;
     private final List<String> mRefCancerTypes;
+    private final Map<String,Integer> mRefCancerSampleCounts; // needs to be build from the RNAs if less than the DNA samples available
 
     private final Map<String,Map<String,double[]>> mRefGeneCancerPercentiles;
     private final Map<String,String> mGeneIdNameMap;
@@ -78,6 +78,8 @@ public class RnaExpression implements CuppaClassifier
         mRefSampleGeneExpression = null;
         mRefSampleGeneExpIndexMap = Maps.newHashMap();
 
+        mRefCancerSampleCounts = Maps.newHashMap();
+
         mRefCancerTypeGeneExpression = null;
         mRefCancerTypes = Lists.newArrayList();
         mGeneIdList = Lists.newArrayList();
@@ -88,7 +90,7 @@ public class RnaExpression implements CuppaClassifier
         mSampleRnaExpression = null;
         mSampleIndexMap = Maps.newHashMap();
 
-        final String rnaMethods = cmd.getOptionValue(RNA_METHODS);
+        final String rnaMethods = cmd.getOptionValue(RNA_METHODS, RNA_METHOD_PAIRWISE_CSS + ";" + RNA_METHOD_CANCER_CSS);
 
         mRunPairwiseCss = rnaMethods != null && rnaMethods.contains(RNA_METHOD_PAIRWISE_CSS);
         mRunCancerCss = rnaMethods == null || rnaMethods.contains(RNA_METHOD_CANCER_CSS);
@@ -108,7 +110,7 @@ public class RnaExpression implements CuppaClassifier
         if(mRunGenePrevalence && mConfig.RefGeneExpPercFile.isEmpty())
             return;
 
-        if(!mConfig.RefGeneExpSampleFile.isEmpty())
+        if(mRunPairwiseCss && !mConfig.RefGeneExpSampleFile.isEmpty())
         {
             mRefSampleGeneExpression =
                     loadMatrixDataFile(mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, Lists.newArrayList("GeneId", "GeneName"));
@@ -122,7 +124,7 @@ public class RnaExpression implements CuppaClassifier
             mRefSampleGeneExpression.cacheTranspose();
         }
 
-        if(!mConfig.RefGeneExpCancerFile.isEmpty())
+        if(mRunCancerCss && !mConfig.RefGeneExpCancerFile.isEmpty())
         {
             mRefCancerTypeGeneExpression =
                     loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, Lists.newArrayList("GeneId", "GeneName"));
@@ -136,11 +138,13 @@ public class RnaExpression implements CuppaClassifier
             mRefCancerTypeGeneExpression.cacheTranspose();
         }
 
-        if(!mConfig.RefGeneExpPercFile.isEmpty())
+        if(mRunGenePrevalence && !mConfig.RefGeneExpPercFile.isEmpty())
         {
             mIsValid &= loadRefPercentileData(mConfig.RefGeneExpPercFile, mRefGeneCancerPercentiles, mGeneIdNameMap);
             populateGeneIdList(mConfig.RefGeneExpCancerFile, mGeneIdList);
         }
+
+        buildCancerSampleCounts();
 
         if(mConfig.SampleRnaExpFile.equals(mConfig.RefGeneExpSampleFile))
         {
@@ -158,6 +162,38 @@ public class RnaExpression implements CuppaClassifier
             }
 
             mSampleRnaExpression.cacheTranspose();
+        }
+    }
+
+    private void buildCancerSampleCounts()
+    {
+        if(mRefSampleGeneExpIndexMap.isEmpty())
+        {
+            for(Map.Entry<String,List<SampleData>> entry : mSampleDataCache.RefCancerSampleData.entrySet())
+            {
+                mRefCancerSampleCounts.put(entry.getKey(), entry.getValue().size());
+            }
+        }
+        else
+        {
+            for(final String refSampleId : mRefSampleGeneExpIndexMap.keySet())
+            {
+                final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
+
+                if(refCancerType == null)
+                    continue;
+
+                Integer sampleCount = mRefCancerSampleCounts.get(refCancerType);
+                if(sampleCount == null)
+                    mRefCancerSampleCounts.put(refCancerType, 1);
+                else
+                    mRefCancerSampleCounts.put(refCancerType, sampleCount + 1);
+            }
+        }
+
+        for(Map.Entry<String,Integer> entry : mRefCancerSampleCounts.entrySet())
+        {
+            CUP_LOGGER.debug("RNA ref cancer({}) samples({})", entry.getKey(), entry.getValue());
         }
     }
 
@@ -241,7 +277,7 @@ public class RnaExpression implements CuppaClassifier
 
         final List<SampleSimilarity> topMatches = Lists.newArrayList();
 
-        for(Map.Entry<String,Integer> entry : mSampleIndexMap.entrySet())
+        for(Map.Entry<String,Integer> entry : mRefSampleGeneExpIndexMap.entrySet())
         {
             final String refSampleId = entry.getKey();
 
@@ -260,7 +296,7 @@ public class RnaExpression implements CuppaClassifier
             }
 
             int refSampleCountsIndex = entry.getValue();
-            final double[] otherSampleTPMs = mSampleRnaExpression.getCol(refSampleCountsIndex);
+            final double[] otherSampleTPMs = mRefSampleGeneExpression.getCol(refSampleCountsIndex);
 
             double css = calcCosineSim(sampleTPMs, otherSampleTPMs);
 
@@ -276,8 +312,8 @@ public class RnaExpression implements CuppaClassifier
 
             double cssWeight = pow(RNA_GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
 
-            int cancerTypeCount = mSampleDataCache.getCancerSampleCount(refCancerType);
-            double weightedCss = css * cssWeight / sqrt(cancerTypeCount);
+            int cancerSampleCount = mRefCancerSampleCounts.get(refCancerType);
+            double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
 
             Double total = cancerCssTotals.get(refCancerType);
 
