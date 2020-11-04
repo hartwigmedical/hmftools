@@ -12,5 +12,6 @@ public enum FeatureType {
     PROMISCUOUS_FUSION,
     SIGNATURE,
     COMBINED,
+    COMPLEX,
     UNKNOWN
 }

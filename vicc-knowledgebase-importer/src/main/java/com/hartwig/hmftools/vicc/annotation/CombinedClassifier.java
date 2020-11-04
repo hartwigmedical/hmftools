@@ -53,6 +53,11 @@ final class CombinedClassifier {
             return countSplice > 1;
         }
 
+        if (featureName.contains(" ")) {
+            String[] parts = featureName.split(" ");
+            return HotspotClassifier.isHotspot(parts[1]) && parts[0].contains("-");
+        }
+
         return featureName.equals("p61BRAF-V600E");
     }
 }

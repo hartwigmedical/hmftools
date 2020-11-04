@@ -40,6 +40,7 @@ public final class FeatureTypeExtractor {
         evaluations.put(FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON, CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene));
         evaluations.put(FeatureType.SIGNATURE, SignatureClassifier.isSignature(featureName));
         evaluations.put(FeatureType.COMBINED, CombinedClassifier.isCombinedEvent(featureName));
+        evaluations.put(FeatureType.COMPLEX, ComplexClassifier.isComplexEvent(featureName, gene));
 
         Set<FeatureType> positiveTypes = Sets.newHashSet();
         for (Map.Entry<FeatureType, Boolean> evaluation : evaluations.entrySet()) {
@@ -49,7 +50,7 @@ public final class FeatureTypeExtractor {
         }
 
         if (positiveTypes.size() > 1) {
-            LOGGER.warn("More than one type evaluated to true for '{}': {}", featureName, positiveTypes);
+            LOGGER.warn("More than one type evaluated to true for '{}' on '{}': {}", featureName, gene, positiveTypes);
         } else if (positiveTypes.size() == 1) {
             return positiveTypes.iterator().next();
         }
