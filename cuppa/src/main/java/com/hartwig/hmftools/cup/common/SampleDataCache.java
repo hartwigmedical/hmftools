@@ -44,6 +44,7 @@ public class SampleDataCache
     }
 
     public boolean hasRefSample(final String sampleId) { return RefSampleCancerTypeMap.containsKey(sampleId); }
+    public boolean hasRefCancerType(final String cancerType) { return RefCancerSampleData.containsKey(cancerType); }
 
     public SampleData findRefSampleData(final String sampleId)
     {

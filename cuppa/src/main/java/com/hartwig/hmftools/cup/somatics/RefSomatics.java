@@ -78,6 +78,9 @@ public class RefSomatics implements RefClassifier
         {
             final String cancerType = entry.getKey();
 
+            if(!mSampleDataCache.hasRefCancerType(cancerType))
+                continue;
+
             for(Map.Entry<String,List<Double>> sigEntry : entry.getValue().entrySet())
             {
                 final String sigName = sigEntry.getKey();
