@@ -58,7 +58,7 @@ public class SigDataLoader
                 if(!config.PositionBucketSizes.isEmpty())
                     snvLoader.initialisePositionFrequencies(config.OutputDir, config.PositionBucketSizes);
 
-                snvLoader.loadData(dbAccess, null, false);
+                snvLoader.loadData(dbAccess, null, true);
 
                 final String fileId = config.SampleIds.size() == 1 ? config.SampleIds.get(0) + "." + "sample_counts" : "sample_counts";
                 final String filename = formOutputFilename(config.OutputDir, config.OutputFileId, fileId);
