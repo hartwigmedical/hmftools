@@ -50,7 +50,7 @@ public class HmfExonPanelBedTest {
     @Ignore
     public void write19() throws IOException {
         String filename = "/Users/jon/hmf/resources/ActionableCodingPanel.hg19.bed";
-        String genePanel = "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/drivercatalog/DriverGenePanel.tsv";
+        String genePanel = "/Users/jon/hmf/resources/DriverGenePanel.hg19.tsv";
         HmfExonPanelBed.write19File(filename, genePanel);
         BEDFileLoader.fromBedFile(filename);
     }
@@ -59,7 +59,7 @@ public class HmfExonPanelBedTest {
     @Ignore
     public void write38() throws IOException {
         String filename = "/Users/jon/hmf/resources/ActionableCodingPanel.hg38.bed";
-        String genePanel = "/Users/jon/hmf/repos/hmftools/hmf-common/src/main/resources/drivercatalog/DriverGenePanel.tsv";
+        String genePanel = "/Users/jon/hmf/resources/DriverGenePanel.hg38.tsv";
         HmfExonPanelBed.write38File(filename, genePanel);
         BEDFileLoader.fromBedFile(filename);
     }
