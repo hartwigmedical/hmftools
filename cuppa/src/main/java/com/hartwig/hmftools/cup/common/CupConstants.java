@@ -19,6 +19,7 @@ public class CupConstants
 
 
     public static final double MIN_CLASSIFIER_SCORE = 0.02;
+    public static final double CORRELATION_DAMPEN_FACTOR = 0.8;
 
     public static final String CANCER_TYPE_UNKNOWN = "Unknown";
 

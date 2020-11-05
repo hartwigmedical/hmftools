@@ -220,7 +220,7 @@ public class RnaExpression implements CuppaClassifier
         if(mRunCancerCss)
             addCancerCssResults(sample, sampleGeneTPMs, results);
 
-        if(mRunPairwiseCss && mSampleRnaExpression.Cols == mSampleDataCache.RefSampleCancerTypeMap.size())
+        if(mRunPairwiseCss)
             addSampleCssResults(sample, sampleGeneTPMs, results, similarities);
 
         if(mRunGenePrevalence && !mRefGeneCancerPercentiles.isEmpty())

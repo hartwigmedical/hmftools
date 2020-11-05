@@ -2,11 +2,13 @@ package com.hartwig.hmftools.cup.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.ClassifierType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
+import static com.hartwig.hmftools.cup.common.CupConstants.CORRELATION_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 
@@ -155,6 +157,12 @@ public class CupCalcs
                 else
                     cancerTypeValues.put(cancerType, probTotal * probability);
             }
+        }
+
+        for(Map.Entry<String,Double> entry : cancerTypeValues.entrySet())
+        {
+            double adjustedProb = pow(entry.getValue(), CORRELATION_DAMPEN_FACTOR);
+            cancerTypeValues.put(entry.getKey(), adjustedProb);
         }
 
         convertToPercentages(cancerTypeValues);

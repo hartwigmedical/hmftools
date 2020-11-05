@@ -92,6 +92,12 @@ public class RefSomatics implements RefClassifier
             final String sampleId = mSampleNames.get(i);
             final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
 
+            if(cancerType == null)
+            {
+                CUP_LOGGER.debug("sample({}) missing cancer type", sampleId);
+                continue;
+            }
+
             List<Double> sampleCounts = mCancerSnvCounts.get(cancerType);
             if(sampleCounts == null)
             {
@@ -200,6 +206,7 @@ public class RefSomatics implements RefClassifier
                 // SampleId,SigName,SigContrib,SigPercent
                 final String[] items = line.split(DATA_DELIM, -1);
                 String sampleId = items[0];
+
                 String sigName = items[1];
                 double sigContrib = Double.parseDouble(items[2]);
 
@@ -207,7 +214,7 @@ public class RefSomatics implements RefClassifier
 
                 if(cancerType == null)
                 {
-                    CUP_LOGGER.error("sample({}) signatures missing cancer type", sampleId);
+                    CUP_LOGGER.debug("sample({}) signatures missing cancer type", sampleId);
                     continue;
                 }
 
