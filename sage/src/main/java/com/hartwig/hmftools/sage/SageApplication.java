@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
@@ -166,12 +166,12 @@ public class SageApplication implements AutoCloseable {
         final ListMultimap<Chromosome, GenomeRegion> result = ArrayListMultimap.create();
 
         for (HumanChromosome chromosome : HumanChromosome.values()) {
-            final GenomeRegions builder = new GenomeRegions(chromosome.toString());
+            final GenomeRegionsBuilder builder = new GenomeRegionsBuilder();
             if (initialPanel.containsKey(chromosome)) {
-                initialPanel.get(chromosome).forEach(x -> builder.addRegion(x.start(), x.end()));
+                initialPanel.get(chromosome).forEach(builder::addRegion);
             }
             if (hotspots.containsKey(chromosome)) {
-                hotspots.get(chromosome).forEach(x -> builder.addPosition(x.position()));
+                hotspots.get(chromosome).forEach(builder::addPosition);
             }
 
             result.putAll(chromosome, builder.build());

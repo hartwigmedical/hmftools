@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getBaseQuality;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,12 +16,11 @@ import java.util.function.Consumer;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.utils.sam.SAMRecords;
 
@@ -315,14 +313,8 @@ public class VariantHotspotEvidenceFactory {
 
     @NotNull
     private static List<GenomeRegion> asRegions(@NotNull final Set<VariantHotspot> allHotspots) {
-        final Map<String, GenomeRegions> builders = Maps.newHashMap();
-        allHotspots.forEach(x -> builders.computeIfAbsent(x.chromosome(), key -> new GenomeRegions(key, DEFAULT_TYPICAL_READ_LENGTH))
-                .addPosition(x.position()));
-
-        final List<GenomeRegion> results = Lists.newArrayList();
-        builders.values().forEach(x -> results.addAll(x.build()));
-
-        Collections.sort(results);
-        return results;
+        final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(DEFAULT_TYPICAL_READ_LENGTH);
+        allHotspots.forEach(builder::addPosition);
+        return builder.build();
     }
 }

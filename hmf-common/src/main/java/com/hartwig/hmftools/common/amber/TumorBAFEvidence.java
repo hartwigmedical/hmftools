@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 
@@ -35,9 +36,9 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
 
-        final GenomeRegions builder = new GenomeRegions(contig, typicalReadDepth);
+        final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(typicalReadDepth);
         for (BaseDepth bafRegion : baseDepths) {
-            builder.addPosition(bafRegion.position());
+            builder.addPosition(bafRegion);
         }
 
         final List<GenomeRegion> bafRegions = builder.build();
