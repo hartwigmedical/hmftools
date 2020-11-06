@@ -30,107 +30,30 @@ final class FilterFactory {
         // We cannot determine phosphorylation with WGS/WTS
         FEATURE_KEYWORDS_TO_FILTER.add("PHOSPHORYLATION");
 
+        // We cannot determine the below events
+        FEATURE_KEYWORDS_TO_FILTER.add("SERUM LEVELS");
+        FEATURE_KEYWORDS_TO_FILTER.add("CYTOPLASMIC MISLOCALIZATION");
+        FEATURE_KEYWORDS_TO_FILTER.add("NUCLEAR TRANSLOCATION");
+
         // "Any" polymorphism is considered too vague.
         FEATURE_KEYWORDS_TO_FILTER.add("POLYMORPHISM");
         FEATURE_KEYWORDS_TO_FILTER.add("Single Nucleotide Polymorphism");
+        FEATURE_KEYWORDS_TO_FILTER.add("3' UTR Polymorphism");
 
         // Copy number variation is too vague.
         FEATURE_KEYWORDS_TO_FILTER.add("COPY NUMBER VARIATION");
+        FEATURE_KEYWORDS_TO_FILTER.add("COPY-NEUTRAL LOSS OF HETEROZYGOSITY");
 
-        // to specific
-        FEATURE_KEYWORDS_TO_FILTER.add("EGFR (L858R,L861,G719,S768I)");
-        FEATURE_KEYWORDS_TO_FILTER.add("ESR1 (E380Q,537,538,L536,P535H)");
-        FEATURE_KEYWORDS_TO_FILTER.add("KIT (550-592,627-664,788-828,829-860)");
-        FEATURE_KEYWORDS_TO_FILTER.add("MAP2K1 (Q56P,P124S,P124L;C121S)");
-        FEATURE_KEYWORDS_TO_FILTER.add("PDGFRA (552-596,631-668,814-854)");
-        FEATURE_KEYWORDS_TO_FILTER.add("FGFR2 (V565I,M536I,M538I,I548V,N550,E566G,L618M,K660E)");
-        FEATURE_KEYWORDS_TO_FILTER.add("FLT3 (F691,D835,N676,Y842)");
-        FEATURE_KEYWORDS_TO_FILTER.add("KIT (V559I,H697Y,T670,V654A,A829P,D816,N822,Y823D)");
-        FEATURE_KEYWORDS_TO_FILTER.add("MAP2K1 (F129L,L215P,I103N,P124)");
-        FEATURE_KEYWORDS_TO_FILTER.add("MAP2K1 (I99T,L115,G128D,F129L,V211D,L215P,I103N,K104N,I111N,H119P,E120D,F133L,P124,D67N)");
-        FEATURE_KEYWORDS_TO_FILTER.add("JAK1 (S646F;R683)");
-        FEATURE_KEYWORDS_TO_FILTER.add("FGFR2 (M536I,M538I,I548V,N550,E566G,L618M,K660E)");
-        FEATURE_KEYWORDS_TO_FILTER.add("ERBB2 (S310,L755,V777)");
-        FEATURE_KEYWORDS_TO_FILTER.add("RET (618,620,634,768,791,891,918,C634W,M918T)");
-
-        // Determine not a specific mutation in a domain
-        FEATURE_KEYWORDS_TO_FILTER.add("NOTCH1 activating mutation in Cterm-PEST domain");
-        FEATURE_KEYWORDS_TO_FILTER.add("NOTCH2 activating mutation (missense in TAD or truncating in Cterm-PEST domain)");
-        FEATURE_KEYWORDS_TO_FILTER.add("MET kinase domain mutation");
-        FEATURE_KEYWORDS_TO_FILTER.add("Truncating Mutations Upstream of Transactivation Domain");
-        FEATURE_KEYWORDS_TO_FILTER.add("Truncating Mutations in the PEST Domain");
-
-        // 2 separate hotspots in one event
-        FEATURE_KEYWORDS_TO_FILTER.add("BRAF V600E/K");
-        FEATURE_KEYWORDS_TO_FILTER.add("D835H/Y");
-        FEATURE_KEYWORDS_TO_FILTER.add("G12/G13");
-        FEATURE_KEYWORDS_TO_FILTER.add("Q157P/R");
-        FEATURE_KEYWORDS_TO_FILTER.add("S310F/Y");
-        FEATURE_KEYWORDS_TO_FILTER.add("S893A/T");
-        FEATURE_KEYWORDS_TO_FILTER.add("S34Y/F");
-
-        // TODO All of below needs some further investigation & explanation
+        // "Expression" is not observed on DNA level
         FEATURE_KEYWORDS_TO_FILTER.add("EXPRESSION");
         FEATURE_KEYWORDS_TO_FILTER.add("expression");
+
+        // Wildtype evidence is ignored at this point.
         FEATURE_KEYWORDS_TO_FILTER.add("WILDTYPE");
         FEATURE_KEYWORDS_TO_FILTER.add("WILD TYPE");
         FEATURE_KEYWORDS_TO_FILTER.add("wild-type");
         FEATURE_KEYWORDS_TO_FILTER.add("wildtype");
         FEATURE_KEYWORDS_TO_FILTER.add("Wildtype");
-
-        FEATURE_KEYWORDS_TO_FILTER.add("SERUM LEVELS");
-
-        FEATURE_KEYWORDS_TO_FILTER.add("3' EXON DELETION");
-        FEATURE_KEYWORDS_TO_FILTER.add("3' UTR MUTATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("3' UTR Polymorphism");
-        FEATURE_KEYWORDS_TO_FILTER.add("5' TANDEM REPEAT");
-        FEATURE_KEYWORDS_TO_FILTER.add("B2 DOMAIN MUTATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("CYTOPLASMIC MISLOCALIZATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("DNA binding domain deletions");
-        FEATURE_KEYWORDS_TO_FILTER.add("DNA binding domain insertions");
-        FEATURE_KEYWORDS_TO_FILTER.add("DNA binding domain missense mutations");
-        FEATURE_KEYWORDS_TO_FILTER.add("DNA BINDING DOMAIN MUTATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("FLT3 internal tandem duplications");
-        FEATURE_KEYWORDS_TO_FILTER.add("INTERNAL DUPLICATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("KINASE DOMAIN MUTATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("N-TERMINAL FRAME SHIFT");
-        FEATURE_KEYWORDS_TO_FILTER.add("NUCLEAR TRANSLOCATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("PROMOTER MUTATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("Promoter Mutations");
-        FEATURE_KEYWORDS_TO_FILTER.add("SH2 DOMAIN MUTATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("TKD MUTATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("EGFR CTD");
-        FEATURE_KEYWORDS_TO_FILTER.add("DPYD*13 HOMOZYGOSITY");
-        FEATURE_KEYWORDS_TO_FILTER.add("DPYD*2A HOMOZYGOSITY");
-        FEATURE_KEYWORDS_TO_FILTER.add("S291fsX300");
-        FEATURE_KEYWORDS_TO_FILTER.add("S70fsX93");
-        FEATURE_KEYWORDS_TO_FILTER.add("COPY-NEUTRAL LOSS OF HETEROZYGOSITY");
-        FEATURE_KEYWORDS_TO_FILTER.add("T599insTT");
-        FEATURE_KEYWORDS_TO_FILTER.add("T76insTLDT");
-        FEATURE_KEYWORDS_TO_FILTER.add("TA83del");
-        FEATURE_KEYWORDS_TO_FILTER.add("V1790_A1996del");
-        FEATURE_KEYWORDS_TO_FILTER.add("V555_L576del");
-        FEATURE_KEYWORDS_TO_FILTER.add("CASP8L");
-        FEATURE_KEYWORDS_TO_FILTER.add("INTRON 6 MUTATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("SNP309");
-        FEATURE_KEYWORDS_TO_FILTER.add("Alu insertion");
-
-        FEATURE_KEYWORDS_TO_FILTER.add("RS11623866");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS16906252");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS2305035");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS2736100");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS3184504");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS34743033");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS34886328");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS3733542");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS3814960");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS4149056");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS461155");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS557806");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS61764370");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS67376798 HOMOZYGOSITY");
-        FEATURE_KEYWORDS_TO_FILTER.add("rs681673");
-        FEATURE_KEYWORDS_TO_FILTER.add("RS751402");
     }
 
     private static void populateFeatureKeysToFilter() {
@@ -156,6 +79,24 @@ final class FilterFactory {
 
         // exon 12 does not exist in canonical transcript of NPM1
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NPM1", "EXON 12 MUTATION"));
+
+        // We ignore variants specified in their RS identifier
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "FNTB", "RS11623866"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "MGMT", "RS16906252"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "CBLB", "RS2305035"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "TERT", "RS2736100"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "SH2B3", "RS3184504"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "TYMS", "RS34743033"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "MDM2", "RS34886328"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "KIT", "RS3733542"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "CDKN2A", "RS3814960"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "SLCO1B1", "RS4149056"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ETS2", "RS461155"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "PPP1R15A", "RS557806"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "KRAS", "RS61764370"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "DPYD", "RS67376798 HOMOZYGOSITY"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "GADD45A", "rs681673"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ERCC5", "RS751402"));
     }
 
     private FilterFactory() {

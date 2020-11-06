@@ -23,6 +23,7 @@ public class CombinedClassifierTest {
         assertTrue(CombinedClassifier.isCombinedEvent("BCR-ABL F486S", "ABL"));
         assertTrue(CombinedClassifier.isCombinedEvent("NPM1-ALK  amp", "ALK"));
 
+        assertFalse(CombinedClassifier.isCombinedEvent("Exon 20 insertions/deletions", "ERBB2"));
         assertFalse(CombinedClassifier.isCombinedEvent("3'UTR alteration (c.642+70C>A)", "VHL"));
     }
 }

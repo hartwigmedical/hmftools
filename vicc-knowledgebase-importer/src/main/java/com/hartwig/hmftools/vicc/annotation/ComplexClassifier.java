@@ -23,7 +23,11 @@ public final class ComplexClassifier {
         } else if (featureName.split("\\*").length > 2) {
             // Some hotspots contain multiple stop codons.
             return true;
-        } else {
+        } else if (featureName.contains("/")) {
+            // Some hotspots appear as V600E/K
+            return !featureName.toLowerCase().contains("exon");
+        } else
+        {
             // Some frameshifts also change the amino acid itself in the position of the frameshift.
             int fsLocation = featureName.indexOf("fs");
             return fsLocation > 1 && !isInteger(featureName.substring(fsLocation - 1, fsLocation));

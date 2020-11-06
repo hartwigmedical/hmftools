@@ -46,29 +46,32 @@ final class CombinedClassifier {
             }
         }
 
+
         if (featureName.contains(",") && !featureName.toLowerCase().contains(" or ")) {
             return true;
         } else if (featureName.contains("+") && !featureName.toLowerCase().contains("c.") && !featureName.contains(">")) {
             return true;
+        } else if (featureName.contains("/")) {
+            return false;
         } else {
             int countInsertion = 0;
             if (featureName.contains("insertion")) {
-                countInsertion = featureName.split("insertion").length - 1;
+                countInsertion = Math.min(1, featureName.split("insertion").length - 1);
             }
 
             int countDeletion = 0;
             if (featureName.contains("deletion")) {
-                countDeletion = featureName.split("deletion").length - 1;
+                countDeletion = Math.min(1, featureName.split("deletion").length - 1);
             }
 
             int countFrameshift = 0;
             if (featureName.contains("frameshift")) {
-                countFrameshift = featureName.split("frameshift").length - 1;
+                countFrameshift = Math.min(1, featureName.split("frameshift").length - 1);
             }
 
             int countSplice = 0;
             if (featureName.contains("splice")) {
-                countSplice = featureName.split("splice").length - 1;
+                countSplice = Math.min(1, featureName.split("splice").length - 1);
             }
 
             if (countInsertion + countDeletion + countFrameshift + countSplice > 1) {
