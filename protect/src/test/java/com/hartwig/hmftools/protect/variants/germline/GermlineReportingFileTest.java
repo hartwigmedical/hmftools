@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.protect.variants.germline;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
@@ -17,5 +20,11 @@ public class GermlineReportingFileTest {
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_REPORTING_TSV);
 
         assertEquals(3, germlineReportingModel.entries().size());
+
+        GermlineReportingEntry apc = germlineReportingModel.entryForGene("APC");
+        assertNotNull(apc);
+        assertTrue(apc.notifyClinicalGeneticist());
+        assertTrue(apc.reportBiallelicOnly());
+        assertNull(apc.exclusiveHgvsProteinFilter());
     }
 }
