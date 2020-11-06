@@ -46,7 +46,9 @@ final class CombinedClassifier {
             }
         }
 
-        if (featureName.contains("+") && !featureName.toLowerCase().contains("c.") && !featureName.contains(">")) {
+        if (featureName.contains(",") && !featureName.toLowerCase().contains(" or ")) {
+            return true;
+        } else if (featureName.contains("+") && !featureName.toLowerCase().contains("c.") && !featureName.contains(">")) {
             return true;
         } else {
             int countInsertion = 0;

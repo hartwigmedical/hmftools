@@ -86,9 +86,6 @@ public final class ComplexClassifier {
         Set<String> erbb2Set = Sets.newHashSet("P780INS", "M774INSAYVM", "DEL 755-759");
         complexEventsPerGene.put("ERBB2", erbb2Set);
 
-        Set<String> fgfr3Set = Sets.newHashSet("FGFR3 (K650,Y373C)");
-        complexEventsPerGene.put("FGFR3", fgfr3Set);
-
         Set<String> fli1Set = Sets.newHashSet("EWSR1-FLI1 Type 1");
         complexEventsPerGene.put("FLI1", fli1Set);
 
@@ -102,8 +99,6 @@ public final class ComplexClassifier {
         complexEventsPerGene.put("KDM5C", kdm5cSet);
 
         Set<String> kitSet = Sets.newHashSet("KIT inframe deletion (577-579)",
-                "KIT (627-664,664-714,449-514)",
-                "KIT (788-828,829-860,550-592)",
                 "T574insTQLPYD",
                 "E554_I571del",
                 "KIT V560_Y578del",
@@ -112,7 +107,7 @@ public final class ComplexClassifier {
                 "KIT inframe deletion (V560)");
         complexEventsPerGene.put("KIT", kitSet);
 
-        Set<String> krasSet = Sets.newHashSet("KRAS (12,13)", "KRAS (12,13,59,61,117,146)", "LCS6-variant");
+        Set<String> krasSet = Sets.newHashSet("LCS6-variant");
         complexEventsPerGene.put("KRAS", krasSet);
 
         Set<String> map2k1Set = Sets.newHashSet("MAP2K1 inframe deletion (56-60)");
@@ -133,9 +128,6 @@ public final class ComplexClassifier {
 
         Set<String> notch2Set = Sets.newHashSet("2010_2471trunc", "1_2009trunc");
         complexEventsPerGene.put("NOTCH2", notch2Set);
-
-        Set<String> nrasSet = Sets.newHashSet("NRAS (12,13,59,61,117,146)");
-        complexEventsPerGene.put("NRAS", nrasSet);
 
         Set<String> ntrk1Set = Sets.newHashSet("TRKAIII Splice Variant");
         complexEventsPerGene.put("NTRK1", ntrk1Set);

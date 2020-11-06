@@ -119,6 +119,10 @@ public final class GeneRangeClassifier {
             return false;
         }
 
+        if (strippedFeature.contains(",")) {
+            return false;
+        }
+
         return Character.isDigit(strippedFeature.substring(strippedFeature.length() - 1).charAt(0));
     }
 }
