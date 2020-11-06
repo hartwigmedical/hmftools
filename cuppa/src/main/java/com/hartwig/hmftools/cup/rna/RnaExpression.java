@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENE_EXPRESSION_CANCER;
-import static com.hartwig.hmftools.cup.common.ClassifierType.GENE_EXPRESSION_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
+import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
@@ -267,7 +267,7 @@ public class RnaExpression implements CuppaClassifier
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, GENE_EXPRESSION_CANCER.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, CLASSIFIER, LIKELIHOOD, EXPRESSION_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
     private void addSampleCssResults(
@@ -306,7 +306,7 @@ public class RnaExpression implements CuppaClassifier
             if(mConfig.WriteSimilarities)
             {
                 recordCssSimilarity(
-                        topMatches, sample.Id, refSampleId, css, GENE_EXPRESSION_PAIRWISE.toString(),
+                        topMatches, sample.Id, refSampleId, css, EXPRESSION_PAIRWISE.toString(),
                         CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
             }
 
@@ -332,7 +332,7 @@ public class RnaExpression implements CuppaClassifier
         }
 
         results.add(new SampleResult(
-                sample.Id, CLASSIFIER, LIKELIHOOD, GENE_EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+                sample.Id, CLASSIFIER, LIKELIHOOD, EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         similarities.addAll(topMatches);
     }

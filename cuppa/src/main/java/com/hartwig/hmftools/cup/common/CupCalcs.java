@@ -6,8 +6,7 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.ClassifierType.COMBINED;
-import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
+import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CORRELATION_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -102,23 +101,13 @@ public class CupCalcs
             }
         }
 
-        double totalPrevalence = cancerPrevalenceValues.values().stream().mapToDouble(x -> x).sum();
-
-        if(totalPrevalence == 0)
-            return null;
-
-        final Map<String,Double> cancerTypeValues = Maps.newHashMap();
-
-        for(Map.Entry<String,Double> entry : cancerPrevalenceValues.entrySet())
-        {
-            double probability = entry.getValue() / totalPrevalence;
-            cancerTypeValues.put(entry.getKey(), probability);
-        }
+        dampenProbabilities(cancerPrevalenceValues);
+        convertToPercentages(cancerPrevalenceValues);
 
         // remove the contributing prevalence likelihood results
         prevalenceResults.forEach(x -> allResults.remove(x));
 
-        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, FEATURE_PREVALENCE.toString(), "", cancerTypeValues);
+        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, FEATURE.toString(), "", cancerPrevalenceValues);
     }
 
     public static void convertToPercentages(final Map<String,Double> dataMap)
@@ -135,6 +124,14 @@ public class CupCalcs
         }
     }
 
+    public static void dampenProbabilities(final Map<String,Double> cancerProbabilities)
+    {
+        for(Map.Entry<String,Double> entry : cancerProbabilities.entrySet())
+        {
+            double adjustedProb = pow(entry.getValue(), CORRELATION_DAMPEN_FACTOR);
+            cancerProbabilities.put(entry.getKey(), adjustedProb);
+        }
+    }
     public static SampleResult calcClassifierScoreResult(final SampleData sample, final List<SampleResult> results, final String dataType)
     {
         final List<SampleResult> classifierResults = results.stream()
@@ -159,12 +156,7 @@ public class CupCalcs
             }
         }
 
-        for(Map.Entry<String,Double> entry : cancerTypeValues.entrySet())
-        {
-            double adjustedProb = pow(entry.getValue(), CORRELATION_DAMPEN_FACTOR);
-            cancerTypeValues.put(entry.getKey(), adjustedProb);
-        }
-
+        dampenProbabilities(cancerTypeValues);
         convertToPercentages(cancerTypeValues);
 
         return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, dataType, "", cancerTypeValues);

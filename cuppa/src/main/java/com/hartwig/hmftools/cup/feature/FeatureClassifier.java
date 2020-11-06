@@ -6,7 +6,6 @@ import static java.lang.Math.pow;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
-import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE_PREVALENCE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PAN;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_ZERO_PREVALENCE_ALLOCATION;
 import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
@@ -19,21 +18,17 @@ import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefCancerFe
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefPrevalenceData;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.FeatureType.INDEL;
-import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
-import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE;
-import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_AMP;
-import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_DEL;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -213,7 +208,7 @@ public class FeatureClassifier implements CuppaClassifier
         }
 
         SampleResult result = new SampleResult(
-                sample.Id, FEATURE, LIKELIHOOD, FEATURE_PREVALENCE.toString(), geneNames, cancerProbTotals);
+                sample.Id, FEATURE, LIKELIHOOD, ClassifierType.FEATURE.toString(), geneNames, cancerProbTotals);
 
         results.add(result);
     }

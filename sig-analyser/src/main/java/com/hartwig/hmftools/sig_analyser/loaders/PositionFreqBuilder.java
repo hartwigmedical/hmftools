@@ -47,6 +47,7 @@ public class PositionFreqBuilder
     private final String mOutputDir;
     private final String mSamplePosCountsFile;
 
+    private final List<String> mSampleList;
     private final Map<String,List<String>> mCancerSampleList;
     private final Map<String,int[]> mSamplePositionFrequencies;
 
@@ -62,6 +63,7 @@ public class PositionFreqBuilder
         mChromosomeLengths = Maps.newHashMap();
         mChromosomePosIndex = Maps.newHashMap();
         mSamplePositionFrequencies = Maps.newHashMap();
+        mSampleList = Lists.newArrayList();
         mCancerSampleList = Maps.newHashMap();
 
         mBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE));
@@ -89,6 +91,7 @@ public class PositionFreqBuilder
 
         initialisePositionCache();
 
+        mSampleList = null;
         mCancerSampleList = null;
         mSamplePosCountsFile = null;
     }
@@ -226,15 +229,13 @@ public class PositionFreqBuilder
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
 
-            int sampleCount = 0;
-
             for(final String line : fileData)
             {
                 final String[] items = line.split(",", -1);
                 String sampleId = items[fieldsIndexMap.get("SampleId")];
                 String cancerType = items[fieldsIndexMap.get("CancerType")];
 
-                ++sampleCount;
+                mSampleList.add(sampleId);
 
                 List<String> sampleIds = mCancerSampleList.get(cancerType);
 
@@ -248,7 +249,7 @@ public class PositionFreqBuilder
                 }
             }
 
-            SIG_LOGGER.info("loaded {} samples and {} cancer types", sampleCount, mCancerSampleList.size());
+            SIG_LOGGER.info("loaded {} samples and {} cancer types", mSampleList.size(), mCancerSampleList.size());
         }
         catch (IOException e)
         {
@@ -281,6 +282,13 @@ public class PositionFreqBuilder
                 // SampleId,SigName,SigContrib,SigPercent
                 final String[] items = line.split(",", -1);
                 String sampleId = items[sampleIndex];
+
+                if(!mSampleList.contains(sampleId))
+                {
+                    line = fileReader.readLine();
+                    continue;
+                }
+
                 String chromosome = items[chrIndex];
                 int position = Integer.parseInt(items[posIndex]);
                 int count = Integer.parseInt(items[countIndex]);
