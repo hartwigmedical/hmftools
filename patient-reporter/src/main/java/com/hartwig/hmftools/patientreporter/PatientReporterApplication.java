@@ -17,8 +17,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -89,7 +87,8 @@ public class PatientReporterApplication {
 
     private static void generateAnalysedReport(@NotNull PatientReporterConfig config, @NotNull SampleMetadata sampleMetadata)
             throws IOException {
-        AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(config));
+        AnalysedReportData reportData = buildAnalysedReportData(config);
+        AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData);
 
         AnalysedPatientReport report = reporter.run(sampleMetadata,
                 config.purplePurityTsv(),
@@ -106,8 +105,7 @@ public class PatientReporterApplication {
                 config.comments(),
                 config.correctedReport());
 
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(germlineReportingModel);
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
         reportWriter.writeAnalysedPatientReport(report, outputFilePath);
