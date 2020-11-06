@@ -98,7 +98,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -assembly hg19 \
     -ref_genome /path/to/refGenome.fasta \
     -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
-    -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
+    -panel_bed /path/to/ActionableCodingPanel.somatic.hg19.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
@@ -113,7 +113,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -assembly hg19 \
     -ref_genome /path/to/refGenome.fasta \
     -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
-    -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
+    -panel_bed /path/to/ActionableCodingPanel.somatic.hg19.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
