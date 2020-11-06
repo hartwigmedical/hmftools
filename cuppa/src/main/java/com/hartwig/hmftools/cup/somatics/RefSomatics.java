@@ -217,7 +217,8 @@ public class RefSomatics implements RefClassifier
 
                 if(cancerType == null)
                 {
-                    CUP_LOGGER.debug("sample({}) signatures missing cancer type", sampleId);
+                    // expected if a smaller ref sample set is being run
+                    // CUP_LOGGER.debug("sample({}) signatures missing cancer type", sampleId);
                     continue;
                 }
 

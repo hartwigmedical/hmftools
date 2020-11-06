@@ -124,7 +124,6 @@ public class RefRnaExpression implements RefClassifier
             int cancerTypeIndex = 0;
             int geneIndex = 0;
             String currentSample = "";
-            String cancerType = "";
             final List<Double> tpmList = Lists.newArrayList(); // only for the initial sample
             long manualLookupCount = 0;
 
@@ -148,7 +147,7 @@ public class RefRnaExpression implements RefClassifier
                         ++sampleIndex;
 
                     currentSample = sampleId;
-                    cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
+                    String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
                     cancerTypeIndex = getCancerTypeIndex(cancerType);
                     mSampleIds.add(sampleId);
                     geneIndex = 0;

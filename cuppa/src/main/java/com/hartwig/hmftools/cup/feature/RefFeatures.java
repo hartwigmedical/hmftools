@@ -156,7 +156,7 @@ public class RefFeatures implements RefClassifier
             final String filename = mConfig.OutputDir + REF_FILE_DRIVER_AVG;
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("CancerType,SvDataType");
+            writer.write("CancerType,AvgDrivers");
             writer.newLine();
 
             for(Map.Entry<String,List<Double>> entry : driversPerSampleMap.entrySet())

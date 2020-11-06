@@ -257,7 +257,7 @@ public class PositionFreqBuilder
         }
     }
 
-    private void loadPositionFrequencies(final String filename)
+        private void loadPositionFrequencies(final String filename)
     {
         try
         {
@@ -276,6 +276,8 @@ public class PositionFreqBuilder
             int[] currentCounts = null;
 
             line = fileReader.readLine(); // skip header
+
+            int nextLog = 100;
 
             while (line != null)
             {
@@ -298,6 +300,12 @@ public class PositionFreqBuilder
                     currentCounts = new int[mPositionCacheSize];
                     currentSample = sampleId;
                     mSamplePositionFrequencies.put(sampleId, currentCounts);
+
+                    if(mSamplePositionFrequencies.size() >= nextLog)
+                    {
+                        SIG_LOGGER.debug("loaded {} sample position freq data", mSamplePositionFrequencies.size());
+                        nextLog += 100;
+                    }
                 }
 
                 int posBucketIndex = getBucketIndex(chromosome, position);

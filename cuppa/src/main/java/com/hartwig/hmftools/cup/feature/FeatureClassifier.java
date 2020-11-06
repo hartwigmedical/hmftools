@@ -188,7 +188,7 @@ public class FeatureClassifier implements CuppaClassifier
                     if(adjustMatchingCancerPrev)
                     {
                         int cohortSize = mSampleDataCache.getCancerSampleCount(cancerType);
-                        double adjustedIncidence = driverPrevValue * cohortSize - maxLikelihood;
+                        double adjustedIncidence = max(driverPrevValue * cohortSize - maxLikelihood, 0);
                         double adjustedDriverPrevValue = cohortSize > 1 ? adjustedIncidence / (cohortSize - 1) : 0;
                         genePrevTotal -= driverPrevValue - adjustedDriverPrevValue;
                         driverPrevValue = adjustedDriverPrevValue;
