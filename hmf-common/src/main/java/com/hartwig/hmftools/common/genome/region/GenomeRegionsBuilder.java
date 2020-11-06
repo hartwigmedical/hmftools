@@ -23,13 +23,20 @@ public class GenomeRegionsBuilder {
         this.minGap = minGap;
     }
 
-    public void addPosition(GenomePosition position) {
-        contigMap.computeIfAbsent(position.chromosome(), contig -> new GenomeRegions(contig, minGap)).addPosition(position.position());
+    public void addPosition(@NotNull String contig, long position) {
+        contigMap.computeIfAbsent(contig, x -> new GenomeRegions(contig, minGap)).addPosition(position);
     }
 
-    public void addRegion(GenomeRegion position) {
-        contigMap.computeIfAbsent(position.chromosome(), contig -> new GenomeRegions(contig, minGap))
-                .addRegion(position.start(), position.end());
+    public void addPosition(@NotNull GenomePosition position) {
+        addPosition(position.chromosome(), position.position());
+    }
+
+    public void addRegion(@NotNull String contig, long start, long end) {
+        contigMap.computeIfAbsent(contig, x -> new GenomeRegions(contig, minGap)).addRegion(start, end);
+    }
+
+    public void addRegion(@NotNull GenomeRegion region) {
+        addRegion(region.chromosome(), region.start(), region.end());
     }
 
     @NotNull

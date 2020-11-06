@@ -2,8 +2,17 @@ package com.hartwig.hmftools.common.drivercatalog.panel;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.bed.NamedBed;
+import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
+import com.hartwig.hmftools.common.genome.genepanel.HmfExonPanelBed;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.apache.commons.compress.utils.Lists;
+import org.jetbrains.annotations.NotNull;
 
 public class DriverGenePanelConversion {
 
@@ -31,7 +40,48 @@ public class DriverGenePanelConversion {
                 outputDriverGenes.add(converted);
             }
         }
+
+        // Write out driver gene panel
         DriverGeneFile.write(outputFile19, inputDriverGenes);
         DriverGeneFile.write(outputFile38, outputDriverGenes);
+
+        // Write out actionable bed files
+        final List<HmfTranscriptRegion> hg19Transcripts = HmfGenePanelSupplier.allGeneList37();
+        final List<HmfTranscriptRegion> hg38Transcripts = HmfGenePanelSupplier.allGeneList38();
+        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.somatic.hg19.bed", somaticGenes(inputDriverGenes), hg19Transcripts);
+        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.germline.hg19.bed", germlineGenes(inputDriverGenes), hg19Transcripts);
+        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.somatic.hg38.bed", somaticGenes(inputDriverGenes), hg38Transcripts);
+        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.germline.hg38.bed", germlineGenes(inputDriverGenes), hg38Transcripts);
     }
+
+    private static void createBedFiles(String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {
+        final List<NamedBed> somaticBed = HmfExonPanelBed.createRegions(genes, transcripts);
+        NamedBedFile.toBedFile(file, somaticBed);
+    }
+
+    @NotNull
+    static Set<String> somaticGenes(@NotNull final List<DriverGene> genePanel) {
+        final Set<String> actionableGenes = Sets.newHashSet();
+        for (DriverGene driverGene : genePanel) {
+            if (driverGene.reportVariant()) {
+                actionableGenes.add(driverGene.gene());
+            }
+        }
+
+        return actionableGenes;
+    }
+
+    @NotNull
+    static Set<String> germlineGenes(@NotNull final List<DriverGene> genePanel) {
+        final Set<String> actionableGenes = Sets.newHashSet();
+        for (DriverGene driverGene : genePanel) {
+            if (driverGene.reportGermlineBiallelic() || driverGene.reportGermlineNonBiallelic()) {
+                actionableGenes.add(driverGene.gene());
+            }
+
+        }
+
+        return actionableGenes;
+    }
+
 }

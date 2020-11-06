@@ -26,7 +26,7 @@ public class NamedBedFile {
     private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
     private static final String DELIMITER = "\t";
 
-    private static void toBedFile(@NotNull final String filename, @NotNull final List<NamedBed> regions) throws IOException {
+    public static void toBedFile(@NotNull final String filename, @NotNull final List<NamedBed> regions) throws IOException {
         List<String> strings = regions.stream().map(NamedBedFile::asBed).collect(Collectors.toList());
         Files.write(new File(filename).toPath(), strings);
     }

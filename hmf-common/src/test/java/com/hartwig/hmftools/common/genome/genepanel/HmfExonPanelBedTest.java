@@ -2,33 +2,29 @@ package com.hartwig.hmftools.common.genome.genepanel;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
-import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class HmfExonPanelBedTest {
 
     @Test
     public void testReverseTranscript() {
-        final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
         final HmfTranscriptRegion transcript = HmfGenePanelSupplier.allGenesMap37().get("TP53");
         HmfExonRegion firstExon = transcript.exome().get(0);
         HmfExonRegion secondExon = transcript.exome().get(1);
         HmfExonRegion thirdExon = transcript.exome().get(2);
         HmfExonRegion finalCodingExon = transcript.exome().get(transcript.exome().size() - 2);
 
-        List<GenomeRegion> regions = HmfExonPanelBed.createRegions(genePanel, Lists.newArrayList(transcript, transcript));
+        List<? extends GenomeRegion> regions =
+                HmfExonPanelBed.createRegions(Sets.newHashSet("TP53"), Lists.newArrayList(transcript, transcript));
 
         assertRegion(regions.get(0), transcript.codingStart(), firstExon.end() + 2);
         assertRegion(regions.get(1), secondExon.start() - 5, secondExon.start() - 5);
@@ -46,21 +42,4 @@ public class HmfExonPanelBedTest {
 
     }
 
-    @Test
-    @Ignore
-    public void write19() throws IOException {
-        String filename = "/Users/jon/hmf/resources/ActionableCodingPanel.hg19.bed";
-        String genePanel = "/Users/jon/hmf/resources/DriverGenePanel.hg19.tsv";
-        HmfExonPanelBed.write19File(filename, genePanel);
-        BEDFileLoader.fromBedFile(filename);
-    }
-
-    @Test
-    @Ignore
-    public void write38() throws IOException {
-        String filename = "/Users/jon/hmf/resources/ActionableCodingPanel.hg38.bed";
-        String genePanel = "/Users/jon/hmf/resources/DriverGenePanel.hg38.tsv";
-        HmfExonPanelBed.write38File(filename, genePanel);
-        BEDFileLoader.fromBedFile(filename);
-    }
 }
