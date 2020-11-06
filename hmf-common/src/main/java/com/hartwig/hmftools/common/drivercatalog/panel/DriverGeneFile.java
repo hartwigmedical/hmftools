@@ -39,9 +39,9 @@ public final class DriverGeneFile {
                 .add("reportDisruption")
                 .add("reportAmplification")
                 .add("reportHotspot")
+                .add("likelihoodType")
                 .add("reportGermlineNonBiallelic")
                 .add("reportGermlineBiallelic")
-                .add("likelihoodType")
                 .toString();
     }
 
@@ -55,9 +55,9 @@ public final class DriverGeneFile {
                 .add(String.valueOf(gene.reportDisruption()))
                 .add(String.valueOf(gene.reportAmplification()))
                 .add(String.valueOf(gene.reportHotspot()))
+                .add(String.valueOf(gene.likelihoodType()))
                 .add(String.valueOf(gene.reportGermlineNonBiallelic()))
                 .add(String.valueOf(gene.reportGermlineBiallelic()))
-                .add(String.valueOf(gene.likelihoodType()))
                 .toString();
     }
 
@@ -73,17 +73,13 @@ public final class DriverGeneFile {
                 .reportDisruption(Boolean.parseBoolean(values[5].toLowerCase()))
                 .reportAmplification(Boolean.parseBoolean(values[6].toLowerCase()))
                 .reportHotspot(Boolean.parseBoolean(values[7].toLowerCase()))
+                .likelihoodType(DriverCategory.valueOf(values[8]))
                 .reportGermlineBiallelic(false)
                 .reportGermlineNonBiallelic(false);
 
-        if (values.length == 9) {
-            builder.likelihoodType(DriverCategory.valueOf(values[8]));
-        } else if (values.length == 11) {
-            builder.reportGermlineBiallelic(Boolean.parseBoolean(values[8].toLowerCase()))
-                    .reportGermlineNonBiallelic(Boolean.parseBoolean(values[9].toLowerCase()))
-                    .likelihoodType(DriverCategory.valueOf(values[10]));
-        } else {
-            throw new IllegalArgumentException("Unknown format");
+        if (values.length == 11) {
+            builder.reportGermlineBiallelic(Boolean.parseBoolean(values[9].toLowerCase()))
+                    .reportGermlineNonBiallelic(Boolean.parseBoolean(values[10].toLowerCase()));
         }
 
         return builder.build();
