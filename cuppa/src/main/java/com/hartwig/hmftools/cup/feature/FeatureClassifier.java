@@ -188,7 +188,7 @@ public class FeatureClassifier implements CuppaClassifier
                     if(adjustMatchingCancerPrev)
                     {
                         int cohortSize = mSampleDataCache.getCancerSampleCount(cancerType);
-                        double adjustedIncidence = max(driverPrevValue * cohortSize - maxLikelihood, 0);
+                        double adjustedIncidence = max(driverPrevValue * cohortSize - maxLikelihood, 0.0);
                         double adjustedDriverPrevValue = cohortSize > 1 ? adjustedIncidence / (cohortSize - 1) : 0;
                         genePrevTotal -= driverPrevValue - adjustedDriverPrevValue;
                         driverPrevValue = adjustedDriverPrevValue;
@@ -254,7 +254,7 @@ public class FeatureClassifier implements CuppaClassifier
                     double noPrevValue = isDriverType ? noDriverPrevalence : noNonDriverPrevalence;
                     featurePrevData.Prevalence += noPrevValue;
                     genePrevTotals.PositiveTotal += featurePrevData.Prevalence;
-                    genePrevTotals.NegitiveTotal += 1 - featurePrevData.Prevalence;
+                    genePrevTotals.NegativeTotal += 1 - featurePrevData.Prevalence;
                 }
                 else
                 {

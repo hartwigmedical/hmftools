@@ -55,7 +55,7 @@ public class RefDataConfig
     {
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
         options.addOption(REF_SAMPLE_TRAITS_FILE, true, "Ref sample traits data file");
-        options.addOption(REF_SIG_CONTRIBS_FILE, true, "Ref signature contirbutions data file");
+        options.addOption(REF_SIG_CONTRIBS_FILE, true, "Ref signature contributions data file");
         options.addOption(REF_SV_DATA_FILE, true, "Ref sample SV data file");
         options.addOption(REF_SNV_POS_DATA_FILE, true, "Ref sample SNV position bucket data file");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Ref sample SNV position bucket data file");

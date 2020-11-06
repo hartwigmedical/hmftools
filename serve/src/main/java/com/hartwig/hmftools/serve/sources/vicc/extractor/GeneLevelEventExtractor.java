@@ -23,43 +23,45 @@ public class GeneLevelEventExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
+    private static final String GENE_ONLY = "gene_only";
+
     public GeneLevelEventExtractor() {
     }
 
     @NotNull
     public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String eventDescription = feature.description().split(" ", 2)[1].trim();
-        if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription) || feature.provenanceRule() != null) {
+        if (GeneRangeClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription) || feature.provenanceRule() != null) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
 
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_LEVEL)) {
+                            if (feature.provenanceRule().equals(GENE_ONLY)) {
                                 return GeneLevelEvent.ACTIVATION;
                             } else {
                                 return GeneLevelEvent.ACTIVATION;
                             }
-                        } else if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
+                        } else if (GeneRangeClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
                             return GeneLevelEvent.ACTIVATION;
                         }
                     } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                         if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(GeneRangeClassifier.GENE_LEVEL)) {
+                            if (feature.provenanceRule().equals(GENE_ONLY)) {
                                 return GeneLevelEvent.INACTIVATION;
                             } else {
                                 return GeneLevelEvent.INACTIVATION;
                             }
-                        } else if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription)) {
+                        } else if (GeneRangeClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
                             return GeneLevelEvent.INACTIVATION;
                         }
                     }
                 }
             }
             LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
-        } else if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITH_TSG.contains(eventDescription)) {
+        } else if (GeneRangeClassifier.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (GeneRangeClassifier.DETAILED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription)) {
+        } else if (GeneRangeClassifier.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             return GeneLevelEvent.ACTIVATION;
         } else {
             LOGGER.warn("Unknown event {}", feature);
@@ -82,7 +84,7 @@ public class GeneLevelEventExtractor {
                                 .event(extractGeneLevelEvent(feature, driverGenes))
                                 .build());
 
-            } else if (feature.type() == FeatureType.FUSION_PROMISCUOUS) {
+            } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
 
                 String curatedPromiscuousFusion = FusionCuration.curateFusion(feature.geneSymbol(), feature);
                 //TODO: check if this is needed

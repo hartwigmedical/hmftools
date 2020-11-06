@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class GeneRangeClassifier {
 
-    public static final Set<String> DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO = Sets.newHashSet("MUTATION",
+    public static final Set<String> GENERIC_GENE_LEVEL_KEYWORDS = Sets.newHashSet("MUTATION",
             "mutant",
             "mut",
             "TRUNCATING MUTATION",
@@ -19,7 +19,7 @@ public final class GeneRangeClassifier {
             "FRAMESHIFT MUTATION",
             "ALTERATION");
 
-    public static final Set<String> DETAILED_GENE_LEVEL_INFO_WITH_TSG = Sets.newHashSet("inact mut",
+    public static final Set<String> INACTIVATING_GENE_LEVEL_KEYWORDS = Sets.newHashSet("inact mut",
             "biallelic inactivation",
             "Loss Of Function Variant",
             "Loss Of Heterozygosity",
@@ -28,29 +28,50 @@ public final class GeneRangeClassifier {
             "BIALLELIC INACTIVATION",
             "LOSS-OF-FUNCTION");
 
-    public static final Set<String> DETAILED_GENE_LEVEL_INFO_WITH_ONCO = Sets.newHashSet("Gain-of-function Mutations",
+    public static final Set<String> ACTIVATING_GENE_LEVEL_KEYWORDS = Sets.newHashSet("Gain-of-function Mutations",
             "Gain-of-Function",
             "act mut",
-            "ACTIVATING MUTATION", "Oncogenic Mutations", "pos", "positive", "oncogenic mutation");
-
-    public static final String GENE_LEVEL = "gene_only";
+            "ACTIVATING MUTATION",
+            "Oncogenic Mutations",
+            "pos",
+            "positive",
+            "oncogenic mutation");
 
     private GeneRangeClassifier() {
     }
 
-    public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String provenanceRule) {
-        String[] parts = featureName.split(" ");
-        if (parts.length < 2) {
+    public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String gene) {
+        if (CombinedClassifier.isCombinedEvent(featureName, gene)) {
             return false;
         }
-        String eventDescription = parts[1].trim();
 
-        return DETAILED_GENE_LEVEL_INFO_WITHOUT_TSG_ONCO.contains(eventDescription) || DETAILED_GENE_LEVEL_INFO_WITH_TSG.contains(
-                eventDescription) || DETAILED_GENE_LEVEL_INFO_WITH_ONCO.contains(eventDescription) || GENE_LEVEL.equals(provenanceRule);
+        if (featureName.toLowerCase().contains("exon")) {
+            return false;
+        }
+
+        for (String keyword : GENERIC_GENE_LEVEL_KEYWORDS) {
+            if (featureName.contains(keyword)) {
+                return true;
+            }
+        }
+
+        for (String keyword : INACTIVATING_GENE_LEVEL_KEYWORDS) {
+            if (featureName.contains(keyword)) {
+                return true;
+            }
+        }
+
+        for (String keyword : ACTIVATING_GENE_LEVEL_KEYWORDS) {
+            if (featureName.contains(keyword)) {
+                return true;
+            }
+        }
+
+        return featureName.trim().equals(gene);
     }
 
     public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName)) {
+        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName, gene)) {
             return false;
         }
 
@@ -64,39 +85,40 @@ public final class GeneRangeClassifier {
     }
 
     public static boolean isGeneRangeCodonEvent(@NotNull String featureName) {
-        if (featureName.length() > 1 && featureName.substring(featureName.length() - 1).equals("X")) {
-            return true;
-        } else {
-            return featureName.length() >= 1 && isValidSingleCodonRange(featureName);
-        }
+        String proteinAnnotation = HotspotClassifier.extractProteinAnnotation(featureName);
+
+        return proteinAnnotation.endsWith("X") || isValidSingleCodonRange(proteinAnnotation);
     }
 
     private static boolean isValidSingleCodonRange(@NotNull String featureName) {
+        // Feature codon ranges occasionally come with parentheses
+        String strippedFeature = featureName.replace("(", "").replace(")", "");
+
         // Features are expected to look something like V600 (1 char - N digits)
-        if (featureName.length() < 3) {
+        if (strippedFeature.length() < 3) {
             return false;
         }
 
-        if (!Character.isLetter(featureName.charAt(0))) {
+        if (!Character.isLetter(strippedFeature.charAt(0))) {
             return false;
         }
 
-        if (!Character.isDigit(featureName.charAt(1))) {
+        if (!Character.isDigit(strippedFeature.charAt(1))) {
             return false;
         }
 
-        if (featureName.contains("*")) {
+        if (strippedFeature.contains("*")) {
             return false;
         }
 
-        if (featureName.contains("/")) {
+        if (strippedFeature.contains("/")) {
             return false;
         }
 
-        if (featureName.contains("fs")) {
+        if (strippedFeature.contains("fs")) {
             return false;
         }
 
-        return Character.isDigit(featureName.substring(featureName.length() - 1).charAt(0));
+        return Character.isDigit(strippedFeature.substring(strippedFeature.length() - 1).charAt(0));
     }
 }

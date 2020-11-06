@@ -3,7 +3,11 @@ package com.hartwig.hmftools.cobalt;
 import static com.hartwig.hmftools.common.cli.Configs.defaultEnumValue;
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
+import java.io.IOException;
 import java.util.StringJoiner;
+
+import com.hartwig.hmftools.common.cli.Configs;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -25,6 +29,8 @@ public interface CobaltConfig {
     int DEFAULT_THREADS = 4;
     int DEFAULT_MIN_MAPPING_QUALITY = 10;
 
+    String TUMOR_ONLY = "tumor_only";
+    String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
     String THREADS = "threads";
     String REFERENCE = "reference";
     String REFERENCE_BAM = "reference_bam";
@@ -40,6 +46,8 @@ public interface CobaltConfig {
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
+        options.addOption(TUMOR_ONLY, false, "Tumor only mode");
+        options.addOption(TUMOR_ONLY_DIPLOID_BED, true, "Diploid regions for tumor-only mode");
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
@@ -86,18 +94,23 @@ public interface CobaltConfig {
     @NotNull
     ValidationStringency validationStringency();
 
+    boolean tumorOnly();
+
+    @NotNull
+    String tumorOnlyDiploidBed();
+
     default int windowSize() {
         return 1000;
     }
 
     @NotNull
-    static CobaltConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
+    static CobaltConfig createConfig(@NotNull final CommandLine cmd) throws ParseException, IOException {
         final int threadCount = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final int minMappingQuality = defaultIntValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
         final String refGenomePath = cmd.getOptionValue(REF_GENOME, "");
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
-        final String gcProfilePath = parameter(cmd, GC_PROFILE, missingJoiner);
+        final String gcProfilePath = Configs.readableFile(cmd, GC_PROFILE);
         if (gcProfilePath.endsWith("gz")) {
             throw new ParseException("Please supply un-compressed " + GC_PROFILE + " file");
         }
@@ -106,14 +119,36 @@ public interface CobaltConfig {
             throw new ParseException(INPUT_DIR + " not applicable to COBALT");
         }
 
-        final String tumorBamPath = parameter(cmd, TUMOR_BAM, missingJoiner);
-        final String referenceBamPath = parameter(cmd, REFERENCE_BAM, missingJoiner);
-        final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
-        final String normal = parameter(cmd, REFERENCE, missingJoiner);
+        final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
+        final String reference;
+        final String referenceBamPath;
+        final String diploidBed;
+        if (isTumorOnly) {
+            if (cmd.hasOption(REFERENCE_BAM)) {
+                throw new ParseException(REFERENCE_BAM + " not applicable to tumor only mode");
+            }
+
+            if (cmd.hasOption(REFERENCE)) {
+                throw new ParseException(REFERENCE + " not applicable to tumor only mode");
+            }
+
+            reference = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
+            referenceBamPath = Strings.EMPTY;
+            diploidBed = Configs.readableFile(cmd, TUMOR_ONLY_DIPLOID_BED);
+
+        } else {
+            diploidBed = Strings.EMPTY;
+            reference = parameter(cmd, REFERENCE, missingJoiner);
+            referenceBamPath = Configs.readableFile(cmd, REFERENCE_BAM);
+        }
+
+        final String tumorBamPath = Configs.readableFile(cmd, TUMOR_BAM);
+        final String outputDirectory = Configs.writableOutputDirectory(cmd, OUTPUT_DIR);
         final String tumor = parameter(cmd, TUMOR, missingJoiner);
         final String missing = missingJoiner.toString();
 
-        final ValidationStringency validationStringency = defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
+        final ValidationStringency validationStringency =
+                defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
 
         if (!missing.isEmpty()) {
             throw new ParseException("Missing the following parameters: " + missing);
@@ -121,6 +156,8 @@ public interface CobaltConfig {
 
         return ImmutableCobaltConfig.builder()
                 .threadCount(threadCount)
+                .tumorOnly(isTumorOnly)
+                .tumorOnlyDiploidBed(diploidBed)
                 .minMappingQuality(minMappingQuality)
                 .gcProfilePath(gcProfilePath)
                 .tumorBamPath(tumorBamPath)
@@ -128,7 +165,7 @@ public interface CobaltConfig {
                 .referenceBamPath(referenceBamPath)
                 .refGenomePath(refGenomePath)
                 .outputDirectory(outputDirectory)
-                .reference(normal)
+                .reference(reference)
                 .tumor(tumor)
                 .validationStringency(validationStringency)
                 .build();

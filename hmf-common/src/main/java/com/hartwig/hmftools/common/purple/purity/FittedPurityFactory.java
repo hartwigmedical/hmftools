@@ -54,7 +54,7 @@ public class FittedPurityFactory {
 
     public FittedPurityFactory(final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes, final double minPurity,
             final double maxPurity, final double purityIncrements, final double minPloidy, final double maxPloidy,
-            final double somaticPenaltyWeight, @NotNull final FittedRegionFactory fittedRegionFactory,
+            final double somaticPenaltyWeight, final boolean tumorOnlyMode, @NotNull final FittedRegionFactory fittedRegionFactory,
             @NotNull final Collection<ObservedRegion> observedRegions, @NotNull final Collection<SomaticVariant> variants)
             throws ExecutionException, InterruptedException {
         this.executorService = executorService;
@@ -72,7 +72,7 @@ public class FittedPurityFactory {
         int accumulatedBafCount = 0;
         double accumulatedWeightedRatio = 0;
         for (final ObservedRegion region : observedRegions) {
-            if (useRegionToFitPurity(cobaltChromosomes, region)) {
+            if (useRegionToFitPurity(tumorOnlyMode, cobaltChromosomes, region)) {
                 filteredRegions.add(region);
                 variantSelector.select(region, filteredVariants::add);
                 accumulatedBafCount += region.bafCount();
@@ -88,7 +88,7 @@ public class FittedPurityFactory {
     }
 
     @VisibleForTesting
-    static boolean useRegionToFitPurity(@NotNull final CobaltChromosomes cobaltChromosomes, @NotNull final ObservedRegion region) {
+    static boolean useRegionToFitPurity(boolean tumorOnlyMode, @NotNull final CobaltChromosomes cobaltChromosomes, @NotNull final ObservedRegion region) {
         if (region.bafCount() <= 0) {
             return false;
         }
@@ -110,6 +110,10 @@ public class FittedPurityFactory {
         }
 
         CobaltChromosome chromosome = cobaltChromosomes.get(region.chromosome());
+        if (tumorOnlyMode && chromosome.isAllosome()) {
+            return false;
+        }
+
         return chromosome.isNormal() && chromosome.isDiploid();
     }
 

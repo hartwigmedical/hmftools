@@ -9,8 +9,9 @@ public enum FeatureType {
     AMPLIFICATION,
     DELETION,
     FUSION_PAIR,
-    FUSION_PROMISCUOUS,
+    PROMISCUOUS_FUSION,
     SIGNATURE,
     COMBINED,
+    COMPLEX,
     UNKNOWN
 }

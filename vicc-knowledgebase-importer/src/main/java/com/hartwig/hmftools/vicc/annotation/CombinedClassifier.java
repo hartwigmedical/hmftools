@@ -13,13 +13,17 @@ final class CombinedClassifier {
 
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXON_RANGES_PER_GENE = Maps.newHashMap();
 
+    private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = Maps.newHashMap();
+
     static {
-        //TODO: check if more EXON_DEL_DUP fusions need to be added
         Set<String> kitSet = Sets.newHashSet("EXON 11 MUTATION", "Exon 11 mutations", "Exon 11 deletions");
         Set<String> metSet = Sets.newHashSet("EXON 14 SKIPPING MUTATION");
 
         FUSION_PAIR_AND_EXON_RANGES_PER_GENE.put("KIT", kitSet);
         FUSION_PAIR_AND_EXON_RANGES_PER_GENE.put("MET", metSet);
+
+        COMBINED_EVENTS_PER_GENE.put("EGFR", Sets.newHashSet("Ex19 del L858R"));
+        COMBINED_EVENTS_PER_GENE.put("BRAF", Sets.newHashSet("p61BRAF-V600E"));
     }
 
     private CombinedClassifier() {
@@ -34,8 +38,17 @@ final class CombinedClassifier {
         return false;
     }
 
-    public static boolean isCombinedEvent(@NotNull String featureName) {
+    public static boolean isCombinedEvent(@NotNull String featureName, @Nullable String gene) {
+        Set<String> entriesForGene = COMBINED_EVENTS_PER_GENE.get(gene);
+        if (entriesForGene != null) {
+            if (entriesForGene.contains(featureName)) {
+                return true;
+            }
+        }
+
         if (featureName.contains("+") && !featureName.toLowerCase().contains("c.") && !featureName.contains(">")) {
+            return true;
+        } else if (featureName.contains("insertion") && featureName.contains("deletion")) {
             return true;
         } else if (featureName.contains("insertion")) {
             int countInsertion = featureName.split("insertion").length - 1;
@@ -46,14 +59,17 @@ final class CombinedClassifier {
         } else if (featureName.contains("frameshift")) {
             int countFrameshift = featureName.split("frameshift").length - 1;
             return countFrameshift > 1;
-        } else if (featureName.contains("insertions") && featureName.contains("deletion")) {
-            int countCombined = (featureName.split("insertion").length - 1) + (featureName.split("deletion").length - 1);
-            return countCombined > 1;
         } else if (featureName.contains("splice")) {
             int countSplice = featureName.split("splice").length - 1;
             return countSplice > 1;
+        } else if (featureName.trim().contains(" ")) {
+            String[] parts = featureName.trim().replace("  ", " ").split(" ");
+            if (parts[0].contains("-")) {
+                // Hotspots or amplifications on fusion genes are considered combined.
+                return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1], gene);
+            }
         }
 
-        return featureName.equals("p61BRAF-V600E");
+        return false;
     }
 }

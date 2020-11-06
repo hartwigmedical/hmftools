@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Downsample;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -104,8 +105,12 @@ class CircosCharts {
     }
 
     private void writeFittedRegions(@NotNull final List<FittedRegion> fittedRegions) throws IOException {
-        CircosFileWriter.writeRegions(baseCircosReferenceSample + ".ratio.circos", fittedRegions, ObservedRegion::unnormalisedObservedNormalRatio);
-        CircosFileWriter.writeRegions(baseCircosTumorSample + ".ratio.circos", fittedRegions, ObservedRegion::observedTumorRatio);
+        CircosFileWriter.writeRegions(baseCircosReferenceSample + ".ratio.circos",
+                fittedRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),
+                ObservedRegion::unnormalisedObservedNormalRatio);
+        CircosFileWriter.writeRegions(baseCircosTumorSample + ".ratio.circos",
+                fittedRegions.stream().filter(x -> Doubles.positive(x.observedTumorRatio())).collect(Collectors.toList()),
+                ObservedRegion::observedTumorRatio);
     }
 
     private void writeBafs(@NotNull final List<AmberBAF> bafs) throws IOException {
@@ -140,7 +145,8 @@ class CircosCharts {
         content = content.replaceAll("SAMPLE", tumorSample);
         content = content.replaceAll("REFERENCE", referenceSample);
         content = content.replaceAll("EXCLUDE", gender.equals(Gender.FEMALE) ? "hsY" : "hsZ");
-        content = content.replaceAll("KARYOTYPE", isHg38 ? "data/karyotype/karyotype.human.hg38.txt" : "data/karyotype/karyotype.human.hg19.txt");
+        content = content.replaceAll("KARYOTYPE",
+                isHg38 ? "data/karyotype/karyotype.human.hg38.txt" : "data/karyotype/karyotype.human.hg19.txt");
         Files.write(new File(confFile(type)).toPath(), content.getBytes(charset));
     }
 

@@ -97,7 +97,7 @@ public class CountBamLinesMigration implements AutoCloseable {
         }
 
         final RatioSupplier ratioSupplier = new RatioSupplier(config.reference(), config.tumor(), config.outputDirectory());
-        final Multimap<Chromosome, CobaltRatio> ratios = ratioSupplier.generateRatios(gcProfiles, readCounts);
+        final Multimap<Chromosome, CobaltRatio> ratios = ratioSupplier.tumorNormalPair(gcProfiles, readCounts);
 
         final String outputFilename = CobaltRatioFile.generateFilenameForWriting(config.outputDirectory(), config.tumor());
         LOGGER.info("Persisting cobalt ratios to {}", outputFilename);

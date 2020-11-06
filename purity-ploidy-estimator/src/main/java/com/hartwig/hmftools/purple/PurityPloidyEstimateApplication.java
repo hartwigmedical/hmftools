@@ -327,6 +327,7 @@ public class PurityPloidyEstimateApplication {
                 fittingConfig.minPloidy(),
                 fittingConfig.maxPloidy(),
                 somaticFitConfig.somaticPenaltyWeight(),
+                configSupplier.commonConfig().tumorOnly(),
                 fittedRegionFactory,
                 observedRegions,
                 snpSomatics);

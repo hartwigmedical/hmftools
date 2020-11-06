@@ -10,7 +10,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 final class CurationFactory {
 
     static final Map<CurationKey, String> FEATURE_NAME_MAPPINGS = Maps.newHashMap();
-    
+
     static final Set<CurationKey> FEATURE_BLACKLIST = Sets.newHashSet();
 
     static {
@@ -34,8 +34,7 @@ final class CurationFactory {
                 "M1I (c.1-1_20del21)");
 
         // Protein annotation is not formally correct, update to make it correct.
-        FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "EGFR", "ENST00000275493", "V769_770insASV"),
-                "V769_D770insASV");
+        FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.CIVIC, "EGFR", "ENST00000275493", "V769_770insASV"), "V769_D770insASV");
 
         // Variants that don't exist
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.CIVIC, "NOTCH1", "ENST00000277541", "S2275FS"));
@@ -79,8 +78,7 @@ final class CurationFactory {
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.JAX, "MET", null, "MET M1250T "), "MET M1268T ");
 
         // These mappings are identical but used concurrently. Confirmed to be replaced by I740_K745dup
-        FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.JAX, "EGFR", null, "EGFR I744_K745insKIPVAI "),
-                "EGFR K745_E746insIPVAIK ");
+        FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.JAX, "EGFR", null, "EGFR I744_K745insKIPVAI "), "EGFR K745_E746insIPVAIK ");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.JAX, "KIT", null, "KIT V559del "), "KIT V560del ");
 
         // The below variants in FLT3 are from a paper where an additional R was added in the ref sequence, shifting all AAs by one position.
@@ -102,6 +100,12 @@ final class CurationFactory {
     }
 
     private static void populateOncoKBCuration() {
+        // The dashes in these keys are not the usual dashes!
+        FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "FGFR1", "ENST00000425967", "ERLIN2–FGFR1 Fusion"),
+                "ERLIN2-FGFR1 Fusion");
+        FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "FGFR2", "ENST00000358487", "FGFR2–PPHLN1 Fusion"),
+                "FGFR2-PPHLN1 Fusion");
+
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "EPAS1", "ENST00000263734", "533_534del"), "I533_P534del");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "EPAS1", "ENST00000263734", "534_536del"), "P534_D536del");
         FEATURE_NAME_MAPPINGS.put(new CurationKey(ViccSource.ONCOKB, "KIT", "ENST00000288135", "V559del"), "V560del");
@@ -136,10 +140,7 @@ final class CurationFactory {
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "CDKN2A", "ENST00000304494", "R79P"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "CDKN2A", "ENST00000304494", "G93W"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "CDKN2A", "ENST00000304494", "V118D"));
-        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB,
-                "FLT3",
-                "ENST00000241453",
-                "L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL"));
+        FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "FLT3", "ENST00000241453", "L611_E612insCSSDNEYFYVDFREYEYDLKWEFPRENL"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "FLT3", "ENST00000241453", "E612_F613insGYVDFREYEYDLKWEFRPRENLEF"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "IGF1R", "ENST00000268035", "G119T"));
         FEATURE_BLACKLIST.add(new CurationKey(ViccSource.ONCOKB, "IGF1R", "ENST00000268035", "G1125A"));

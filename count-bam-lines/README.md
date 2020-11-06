@@ -79,6 +79,24 @@ threads | 4 | Number of threads to use
 min_quality | 10 | Min quality
 ref_genome | None | Path to the reference genome fasta file if using CRAM files
 validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
+tumor_only | NA | Set to tumor only mode
+tumor_only_diploid_bed | NA | Bed file of diploid regions of the genome
+
+## Tumor Only Mode
+In the absence of a reference bam, COBALT can be put into tumor only mode with the `tumor_only` flag. 
+In this mode the `reference` and `reference_bam` parameters are no longer valid.
+
+As no reference data is supplied, COBALT does not try to determine gender or any chromosomal aberrations. 
+The output reference ratios will be 1 or -1 on all chromosomes even if they are allosomes. 
+Downstream, PURPLE will adjust the allosome ratios according to the AMBER gender. 
+A file called `DIPLOID.cobalt.ratio.pcf' will be created in lieu of a reference PCF file.
+
+Without a means to determine which regions of the normal are diploid, a bed file specifying these locations must be included with the `tumor-only-diploid-bed` parameter. 
+A HG19 bed file (DiploidRegions.hg19.bed) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl).
+A HG38 equivalent is not yet available. 
+
+To create this bed file we examined the COBALT output of 100 samples. 
+We considered each 1000 base region to be diploid if 50% or more of the samples were diploid (0.85 >= referenceGCDiploidRatio <= 1.15 ) at this point. 
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -132,6 +150,8 @@ java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMi
 ```
 
 ## Version History and Download Links
+- Upcoming
+  - Tumor only mode
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.10)
   - Re-added support for cancel panel integration test 
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.9)

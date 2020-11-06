@@ -25,7 +25,7 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
 
 AMBER requires Java 1.8+ to be installed.
 
-## Pared Normal/Tumor Mode
+## Paired Normal/Tumor Mode
 This is the default and recommended mode.
 
 ### Mandatory Arguments

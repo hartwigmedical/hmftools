@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.cli;
 
+import java.io.File;
+import java.io.IOException;
+
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.cli.CommandLine;
@@ -38,7 +41,7 @@ public final class Configs {
     public static boolean defaultBooleanValue(@NotNull final CommandLine cmd, @NotNull final String opt, final boolean defaultValue) {
         if (cmd.hasOption(opt)) {
             final boolean result = Boolean.parseBoolean(cmd.getOptionValue(opt));
-            if (result  != defaultValue) {
+            if (result != defaultValue) {
                 LOGGER.info("Using non default value {} for parameter {}", result, opt);
             }
             return result;
@@ -91,4 +94,34 @@ public final class Configs {
         }
         return false;
     }
+
+    @NotNull
+    public static String readableFile(@NotNull final CommandLine cmd, @NotNull final String opt) throws IOException, ParseException {
+        if (!cmd.hasOption(opt)) {
+            throw new ParseException(opt + " is a required option");
+        }
+        final String file = cmd.getOptionValue(opt);
+        if (!new File(file).exists()) {
+            throw new IOException("Unable to read file:  " + file);
+        }
+
+        return file;
+    }
+
+    @NotNull
+    public static String writableOutputDirectory(@NotNull final CommandLine cmd, @NotNull final String opt)
+            throws ParseException, IOException {
+        if (!cmd.hasOption(opt)) {
+            throw new ParseException(opt + " is a required option");
+        }
+
+        final String outputDirString = cmd.getOptionValue(opt);
+        final File outputDir = new File(outputDirString);
+        if (!outputDir.exists() && !outputDir.mkdirs()) {
+            throw new IOException("Unable to write output directory " + outputDirString);
+        }
+
+        return outputDirString;
+    }
+
 }

@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.cobalt;
 
+import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,12 +28,17 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.tribble.readers.LineIterator;
 
 public class CountBamLinesApplication implements AutoCloseable {
 
@@ -59,15 +67,6 @@ public class CountBamLinesApplication implements AutoCloseable {
         final CommandLine cmd = createCommandLine(args, options);
         config = CobaltConfig.createConfig(cmd);
 
-        final File outputDir = new File(config.outputDirectory());
-        if (!outputDir.exists() && !outputDir.mkdirs()) {
-            throw new IOException("Unable to write directory " + config.outputDirectory());
-        }
-
-        if (!new File(config.gcProfilePath()).exists()) {
-            throw new IOException("Unable to locate gc profile file " + config.gcProfilePath());
-        }
-
         if (!config.refGenomePath().isEmpty() && !new File(config.gcProfilePath()).exists()) {
             throw new IOException("Unable to locate ref genome file " + config.refGenomePath());
         }
@@ -82,8 +81,10 @@ public class CountBamLinesApplication implements AutoCloseable {
     }
 
     private void run() throws IOException, ExecutionException, InterruptedException {
-        LOGGER.info("Reading GC Profile");
+        LOGGER.info("Reading GC Profile from {}", config.gcProfilePath());
         final Multimap<Chromosome, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfilePath());
+
+        final List<BEDFeature> diploidBedFile = diploidBedFile(config);
 
         final SamReaderFactory readerFactory = readerFactory(config);
         final CountSupplier countSupplier = new CountSupplier(config.tumor(),
@@ -92,10 +93,14 @@ public class CountBamLinesApplication implements AutoCloseable {
                 config.minMappingQuality(),
                 executorService,
                 readerFactory);
-        final Multimap<Chromosome, CobaltCount> readCounts = countSupplier.fromBam(config.referenceBamPath(), config.tumorBamPath());
+        final Multimap<Chromosome, CobaltCount> readCounts = config.tumorOnly()
+                ? countSupplier.tumorOnly(config.tumorBamPath())
+                : countSupplier.pairedTumorNormal(config.referenceBamPath(), config.tumorBamPath());
 
         final RatioSupplier ratioSupplier = new RatioSupplier(config.reference(), config.tumor(), config.outputDirectory());
-        final Multimap<Chromosome, CobaltRatio> ratios = ratioSupplier.generateRatios(gcProfiles, readCounts);
+        final Multimap<Chromosome, CobaltRatio> ratios = config.tumorOnly()
+                ? ratioSupplier.tumorOnly(diploidBedFile, gcProfiles, readCounts)
+                : ratioSupplier.tumorNormalPair(gcProfiles, readCounts);
 
         final String outputFilename = CobaltRatioFile.generateFilenameForWriting(config.outputDirectory(), config.tumor());
         LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
@@ -103,6 +108,25 @@ public class CountBamLinesApplication implements AutoCloseable {
         CobaltRatioFile.write(outputFilename, ratios);
 
         new RatioSegmentation(executorService, config.outputDirectory()).applySegmentation(config.reference(), config.tumor());
+    }
+
+    @NotNull
+    private static List<BEDFeature> diploidBedFile(CobaltConfig config) throws IOException {
+        List<BEDFeature> result = Lists.newArrayList();
+        if (!config.tumorOnly()) {
+            return result;
+        }
+
+        LOGGER.info("Reading diploid regions from {}", config.tumorOnlyDiploidBed());
+        try (final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(config.tumorOnlyDiploidBed(),
+                new BEDCodec(),
+                false)) {
+            for (BEDFeature bedFeature : reader.iterator()) {
+                result.add(bedFeature);
+            }
+        }
+
+        return result;
     }
 
     @NotNull
