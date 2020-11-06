@@ -7,11 +7,8 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.actionability.ClinicalTrial;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -21,7 +18,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAndTypeTable;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.EventFilter;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
@@ -29,7 +25,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
@@ -70,10 +65,6 @@ public class SummaryChapter implements ReportChapter {
 
     private GenomicAnalysis analysis() {
         return patientReport.genomicAnalysis();
-    }
-
-    private LimsGermlineReportingLevel germlineReportingLevel() {
-        return patientReport.sampleReport().germlineReportingLevel();
     }
 
     @Override
@@ -128,22 +119,13 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
-        List<EvidenceItem> filteredTumorSpecificEvidence =
-                EventFilter.removeEvidenceOnFilteredGermlineVariants(analysis().tumorSpecificEvidence(),
-                        analysis().reportableVariants(),
-                        germlineReportingLevel());
-
-        int therapyEventCount = EvidenceItems.uniqueEventCount(filteredTumorSpecificEvidence);
-        int therapyCount = EvidenceItems.uniqueTherapyCount(filteredTumorSpecificEvidence);
+        int therapyEventCount = EvidenceItems.uniqueEventCount(analysis().tumorSpecificEvidence());
+        int therapyCount = EvidenceItems.uniqueTherapyCount(analysis().tumorSpecificEvidence());
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with therapy indication").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createTreatmentIndicationCell(therapyEventCount, therapyCount, "treatment(s)"));
 
-        List<ClinicalTrial> filteredTrials = EventFilter.removeEvidenceOnFilteredGermlineVariants(analysis().clinicalTrials(),
-                analysis().reportableVariants(),
-                germlineReportingLevel());
-
-        int trialEventCount = ClinicalTrials.uniqueEventCount(filteredTrials);
-        int trialCount = ClinicalTrials.uniqueTrialCount(filteredTrials);
+        int trialEventCount = ClinicalTrials.uniqueEventCount(analysis().clinicalTrials());
+        int trialCount = ClinicalTrials.uniqueTrialCount(analysis().clinicalTrials());
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with clinical trial eligibility").addStyle(
                 ReportResources.bodyTextStyle())));
         table.addCell(createTreatmentIndicationCell(trialEventCount, trialCount, "trial(s)"));
@@ -227,15 +209,13 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(new Paragraph("Genomic alterations").addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
-        List<ReportableVariant> filteredVariants =
-                SomaticVariants.filterForGermlineConsent(analysis().reportableVariants(), germlineReportingLevel());
-        Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(filteredVariants);
+        Set<String> driverVariantGenes = SomaticVariants.driverGenesWithVariant(analysis().reportableVariants());
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Driver genes with variant(s)").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(driverVariantGenes)));
 
-        int reportedVariants = SomaticVariants.countReportableVariants(filteredVariants);
+        int reportedVariants = SomaticVariants.countReportableVariants(analysis().reportableVariants());
         Style reportedVariantsStyle =
                 (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported variants").addStyle(ReportResources.bodyTextStyle())));

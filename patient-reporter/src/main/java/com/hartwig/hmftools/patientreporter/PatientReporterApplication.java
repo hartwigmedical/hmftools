@@ -71,7 +71,7 @@ public class PatientReporterApplication {
                 config.comments(),
                 config.correctedReport());
 
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriterNoConsent();
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriterNoGermline();
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
         reportWriter.writeQCFailReport(report, outputFilePath);
 

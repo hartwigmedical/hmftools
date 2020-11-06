@@ -37,17 +37,17 @@ public class GenomicAlterationsChapter implements ReportChapter {
     private static final boolean DISPLAY_CLONAL_COLUMN = false;
 
     @NotNull
-    private final GermlineReportingModel germlineReportingModel;
+    private final GenomicAnalysis genomicAnalysis;
     @NotNull
     private final SampleReport sampleReport;
     @NotNull
-    private final GenomicAnalysis genomicAnalysis;
+    private final GermlineReportingModel germlineReportingModel;
 
-    public GenomicAlterationsChapter(@NotNull final GermlineReportingModel germlineReportingModel, @NotNull final SampleReport sampleReport,
-            @NotNull final GenomicAnalysis genomicAnalysis) {
-        this.germlineReportingModel = germlineReportingModel;
-        this.sampleReport = sampleReport;
+    public GenomicAlterationsChapter(@NotNull final GenomicAnalysis genomicAnalysis, @NotNull final SampleReport sampleReport,
+            @NotNull final GermlineReportingModel germlineReportingModel) {
         this.genomicAnalysis = genomicAnalysis;
+        this.sampleReport = sampleReport;
+        this.germlineReportingModel = germlineReportingModel;
     }
 
     @Override
@@ -104,9 +104,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Driver").setTextAlignment(TextAlignment.CENTER) });
         }
 
-        List<ReportableVariant> filteredVariants = SomaticVariants.filterForGermlineConsent(reportableVariants, germlineReportingLevel);
-
-        for (ReportableVariant variant : SomaticVariants.sort(filteredVariants)) {
+        for (ReportableVariant variant : SomaticVariants.sort(reportableVariants)) {
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant,
                     germlineReportingModel,
                     germlineReportingLevel)));
@@ -133,7 +131,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     .setTextAlignment(TextAlignment.CENTER);
         }
 
-        if (SomaticVariants.hasNotifiableGermlineVariant(filteredVariants, germlineReportingModel, germlineReportingLevel)) {
+        if (SomaticVariants.hasNotifiableGermlineVariant(reportableVariants, germlineReportingModel, germlineReportingLevel)) {
             contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                     .add(new Paragraph("\n# Marked variant(s) are also present in the germline of the patient. Referral to a genetic "
                             + "specialist should be advised.").addStyle(ReportResources.subTextStyle())));

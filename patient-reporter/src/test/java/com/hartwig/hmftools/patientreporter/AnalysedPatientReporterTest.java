@@ -5,9 +5,18 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.actionability.WithEvent;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
+import com.hartwig.hmftools.protect.variants.ReportableVariant;
+import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class AnalysedPatientReporterTest {
@@ -67,5 +76,95 @@ public class AnalysedPatientReporterTest {
 
         assertEquals(QsFormNumber.FOR_209.display(),
                 AnalysedPatientReporter.determineForNumber(hasReliablePurityNotCorrect, purityNotCorrect));
+    }
+
+    @Test
+    public void canFilterVariantsForGermlineConsent() {
+        ReportableVariant somaticVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.SOMATIC).build();
+        ReportableVariant germlineVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.GERMLINE).build();
+
+        assertEquals(2,
+                AnalysedPatientReporter.filterVariantsForGermlineConsent(Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION).size());
+
+        assertEquals(1,
+                AnalysedPatientReporter.filterVariantsForGermlineConsent(Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.NO_REPORTING).size());
+    }
+
+    @Test
+    public void canFilterEvidenceForGermlineConsent() {
+        String somaticEventString = "somatic";
+        String germlineEventString = "germline";
+
+        ReportableVariant somaticVariant = variant(ReportableVariantSource.SOMATIC, somaticEventString);
+        ReportableVariant germlineVariant = variant(ReportableVariantSource.GERMLINE, germlineEventString);
+
+        // Extra space is added because of protein impact which is missing in this test.
+        WithEvent somaticEvent = new AnalysedPatientReporterTest.DummyEvent(somaticEventString + " ");
+        WithEvent germlineEvent = new AnalysedPatientReporterTest.DummyEvent(germlineEventString + " ");
+
+        assertEquals(2,
+                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(somaticEvent, germlineEvent),
+                        Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION).size());
+
+        assertEquals(1,
+                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(somaticEvent, germlineEvent),
+                        Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.NO_REPORTING).size());
+
+        assertEquals(2,
+                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(somaticEvent, somaticEvent),
+                        Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.NO_REPORTING).size());
+
+        assertEquals(2,
+                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(somaticEvent, germlineEvent),
+                        Lists.newArrayList(somaticVariant),
+                        LimsGermlineReportingLevel.NO_REPORTING).size());
+    }
+
+    @NotNull
+    private static ReportableVariant variant(@NotNull ReportableVariantSource source, @NotNull String event) {
+        return createTestReportableVariantBuilder().source(source).gene(event).build();
+    }
+
+    @NotNull
+    private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
+        return ImmutableReportableVariant.builder()
+                .source(ReportableVariantSource.SOMATIC)
+                .gene(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .position(0)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .totalCopyNumber(0)
+                .alleleCopyNumber(0D)
+                .hotspot(Hotspot.HOTSPOT)
+                .clonalLikelihood(1D)
+                .driverLikelihood(0D)
+                .biallelic(false);
+    }
+
+    private static class DummyEvent implements WithEvent {
+
+        @NotNull
+        private final String event;
+
+        public DummyEvent(@NotNull final String event) {
+            this.event = event;
+        }
+
+        @NotNull
+        @Override
+        public String event() {
+            return event;
+        }
     }
 }

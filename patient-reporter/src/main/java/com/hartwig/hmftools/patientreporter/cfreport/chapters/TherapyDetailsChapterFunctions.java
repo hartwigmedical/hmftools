@@ -5,13 +5,10 @@ import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.EventFilter;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
@@ -37,8 +34,7 @@ final class TherapyDetailsChapterFunctions {
     }
 
     @NotNull
-    static Table createEvidenceTable(@NotNull String title, @NotNull List<EvidenceItem> evidence, @NotNull List<ReportableVariant> variants,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
+    static Table createEvidenceTable(@NotNull String title, @NotNull List<EvidenceItem> evidence) {
         if (evidence.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
@@ -49,8 +45,7 @@ final class TherapyDetailsChapterFunctions {
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
-        List<EvidenceItem> filtered = EventFilter.removeEvidenceOnFilteredGermlineVariants(evidence, variants, germlineReportingLevel);
-        for (EvidenceItem item : EvidenceItems.sort(filtered)) {
+        for (EvidenceItem item : EvidenceItems.sort(evidence)) {
             contentTable.addCell(TableUtil.createContentCell(item.event()));
             contentTable.addCell(TableUtil.createContentCell(createTreatmentMatchParagraph(item.scope() == EvidenceScope.SPECIFIC)));
             contentTable.addCell(TableUtil.createContentCell(createTreatmentIcons(item.drug()).setVerticalAlignment(VerticalAlignment.TOP)));
