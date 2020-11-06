@@ -18,9 +18,6 @@ final class FilterFactory {
 
     private static void populateFeatureKeywordsToFilter() {
         // We cannot determine methylation with WGS/WTS
-        FEATURE_KEYWORDS_TO_FILTER.add("PROMOTER METHYLATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("PROMOTER DEMETHYLATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("Promoter Hypermethylation");
         FEATURE_KEYWORDS_TO_FILTER.add("METHYLATION");
         FEATURE_KEYWORDS_TO_FILTER.add("Hypermethylation");
 
@@ -57,7 +54,7 @@ final class FilterFactory {
     }
 
     private static void populateFeatureKeysToFilter() {
-        // Variants implying stop lost. They are real but not handled yet in SERVE (TODO DEV-1475)
+        // Variants implying stop lost. They are real but not handled yet in SERVE
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VHL", "*214W (c.642A>G)"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "MLH1", "*757L"));
 
@@ -65,15 +62,15 @@ final class FilterFactory {
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VHL", "R161R (c.481C>A)"));
 
         // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned delete is fine but the left-aligned insert lies outside of exon range (TODO DEV-1475)
+        // The unaligned delete is fine but the left-aligned insert lies outside of exon range
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "KIT", "KIT K550_W557del "));
 
         // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine (TODO DEV-1475)
+        // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "BRAF", "R506_K507insVLR"));
 
         // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned delete is fine but the left-aligned insert lies outside of exon range (TODO DEV-1475)
+        // The unaligned delete is fine but the left-aligned insert lies outside of exon range
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_K558del"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_W557del"));
 
@@ -97,6 +94,9 @@ final class FilterFactory {
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "DPYD", "RS67376798 HOMOZYGOSITY"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "GADD45A", "rs681673"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "ERCC5", "RS751402"));
+
+        // A similar type of filtered variant to RS variants.
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "MDM2", "SNP309"));
     }
 
     private FilterFactory() {

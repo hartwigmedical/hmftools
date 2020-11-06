@@ -41,6 +41,9 @@ final class CurationFactory {
         // These fusions are on synonym genes
         FEATURE_NAME_MAPPINGS.put(cgiKey("BRD4", null, "BRD4-C15orf55 fusion"), "BRD4-NUTM1 fusion");
         FEATURE_NAME_MAPPINGS.put(cgiKey("C15orf55", null, "BRD4-C15orf55 fusion"), "BRD4-NUTM1 fusion");
+
+        // Improve for consistency
+        FEATURE_NAME_MAPPINGS.put(cgiKey("MET", null, "MET (Y1230C;Y1235D)"), "MET (Y1230C,Y1235D)");
     }
 
     private static void populateCIViCCuration() {
@@ -50,6 +53,7 @@ final class CurationFactory {
 
         // Protein annotation is not formally correct, update to make it correct.
         FEATURE_NAME_MAPPINGS.put(civicKey("EGFR", "ENST00000275493", "V769_770insASV"), "V769_D770insASV");
+        FEATURE_NAME_MAPPINGS.put(civicKey("ERBB2", "ENST00000269571", "M774INSAYVM"), "M774_A775INSAYVM");
 
         // Fusion needs to be flipped around
         FEATURE_NAME_MAPPINGS.put(civicKey("BRAF", "ENST00000288602", "BRAF-CUL1"), "CUL1-BRAF");
@@ -88,6 +92,9 @@ final class CurationFactory {
 
         // Variant hard to interpret in protein space as it changes an amino acid followed by a frameshift.
         FEATURE_BLACKLIST.add(civicKey("VHL", "ENST00000256474", "M54IFS (c.162_166delGGAGG)"));
+
+        // Variant has an inconsistent formatting. Not sure how to correct
+        FEATURE_BLACKLIST.add(civicKey("PDGFRA", "ENST00000257290", "DI842-843VM"));
     }
 
     private static void populateJaxCuration() {
@@ -165,11 +172,15 @@ final class CurationFactory {
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("FGFR2", "ENST00000358487", "FGFR2-KIAA1967 Fusion"), "FGFR2-CCAR2 Fusion");
 
         // These are inconsistent or improperly aligned variants.
+        FEATURE_NAME_MAPPINGS.put(oncoKbKey("BRAF", "ENST00000288602", "T599insTT"), "T599_V600insTT");
+        FEATURE_NAME_MAPPINGS.put(oncoKbKey("EGFR", "ENST00000275493", "E746_T751insIP"), "E746_L747insIP");
+        FEATURE_NAME_MAPPINGS.put(oncoKbKey("EGFR", "ENST00000275493", "H773insLGNP"), "H773_V774insLGNP");
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("EPAS1", "ENST00000263734", "533_534del"), "I533_P534del");
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("EPAS1", "ENST00000263734", "534_536del"), "P534_D536del");
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("KIT", "ENST00000288135", "V559del"), "V560del");
+        FEATURE_NAME_MAPPINGS.put(oncoKbKey("KIT", "ENST00000288135", "T574insTQLPYD"), "T574_T575insTQLPYD");
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("PTEN", "ENST00000371953", "I32del"), "I33del");
-        FEATURE_NAME_MAPPINGS.put(oncoKbKey("EGFR", "ENST00000275493", "E746_T751insIP"), "E746_L747insIP");
+        FEATURE_NAME_MAPPINGS.put(oncoKbKey("RIT1", "ENST00000368323", "T76insTLDT"), "T76_A77insTLDT");
 
         // Fusions that we don't know what gene they are on
         FEATURE_BLACKLIST.add(oncoKbKey("NKX2-1", "ENST00000354822", "TRA-NKX2-1 Fusion"));
@@ -280,6 +291,9 @@ final class CurationFactory {
         // Variants that are simply invalid protein annotations
         FEATURE_BLACKLIST.add(oncoKbKey("BRAF", "ENST00000288602", "V600D_K601insFGLAT"));
         FEATURE_BLACKLIST.add(oncoKbKey("CARD11", "ENST00000396946", "L225LI"));
+        FEATURE_BLACKLIST.add(oncoKbKey("RIT1", "ENST00000368323", "TA83del"));
+        FEATURE_BLACKLIST.add(oncoKbKey("RUNX1", "ENST00000300305", "S291fsX300"));
+        FEATURE_BLACKLIST.add(oncoKbKey("RUNX1", "ENST00000300305", "S70fsX93"));
     }
 
     @NotNull

@@ -26,8 +26,7 @@ public final class ComplexClassifier {
         } else if (featureName.contains("/")) {
             // Some hotspots appear as V600E/K
             return !featureName.toLowerCase().contains("exon");
-        } else
-        {
+        } else {
             // Some frameshifts also change the amino acid itself in the position of the frameshift.
             int fsLocation = featureName.indexOf("fs");
             return fsLocation > 1 && !isInteger(featureName.substring(fsLocation - 1, fsLocation));
@@ -56,8 +55,18 @@ public final class ComplexClassifier {
         Set<String> brafSet = Sets.newHashSet("DEL 485-490", "L485_P490>Y");
         complexEventsPerGene.put("BRAF", brafSet);
 
-        Set<String> brca2Set = Sets.newHashSet("V1839_E1901del", "S1834_G1892del", "A1847_M1890del", "T1815_Y1894del", "S1871_C1893del");
+        Set<String> brca1Set = Sets.newHashSet("Alu insertion");
+        complexEventsPerGene.put("BRCA1", brca1Set);
+
+        Set<String> brca2Set =
+                Sets.newHashSet("V1790_A1996del", "T1815_Y1894del", "S1834_G1892del", "V1839_E1901del", "A1847_M1890del", "S1871_C1893del");
         complexEventsPerGene.put("BRCA2", brca2Set);
+
+        Set<String> casp8Set = Sets.newHashSet("CASP8L");
+        complexEventsPerGene.put("CASP8", casp8Set);
+
+        Set<String> cebpaSet = Sets.newHashSet("N-TERMINAL FRAME SHIFT");
+        complexEventsPerGene.put("CEBPA", cebpaSet);
 
         Set<String> ccnd1Set = Sets.newHashSet("256_286trunc");
         complexEventsPerGene.put("CCND1", ccnd1Set);
@@ -71,7 +80,7 @@ public final class ComplexClassifier {
         Set<String> dnmt3bSet = Sets.newHashSet("DNMT3B7");
         complexEventsPerGene.put("DNMT3B", dnmt3bSet);
 
-        Set<String> dpydSet = Sets.newHashSet("DPYD splice donor variant");
+        Set<String> dpydSet = Sets.newHashSet("DPYD splice donor variant", "DPYD*13 HOMOZYGOSITY", "DPYD*2A HOMOZYGOSITY");
         complexEventsPerGene.put("DPYD", dpydSet);
 
         Set<String> egfrSet = Sets.newHashSet("EGFR L698_S1037dup",
@@ -79,21 +88,21 @@ public final class ComplexClassifier {
                 "EGFR inframe insertion (769-770)",
                 "EGFR inframe deletion (6-273)",
                 "T34_A289del",
-                "H773insLGNP",
                 "EGFR T34_A289del",
-                "G983_A1210del");
+                "G983_A1210del",
+                "EGFR CTD");
         complexEventsPerGene.put("EGFR", egfrSet);
 
         Set<String> eif1axSet = Sets.newHashSet("A113_splice");
         complexEventsPerGene.put("EIF1AX", eif1axSet);
 
-        Set<String> erbb2Set = Sets.newHashSet("P780INS", "M774INSAYVM", "DEL 755-759");
+        Set<String> erbb2Set = Sets.newHashSet("P780INS", "DEL 755-759");
         complexEventsPerGene.put("ERBB2", erbb2Set);
 
         Set<String> fli1Set = Sets.newHashSet("EWSR1-FLI1 Type 1");
         complexEventsPerGene.put("FLI1", fli1Set);
 
-        Set<String> flt3Set = Sets.newHashSet("FLT3-ITD", "ITD");
+        Set<String> flt3Set = Sets.newHashSet("FLT3-ITD", "ITD", "FLT3 internal tandem duplications");
         complexEventsPerGene.put("FLT3", flt3Set);
 
         Set<String> hlaaSet = Sets.newHashSet("596_619splice");
@@ -102,12 +111,13 @@ public final class ComplexClassifier {
         Set<String> kdm5cSet = Sets.newHashSet("M1_E165DEL");
         complexEventsPerGene.put("KDM5C", kdm5cSet);
 
-        Set<String> kitSet = Sets.newHashSet("KIT inframe deletion (577-579)",
-                "T574insTQLPYD",
+        Set<String> kitSet = Sets.newHashSet("INTERNAL DUPLICATION",
                 "E554_I571del",
-                "KIT V560_Y578del",
+                "V555_L576del",
                 "K550_G592del",
+                "KIT V560_Y578del",
                 "KIT V560_L576del",
+                "KIT inframe deletion (577-579)",
                 "KIT inframe deletion (V560)");
         complexEventsPerGene.put("KIT", kitSet);
 
@@ -117,8 +127,7 @@ public final class ComplexClassifier {
         Set<String> map2k1Set = Sets.newHashSet("MAP2K1 inframe deletion (56-60)");
         complexEventsPerGene.put("MAP2K1", map2k1Set);
 
-        Set<String> metSet = Sets.newHashSet("MET (Y1230C;Y1235D)",
-                "963_D1010splice",
+        Set<String> metSet = Sets.newHashSet("963_D1010splice",
                 "981_1028splice",
                 "X1008_splice",
                 "X963_splice",
@@ -136,7 +145,7 @@ public final class ComplexClassifier {
         Set<String> ntrk1Set = Sets.newHashSet("TRKAIII Splice Variant");
         complexEventsPerGene.put("NTRK1", ntrk1Set);
 
-        Set<String> pdgfraSet = Sets.newHashSet("PDGFRA inframe deletion (I843)", "C456_R481del", "Y375_K455del", "DI842-843VM");
+        Set<String> pdgfraSet = Sets.newHashSet("PDGFRA inframe deletion (I843)", "C456_R481del", "Y375_K455del");
         complexEventsPerGene.put("PDGFRA", pdgfraSet);
 
         Set<String> pik3r1Set = Sets.newHashSet("X582_splice", "X475_splice", "X434_splice");
@@ -154,28 +163,34 @@ public final class ComplexClassifier {
         Set<String> runx1Set = Sets.newHashSet("R135FSX177");
         complexEventsPerGene.put("RUNX1", runx1Set);
 
-        Set<String> tertSet = Sets.newHashSet("TERT promoters core");
+        Set<String> tertSet = Sets.newHashSet("TERT promoters core", "Promoter Mutations");
         complexEventsPerGene.put("TERT", tertSet);
 
         Set<String> tgfbr1Set = Sets.newHashSet("TGFBR1*6A");
         complexEventsPerGene.put("TGFBR1", tgfbr1Set);
 
+        Set<String> tp53Set = Sets.newHashSet("DNA binding domain deletions", "DNA binding domain insertions");
+        complexEventsPerGene.put("TP53", tp53Set);
+
         Set<String> tpmtSet = Sets.newHashSet("TPMT splice acceptor variant");
         complexEventsPerGene.put("TPMT", tpmtSet);
+
+        Set<String> tymsSet = Sets.newHashSet("5' TANDEM REPEAT");
+        complexEventsPerGene.put("TYMS", tymsSet);
 
         Set<String> ugt1a1Set = Sets.newHashSet("UGT1A1*28", "UGT1A1*60");
         complexEventsPerGene.put("UGT1A1", ugt1a1Set);
 
-        Set<String> vhlSet = Sets.newHashSet("3'UTR alteration (c.639+10C>G)",
-                "Splicing alteration (c.464-2A>G)",
+        Set<String> vhlSet = Sets.newHashSet("R108ins (c.324InsCGC)",
+                "3'UTR alteration (c.639+10C>G)",
+                "3'UTR alteration (c.642+70C>A)",
+                "Splicing alteration (c.341-2A>C)",
+                "Splicing alteration (c.463+1G>C)",
                 "Splicing alteration (c.463+2C>T)",
+                "Splicing alteration (c.464-2A>G)",
                 "Splicing alteration (c.464-2A>T)",
                 "Splicing alteration (c.464-1G>A)",
-                "3'UTR alteration (c.642+70C>A)",
-                "Splicing alteration (c.463+1G>C)",
-                "R108ins (c.324InsCGC)",
-                "Splicing alteration (c.464-1G>C)",
-                "Splicing alteration (c.341-2A>C)");
+                "Splicing alteration (c.464-1G>C)");
         complexEventsPerGene.put("VHL", vhlSet);
 
         return complexEventsPerGene;
