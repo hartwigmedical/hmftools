@@ -27,6 +27,10 @@ public interface DriverGene extends Comparable<DriverGene> {
 
     boolean reportHotspot();
 
+    boolean reportGermlineNonBiallelic();
+
+    boolean reportGermlineBiallelic();
+
     @NotNull
     DriverCategory likelihoodType();
 
