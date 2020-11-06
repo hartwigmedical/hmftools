@@ -13,10 +13,10 @@ final class FusionClassifier {
             Sets.newHashSet("Fusion", "fusion", "FUSION", "Fusions", "FUSIONS", "REARRANGEMENT", "rearrange");
 
     private static final Set<String> EXON_DEL_DUP_FUSION_PAIRS =
-            Sets.newHashSet("EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD", "ITD");
+            Sets.newHashSet("EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD");
 
     private static final Set<String> FEATURE_NAMES_TO_SKIP =
-            Sets.newHashSet("p61BRAF-V600E", "LOSS-OF-FUNCTION", "LCS6-variant", "DI842-843VM");
+            Sets.newHashSet("p61BRAF-V600E", "AR-V7", "LOSS-OF-FUNCTION", "LCS6-variant", "DI842-843VM", "FLT3-ITD");
 
     private FusionClassifier() {
     }

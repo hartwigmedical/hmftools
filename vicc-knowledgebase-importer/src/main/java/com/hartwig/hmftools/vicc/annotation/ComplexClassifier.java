@@ -46,7 +46,7 @@ public final class ComplexClassifier {
         Set<String> alkSet = Sets.newHashSet("ALK inframe insertion (1151T)");
         complexEventsPerGene.put("ALK", alkSet);
 
-        Set<String> arSet = Sets.newHashSet("ARv567es", "SPLICE VARIANT 7");
+        Set<String> arSet = Sets.newHashSet("ARv567es", "SPLICE VARIANT 7", "AR-V7");
         complexEventsPerGene.put("AR", arSet);
 
         Set<String> brafSet = Sets.newHashSet("DEL 485-490", "L485_P490>Y");
@@ -91,6 +91,9 @@ public final class ComplexClassifier {
 
         Set<String> fli1Set = Sets.newHashSet("EWSR1-FLI1 Type 1");
         complexEventsPerGene.put("FLI1", fli1Set);
+
+        Set<String> flt3Set = Sets.newHashSet("FLT3-ITD", "ITD");
+        complexEventsPerGene.put("FLT3", flt3Set);
 
         Set<String> hlaaSet = Sets.newHashSet("596_619splice");
         complexEventsPerGene.put("HLA-A", hlaaSet);

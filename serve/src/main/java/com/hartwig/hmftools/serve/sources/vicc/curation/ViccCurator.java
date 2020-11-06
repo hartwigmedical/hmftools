@@ -34,6 +34,9 @@ public class ViccCurator {
             List<Feature> curatedFeatures = Lists.newArrayList();
             boolean includeEntry = true;
             for (Feature feature : entry.features()) {
+                if (feature.name().startsWith("PAX8-PPAR")) {
+                    int x = 1;
+                }
                 Feature curatedFeature = curate(entry, feature);
                 if (curatedFeature != null) {
                     curatedFeatures.add(curatedFeature);
