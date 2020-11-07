@@ -94,6 +94,11 @@ public class CupAnalyser
         // mark any samples included in the ref data set so they can be excluded from self-comparison
         mSampleDataCache.SampleDataList.stream()
                 .filter(x -> mSampleDataCache.RefSampleCancerTypeMap.containsKey(x.Id)).forEach(x -> x.setRefSample());
+
+        if(mConfig.CancerSubtypeMode)
+        {
+            mSampleDataCache.SampleDataList.forEach(x -> x.setCheckSubType());
+        }
     }
 
     public void run()
@@ -239,7 +244,7 @@ public class CupAnalyser
                 mSampleSimilarityWriter = createBufferedWriter(sampleSimilarityFilename, false);
 
                 mSampleSimilarityWriter.write("SampleId,MatchType,Score,MatchSampleId");
-                mSampleSimilarityWriter.write(",MatchCancerType,MatchPrimaryLocation,MatchCancerSubtype");
+                mSampleSimilarityWriter.write(",MatchCancerType,MatchCancerSubtype");
                 mSampleSimilarityWriter.newLine();
             }
         }
@@ -295,9 +300,9 @@ public class CupAnalyser
                     continue;
                 }
 
-                mSampleSimilarityWriter.write(String.format("%s,%s,%.3f,%s,%s,%s,%s",
+                mSampleSimilarityWriter.write(String.format("%s,%s,%.3f,%s,%s,%s",
                         sampleData.Id, similarity.MatchType, similarity.Score,
-                        refSample.Id, refSample.CancerType, refSample.OriginalCancerType, refSample.CancerSubtype));
+                        refSample.Id, refSample.CancerType, refSample.CancerSubtype));
 
                 mSampleSimilarityWriter.newLine();
             }

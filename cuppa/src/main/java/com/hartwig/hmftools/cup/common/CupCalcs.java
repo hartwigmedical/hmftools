@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CORRELATION_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
+import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ public class CupCalcs
     private static final int PERCENTILE_HIGH = 95;
 
     public static Map<String,Double> calcPercentilePrevalence(
-            final String sampleCancerType, int sampleCancerCount, int cancerTypeCount,
+            final SampleData sample, int sampleCancerCount, int cancerTypeCount,
             final Map<String,double[]> cancerPercentiles, double value,  boolean useLowThreshold)
     {
         /*
@@ -48,11 +49,15 @@ public class CupCalcs
         for(Map.Entry<String,double[]> entry : cancerPercentiles.entrySet())
         {
             final String cancerType = entry.getKey();
+
+            if(!checkIsValidCancerType(sample, cancerType, cancerPrevalences))
+                continue;
+
             final double[] percentiles = entry.getValue();
 
             double percentile = getPercentile(percentiles, threshold);
 
-            if(sampleCancerCount > 0 && cancerType.equals(sampleCancerType))
+            if(sampleCancerCount > 0 && cancerType.equals(sample.CancerType))
             {
                 // adjust percentile value to remove this sample
                 if(useLowThreshold && value < threshold)

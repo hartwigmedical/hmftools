@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRE
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
+import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
@@ -173,52 +174,6 @@ public class SomaticClassifier implements CuppaClassifier
         }
     }
 
-    private void populateSomaticCounts(final List<SomaticVariant> variants)
-    {
-        // PositionFrequencies
-        //             SigMatrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex
-
-        PositionFrequencies positionFrequencies = new PositionFrequencies(null, POS_FREQ_BUCKET_SIZE);
-        final Map<String,Integer> bucketNameMap = Maps.newHashMap();
-        populateBucketMap(bucketNameMap);
-
-        for(final SomaticVariant variant : variants)
-        {
-            if(variant.isFiltered())
-                continue;
-
-            if(variant.type() == INDEL)
-            {
-
-                continue;
-            }
-
-            if(variant.alt().length() != 1)
-                continue;
-
-            String rawContext = variant.trinucleotideContext();
-
-            if(rawContext.contains("N"))
-                continue;
-
-            // check filters
-            positionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
-
-            final String bucketName = contextFromVariant(variant);
-            Integer bucketIndex = bucketNameMap.get(bucketName);
-
-            if(bucketIndex == null)
-            {
-                CUP_LOGGER.error("invalid bucketName({}) from var({}>{}) context={})",
-                        bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
-
-                return;
-            }
-
-            // ++sampleCounts[bucketIndex][sampleIndex];
-        }
-    }
-
     private boolean loadSigContributions()
     {
         if(!mConfig.SampleSigContribFile.isEmpty())
@@ -273,34 +228,37 @@ public class SomaticClassifier implements CuppaClassifier
         addCssResults(sample, sampleCounts, snvTotal, results, similarities);
         addPosFreqCssResults(sample, results);
 
-        addSigContributionResults(sample, results);
-
-        // add a percentile result
-
-        final Map<String, Double> cancerTypeValues = Maps.newHashMap();
-
-        for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
+        if(!mConfig.CancerSubtypeMode)
         {
-            final String cancerType = cancerPercentiles.getKey();
-            double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true);
-            cancerTypeValues.put(cancerType, percentile);
+            addSigContributionResults(sample, results);
+
+            // add a percentile result
+
+            final Map<String, Double> cancerTypeValues = Maps.newHashMap();
+
+            for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
+            {
+                final String cancerType = cancerPercentiles.getKey();
+                double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true);
+                cancerTypeValues.put(cancerType, percentile);
+            }
+
+            SampleResult result = new SampleResult(
+                    sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
+
+            results.add(result);
         }
-
-        SampleResult result = new SampleResult(
-                sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
-
-        results.add(result);
 
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
         int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.CancerType) : 0;
 
         final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
-                sample.CancerType, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal,  true);
+                sample, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal,  true);
 
         results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_LOW", snvTotal, cancerPrevsLow));
 
         final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(
-                sample.CancerType, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal, false);
+                sample, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal, false);
 
         results.add(new SampleResult(sample.Id, SNV, LIKELIHOOD, "SNV_COUNT_HIGH", snvTotal, cancerPrevsHigh));
     }
@@ -327,11 +285,8 @@ public class SomaticClassifier implements CuppaClassifier
 
             final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
 
-            if(!sample.isCandidateCancerType(refCancerType))
-            {
-                cancerCssTotals.put(refCancerType, 0.0);
+            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
-            }
 
             final double[] otherSampleCounts = mRefSampleCounts.getCol(s);
 
@@ -398,11 +353,8 @@ public class SomaticClassifier implements CuppaClassifier
         {
             final String refCancerType = mRefSnvPosFreqCancerTypes.get(i);
 
-            if(!sample.isCandidateCancerType(refCancerType))
-            {
-                cancerCssTotals.put(refCancerType, 0.0);
+            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
-            }
 
             boolean matchesCancerType = sample.CancerType.equals(refCancerType);
 
@@ -522,4 +474,49 @@ public class SomaticClassifier implements CuppaClassifier
         }
     }
 
+    private void populateSomaticCounts(final List<SomaticVariant> variants)
+    {
+        // PositionFrequencies
+        //             SigMatrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex
+
+        PositionFrequencies positionFrequencies = new PositionFrequencies(null, POS_FREQ_BUCKET_SIZE);
+        final Map<String,Integer> bucketNameMap = Maps.newHashMap();
+        populateBucketMap(bucketNameMap);
+
+        for(final SomaticVariant variant : variants)
+        {
+            if(variant.isFiltered())
+                continue;
+
+            if(variant.type() == INDEL)
+            {
+
+                continue;
+            }
+
+            if(variant.alt().length() != 1)
+                continue;
+
+            String rawContext = variant.trinucleotideContext();
+
+            if(rawContext.contains("N"))
+                continue;
+
+            // check filters
+            positionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
+
+            final String bucketName = contextFromVariant(variant);
+            Integer bucketIndex = bucketNameMap.get(bucketName);
+
+            if(bucketIndex == null)
+            {
+                CUP_LOGGER.error("invalid bucketName({}) from var({}>{}) context={})",
+                        bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
+
+                return;
+            }
+
+            // ++sampleCounts[bucketIndex][sampleIndex];
+        }
+    }
 }

@@ -15,20 +15,20 @@ public class SampleData
     public final String Id;
     public final String CancerType;
     public final String CancerSubtype;
-    public final String OriginalCancerType;
 
     private boolean mIsRefSample;
     private Gender mGenderType;
+    private boolean mCheckSubType;
 
-    public SampleData(final String id, final String cancerType, final String cancerSubtype, final String origType)
+    public SampleData(final String id, final String cancerType, final String cancerSubtype)
     {
         Id = id;
         CancerType = cancerType;
         CancerSubtype = cancerSubtype;
-        OriginalCancerType = origType;
 
         mGenderType = null;
         mIsRefSample = false;
+        mCheckSubType = false;
     }
 
     public Gender gender() { return mGenderType; }
@@ -37,24 +37,56 @@ public class SampleData
     public boolean isRefSample() { return mIsRefSample; }
     public void setRefSample() { mIsRefSample = true; }
 
+    public void setCheckSubType() { mCheckSubType = true; }
+    public boolean checkSubType() { return mCheckSubType; }
+
     public static SampleData from(final Map<String,Integer> fieldsIndexMap, final String data)
     {
         final String[] items = data.split(DATA_DELIM, -1);
         final String sampleId = items[fieldsIndexMap.get("SampleId")];
-        final String cancerType = items[fieldsIndexMap.get("CancerType")];
 
-        final String cancerSubtype = fieldsIndexMap.containsKey("CancerSubtype") ?
+        String cancerType = items[fieldsIndexMap.get("CancerType")];
+
+        String cancerSubtype = fieldsIndexMap.containsKey("CancerSubtype") ?
                 items[fieldsIndexMap.get("CancerSubtype")] : CANCER_SUBTYPE_OTHER;
 
-        final String originalCancerType = fieldsIndexMap.containsKey("OrigCancerType") ?
-                items[fieldsIndexMap.get("OrigCancerType")] : cancerType;
+        /*
+        if(cancerType.contains(CANCER_SUBTYPE_DELIM))
+        {
+            String cancerSubTypeCombo = cancerType;
+            cancerType = parseCancerType(cancerSubTypeCombo);
+            cancerSubtype = parseCancersSubType(cancerSubTypeCombo);
+        }
+        */
 
-        return new SampleData(sampleId, cancerType, cancerSubtype, originalCancerType);
+        return new SampleData(sampleId, cancerType, cancerSubtype);
 
+    }
+
+    public static String CANCER_SUBTYPE_DELIM = ";";
+    public static int CANCER_ITEM = 0;
+    public static int CANCER_SUBTYPE_ITEM = 1;
+
+    public static String parseCancerType(final String cancerSubTypeCombo)
+    {
+        final String[] items = cancerSubTypeCombo.split(CANCER_SUBTYPE_DELIM);
+        return items.length == 2 ? items[CANCER_ITEM] : "";
+    }
+
+    public static String parseCancersSubType(final String cancerSubTypeCombo)
+    {
+        final String[] items = cancerSubTypeCombo.split(CANCER_SUBTYPE_DELIM);
+        return items.length == 2 ? items[CANCER_SUBTYPE_ITEM] : "";
     }
 
     public boolean isCandidateCancerType(final String cancerType)
     {
+        if(mCheckSubType)
+        {
+            String refCancerType = cancerType.contains(CANCER_SUBTYPE_DELIM) ? parseCancerType(cancerType) : cancerType;
+            return parseCancerType(CancerType).equals(refCancerType);
+        }
+
         if(mGenderType == null)
             return true;
 

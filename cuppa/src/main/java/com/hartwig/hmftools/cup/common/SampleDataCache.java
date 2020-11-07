@@ -79,7 +79,7 @@ public class SampleDataCache
                 cancerType = RefSampleCancerTypeMap.get(sampleId);
             }
 
-            SpecificSample = new SampleData(sampleId, cancerType, cancerSubtype, cancerType);
+            SpecificSample = new SampleData(sampleId, cancerType, cancerSubtype);
             SampleDataList.add(SpecificSample);
         }
         else if(sampleDataFile != null)

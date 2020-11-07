@@ -2,6 +2,8 @@ package com.hartwig.hmftools.cup.common;
 
 import java.util.Map;
 
+import com.google.common.collect.Maps;
+
 public class SampleResult
 {
     public final String SampleId;
@@ -22,5 +24,16 @@ public class SampleResult
         ResultType = resultType;
         Value = value;
         CancerTypeValues = cancerTypeValues;
+    }
+
+    public static boolean checkIsValidCancerType(final SampleData sample, final String refCancerType, final Map<String,Double> cancerDataMap)
+    {
+        if(sample.isCandidateCancerType(refCancerType))
+            return true;
+
+        if(!sample.checkSubType())
+            cancerDataMap.put(refCancerType, 0.0);
+
+        return false;
     }
 }

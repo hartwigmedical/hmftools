@@ -136,6 +136,14 @@ public class SampleTraits implements CuppaClassifier
             return;
         }
 
+        if(!mConfig.CancerSubtypeMode)
+            addTraitPrevalences(sample, sampleTraits, results);
+
+        addTraitLikelihoods(sample, sampleTraits, results);
+    }
+
+    private void addTraitPrevalences(final SampleData sample, final SampleTraitsData sampleTraits, final List<SampleResult> results)
+    {
         for(Map.Entry<SampleTraitType, Map<String, Double>> entry : mRefTraitRates.entrySet())
         {
             final SampleTraitType traitType = entry.getKey();
@@ -192,7 +200,10 @@ public class SampleTraits implements CuppaClassifier
 
             results.add(result);
         }
+    }
 
+    private void addTraitLikelihoods(final SampleData sample, final SampleTraitsData sampleTraits, final List<SampleResult> results)
+    {
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
         int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.CancerType) : 0;
 
@@ -200,11 +211,11 @@ public class SampleTraits implements CuppaClassifier
         double indelMb = sampleTraits.IndelsMbPerMb;
 
         final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
-                sample.CancerType, cancerSampleCount, cancerTypeCount, indelPercentiles, indelMb,  true);
+                sample, cancerSampleCount, cancerTypeCount, indelPercentiles, indelMb,  true);
         results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_LOW", indelMb, cancerPrevsLow));
 
         final Map<String,Double> cancerPrevsHigh = calcPercentilePrevalence(
-                sample.CancerType, cancerSampleCount, cancerTypeCount, indelPercentiles, indelMb, false);
+                sample, cancerSampleCount, cancerTypeCount, indelPercentiles, indelMb, false);
         results.add(new SampleResult(sample.Id, SAMPLE_TRAIT, LIKELIHOOD, MS_INDELS_TMB + "_HIGH", indelMb, cancerPrevsHigh));
     }
 

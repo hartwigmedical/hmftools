@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXP
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
+import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.rna.RefRnaExpression.loadRefPercentileData;
 import static com.hartwig.hmftools.cup.rna.RefRnaExpression.populateGeneIdList;
@@ -237,11 +238,8 @@ public class RnaExpression implements CuppaClassifier
         {
             final String refCancerType = mRefCancerTypes.get(i);
 
-            if(!sample.isCandidateCancerType(refCancerType))
-            {
-                cancerCssTotals.put(refCancerType, 0.0);
+            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
-            }
 
             boolean matchesCancerType = sample.CancerType.equals(refCancerType);
 
@@ -289,11 +287,8 @@ public class RnaExpression implements CuppaClassifier
             if(refCancerType == null)
                 continue;
 
-            if(!sample.isCandidateCancerType(refCancerType))
-            {
-                cancerCssTotals.put(refCancerType, 0.0);
+            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
-            }
 
             int refSampleCountsIndex = entry.getValue();
             final double[] otherSampleTPMs = mRefSampleGeneExpression.getCol(refSampleCountsIndex);
@@ -376,7 +371,7 @@ public class RnaExpression implements CuppaClassifier
             final Map<String,double[]> cancerPercentiles = mRefGeneCancerPercentiles.get(geneId);
 
             final Map<String,Double> cancerPrevs = calcPercentilePrevalence(
-                    sample.CancerType, cancerSampleCount,  cancerTypeCount, cancerPercentiles, sampleTpm, false);
+                    sample, cancerSampleCount,  cancerTypeCount, cancerPercentiles, sampleTpm, false);
 
 
             /*

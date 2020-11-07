@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_ZERO_PREVALENC
 import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
+import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadDriversFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
@@ -78,7 +79,8 @@ public class FeatureClassifier implements CuppaClassifier
         if(sampleFeatures == null || sampleFeatures.isEmpty())
             return;
 
-        addDriverPrevalence(sample, sampleFeatures, results);
+        if(!mConfig.CancerSubtypeMode)
+            addDriverPrevalence(sample, sampleFeatures, results);
 
         calcCancerTypeProbability(sample, sampleFeatures, results);
     }
@@ -142,11 +144,8 @@ public class FeatureClassifier implements CuppaClassifier
         {
             final String cancerType = entry.getKey();
 
-            if(!sample.isCandidateCancerType(cancerType))
-            {
-                cancerProbTotals.put(cancerType, 0.0);
+            if(!checkIsValidCancerType(sample, cancerType, cancerProbTotals))
                 continue;
-            }
 
             boolean adjustMatchingCancerPrev = sample.CancerType.equals(cancerType);
 
@@ -171,7 +170,7 @@ public class FeatureClassifier implements CuppaClassifier
 
                 if(genePrevTotals == null)
                 {
-                    CUP_LOGGER.warn("sample({}) missing gene({}) prevalence data", sample.Id, gene);
+                    CUP_LOGGER.debug("sample({}) missing gene({}) prevalence data", sample.Id, gene);
                     continue;
                 }
 

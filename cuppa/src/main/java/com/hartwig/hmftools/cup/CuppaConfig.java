@@ -73,6 +73,7 @@ public class CuppaConfig
     // database access
     public final DatabaseAccess DbAccess;
 
+    public final boolean CancerSubtypeMode;
     public final boolean WriteSimilarities;
     public final boolean WriteClassifiersOnly;
 
@@ -109,6 +110,8 @@ public class CuppaConfig
     private static final String REF_RNA_GENE_EXP_CANCER_FILE = "ref_gene_exp_cancer_file";
     private static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
     private static final String REF_RNA_GENE_EXP_CANCER_PERC_FILE = "ref_gene_exp_cancer_perc_file";
+
+    public static final String CANCER_SUBTYPE_MODE = "cancer_subtype_mode";
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_CLASSIFIERS_ONLY = "write_classifiers_only";
@@ -181,6 +184,7 @@ public class CuppaConfig
 
         WriteSimilarities = Boolean.parseBoolean(cmd.getOptionValue(WRITE_SIMS, "true"));
         WriteClassifiersOnly = cmd.hasOption(WRITE_CLASSIFIERS_ONLY);
+        CancerSubtypeMode = cmd.hasOption(CANCER_SUBTYPE_MODE);
 
         DbAccess = createDatabaseAccess(cmd);
     }
@@ -243,6 +247,8 @@ public class CuppaConfig
         options.addOption(REF_RNA_GENE_EXP_CANCER_FILE, true, "Reference RNA cancer gene expression file, default: " + REF_FILE_GENE_EXP_CANCER);
         options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Reference RNA sample gene expression file, default: " + REF_FILE_GENE_EXP_SAMPLE);
         options.addOption(REF_RNA_GENE_EXP_CANCER_PERC_FILE, true, "Reference RNA cancer percentiles gene expression file, default: " + REF_FILE_GENE_EXP_PERC);
+
+        options.addOption(CANCER_SUBTYPE_MODE, false, "Run analysis within cancer subtypes");
 
         options.addOption(WRITE_SIMS, true, "Cohort-only - write top-20 CSS similarities to file");
         options.addOption(WRITE_CLASSIFIERS_ONLY, false, "Cohort-only - only write classifier data");

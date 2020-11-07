@@ -83,26 +83,29 @@ public class SvClassifier implements CuppaClassifier
         if(svData == null)
             return;
 
-        for(Map.Entry<SvDataType,Map<String,double[]>> entry : mRefSvTypePercentiles.entrySet())
+        if(!mConfig.CancerSubtypeMode)
         {
-            final SvDataType svDataType = entry.getKey();
-
-            if(!isReportableType(svDataType))
-                continue;
-
-            double svCount = svData.getCount(svDataType);
-
-            final Map<String,Double> cancerTypeValues = Maps.newHashMap();
-
-            for(Map.Entry<String,double[]> cancerPercentiles : entry.getValue().entrySet())
+            for(Map.Entry<SvDataType, Map<String, double[]>> entry : mRefSvTypePercentiles.entrySet())
             {
-                final String cancerType = cancerPercentiles.getKey();
-                double percentile = getPercentile(cancerPercentiles.getValue(), svCount, true);
-                cancerTypeValues.put(cancerType, percentile);
-            }
+                final SvDataType svDataType = entry.getKey();
 
-            SampleResult result = new SampleResult(sample.Id, SV, PERCENTILE, svDataType.toString(), svCount, cancerTypeValues);
-            results.add(result);
+                if(!isReportableType(svDataType))
+                    continue;
+
+                double svCount = svData.getCount(svDataType);
+
+                final Map<String, Double> cancerTypeValues = Maps.newHashMap();
+
+                for(Map.Entry<String, double[]> cancerPercentiles : entry.getValue().entrySet())
+                {
+                    final String cancerType = cancerPercentiles.getKey();
+                    double percentile = getPercentile(cancerPercentiles.getValue(), svCount, true);
+                    cancerTypeValues.put(cancerType, percentile);
+                }
+
+                SampleResult result = new SampleResult(sample.Id, SV, PERCENTILE, svDataType.toString(), svCount, cancerTypeValues);
+                results.add(result);
+            }
         }
 
         // calculate prevalence for specific SV values
@@ -126,7 +129,7 @@ public class SvClassifier implements CuppaClassifier
         double svValue = svData.getCount(type);
 
         final Map<String,Double> cancerPrevs = calcPercentilePrevalence(
-                sample.CancerType, cancerSampleCount, cancerTypeCount, mRefSvTypePercentiles.get(type), svValue, useLowThreshold);
+                sample, cancerSampleCount, cancerTypeCount, mRefSvTypePercentiles.get(type), svValue, useLowThreshold);
 
         final String dataType = String.format("%s_%s", type, useLowThreshold ? "LOW" : "HIGH");
         return new SampleResult(sample.Id, SV, LIKELIHOOD, dataType, svValue, cancerPrevs);
