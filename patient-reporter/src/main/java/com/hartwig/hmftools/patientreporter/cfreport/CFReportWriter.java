@@ -44,7 +44,7 @@ public class CFReportWriter implements ReportWriter {
     private final GermlineReportingModel germlineReportingModel;
 
     @NotNull
-    public static CFReportWriter createProductionReportWriterNoConsent() {
+    public static CFReportWriter createProductionReportWriterNoGermline() {
         return new CFReportWriter(true, new GermlineReportingModel(Lists.newArrayList()));
     }
 
@@ -62,10 +62,9 @@ public class CFReportWriter implements ReportWriter {
     @Override
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
         GenomicAnalysis analysis = report.genomicAnalysis();
-        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report),
-                new TherapyDetailsChapterOnLabel(analysis, report.sampleReport().germlineReportingLevel()),
-                new TherapyDetailsChapterOffLabel(analysis, report.sampleReport().germlineReportingLevel()),
-                new GenomicAlterationsChapter(germlineReportingModel, report.sampleReport(), analysis),
+        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(analysis),
+                new TherapyDetailsChapterOffLabel(analysis),
+                new GenomicAlterationsChapter(analysis, report.sampleReport(), germlineReportingModel),
                 new TumorCharacteristicsChapter(analysis), new CircosChapter(report), new ExplanationChapter(),
                 new DetailsAndDisclaimerChapter(report) };
 

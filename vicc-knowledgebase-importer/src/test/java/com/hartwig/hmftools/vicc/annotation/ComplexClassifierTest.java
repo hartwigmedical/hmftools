@@ -15,6 +15,9 @@ public class ComplexClassifierTest {
         assertTrue(ComplexClassifier.isComplexEvent("APC p.I1557*fs*1", "APC"));
         assertTrue(ComplexClassifier.isComplexEvent("BRCA1 L631Qfs*4", "BRCA1"));
 
+        assertTrue(ComplexClassifier.isComplexEvent("S310F/Y", "ERBB2"));
+        assertFalse(ComplexClassifier.isComplexEvent("Exon 19 deletion/insertion", "EGFR"));
+
         assertFalse(ComplexClassifier.isComplexEvent("BRCA1 L631QFS", "BRCA1"));
     }
 

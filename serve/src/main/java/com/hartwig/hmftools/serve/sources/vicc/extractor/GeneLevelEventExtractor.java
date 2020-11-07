@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.curation.FusionCuration;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.annotation.GeneRangeClassifier;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -83,17 +82,9 @@ public class GeneLevelEventExtractor {
                                 .gene(feature.geneSymbol())
                                 .event(extractGeneLevelEvent(feature, driverGenes))
                                 .build());
-
             } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
-
-                String curatedPromiscuousFusion = FusionCuration.curateFusion(feature.geneSymbol(), feature);
-                //TODO: check if this is needed
-                // if (function.equals("Likely Loss-of-function")) {
-                //            gene = Strings.EMPTY;
-                //            typeEvent = Strings.EMPTY;
-                //        }
                 geneLevelEventsPerFeature.put(feature,
-                        ImmutableGeneLevelAnnotation.builder().gene(curatedPromiscuousFusion).event(GeneLevelEvent.FUSION).build());
+                        ImmutableGeneLevelAnnotation.builder().gene(feature.name()).event(GeneLevelEvent.FUSION).build());
             }
 
         }
