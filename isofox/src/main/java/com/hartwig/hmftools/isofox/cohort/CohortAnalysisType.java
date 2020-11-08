@@ -19,7 +19,9 @@ public enum CohortAnalysisType
     RETAINED_INTRON,
     SAMPLE_ROUTINES,
     EXTERNAL_EXPRESSION_COMPARE,
-    GENE_EXPRESSION_COMPARE;
+    GENE_EXPRESSION_COMPARE,
+    GENE_EXPRESSION_MATRIX,
+    TRANSCRIPT_EXPRESSION_MATRIX;
 
     public static String getFileId(CohortAnalysisType type)
     {
@@ -44,6 +46,12 @@ public enum CohortAnalysisType
 
             case PASSING_FUSION:
                 return PASS_FUSION_FILE_ID;
+
+            case GENE_EXPRESSION_MATRIX:
+                return GENE_RESULTS_FILE;
+
+            case TRANSCRIPT_EXPRESSION_MATRIX:
+                return TRANSCRIPT_RESULTS_FILE;
 
             default:
                 return "";

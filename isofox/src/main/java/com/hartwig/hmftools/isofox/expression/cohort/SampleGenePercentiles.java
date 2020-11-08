@@ -28,8 +28,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
-import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
-
 public class SampleGenePercentiles
 {
     private final CohortConfig mConfig;
@@ -136,7 +134,7 @@ public class SampleGenePercentiles
 
                 double tpm = Double.parseDouble(items[tpmIndex]);
 
-                if(tpm < mConfig.Expression.TpmLogThreshold)
+                if(tpm < mConfig.Expression.TpmThreshold)
                     continue;
 
                 final String geneName = items[geneNameIndex];

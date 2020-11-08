@@ -154,7 +154,7 @@ public class RefRnaExpression implements RefClassifier
 
                     if(sampleIndex == 1)
                     {
-                        // build the matrix that all genes have been seen
+                        // build the matrix now that all genes have been seen
                         mGeneSampleExpressionData = new SigMatrix(mGeneIds.size(), mSampleDataCache.SampleIds.size());
                         sampleMatrixData = mGeneSampleExpressionData.getData();
 

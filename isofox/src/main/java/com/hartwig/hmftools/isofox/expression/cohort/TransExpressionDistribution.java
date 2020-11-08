@@ -136,7 +136,7 @@ public class TransExpressionDistribution
                 calcPercentileValues(tmpDataList, percentileValues);
 
                 // skip a transcript if its 100th percentile TPM is below the threshold
-                if(percentileValues[percentileValues.length - 1] < mConfig.Expression.TpmLogThreshold)
+                if(percentileValues[percentileValues.length - 1] < mConfig.Expression.TpmThreshold)
                     continue;
 
                 mTransDistributionWriter.write(String.format("%s,%s,%s",

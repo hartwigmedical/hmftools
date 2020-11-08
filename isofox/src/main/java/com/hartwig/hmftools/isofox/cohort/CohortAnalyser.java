@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortCompare;
+import com.hartwig.hmftools.isofox.expression.cohort.ExpressionMatrix;
 import com.hartwig.hmftools.isofox.expression.cohort.ExternalExpressionCompare;
 import com.hartwig.hmftools.isofox.expression.cohort.GeneExpressionDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
@@ -109,6 +110,14 @@ public class CohortAnalyser
                 {
                     ExpressionCohortCompare expCompare = new ExpressionCohortCompare(mConfig);
                     expCompare.processSamples();
+                    break;
+                }
+
+                case GENE_EXPRESSION_MATRIX:
+                case TRANSCRIPT_EXPRESSION_MATRIX:
+                {
+                    ExpressionMatrix expMatrix = new ExpressionMatrix(mConfig, type);
+                    expMatrix.processSamples();
                     break;
                 }
 

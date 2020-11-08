@@ -12,8 +12,10 @@ import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.EXTERNAL_EXP
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.GENE_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.GENE_EXPRESSION_COMPARE;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.GENE_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.SAMPLE_GENE_PERCENTILES;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_DISTRIBUTION;
+import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.getFileId;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
@@ -134,7 +136,8 @@ public class CohortConfig
     {
         return loadTypes.contains(GENE_DISTRIBUTION) || loadTypes.contains(TRANSCRIPT_DISTRIBUTION)
                 || loadTypes.contains(SAMPLE_GENE_PERCENTILES) || loadTypes.contains(GENE_EXPRESSION_COMPARE)
-                || loadTypes.contains(EXTERNAL_EXPRESSION_COMPARE);
+                || loadTypes.contains(EXTERNAL_EXPRESSION_COMPARE) || loadTypes.contains(GENE_EXPRESSION_MATRIX)
+                || loadTypes.contains(TRANSCRIPT_EXPRESSION_MATRIX);
     }
 
     public static boolean isValid(final CommandLine cmd)

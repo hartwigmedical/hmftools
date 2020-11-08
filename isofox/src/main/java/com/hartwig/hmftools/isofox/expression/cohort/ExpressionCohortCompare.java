@@ -141,7 +141,7 @@ public class ExpressionCohortCompare
 
     private void addGeneTpmData(final Map<String,List<Double>> geneExpMap, final String geneId, double tpm)
     {
-        if(tpm < mConfig.Expression.TpmLogThreshold)
+        if(tpm < mConfig.Expression.TpmThreshold)
             return;
 
         List<Double> tpmList = geneExpMap.get(geneId);
