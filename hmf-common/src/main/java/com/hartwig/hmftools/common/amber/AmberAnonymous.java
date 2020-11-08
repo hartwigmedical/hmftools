@@ -14,4 +14,6 @@ public interface AmberAnonymous {
     @NotNull
     String hmfSampleId();
 
+    boolean deleted();
+
 }

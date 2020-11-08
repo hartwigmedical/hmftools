@@ -14,5 +14,5 @@ data class AnonymizedRecord(val sampleId: String, val hmfSampleId: String) : Csv
         }
     }
 
-    fun toAmberAnonymous(): AmberAnonymous = ImmutableAmberAnonymous.builder().sampleId(sampleId).hmfSampleId(hmfSampleId).build()
+    fun toAmberAnonymous(): AmberAnonymous = ImmutableAmberAnonymous.builder().sampleId(sampleId).hmfSampleId(hmfSampleId).deleted(false).build()
 }

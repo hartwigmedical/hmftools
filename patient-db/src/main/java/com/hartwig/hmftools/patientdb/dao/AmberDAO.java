@@ -23,6 +23,7 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep3;
+import org.jooq.InsertValuesStep4;
 import org.jooq.InsertValuesStep6;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
@@ -103,10 +104,13 @@ class AmberDAO {
         }
         context.truncate(AMBERANONYMOUS).execute();
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        InsertValuesStep3 inserter =
-                context.insertInto(AMBERANONYMOUS, AMBERANONYMOUS.MODIFIED, AMBERANONYMOUS.SAMPLEID, AMBERANONYMOUS.HMFSAMPLEID);
+        InsertValuesStep4 inserter = context.insertInto(AMBERANONYMOUS,
+                AMBERANONYMOUS.MODIFIED,
+                AMBERANONYMOUS.SAMPLEID,
+                AMBERANONYMOUS.HMFSAMPLEID,
+                AMBERANONYMOUS.DELETED);
         for (AmberAnonymous amberPatient : patients) {
-            inserter.values(timestamp, amberPatient.sampleId(), amberPatient.hmfSampleId());
+            inserter.values(timestamp, amberPatient.sampleId(), amberPatient.hmfSampleId(), amberPatient.deleted());
         }
         inserter.execute();
     }
@@ -120,6 +124,7 @@ class AmberDAO {
             result.add(ImmutableAmberAnonymous.builder()
                     .sampleId(record.get(AMBERANONYMOUS.SAMPLEID))
                     .hmfSampleId(record.get(AMBERANONYMOUS.HMFSAMPLEID))
+                    .deleted(record.get(AMBERANONYMOUS.DELETED) != 0)
                     .build());
         }
 
@@ -277,7 +282,7 @@ class AmberDAO {
     }
 
     void deleteAmberRecordsForSample(@NotNull String sample) {
-        context.delete(AMBERANONYMOUS).where(AMBERANONYMOUS.SAMPLEID.eq(sample)).execute();
+        context.update(AMBERANONYMOUS).set(AMBERANONYMOUS.DELETED, (byte) 1).where(AMBERANONYMOUS.SAMPLEID.eq(sample)).execute();
         context.delete(AMBERPATIENT).where(AMBERPATIENT.SAMPLEID.eq(sample)).execute();
         context.delete(AMBERMAPPING).where(AMBERMAPPING.FIRSTSAMPLEID.eq(sample)).execute();
         context.delete(AMBERMAPPING).where(AMBERMAPPING.SECONDSAMPLEID.eq(sample)).execute();
