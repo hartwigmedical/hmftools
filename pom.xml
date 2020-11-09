@@ -57,7 +57,7 @@
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
         <patient-db.version>3.50</patient-db.version>
-        <ig-generator.version>2.5</ig-generator.version>
+        <id-generator.version>2.5</id-generator.version>
         <sage.version>2.4</sage.version>
         <amber.version>3.5</amber.version>
         <cobalt.version>1.11</cobalt.version>
