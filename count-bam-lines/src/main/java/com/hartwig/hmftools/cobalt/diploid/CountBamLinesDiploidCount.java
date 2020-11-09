@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.cli.CommandLine;
@@ -81,10 +80,17 @@ public class CountBamLinesDiploidCount implements AutoCloseable {
             return;
         }
 
-        LOGGER.info("Processing diploid regions");
-        Collection<CobaltChromosome> selectedChromosomes =
-                chromosomes.gender().equals(Gender.MALE) ? Collections.singleton(chromosomes.get("Y")) : chromosomes.chromosomes();
 
+        Collection<CobaltChromosome> selectedChromosomes;
+        if (chromosomes.contains("Y")) {
+            selectedChromosomes = Collections.singleton(chromosomes.get("Y"));
+        } else if (chromosomes.contains("chrY")) {
+            selectedChromosomes = Collections.singleton(chromosomes.get("chrY"));
+        } else {
+            selectedChromosomes = chromosomes.chromosomes();
+        }
+
+        LOGGER.info("Processing diploid regions");
         for (CobaltChromosome selectedChromosome : selectedChromosomes) {
             Collection<CobaltRatio> selectedRatios = ratios.get(HumanChromosome.fromString(selectedChromosome.contig()));
             for (CobaltRatio ratio : selectedRatios) {
