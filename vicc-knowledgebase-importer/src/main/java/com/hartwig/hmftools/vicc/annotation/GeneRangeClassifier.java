@@ -42,7 +42,7 @@ public final class GeneRangeClassifier {
     }
 
     public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isCombinedEvent(featureName, gene)) {
+        if (CombinedClassifier.isCombinedEvent(featureName, gene) || ComplexClassifier.isComplexEvent(featureName, gene)) {
             return false;
         }
 

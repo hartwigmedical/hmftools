@@ -52,7 +52,7 @@ public final class ComplexClassifier {
         Set<String> arSet = Sets.newHashSet("ARv567es", "SPLICE VARIANT 7", "AR-V7");
         complexEventsPerGene.put("AR", arSet);
 
-        Set<String> brafSet = Sets.newHashSet("DEL 485-490", "L485_P490>Y");
+        Set<String> brafSet = Sets.newHashSet("DEL 485-490", "L485_P490>Y", "BRAF p.L485_P490");
         complexEventsPerGene.put("BRAF", brafSet);
 
         Set<String> brca1Set = Sets.newHashSet("Alu insertion");
@@ -96,22 +96,29 @@ public final class ComplexClassifier {
         Set<String> eif1axSet = Sets.newHashSet("A113_splice");
         complexEventsPerGene.put("EIF1AX", eif1axSet);
 
-        Set<String> erbb2Set = Sets.newHashSet("P780INS", "DEL 755-759");
+        Set<String> erbb2Set = Sets.newHashSet("P780INS", "DEL 755-759", "KINASE DOMAIN MUTATION");
         complexEventsPerGene.put("ERBB2", erbb2Set);
+
+        Set<String> ezh2Set = Sets.newHashSet("INTRON 6 MUTATION");
+        complexEventsPerGene.put("EZH2", ezh2Set);
 
         Set<String> fli1Set = Sets.newHashSet("EWSR1-FLI1 Type 1");
         complexEventsPerGene.put("FLI1", fli1Set);
 
-        Set<String> flt3Set = Sets.newHashSet("FLT3-ITD", "ITD", "FLT3 internal tandem duplications");
+        Set<String> flt3Set = Sets.newHashSet("FLT3-ITD", "ITD", "FLT3 internal tandem duplications", "TKD MUTATION");
         complexEventsPerGene.put("FLT3", flt3Set);
 
         Set<String> hlaaSet = Sets.newHashSet("596_619splice");
         complexEventsPerGene.put("HLA-A", hlaaSet);
 
+        Set<String> jak2Set = Sets.newHashSet("F547 SPLICE SITE MUTATION");
+        complexEventsPerGene.put("JAK2", jak2Set);
+
         Set<String> kdm5cSet = Sets.newHashSet("M1_E165DEL");
         complexEventsPerGene.put("KDM5C", kdm5cSet);
 
         Set<String> kitSet = Sets.newHashSet("INTERNAL DUPLICATION",
+                "3' UTR MUTATION",
                 "E554_I571del",
                 "V555_L576del",
                 "K550_G592del",
@@ -127,17 +134,24 @@ public final class ComplexClassifier {
         Set<String> map2k1Set = Sets.newHashSet("MAP2K1 inframe deletion (56-60)");
         complexEventsPerGene.put("MAP2K1", map2k1Set);
 
-        Set<String> metSet = Sets.newHashSet("963_D1010splice",
-                "981_1028splice",
-                "X1008_splice",
+        Set<String> metSet = Sets.newHashSet("MET kinase domain mutation",
+                "963_D1010splice",
                 "X963_splice",
+                "981_1028splice",
                 "X1006_splice",
-                "X1009_splice",
-                "X1007_splice");
+                "X1007_splice",
+                "X1008_splice",
+                "X1009_splice");
         complexEventsPerGene.put("MET", metSet);
 
         Set<String> mlh1Set = Sets.newHashSet("C.790+1G>A");
         complexEventsPerGene.put("MLH1", mlh1Set);
+
+        Set<String> notch1Set = Sets.newHashSet("NOTCH1 activating mutation in Cterm-PEST domain",
+                "NOTCH2 activating mutation (missense in TAD or truncating in Cterm-PEST domain)",
+                "Truncating Mutations in the PEST Domain",
+                "Truncating Mutations Upstream of Transactivation Domain");
+        complexEventsPerGene.put("NOTCH1", notch1Set);
 
         Set<String> notch2Set = Sets.newHashSet("2010_2471trunc", "1_2009trunc");
         complexEventsPerGene.put("NOTCH2", notch2Set);
@@ -151,6 +165,9 @@ public final class ComplexClassifier {
         Set<String> pik3r1Set = Sets.newHashSet("X582_splice", "X475_splice", "X434_splice");
         complexEventsPerGene.put("PIK3R1", pik3r1Set);
 
+        Set<String> pmlSet = Sets.newHashSet("B2 DOMAIN MUTATION");
+        complexEventsPerGene.put("PML", pmlSet);
+
         Set<String> poleSet = Sets.newHashSet("POLE (268-471)");
         complexEventsPerGene.put("POLE", poleSet);
 
@@ -163,13 +180,16 @@ public final class ComplexClassifier {
         Set<String> runx1Set = Sets.newHashSet("R135FSX177", "T148HFSX9");
         complexEventsPerGene.put("RUNX1", runx1Set);
 
-        Set<String> tertSet = Sets.newHashSet("TERT promoters core", "Promoter Mutations");
+        Set<String> tertSet = Sets.newHashSet("TERT promoters core", "Promoter Mutations", "PROMOTER MUTATION");
         complexEventsPerGene.put("TERT", tertSet);
 
         Set<String> tgfbr1Set = Sets.newHashSet("TGFBR1*6A");
         complexEventsPerGene.put("TGFBR1", tgfbr1Set);
 
-        Set<String> tp53Set = Sets.newHashSet("DNA binding domain deletions", "DNA binding domain insertions");
+        Set<String> tp53Set = Sets.newHashSet("DNA binding domain deletions",
+                "DNA binding domain insertions",
+                "DNA binding domain missense mutations",
+                "DNA BINDING DOMAIN MUTATION");
         complexEventsPerGene.put("TP53", tp53Set);
 
         Set<String> tpmtSet = Sets.newHashSet("TPMT splice acceptor variant");

@@ -11,6 +11,7 @@ public class CombinedClassifierTest {
     public void canAssessWhetherFeatureIsCombinedEvent() {
         assertTrue(CombinedClassifier.isCombinedEvent("Ex19 del L858R", "EGFR"));
 
+        assertTrue(CombinedClassifier.isCombinedEvent("JAK1 (S646F;R683)", "JAK1"));
         assertTrue(CombinedClassifier.isCombinedEvent("KIT (627-664,664-714,449-514)", "KIT"));
         assertFalse(CombinedClassifier.isCombinedEvent("KIT mutation in exon 9,11,13,14 or 17", "KIT"));
 

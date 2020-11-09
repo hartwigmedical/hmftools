@@ -14,6 +14,8 @@ public class GeneRangeClassifierTest {
         assertTrue(GeneRangeClassifier.isGeneLevelEvent("AKT1 act mut", "AKT1"));
         assertTrue(GeneRangeClassifier.isGeneLevelEvent("AKT1", "AKT1"));
         assertTrue(GeneRangeClassifier.isGeneLevelEvent("biallelic inactivation", "TP53"));
+
+        assertFalse(GeneRangeClassifier.isGeneLevelEvent("3' UTR MUTATION", "KIT"));
     }
 
     @Test
@@ -24,6 +26,7 @@ public class GeneRangeClassifierTest {
 
         assertFalse(GeneRangeClassifier.isGeneRangeCodonEvent("EZH2 (Y641,A677)"));
         assertFalse(GeneRangeClassifier.isGeneRangeCodonEvent("T148HFSX9"));
+        assertFalse(GeneRangeClassifier.isGeneRangeCodonEvent("RARE EX 18-21 MUT"));
     }
 
     @Test
