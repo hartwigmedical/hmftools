@@ -15,6 +15,10 @@ public class SampleData
     public final String Id;
     public final String CancerType;
     public final String CancerSubtype;
+    public final String PrimaryLocation;
+    public final String PrimarySubLocation;
+    public final String PrimaryType;
+    public final String PrimarySubtype;
 
     private boolean mIsRefSample;
     private Gender mGenderType;
@@ -22,9 +26,20 @@ public class SampleData
 
     public SampleData(final String id, final String cancerType, final String cancerSubtype)
     {
+        this(id, cancerType, cancerSubtype, "", "", "", "");
+    }
+
+    public SampleData(
+            final String id, final String cancerType, final String cancerSubtype,
+            final String location, final String locationSubtype, final String primaryType, final String primarySubtype)
+    {
         Id = id;
         CancerType = cancerType;
         CancerSubtype = cancerSubtype;
+        PrimaryLocation = location;
+        PrimarySubLocation = locationSubtype;
+        PrimaryType = primaryType;
+        PrimarySubtype = primarySubtype;
 
         mGenderType = null;
         mIsRefSample = false;
@@ -50,7 +65,19 @@ public class SampleData
         String cancerSubtype = fieldsIndexMap.containsKey("CancerSubtype") ?
                 items[fieldsIndexMap.get("CancerSubtype")] : CANCER_SUBTYPE_OTHER;
 
-        return new SampleData(sampleId, cancerType, cancerSubtype);
+        String primaryLocation = fieldsIndexMap.containsKey("PrimaryTumorLocation") ?
+                items[fieldsIndexMap.get("PrimaryTumorLocation")] : "";
+
+        String primarySubLocation = fieldsIndexMap.containsKey("PrimaryTumorSubLocation") ?
+                items[fieldsIndexMap.get("PrimaryTumorSubLocation")] : "";
+
+        String primaryType = fieldsIndexMap.containsKey("PrimaryTumorType") ?
+                items[fieldsIndexMap.get("PrimaryTumorLocation")] : "";
+
+        String primarySubtype = fieldsIndexMap.containsKey("PrimaryTumorSubType") ?
+                items[fieldsIndexMap.get("PrimaryTumorSubType")] : "";
+
+        return new SampleData(sampleId, cancerType, cancerSubtype, primaryLocation, primarySubLocation, primaryType, primarySubtype);
     }
 
     public static String CANCER_SUBTYPE_DELIM = ";";

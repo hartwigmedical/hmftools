@@ -243,8 +243,8 @@ public class CupAnalyser
 
                 mSampleSimilarityWriter = createBufferedWriter(sampleSimilarityFilename, false);
 
-                mSampleSimilarityWriter.write("SampleId,MatchType,Score,MatchSampleId");
-                mSampleSimilarityWriter.write(",MatchCancerType,MatchCancerSubtype");
+                mSampleSimilarityWriter.write("SampleId,MatchType,Score,MatchSampleId,MatchCancerType");
+                mSampleSimilarityWriter.write(",MatchPrimaryType,MatchPrimarySubtype,MatchLocation,MatchSubLocation");
                 mSampleSimilarityWriter.newLine();
             }
         }
@@ -299,12 +299,19 @@ public class CupAnalyser
                     matchedSample = mSampleDataCache.findSampleData(similarity.MatchedSampleId);
                 }
 
-                final String matchCancerType = matchedSample != null ? matchedSample.CancerType : "Unclassified";
-                final String matchCancerSubtype = matchedSample != null ? matchedSample.CancerSubtype : "Unclassified";
+                mSampleSimilarityWriter.write(String.format("%s,%s,%.3f,%s",
+                        sampleData.Id, similarity.MatchType, similarity.Score, similarity.MatchedSampleId));
 
-                mSampleSimilarityWriter.write(String.format("%s,%s,%.3f,%s,%s,%s",
-                        sampleData.Id, similarity.MatchType, similarity.Score,
-                        similarity.MatchedSampleId, matchCancerType, matchCancerSubtype));
+                if(matchedSample != null)
+                {
+                    mSampleSimilarityWriter.write(String.format(",%s,%s,%s,%s,%s",
+                            matchedSample.CancerType, matchedSample.PrimaryType, matchedSample.PrimarySubtype,
+                            matchedSample.PrimaryLocation, matchedSample.PrimarySubLocation));
+                }
+                else
+                {
+                    mSampleSimilarityWriter.write(",Unclassifed,,,,");
+                }
 
                 mSampleSimilarityWriter.newLine();
             }

@@ -182,7 +182,7 @@ public class CuppaConfig
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
 
-        WriteSimilarities = Boolean.parseBoolean(cmd.getOptionValue(WRITE_SIMS, "true"));
+        WriteSimilarities = cmd.hasOption(WRITE_SIMS);
         WriteClassifiersOnly = cmd.hasOption(WRITE_CLASSIFIERS_ONLY);
         CancerSubtypeMode = cmd.hasOption(CANCER_SUBTYPE_MODE);
 
@@ -250,7 +250,7 @@ public class CuppaConfig
 
         options.addOption(CANCER_SUBTYPE_MODE, false, "Run analysis within cancer subtypes");
 
-        options.addOption(WRITE_SIMS, true, "Cohort-only - write top-20 CSS similarities to file");
+        options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
         options.addOption(WRITE_CLASSIFIERS_ONLY, false, "Cohort-only - only write classifier data");
 
         addDatabaseCmdLineArgs(options);
