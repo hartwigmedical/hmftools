@@ -160,7 +160,7 @@ public final class ComplexClassifier {
         Set<String> ptch1Set = Sets.newHashSet("LOH");
         complexEventsPerGene.put("PTCH1", ptch1Set);
 
-        Set<String> runx1Set = Sets.newHashSet("R135FSX177");
+        Set<String> runx1Set = Sets.newHashSet("R135FSX177", "T148HFSX9");
         complexEventsPerGene.put("RUNX1", runx1Set);
 
         Set<String> tertSet = Sets.newHashSet("TERT promoters core", "Promoter Mutations");

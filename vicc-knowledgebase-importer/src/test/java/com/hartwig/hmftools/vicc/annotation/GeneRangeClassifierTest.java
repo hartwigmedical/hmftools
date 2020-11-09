@@ -21,5 +21,7 @@ public class GeneRangeClassifierTest {
         assertTrue(GeneRangeClassifier.isGeneRangeCodonEvent("EGFR E709X "));
 
         assertFalse(GeneRangeClassifier.isGeneRangeCodonEvent("EZH2 (Y641,A677)"));
+        // TODO Implement
+//        assertFalse(GeneRangeClassifier.isGeneRangeCodonEvent("T148HFSX9"));
     }
 }
