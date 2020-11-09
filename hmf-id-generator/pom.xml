@@ -10,7 +10,7 @@
 
     <artifactId>hmf-id-generator</artifactId>
     <packaging>jar</packaging>
-    <version>2.4</version>
+    <version>${id-generator.version}</version>
     <name>HMF Tools - HMF ID Generator</name>
 
     <dependencies>
