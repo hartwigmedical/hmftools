@@ -48,6 +48,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jooq.Record;
 import org.jooq.Result;
+import org.jooq.ResultQuery;
 
 public class FeatureDataLoader
 {
@@ -157,13 +158,15 @@ public class FeatureDataLoader
         if(dbAccess == null)
             return false;
 
-        final Map<String,List<DriverCatalog>> sampleDriverMap = getAllDrivers(dbAccess, skipZeroDriverLikelihood);
+        final String specificSampleId = sampleIds.size() == 1 ? sampleIds.get(0) : null;
 
-        final Map<String,List<LinxFusion>> sampleFusionMap = getAllFusions(dbAccess);
+        final Map<String,List<DriverCatalog>> sampleDriverMap = getAllDrivers(dbAccess, skipZeroDriverLikelihood, specificSampleId);
 
-        final Map<String,List<LinxViralInsertion>> sampleVirusMap = getAllViruses(dbAccess);
+        final Map<String,List<LinxFusion>> sampleFusionMap = getAllFusions(dbAccess, specificSampleId);
 
-        final Map<String,List<String>> sampleIndelMap = getAllIndels(dbAccess);
+        final Map<String,List<LinxViralInsertion>> sampleVirusMap = getAllViruses(dbAccess, specificSampleId);
+
+        final Map<String,List<String>> sampleIndelMap = getAllIndels(dbAccess, specificSampleId);
 
         int i = 0;
         int nextLog = 100;
@@ -189,11 +192,14 @@ public class FeatureDataLoader
         return true;
     }
 
-    private static final Map<String,List<LinxFusion>> getAllFusions(final DatabaseAccess dbAccess)
+    private static final Map<String,List<LinxFusion>> getAllFusions(final DatabaseAccess dbAccess, final String specificSampleId)
     {
         final Map<String,List<LinxFusion>> sampleFusionMap = Maps.newHashMap();
 
-        Result<Record> result = dbAccess.context().select().from(SVFUSION).where(SVFUSION.REPORTED.eq((byte)1)).fetch();
+        Result<Record> result = dbAccess.context().select().from(SVFUSION)
+                .where(SVFUSION.REPORTED.eq((byte)1))
+                .and(specificSampleId != null ? SVFUSION.SAMPLEID.eq(specificSampleId) : SVFUSION.SAMPLEID.isNotNull())
+                .fetch();
 
         for (Record record : result)
         {
@@ -235,11 +241,14 @@ public class FeatureDataLoader
         return sampleFusionMap;
     }
 
-    private static final Map<String,List<LinxViralInsertion>> getAllViruses(final DatabaseAccess dbAccess)
+    private static final Map<String,List<LinxViralInsertion>> getAllViruses(final DatabaseAccess dbAccess, final String specificSampleId)
     {
         final Map<String,List<LinxViralInsertion>> sampleVirusMap = Maps.newHashMap();
 
-        Result<Record> result = dbAccess.context().select().from(VIRALINSERTION).fetch();
+        Result<Record> result = dbAccess.context().select()
+                .from(VIRALINSERTION)
+                .where(specificSampleId != null ? VIRALINSERTION.SAMPLEID.eq(specificSampleId) : VIRALINSERTION.SAMPLEID.isNotNull())
+                .fetch();
 
         for (Record record : result)
         {
@@ -259,13 +268,14 @@ public class FeatureDataLoader
         return sampleVirusMap;
     }
 
-    private static final Map<String,List<String>> getAllIndels(final DatabaseAccess dbAccess)
+    private static final Map<String,List<String>> getAllIndels(final DatabaseAccess dbAccess, final String specificSampleId)
     {
         final Map<String,List<String>> sampleIndelMap = Maps.newHashMap();
 
         Result<Record> result = dbAccess.context().select()
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.FILTER.eq("PASS"))
+                .and(specificSampleId != null ? SOMATICVARIANT.SAMPLEID.eq(specificSampleId) : SOMATICVARIANT.SAMPLEID.isNotNull())
                 .and(SOMATICVARIANT.GENE.in(INDEL_ALB, INDEL_SFTPB, INDEL_SLC34A2))
                 .and(SOMATICVARIANT.REPEATCOUNT.lessOrEqual(INDEL_MAX_REPEAT_COUNT))
                 .and(SOMATICVARIANT.TYPE.eq(VariantType.INDEL.toString()))
@@ -286,11 +296,14 @@ public class FeatureDataLoader
         return sampleIndelMap;
     }
 
-    private static final Map<String,List<DriverCatalog>> getAllDrivers(final DatabaseAccess dbAccess, boolean skipZeroDriverLikelihood)
+    private static final Map<String,List<DriverCatalog>> getAllDrivers(
+            final DatabaseAccess dbAccess, boolean skipZeroDriverLikelihood, final String specificSampleId)
     {
         final Map<String,List<DriverCatalog>> sampleDriverMap = Maps.newHashMap();
 
-        final Result<Record> result = dbAccess.context().select().from(DRIVERCATALOG).fetch();
+        final Result<Record> result = dbAccess.context().select().from(DRIVERCATALOG)
+                .where(specificSampleId != null ? DRIVERCATALOG.SAMPLEID.eq(specificSampleId) : DRIVERCATALOG.SAMPLEID.isNotNull())
+                .fetch();
 
         for (Record record : result)
         {
@@ -393,10 +406,13 @@ public class FeatureDataLoader
 
         if(viralInserts != null)
         {
-            final List<SampleFeatureData> viralInsertDataList = viralInserts.stream()
+            final List<SampleFeatureData> viralInsertDataList = Lists.newArrayList();
+
+            viralInserts.stream()
                     .map(x -> new SampleFeatureData(sampleId, fromVirusName(x.VirusName).toString(), FeatureType.VIRUS, 1))
                     .filter(x -> !x.Name.equals(OTHER.toString()))
-                    .collect(Collectors.toList());
+                    .filter(x -> viralInsertDataList.stream().noneMatch(y -> y.Name.equals(x.Name))) // check for duplicates
+                    .forEach(x -> viralInsertDataList.add(x));
 
             featuresList.addAll(viralInsertDataList);
         }

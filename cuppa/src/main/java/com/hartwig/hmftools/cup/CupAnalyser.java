@@ -88,7 +88,7 @@ public class CupAnalyser
 
     private void loadSampleData(final CommandLine cmd)
     {
-        mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), mConfig.SampleDataFile);
+        mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), mConfig.SampleDataFile, mConfig.CancerSubtypeMode);
         mSampleDataCache.loadReferenceSampleData(mConfig.RefSampleDataFile, true);
 
         // mark any samples included in the ref data set so they can be excluded from self-comparison
@@ -186,7 +186,7 @@ public class CupAnalyser
         }
 
         // combine all features into a single classifier
-        SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults);
+        SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults, mSampleDataCache.SampleIds.size() > 1);
 
         if(combinedFeatureResult != null)
             allResults.add(combinedFeatureResult);

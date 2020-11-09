@@ -81,7 +81,7 @@ public class CupCalcs
         return cancerPrevalences;
     }
 
-    public static SampleResult calcCombinedFeatureResult(final SampleData sample, final List<SampleResult> allResults)
+    public static SampleResult calcCombinedFeatureResult(final SampleData sample, final List<SampleResult> allResults, boolean purgeContributors)
     {
         final Map<String,Double> cancerPrevalenceValues = Maps.newHashMap();
 
@@ -110,7 +110,8 @@ public class CupCalcs
         convertToPercentages(cancerPrevalenceValues);
 
         // remove the contributing prevalence likelihood results
-        prevalenceResults.forEach(x -> allResults.remove(x));
+        if(purgeContributors)
+            prevalenceResults.forEach(x -> allResults.remove(x));
 
         return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, FEATURE.toString(), "", cancerPrevalenceValues);
     }

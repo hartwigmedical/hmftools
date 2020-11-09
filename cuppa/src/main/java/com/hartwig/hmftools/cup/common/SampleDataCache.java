@@ -58,7 +58,7 @@ public class SampleDataCache
         return null;
     }
 
-    public void loadSampleData(final String specificSampleData, final String sampleDataFile)
+    public void loadSampleData(final String specificSampleData, final String sampleDataFile, boolean cancerSubtypeMode)
     {
         if(specificSampleData != null)
         {
@@ -72,6 +72,11 @@ public class SampleDataCache
 
             if(sampleItems.length == 3)
                 cancerSubtype = sampleItems[2];
+
+            if(cancerSubtypeMode)
+            {
+                cancerType = cancerType + SUBSET_DELIM + cancerSubtype;
+            }
 
             if(RefSampleCancerTypeMap.containsKey(sampleId))
             {
@@ -96,9 +101,6 @@ public class SampleDataCache
                 for(final String line : fileData)
                 {
                     SampleData sample = SampleData.from(fieldsIndexMap, line);
-
-                    // if(SpecificSample != null && SpecificSample.Id.equals(sample.Id))
-                    //    continue;
 
                     SampleDataList.add(sample);
                 }

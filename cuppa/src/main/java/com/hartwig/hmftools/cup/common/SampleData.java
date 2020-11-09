@@ -50,17 +50,7 @@ public class SampleData
         String cancerSubtype = fieldsIndexMap.containsKey("CancerSubtype") ?
                 items[fieldsIndexMap.get("CancerSubtype")] : CANCER_SUBTYPE_OTHER;
 
-        /*
-        if(cancerType.contains(CANCER_SUBTYPE_DELIM))
-        {
-            String cancerSubTypeCombo = cancerType;
-            cancerType = parseCancerType(cancerSubTypeCombo);
-            cancerSubtype = parseCancersSubType(cancerSubTypeCombo);
-        }
-        */
-
         return new SampleData(sampleId, cancerType, cancerSubtype);
-
     }
 
     public static String CANCER_SUBTYPE_DELIM = ";";
