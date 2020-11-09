@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.idgenerator
 
-import com.hartwig.hmftools.common.amber.AmberAnonymous
 import com.hartwig.hmftools.common.amber.AmberPatient
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
@@ -9,7 +8,6 @@ import com.hartwig.hmftools.extensions.cli.options.strings.RequiredInputOption
 import com.hartwig.hmftools.extensions.cli.options.strings.RequiredOutputOption
 import com.hartwig.hmftools.extensions.csv.CsvReader
 import com.hartwig.hmftools.extensions.csv.CsvWriter
-import com.hartwig.hmftools.idgenerator.anonymizedIds.HmfSampleIdCsv
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import org.apache.commons.cli.CommandLine
 import org.apache.logging.log4j.LogManager
@@ -31,61 +29,98 @@ fun main(args: Array<String>) {
 }
 
 private fun run(cmd: CommandLine) {
-    val password = cmd.getOptionValue(PASSWORD)
-    val newPassword = cmd.getOptionValue(NEW_PASSWORD, password)
+    val oldPassword = cmd.getOptionValue(PASSWORD)
+    val newPassword = cmd.getOptionValue(NEW_PASSWORD, oldPassword)
     val databaseAccess = DatabaseAccess.databaseAccess(cmd)
+    val hashFileIn = cmd.getOptionValue(HASH_FILE_IN)
+    val oldGenerator = IdGenerator(oldPassword)
+    val newGenerator = IdGenerator(newPassword)
 
+    // Retrieve Data
     val amberPatients = databaseAccess.readAmberPatients()
     logger.info("Retrieved ${amberPatients.size} samples from amberPatient table")
 
-    val rawMappings = databaseAccess.readAmberAnonymous().toSet()
-    val existingMappings = rawMappings.filter { x -> !x.deleted() }.toSet()
-    val deletedMappings = rawMappings.filter { x -> x.deleted() }.toSet()
+    val currentDatabaseAnonymous = databaseAccess.readAmberAnonymous().map { x -> HmfSample(x) }
+    logger.info("Retrieved ${currentDatabaseAnonymous.size} sample mappings from amberAnonymous table")
 
-    logger.info("Retrieved ${rawMappings.size} sample mappings from amberAnonymous table")
-    if (rawMappings.isEmpty()) {
-        logger.error("amberAnonymous table seems to be truncated. Exiting")
+    val currentFileAnonymous = CsvReader.readCSVByName<HmfSampleCsv>(hashFileIn).toSet()
+    logger.info("Retrieved ${currentFileAnonymous.size} sample mappings from $hashFileIn")
+
+    // Validate amberPatient and amberAnonymous tables
+    if (!validAmberPatients(currentDatabaseAnonymous, amberPatients)) {
+        logger.error("amberPatient and amberAnonymous are not synchronized")
         exitProcess(1)
     }
 
-    val deletedPatientInfo = deletedMappingPatientInfo(deletedMappings, amberPatients)
-    if (deletedPatientInfo.isNotEmpty()) {
-        for (sample in deletedPatientInfo) {
-            logger.error("amberPatient table contains record for deleted sample $sample")
-        }
+    // Validate synchronization between database and file
+    val currentDatabaseCsv = currentDatabaseAnonymous.map { x -> x.toCsv(oldGenerator)}.toSet()
+    if (!databaseAndFileInSync(currentDatabaseCsv, currentFileAnonymous)) {
+        logger.error("Database and file are not synchronized")
         exitProcess(1)
     }
-
-    val hashFileIn = cmd.getOptionValue(HASH_FILE_IN)
-    val currentIds = CsvReader.readCSVByName<HmfSampleIdCsv>(hashFileIn).map { it.toHmfSampleId() }
-    logger.info("Retrieved ${currentIds.size} sample hashes from ${hashFileIn}")
 
     logger.info("Processing samples")
-    val amberAnonymizer = PatientAnonymizer(password, newPassword)
-    val result = amberAnonymizer.anonymize(amberPatients, currentIds)
-    val newMappings = AnonymizedRecord(newPassword, result, amberPatients.map { it.sample() }).map { x -> x.toAmberAnonymous() }
+    val amberAnonymizer = PatientAnonymizer()
+    val result = amberAnonymizer.anonymize(amberPatients, currentDatabaseAnonymous.toList())
 
-    val droppedMappings = existingMappings.subtract(newMappings)
-    if (droppedMappings.isNotEmpty()) {
-        for (missing in droppedMappings) {
-            logger.error("Previous mapping ${missing} is no longer found")
-        }
-        exitProcess(1)
-    }
 
     // Write to file and database
     val hashFileOut = cmd.getOptionValue(HASH_FILE_OUT)
     logger.info("Writing ${result.size} samples hashes to ${hashFileOut}")
-    CsvWriter.writeCSV(result.map { it.toCsv() }, hashFileOut)
+    CsvWriter.writeCSV(result.map { x -> x.toCsv(newGenerator) }, hashFileOut)
 
-    val databaseOutput = newMappings + deletedMappings
-    logger.info("Writing ${databaseOutput.size} sample mappings to database")
-    databaseAccess.writeAmberAnonymous(databaseOutput)
+    logger.info("Writing ${result.size} sample mappings to database")
+    databaseAccess.writeAmberAnonymous(result.map { x -> x.toAmberAnonymous() })
 
     logger.info("Complete")
 }
 
-private fun deletedMappingPatientInfo(deletedMappings: Set<AmberAnonymous>, patients: List<AmberPatient>): Set<String> {
-    val patientSet = patients.map { x -> x.sample() }.toSet()
-    return deletedMappings.map { x -> x.sampleId() }.filter { x -> patientSet.contains(x) }.toSet()
+
+private fun validAmberPatients(currentDatabase: List<HmfSample>, patients: List<AmberPatient>): Boolean {
+    val actualSamples = patients.map { x -> x.sample() }.toSet()
+    val expectedSamples = currentDatabase.filter { x -> !x.deleted }.map { x -> x.sample }
+    val missingSamples = expectedSamples subtract actualSamples
+    for (missingSample in missingSamples) {
+        logger.error("Missing sample $missingSample from amberPatient table")
+    }
+
+    val deletedSamples = currentDatabase.filter {  x-> x.deleted }.map { x -> x.sample }
+    val unexpectedSamples = actualSamples intersect deletedSamples
+    for (unexpectedSample in unexpectedSamples) {
+        logger.error("Deleted sample $unexpectedSample in amberPatient table")
+    }
+
+    if (missingSamples.isNotEmpty() || unexpectedSamples.isNotEmpty()) {
+        return false
+    }
+
+    return true
 }
+
+
+private fun databaseAndFileInSync(currentDatabaseCsv: Set<HmfSampleCsv>, currentFileCsv: Set<HmfSampleCsv>): Boolean {
+    // Ignore deleted flag for moment
+    val adjustedCurrentDatabaseCsv= currentDatabaseCsv.map { x -> x.copy(deleted = false.toString()) }
+    val adjustedCurrentFileCsv= currentFileCsv.map { x -> x.copy(deleted = false.toString()) }
+
+    val missingFromDatabase = adjustedCurrentFileCsv subtract adjustedCurrentDatabaseCsv
+    val missingFromFile = adjustedCurrentDatabaseCsv subtract adjustedCurrentFileCsv
+    if (missingFromDatabase.isNotEmpty()) {
+        for (missing in missingFromDatabase) {
+            logger.error("${missing.hmfSampleId} missing from database")
+        }
+    }
+
+    if (missingFromFile.isNotEmpty()) {
+        for (missing in missingFromFile) {
+            logger.error("${missing.hmfSampleId} missing from file")
+        }
+    }
+
+    if (missingFromDatabase.isNotEmpty() || missingFromFile.isNotEmpty()) {
+        return false
+    }
+
+    return true
+}
+
