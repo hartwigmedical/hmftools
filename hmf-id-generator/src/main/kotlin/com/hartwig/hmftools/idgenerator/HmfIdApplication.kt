@@ -64,7 +64,6 @@ private fun run(cmd: CommandLine) {
     val amberAnonymizer = PatientAnonymizer()
     val result = amberAnonymizer.anonymize(amberPatients, currentDatabaseAnonymous.toList())
 
-
     // Write to file and database
     val hashFileOut = cmd.getOptionValue(HASH_FILE_OUT)
     logger.info("Writing ${result.size} samples hashes to ${hashFileOut}")
@@ -75,7 +74,6 @@ private fun run(cmd: CommandLine) {
 
     logger.info("Complete")
 }
-
 
 private fun validAmberPatients(currentDatabase: List<HmfSample>, patients: List<AmberPatient>): Boolean {
     val actualSamples = patients.map { x -> x.sample() }.toSet()
@@ -97,7 +95,6 @@ private fun validAmberPatients(currentDatabase: List<HmfSample>, patients: List<
 
     return true
 }
-
 
 private fun databaseAndFileInSync(currentDatabaseCsv: Set<HmfSampleCsv>, currentFileCsv: Set<HmfSampleCsv>): Boolean {
     // Ignore deleted flag for moment
@@ -125,6 +122,7 @@ private fun databaseAndFileInSync(currentDatabaseCsv: Set<HmfSampleCsv>, current
     return true
 }
 
+@Suppress("unused")
 private fun sample(password: String, hash: String): String {
     val generator = IdGenerator(password)
     val prefixes = setOf("WIDE", "CPCT", "DRUP")

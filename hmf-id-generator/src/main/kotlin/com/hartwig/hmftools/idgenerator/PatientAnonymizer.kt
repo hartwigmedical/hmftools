@@ -5,7 +5,6 @@ import com.hartwig.hmftools.common.amber.AmberPatient
 class PatientAnonymizer {
 
     fun anonymize(amberPatients: List<AmberPatient>, existingSamples: List<HmfSample>): List<HmfSample> {
-
         val newSamples = mutableListOf<HmfSample>()
         var maxPatientId = existingSamples.map { x -> x.patientId }.max() ?: 0
 

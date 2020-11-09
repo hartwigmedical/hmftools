@@ -27,7 +27,6 @@ data class HmfSample(val patientId: Int, val sampleId: Int, val deleted: Boolean
         return patientString + sampleString.toString()
     }
 
-
     fun toCsv(generator: IdGenerator): HmfSampleCsv {
         return HmfSampleCsv(patientId.toString(), sampleId.toString(), hmfSample(), deleted.toString(), generator.hash(sample))
     }
@@ -39,7 +38,6 @@ data class HmfSample(val patientId: Int, val sampleId: Int, val deleted: Boolean
     override fun compareTo(other: HmfSample): Int {
         return compareBy<HmfSample> { it.patientId }.thenComparing { hmfSampleId -> hmfSampleId.sampleId }.compare(this, other)
     }
-
 }
 
 data class HmfSampleCsv(val patientId: String, val sampleId: String, val hmfSampleId: String, val deleted: String, val sampleHash: String) : CsvData
