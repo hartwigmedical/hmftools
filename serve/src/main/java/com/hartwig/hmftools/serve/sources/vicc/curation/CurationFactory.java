@@ -132,6 +132,10 @@ final class CurationFactory {
         // Variant that doesn't seem to exist.
         FEATURE_BLACKLIST.add(jaxKey("PTEN", null, "PTEN Y86fs "));
 
+        // Variants spanning multiple exons in our interpretation
+        FEATURE_BLACKLIST.add(jaxKey("PTEN", null, "PTEN R55fs*1 "));
+        FEATURE_BLACKLIST.add(jaxKey("PTEN", null, "PTEN Y27fs*1 "));
+
         // Variant hard to interpret as it crossing exonic boundary
         FEATURE_BLACKLIST.add(jaxKey("VHL", null, "VHL V155fs "));
     }
@@ -178,7 +182,6 @@ final class CurationFactory {
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("EPAS1", "ENST00000263734", "533_534del"), "I533_P534del");
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("EPAS1", "ENST00000263734", "534_536del"), "P534_D536del");
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("KIT", "ENST00000288135", "V559del"), "V560del");
-        FEATURE_NAME_MAPPINGS.put(oncoKbKey("KIT", "ENST00000288135", "T574insTQLPYD"), "T574_T575insTQLPYD");
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("PTEN", "ENST00000371953", "I32del"), "I33del");
         FEATURE_NAME_MAPPINGS.put(oncoKbKey("RIT1", "ENST00000368323", "T76insTLDT"), "T76_A77insTLDT");
 
@@ -189,6 +192,9 @@ final class CurationFactory {
         // Variants are unlikely as they span multiple exons (and hence are more fusions than inframes)
         FEATURE_BLACKLIST.add(oncoKbKey("PDGFRA", "ENST00000257290", "E311_K312del"));
         FEATURE_BLACKLIST.add(oncoKbKey("ETV6", "ENST00000396373", "385_418del"));
+
+        // Variants that we couldn't quite figure out
+        FEATURE_BLACKLIST.add(oncoKbKey("KIT", "ENST00000288135", "T574insTQLPYD"));
 
         // Variants that don't exist
         //  - Below is called a "silent promoter" according to https://pubmed.ncbi.nlm.nih.gov/11606402/
