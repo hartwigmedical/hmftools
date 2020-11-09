@@ -292,17 +292,19 @@ public class CupAnalyser
         {
             for(SampleSimilarity similarity : similarities)
             {
-                final SampleData refSample = mSampleDataCache.findRefSampleData(similarity.MatchedSampleId);
+                SampleData matchedSample = mSampleDataCache.findRefSampleData(similarity.MatchedSampleId);
 
-                if(refSample == null)
+                if(matchedSample == null)
                 {
-                    CUP_LOGGER.error("refSample({}) not found", similarity.MatchedSampleId);
-                    continue;
+                    matchedSample = mSampleDataCache.findSampleData(similarity.MatchedSampleId);
                 }
+
+                final String matchCancerType = matchedSample != null ? matchedSample.CancerType : "Unclassified";
+                final String matchCancerSubtype = matchedSample != null ? matchedSample.CancerSubtype : "Unclassified";
 
                 mSampleSimilarityWriter.write(String.format("%s,%s,%.3f,%s,%s,%s",
                         sampleData.Id, similarity.MatchType, similarity.Score,
-                        refSample.Id, refSample.CancerType, refSample.CancerSubtype));
+                        similarity.MatchedSampleId, matchCancerType, matchCancerSubtype));
 
                 mSampleSimilarityWriter.newLine();
             }

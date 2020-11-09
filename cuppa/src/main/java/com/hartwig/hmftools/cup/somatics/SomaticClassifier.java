@@ -329,6 +329,30 @@ public class SomaticClassifier implements CuppaClassifier
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
+        // for non-ref cohorts, also report closest matches from amongst these
+        if(mConfig.WriteSimilarities && mSampleDataCache.isMultiSampleNonRef())
+        {
+            for(Map.Entry<String,Integer> entry : mSampleCountsIndex.entrySet())
+            {
+                final String nonRefSampleId = entry.getKey();
+
+                if(nonRefSampleId.equals(sample.Id))
+                    continue;
+
+                final double[] otherSampleCounts = mSampleCounts.getCol(entry.getValue());
+
+                double css = calcCosineSim(sampleCounts, otherSampleCounts);
+
+                if(mConfig.WriteSimilarities)
+                {
+                    recordCssSimilarity(
+                            topMatches, sample.Id, nonRefSampleId, css, SNV_96_PAIRWISE_SIMILARITY.toString(),
+                            CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+                }
+
+            }
+        }
+
         similarities.addAll(topMatches);
     }
 

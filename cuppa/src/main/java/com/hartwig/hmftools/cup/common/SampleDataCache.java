@@ -36,6 +36,7 @@ public class SampleDataCache
 
     public boolean isSingleSample() { return SpecificSample != null; }
     public boolean isMultiSample() { return !isSingleSample(); }
+    public boolean isMultiSampleNonRef() { return SampleIds.size() > 1 && RefSampleCancerTypeMap.size() != SampleIds.size(); }
 
     public int getCancerSampleCount(final String cancerType)
     {
@@ -56,6 +57,11 @@ public class SampleDataCache
         }
 
         return null;
+    }
+
+    public SampleData findSampleData(final String sampleId)
+    {
+        return SampleDataList.stream().filter(x -> x.Id.equals(sampleId)).findFirst().orElse(null);
     }
 
     public void loadSampleData(final String specificSampleData, final String sampleDataFile, boolean cancerSubtypeMode)
