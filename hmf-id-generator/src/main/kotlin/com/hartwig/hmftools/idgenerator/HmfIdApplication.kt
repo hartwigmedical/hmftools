@@ -11,6 +11,7 @@ import com.hartwig.hmftools.extensions.csv.CsvWriter
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import org.apache.commons.cli.CommandLine
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.util.Strings
 import kotlin.system.exitProcess
 
 private val logger = LogManager.getLogger("HmfIdApplication")
@@ -53,7 +54,7 @@ private fun run(cmd: CommandLine) {
     }
 
     // Validate synchronization between database and file
-    val currentDatabaseCsv = currentDatabaseAnonymous.map { x -> x.toCsv(oldGenerator)}.toSet()
+    val currentDatabaseCsv = currentDatabaseAnonymous.map { x -> x.toCsv(oldGenerator) }.toSet()
     if (!databaseAndFileInSync(currentDatabaseCsv, currentFileAnonymous)) {
         logger.error("Database and file are not synchronized")
         exitProcess(1)
@@ -84,7 +85,7 @@ private fun validAmberPatients(currentDatabase: List<HmfSample>, patients: List<
         logger.error("Missing sample $missingSample from amberPatient table")
     }
 
-    val deletedSamples = currentDatabase.filter {  x-> x.deleted }.map { x -> x.sample }
+    val deletedSamples = currentDatabase.filter { x -> x.deleted }.map { x -> x.sample }
     val unexpectedSamples = actualSamples intersect deletedSamples
     for (unexpectedSample in unexpectedSamples) {
         logger.error("Deleted sample $unexpectedSample in amberPatient table")
@@ -100,8 +101,8 @@ private fun validAmberPatients(currentDatabase: List<HmfSample>, patients: List<
 
 private fun databaseAndFileInSync(currentDatabaseCsv: Set<HmfSampleCsv>, currentFileCsv: Set<HmfSampleCsv>): Boolean {
     // Ignore deleted flag for moment
-    val adjustedCurrentDatabaseCsv= currentDatabaseCsv.map { x -> x.copy(deleted = false.toString()) }
-    val adjustedCurrentFileCsv= currentFileCsv.map { x -> x.copy(deleted = false.toString()) }
+    val adjustedCurrentDatabaseCsv = currentDatabaseCsv.map { x -> x.copy(deleted = false.toString()) }
+    val adjustedCurrentFileCsv = currentFileCsv.map { x -> x.copy(deleted = false.toString()) }
 
     val missingFromDatabase = adjustedCurrentFileCsv subtract adjustedCurrentDatabaseCsv
     val missingFromFile = adjustedCurrentDatabaseCsv subtract adjustedCurrentFileCsv
@@ -122,5 +123,34 @@ private fun databaseAndFileInSync(currentDatabaseCsv: Set<HmfSampleCsv>, current
     }
 
     return true
+}
+
+private fun sample(password: String, hash: String): String {
+    val generator = IdGenerator(password)
+    val prefixes = setOf("WIDE", "CPCT", "DRUP")
+    val locations = setOf("01", "02")
+    val suffixes: Set<String> = setOf("T", "TI", "TII", "TIII")
+
+    logger.info("Attempting to crack sample")
+
+    for (prefix in prefixes) {
+        logger.info("  using prefix $prefix")
+        for (location in locations) {
+            logger.info("   using location $location")
+            for (suffix in suffixes) {
+                logger.info("     using suffix $suffix")
+                for (i in 1..500000) {
+                    val sample = prefix + location + i.toString().padStart(6, '0') + suffix
+                    val newHash = generator.hash(sample)
+                    if (newHash == hash) {
+                        logger.info("Success: $sample")
+                        return sample
+                    }
+                }
+            }
+
+        }
+    }
+    return Strings.EMPTY;
 }
 
