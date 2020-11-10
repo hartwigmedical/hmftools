@@ -39,6 +39,7 @@ public final class GeneRangeClassifier {
             "oncogenic mutation");
 
     private static final String EXON_KEYWORD = "exon";
+    private static final Set<String> EXON_RANGE_EXACT_TERMS = Sets.newHashSet("RARE EX 18-21 MUT");
 
     private static final Set<String> EXON_RANGE_KEYWORDS =
             Sets.newHashSet("deletion", "insertion", "proximal", "mutation", "splice site insertion", "frameshift");
@@ -81,14 +82,20 @@ public final class GeneRangeClassifier {
             return false;
         }
 
-        String lowerCaseFeatureName = featureName.toLowerCase();
-        if (lowerCaseFeatureName.contains(EXON_KEYWORD)) {
-            for (String keyword : EXON_RANGE_KEYWORDS) {
-                if (lowerCaseFeatureName.contains(keyword)) {
-                    return true;
+        if (EXON_RANGE_EXACT_TERMS.contains(featureName)) {
+            return true;
+        }
+        else {
+            String lowerCaseFeatureName = featureName.toLowerCase();
+            if (lowerCaseFeatureName.contains(EXON_KEYWORD)) {
+                for (String keyword : EXON_RANGE_KEYWORDS) {
+                    if (lowerCaseFeatureName.contains(keyword)) {
+                        return true;
+                    }
                 }
             }
         }
+
         return false;
     }
 

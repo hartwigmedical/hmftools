@@ -23,6 +23,7 @@ public class GeneRangeClassifierTest {
 
     @Test
     public void canClassifyGeneRangeExonEvents() {
+        assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("RARE EX 18-21 MUT", "EGFR"));
         assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("EGFR exon 19 deletions", "EGFR"));
         assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("EXON 12 MUTATION", "AXSL1"));
 
