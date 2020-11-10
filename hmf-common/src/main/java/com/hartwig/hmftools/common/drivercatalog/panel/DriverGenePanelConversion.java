@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.drivercatalog.panel;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
@@ -43,7 +44,7 @@ public class DriverGenePanelConversion {
 
         // Write out driver gene panel
         DriverGeneFile.write(outputFile19, inputDriverGenes);
-        DriverGeneFile.write(outputFile38, outputDriverGenes);
+        DriverGeneFile.write(outputFile38, outputDriverGenes.stream().sorted().collect(Collectors.toList()));
 
         // Write out actionable bed files
         final List<HmfTranscriptRegion> hg19Transcripts = HmfGenePanelSupplier.allGeneList37();
