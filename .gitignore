@@ -12,6 +12,9 @@ target
 # Ignore test xml ecrf
 hmf-common/src/test/resources/ecrf/example/ecrf.xml
 
+# Ignore full DOID file
+hmf-common/src/test/resources/doid/201015_doid.json
+
 # Ignore log file in patient db
 patient-db/patient-db-logs/*.log
 .DS_Store
