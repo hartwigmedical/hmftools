@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.doid;
 
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +12,29 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DoidMetadata {
+
+    private static final Logger LOGGER = LogManager.getLogger(DoidMetadata.class);
+
+    @Nullable
+    @Value.Derived
+    public String snomedId() {
+        if (xrefs() == null) {
+            return null;
+        }
+
+        for (DoidXref xref : xrefs()) {
+            // Format to look for is DoidXref{val=SNOMEDCT_US_2020_03_01:109355002}
+            if (xref.val().contains("SNOMED")) {
+                String[] parts = xref.val().split(":");
+                if (parts.length == 2 && parts[1].length() > 1) {
+                    return parts[1].substring(0, parts[1].length() - 1);
+                } else {
+                    LOGGER.warn("Unexpected SNOMED entry found: {}", xref.val());
+                }
+            }
+        }
+        return null;
+    }
 
     @Nullable
     public abstract DoidDefinition doidDefinition();
