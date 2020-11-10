@@ -13,13 +13,13 @@ public class DoidMetadataTest {
         assertNull(emptyMetadata.snomedId());
 
         DoidMetadata properMetadata = ImmutableDoidMetadata.builder()
-                .addXrefs(ImmutableDoidXref.builder().val("DoidXref{val=SNOMEDCT_US_2020_03_01:109355002}").build())
+                .addXrefs(ImmutableDoidXref.builder().val("SNOMEDCT_US_2020_03_01:109355002").build())
                 .build();
 
         assertEquals("109355002", properMetadata.snomedId());
 
         DoidMetadata differentID = ImmutableDoidMetadata.builder()
-                .addXrefs(ImmutableDoidXref.builder().val("DoidXref{val=HMF:1}").build())
+                .addXrefs(ImmutableDoidXref.builder().val("HMF:1").build())
                 .build();
 
         assertNull(differentID.snomedId());
