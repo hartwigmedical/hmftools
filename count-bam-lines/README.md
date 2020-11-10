@@ -92,8 +92,7 @@ Downstream, PURPLE will adjust the allosome ratios according to the AMBER gender
 A file called `DIPLOID.cobalt.ratio.pcf' will be created in lieu of a reference PCF file.
 
 Without a means to determine which regions of the normal are diploid, a bed file specifying these locations must be included with the `tumor-only-diploid-bed` parameter. 
-A HG19 bed file (DiploidRegions.hg19.bed) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl).
-A HG38 equivalent is not yet available. 
+A HG19 bed file (DiploidRegions.hg19.bed.gz) and HG38 equivalent are available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl).
 
 To create this bed file we examined the COBALT output of 100 samples. 
 We considered each 1000 base region to be diploid if 50% or more of the samples were diploid (0.85 >= referenceGCDiploidRatio <= 1.15 ) at this point. 

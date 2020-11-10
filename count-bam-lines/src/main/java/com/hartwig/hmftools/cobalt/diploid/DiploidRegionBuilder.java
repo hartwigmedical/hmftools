@@ -16,7 +16,8 @@ class DiploidRegionBuilder implements Consumer<DiploidCount> {
     private final List<GenomeRegion> result = Lists.newArrayList();
 
     private final double cutoff;
-    private final int samples;
+    private final int maleSamples;
+    private final int femaleSamples;
     private long totalDiploidBases = 0;
 
     private String contig = "";
@@ -24,13 +25,15 @@ class DiploidRegionBuilder implements Consumer<DiploidCount> {
     private long end = 0;
     private boolean isDiploid;
 
-    DiploidRegionBuilder(final double cutoff, final int samples) {
+    DiploidRegionBuilder(final double cutoff, final int femaleSamples, final int maleSamples) {
         this.cutoff = cutoff;
-        this.samples = samples;
+        this.maleSamples = maleSamples;
+        this.femaleSamples = femaleSamples;
     }
 
     @Override
     public void accept(@NotNull DiploidCount count) {
+        int samples = count.chromosome().equals("Y") || count.chromosome().equals("chrY") ? maleSamples : femaleSamples;
         boolean isCountDiploid = Doubles.greaterOrEqual(count.proportionIsDiploid(samples), cutoff);
         if (!count.chromosome().equals(contig) || isCountDiploid != isDiploid) {
             finaliseCurrent();

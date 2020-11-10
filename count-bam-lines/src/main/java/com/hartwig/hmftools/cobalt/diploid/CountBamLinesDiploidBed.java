@@ -46,13 +46,14 @@ public class CountBamLinesDiploidBed implements AutoCloseable {
     }
 
     public void run() throws IOException {
-        double cutoff = 0.90;
+        double cutoff = 0.50;
 
         LOGGER.info("Reading input file: {}", inputFile);
         final List<DiploidCount> diploidCounts = DiploidCount.readDiploidCountAsList(inputFile);
 
         LOGGER.info("Determining diploid regions with {} cutoff", cutoff);
-        final DiploidRegionBuilder builder = new DiploidRegionBuilder(cutoff, 100);
+//        final DiploidRegionBuilder builder = new DiploidRegionBuilder(cutoff, 100, 100);
+        final DiploidRegionBuilder builder = new DiploidRegionBuilder(cutoff, 62, 34);
         diploidCounts.forEach(builder);
         final List<GenomeRegion> diploidRegions = builder.build();
         LOGGER.info("Total diploid bases: {}", builder.getTotalDiploidBases());
