@@ -120,7 +120,7 @@ public class ProtectApplication implements AutoCloseable {
     private static Set<String> doids(@NotNull ProtectConfig config) throws IOException {
         final Set<String> result = Sets.newHashSet();
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
-        final DoidParents doidParent = new DoidParents(DiseaseOntology.readDoidJsonFile(config.doidJsonFile()).edges());
+        final DoidParents doidParent = new DoidParents(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
 
         LOGGER.info("Loading patient tumor locations from {}", config.tumorLocationTsv());
         final List<PatientTumorLocation> tumorLocations = PatientTumorLocationFile.read(config.tumorLocationTsv());
