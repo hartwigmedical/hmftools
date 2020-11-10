@@ -1,7 +1,9 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Can be removed per 15 nov.
+-- TODO Can be removed per 15th of nov.
 DROP TABLE IF EXISTS doidEntry;
+-- TODO Can be removed per 1st of dec.
+DROP TABLE IF EXISTS anonymizedSampleMapping;
 
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
@@ -830,14 +832,6 @@ CREATE TABLE clinicalEvidence
     isOnLabel BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
-);
-
-DROP TABLE IF EXISTS anonymizedSampleMapping;
-CREATE TABLE anonymizedSampleMapping
-(   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    sampleId varchar(50) NOT NULL,
-    hmfId varchar(50) NOT NULL,
-    PRIMARY KEY (sampleId)
 );
 
 DROP TABLE IF EXISTS pgxCalls;
