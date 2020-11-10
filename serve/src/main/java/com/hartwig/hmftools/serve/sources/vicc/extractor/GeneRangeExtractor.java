@@ -33,6 +33,11 @@ public class GeneRangeExtractor {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
+    //TODO implement extraction exonNumber
+    private static List<Integer> extractExonNumber() {
+        return Lists.newArrayList();
+    }
+
     @NotNull
     public Map<Feature, List<GeneRangeAnnotation>> extractGeneRanges(@NotNull ViccEntry viccEntry, @NotNull List<DriverGene> driverGenes) {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
