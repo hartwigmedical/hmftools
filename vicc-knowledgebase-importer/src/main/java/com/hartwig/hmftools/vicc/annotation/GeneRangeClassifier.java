@@ -2,6 +2,7 @@ package com.hartwig.hmftools.vicc.annotation;
 
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +42,7 @@ public final class GeneRangeClassifier {
     }
 
     public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isCombinedEvent(featureName, gene)) {
+        if (CombinedClassifier.isCombinedEvent(featureName, gene) || ComplexClassifier.isComplexEvent(featureName, gene)) {
             return false;
         }
 
@@ -87,7 +88,7 @@ public final class GeneRangeClassifier {
     public static boolean isGeneRangeCodonEvent(@NotNull String featureName) {
         String proteinAnnotation = HotspotClassifier.extractProteinAnnotation(featureName);
 
-        return proteinAnnotation.endsWith("X") || isValidSingleCodonRange(proteinAnnotation);
+        return isValidSingleCodonRange(proteinAnnotation);
     }
 
     private static boolean isValidSingleCodonRange(@NotNull String featureName) {
@@ -95,7 +96,7 @@ public final class GeneRangeClassifier {
         String strippedFeature = featureName.replace("(", "").replace(")", "");
 
         // Features are expected to look something like V600 (1 char - N digits)
-        if (strippedFeature.length() < 3) {
+        if (strippedFeature.length() < 2) {
             return false;
         }
 
@@ -107,22 +108,34 @@ public final class GeneRangeClassifier {
             return false;
         }
 
-        if (strippedFeature.contains("*")) {
+        // Some characters are definitely not single codon ranges
+        if (strippedFeature.contains("*") || strippedFeature.contains("/") || strippedFeature.contains("fs")
+                || strippedFeature.contains(",")) {
             return false;
         }
 
-        if (strippedFeature.contains("/")) {
+        // Some features contain multiple digit sequences.
+        if (countDigitSequences(strippedFeature) > 1) {
             return false;
         }
 
-        if (strippedFeature.contains("fs")) {
-            return false;
-        }
+        // Codon range should end with X or with a digit!
+        return Character.isDigit(strippedFeature.charAt(strippedFeature.length() - 1)) || strippedFeature.endsWith("X");
+    }
 
-        if (strippedFeature.contains(",")) {
-            return false;
-        }
+    @VisibleForTesting
+    static int countDigitSequences(@NotNull String string) {
+        int digitSequences = 0;
 
-        return Character.isDigit(strippedFeature.substring(strippedFeature.length() - 1).charAt(0));
+        boolean inDigitSequence = false;
+        for (int i = 0; i < string.length(); i++) {
+            if (Character.isDigit(string.charAt(i)) && !inDigitSequence) {
+                inDigitSequence = true;
+                digitSequences++;
+            } else if (!Character.isDigit(string.charAt(i)) && inDigitSequence) {
+                inDigitSequence = false;
+            }
+         }
+        return digitSequences;
     }
 }

@@ -6,91 +6,62 @@ import org.junit.Test
 
 class PatientAnonymizerTest {
 
-    private val initialPassword = "0000"
     private val sample1 = createPatient(1, "sample1")
     private val sample2 = createPatient(2, "sample2")
     private val sample3 = createPatient(1, "sample3")
     private val sample4 = createPatient(3, "sample4")
     private val initialSamples = listOf(sample1, sample2, sample3, sample4)
-    private val initialHashes = PatientAnonymizer(initialPassword, initialPassword).anonymize(initialSamples, listOf())
+    private val initialMapping = PatientAnonymizer().anonymize(initialSamples, listOf())
 
     private val sample5 = createPatient(4, "sample5")
     private val sample6 = createPatient(2, "sample6")
 
     @Test
     fun testInitialSetup() {
-        val mapping = AnonymizedRecord(initialPassword, initialHashes, initialSamples.map { it.sample() })
-        assertEquals(AnonymizedRecord("sample1", "HMF000001A"), mapping[0])
-        assertEquals(AnonymizedRecord("sample2", "HMF000002A"), mapping[1])
-        assertEquals(AnonymizedRecord("sample3", "HMF000001B"), mapping[2])
-        assertEquals(AnonymizedRecord("sample4", "HMF000003A"), mapping[3])
+        assertMapping("sample1", "HMF000001A", initialMapping[0])
+        assertMapping("sample3", "HMF000001B", initialMapping[1])
+        assertMapping("sample2", "HMF000002A", initialMapping[2])
+        assertMapping("sample4", "HMF000003A", initialMapping[3])
+    }
+
+    private fun assertMapping(sample: String, hmfSample: String, victim: HmfSample) {
+        assertEquals(sample, victim.sample)
+        assertEquals(hmfSample, victim.hmfSample)
+
     }
 
     @Test
     fun testAddNewPatientToExisting() {
         val samples = initialSamples + sample5
-        val hashes = PatientAnonymizer(initialPassword, initialPassword).anonymize(samples, initialHashes)
-        val mapping = AnonymizedRecord(initialPassword, hashes, samples.map { it.sample() })
-        assertEquals(AnonymizedRecord("sample1", "HMF000001A"), mapping[0])
-        assertEquals(AnonymizedRecord("sample2", "HMF000002A"), mapping[1])
-        assertEquals(AnonymizedRecord("sample3", "HMF000001B"), mapping[2])
-        assertEquals(AnonymizedRecord("sample4", "HMF000003A"), mapping[3])
-        assertEquals(AnonymizedRecord("sample5", "HMF000004A"), mapping[4])
+        val mapping = PatientAnonymizer().anonymize(samples, initialMapping)
+        assertMapping("sample1", "HMF000001A", mapping[0])
+        assertMapping("sample3", "HMF000001B", mapping[1])
+        assertMapping("sample2", "HMF000002A", mapping[2])
+        assertMapping("sample4", "HMF000003A", mapping[3])
+        assertMapping("sample5", "HMF000004A", mapping[4])
     }
 
     @Test
     fun testAddExistingPatientToExisting() {
         val samples = initialSamples + sample6
-        val hashes = PatientAnonymizer(initialPassword, initialPassword).anonymize(samples, initialHashes)
-        val mapping = AnonymizedRecord(initialPassword, hashes, samples.map { it.sample() })
-        assertEquals(AnonymizedRecord("sample1", "HMF000001A"), mapping[0])
-        assertEquals(AnonymizedRecord("sample2", "HMF000002A"), mapping[1])
-        assertEquals(AnonymizedRecord("sample3", "HMF000001B"), mapping[2])
-        assertEquals(AnonymizedRecord("sample4", "HMF000003A"), mapping[3])
-        assertEquals(AnonymizedRecord("sample6", "HMF000002B"), mapping[4])
+        val mapping = PatientAnonymizer().anonymize(samples, initialMapping)
+        assertMapping("sample1", "HMF000001A", mapping[0])
+        assertMapping("sample3", "HMF000001B", mapping[1])
+        assertMapping("sample2", "HMF000002A", mapping[2])
+        assertMapping("sample6", "HMF000002B", mapping[3])
+        assertMapping("sample4", "HMF000003A", mapping[4])
     }
 
     @Test
-    fun deletedSampleIdIsStillReserved() {
-        // Remove sample 4
-        var samples = listOf(sample1, sample2,  sample3)
-        var hashes = PatientAnonymizer(initialPassword, initialPassword).anonymize(samples, initialHashes)
-
-        // Adds sample 5
-        samples = listOf(sample1, sample2,  sample3, sample5)
-        hashes = PatientAnonymizer(initialPassword, initialPassword).anonymize(samples, hashes)
-
-        val mapping = AnonymizedRecord(initialPassword, hashes, samples.map { it.sample() })
-        assertEquals(AnonymizedRecord("sample1", "HMF000001A"), mapping[0])
-        assertEquals(AnonymizedRecord("sample2", "HMF000002A"), mapping[1])
-        assertEquals(AnonymizedRecord("sample3", "HMF000001B"), mapping[2])
-        assertEquals(AnonymizedRecord("sample5", "HMF000004A"), mapping[3])
+    fun testKeepSamplesEvenIfNotInAmberPatients() {
+        val samples = listOf(sample1)
+        val mapping = PatientAnonymizer().anonymize(samples, initialMapping)
+        assertMapping("sample1", "HMF000001A", mapping[0])
+        assertMapping("sample3", "HMF000001B", mapping[1])
+        assertMapping("sample2", "HMF000002A", mapping[2])
+        assertMapping("sample4", "HMF000003A", mapping[3])
     }
 
-    @Test
-    fun testPasswordChange() {
-        val newPassword = "1234"
-        val hashes = PatientAnonymizer(initialPassword, newPassword).anonymize(initialSamples, initialHashes)
-
-        val mapping = AnonymizedRecord(newPassword, hashes, initialSamples.map { it.sample() })
-        assertEquals(AnonymizedRecord("sample1", "HMF000001A"), mapping[0])
-        assertEquals(AnonymizedRecord("sample2", "HMF000002A"), mapping[1])
-        assertEquals(AnonymizedRecord("sample3", "HMF000001B"), mapping[2])
-    }
-
-    @Test
-    fun testAmberPatientIdChanges() {
-        sample1.patientId()
-        val sample1 = createPatient(110, "sample1")
-        val sample2 = createPatient(210, "sample2")
-        val sample3 = createPatient(110, "sample3")
-        val samples = listOf(sample1, sample2, sample3)
-        val hashes = PatientAnonymizer(initialPassword, initialPassword).anonymize(samples, initialHashes)
-        val mapping = AnonymizedRecord(initialPassword, hashes, samples.map { it.sample() })
-        assertEquals(AnonymizedRecord("sample1", "HMF000001A"), mapping[0])
-        assertEquals(AnonymizedRecord("sample2", "HMF000002A"), mapping[1])
-        assertEquals(AnonymizedRecord("sample3", "HMF000001B"), mapping[2])
-    }
 
     private fun createPatient(id: Int, sample: String) = ImmutableAmberPatient.builder().patientId(id).sample(sample).build()
 

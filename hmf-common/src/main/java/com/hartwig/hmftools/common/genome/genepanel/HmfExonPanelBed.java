@@ -1,110 +1,99 @@
 package com.hartwig.hmftools.common.genome.genepanel;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelAssembly;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
+import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-// This class is only used by tests but we like to keep for future reference
-final class HmfExonPanelBed {
-
-    private static final String DELIMITER = "\t";
-
-    @SuppressWarnings("WeakerAccess")
-    public static void write19File(@NotNull final String filename, @NotNull final String genePanelFile) throws IOException {
-        List<DriverGene> driverGenes = DriverGeneFile.read(genePanelFile);
-        DriverGenePanel genePanel = DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, driverGenes);
-        writeBedFile(filename, Strings.EMPTY, createRegions(genePanel, HmfGenePanelSupplier.allGeneList37()));
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public static void write38File(@NotNull final String filename, @NotNull final String genePanelFile) throws IOException {
-        List<DriverGene> driverGenes = DriverGeneFile.read(genePanelFile);
-        DriverGenePanel genePanel = DriverGenePanelFactory.create(DriverGenePanelAssembly.HG38, driverGenes);
-        writeBedFile(filename, "chr", createRegions(genePanel, HmfGenePanelSupplier.allGeneList38()));
-    }
-
-    private static void writeBedFile(@NotNull final String filename, @NotNull final String prefix,
-            @NotNull final List<GenomeRegion> regions) throws IOException {
-        List<String> strings = regions.stream().map(x -> asBed(prefix, x)).collect(Collectors.toList());
-        Files.write(new File(filename).toPath(), strings);
-    }
+public final class HmfExonPanelBed {
 
     @NotNull
-    static List<GenomeRegion> createRegions(@NotNull final DriverGenePanel genePanel, @NotNull final List<HmfTranscriptRegion> regions) {
-        final Set<String> actionableGenes = Sets.newHashSet();
-        actionableGenes.addAll(genePanel.oncoGenes());
-        actionableGenes.addAll(genePanel.tsGenes());
+    public static List<NamedBed> createRegions(@NotNull final Set<String> actionableGenes,
+            @NotNull final List<HmfTranscriptRegion> regions) {
+        final List<NamedBed> result = regions.stream()
+                .distinct()
+                .filter(transcript -> transcript.codingStart() != 0 && actionableGenes.contains(transcript.gene()))
+                .flatMap(transcript -> codingExonsWithSpliceSites(transcript).stream())
+                .sorted()
+                .collect(Collectors.toList());
 
-        final Map<String, GenomeRegions> regionsMap = Maps.newHashMap();
-
-        for (HmfTranscriptRegion transcript : regions) {
-            final GenomeRegions regionBuilder = regionsMap.computeIfAbsent(transcript.chromosome(), GenomeRegions::new);
-
-            boolean forward = transcript.strand() == Strand.FORWARD;
-            for (int i = 0; i < transcript.exome().size(); i++) {
-                if (transcript.codingStart() == 0 || !actionableGenes.contains(transcript.gene())) {
-                    continue;
-                }
-
-                // Splice sites (+1,+2,+5, -2,-1)
-                final HmfExonRegion exon = transcript.exome().get(i);
-                if (i != 0) {
-                    regionBuilder.addRegion(exon.start() - 2, exon.start() - 1);
-                    if (!forward) {
-                        regionBuilder.addPosition(exon.start() - 5);
-                    }
-                }
-                if (i != transcript.exome().size() - 1) {
-                    regionBuilder.addRegion(exon.end() + 1, exon.end() + 2);
-                    if (forward) {
-                        regionBuilder.addPosition(exon.end() + 5);
-                    }
-                }
-
-                if (transcript.codingStart() < exon.end() && transcript.codingEnd() > exon.start()) {
-                    regionBuilder.addRegion(Math.max(transcript.codingStart(), exon.start()), Math.min(transcript.codingEnd(), exon.end()));
-                }
-            }
+        if (containsOverlappingSegments(result)) {
+            throw new IllegalArgumentException("Generating invalid bed!");
         }
-
-        final List<GenomeRegion> result = Lists.newArrayList();
-        for (GenomeRegions genomeRegions : regionsMap.values()) {
-            result.addAll(genomeRegions.build());
-        }
-
-        Collections.sort(result);
 
         return result;
     }
 
+    private static boolean containsOverlappingSegments(@NotNull List<NamedBed> regions) {
+        final List<GenomeRegion> sortedInput =
+                regions.stream().map(x -> GenomeRegions.create(x.chromosome(), x.start(), x.end())).sorted().collect(Collectors.toList());
+
+        final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(1);
+        sortedInput.forEach(builder::addRegion);
+
+        final List<GenomeRegion> reduced = builder.build();
+        if (sortedInput.size() != reduced.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < sortedInput.size(); i++) {
+            GenomeRegion first = sortedInput.get(0);
+            GenomeRegion second = reduced.get(0);
+            if (!first.equals(second)) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
     @NotNull
-    private static String asBed(@NotNull final String prefix, @NotNull final GenomeRegion region) {
-        return new StringJoiner(DELIMITER).add(prefix + region.chromosome())
-                .add(String.valueOf(region.start() - 1))
-                .add(String.valueOf(region.end()))
-                .toString();
+    static List<NamedBed> codingExonsWithSpliceSites(@NotNull final HmfTranscriptRegion transcript) {
+
+        final List<NamedBed> result = Lists.newArrayList();
+        final GenomeRegionsBuilder regionBuilder = new GenomeRegionsBuilder();
+
+        boolean forward = transcript.strand() == Strand.FORWARD;
+        for (int i = 0; i < transcript.exome().size(); i++) {
+
+            // Splice sites (+1,+2,+5, -2,-1)
+            final HmfExonRegion exon = transcript.exome().get(i);
+            if (i != 0) {
+                regionBuilder.addRegion(exon.chromosome(), exon.start() - 2, exon.start() - 1);
+                if (!forward) {
+                    regionBuilder.addPosition(exon.chromosome(), exon.start() - 5);
+                }
+            }
+            if (i != transcript.exome().size() - 1) {
+                regionBuilder.addRegion(exon.chromosome(), exon.end() + 1, exon.end() + 2);
+                if (forward) {
+                    regionBuilder.addPosition(exon.chromosome(), exon.end() + 5);
+                }
+            }
+
+            if (transcript.codingStart() < exon.end() && transcript.codingEnd() > exon.start()) {
+                regionBuilder.addRegion(exon.chromosome(),
+                        Math.max(transcript.codingStart(), exon.start()),
+                        Math.min(transcript.codingEnd(), exon.end()));
+            }
+        }
+
+        regionBuilder.build().stream().map(x -> ImmutableNamedBed.builder().from(x).name(transcript.gene()).build()).forEach(result::add);
+
+        Collections.sort(result);
+        return result;
     }
 }

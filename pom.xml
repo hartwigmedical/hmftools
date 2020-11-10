@@ -53,25 +53,25 @@
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
-        <hmf-gene-panel.version>local-SNAPSHOT</hmf-gene-panel.version>
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
-        <bam-slicer.version>1.5</bam-slicer.version>
-        <bachelor.version>1.12</bachelor.version>
-        <sv-linx.version>1.12</sv-linx.version>
-        <sig-analyser.version>1.0</sig-analyser.version>
-        <cuppa.version>1.0</cuppa.version>
-        <sv-tools.version>1.0</sv-tools.version>
-        <isofox.version>1.0</isofox.version>
+        <patient-db.version>3.50</patient-db.version>
+        <id-generator.version>2.5</id-generator.version>
+        <sage.version>2.4</sage.version>
         <amber.version>3.5</amber.version>
         <cobalt.version>1.11</cobalt.version>
         <purple.version>2.51</purple.version>
-        <sage.version>2.4</sage.version>
+        <bam-slicer.version>1.5</bam-slicer.version>
+        <bachelor.version>1.12</bachelor.version>
+        <gripss.version>1.8</gripss.version>
+        <sv-linx.version>1.12</sv-linx.version>
         <health-checker.version>3.2</health-checker.version>
         <patient-reporter.version>7.18</patient-reporter.version>
-        <patient-db.version>3.50</patient-db.version>
-        <gripss.version>1.8</gripss.version>
+        <sv-tools.version>1.0</sv-tools.version>
+        <sig-analyser.version>1.0</sig-analyser.version>
+        <cuppa.version>1.0</cuppa.version>
+        <isofox.version>1.0</isofox.version>
         <paddle.version>0.1</paddle.version>
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>

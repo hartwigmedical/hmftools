@@ -40,6 +40,8 @@ public final class DriverGeneFile {
                 .add("reportAmplification")
                 .add("reportHotspot")
                 .add("likelihoodType")
+                .add("reportGermlineNonBiallelic")
+                .add("reportGermlineBiallelic")
                 .toString();
     }
 
@@ -54,6 +56,8 @@ public final class DriverGeneFile {
                 .add(String.valueOf(gene.reportAmplification()))
                 .add(String.valueOf(gene.reportHotspot()))
                 .add(String.valueOf(gene.likelihoodType()))
+                .add(String.valueOf(gene.reportGermlineNonBiallelic()))
+                .add(String.valueOf(gene.reportGermlineBiallelic()))
                 .toString();
     }
 
@@ -69,7 +73,15 @@ public final class DriverGeneFile {
                 .reportDisruption(Boolean.parseBoolean(values[5].toLowerCase()))
                 .reportAmplification(Boolean.parseBoolean(values[6].toLowerCase()))
                 .reportHotspot(Boolean.parseBoolean(values[7].toLowerCase()))
-                .likelihoodType(DriverCategory.valueOf(values[8]));
+                .likelihoodType(DriverCategory.valueOf(values[8]))
+                .reportGermlineBiallelic(false)
+                .reportGermlineNonBiallelic(false);
+
+        if (values.length == 11) {
+            builder.reportGermlineBiallelic(Boolean.parseBoolean(values[9].toLowerCase()))
+                    .reportGermlineNonBiallelic(Boolean.parseBoolean(values[10].toLowerCase()));
+        }
+
         return builder.build();
     }
 

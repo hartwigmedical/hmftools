@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 
 import org.jetbrains.annotations.NotNull;
@@ -45,8 +46,8 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
         }
         this.selector = GenomePositionSelectorFactory.create(tumorRecords);
 
-        final GenomeRegions builder = new GenomeRegions(contig, typicalReadDepth);
-        baseDepths.forEach(x -> builder.addPosition(x.position()));
+        final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(typicalReadDepth);
+        baseDepths.forEach(builder::addPosition);
         this.supplier = new SAMSlicer(minMappingQuality, builder.build());
     }
 

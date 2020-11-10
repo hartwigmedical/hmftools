@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 
@@ -35,8 +36,8 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence> {
         this.contig = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
-        final GenomeRegions builder = new GenomeRegions(contig, typicalReadDepth);
-        bafRegions.forEach(x -> builder.addPosition(x.position()));
+        final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(typicalReadDepth);
+        bafRegions.forEach(builder::addPosition);
         final List<GenomeRegion> bafRegions1 = builder.build();
 
         this.evidence = bafRegions.stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
