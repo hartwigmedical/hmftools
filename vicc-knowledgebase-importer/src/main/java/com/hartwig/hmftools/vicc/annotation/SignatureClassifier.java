@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 final class SignatureClassifier {
 
-    public static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
+    private static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
 
     private SignatureClassifier() {
     }

@@ -52,35 +52,11 @@ final class CombinedClassifier {
             return true;
         } else if (featureName.contains("/")) {
             return false;
-        } else {
-            int countInsertion = 0;
-            if (featureName.contains("insertion")) {
-                countInsertion = Math.min(1, featureName.split("insertion").length - 1);
-            }
-
-            int countDeletion = 0;
-            if (featureName.contains("deletion")) {
-                countDeletion = Math.min(1, featureName.split("deletion").length - 1);
-            }
-
-            int countFrameshift = 0;
-            if (featureName.contains("frameshift")) {
-                countFrameshift = Math.min(1, featureName.split("frameshift").length - 1);
-            }
-
-            int countSplice = 0;
-            if (featureName.contains("splice")) {
-                countSplice = Math.min(1, featureName.split("splice").length - 1);
-            }
-
-            if (countInsertion + countDeletion + countFrameshift + countSplice > 1) {
-                return true;
-            } else if (featureName.trim().contains(" ")) {
-                String[] parts = featureName.trim().replace("  ", " ").split(" ");
-                if (parts[0].contains("-")) {
-                    // Hotspots or amplifications on fusion genes are considered combined.
-                    return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1], gene);
-                }
+        } else if (featureName.trim().contains(" ")) {
+            String[] parts = featureName.trim().replace("  ", " ").split(" ");
+            if (parts[0].contains("-")) {
+                // Hotspots or amplifications on fusion genes are considered combined.
+                return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1], gene);
             }
         }
 

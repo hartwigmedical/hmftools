@@ -25,7 +25,7 @@ public final class FeatureTypeExtractor {
     }
 
     @NotNull
-    public static FeatureType extractType(@NotNull String featureName, @Nullable String gene) {
+    private static FeatureType extractType(@NotNull String featureName, @Nullable String gene) {
         Map<FeatureType, Boolean> evaluations = Maps.newHashMap();
 
         evaluations.put(FeatureType.HOTSPOT, HotspotClassifier.isHotspot(featureName));

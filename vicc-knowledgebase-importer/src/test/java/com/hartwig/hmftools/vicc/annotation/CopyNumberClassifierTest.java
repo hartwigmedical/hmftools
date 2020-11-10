@@ -14,13 +14,16 @@ public class CopyNumberClassifierTest {
 
         assertFalse(CopyNumberClassifier.isAmplification("MET amplification + mutation", "MET"));
         assertFalse(CopyNumberClassifier.isAmplification("NPM1-ALK  amp", "ALK"));
+        assertFalse(CopyNumberClassifier.isAmplification("V600E", "BRAF"));
     }
 
     @Test
     public void canAssessWhetherFeatureIsDeletion() {
         assertTrue(CopyNumberClassifier.isDeletion("CDKN2A del", "CDKN2A"));
+        assertTrue(CopyNumberClassifier.isDeletion("CDKN2A dec exp", "CDKN2A"));
 
         assertFalse(CopyNumberClassifier.isDeletion("MET deletion + mutation", "MET"));
         assertFalse(CopyNumberClassifier.isDeletion("EGFR inframe deletion", "EGFR"));
+        assertFalse(CopyNumberClassifier.isDeletion("V600E", "BRAF"));
     }
 }
