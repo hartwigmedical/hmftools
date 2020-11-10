@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
-import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
