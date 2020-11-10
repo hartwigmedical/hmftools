@@ -149,7 +149,7 @@ java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMi
 ```
 
 ## Version History and Download Links
-- Upcoming
+- [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.11)
   - Tumor only mode
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.10)
   - Re-added support for cancel panel integration test 
