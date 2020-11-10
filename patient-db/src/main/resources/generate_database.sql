@@ -58,6 +58,7 @@ CREATE TABLE doidNode
     patientId int NOT NULL,
     doid varchar(255) NOT NULL,
     doidTerm varchar(255) NOT NULL,
+    snomedId varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );

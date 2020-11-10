@@ -186,8 +186,8 @@ class ClinicalDAO {
     }
 
     private void writeDoidNode(int patientId, @NotNull DoidNode doidNode) {
-        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM)
-                .values(patientId, doidNode.doid(), doidNode.doidTerm())
+        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM, DOIDNODE.SNOMEDID)
+                .values(patientId, doidNode.doid(), doidNode.doidTerm(), doidNode.snomedId())
                 .execute();
     }
 

@@ -16,6 +16,21 @@ public abstract class DoidMetadata {
     private static final Logger LOGGER = LogManager.getLogger(DoidMetadata.class);
 
     @Nullable
+    public abstract DoidDefinition doidDefinition();
+
+    @Nullable
+    public abstract List<String> subsets();
+
+    @Nullable
+    public abstract List<DoidXref> xrefs();
+
+    @Nullable
+    public abstract List<DoidSynonym> synonyms();
+
+    @Nullable
+    public abstract List<DoidBasicPropertyValue> basicPropertyValues();
+
+    @Nullable
     @Value.Derived
     public String snomedId() {
         if (xrefs() == null) {
@@ -35,19 +50,4 @@ public abstract class DoidMetadata {
         }
         return null;
     }
-
-    @Nullable
-    public abstract DoidDefinition doidDefinition();
-
-    @Nullable
-    public abstract List<String> subsets();
-
-    @Nullable
-    public abstract List<DoidXref> xrefs();
-
-    @Nullable
-    public abstract List<DoidSynonym> synonyms();
-
-    @Nullable
-    public abstract List<DoidBasicPropertyValue> basicPropertyValues();
 }
