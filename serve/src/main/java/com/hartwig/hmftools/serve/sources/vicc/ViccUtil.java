@@ -20,6 +20,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,6 +63,7 @@ public final class ViccUtil {
                 .add("transcript")
                 .add("type")
                 .add("feature")
+                .add("interpretation")
                 .toString();
         lines.add(header);
 
@@ -83,6 +85,7 @@ public final class ViccUtil {
                     .add(feature.transcript())
                     .add(feature.type())
                     .add(feature.name())
+                    .add(Strings.EMPTY)
                     .toString());
         }
 
