@@ -368,6 +368,10 @@ public class PositionFreqBuilder
             for(Map.Entry<String,List<String>> entry : mCancerSampleList.entrySet())
             {
                 final String cancerType = entry.getKey();
+
+                if(cancerType.equals("Other"))
+                    continue;
+
                 final List<String> sampleIds = entry.getValue();
 
                 final double[] posCounts = new double[mPositionCacheSize];
