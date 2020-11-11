@@ -136,12 +136,12 @@ public class SomaticDataLoader
         return refSampleCounts;
     }
 
-    public static SigMatrix loadRefSnvPosFrequences(final String filename, final List<String> refCancerTypes)
+    public static SigMatrix loadRefSnvPosFrequences(final String filename, final List<String> refItems)
     {
         if(filename.isEmpty())
             return null;
 
-        SigMatrix refSnvPosFrequences = loadMatrixDataFile(filename, refCancerTypes);
+        SigMatrix refSnvPosFrequences = loadMatrixDataFile(filename, refItems);
         refSnvPosFrequences.cacheTranspose();
         return refSnvPosFrequences;
     }

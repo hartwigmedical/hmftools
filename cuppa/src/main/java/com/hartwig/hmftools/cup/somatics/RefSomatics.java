@@ -93,11 +93,13 @@ public class RefSomatics implements RefClassifier
         {
             double sampleTotal = sumVector(mSampleCounts.getCol(i));
             final String sampleId = mSampleNames.get(i);
+
             final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
 
             if(cancerType == null)
             {
-                CUP_LOGGER.debug("sample({}) missing cancer type", sampleId);
+                // not a ref sample even though in the counts file
+                // CUP_LOGGER.debug("sample({}) SNV missing cancer type", sampleId);
                 continue;
             }
 

@@ -138,17 +138,22 @@ public class SampleDataCache
             {
                 SampleData sample = SampleData.from(fieldsIndexMap, line);
 
-                List<SampleData> cancerSampleData = RefCancerSampleData.get(sample.CancerType);
+                if(sample.isKnownCancerType())
+                {
+                    List<SampleData> cancerSampleData = RefCancerSampleData.get(sample.CancerType);
 
-                if(cancerSampleData == null)
-                    RefCancerSampleData.put(sample.CancerType, Lists.newArrayList(sample));
-                else
-                    cancerSampleData.add(sample);
+                    if(cancerSampleData == null)
+                        RefCancerSampleData.put(sample.CancerType, Lists.newArrayList(sample));
+                    else
+                        cancerSampleData.add(sample);
 
-                RefSampleCancerTypeMap.put(sample.Id, sample.CancerType);
+                    RefSampleCancerTypeMap.put(sample.Id, sample.CancerType);
+                }
 
-                if(!populateRefOnly)
+                if(!populateRefOnly && sample.isKnownCancerType())
+                {
                     SampleDataList.add(sample);
+                }
             }
         }
         catch (IOException e)

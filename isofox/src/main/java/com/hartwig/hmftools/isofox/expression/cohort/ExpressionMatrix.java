@@ -117,6 +117,8 @@ public class ExpressionMatrix
                     expressionItemCount = (int)itemCount;
                 }
 
+                ISF_LOGGER.debug("building gene expression matrix: genes({}) samples({})", expressionItemCount, samplesCount);
+
                 mExpressionMatrix = new SigMatrix(expressionItemCount, samplesCount);
             }
 

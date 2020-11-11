@@ -3,20 +3,20 @@ package com.hartwig.hmftools.cup;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_CANCER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
-import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
@@ -50,7 +50,8 @@ public class CuppaConfig
     public final String RefFeaturePrevFile;
     public final String RefTraitPercFile;
     public final String RefTraitRateFile;
-    public final String RefSnvPosFreqFile;
+    public final String RefSnvCancerPosFreqFile;
+    public final String RefSnvSamplePosFreqFile;
     public final String RefDriverAvgFile;
 
     public final String RefGeneExpCancerFile;
@@ -100,7 +101,8 @@ public class CuppaConfig
 
     public static final String REF_SAMPLE_DATA_FILE = "ref_sample_data_file";
     public static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
-    private static final String REF_SNV_POS_FREQ_FILE = "ref_snv_pos_freq_file";
+    private static final String REF_SNV_CANCER_POS_FREQ_FILE = "ref_cancer_snv_pos_freq_file";
+    private static final String REF_SNV_SAMPLE_POS_FREQ_FILE = "ref_sample_snv_pos_freq_file";
     private static final String REF_SIG_CONTRIB_FILE = "ref_sig_contrib_file";
     private static final String REF_FEAT_PREV_FILE = "ref_feature_prev_file";
     private static final String REF_DRIVER_AVG_FILE = "ref_feature_avg_file";
@@ -172,7 +174,8 @@ public class CuppaConfig
         RefTraitPercFile = getRefDataFile(cmd, REF_TRAIT_PERC_FILE, REF_FILE_TRAIT_PERC);
         RefTraitRateFile = getRefDataFile(cmd, REF_TRAIT_RATE_FILE, REF_FILE_TRAIT_RATES);
         RefSvPercFile = getRefDataFile(cmd, REF_SV_PERC_FILE, REF_FILE_SV_PERC);
-        RefSnvPosFreqFile = getRefDataFile(cmd, REF_SNV_POS_FREQ_FILE, REF_FILE_POS_FREQ_COUNTS);
+        RefSnvCancerPosFreqFile = getRefDataFile(cmd, REF_SNV_CANCER_POS_FREQ_FILE, REF_FILE_CANCER_POS_FREQ_COUNTS);
+        RefSnvSamplePosFreqFile = getRefDataFile(cmd, REF_SNV_SAMPLE_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
         RefDriverAvgFile = getRefDataFile(cmd, REF_DRIVER_AVG_FILE, REF_FILE_DRIVER_AVG);
 
         RefGeneExpCancerFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_CANCER_FILE, REF_FILE_GENE_EXP_CANCER);
@@ -242,7 +245,8 @@ public class CuppaConfig
         options.addOption(REF_SV_PERC_FILE, true, "Reference SV percentiles file, default: " + REF_FILE_SV_PERC);
         options.addOption(REF_TRAIT_PERC_FILE, true, "Reference traits percentiles file, default: " + REF_FILE_TRAIT_PERC);
         options.addOption(REF_TRAIT_RATE_FILE, true, "Reference traits rates file, default: " + REF_FILE_TRAIT_RATES);
-        options.addOption(REF_SNV_POS_FREQ_FILE, true, "Reference SNV position frequency file, default: " + REF_FILE_POS_FREQ_COUNTS);
+        options.addOption(REF_SNV_CANCER_POS_FREQ_FILE, true, "Reference SNV cancer position frequency file, default: " + REF_FILE_CANCER_POS_FREQ_COUNTS);
+        options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Reference SNV sample position frequency file, default: " + REF_FILE_SAMPLE_POS_FREQ_COUNTS);
         options.addOption(REF_DRIVER_AVG_FILE, true, "Reference features per sample file, default: " + REF_FILE_DRIVER_AVG);
         options.addOption(REF_RNA_GENE_EXP_CANCER_FILE, true, "Reference RNA cancer gene expression file, default: " + REF_FILE_GENE_EXP_CANCER);
         options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Reference RNA sample gene expression file, default: " + REF_FILE_GENE_EXP_SAMPLE);

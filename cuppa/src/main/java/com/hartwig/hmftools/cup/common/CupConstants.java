@@ -18,10 +18,11 @@ public class CupConstants
     public static final int POS_FREQ_MAX_SAMPLE_COUNT = 20000;
 
 
-    public static final double MIN_CLASSIFIER_SCORE = 0.02;
+    public static final double MIN_CLASSIFIER_SCORE = 0.01;
     public static final double CORRELATION_DAMPEN_FACTOR = 0.8;
 
     public static final String CANCER_TYPE_UNKNOWN = "Unknown";
+    public static final String CANCER_TYPE_OTHER = "Other";
 
     // cancer types with gender-exclusions
     public static final String CANCER_TYPE_PROSTATE = "Prostate";

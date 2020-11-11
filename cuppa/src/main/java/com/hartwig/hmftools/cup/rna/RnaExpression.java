@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
@@ -237,6 +238,9 @@ public class RnaExpression implements CuppaClassifier
         for(int i = 0; i < refCancerCount; ++i)
         {
             final String refCancerType = mRefCancerTypes.get(i);
+
+            if(refCancerType.equals(CANCER_TYPE_OTHER))
+                continue;
 
             if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;

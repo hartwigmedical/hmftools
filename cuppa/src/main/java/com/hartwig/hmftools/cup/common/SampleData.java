@@ -2,8 +2,10 @@ package com.hartwig.hmftools.cup.common;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OVARY;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PROSTATE;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UTERUS;
 
 import java.util.Map;
@@ -52,6 +54,13 @@ public class SampleData
     public boolean isRefSample() { return mIsRefSample; }
     public void setRefSample() { mIsRefSample = true; }
 
+    public boolean isKnownCancerType() { return isKnownCancerType(CancerType); }
+
+    public static boolean isKnownCancerType(final String cancerType)
+    {
+        return !cancerType.equals(CANCER_TYPE_OTHER) && !cancerType.equals(CANCER_TYPE_UNKNOWN);
+    }
+
     public void setCheckSubType() { mCheckSubType = true; }
     public boolean checkSubType() { return mCheckSubType; }
 
@@ -72,7 +81,7 @@ public class SampleData
                 items[fieldsIndexMap.get("PrimaryTumorSubLocation")] : "";
 
         String primaryType = fieldsIndexMap.containsKey("PrimaryTumorType") ?
-                items[fieldsIndexMap.get("PrimaryTumorLocation")] : "";
+                items[fieldsIndexMap.get("PrimaryTumorType")] : "";
 
         String primarySubtype = fieldsIndexMap.containsKey("PrimaryTumorSubType") ?
                 items[fieldsIndexMap.get("PrimaryTumorSubType")] : "";
