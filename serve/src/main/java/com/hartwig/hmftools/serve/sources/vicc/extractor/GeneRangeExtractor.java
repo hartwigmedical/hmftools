@@ -250,20 +250,6 @@ public class GeneRangeExtractor {
                                 driverGenes,
                                 extractSpecificMutationTypeFilter(feature));
                         geneRangesPerFeature.put(feature, geneRangeAnnotation);
-                    } else if (feature.name().contains("_") && isInteger(feature.name().split("_")[0].replaceAll("\\D+", "")) && isInteger(
-                            feature.name().split("_")[1].replaceAll("\\D+", ""))) { //example L485_P490 BRAF
-                        int startCodon = Integer.parseInt(feature.name().split("_")[0].replaceAll("\\D+", ""));
-                        int endCodon = Integer.parseInt(feature.name().split("_")[1].replaceAll("\\D+", ""));
-                        geneRangesPerFeature = determineRangesMulti(viccEntry,
-                                feature,
-                                startCodon,
-                                endCodon,
-                                geneRangeAnnotation,
-                                geneRangesPerFeature,
-                                canonicalTranscript,
-                                driverGenes,
-                                extractSpecificMutationTypeFilter(feature));
-                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     }
                 }
             }
@@ -398,50 +384,6 @@ public class GeneRangeExtractor {
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotations);
                 }
-
-            } else {
-                LOGGER.warn("Multiple genomic regions known for event {}", feature);
-            }
-        } else {
-            LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-                    transcriptIdVicc,
-                    canonicalTranscript.transcriptID(),
-                    feature);
-        }
-        return geneRangesPerFeature;
-    }
-
-    @NotNull
-    private static Map<Feature, List<GeneRangeAnnotation>> determineRangesMulti(@NotNull ViccEntry viccEntry, @NotNull Feature feature,
-            int startCodon, int endCodon, @NotNull List<GeneRangeAnnotation> geneRangeAnnotation,
-            @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature, @NotNull HmfTranscriptRegion canonicalTranscript,
-            @NotNull List<DriverGene> driverGenes, @NotNull MutationTypeFilter specificMutationType) {
-        String transcriptIdVicc = viccEntry.transcriptId();
-
-        if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-            String geneSymbol = feature.geneSymbol();
-            List<GenomeRegion> genomeRegionsStart = canonicalTranscript.codonByIndex(startCodon);
-            List<GenomeRegion> genomeRegionsEnd = canonicalTranscript.codonByIndex(endCodon);
-
-            if (genomeRegionsStart.size() == 1 && genomeRegionsEnd.size() == 1) {
-                long start = genomeRegionsStart.get(0).start();
-                long end = genomeRegionsEnd.get(0).end();
-                String chromosomeStart = genomeRegionsStart.get(0).chromosome();
-                String chromosomeEnd = genomeRegionsEnd.get(0).chromosome();
-
-                String chromosome = Strings.EMPTY;
-                if (chromosomeStart.equals(chromosomeEnd)) {
-                    chromosome = chromosomeStart;
-                }
-                geneRangeAnnotation.add(ImmutableGeneRangeAnnotation.builder()
-                        .gene(geneSymbol)
-                        .start(start)
-                        .end(end)
-                        .chromosome(chromosome)
-                        .rangeInfo(extractExonNumber().get(0))
-                        .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
-                        .build());
-                geneRangesPerFeature.put(feature, geneRangeAnnotation);
 
             } else {
                 LOGGER.warn("Multiple genomic regions known for event {}", feature);
