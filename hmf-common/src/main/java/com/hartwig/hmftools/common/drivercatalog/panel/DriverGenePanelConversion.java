@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
@@ -28,10 +28,6 @@ public class DriverGenePanelConversion {
         for (DriverGene input : inputDriverGenes) {
             final String hg19Gene = input.gene();
             final String hg38Gene = geneNameMap.hg38Gene(input.gene());
-            if (input.reportVariant() && !geneNameMap.isValidHg19Gene(hg19Gene)) {
-                System.out.println("Bad gene: " + hg19Gene);
-            }
-
             if (hg19Gene.equals("LINC00290") || hg19Gene.equals("LINC01001")) {
                 outputDriverGenes.add(input);
             } else if (hg38Gene.equals("NA")) {
@@ -42,9 +38,17 @@ public class DriverGenePanelConversion {
             }
         }
 
+        // Sort
+        Collections.sort(inputDriverGenes);
+        Collections.sort(outputDriverGenes);
+
+        // Validate
+        DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, inputDriverGenes);
+        DriverGenePanelFactory.create(DriverGenePanelAssembly.HG38, outputDriverGenes);
+
         // Write out driver gene panel
         DriverGeneFile.write(outputFile19, inputDriverGenes);
-        DriverGeneFile.write(outputFile38, outputDriverGenes.stream().sorted().collect(Collectors.toList()));
+        DriverGeneFile.write(outputFile38, outputDriverGenes);
 
         // Write out actionable bed files
         final List<HmfTranscriptRegion> hg19Transcripts = HmfGenePanelSupplier.allGeneList37();
