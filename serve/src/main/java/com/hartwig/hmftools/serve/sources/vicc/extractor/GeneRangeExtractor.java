@@ -40,9 +40,9 @@ public class GeneRangeExtractor {
     }
 
     //TODO implement extraction codonNumber
-    private static List<Integer> extractCodonNumber() {
+    private static Integer extractCodonNumber() {
 
-        return Lists.newArrayList();
+        return 0;
     }
 
     @NotNull
@@ -379,7 +379,7 @@ public class GeneRangeExtractor {
                             .start(start)
                             .end(end)
                             .chromosome(chromosome)
-                            .rangeInfo(extractExonNumber().get(0))
+                            .rangeInfo(extractCodonNumber())
                             .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
                             .build());
                     geneRangesPerFeature.put(feature, geneRangeAnnotations);
