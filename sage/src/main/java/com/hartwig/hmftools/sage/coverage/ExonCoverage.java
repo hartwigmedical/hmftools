@@ -23,12 +23,17 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion> {
             return;
         }
 
-        synchronized (coverage) {
-            int start = (int) Math.max(start(), alignment.start());
-            int end = (int) Math.min(end(), alignment.end());
+        int startPosition = (int) Math.max(start(), alignment.start());
+        int endPosition = (int) Math.min(end(), alignment.end());
 
-            for (int i = index(start); i <= index(end); i++) {
-                coverage[i] += 1;
+        int startIndex = index(startPosition);
+        int endIndex = index(endPosition);
+
+        if (startIndex <= endIndex) {
+            synchronized (coverage) {
+                for (int i = startIndex; i <= endIndex; i++) {
+                    coverage[i] += 1;
+                }
             }
         }
     }
