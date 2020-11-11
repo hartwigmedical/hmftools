@@ -35,7 +35,6 @@ public class GeneRangeExtractor {
     //TODO implement specific extraction exonNumber
     private static List<Integer> extractExonNumber(@NotNull String featureName) {
         List<Integer> codons = Lists.newArrayList();
-        int extract = 0;
         if (featureName.contains("or")) {
 
         } else if (featureName.contains(",")) {
@@ -49,13 +48,8 @@ public class GeneRangeExtractor {
             for (String event: extraction){
                 if (event.matches("[0-9]+")) {
                     codons.add(Integer.valueOf(event));
-                    extract +=1;
-                }
-                if (extract == 0) {
-                    LOGGER.warn("No exon number is extracted from event {}", featureName);
                 }
             }
-
         }
 
         if (codons.size() == 0) {
