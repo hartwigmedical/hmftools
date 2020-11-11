@@ -55,8 +55,6 @@ public class GeneRangeExtractor {
         if (codons.size() == 0) {
             LOGGER.warn("No exon number is extracted from event {}", featureName);
         }
-        LOGGER.info(featureName);
-        LOGGER.info(codons);
         return codons;
     }
 
