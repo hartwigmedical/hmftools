@@ -81,7 +81,7 @@ public final class ActionableRangeFile {
                 .chromosome(values[1])
                 .start(Long.parseLong(values[2]))
                 .end(Long.parseLong(values[3]))
-                .rangeInfo("UNKNOWN") //TODO: @Lieke, (changes to values[4] currently your to and from lines are inconsistent and files on datastore do not contain rangeInfo
+                .rangeInfo(0) //TODO: @Lieke, (changes to values[4] currently your to and from lines are inconsistent and files on datastore do not contain rangeInfo
                 .mutationType(MutationTypeFilter.valueOf(values[4]))
                 .source(ActionableEventFactory.sourceFromFileValue(values[5]))
                 .treatment(values[6])
@@ -111,7 +111,7 @@ public final class ActionableRangeFile {
                 .add(range.chromosome())
                 .add(Long.toString(range.start()))
                 .add(Long.toString(range.end()))
-                .add(range.rangeInfo())
+                .add(Integer.toString(range.rangeInfo()))
                 .add(range.mutationType().toString())
                 .add(range.source().display())
                 .add(range.treatment())
