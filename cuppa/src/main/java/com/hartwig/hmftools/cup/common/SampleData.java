@@ -24,7 +24,6 @@ public class SampleData
 
     private boolean mIsRefSample;
     private Gender mGenderType;
-    private boolean mCheckSubType;
 
     public SampleData(final String id, final String cancerType, final String cancerSubtype)
     {
@@ -45,7 +44,6 @@ public class SampleData
 
         mGenderType = null;
         mIsRefSample = false;
-        mCheckSubType = false;
     }
 
     public Gender gender() { return mGenderType; }
@@ -60,9 +58,6 @@ public class SampleData
     {
         return !cancerType.equals(CANCER_TYPE_OTHER) && !cancerType.equals(CANCER_TYPE_UNKNOWN);
     }
-
-    public void setCheckSubType() { mCheckSubType = true; }
-    public boolean checkSubType() { return mCheckSubType; }
 
     public static SampleData from(final Map<String,Integer> fieldsIndexMap, final String data)
     {
@@ -107,12 +102,6 @@ public class SampleData
 
     public boolean isCandidateCancerType(final String cancerType)
     {
-        if(mCheckSubType)
-        {
-            String refCancerType = cancerType.contains(CANCER_SUBTYPE_DELIM) ? parseCancerType(cancerType) : cancerType;
-            return parseCancerType(CancerType).equals(refCancerType);
-        }
-
         if(mGenderType == null)
             return true;
 

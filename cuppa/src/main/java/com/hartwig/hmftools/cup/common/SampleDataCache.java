@@ -64,7 +64,7 @@ public class SampleDataCache
         return SampleDataList.stream().filter(x -> x.Id.equals(sampleId)).findFirst().orElse(null);
     }
 
-    public void loadSampleData(final String specificSampleData, final String sampleDataFile, boolean cancerSubtypeMode)
+    public void loadSampleData(final String specificSampleData, final String sampleDataFile)
     {
         if(specificSampleData != null)
         {
@@ -78,11 +78,6 @@ public class SampleDataCache
 
             if(sampleItems.length == 3)
                 cancerSubtype = sampleItems[2];
-
-            if(cancerSubtypeMode)
-            {
-                cancerType = cancerType + SUBSET_DELIM + cancerSubtype;
-            }
 
             if(RefSampleCancerTypeMap.containsKey(sampleId))
             {

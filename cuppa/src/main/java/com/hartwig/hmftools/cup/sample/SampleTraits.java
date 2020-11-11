@@ -136,9 +136,7 @@ public class SampleTraits implements CuppaClassifier
             return;
         }
 
-        if(!mConfig.CancerSubtypeMode)
-            addTraitPrevalences(sample, sampleTraits, results);
-
+        addTraitPrevalences(sample, sampleTraits, results);
         addTraitLikelihoods(sample, sampleTraits, results);
     }
 

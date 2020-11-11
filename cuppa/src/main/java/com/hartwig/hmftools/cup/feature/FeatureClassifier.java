@@ -79,8 +79,7 @@ public class FeatureClassifier implements CuppaClassifier
         if(sampleFeatures == null || sampleFeatures.isEmpty())
             return;
 
-        if(!mConfig.CancerSubtypeMode)
-            addDriverPrevalence(sample, sampleFeatures, results);
+        addDriverPrevalence(sample, sampleFeatures, results);
 
         calcCancerTypeProbability(sample, sampleFeatures, results);
     }

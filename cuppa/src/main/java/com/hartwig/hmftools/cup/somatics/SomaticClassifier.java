@@ -245,26 +245,23 @@ public class SomaticClassifier implements CuppaClassifier
         addCssResults(sample, sampleCounts, snvTotal, results, similarities);
         addPosFreqCssResults(sample, results, similarities);
 
-        if(!mConfig.CancerSubtypeMode)
+        addSigContributionResults(sample, results);
+
+        // add a percentile result
+
+        final Map<String, Double> cancerTypeValues = Maps.newHashMap();
+
+        for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
         {
-            addSigContributionResults(sample, results);
-
-            // add a percentile result
-
-            final Map<String, Double> cancerTypeValues = Maps.newHashMap();
-
-            for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
-            {
-                final String cancerType = cancerPercentiles.getKey();
-                double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true);
-                cancerTypeValues.put(cancerType, percentile);
-            }
-
-            SampleResult result = new SampleResult(
-                    sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
-
-            results.add(result);
+            final String cancerType = cancerPercentiles.getKey();
+            double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true);
+            cancerTypeValues.put(cancerType, percentile);
         }
+
+        SampleResult result = new SampleResult(
+                sample.Id, SAMPLE_TRAIT, PERCENTILE, "SNV_COUNT", snvTotal, cancerTypeValues);
+
+        results.add(result);
 
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
         int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.CancerType) : 0;

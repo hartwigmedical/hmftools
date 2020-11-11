@@ -88,17 +88,12 @@ public class CupAnalyser
 
     private void loadSampleData(final CommandLine cmd)
     {
-        mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), mConfig.SampleDataFile, mConfig.CancerSubtypeMode);
+        mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), mConfig.SampleDataFile);
         mSampleDataCache.loadReferenceSampleData(mConfig.RefSampleDataFile, true);
 
         // mark any samples included in the ref data set so they can be excluded from self-comparison
         mSampleDataCache.SampleDataList.stream()
                 .filter(x -> mSampleDataCache.RefSampleCancerTypeMap.containsKey(x.Id)).forEach(x -> x.setRefSample());
-
-        if(mConfig.CancerSubtypeMode)
-        {
-            mSampleDataCache.SampleDataList.forEach(x -> x.setCheckSubType());
-        }
     }
 
     public void run()

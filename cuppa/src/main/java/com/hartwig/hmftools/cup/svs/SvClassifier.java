@@ -83,29 +83,26 @@ public class SvClassifier implements CuppaClassifier
         if(svData == null)
             return;
 
-        if(!mConfig.CancerSubtypeMode)
+        for(Map.Entry<SvDataType, Map<String, double[]>> entry : mRefSvTypePercentiles.entrySet())
         {
-            for(Map.Entry<SvDataType, Map<String, double[]>> entry : mRefSvTypePercentiles.entrySet())
+            final SvDataType svDataType = entry.getKey();
+
+            if(!isReportableType(svDataType))
+                continue;
+
+            double svCount = svData.getCount(svDataType);
+
+            final Map<String, Double> cancerTypeValues = Maps.newHashMap();
+
+            for(Map.Entry<String, double[]> cancerPercentiles : entry.getValue().entrySet())
             {
-                final SvDataType svDataType = entry.getKey();
-
-                if(!isReportableType(svDataType))
-                    continue;
-
-                double svCount = svData.getCount(svDataType);
-
-                final Map<String, Double> cancerTypeValues = Maps.newHashMap();
-
-                for(Map.Entry<String, double[]> cancerPercentiles : entry.getValue().entrySet())
-                {
-                    final String cancerType = cancerPercentiles.getKey();
-                    double percentile = getPercentile(cancerPercentiles.getValue(), svCount, true);
-                    cancerTypeValues.put(cancerType, percentile);
-                }
-
-                SampleResult result = new SampleResult(sample.Id, SV, PERCENTILE, svDataType.toString(), svCount, cancerTypeValues);
-                results.add(result);
+                final String cancerType = cancerPercentiles.getKey();
+                double percentile = getPercentile(cancerPercentiles.getValue(), svCount, true);
+                cancerTypeValues.put(cancerType, percentile);
             }
+
+            SampleResult result = new SampleResult(sample.Id, SV, PERCENTILE, svDataType.toString(), svCount, cancerTypeValues);
+            results.add(result);
         }
 
         // calculate prevalence for specific SV values

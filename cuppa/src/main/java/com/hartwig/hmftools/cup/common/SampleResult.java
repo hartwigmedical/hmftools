@@ -31,9 +31,7 @@ public class SampleResult
         if(sample.isCandidateCancerType(refCancerType))
             return true;
 
-        if(!sample.checkSubType())
-            cancerDataMap.put(refCancerType, 0.0);
-
+        cancerDataMap.put(refCancerType, 0.0);
         return false;
     }
 }
