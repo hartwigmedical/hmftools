@@ -252,23 +252,7 @@ public class GeneRangeExtractor {
         geneRangesPerFeature.put(feature, geneRangeAnnotation);
     }
 
-    private static void extractGeneRangesPerFeatureMultipleExons(@NotNull List<Integer> exonNumbers, @NotNull Feature feature,
-            @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
-            @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature,
-            @NotNull MutationTypeFilter specificMutationType) {
-        for (Integer exon : exonNumbers) {
-            int exonNumberList = exon - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-            geneRangeAnnotation.add(extractExonGenomicPositions(feature,
-                    canonicalTranscript,
-                    exonNumberList,
-                    driverGenes,
-                    exon,
-                    specificMutationType));
-        }
-        geneRangesPerFeature.put(feature, geneRangeAnnotation);
-    }
-
-    @NotNull
+        @NotNull
     private static GeneRangeAnnotation extractExonGenomicPositions(@NotNull Feature feature,
             @NotNull HmfTranscriptRegion canonicalTranscript, int exonNumberList, @NotNull List<DriverGene> driverGenes, int exonNumber,
             @NotNull MutationTypeFilter specificMutationType) {
