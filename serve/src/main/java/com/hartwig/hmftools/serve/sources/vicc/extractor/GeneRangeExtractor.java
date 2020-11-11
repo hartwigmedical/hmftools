@@ -76,13 +76,25 @@ public class GeneRangeExtractor {
         return codons;
     }
 
-    private static Integer extractCodonNumber(@NotNull String featureName) {
-        if (!isInteger(" ".replaceAll("\\D+", ""))) {
-            LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
-            return null;
-        } else {
-            return Integer.parseInt(featureName.replaceAll("\\D+", ""));
+     private static Integer extractCodonNumber(@NotNull String featureName) {
+        if (featureName.split(" ").length ==1) {
+            if (!isInteger(featureName.replaceAll("\\D+", ""))) {
+                LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
+                return null;
+            } else {
+                return Integer.parseInt(featureName.replaceAll("\\D+", ""));
+            }
+        } else if (featureName.split(" ").length == 2) {
+            featureName = featureName.split(" ")[1];
+            if (!isInteger(featureName.replaceAll("\\D+", ""))) {
+                LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
+                return null;
+            } else {
+                return Integer.parseInt(featureName.replaceAll("\\D+", ""));
+            }
         }
+        LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
+        return null;
     }
 
     private static boolean isInteger(@NotNull String string) {
