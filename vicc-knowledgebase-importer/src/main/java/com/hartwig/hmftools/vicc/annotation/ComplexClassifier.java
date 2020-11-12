@@ -97,7 +97,7 @@ public final class ComplexClassifier {
         complexEventsPerGene.put("EIF1AX", eif1axSet);
 
         Set<String> epcamSet = Sets.newHashSet("3' EXON DELETION");
-        complexEventsPerGene.put("EPCAM", eif1axSet);
+        complexEventsPerGene.put("EPCAM", epcamSet);
 
         Set<String> erbb2Set = Sets.newHashSet("P780INS", "DEL 755-759", "KINASE DOMAIN MUTATION");
         complexEventsPerGene.put("ERBB2", erbb2Set);
