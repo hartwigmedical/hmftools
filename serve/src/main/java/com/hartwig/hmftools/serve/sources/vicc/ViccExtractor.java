@@ -307,7 +307,7 @@ public final class ViccExtractor {
 
 
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner(";").add("gene").add("event")
+        String header = new StringJoiner("\t").add("gene").add("event")
                 .add("type")
                 .add("interpretation")
                 .toString();
@@ -334,7 +334,7 @@ public final class ViccExtractor {
                     if (hotspotsForFeature != null) {
                         featuresWithHotspotsCount++;
                         totalHotspotsCount += hotspotsForFeature.size();
-                        lines.add(new StringJoiner(";").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
                                 .add(feature.type().name())
                                 .add(hotspotsForFeature.toString())
                                 .toString());
@@ -342,7 +342,7 @@ public final class ViccExtractor {
 
                     if (ampDelForFeature != null) {
                         featuresWithCopyNumberCount++;
-                        lines.add(new StringJoiner(";").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
                                 .add(feature.type().name())
                                 .add(ampDelForFeature.toString())
                                 .toString());
@@ -350,7 +350,7 @@ public final class ViccExtractor {
 
                     if (fusionForFeature != null) {
                         featuresWithFusionCount++;
-                        lines.add(new StringJoiner(";").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
                                 .add(feature.type().name())
                                 .add(fusionForFeature.toString())
                                 .toString());
@@ -358,7 +358,7 @@ public final class ViccExtractor {
 
                     if (geneLevelEventForFeature != null) {
                         featuresWithGeneLevelEventCount++;
-                        lines.add(new StringJoiner(";").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
                                 .add(feature.type().name())
                                 .add(geneLevelEventForFeature.toString())
                                 .toString());
@@ -367,7 +367,7 @@ public final class ViccExtractor {
                     if (geneRangesForFeature != null) {
                         featuresWithGeneRangeCount++;
                         totalRangeCount += geneRangesForFeature.size();
-                        lines.add(new StringJoiner(";").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
                                 .add(feature.type().name())
                                 .add(geneRangesForFeature.toString())
                                 .toString());
@@ -375,7 +375,7 @@ public final class ViccExtractor {
 
                     if (signatureForFeature != null) {
                         featuresWithSignatureCount++;
-                        lines.add(new StringJoiner(";").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
                                 .add(feature.type().name())
                                 .add(signatureForFeature.toString())
                                 .toString());
