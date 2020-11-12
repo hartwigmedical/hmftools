@@ -98,7 +98,7 @@ public class CupAnalyser
 
     public void run()
     {
-        if(!mConfig.isValid())
+        if(!mConfig.isValid() || !mSampleDataCache.isValid())
         {
             CUP_LOGGER.error("invalid config");
             return;

@@ -25,6 +25,8 @@ public class SampleDataCache
     public final Map<String,List<SampleData>> RefCancerSampleData;
     public final Map<String,String> RefSampleCancerTypeMap;
 
+    private boolean mIsValid;
+
     public SampleDataCache()
     {
         SampleIds = Lists.newArrayList();
@@ -32,8 +34,10 @@ public class SampleDataCache
         RefCancerSampleData = Maps.newHashMap();
         RefSampleCancerTypeMap = Maps.newHashMap();
         SpecificSample = null;
+        mIsValid = true;
     }
 
+    public boolean isValid() { return mIsValid; }
     public boolean isSingleSample() { return SpecificSample != null; }
     public boolean isMultiSample() { return !isSingleSample(); }
     public boolean isMultiSampleNonRef() { return SampleIds.size() > 1 && RefSampleCancerTypeMap.size() != SampleIds.size(); }
@@ -109,6 +113,7 @@ public class SampleDataCache
             catch (IOException e)
             {
                 CUP_LOGGER.error("failed to read sample data file({}): {}", sampleDataFile, e.toString());
+                mIsValid = false;
             }
         }
 
@@ -118,7 +123,10 @@ public class SampleDataCache
     public void loadReferenceSampleData(final String refSampleDataFile, boolean populateRefOnly)
     {
         if(refSampleDataFile == null)
+        {
+            mIsValid = false;
             return;
+        }
 
         try
         {
@@ -154,6 +162,7 @@ public class SampleDataCache
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sample data file({}): {}", refSampleDataFile, e.toString());
+            mIsValid = false;
         }
 
         if(!populateRefOnly)

@@ -84,22 +84,6 @@ public class SampleData
         return new SampleData(sampleId, cancerType, cancerSubtype, primaryLocation, primarySubLocation, primaryType, primarySubtype);
     }
 
-    public static String CANCER_SUBTYPE_DELIM = ";";
-    public static int CANCER_ITEM = 0;
-    public static int CANCER_SUBTYPE_ITEM = 1;
-
-    public static String parseCancerType(final String cancerSubTypeCombo)
-    {
-        final String[] items = cancerSubTypeCombo.split(CANCER_SUBTYPE_DELIM);
-        return items.length == 2 ? items[CANCER_ITEM] : "";
-    }
-
-    public static String parseCancersSubType(final String cancerSubTypeCombo)
-    {
-        final String[] items = cancerSubTypeCombo.split(CANCER_SUBTYPE_DELIM);
-        return items.length == 2 ? items[CANCER_SUBTYPE_ITEM] : "";
-    }
-
     public boolean isCandidateCancerType(final String cancerType)
     {
         if(mGenderType == null)
