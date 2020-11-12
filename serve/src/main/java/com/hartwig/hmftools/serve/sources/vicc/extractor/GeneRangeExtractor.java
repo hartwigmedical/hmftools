@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -76,7 +77,8 @@ public class GeneRangeExtractor {
         return codons;
     }
 
-     private static Integer extractCodonNumber(@NotNull String featureName) {
+    @VisibleForTesting
+     public static Integer extractCodonNumber(@NotNull String featureName) {
         if (featureName.split(" ").length ==1) {
             if (!isInteger(featureName.replaceAll("\\D+", ""))) {
                 LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
