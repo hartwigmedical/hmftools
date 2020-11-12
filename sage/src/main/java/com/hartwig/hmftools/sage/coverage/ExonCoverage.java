@@ -10,18 +10,15 @@ import org.jetbrains.annotations.NotNull;
 class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion> {
 
     private final NamedBed exon;
-    private final int[] coverage;
+    private final int[] baseCoverage;
 
-    public ExonCoverage(final NamedBed exon) {
+    ExonCoverage(final NamedBed exon) {
         this.exon = exon;
-        this.coverage = new int[(int) exon.bases()];
+        this.baseCoverage = new int[(int) exon.bases()];
     }
 
     @Override
     public void accept(final GenomeRegion alignment) {
-        if (!alignment.chromosome().equals(exon.chromosome())) {
-            return;
-        }
 
         int startPosition = (int) Math.max(start(), alignment.start());
         int endPosition = (int) Math.min(end(), alignment.end());
@@ -30,9 +27,9 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion> {
         int endIndex = index(endPosition);
 
         if (startIndex <= endIndex) {
-            synchronized (coverage) {
+            synchronized (baseCoverage) {
                 for (int i = startIndex; i <= endIndex; i++) {
-                    coverage[i] += 1;
+                    baseCoverage[i] += 1;
                 }
             }
         }
@@ -40,7 +37,7 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion> {
 
     @NotNull
     public int[] coverage() {
-        return coverage;
+        return baseCoverage;
     }
 
     @NotNull
