@@ -158,6 +158,7 @@ public class GeneTestUtils
                 .reportHotspot(false)
                 .reportGermlineBiallelic(false)
                 .reportGermlineNonBiallelic(false)
+                .reportGermlineHotspot(false)
                 .likelihoodType(TSG)
                 .build();
     }
