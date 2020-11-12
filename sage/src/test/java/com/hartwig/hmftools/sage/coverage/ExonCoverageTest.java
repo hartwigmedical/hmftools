@@ -13,13 +13,6 @@ import org.junit.Test;
 public class ExonCoverageTest {
 
     @Test
-    public void testOtherChromosome() {
-        ExonCoverage victim = exon("Gene", 100, 104);
-        victim.accept(GenomeRegions.create("2", 100, 104));
-        assertCoverage(victim, 0, 0, 0, 0, 0);
-    }
-
-    @Test
     public void testAlignmentBefore() {
         ExonCoverage victim = exon("Gene", 100, 104);
         victim.accept(alignment(30, 99));
