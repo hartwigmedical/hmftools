@@ -17,12 +17,17 @@ public class Coverage {
 
     private final Map<String, List<GeneCoverage>> geneCoverage;
 
-    public Coverage(final Collection<String> samples, final Collection<NamedBed> panel) {
+    public Coverage(final Collection<String> referenceSamples, final Collection<String> tumorSamples, final Collection<NamedBed> panel) {
         this.geneCoverage = Maps.newHashMap();
         final Set<String> genes = panel.stream().map(NamedBed::name).collect(Collectors.toSet());
-        for (String sample : samples) {
-            geneCoverage.put(sample, createGeneCoverage(genes, panel));
-        }
+
+        tumorSamples.forEach(sample -> geneCoverage.put(sample, createGeneCoverage(genes, panel)));
+        referenceSamples.forEach(sample -> geneCoverage.put(sample, createGeneCoverage(genes, panel)));
+    }
+
+    @NotNull
+    public Set<String> samples() {
+        return geneCoverage.keySet();
     }
 
     @NotNull

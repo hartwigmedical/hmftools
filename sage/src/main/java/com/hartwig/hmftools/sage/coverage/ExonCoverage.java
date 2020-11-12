@@ -19,14 +19,14 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion> {
 
     @Override
     public void accept(final GenomeRegion alignment) {
+        if (alignment.start() <= exon.end() && alignment.end() >= exon.start()) {
 
-        int startPosition = (int) Math.max(start(), alignment.start());
-        int endPosition = (int) Math.min(end(), alignment.end());
+            int startPosition = (int) Math.max(start(), alignment.start());
+            int endPosition = (int) Math.min(end(), alignment.end());
 
-        int startIndex = index(startPosition);
-        int endIndex = index(endPosition);
+            int startIndex = index(startPosition);
+            int endIndex = index(endPosition);
 
-        if (startIndex <= endIndex) {
             synchronized (baseCoverage) {
                 for (int i = startIndex; i <= endIndex; i++) {
                     baseCoverage[i] += 1;

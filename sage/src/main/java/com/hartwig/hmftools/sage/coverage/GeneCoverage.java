@@ -28,7 +28,7 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
 
         for (NamedBed exon : exons) {
             tmpMin = Math.min(tmpMin, exon.start());
-            tmpMax = Math.min(tmpMax, exon.end());
+            tmpMax = Math.max(tmpMax, exon.end());
         }
 
         minPosition = tmpMin;
