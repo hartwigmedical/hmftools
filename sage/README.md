@@ -284,7 +284,7 @@ The base quality recalibration chart can be independently disabled by including 
  
 ## 2. Candidate Variants
 In this first pass of the tumor BAM(s), SAGE looks for candidate variants.
-Valid candidates include a complete read context in addition to raw counts of ref and alt support (`RAD`) and their respective base quality contributions (`BABQ`).  
+Valid candidates include a complete read context in addition to raw counts of ref and alt support (`RAD`) and their respective base quality contributions (`RABQ`).  
 The raw values are calculated directly from the aligner without any filters or quality requirements.
 
 INDELS are located using the `I` and `D` flag in the CIGAR.
