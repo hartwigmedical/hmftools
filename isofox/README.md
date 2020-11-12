@@ -81,13 +81,13 @@ java -jar isofox.jar
     -functions EXPECTED_TRANS_COUNTS
     -output_dir /path_to_output_data/ 
     -gene_transcripts_dir /path_ensembl_data_cache_files/ 
-    -read_length 76 
+    -read_length 151 
     -long_frag_limit 550 
     -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0" 
     -threads 10 
 ```
 
-The output file is approximately 400MB.
+The output file is approximately 100MB.
 
 Generate Expected GC Ratio Counts
 
@@ -99,11 +99,11 @@ java -jar isofox.jar
     -output_dir /path_to_output_data/ 
     -ref_genome /path_to_ref_files/ref-genome.fasta 
     -gene_transcripts_dir /path_ensembl_data_cache_files/ 
-    -read_length 76 
+    -read_length 151 
     -threads 10 
 ```
 
-The output file is approximately 100MB.
+The output file is approximately 120MB.
 
 Argument | Description
 ---|---

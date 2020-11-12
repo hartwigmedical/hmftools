@@ -123,7 +123,6 @@ public class Isofox
         if(mConfig.runFunction(EXPECTED_GC_COUNTS))
         {
             boolean status = generateGcRatios(chrGeneMap);
-            mGcTranscriptCalcs.close();
             return status;
         }
 
@@ -382,15 +381,19 @@ public class Isofox
         final List<GcTranscriptCalculator> taskList = Lists.newArrayList();
         final List<Callable> callableList = Lists.newArrayList();
 
+        mGcTranscriptCalcs.initialiseWriter();
+
         for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
         {
             GcTranscriptCalculator gcCalcs = new GcTranscriptCalculator(mConfig, mGeneTransCache);
-            gcCalcs.initialise(entry.getKey(), entry.getValue());
+            gcCalcs.initialise(entry.getKey(), entry.getValue(), mGcTranscriptCalcs.getWriter());
             taskList.add(gcCalcs);
             callableList.add(gcCalcs);
         }
 
-        return TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+        boolean taskStatus = TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+        mGcTranscriptCalcs.close();
+        return taskStatus;
     }
 
     private boolean generateExpectedCounts(final Map<String,List<EnsemblGeneData>> chrGeneMap)

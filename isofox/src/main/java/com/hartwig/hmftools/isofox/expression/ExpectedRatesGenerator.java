@@ -800,7 +800,6 @@ public class ExpectedRatesGenerator
         {
             ISF_LOGGER.error("failed to write transcript expected counts file: {}", e.toString());
         }
-
     }
 
     public synchronized static void writeExpectedRates(

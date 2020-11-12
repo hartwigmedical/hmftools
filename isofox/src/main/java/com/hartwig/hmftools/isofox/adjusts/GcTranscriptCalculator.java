@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.adjusts;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.stripChromosome;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVectors;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -31,8 +32,13 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
+
+import htsjdk.samtools.SAMException;
 
 public class GcTranscriptCalculator implements Callable
 {
@@ -47,7 +53,7 @@ public class GcTranscriptCalculator implements Callable
     private final GcRatioCounts mTranscriptFitGcCounts;
     private final double[] mGcRatioAdjustments;
 
-    private final BufferedWriter mWriter;
+    private BufferedWriter mWriter;
 
     private final double[] mTotalExpectedCounts;
 
@@ -66,14 +72,15 @@ public class GcTranscriptCalculator implements Callable
         if(config.ExpGcRatiosFile != null)
             loadExpectedData();
 
-        mWriter = mConfig.runFunction(EXPECTED_GC_COUNTS) ? createWriter() : null;
+        mWriter = null;
 
         mTotalExpectedCounts = mConfig.runFunction(EXPECTED_GC_COUNTS) ? new double[mTranscriptFitGcCounts.size()] : null;
     }
 
-    public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList)
+    public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList, final BufferedWriter writer)
     {
         mChromosome = chromosome;
+        mWriter = writer;
         mGeneDataList.clear();
         mGeneDataList.addAll(geneDataList);
     }
@@ -86,6 +93,7 @@ public class GcTranscriptCalculator implements Callable
     }
 
     public void close() { closeBufferedWriter(mWriter); }
+    public BufferedWriter getWriter() { return mWriter; }
 
     public final double[] getGcRatioAdjustments() { return mGcRatioAdjustments; }
     public final GcRatioCounts getTranscriptFitGcCounts() { return mTranscriptFitGcCounts; }
@@ -130,9 +138,15 @@ public class GcTranscriptCalculator implements Callable
         int genesProcessed = 0;
         int nextLogCount = 100;
 
+        final RefGenome chrLengths = mConfig.RefGenVersion == RefGenomeVersion.HG38 ? RefGenome.HG38 : RefGenome.HG19;
+        long chromosomeLength = chrLengths.lengths().get(HumanChromosome.fromString(mChromosome));
+
         for(final EnsemblGeneData geneData : mGeneDataList)
         {
             final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
+
+            if(geneData.GeneEnd > chromosomeLength)
+                break;
 
             generateExpectedGeneCounts(geneData);
 
@@ -151,6 +165,8 @@ public class GcTranscriptCalculator implements Callable
         }
 
         writeExpectedGcRatios(mWriter, String.format("CHR_%s", mChromosome), mTotalExpectedCounts);
+
+        ISF_LOGGER.info("chromosome({}) GC ratio generation complete", mChromosome);
     }
 
     private void generateExpectedGeneCounts(final EnsemblGeneData geneData)
@@ -158,10 +174,11 @@ public class GcTranscriptCalculator implements Callable
         GcRatioCounts gcRatioCounts = new GcRatioCounts();
         int readLength = mConfig.ReadLength;
 
-        if(geneData.length() - 1 < readLength)
+        final String geneBases = getRefBaseString(geneData);
+
+        if(geneBases.length() - 1 < readLength)
         {
-            final String bases = mConfig.RefGenome.getBaseString(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd);
-            gcRatioCounts.addGcRatio(calcGcRatio(bases));
+            gcRatioCounts.addGcRatio(calcGcRatio(geneBases));
         }
         else
         {
@@ -169,8 +186,6 @@ public class GcTranscriptCalculator implements Callable
             List<int[]> readRegions = Lists.newArrayListWithExpectedSize(1);
             int[] geneRegion = new int[] { 0, 0 };
             readRegions.add(geneRegion);
-
-            final String geneBases = mConfig.RefGenome.getBaseString(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd);
 
             final String initialBases = geneBases.substring(0, readLength);
             int gcCount = calcGcCount(initialBases);
@@ -199,6 +214,19 @@ public class GcTranscriptCalculator implements Callable
         sumVectors(gcRatioCounts.getCounts(), mTotalExpectedCounts);
 
         writeExpectedGcRatios(mWriter, geneData.GeneId, gcRatioCounts.getCounts());
+    }
+
+    private String getRefBaseString(final EnsemblGeneData geneData)
+    {
+        try
+        {
+            return mConfig.RefGenome.getBaseString(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd);
+        }
+        catch (SAMException e)
+        {
+            ISF_LOGGER.warn("gene({}) bases beyond ref genome", geneData);
+            return "";
+        }
     }
 
     private void calculateTranscriptGcRatios(final String chromosome, final TranscriptData transData)
@@ -380,35 +408,32 @@ public class GcTranscriptCalculator implements Callable
         }
     }
 
-    public BufferedWriter createWriter()
+    public void initialiseWriter()
     {
         try
         {
             String outputFileName = String.format("%sread_%d_%s", mConfig.OutputDir, mConfig.ReadLength, "exp_gc_ratios.csv");
 
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            mWriter = createBufferedWriter(outputFileName, false);
 
-            writer.write("TransName");
+            mWriter.write("TransName");
 
             GcRatioCounts tmp = new GcRatioCounts();
 
             for(Double gcRatio : tmp.getRatios())
             {
-                writer.write(String.format(",Gcr_%.2f", gcRatio));
+                mWriter.write(String.format(",Gcr_%.2f", gcRatio));
             }
 
-            writer.newLine();
-            return writer;
+            mWriter.newLine();
         }
         catch (IOException e)
         {
             ISF_LOGGER.error("failed to write transcript expected GC ratio counts file: {}", e.toString());
-            return null;
         }
     }
 
-    private synchronized static void writeExpectedGcRatios(
-            final BufferedWriter writer, final String transName, final double[] counts)
+    private synchronized static void writeExpectedGcRatios(final BufferedWriter writer, final String transName, final double[] counts)
     {
         if(writer == null)
             return;
