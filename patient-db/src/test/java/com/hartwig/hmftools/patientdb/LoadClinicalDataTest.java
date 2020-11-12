@@ -18,9 +18,9 @@ import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
+import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
@@ -44,7 +44,7 @@ public class LoadClinicalDataTest {
 
     @Test
     public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
-        TumorLocationCurator tumorLocationCurator = TestCuratorFactory.tumorLocationCurator();
+        PrimaryTumorCurator primaryTumorCurator = TestCuratorFactory.primaryTumorCurator();
         BiopsySiteCurator biopsySiteCurator = TestCuratorFactory.biopsySiteCurator();
         TreatmentCurator treatmentCurator = TestCuratorFactory.treatmentCurator();
 
@@ -52,7 +52,7 @@ public class LoadClinicalDataTest {
         assertEquals(1, cpctEcrfModel.patientCount());
         assertEquals(1298, Lists.newArrayList(cpctEcrfModel.fields()).size());
 
-        EcrfPatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
+        EcrfPatientReader cpctPatientReader = new CpctPatientReader(primaryTumorCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
                 biopsySiteCurator,
                 treatmentCurator);
@@ -75,7 +75,7 @@ public class LoadClinicalDataTest {
         BaselineData baselineData = patient.baselineData();
         assertNotNull(baselineData);
         assertEquals(new Integer(1984), baselineData.birthYear());
-        assertEquals("Gastrointestinal Stromal Tumors (GIST)", baselineData.curatedTumorLocation().searchTerm());
+        assertEquals("Gastrointestinal Stromal Tumors (GIST)", baselineData.curatedPrimaryTumor().searchTerm());
         assertEquals("female", baselineData.gender());
         assertEquals(LocalDate.parse("2018-06-02", DATE_FORMATTER), baselineData.informedConsentDate());
         assertEquals(LocalDate.parse("2018-12-10", DATE_FORMATTER), baselineData.registrationDate());

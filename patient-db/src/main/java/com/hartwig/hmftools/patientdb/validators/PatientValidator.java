@@ -46,7 +46,7 @@ public final class PatientValidator {
         findings.addAll(validateDeathDate(patientIdentifier, patient.baselineData(), patient.treatments()));
         findings.addAll(validateInformedConsentDate(patientIdentifier, patient.baselineData(), patient.clinicalBiopsies()));
 
-        findings.addAll(validateTumorLocationCuration(patientIdentifier, patient.baselineData()));
+        findings.addAll(validatePrimaryTumorCuration(patientIdentifier, patient.baselineData()));
         findings.addAll(validateBiopsyTreatmentsCuration(patientIdentifier, patient.treatments()));
         findings.addAll(validatePreTreatmentCuration(patientIdentifier, patient.preTreatmentData()));
 
@@ -57,7 +57,7 @@ public final class PatientValidator {
     @VisibleForTesting
     static List<ValidationFinding> validateBaselineData(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         List<ValidationFinding> findings = Lists.newArrayList();
-        if (baselineData.curatedTumorLocation().searchTerm() == null) {
+        if (baselineData.curatedPrimaryTumor().searchTerm() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
                     "Primary tumor location empty",
@@ -293,14 +293,14 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateTumorLocationCuration(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
+    static List<ValidationFinding> validatePrimaryTumorCuration(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
         List<ValidationFinding> findings = Lists.newArrayList();
 
-        String searchTerm = baselineData.curatedTumorLocation().searchTerm();
-        if (searchTerm != null && !searchTerm.isEmpty() && baselineData.curatedTumorLocation().primaryTumorLocation() == null) {
-            findings.add(ValidationFinding.of("tumorLocationCuration",
+        String searchTerm = baselineData.curatedPrimaryTumor().searchTerm();
+        if (searchTerm != null && !searchTerm.isEmpty() && baselineData.curatedPrimaryTumor().primaryTumorLocation() == null) {
+            findings.add(ValidationFinding.of("primaryTumorCuration",
                     patientIdentifier,
-                    "Failed to curate primary tumor location",
+                    "Failed to curate primary tumor",
                     baselineData.primaryTumorStatus(),
                     searchTerm));
         }

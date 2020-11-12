@@ -29,8 +29,8 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
+import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
@@ -79,7 +79,7 @@ public final class LoadClinicalData {
     private static final String DO_LOAD_CLINICAL_DATA = "do_load_clinical_data";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
-    private static final String CURATED_TUMOR_LOCATION_TSV = "curated_tumor_location_tsv";
+    private static final String CURATED_PRIMARY_TUMOR_TSV = "curated_primary_tumor_tsv";
 
     private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
     private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
@@ -107,7 +107,7 @@ public final class LoadClinicalData {
         }
 
         List<DoidNode> doidNodes = DiseaseOntology.readDoidOwlEntryFromDoidJson(cmd.getOptionValue(DOID_JSON)).nodes();
-        TumorLocationCurator tumorLocationCurator = new TumorLocationCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV), doidNodes);
+        PrimaryTumorCurator primaryTumorCurator = new PrimaryTumorCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV), doidNodes);
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
         TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
 
@@ -132,10 +132,10 @@ public final class LoadClinicalData {
         EcrfModels ecrfModels = loadEcrfModels(cmd);
 
         Map<String, Patient> patients =
-                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, biopsySiteCurator, treatmentCurator);
+                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator);
 
-        LOGGER.info("Writing curated tumor locations");
-        DumpTumorLocationData.writeCuratedTumorLocationsToTSV(cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV), patients.values());
+        LOGGER.info("Writing curated primary tumors");
+        DumpPrimaryTumorData.writeCuratedPrimaryTumorsToTSV(cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV), patients.values());
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
             LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
@@ -147,7 +147,7 @@ public final class LoadClinicalData {
 
             writeClinicalData(dbWriter, lims, sequencedPatientIds, sampleDataPerPatient, patients);
 
-            dbWriter.writeValidationFindings(CurationValidator.validateTumorLocationCurator(tumorLocationCurator));
+            dbWriter.writeValidationFindings(CurationValidator.validatePrimaryTumorCurator(primaryTumorCurator));
             dbWriter.writeValidationFindings(CurationValidator.validateTreatmentCurator(treatmentCurator));
         }
 
@@ -379,11 +379,11 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull EcrfModels ecrfModels, @NotNull TumorLocationCurator tumorLocationCurator,
+            @NotNull EcrfModels ecrfModels, @NotNull PrimaryTumorCurator primaryTumorCurator,
             @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
-        EcrfPatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
+        EcrfPatientReader cpctPatientReader = new CpctPatientReader(primaryTumorCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
                 biopsySiteCurator,
                 treatmentCurator);
@@ -393,18 +393,18 @@ public final class LoadClinicalData {
 
         EcrfModel drupEcrfModel = ecrfModels.drupModel();
         LOGGER.info("Interpreting and curating data for {} DRUP patients", drupEcrfModel.patientCount());
-        EcrfPatientReader drupPatientReader = new DrupPatientReader(tumorLocationCurator, biopsySiteCurator);
+        EcrfPatientReader drupPatientReader = new DrupPatientReader(primaryTumorCurator, biopsySiteCurator);
 
         Map<String, Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), sampleDataPerPatient);
         LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
         LOGGER.info("Interpreting and curating data for WIDE patients");
         Map<String, Patient> widePatients =
-                readWidePatients(ecrfModels.wideModel(), sampleDataPerPatient, tumorLocationCurator, treatmentCurator);
+                readWidePatients(ecrfModels.wideModel(), sampleDataPerPatient, primaryTumorCurator, treatmentCurator);
         LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
         LOGGER.info("Interpreting and curating data for CORE patients");
-        Map<String, Patient> corePatients = readCorePatients(sampleDataPerPatient, tumorLocationCurator);
+        Map<String, Patient> corePatients = readCorePatients(sampleDataPerPatient, primaryTumorCurator);
         LOGGER.info(" Finished curation of {} CORE patients", corePatients.size());
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
@@ -430,11 +430,11 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> readWidePatients(@NotNull WideEcrfModel wideEcrfModel,
-            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull TumorLocationCurator tumorLocationCurator,
+            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull PrimaryTumorCurator primaryTumorCurator,
             @NotNull TreatmentCurator treatmentCurator) {
         Map<String, Patient> patientMap = Maps.newHashMap();
 
-        WidePatientReader widePatientReader = new WidePatientReader(wideEcrfModel, tumorLocationCurator, treatmentCurator);
+        WidePatientReader widePatientReader = new WidePatientReader(wideEcrfModel, primaryTumorCurator, treatmentCurator);
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
 
@@ -456,9 +456,9 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> readCorePatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull TumorLocationCurator tumorLocationCurator) {
+            @NotNull PrimaryTumorCurator primaryTumorCurator) {
         Map<String, Patient> patientMap = Maps.newHashMap();
-        CorePatientReader corePatientReader = new CorePatientReader(tumorLocationCurator);
+        CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
 
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
@@ -549,7 +549,7 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(TREATMENT_MAPPING_CSV),
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV),
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV),
-                cmd.getOptionValue(CURATED_TUMOR_LOCATION_TSV),
+                cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV),
                 cmd.getOptionValue(DOID_JSON));
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
@@ -589,8 +589,8 @@ public final class LoadClinicalData {
         options.addOption(DRUP_ECRF_FILE, true, "Path towards the drup ecrf file.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database");
 
-        options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, curated tumor locations will be written to csv file");
-        options.addOption(CURATED_TUMOR_LOCATION_TSV, true, "Path towards to the TSV of curated tumor locations.");
+        options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, clinical data will be loaded into the database");
+        options.addOption(CURATED_PRIMARY_TUMOR_TSV, true, "Path towards to the TSV of curated primary tumor.");
 
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,
@@ -603,7 +603,7 @@ public final class LoadClinicalData {
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
 
-        options.addOption(DOID_JSON, true, "Path towards to the json file of the doid ID of tumor locations.");
+        options.addOption(DOID_JSON, true, "Path towards to the json file of the doid ID of primary tumors.");
         options.addOption(TUMOR_LOCATION_MAPPING_TSV, true, "Path towards to the TSV of mapping the tumor location.");
         options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the CSV of mapping the treatments.");
         options.addOption(BIOPSY_MAPPING_CSV, true, "Path towards to the CSV of mapping of biopsies.");

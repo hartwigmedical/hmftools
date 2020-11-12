@@ -8,10 +8,10 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,12 +58,12 @@ class BaselineReader {
     private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
 
     @NotNull
-    private final TumorLocationCurator tumorLocationCurator;
+    private final PrimaryTumorCurator primaryTumorCurator;
     @NotNull
     private final Map<Integer, String> hospitals;
 
-    public BaselineReader(@NotNull final TumorLocationCurator tumorLocationCurator, @NotNull final Map<Integer, String> hospitals) {
-        this.tumorLocationCurator = tumorLocationCurator;
+    public BaselineReader(@NotNull final PrimaryTumorCurator primaryTumorCurator, @NotNull final Map<Integer, String> hospitals) {
+        this.primaryTumorCurator = primaryTumorCurator;
         this.hospitals = hospitals;
     }
 
@@ -72,7 +72,7 @@ class BaselineReader {
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())
-                .curatedTumorLocation(ImmutableCuratedTumorLocation.builder().searchTerm(Strings.EMPTY).build())
+                .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).build())
                 .eligibilityStatus(FormStatus.undefined())
                 .selectionCriteriaStatus(FormStatus.undefined())
                 .informedConsentStatus(FormStatus.undefined())
@@ -158,7 +158,7 @@ class BaselineReader {
             //                    patientId);
         }
 
-        builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
+        builder.curatedPrimaryTumor(primaryTumorCurator.search(primaryTumorLocation));
         builder.primaryTumorStatus(primaryTumorFormStatus != null ? primaryTumorFormStatus : FormStatus.undefined());
     }
 

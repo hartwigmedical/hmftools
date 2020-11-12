@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.patientdb.data;
+package com.hartwig.hmftools.common.clinical;
 
 import java.util.List;
-
-import com.hartwig.hmftools.common.doid.DoidNode;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -11,27 +9,29 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CuratedTumorLocation {
+public abstract class PatientPrimaryTumor {
 
-    @Nullable
-    public abstract String searchTerm();
+    @NotNull
+    public abstract String patientIdentifier();
 
-    @Nullable
+    @NotNull
     public abstract String primaryTumorLocation();
 
-    @Nullable
+    @NotNull
     public abstract String primaryTumorSubLocation();
 
-    @Nullable
+    @NotNull
     public abstract String primaryTumorType();
 
-    @Nullable
+    @NotNull
     public abstract String primaryTumorSubType();
 
-    @Nullable
+    @NotNull
     public abstract String primaryTumorExtraDetails();
 
-    @Nullable
-    public abstract List<DoidNode> doidNodes();
+    @NotNull
+    public abstract List<String> doids();
+
+    public abstract boolean isOverridden();
 
 }

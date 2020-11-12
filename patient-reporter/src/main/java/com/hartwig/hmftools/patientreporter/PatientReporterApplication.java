@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
@@ -156,17 +156,17 @@ public class PatientReporterApplication {
 
     @NotNull
     private static QCFailReportData buildBaseReportData(@NotNull PatientReporterConfig config) throws IOException {
-        String tumorLocationTsv = config.tumorLocationTsv();
+        String primaryTumorTsv = config.primaryTumorTsv();
 
-        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.read(tumorLocationTsv);
-        LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationTsv);
+        List<PatientPrimaryTumor> patientPrimaryTumors = PatientPrimaryTumorFile.read(primaryTumorTsv);
+        LOGGER.info("Loaded primary tumors for {} patients from {}", patientPrimaryTumors.size(), primaryTumorTsv);
 
         String limsDirectory = config.limsDir();
         Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
         LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
 
         return ImmutableQCFailReportData.builder()
-                .patientTumorLocations(patientTumorLocations)
+                .patientPrimaryTumors(patientPrimaryTumors)
                 .limsModel(lims)
                 .signaturePath(config.signature())
                 .logoRVAPath(config.rvaLogo())

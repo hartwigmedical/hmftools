@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.WithEvent;
 import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzer;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.protect.GenomicAnalysis;
@@ -49,15 +49,14 @@ class AnalysedPatientReporter {
             @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile, @Nullable String comments,
             boolean correctedReport) throws IOException {
-        PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findTumorLocationForSample(reportData.patientTumorLocations(),
+        PatientPrimaryTumor patientPrimaryTumor =
+                PatientPrimaryTumorFunctions.findPrimaryTumorForSample(reportData.patientPrimaryTumors(),
                         sampleMetadata.tumorSampleId());
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
+        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.actionabilityAnalyzer(), reportData.germlineReportingModel());
-        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
-                patientTumorLocation,
+        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(), patientPrimaryTumor,
                 purplePurityTsv,
                 purpleQCFile,
                 purpleDriverCatalogTsv,
@@ -171,7 +170,7 @@ class AnalysedPatientReporter {
 
         LOGGER.info("Printing clinical and laboratory data for {}", report.sampleReport().tumorSampleId());
         LOGGER.info(" Tumor sample arrived at HMF on {}", formattedTumorArrivalDate);
-        LOGGER.info(" Primary tumor location: {}{}",
+        LOGGER.info(" Primary tumor details: {}{}",
                 report.sampleReport().primaryTumorLocationString(),
                 !report.sampleReport().primaryTumorTypeString().isEmpty()
                         ? " (" + report.sampleReport().primaryTumorTypeString() + ")"

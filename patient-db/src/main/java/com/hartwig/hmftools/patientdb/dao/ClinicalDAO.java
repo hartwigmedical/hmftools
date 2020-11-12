@@ -147,11 +147,11 @@ class ClinicalDAO {
                         patient.gender(),
                         patient.hospital(),
                         patient.birthYear(),
-                        patient.curatedTumorLocation().primaryTumorLocation(),
-                        patient.curatedTumorLocation().primaryTumorSubLocation(),
-                        patient.curatedTumorLocation().primaryTumorType(),
-                        patient.curatedTumorLocation().primaryTumorSubType(),
-                        patient.curatedTumorLocation().primaryTumorExtraDetails(),
+                        patient.curatedPrimaryTumor().primaryTumorLocation(),
+                        patient.curatedPrimaryTumor().primaryTumorSubLocation(),
+                        patient.curatedPrimaryTumor().primaryTumorType(),
+                        patient.curatedPrimaryTumor().primaryTumorSubType(),
+                        patient.curatedPrimaryTumor().primaryTumorExtraDetails(),
                         primaryTumorOverridden,
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
@@ -161,7 +161,7 @@ class ClinicalDAO {
                         preTreatmentMechanism)
                 .execute();
 
-        List<DoidNode> doidNodes = patient.curatedTumorLocation().doidNodes();
+        List<DoidNode> doidNodes = patient.curatedPrimaryTumor().doidNodes();
         if (doidNodes != null) {
             for (DoidNode doidNode : doidNodes) {
                 writeDoidNode(patientId, doidNode);

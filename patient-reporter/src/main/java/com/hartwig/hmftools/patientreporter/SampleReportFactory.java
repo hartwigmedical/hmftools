@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.time.LocalDate;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
@@ -23,7 +23,7 @@ public final class SampleReportFactory {
 
     @NotNull
     public static SampleReport fromLimsModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
-            @Nullable PatientTumorLocation patientTumorLocation) {
+            @Nullable PatientPrimaryTumor patientPrimaryTumor) {
         String refSampleBarcode = sampleMetadata.refSampleBarcode();
         String refSampleId = sampleMetadata.refSampleId();
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
@@ -63,7 +63,7 @@ public final class SampleReportFactory {
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
-                .patientTumorLocation(patientTumorLocation)
+                .patientPrimaryTumor(patientPrimaryTumor)
                 .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode))
                 .reportViralInsertions(lims.reportViralInsertions(tumorSampleBarcode))
                 .refArrivalDate(arrivalDateRefSample)

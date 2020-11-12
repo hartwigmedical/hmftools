@@ -10,17 +10,17 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.CuratedPrimaryTumor;
 
 import org.junit.Test;
 
-public class TumorLocationCuratorTest {
+public class PrimaryTumorCuratorTest {
 
     private static final String DOID_FILE_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
     @Test
     public void canDetermineUnusedTerms() {
-        TumorLocationCurator curator = TestCuratorFactory.tumorLocationCurator();
+        PrimaryTumorCurator curator = TestCuratorFactory.primaryTumorCurator();
         assertEquals(5, curator.unusedSearchTerms().size());
 
         curator.search("Morbus Kahler");
@@ -30,26 +30,26 @@ public class TumorLocationCuratorTest {
     @Test
     public void canCurateDesmoidTumor() {
         // See DEV-275
-        TumorLocationCurator curator = TestCuratorFactory.tumorLocationCurator();
+        PrimaryTumorCurator curator = TestCuratorFactory.primaryTumorCurator();
         String desmoidTumor = "desmoïd tumor";
-        CuratedTumorLocation tumorLocation = curator.search(desmoidTumor);
+        CuratedPrimaryTumor primaryTumor = curator.search(desmoidTumor);
 
-        assertEquals("Bone/Soft tissue", tumorLocation.primaryTumorLocation());
+        assertEquals("Bone/Soft tissue", primaryTumor.primaryTumorLocation());
     }
 
     @Test
     public void canResolveDoidNodes() throws IOException {
         List<DoidNode> doidNodes = DiseaseOntology.readDoidOwlEntryFromDoidJson(DOID_FILE_JSON).nodes();
-        assertEquals(Lists.newArrayList(doidNodes.get(0)), TumorLocationCurator.resolveDoidNodes(doidNodes, Lists.newArrayList("8718")));
+        assertEquals(Lists.newArrayList(doidNodes.get(0)), PrimaryTumorCurator.resolveDoidNodes(doidNodes, Lists.newArrayList("8718")));
     }
 
     @Test
     public void canCurateSearchTermWithChar34() {
         String searchTerm = "Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis \"lung carcinoma\"";
-        TumorLocationCurator curator = TestCuratorFactory.tumorLocationCurator();
-        CuratedTumorLocation tumorLocation = curator.search(searchTerm);
+        PrimaryTumorCurator curator = TestCuratorFactory.primaryTumorCurator();
+        CuratedPrimaryTumor primaryTumor = curator.search(searchTerm);
 
-        String location = tumorLocation.primaryTumorLocation();
+        String location = primaryTumor.primaryTumorLocation();
         assertNotNull(location);
         assertEquals("lung", location.toLowerCase());
     }

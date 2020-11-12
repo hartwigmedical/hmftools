@@ -17,11 +17,11 @@ public final class TestCuratorFactory {
     }
 
     @NotNull
-    public static TumorLocationCurator tumorLocationCurator() {
+    public static PrimaryTumorCurator primaryTumorCurator() {
         try {
-            return new TumorLocationCurator(TUMOR_LOCATION_MAPPING_TSV, Lists.newArrayList());
+            return new PrimaryTumorCurator(TUMOR_LOCATION_MAPPING_TSV, Lists.newArrayList());
         } catch (IOException e) {
-            throw new IllegalStateException("Could not create tumor location curator!");
+            throw new IllegalStateException("Could not create primary tumor curator!");
         }
     }
 
