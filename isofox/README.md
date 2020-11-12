@@ -116,6 +116,7 @@ apply_gc_bias_adjust | Adjusted transcript counts by actual vs expected GC ratio
 exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
 long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
+single_map_qual | Default 255, discard reads with map quality below this unless using the config 'apply_map_qual_adjust'
 apply_map_qual_adjust | Include multi-mapped fragments in transcript counting, weighted by inverse of # multi-mapped locations
 enriched_gene_ids | By default includes: ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735
 gc_ratio_bucket | Default 0.01 ie percentiles. Ratio unit for GC distribution.
@@ -158,7 +159,8 @@ java -jar isofox.jar
     -output_dir /path_to_output_data/ 
     -apply_calc_frag_lengths 
     -apply_exp_rates 
-    -read_length 76 
+    -read_length 151
+    -single_map_qual 255
     -exp_counts_file /path_to_ref_files/read_76_exp_counts.csv 
     -apply_gc_bias_adjust 
     -exp_gc_ratios_file /path_to_ref_files/read_100_exp_gc_ratios.csv 
@@ -178,7 +180,8 @@ java -jar isofox.jar
     -ref_genome /path_to_ref_files/ef-genome.fasta 
     -gene_transcripts_dir /path_ensembl_data_cache_files/ 
     -output_dir /path_to_output_data/ 
-    -read_length 76 
+    -read_length 151 
+    -single_map_qual 255
     -long_frag_limit 550 
     -known_fusion_file /path_to_fusion_ref_file/known_fusion_data.csv
     -threads 10 

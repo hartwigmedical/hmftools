@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_1;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_2;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_3;
@@ -74,6 +75,7 @@ public class IsofoxConfig
     private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     private static final String DROP_DUPLICATES = "drop_dups";
     private static final String MARK_DUPLICATES = "mark_dups";
+    private static final String SINGLE_MAP_QUAL = "single_map_qual";
 
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
@@ -261,6 +263,7 @@ public class IsofoxConfig
 
         GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
+        IsofoxConstants.SINGLE_MAP_QUALITY = Short.parseShort(cmd.getOptionValue(SINGLE_MAP_QUAL, String.valueOf(DEFAULT_SINGLE_MAP_QUALITY)));
         DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
         MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
         FragmentLengthSamplingCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, "0"));
@@ -571,6 +574,7 @@ public class IsofoxConfig
         options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates per transcript");
         options.addOption(EXP_GC_RATIOS_FILE, true, "File with generated expected GC ratios per transcript");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
+        options.addOption(SINGLE_MAP_QUAL, true, "Optional - map quality for reads mapped to a single location (default=255)");
         options.addOption(APPLY_FRAG_LENGTH_ADJUSTMENT, false, "Use sample fragment length distribution in expected rate calcs");
         options.addOption(APPLY_MQ_ADJUST, false, "Use read map quality to adjust expected counts");
         options.addOption(APPLY_GC_BIAS_ADJUSTMENT, false, "Use GC Bias adjustments in expected rate calcs");

@@ -117,7 +117,8 @@ public class GcTranscriptCalculator implements Callable
 
                 if(transGcCounts == null)
                 {
-                    ISF_LOGGER.error("transcript({}) missing expected GC ratio counts from cache", transName);
+                    ISF_LOGGER.warn("genes({}) transcript({}) missing expected GC ratio counts from cache",
+                            geneSummary.GeneNames, transName);
                     return;
                 }
 

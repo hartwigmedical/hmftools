@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
@@ -392,7 +393,7 @@ public class BamFragmentAllocator
 
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
         int minMapQuality = min(read1.mapQuality(), read2.mapQuality());
-        boolean isMultiMapped = minMapQuality < SINGLE_MAP_QUALITY;
+        boolean isMultiMapped = minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD;
         boolean isChimeric = read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection();
 
         if(!isChimeric && !isDuplicate && !isMultiMapped && mRunFusions && (read1.containsSplit() || read2.containsSplit()))
@@ -909,7 +910,7 @@ public class BamFragmentAllocator
 
         double fragmentCount = 1;
 
-        if(minMapQuality < SINGLE_MAP_QUALITY && mConfig.ApplyMapQualityAdjust)
+        if(minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD && mConfig.ApplyMapQualityAdjust)
         {
             if(minMapQuality == 3)
                 fragmentCount = 0.5;
