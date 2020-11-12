@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.CuratedPrimaryTumor;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +36,7 @@ class BiopsyReader {
     }
 
     @NotNull
-    List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedTumorLocation curatedTumorLocation) {
+    List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedPrimaryTumor curatedPrimaryTumor) {
         List<BiopsyData> biopsies = Lists.newArrayList();
         for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
             for (EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPSY)) {
@@ -55,8 +55,8 @@ class BiopsyReader {
 
                     String location = tumorBiopsyGroup.readItemString(FIELD_LOCATION);
 
-                    CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
-                            curatedTumorLocation.primaryTumorType(),
+                    CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedPrimaryTumor.primaryTumorLocation(),
+                            curatedPrimaryTumor.primaryTumorType(),
                             finalSite,
                             location);
 

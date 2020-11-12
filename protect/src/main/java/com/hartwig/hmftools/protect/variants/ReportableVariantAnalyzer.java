@@ -6,7 +6,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.protect.actionability.ReportableEvidenceItemFactory;
 
@@ -21,11 +21,11 @@ public final class ReportableVariantAnalyzer {
     @NotNull
     public static ReportableVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<ReportableVariant> reportableSomaticVariants,
             @NotNull List<ReportableVariant> reportableGermlineVariants, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation) {
+            @Nullable PatientPrimaryTumor patientPrimaryTumor) {
         List<ReportableVariant> allReportableVariants =
                 ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
 
-        String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
+        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.primaryTumorLocation() : null;
         // Extract somatic evidence for high drivers variants only (See DEV-824)
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
                 filterHighDriverLikelihood(actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation));

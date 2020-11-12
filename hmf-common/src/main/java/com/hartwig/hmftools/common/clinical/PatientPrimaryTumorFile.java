@@ -11,27 +11,27 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PatientTumorLocationFile {
+public class PatientPrimaryTumorFile {
 
     private static final String TAB_DELIMITER = "\t";
     private static final String DOID_DELIMITER = ";";
 
-    private PatientTumorLocationFile() {
+    private PatientPrimaryTumorFile() {
     }
 
     @NotNull
-    public static List<PatientTumorLocation> read(@NotNull String filePath) throws IOException {
+    public static List<PatientPrimaryTumor> read(@NotNull String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
     @NotNull
     @VisibleForTesting
-    static List<PatientTumorLocation> fromLines(@NotNull List<String> lines) {
-        List<PatientTumorLocation> patientTumorLocations = Lists.newArrayList();
+    static List<PatientPrimaryTumor> fromLines(@NotNull List<String> lines) {
+        List<PatientPrimaryTumor> patientPrimaryTumors = Lists.newArrayList();
         // Skip header
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(TAB_DELIMITER);
-            patientTumorLocations.add(ImmutablePatientTumorLocation.builder()
+            patientPrimaryTumors.add(ImmutablePatientPrimaryTumor.builder()
                     .patientIdentifier(parts[0])
                     .primaryTumorLocation(parts[1])
                     .primaryTumorSubLocation(parts[2])
@@ -43,20 +43,20 @@ public class PatientTumorLocationFile {
                     .build());
         }
 
-        return patientTumorLocations;
+        return patientPrimaryTumors;
     }
 
-    public static void write(@NotNull String outputPath, @NotNull List<PatientTumorLocation> patientTumorLocations) throws IOException {
-        Files.write(new File(outputPath).toPath(), toLines(patientTumorLocations));
+    public static void write(@NotNull String outputPath, @NotNull List<PatientPrimaryTumor> patientPrimaryTumors) throws IOException {
+        Files.write(new File(outputPath).toPath(), toLines(patientPrimaryTumors));
     }
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull List<PatientTumorLocation> patientTumorLocations) {
+    static List<String> toLines(@NotNull List<PatientPrimaryTumor> patientPrimaryTumors) {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
-        for (PatientTumorLocation patientTumorLocation : patientTumorLocations) {
-            lines.add(toString(patientTumorLocation));
+        for (PatientPrimaryTumor patientPrimaryTumor : patientPrimaryTumors) {
+            lines.add(toString(patientPrimaryTumor));
         }
         return lines;
     }
@@ -75,15 +75,15 @@ public class PatientTumorLocationFile {
     }
 
     @NotNull
-    private static String toString(@NotNull PatientTumorLocation patientTumorLocation) {
-        return new StringJoiner(TAB_DELIMITER).add(patientTumorLocation.patientIdentifier())
-                .add(patientTumorLocation.primaryTumorLocation())
-                .add(patientTumorLocation.primaryTumorSubLocation())
-                .add(patientTumorLocation.primaryTumorType())
-                .add(patientTumorLocation.primaryTumorSubType())
-                .add(patientTumorLocation.primaryTumorExtraDetails())
-                .add(fromDOIDs(patientTumorLocation.doids()))
-                .add(String.valueOf(patientTumorLocation.isOverridden()))
+    private static String toString(@NotNull PatientPrimaryTumor patientPrimaryTumor) {
+        return new StringJoiner(TAB_DELIMITER).add(patientPrimaryTumor.patientIdentifier())
+                .add(patientPrimaryTumor.primaryTumorLocation())
+                .add(patientPrimaryTumor.primaryTumorSubLocation())
+                .add(patientPrimaryTumor.primaryTumorType())
+                .add(patientPrimaryTumor.primaryTumorSubType())
+                .add(patientPrimaryTumor.primaryTumorExtraDetails())
+                .add(fromDOIDs(patientPrimaryTumor.doids()))
+                .add(String.valueOf(patientPrimaryTumor.isOverridden()))
                 .toString();
     }
 

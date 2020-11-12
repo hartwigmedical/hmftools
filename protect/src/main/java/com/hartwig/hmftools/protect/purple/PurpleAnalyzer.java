@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
@@ -25,11 +25,11 @@ public final class PurpleAnalyzer {
 
     @NotNull
     public static PurpleAnalysis run(@NotNull PurityContext purityContext, @NotNull PurpleQC purpleQC,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientPrimaryTumor patientPrimaryTumor,
             @NotNull List<DriverCatalog> purpleDriverCatalog) {
         FittedPurity bestFit = purityContext.bestFit();
         List<ReportableGainLoss> reportableGainsAndLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(purpleDriverCatalog);
-        String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
+        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.primaryTumorLocation() : null;
         Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(reportableGainsAndLosses, primaryTumorLocation);
 

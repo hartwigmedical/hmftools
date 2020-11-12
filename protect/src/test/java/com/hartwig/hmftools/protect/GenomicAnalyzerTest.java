@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 
 import org.junit.Test;
 
@@ -28,10 +28,9 @@ public class GenomicAnalyzerTest {
         GenomicAnalyzer analyzer = new GenomicAnalyzer(ProtectTestFactory.loadTestActionabilityAnalyzer(),
                 ProtectTestFactory.createEmptyGermlineReportingModel());
 
-        PatientTumorLocation patientTumorLocation = null;
+        PatientPrimaryTumor patientPrimaryTumor = null;
 
-        assertNotNull(analyzer.run("sample",
-                patientTumorLocation,
+        assertNotNull(analyzer.run("sample", patientPrimaryTumor,
                 PURPLE_PURITY_TSV,
                 PURPLE_QC_FILE,
                 PURPLE_DRIVER_CATALOG_TSV,

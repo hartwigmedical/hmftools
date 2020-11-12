@@ -23,7 +23,7 @@ public class DiseaseOntologyTest {
 
     @Test
     public void canLoadDoidJsonFile() throws IOException {
-        DoidEntry doidEntry = DiseaseOntology.readDoidJsonFile(DOID_FILE_JSON);
+        DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(DOID_FILE_JSON);
 
         assertEquals(DiseaseOntology.ID_TO_READ, doidEntry.id());
 

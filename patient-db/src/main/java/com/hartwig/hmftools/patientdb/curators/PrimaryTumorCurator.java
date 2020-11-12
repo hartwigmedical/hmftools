@@ -12,24 +12,24 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.CuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TumorLocationCurator implements CleanableCurator {
+public class PrimaryTumorCurator implements CleanableCurator {
 
     private static final String FIELD_DELIMITER = "\t";
     private static final String DOID_DELIMITER = ";";
 
     @NotNull
-    private final Map<String, CuratedTumorLocation> tumorLocationMap = Maps.newHashMap();
+    private final Map<String, CuratedPrimaryTumor> primaryTumorMap = Maps.newHashMap();
     @NotNull
     private final Set<String> unusedSearchTerms;
 
-    public TumorLocationCurator(@NotNull String tumorLocationMappingTsv, @NotNull List<DoidNode> doidNodes) throws IOException {
+    public PrimaryTumorCurator(@NotNull String tumorLocationMappingTsv, @NotNull List<DoidNode> doidNodes) throws IOException {
         List<String> lines = Files.readAllLines(new File(tumorLocationMappingTsv).toPath());
 
         // Skip header
@@ -43,8 +43,8 @@ public class TumorLocationCurator implements CleanableCurator {
             String primaryTumorExtraDetails = parts.length > 5 ? parts[5] : Strings.EMPTY;
             List<String> doids = parts.length > 6 ? Lists.newArrayList(parts[6].split(DOID_DELIMITER)) : Lists.newArrayList();
 
-            tumorLocationMap.put(searchTerm,
-                    ImmutableCuratedTumorLocation.builder()
+            primaryTumorMap.put(searchTerm,
+                    ImmutableCuratedPrimaryTumor.builder()
                             .primaryTumorLocation(primaryTumorLocation)
                             .primaryTumorSubLocation(primaryTumorSubLocation)
                             .primaryTumorType(primaryTumorType)
@@ -56,7 +56,7 @@ public class TumorLocationCurator implements CleanableCurator {
         }
 
         // Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
-        unusedSearchTerms = Sets.newHashSet(tumorLocationMap.keySet());
+        unusedSearchTerms = Sets.newHashSet(primaryTumorMap.keySet());
     }
 
     @NotNull
@@ -74,17 +74,17 @@ public class TumorLocationCurator implements CleanableCurator {
     }
 
     @NotNull
-    public CuratedTumorLocation search(@Nullable String searchTerm) {
+    public CuratedPrimaryTumor search(@Nullable String searchTerm) {
         if (searchTerm != null && !searchTerm.isEmpty()) {
             unusedSearchTerms.remove(searchTerm);
-            CuratedTumorLocation result = tumorLocationMap.get(searchTerm);
+            CuratedPrimaryTumor result = primaryTumorMap.get(searchTerm);
 
             if (result != null) {
                 return result;
             }
         }
 
-        return ImmutableCuratedTumorLocation.builder().searchTerm(searchTerm).build();
+        return ImmutableCuratedPrimaryTumor.builder().searchTerm(searchTerm).build();
     }
 
     @NotNull

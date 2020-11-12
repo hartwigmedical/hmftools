@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.protect.actionability.ReportableEvidenceItemFactory;
@@ -21,8 +21,8 @@ public final class SvAnalyzer {
 
     @NotNull
     public static SvAnalysis run(@NotNull LinxData linxData, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientTumorLocation patientTumorLocation) {
-        String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
+            @Nullable PatientPrimaryTumor patientPrimaryTumor) {
+        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.primaryTumorLocation() : null;
         Map<LinxFusion, List<EvidenceItem>> evidencePerFusion =
                 actionabilityAnalyzer.evidenceForFusions(linxData.fusions(), primaryTumorLocation);
 
@@ -37,10 +37,10 @@ public final class SvAnalyzer {
 
     @NotNull
     public static SvAnalysis run(@NotNull List<LinxFusion> fusions, @NotNull List<LinxBreakend> disruptions,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientPrimaryTumor patientPrimaryTumor) {
         List<ReportableGeneDisruption> reportableGeneDisruptions = ReportableGeneDisruptionFactory.convert(disruptions);
 
-        String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
+        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.primaryTumorLocation() : null;
 
         Map<LinxFusion, List<EvidenceItem>> evidencePerFusion = actionabilityAnalyzer.evidenceForFusions(fusions, primaryTumorLocation);
 

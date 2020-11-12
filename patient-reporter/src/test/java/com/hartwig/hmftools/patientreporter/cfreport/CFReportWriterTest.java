@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.clinical.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
@@ -223,7 +223,7 @@ public class CFReportWriterTest {
 
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
-                .patientTumorLocation(ImmutablePatientTumorLocation.of(Strings.EMPTY,
+                .patientPrimaryTumor(ImmutablePatientPrimaryTumor.of(Strings.EMPTY,
                         "Skin",
                         Strings.EMPTY,
                         "Melanoma",

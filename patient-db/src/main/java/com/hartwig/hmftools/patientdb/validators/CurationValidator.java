@@ -6,8 +6,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.CleanableCurator;
+import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
-import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,8 +17,8 @@ public final class CurationValidator {
     }
 
     @NotNull
-    public static List<ValidationFinding> validateTumorLocationCurator(@NotNull TumorLocationCurator tumorLocationCurator) {
-        return validateCurator(tumorLocationCurator, "tumorLocationCuration", "Tumor location search term not used");
+    public static List<ValidationFinding> validatePrimaryTumorCurator(@NotNull PrimaryTumorCurator primaryTumorCurator) {
+        return validateCurator(primaryTumorCurator, "primaryTumorCuration", "Primary tumor search term not used");
     }
 
     @NotNull

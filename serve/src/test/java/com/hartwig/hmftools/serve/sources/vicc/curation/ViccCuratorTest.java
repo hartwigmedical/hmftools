@@ -11,7 +11,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ViccCuratorTest {
@@ -40,11 +39,11 @@ public class ViccCuratorTest {
     }
 
     @Test
-    @Ignore
     public void canKeepTrackOfFeatures() {
         ViccCurator curator = new ViccCurator();
 
-        ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, ViccTestFactory.testOncoKbWithTranscript("any"));
+        ViccEntry entry =
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, ViccTestFactory.testOncoKbWithTranscript("any"));
         Feature feature = ImmutableFeature.builder().geneSymbol("any").name("any").build();
 
         assertNotNull(curator.curate(entry, feature));

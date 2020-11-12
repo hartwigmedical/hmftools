@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
@@ -36,8 +36,8 @@ public class QCFailReporter {
             throw new IllegalStateException("QC fail report not supported for non-cancer study samples: " + sampleMetadata.tumorSampleId());
         }
 
-        PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findTumorLocationForSample(reportData.patientTumorLocations(),
+        PatientPrimaryTumor patientPrimaryTumor =
+                PatientPrimaryTumorFunctions.findPrimaryTumorForSample(reportData.patientPrimaryTumors(),
                         sampleMetadata.tumorSampleId());
 
         String wgsPurityString = null;
@@ -49,7 +49,7 @@ public class QCFailReporter {
             wgsPurityString = hasReliablePurity ? formattedPurity : Lims.PURITY_NOT_RELIABLE_STRING;
         }
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientTumorLocation);
+        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)

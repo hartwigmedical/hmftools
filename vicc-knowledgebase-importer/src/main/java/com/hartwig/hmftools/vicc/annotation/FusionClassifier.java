@@ -12,11 +12,10 @@ final class FusionClassifier {
     private static final Set<String> FUSION_KEYWORDS =
             Sets.newHashSet("Fusion", "fusion", "FUSION", "Fusions", "FUSIONS", "REARRANGEMENT", "rearrange");
 
-    private static final Set<String> EXON_DEL_DUP_FUSION_PAIRS =
-            Sets.newHashSet("EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD");
+    private static final Set<String> EXON_DEL_DUP_FUSION_PAIRS = Sets.newHashSet("EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD");
 
     private static final Set<String> FEATURE_NAMES_TO_SKIP =
-            Sets.newHashSet("p61BRAF-V600E", "AR-V7", "LOSS-OF-FUNCTION", "LCS6-variant", "DI842-843VM", "FLT3-ITD");
+            Sets.newHashSet("AR-V7", "Gain-of-Function", "LOSS-OF-FUNCTION", "LCS6-variant", "DI842-843VM", "FLT3-ITD");
 
     private FusionClassifier() {
     }
@@ -46,11 +45,7 @@ final class FusionClassifier {
         if (EXON_DEL_DUP_FUSION_PAIRS.contains(featureName) || isTypicalFusionPair(featureName)) {
             return FusionEvent.FUSION_PAIR;
         } else if (hasFusionKeyword(featureName)) {
-            if (featureName.contains("-")) {
-                return FusionEvent.FUSION_PAIR;
-            } else {
-                return FusionEvent.PROMISCUOUS_FUSION;
-            }
+            return FusionEvent.PROMISCUOUS_FUSION;
         }
 
         return null;
@@ -80,12 +75,8 @@ final class FusionClassifier {
 
         if (potentialFusion.contains("-")) {
             String[] parts = potentialFusion.split("-");
-            if (parts.length != 2) {
-                return false;
-            } else {
-                // Assume genes that are fused contain no spaces
-                return !parts[0].contains(" ") && !parts[1].contains(" ");
-            }
+            // Assume genes that are fused contain no spaces
+            return !parts[0].contains(" ") && !parts[1].contains(" ");
         }
         return false;
     }

@@ -13,7 +13,6 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ViccFilterTest {
@@ -32,7 +31,6 @@ public class ViccFilterTest {
     }
 
     @Test
-    @Ignore
     public void canFilterIndividualFeatures() {
         ViccFilter filter = new ViccFilter();
 

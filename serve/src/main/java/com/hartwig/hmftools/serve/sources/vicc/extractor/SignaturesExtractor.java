@@ -33,12 +33,14 @@ public class SignaturesExtractor {
     static SignatureName extractSignatureName(@NotNull String featureName) {
         if (featureName.equals("Microsatellite Instability-High")) {
             return SignatureName.MICROSATELLITE_UNSTABLE;
-        } else if (featureName.equals("High tumor mutational load")) { // TODO: check for right string
-            return SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD;
-        } else if (featureName.equals("HRD")) {
-            return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENY; // TODO: check for right string
         } else {
             return SignatureName.UNKNOWN;
         }
+        // AT this moment not needed because those events are not present
+//        else if (featureName.equals("XXX")) {
+//            return SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD;
+//        } else if (featureName.equals("XXX")) {
+//            return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENY;
+//        }
     }
 }

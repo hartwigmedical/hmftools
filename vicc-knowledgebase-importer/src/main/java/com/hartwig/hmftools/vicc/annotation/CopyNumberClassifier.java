@@ -48,14 +48,6 @@ final class CopyNumberClassifier {
 
     @Nullable
     private static CopyNumberType extractAmplificationDeletionType(@NotNull String featureName) {
-        if (featureName.contains(" ")) {
-            // Never consider something an amp or del when the first part has a dash.
-            if (featureName.split(" ")[0].contains("-")) {
-                return null;
-            }
-
-        }
-
         String[] words = featureName.split(" ");
         for (String keyword : AMPLIFICATION_KEYWORDS) {
             for (String word : words) {

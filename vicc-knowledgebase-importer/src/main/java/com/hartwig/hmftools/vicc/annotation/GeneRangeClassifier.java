@@ -38,6 +38,12 @@ public final class GeneRangeClassifier {
             "positive",
             "oncogenic mutation");
 
+    private static final String EXON_KEYWORD = "exon";
+    private static final Set<String> EXON_RANGE_EXACT_TERMS = Sets.newHashSet("RARE EX 18-21 MUT");
+
+    private static final Set<String> EXON_RANGE_KEYWORDS =
+            Sets.newHashSet("deletion", "insertion", "proximal", "mutation", "splice site insertion", "frameshift");
+
     private GeneRangeClassifier() {
     }
 
@@ -46,7 +52,7 @@ public final class GeneRangeClassifier {
             return false;
         }
 
-        if (featureName.toLowerCase().contains("exon")) {
+        if (featureName.toLowerCase().contains(EXON_KEYWORD)) {
             return false;
         }
 
@@ -72,16 +78,24 @@ public final class GeneRangeClassifier {
     }
 
     public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName, gene)) {
+        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName, gene)
+                || ComplexClassifier.isComplexEvent(featureName, gene)) {
             return false;
         }
 
-        String lowerCaseFeatureName = featureName.toLowerCase();
-        if (lowerCaseFeatureName.contains("exon")) {
-            return lowerCaseFeatureName.contains("deletion") || lowerCaseFeatureName.contains("insertion") || lowerCaseFeatureName.contains(
-                    "proximal") || lowerCaseFeatureName.contains("mutation") || lowerCaseFeatureName.contains("splice site insertion")
-                    || lowerCaseFeatureName.contains("frameshift");
+        if (EXON_RANGE_EXACT_TERMS.contains(featureName)) {
+            return true;
+        } else {
+            String lowerCaseFeatureName = featureName.toLowerCase();
+            if (lowerCaseFeatureName.contains(EXON_KEYWORD)) {
+                for (String keyword : EXON_RANGE_KEYWORDS) {
+                    if (lowerCaseFeatureName.contains(keyword)) {
+                        return true;
+                    }
+                }
+            }
         }
+
         return false;
     }
 
@@ -135,7 +149,7 @@ public final class GeneRangeClassifier {
             } else if (!Character.isDigit(string.charAt(i)) && inDigitSequence) {
                 inDigitSequence = false;
             }
-         }
+        }
         return digitSequences;
     }
 }

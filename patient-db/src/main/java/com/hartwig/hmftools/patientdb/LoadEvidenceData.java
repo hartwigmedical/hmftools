@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationFile;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.copynumber.ExtractReportableGainsAndLosses;
@@ -44,7 +44,7 @@ public class LoadEvidenceData {
     private static final String SAMPLE = "sample";
 
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
-    private static final String TUMOR_LOCATION_TSV = "tumor_location_tsv";
+    private static final String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
 
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
@@ -58,7 +58,7 @@ public class LoadEvidenceData {
 
         // General params needed for every sample
         String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
-        String tumorLocationTsv = cmd.getOptionValue(TUMOR_LOCATION_TSV);
+        String primaryTumorTsv = cmd.getOptionValue(PRIMARY_TUMOR_TSV);
 
         // Params specific for specific sample
         String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
@@ -67,7 +67,7 @@ public class LoadEvidenceData {
 
         if (Utils.anyNull(sampleId,
                 knowledgebaseDirectory,
-                tumorLocationTsv,
+                primaryTumorTsv,
                 somaticVariantVcf,
                 purpleDriverCatalogTsv,
                 linxFusionTsv,
@@ -83,7 +83,7 @@ public class LoadEvidenceData {
         LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
-        String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationTsv, sampleId);
+        String patientPrimaryTumorLocation = extractPatientTumorLocation(primaryTumorTsv, sampleId);
         List<SomaticVariant> passSomaticVariants = readPassSomaticVariants(sampleId, somaticVariantVcf);
         List<ReportableGainLoss> reportableGainLosses = getReportableGainsAndLosses(purpleDriverCatalogTsv);
         List<LinxFusion> geneFusions = readGeneFusions(linxFusionTsv);
@@ -144,17 +144,17 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static String extractPatientTumorLocation(@NotNull String tumorLocationTsv, @NotNull String sampleId) throws IOException {
-        LOGGER.info("Reading primary tumor locations from {}", tumorLocationTsv);
-        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocationFile.read(tumorLocationTsv);
-        LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
+    private static String extractPatientTumorLocation(@NotNull String primaryTumorTsv, @NotNull String sampleId) throws IOException {
+        LOGGER.info("Reading patient primary tumors from {}", primaryTumorTsv);
+        List<PatientPrimaryTumor> patientPrimaryTumors = PatientPrimaryTumorFile.read(primaryTumorTsv);
+        LOGGER.info(" Loaded primary tumors for {} patients", patientPrimaryTumors.size());
 
-        PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findTumorLocationForSample(patientTumorLocations, sampleId);
+        PatientPrimaryTumor patientPrimaryTumor =
+                PatientPrimaryTumorFunctions.findPrimaryTumorForSample(patientPrimaryTumors, sampleId);
 
         String patientPrimaryTumorLocation = Strings.EMPTY;
-        if (patientTumorLocation != null) {
-            patientPrimaryTumorLocation = patientTumorLocation.primaryTumorLocation();
+        if (patientPrimaryTumor != null) {
+            patientPrimaryTumorLocation = patientPrimaryTumor.primaryTumorLocation();
         }
 
         LOGGER.info(" Retrieved tumor location '{}' for sample {}", patientPrimaryTumorLocation, sampleId);
@@ -209,7 +209,7 @@ public class LoadEvidenceData {
         options.addOption(SAMPLE, true, "Tumor sample of run");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
-        options.addOption(TUMOR_LOCATION_TSV, true, "Path towards the (curated) tumor location TSV.");
+        options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
 
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");

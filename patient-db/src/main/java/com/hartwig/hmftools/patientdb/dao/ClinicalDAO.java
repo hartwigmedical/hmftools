@@ -147,11 +147,11 @@ class ClinicalDAO {
                         patient.gender(),
                         patient.hospital(),
                         patient.birthYear(),
-                        patient.curatedTumorLocation().primaryTumorLocation(),
-                        patient.curatedTumorLocation().primaryTumorSubLocation(),
-                        patient.curatedTumorLocation().primaryTumorType(),
-                        patient.curatedTumorLocation().primaryTumorSubType(),
-                        patient.curatedTumorLocation().primaryTumorExtraDetails(),
+                        patient.curatedPrimaryTumor().primaryTumorLocation(),
+                        patient.curatedPrimaryTumor().primaryTumorSubLocation(),
+                        patient.curatedPrimaryTumor().primaryTumorType(),
+                        patient.curatedPrimaryTumor().primaryTumorSubType(),
+                        patient.curatedPrimaryTumor().primaryTumorExtraDetails(),
                         primaryTumorOverridden,
                         Utils.toSQLDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
@@ -161,7 +161,7 @@ class ClinicalDAO {
                         preTreatmentMechanism)
                 .execute();
 
-        List<DoidNode> doidNodes = patient.curatedTumorLocation().doidNodes();
+        List<DoidNode> doidNodes = patient.curatedPrimaryTumor().doidNodes();
         if (doidNodes != null) {
             for (DoidNode doidNode : doidNodes) {
                 writeDoidNode(patientId, doidNode);
@@ -186,8 +186,8 @@ class ClinicalDAO {
     }
 
     private void writeDoidNode(int patientId, @NotNull DoidNode doidNode) {
-        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM)
-                .values(patientId, doidNode.doid(), doidNode.doidTerm())
+        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM, DOIDNODE.SNOMEDID)
+                .values(patientId, doidNode.doid(), doidNode.doidTerm(), doidNode.snomedId())
                 .execute();
     }
 

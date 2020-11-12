@@ -35,7 +35,7 @@ public final class DiseaseOntology {
     }
 
     @NotNull
-    public static DoidEntry readDoidJsonFile(@NotNull String doidJsonFile) throws IOException {
+    public static DoidEntry readDoidOwlEntryFromDoidJson(@NotNull String doidJsonFile) throws IOException {
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(doidJsonFile));
         reader.setLenient(true);

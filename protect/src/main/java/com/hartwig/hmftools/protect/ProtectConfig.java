@@ -25,7 +25,7 @@ public interface ProtectConfig {
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
     String DOID_JSON = "doid_json";
 
-    String TUMOR_LOCATION_TSV = "tumor_location_tsv";
+    String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
 
     // Files containing the actual genomic results for this sample.
@@ -54,7 +54,7 @@ public interface ProtectConfig {
         options.addOption(DEPRECATED_ACTIONABILITY_DIRECTORY, true, "Path towards the deprecated pre-SERVE actionability directory.");
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
 
-        options.addOption(TUMOR_LOCATION_TSV, true, "Path towards the (curated) tumor location TSV.");
+        options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
@@ -89,7 +89,7 @@ public interface ProtectConfig {
     String serveActionabilityDir();
 
     @NotNull
-    String tumorLocationTsv();
+    String primaryTumorTsv();
 
     @NotNull
     String germlineReportingTsv();
@@ -135,7 +135,7 @@ public interface ProtectConfig {
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .deprecatedActionabilityDir(nonOptionalDir(cmd, DEPRECATED_ACTIONABILITY_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
-                .tumorLocationTsv(nonOptionalFile(cmd, TUMOR_LOCATION_TSV))
+                .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
                 .germlineReportingTsv(nonOptionalFile(cmd, GERMLINE_REPORTING_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))

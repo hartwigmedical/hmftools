@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
@@ -23,12 +24,15 @@ public class DriverGenePanelFactory {
 
     @NotNull
     public static DriverGenePanel create(@NotNull final DriverGenePanelAssembly assembly, final List<DriverGene> genes) {
-        final DndsGeneName dndsGeneName = new DndsGeneName(assembly);
         final Map<String, String> dndsTsGenes = Maps.newHashMap();
         final Map<String, String> dndsOncoGenes = Maps.newHashMap();
 
+        final List<DndsDriverGeneLikelihood> oncoLikelihoodList = oncoLikelihood();
+        final Set<String> dndsGenes = oncoLikelihoodList.stream().map(DndsDriverGeneLikelihood::gene).collect(Collectors.toSet());
+        final DndsGeneName dndsGeneName = new DndsGeneName(assembly, dndsGenes);
+
         for (DriverGene gene : genes) {
-            if (gene.reportVariant()) {
+            if (gene.reportMissenseAndInframe() || gene.reportNonsenseAndFrameshift() || gene.reportSplice()) {
                 boolean isValidGene = dndsGeneName.isValid(gene);
                 if (!isValidGene) {
                     throw new IllegalArgumentException(
@@ -48,16 +52,12 @@ public class DriverGenePanelFactory {
                 .filter(x -> dndsTsGenes.containsKey(x.gene()))
                 .map(x -> ImmutableDndsDriverGeneLikelihood.builder().from(x).gene(dndsTsGenes.get(x.gene())).build())
                 .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
-        Map<String, DndsDriverGeneLikelihood> oncoLikelihood = oncoLikelihood().stream()
+        Map<String, DndsDriverGeneLikelihood> oncoLikelihood = oncoLikelihoodList.stream()
                 .filter(x -> dndsOncoGenes.containsKey(x.gene()))
                 .map(x -> ImmutableDndsDriverGeneLikelihood.builder().from(x).gene(dndsOncoGenes.get(x.gene())).build())
                 .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
 
-        return ImmutableDriverGenePanel.builder()
-                .driverGenes(genes)
-                .tsgLikelihood(tsgLikelihood)
-                .oncoLikelihood(oncoLikelihood)
-                .build();
+        return ImmutableDriverGenePanel.builder().driverGenes(genes).tsgLikelihood(tsgLikelihood).oncoLikelihood(oncoLikelihood).build();
     }
 
     @NotNull

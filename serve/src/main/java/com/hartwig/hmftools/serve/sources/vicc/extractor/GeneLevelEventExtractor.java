@@ -84,7 +84,7 @@ public class GeneLevelEventExtractor {
                                 .build());
             } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
                 geneLevelEventsPerFeature.put(feature,
-                        ImmutableGeneLevelAnnotation.builder().gene(feature.name()).event(GeneLevelEvent.FUSION).build());
+                        ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
             }
 
         }

@@ -10,29 +10,29 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class PatientTumorLocationFunctions {
+public final class PatientPrimaryTumorFunctions {
 
-    private static final Logger LOGGER = LogManager.getLogger(PatientTumorLocationFunctions.class);
+    private static final Logger LOGGER = LogManager.getLogger(PatientPrimaryTumorFunctions.class);
 
-    private PatientTumorLocationFunctions() {
+    private PatientPrimaryTumorFunctions() {
     }
 
     @Nullable
-    public static PatientTumorLocation findTumorLocationForSample(@NotNull List<PatientTumorLocation> patientTumorLocations,
+    public static PatientPrimaryTumor findPrimaryTumorForSample(@NotNull List<PatientPrimaryTumor> patientPrimaryTumors,
             @NotNull String sample) {
         String patientIdentifier = toPatientIdentifier(sample);
 
-        List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
-                .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
+        List<PatientPrimaryTumor> matchingIdPrimaryTumors = patientPrimaryTumors.stream()
+                .filter(patientPrimaryTumor -> patientPrimaryTumor.patientIdentifier().equals(patientIdentifier))
                 .collect(Collectors.toList());
 
-        // We should never have more than one tumor location for a single patient.
-        assert matchingIdTumorLocations.size() < 2;
+        // We should never have more than one primary tumor for a single patient.
+        assert matchingIdPrimaryTumors.size() < 2;
 
-        if (matchingIdTumorLocations.size() == 1) {
-            return matchingIdTumorLocations.get(0);
+        if (matchingIdPrimaryTumors.size() == 1) {
+            return matchingIdPrimaryTumors.get(0);
         } else {
-            LOGGER.warn("Could not find patient '{}' in list of primary tumor locations!", patientIdentifier);
+            LOGGER.warn("Could not find patient '{}' in list of primary tumors!", patientIdentifier);
             return null;
         }
     }
@@ -47,7 +47,7 @@ public final class PatientTumorLocationFunctions {
             return "COLO829";
         }
 
-        // If we want to fetch the tumor location for a sample we cannot derive patient of, we assume sample and patient are equal.
+        // If we want to fetch the primary tumor for a sample we cannot derive patient of, we assume sample and patient are equal.
         return sample;
     }
 }

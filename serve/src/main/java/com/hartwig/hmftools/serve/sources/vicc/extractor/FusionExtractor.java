@@ -31,14 +31,11 @@ public class FusionExtractor {
             Integer exonUp = null;
             Integer exonDown = null;
             if (feature.type() == FeatureType.FUSION_PAIR) {
-                if (fusion.contains("fusion")) {
-                    fusion = fusion.substring(0, fusion.lastIndexOf(" "));
-                }
                 String[] fusionArray = fusion.split("-");
 
                 if (fusionArray.length == 2) {
                     fusionGeneStart = fusionArray[0];
-                    fusionGeneEnd = fusionArray[1];
+                    fusionGeneEnd = fusionArray[1].split(" ")[0];
                 } else if (fusionArray.length == 1) {
                     if (fusion.equals("EGFRvII")) { //TODO implement correct genes and exons
                         fusionGeneStart = feature.geneSymbol();
@@ -74,14 +71,14 @@ public class FusionExtractor {
                         .description()
                         .equals("KIT Exon 11 deletions")) {
                     fusionGeneStart = feature.geneSymbol();
-                    exonUp = 0; // Integer.valueOf(feature.proteinAnnotation());
+                    exonUp = extractExonNumber(feature.name());
                     fusionGeneEnd = feature.geneSymbol();
-                    exonDown = 0; //Integer.valueOf(feature.proteinAnnotation());
+                    exonDown = extractExonNumber(feature.name());
                 } else if (feature.description().equals("MET EXON 14 SKIPPING MUTATION")) {
                     fusionGeneStart = feature.geneSymbol();
-                    exonUp = 0; // Integer.parseInt(feature.proteinAnnotation()) - 1;
+                    exonUp = extractExonNumber(feature.name()) -1;
                     fusionGeneEnd = feature.geneSymbol();
-                    exonDown = 0; //Integer.parseInt(feature.proteinAnnotation()) + 1;
+                    exonDown = extractExonNumber(feature.name()) + 1;
                 }
                 fusionsPerFeature.put(feature,
                         ImmutableKnownFusionPair.builder()
@@ -95,4 +92,9 @@ public class FusionExtractor {
         return fusionsPerFeature;
     }
 
+    @NotNull
+    public static Integer extractExonNumber(@NotNull String featureName) {
+        String exonNumberAsString = featureName.split(" ")[1];
+        return Integer.valueOf(exonNumberAsString);
+    }
 }

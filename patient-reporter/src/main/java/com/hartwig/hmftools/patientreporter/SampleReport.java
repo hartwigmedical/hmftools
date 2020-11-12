@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.time.LocalDate;
 
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
@@ -22,7 +22,7 @@ public abstract class SampleReport {
     public abstract SampleMetadata sampleMetadata();
 
     @Nullable
-    public abstract PatientTumorLocation patientTumorLocation();
+    public abstract PatientPrimaryTumor patientPrimaryTumor();
 
     @NotNull
     public abstract LimsGermlineReportingLevel germlineReportingLevel();
@@ -95,7 +95,7 @@ public abstract class SampleReport {
     @NotNull
     @Value.Derived
     public String primaryTumorLocationString() {
-        PatientTumorLocation entry = patientTumorLocation();
+        PatientPrimaryTumor entry = patientPrimaryTumor();
         if (entry != null) {
             if (!entry.primaryTumorSubLocation().isEmpty()) {
                 return entry.primaryTumorLocation() + " (" + entry.primaryTumorSubLocation() + ")";
@@ -110,7 +110,7 @@ public abstract class SampleReport {
     @NotNull
     @Value.Derived
     public String primaryTumorTypeString() {
-        PatientTumorLocation entry = patientTumorLocation();
+        PatientPrimaryTumor entry = patientPrimaryTumor();
         if (entry != null) {
             if (!entry.primaryTumorSubType().isEmpty()) {
                 return entry.primaryTumorSubType();

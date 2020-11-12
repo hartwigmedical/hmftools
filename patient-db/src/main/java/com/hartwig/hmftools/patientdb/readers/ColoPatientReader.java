@@ -3,9 +3,9 @@ package com.hartwig.hmftools.patientdb.readers;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.CuratedPrimaryTumor;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
@@ -21,16 +21,16 @@ public class ColoPatientReader {
 
         String patientId = isColo829 ? "COLO829" : Strings.EMPTY;
 
-        CuratedTumorLocation curatedTumorLocation = isColo829 ? ImmutableCuratedTumorLocation.builder()
+        CuratedPrimaryTumor curatedPrimaryTumor = isColo829 ? ImmutableCuratedPrimaryTumor.builder()
                 .primaryTumorLocation("Skin")
                 .primaryTumorSubLocation(Strings.EMPTY)
                 .primaryTumorType("Melanoma")
                 .primaryTumorSubType(Strings.EMPTY)
                 .primaryTumorExtraDetails(Strings.EMPTY)
-                .build() : ImmutableCuratedTumorLocation.builder().build();
+                .build() : ImmutableCuratedPrimaryTumor.builder().build();
 
         return new Patient(patientId,
-                toBaselineData(curatedTumorLocation),
+                toBaselineData(curatedPrimaryTumor),
                 noPreTreatmentData(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
@@ -42,14 +42,14 @@ public class ColoPatientReader {
     }
 
     @NotNull
-    private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation) {
+    private static BaselineData toBaselineData(@NotNull CuratedPrimaryTumor curatedPrimaryTumor) {
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)
                 .gender(null)
                 .hospital(null)
                 .birthYear(null)
-                .curatedTumorLocation(curatedTumorLocation)
+                .curatedPrimaryTumor(curatedPrimaryTumor)
                 .deathDate(null)
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())

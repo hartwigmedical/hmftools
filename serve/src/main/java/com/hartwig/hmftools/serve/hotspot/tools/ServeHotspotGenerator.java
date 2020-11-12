@@ -109,10 +109,8 @@ public class ServeHotspotGenerator {
 
         Map<VariantHotspot, HotspotAnnotation> viccHotspotMap = viccHotspotMap(viccJson, proteinResolver, driverGenes);
         Map<VariantHotspot, HotspotAnnotation> docmHotspotMap = docmHotspotMap(docmTsv, proteinResolver);
-        Map<VariantHotspot, HotspotAnnotation> hartwigCohortMap =
-                hartwigCohortMap(hartwigCohortTsv, proteinResolver, generateHotspots);
-        Map<VariantHotspot, HotspotAnnotation> hartwigCuratedMap =
-                hartwigCuratedMap(hartwigCuratedTsv, proteinResolver, generateHotspots);
+        Map<VariantHotspot, HotspotAnnotation> hartwigCohortMap = hartwigCohortMap(hartwigCohortTsv, proteinResolver, generateHotspots);
+        Map<VariantHotspot, HotspotAnnotation> hartwigCuratedMap = hartwigCuratedMap(hartwigCuratedTsv, proteinResolver, generateHotspots);
 
         LOGGER.info("Merging {} VICC hotspots with {} DoCM hotspots and {} Hartwig Cohort hotspots and {} Hartwig Curated hotspots",
                 viccHotspotMap.size(),
@@ -139,16 +137,17 @@ public class ServeHotspotGenerator {
     }
 
     @NotNull
-    private static Map<VariantHotspot, HotspotAnnotation> viccHotspotMap(@NotNull String viccJson,
-            @NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes) throws IOException {
+    private static Map<VariantHotspot, HotspotAnnotation> viccHotspotMap(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver,
+            @NotNull List<DriverGene> driverGenes) throws IOException {
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
-        return viccExtractor.extractFromViccEntries(viccEntries, driverGenes).hotspots();
+        return viccExtractor.extractFromViccEntries(viccEntries, driverGenes, "")
+                .hotspots(); // empty string is file of interpretation of events
     }
 
     @NotNull
-    private static Map<VariantHotspot, HotspotAnnotation> docmHotspotMap(@NotNull String docmTsv,
-            @NotNull ProteinResolver proteinResolver) throws IOException {
+    private static Map<VariantHotspot, HotspotAnnotation> docmHotspotMap(@NotNull String docmTsv, @NotNull ProteinResolver proteinResolver)
+            throws IOException {
         LOGGER.info("Reading DoCM TSV from '{}'", docmTsv);
         List<DocmEntry> docmEntries = DocmFileReader.readDcomFile(docmTsv);
         LOGGER.info(" Read {} entries", docmEntries.size());

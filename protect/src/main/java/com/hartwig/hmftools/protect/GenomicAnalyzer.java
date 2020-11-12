@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
-import com.hartwig.hmftools.common.clinical.PatientTumorLocation;
+import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -65,17 +65,17 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable PatientTumorLocation patientTumorLocation,
+    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable PatientPrimaryTumor patientPrimaryTumor,
             @NotNull String purplePurityTsv, @NotNull String purpleQCFile, @NotNull String purpleDriverCatalogTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
             @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
             @NotNull String chordPredictionTxt) throws IOException {
         List<DriverCatalog> purpleDriverCatalog = readDriverCatalog(purpleDriverCatalogTsv);
-        PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, patientTumorLocation, purpleDriverCatalog);
+        PurpleAnalysis purpleAnalysis = analyzePurple(purplePurityTsv, purpleQCFile, patientPrimaryTumor, purpleDriverCatalog);
         List<ReportableVariant> reportableSomaticVariants =
                 analyzeSomaticVariants(tumorSampleId, purpleSomaticVariantVcf, purpleDriverCatalog);
 
-        SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxBreakendTsv, patientTumorLocation);
+        SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxBreakendTsv, patientPrimaryTumor);
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv);
 
@@ -88,8 +88,7 @@ public class GenomicAnalyzer {
         ReportableVariantAnalysis reportableVariantAnalysis = ReportableVariantAnalyzer.mergeSomaticAndGermlineVariants(
                 reportableSomaticVariants,
                 reportableGermlineVariants,
-                actionabilityAnalyzer,
-                patientTumorLocation);
+                actionabilityAnalyzer, patientPrimaryTumor);
 
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
 
@@ -134,7 +133,7 @@ public class GenomicAnalyzer {
 
     @NotNull
     private PurpleAnalysis analyzePurple(@NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @Nullable PatientTumorLocation patientTumorLocation, @NotNull List<DriverCatalog> purpleDriverCatalog) throws IOException {
+            @Nullable PatientPrimaryTumor patientPrimaryTumor, @NotNull List<DriverCatalog> purpleDriverCatalog) throws IOException {
         PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
         LOGGER.info("Loaded purple sample data from {}", purplePurityTsv);
         LOGGER.info(" Purple purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
@@ -146,7 +145,7 @@ public class GenomicAnalyzer {
         LOGGER.info("Loaded purple QC data from {}", purpleQCFile);
         LOGGER.info(" Purple QC status: {}", purpleQC.toString());
 
-        return PurpleAnalyzer.run(purityContext, purpleQC, actionabilityAnalyzer, patientTumorLocation, purpleDriverCatalog);
+        return PurpleAnalyzer.run(purityContext, purpleQC, actionabilityAnalyzer, patientPrimaryTumor, purpleDriverCatalog);
     }
 
     @NotNull
@@ -185,7 +184,7 @@ public class GenomicAnalyzer {
 
     @NotNull
     private SvAnalysis analyzeStructuralVariants(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
-            @Nullable PatientTumorLocation patientTumorLocation) throws IOException {
+            @Nullable PatientPrimaryTumor patientPrimaryTumor) throws IOException {
         List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv);
         List<LinxFusion> linxReportedFusions = linxFusions.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
@@ -196,7 +195,7 @@ public class GenomicAnalyzer {
 
         LOGGER.info("Loaded {} disruptions from {}", linxReportedBreakends.size(), linxBreakendTsv);
 
-        return SvAnalyzer.run(linxReportedFusions, linxReportedBreakends, actionabilityAnalyzer, patientTumorLocation);
+        return SvAnalyzer.run(linxReportedFusions, linxReportedBreakends, actionabilityAnalyzer, patientPrimaryTumor);
     }
 
     @NotNull

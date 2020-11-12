@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class BiopsyReaderTest {
     public void canFilterOutEmptyAndDuplicateForms() {
         BiopsyReader biopsyReader = new BiopsyReader(TestCuratorFactory.biopsySiteCurator());
         List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(),
-                ImmutableCuratedTumorLocation.of(null, null, null, null, null, null, Lists.newArrayList()));
+                ImmutableCuratedPrimaryTumor.of(null, null, null, null, null, null, Lists.newArrayList()));
         assertEquals(1, biopsies.size());
         assertNotNull(biopsies.get(0).date());
         assertNotNull(biopsies.get(0).biopsyTaken());
@@ -40,7 +40,7 @@ public class BiopsyReaderTest {
     public void canReadCpctPatientBiopsies() {
         BiopsyReader biopsyReader = new BiopsyReader(TestCuratorFactory.biopsySiteCurator());
         List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(),
-                ImmutableCuratedTumorLocation.of(null, null, null, null, null, null, Lists.newArrayList()));
+                ImmutableCuratedPrimaryTumor.of(null, null, null, null, null, null, Lists.newArrayList()));
 
         assertEquals(1, biopsies.size());
         assertEquals("body", biopsies.get(0).site());
