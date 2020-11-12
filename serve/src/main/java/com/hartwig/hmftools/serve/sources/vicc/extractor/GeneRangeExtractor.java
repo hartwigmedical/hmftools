@@ -33,7 +33,8 @@ public class GeneRangeExtractor {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
-    private static List<Integer> extractExonNumber(@NotNull String featureName) {
+    @VisibleForTesting
+    public static List<Integer> extractExonNumber(@NotNull String featureName) {
         List<Integer> codons = Lists.newArrayList();
         if (featureName.contains("or") && featureName.contains(",")) {
             featureName = featureName.replace(" or ", ",");
