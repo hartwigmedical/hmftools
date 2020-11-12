@@ -78,14 +78,14 @@ public final class GeneRangeClassifier {
     }
 
     public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName, gene)) {
+        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName, gene)
+                || ComplexClassifier.isComplexEvent(featureName, gene)) {
             return false;
         }
 
         if (EXON_RANGE_EXACT_TERMS.contains(featureName)) {
             return true;
-        }
-        else {
+        } else {
             String lowerCaseFeatureName = featureName.toLowerCase();
             if (lowerCaseFeatureName.contains(EXON_KEYWORD)) {
                 for (String keyword : EXON_RANGE_KEYWORDS) {

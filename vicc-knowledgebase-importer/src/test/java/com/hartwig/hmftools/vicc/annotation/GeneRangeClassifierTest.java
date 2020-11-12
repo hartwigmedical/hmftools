@@ -27,6 +27,7 @@ public class GeneRangeClassifierTest {
         assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("EGFR exon 19 deletions", "EGFR"));
         assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("EXON 12 MUTATION", "AXSL1"));
 
+        assertFalse(GeneRangeClassifier.isGeneRangeExonEvent("3' EXON DELETION", "EPCAM"));
         assertFalse(GeneRangeClassifier.isGeneRangeExonEvent("EGFR exon 19 deletions + amp", "EGFR"));
         assertFalse(GeneRangeClassifier.isGeneRangeExonEvent("V600E", "BRAF"));
     }
