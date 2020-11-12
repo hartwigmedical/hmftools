@@ -92,7 +92,7 @@ public class CnJcnCalcs
 
             if (cnStartData == null || cnStartData.getStructuralVariantData() == null)
             {
-                LNX_LOGGER.error("SV({}) missing start copy number data or unlined SV data", svId);
+                LNX_LOGGER.error("SV({}) missing start copy number data or unlinked SV data", svId);
                 continue;
             }
 
