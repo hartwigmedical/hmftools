@@ -434,6 +434,25 @@ public class SomaticClassifier implements CuppaClassifier
                 sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         // then run pairwise analysis if similarities are being analysed
+        // addSnvPosSimilarities(sample, sampleCounts, similarities);
+    }
+
+    private double[] adjustRefPosFreqCounts(final double[] refPosFreqs, final double[] sampleCounts, final double sampleTotal)
+    {
+        double adjustMultiplier = sampleTotal > SNV_POS_FREQ_SNV_TOTAL_THRESHOLD ? SNV_POS_FREQ_SNV_TOTAL_THRESHOLD / sampleTotal : 1;
+
+        double[] adjustedCounts = new double[refPosFreqs.length];
+
+        for(int b = 0; b < refPosFreqs.length; ++b)
+        {
+            adjustedCounts[b] = max(refPosFreqs[b] - (sampleCounts[b] * adjustMultiplier), 0);
+        }
+
+        return adjustedCounts;
+    }
+
+    private void addSnvPosSimilarities(final SampleData sample, final double[] sampleCounts, final List<SampleSimilarity> similarities)
+    {
         if(mRefSampleSnvPosFrequencies != null && mConfig.WriteSimilarities)
         {
             final List<SampleSimilarity> topMatches = Lists.newArrayList();
@@ -467,20 +486,6 @@ public class SomaticClassifier implements CuppaClassifier
 
             similarities.addAll(topMatches);
         }
-    }
-
-    private double[] adjustRefPosFreqCounts(final double[] refPosFreqs, final double[] sampleCounts, final double sampleTotal)
-    {
-        double adjustMultiplier = sampleTotal > SNV_POS_FREQ_SNV_TOTAL_THRESHOLD ? SNV_POS_FREQ_SNV_TOTAL_THRESHOLD / sampleTotal : 1;
-
-        double[] adjustedCounts = new double[refPosFreqs.length];
-
-        for(int b = 0; b < refPosFreqs.length; ++b)
-        {
-            adjustedCounts[b] = max(refPosFreqs[b] - (sampleCounts[b] * adjustMultiplier), 0);
-        }
-
-        return adjustedCounts;
     }
 
     private static final Map<String,String> REPORTABLE_SIGS = Maps.newHashMap();
