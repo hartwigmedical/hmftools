@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -13,6 +15,8 @@ import com.hartwig.hmftools.sage.config.SoftFilter;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
@@ -73,16 +77,26 @@ public class SageVCF implements AutoCloseable {
     private final Consumer<VariantContext> consumer;
 
     public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
+        final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
+
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
-                .setReferenceDictionary(reference.getSequenceDictionary())
+                .setReferenceDictionary(sequenceDictionary)
                 .build();
         SomaticRefContextEnrichment enrichment = new SomaticRefContextEnrichment(reference, writer::add);
         this.consumer = enrichment;
 
         final VCFHeader header = enrichment.enrichHeader(header(config));
-        header.setSequenceDictionary(reference.getSequenceDictionary());
+
+        final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
+        for (SAMSequenceRecord sequence : sequenceDictionary.getSequences()) {
+            if (HumanChromosome.contains(sequence.getContig()) || MitochondrialChromosome.contains(sequence.getContig())) {
+                condensedDictionary.addSequence(sequence);
+            }
+        }
+
+        header.setSequenceDictionary(condensedDictionary);
         writer.writeHeader(header);
     }
 
