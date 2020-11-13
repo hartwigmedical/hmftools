@@ -12,6 +12,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.genome.bed.NamedBed;
+import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
@@ -22,7 +24,10 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.coverage.GeneDepthFile;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
+import com.hartwig.hmftools.sage.pipeline.CoveragePipeline;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationSupplier;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
@@ -54,12 +59,13 @@ public class SageApplication implements AutoCloseable {
     private final IndexedFastaSequenceFile refGenome;
     private final QualityRecalibrationSupplier qualityRecalibrationSupplier;
 
-    private final ListMultimap<Chromosome, GenomeRegion> panel;
+    private final ListMultimap<Chromosome, NamedBed> panelWithoutHotspots;
+    private final ListMultimap<Chromosome, GenomeRegion> panelWithHotspots;
     private final ListMultimap<Chromosome, VariantHotspot> hotspots;
     private final ListMultimap<Chromosome, GenomeRegion> highConfidence;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
-        final Options options = SageConfig.createOptions();
+        final Options options = SageConfig.createSageOptions();
         try (final SageApplication application = new SageApplication(options, args)) {
             application.run();
         } catch (ParseException e) {
@@ -76,10 +82,10 @@ public class SageApplication implements AutoCloseable {
 
         final CommandLine cmd = createCommandLine(args, options);
         this.config = SageConfig.createConfig(false, version.version(), cmd);
-
+        panelWithoutHotspots = readNamedBed(config.panelBed());
         hotspots = readHotspots();
-        panel = panelWithHotspots(hotspots);
-        highConfidence = readPanel(config.highConfidenceBed());
+        panelWithHotspots = panelWithHotspots(panelWithoutHotspots, hotspots);
+        highConfidence = readUnnamedBed(config.highConfidenceBed());
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
@@ -108,7 +114,17 @@ public class SageApplication implements AutoCloseable {
             }
         }
 
-//                createChromosomePipeline("10", recalibrationMap).process(130404941, 130405950);
+        //                createChromosomePipeline("10", recalibrationMap).process(130404941, 130405950);
+
+        if (config.panelCoverage()) {
+            LOGGER.info("Calculating panel coverage");
+            CoveragePipeline coveragePipeline = new CoveragePipeline(config, refGenome, panelWithoutHotspots, executorService);
+            Coverage coverage = coveragePipeline.process();
+            for (String sample : coverage.samples()) {
+                String filename = config.geneCoverageFile(sample);
+                GeneDepthFile.write(filename, coverage.depth(sample));
+            }
+        }
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
         LOGGER.info("Completed in {} seconds", timeTaken / 1000);
@@ -130,7 +146,7 @@ public class SageApplication implements AutoCloseable {
                 config,
                 executorService,
                 hotspots.get(chromosome),
-                panel.get(chromosome),
+                panelWithHotspots.get(chromosome),
                 highConfidence.get(chromosome),
                 qualityRecalibrationMap,
                 vcf::write);
@@ -160,15 +176,14 @@ public class SageApplication implements AutoCloseable {
     }
 
     @NotNull
-    private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(@NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots)
-            throws IOException {
-        final ListMultimap<Chromosome, GenomeRegion> initialPanel = readPanel(config.panelBed());
+    private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(final ListMultimap<Chromosome, NamedBed> panelWithoutHotspots,
+            @NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots) {
         final ListMultimap<Chromosome, GenomeRegion> result = ArrayListMultimap.create();
 
         for (HumanChromosome chromosome : HumanChromosome.values()) {
             final GenomeRegionsBuilder builder = new GenomeRegionsBuilder();
-            if (initialPanel.containsKey(chromosome)) {
-                initialPanel.get(chromosome).forEach(builder::addRegion);
+            if (panelWithoutHotspots.containsKey(chromosome)) {
+                panelWithoutHotspots.get(chromosome).forEach(builder::addRegion);
             }
             if (hotspots.containsKey(chromosome)) {
                 hotspots.get(chromosome).forEach(builder::addPosition);
@@ -181,7 +196,22 @@ public class SageApplication implements AutoCloseable {
     }
 
     @NotNull
-    private static ListMultimap<Chromosome, GenomeRegion> readPanel(@NotNull final String panelBed) throws IOException {
+    private static ListMultimap<Chromosome, NamedBed> readNamedBed(@NotNull final String panelBed) throws IOException {
+        final ListMultimap<Chromosome, NamedBed> panel = ArrayListMultimap.create();
+        if (!panelBed.isEmpty()) {
+            LOGGER.info("Reading bed file: {}", panelBed);
+            for (NamedBed bed : NamedBedFile.fromBedFile(panelBed)) {
+                if (HumanChromosome.contains(bed.chromosome())) {
+                    panel.put(HumanChromosome.fromString(bed.chromosome()), bed);
+                }
+            }
+        }
+
+        return panel;
+    }
+
+    @NotNull
+    private static ListMultimap<Chromosome, GenomeRegion> readUnnamedBed(@NotNull final String panelBed) throws IOException {
         final ListMultimap<Chromosome, GenomeRegion> panel = ArrayListMultimap.create();
         if (!panelBed.isEmpty()) {
             LOGGER.info("Reading bed file: {}", panelBed);

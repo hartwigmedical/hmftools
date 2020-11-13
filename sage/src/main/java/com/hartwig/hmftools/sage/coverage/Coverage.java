@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.coverage;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,12 +18,11 @@ public class Coverage {
 
     private final Map<String, List<GeneCoverage>> geneCoverage;
 
-    public Coverage(final Collection<String> referenceSamples, final Collection<String> tumorSamples, final Collection<NamedBed> panel) {
+    public Coverage(final Set<String> samples, final Collection<NamedBed> panel) {
         this.geneCoverage = Maps.newHashMap();
         final Set<String> genes = panel.stream().map(NamedBed::name).collect(Collectors.toSet());
 
-        tumorSamples.forEach(sample -> geneCoverage.put(sample, createGeneCoverage(genes, panel)));
-        referenceSamples.forEach(sample -> geneCoverage.put(sample, createGeneCoverage(genes, panel)));
+        samples.forEach(sample -> geneCoverage.put(sample, createGeneCoverage(genes, panel)));
     }
 
     @NotNull
@@ -32,7 +32,10 @@ public class Coverage {
 
     @NotNull
     public List<GeneDepth> depth(@NotNull final String sample) {
-        return coverage(sample).stream().map(x -> x.geneDepth(30)).collect(Collectors.toList());
+        return coverage(sample).stream()
+                .map(GeneCoverage::geneDepth)
+                .sorted(Comparator.comparing(GeneDepth::gene))
+                .collect(Collectors.toList());
     }
 
     @NotNull
