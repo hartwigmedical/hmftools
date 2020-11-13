@@ -53,6 +53,7 @@ public interface SageConfig {
     String SLICE_SIZE = "slice_size";
     String MNV = "mnv_enabled";
     String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
+    String PANEL_COVERAGE = "panel_coverage";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 10;
@@ -62,9 +63,10 @@ public interface SageConfig {
     int DEFAULT_SLICE_SIZE = 100_000;
     int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
     boolean DEFAULT_MNV = true;
+    boolean DEFAULT_PANEL_COVERAGE = true;
 
     @NotNull
-    static Options createOptions() {
+    static Options createSageOptions() {
         final Options options = new Options();
         options.addOption(MNV, true, "Enable MNVs [" + DEFAULT_MNV + "]");
         options.addOption(ASSEMBLY, true, "Assembly, must be one of [hg19, hg38]");
@@ -76,8 +78,17 @@ public interface SageConfig {
         options.addOption(PANEL_BED, true, "Panel regions bed file");
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
         options.addOption(HOTSPOTS, true, "Hotspots");
+        options.addOption(PANEL_COVERAGE, true, "Create panel coverage states [" + DEFAULT_PANEL_COVERAGE + "]");
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
+        return options;
+    }
+
+    @NotNull
+    static Options createAddReferenceOptions() {
+        final Options options = new Options();
+        options.addOption(INPUT_VCF, true, "Path to input vcf");
+        commonOptions().getOptions().forEach(options::addOption);
         return options;
     }
 
@@ -97,14 +108,6 @@ public interface SageConfig {
         options.addOption(MAX_REALIGNMENT_DEPTH, true, "Max depth to check for realignment [" + DEFAULT_MAX_REALIGNMENT_DEPTH + "]");
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
         BaseQualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
-        return options;
-    }
-
-    @NotNull
-    static Options createAddReferenceOptions() {
-        final Options options = new Options();
-        options.addOption(INPUT_VCF, true, "Path to input vcf");
-        commonOptions().getOptions().forEach(options::addOption);
         return options;
     }
 
@@ -141,6 +144,13 @@ public interface SageConfig {
     List<HmfTranscriptRegion> transcriptRegions();
 
     @NotNull
+    default String geneCoverageFile(@NotNull final String sample) {
+        String filename = sample + ".sage.gene.coverage.tsv";
+        String parent = new File(outputFile()).getParent();
+        return parent == null ? filename : parent + File.separator + filename;
+    }
+
+    @NotNull
     default String baseQualityRecalibrationFile(@NotNull final String sample) {
         String parent = new File(outputFile()).getParent();
         return parent == null ? sample + ".sage.bqr.tsv" : parent + File.separator + sample + ".sage.bqr.tsv";
@@ -150,6 +160,8 @@ public interface SageConfig {
     String panelBed();
 
     boolean panelOnly();
+
+    boolean panelCoverage();
 
     boolean mnvEnabled();
 
@@ -295,6 +307,7 @@ public interface SageConfig {
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
                 .mnvEnabled(defaultBooleanValue(cmd, MNV, DEFAULT_MNV))
+                .panelCoverage(defaultBooleanValue(cmd, PANEL_COVERAGE, DEFAULT_PANEL_COVERAGE))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .regionSliceSize(defaultIntValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
                 .readContextFlankSize(defaultIntValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE))
