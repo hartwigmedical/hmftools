@@ -64,24 +64,20 @@ public class SampleData
         final String[] items = data.split(DATA_DELIM, -1);
         final String sampleId = items[fieldsIndexMap.get("SampleId")];
 
-        String cancerType = items[fieldsIndexMap.get("CancerType")];
-
-        String cancerSubtype = fieldsIndexMap.containsKey("CancerSubtype") ?
-                items[fieldsIndexMap.get("CancerSubtype")] : CANCER_SUBTYPE_OTHER;
-
-        String primaryLocation = fieldsIndexMap.containsKey("PrimaryTumorLocation") ?
-                items[fieldsIndexMap.get("PrimaryTumorLocation")] : "";
-
-        String primarySubLocation = fieldsIndexMap.containsKey("PrimaryTumorSubLocation") ?
-                items[fieldsIndexMap.get("PrimaryTumorSubLocation")] : "";
-
-        String primaryType = fieldsIndexMap.containsKey("PrimaryTumorType") ?
-                items[fieldsIndexMap.get("PrimaryTumorType")] : "";
-
-        String primarySubtype = fieldsIndexMap.containsKey("PrimaryTumorSubType") ?
-                items[fieldsIndexMap.get("PrimaryTumorSubType")] : "";
+        String cancerType = extractOptionalField(fieldsIndexMap, items, "CancerType", CANCER_TYPE_UNKNOWN);
+        String cancerSubtype = extractOptionalField(fieldsIndexMap, items, "CancerSubtype", CANCER_TYPE_UNKNOWN);
+        String primaryLocation = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorLocation", CANCER_SUBTYPE_OTHER);
+        String primarySubLocation = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorSubLocation", "");
+        String primaryType = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorType", "");
+        String primarySubtype = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorSubType", "");
 
         return new SampleData(sampleId, cancerType, cancerSubtype, primaryLocation, primarySubLocation, primaryType, primarySubtype);
+    }
+
+    private static String extractOptionalField(
+            final Map<String,Integer> fieldsIndexMap, final String[] items, final String fieldName, final String defaultValue)
+    {
+        return fieldsIndexMap.containsKey(fieldName) ?items[fieldsIndexMap.get(fieldName)] : defaultValue;
     }
 
     public boolean isCandidateCancerType(final String cancerType)

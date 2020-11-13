@@ -118,7 +118,6 @@ public class RefRnaExpression implements RefClassifier
         CUP_LOGGER.debug("writing RNA gene expression reference data");
 
         writeMatrixData(mGeneCancerExpressionData, mCancerTypes, REF_FILE_GENE_EXP_CANCER);
-        // writeMatrixData(mGeneSampleExpressionData, mSampleIds, REF_FILE_GENE_EXP_SAMPLE);
     }
 
     private void loadRefRnaGeneExpression(final String filename)

@@ -9,7 +9,9 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
+import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -45,6 +47,7 @@ public class PositionFreqBuilder
     private int mPositionCacheSize;
     private int mMaxSampleCount;
     private final String mOutputDir;
+    private final String mOutputFileId;
     private final String mSamplePosCountsFile;
 
     private final List<String> mSampleList;
@@ -70,6 +73,7 @@ public class PositionFreqBuilder
         mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
         mPositionCacheSize = 0;
         mOutputDir = parseOutputDir(cmd);
+        mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
 
         initialisePositionCache();
 
@@ -78,7 +82,7 @@ public class PositionFreqBuilder
         mSamplePosCountsFile = cmd.getOptionValue(POSITION_DATA_FILE);
     }
 
-    public PositionFreqBuilder(final String outputDir, int positionBucketSize, int maxSampleCount)
+    public PositionFreqBuilder(final String outputDir, final String outputId, int positionBucketSize, int maxSampleCount)
     {
         mChromosomeLengths = Maps.newHashMap();
         mChromosomePosIndex = Maps.newHashMap();
@@ -88,6 +92,7 @@ public class PositionFreqBuilder
         mMaxSampleCount = maxSampleCount;
         mPositionCacheSize = 0;
         mOutputDir = outputDir;
+        mOutputFileId = outputId;
 
         initialisePositionCache();
 
@@ -103,12 +108,13 @@ public class PositionFreqBuilder
         options.addOption(POSITION_DATA_FILE, true, "Position frequencies data file");
         options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count, default = 20K");
         options.addOption(OUTPUT_DIR, true, "Path to output files");
+        options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
         options.addOption(LOG_DEBUG, false, "Log verbose");
     }
 
     public void run()
     {
-        if(mBucketSize <= 0 || mPositionCacheSize <= 0 || mCancerSampleList.isEmpty() || mSamplePosCountsFile == null)
+        if(mBucketSize <= 0 || mPositionCacheSize <= 0 || mSamplePosCountsFile == null)
         {
             SIG_LOGGER.error("failed to initialise");
             return;
@@ -224,6 +230,12 @@ public class PositionFreqBuilder
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
 
+            if(fileData.isEmpty())
+            {
+                SIG_LOGGER.error("empty sample data file({})", filename);
+                return;
+            }
+
             final String header = fileData.get(0);
             fileData.remove(0);
 
@@ -233,19 +245,23 @@ public class PositionFreqBuilder
             {
                 final String[] items = line.split(",", -1);
                 String sampleId = items[fieldsIndexMap.get("SampleId")];
-                String cancerType = items[fieldsIndexMap.get("CancerType")];
+
+                String cancerType = fieldsIndexMap.containsKey("CancerType") ? items[fieldsIndexMap.get("CancerType")] : "";
 
                 mSampleList.add(sampleId);
 
-                List<String> sampleIds = mCancerSampleList.get(cancerType);
+                if(!cancerType.isEmpty() && !cancerType.equals("Unknown"))
+                {
+                    List<String> sampleIds = mCancerSampleList.get(cancerType);
 
-                if(sampleIds == null)
-                {
-                    mCancerSampleList.put(cancerType, Lists.newArrayList(sampleId));
-                }
-                else
-                {
-                    sampleIds.add(sampleId);
+                    if(sampleIds == null)
+                    {
+                        mCancerSampleList.put(cancerType, Lists.newArrayList(sampleId));
+                    }
+                    else
+                    {
+                        sampleIds.add(sampleId);
+                    }
                 }
             }
 
@@ -257,7 +273,7 @@ public class PositionFreqBuilder
         }
     }
 
-        private void loadPositionFrequencies(final String filename)
+    private void loadPositionFrequencies(final String filename)
     {
         try
         {
@@ -324,7 +340,8 @@ public class PositionFreqBuilder
     {
         try
         {
-            final String filename = mOutputDir + "pos_freq_counts.csv";
+            final String filename = formOutputFilename(mOutputDir, mOutputFileId, "pos_freq_matrix");
+
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             final List<String> sampleIds = mSamplePositionFrequencies.keySet().stream().collect(Collectors.toList());
@@ -358,6 +375,9 @@ public class PositionFreqBuilder
 
     private void writeCancerRefData()
     {
+        if(mCancerSampleList.isEmpty())
+            return;
+
         try
         {
             final String filename = mOutputDir + "cancer_ref_pos_freq_counts.csv";

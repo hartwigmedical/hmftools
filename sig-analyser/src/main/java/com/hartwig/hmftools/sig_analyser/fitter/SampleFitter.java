@@ -226,7 +226,7 @@ public class SampleFitter
             if(mPositionBucketSize > 0)
             {
                 PositionFreqBuilder posFreqBuilder =
-                        new PositionFreqBuilder(mOutputDir, mPositionBucketSize, mMaxSampleCount);
+                        new PositionFreqBuilder(mOutputDir, mOutputId, mPositionBucketSize, mMaxSampleCount);
 
                 final PositionFrequencies samplePosFrequencies = mSnvLoader.getPositionFrequencies().get(0);
                 posFreqBuilder.writeSampleCounts(sampleId, samplePosFrequencies.getChrPosBucketFrequencies());
