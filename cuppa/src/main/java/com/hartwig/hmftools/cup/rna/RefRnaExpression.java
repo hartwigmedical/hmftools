@@ -125,7 +125,9 @@ public class RefRnaExpression implements RefClassifier
         if(filename.isEmpty())
             return;
 
-        mGeneSampleExpressionData = loadMatrixDataFile(filename, mSampleTpmIndex, Lists.newArrayList("GeneId","GeneName"));
+        final List<String> ignoreFields = Lists.newArrayList("GeneId", "GeneName");
+
+        mGeneSampleExpressionData = loadMatrixDataFile(filename, mSampleTpmIndex, ignoreFields);
         mGeneSampleExpressionData.cacheTranspose();
 
         // populate the gene info
@@ -152,11 +154,11 @@ public class RefRnaExpression implements RefClassifier
                 line = fileReader.readLine();
             }
 
-            CUP_LOGGER.debug("loaded {} genes for expression ref data", mGeneIds.size());
+            CUP_LOGGER.debug("loaded {} gene for expression ref data", mGeneIds.size());
         }
         catch (IOException e)
         {
-            CUP_LOGGER.debug("failed to load gene expression ref data from {}: {}", filename, e.toString());
+            CUP_LOGGER.debug("failed to load RNA expression ref data from {}: {}", filename, e.toString());
         }
     }
 
@@ -195,44 +197,6 @@ public class RefRnaExpression implements RefClassifier
         catch(IOException e)
         {
             CUP_LOGGER.error("failed to write ref RNA gene expression output: {}", e.toString());
-        }
-    }
-
-    private int getCancerTypeIndex(final String cancerType)
-    {
-        int index = 0;
-        for(; index < mCancerTypes.size(); ++index)
-        {
-            if(mCancerTypes.get(index).equals(cancerType))
-                return index;
-        }
-
-        mCancerTypes.add(index, cancerType);
-        return index;
-    }
-
-    public static void populateGeneIdList(final String filename, final List<String> geneIdList)
-    {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            final String header = fileData.get(0);
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
-            int geneIdCol = fieldsIndexMap.get("GeneId");
-
-            fileData.remove(0);
-
-            for(String line : fileData)
-            {
-                final String[] items = line.split(DATA_DELIM, -1);
-                geneIdList.add(items[geneIdCol]);
-            }
-
-        }
-        catch (IOException exception)
-        {
-            CUP_LOGGER.error("failed to read geneIds from file({}): {}", filename, exception.toString());
         }
     }
 
@@ -296,147 +260,4 @@ public class RefRnaExpression implements RefClassifier
 
         return true;
     }
-
-    private void loadRefRnaGeneExpression_old(final String filename)
-    {
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            // SampleId,CancerType,GeneId,GeneName,TPM
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ",");
-
-            int sampleIdCol = fieldsIndexMap.get("SampleId");
-            int geneIdCol = fieldsIndexMap.get("GeneId");
-            int geneNameCol = fieldsIndexMap.get("GeneName");
-            int tpmCol = fieldsIndexMap.get("TPM");
-
-            line = fileReader.readLine(); // skip header
-
-            int sampleIndex = 0;
-            int cancerTypeIndex = 0;
-            int geneIndex = 0;
-            String currentSample = "";
-            final List<Double> tpmList = Lists.newArrayList(); // only for the initial sample
-            long manualLookupCount = 0;
-
-            double[][] sampleMatrixData = null;
-            double[][] cancerMatrixData = null;
-
-            while (line != null)
-            {
-                final String[] items = line.split(",", -1);
-                String sampleId = items[sampleIdCol];
-
-                if(!currentSample.equals(sampleId))
-                {
-                    if(!mSampleDataCache.SampleIds.contains(sampleId))
-                    {
-                        line = fileReader.readLine();
-                        continue;
-                    }
-
-                    if(!currentSample.isEmpty())
-                        ++sampleIndex;
-
-                    currentSample = sampleId;
-                    String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
-                    cancerTypeIndex = getCancerTypeIndex(cancerType);
-                    mSampleIds.add(sampleId);
-                    geneIndex = 0;
-
-                    if(sampleIndex == 1)
-                    {
-                        // build the matrix now that all genes have been seen
-                        mGeneSampleExpressionData = new SigMatrix(mGeneIds.size(), mSampleDataCache.SampleIds.size());
-                        sampleMatrixData = mGeneSampleExpressionData.getData();
-
-                        mGeneCancerExpressionData = new SigMatrix(mGeneIds.size(), mSampleDataCache.RefCancerSampleData.size());
-                        cancerMatrixData = mGeneCancerExpressionData.getData();
-
-                        // add in the first sample's data
-                        for(int i = 0; i < tpmList.size(); ++i)
-                        {
-                            sampleMatrixData[i][0] = tpmList.get(i);
-                            cancerMatrixData[i][0] = tpmList.get(i);
-                        }
-
-                        tpmList.clear();
-                    }
-
-                    if(sampleIndex > 0 && (sampleIndex % 100) == 0)
-                    {
-                        CUP_LOGGER.info("processed {} RNA samples", sampleIndex);
-                    }
-                }
-
-                String geneId = items[geneIdCol];
-                String geneName = items[geneNameCol];
-
-                double tpm = Double.parseDouble(items[tpmCol]);
-                double scaledTpm = scaleTpm(tpm);
-
-                if(sampleIndex == 0)
-                {
-                    mGeneIds.add(geneId);
-                    mGeneNames.add(geneName);
-
-                    tpmList.add(scaledTpm);
-                }
-                else
-                {
-                    if(!mGeneIds.get(geneIndex).equals(geneId))
-                    {
-                        ++manualLookupCount;
-
-                        // locate manually
-                        boolean found = false;
-                        for(geneIndex = 0; geneIndex < mGeneIds.size(); ++geneIndex)
-                        {
-                            if(mGeneIds.get(geneIndex).equals(geneId))
-                            {
-                                found = true;
-                                break;
-                            }
-                        }
-
-                        if(!found)
-                        {
-                            CUP_LOGGER.error("gene({}:{}) not present in initial samples", geneId, geneName);
-                            return;
-                        }
-                    }
-
-                    sampleMatrixData[geneIndex][sampleIndex] = scaledTpm;
-                    cancerMatrixData[geneIndex][cancerTypeIndex] += scaledTpm;
-                    ++geneIndex;
-                }
-
-                line = fileReader.readLine();
-            }
-
-            if(manualLookupCount > 0)
-            {
-                CUP_LOGGER.info("manual geneId lookup({})", manualLookupCount);
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read RNA gene expression data file({}): {}", filename, e.toString());
-        }
-    }
-
-    private double scaleTpm(double tpm)
-    {
-        if(mTpmLogCutoff == 0)
-            return log(tpm+1);
-
-        if(tpm <= mTpmLogCutoff)
-            return 0;
-
-        return log(tpm);
-    }
-
 }

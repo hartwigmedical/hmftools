@@ -23,7 +23,6 @@ import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.rna.RefRnaExpression.loadRefPercentileData;
-import static com.hartwig.hmftools.cup.rna.RefRnaExpression.populateGeneIdList;
 
 import java.util.List;
 import java.util.Map;
@@ -112,10 +111,12 @@ public class RnaExpression implements CuppaClassifier
         if(mRunGenePrevalence && mConfig.RefGeneExpPercFile.isEmpty())
             return;
 
+        final List<String> ignoreFields = Lists.newArrayList("GeneId", "GeneName");
+
         if(mRunPairwiseCss && !mConfig.RefGeneExpSampleFile.isEmpty())
         {
             mRefSampleGeneExpression =
-                    loadMatrixDataFile(mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, Lists.newArrayList("GeneId", "GeneName"));
+                    loadMatrixDataFile(mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, ignoreFields);
 
             if(mRefSampleGeneExpression ==  null)
             {
@@ -129,7 +130,7 @@ public class RnaExpression implements CuppaClassifier
         if(mRunCancerCss && !mConfig.RefGeneExpCancerFile.isEmpty())
         {
             mRefCancerTypeGeneExpression =
-                    loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, Lists.newArrayList("GeneId", "GeneName"));
+                    loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, ignoreFields);
 
             if(mRefCancerTypeGeneExpression ==  null)
             {
@@ -143,7 +144,7 @@ public class RnaExpression implements CuppaClassifier
         if(mRunGenePrevalence && !mConfig.RefGeneExpPercFile.isEmpty())
         {
             mIsValid &= loadRefPercentileData(mConfig.RefGeneExpPercFile, mRefGeneCancerPercentiles, mGeneIdNameMap);
-            populateGeneIdList(mConfig.RefGeneExpCancerFile, mGeneIdList);
+            // populateGeneIdList(mConfig.RefGeneExpCancerFile, mGeneIdList);
         }
 
         buildCancerSampleCounts();
@@ -155,7 +156,7 @@ public class RnaExpression implements CuppaClassifier
         }
         else
         {
-            mSampleRnaExpression = loadMatrixDataFile(mConfig.SampleRnaExpFile, mSampleIndexMap, Lists.newArrayList("GeneId", "GeneName"));
+            mSampleRnaExpression = loadMatrixDataFile(mConfig.SampleRnaExpFile, mSampleIndexMap, ignoreFields);
 
             if(mSampleRnaExpression == null || mRefCancerTypeGeneExpression ==  null)
             {

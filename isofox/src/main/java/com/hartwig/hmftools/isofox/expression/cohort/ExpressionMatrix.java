@@ -58,7 +58,7 @@ public class ExpressionMatrix
 
         final String typeStr = mType == GENE_EXPRESSION_MATRIX ? "gene" : "transcript";
 
-        ISF_LOGGER.info("processing {} samples {}} files", mConfig.SampleData.SampleIds.size(), typeStr);
+        ISF_LOGGER.info("processing {} samples {} files", mConfig.SampleData.SampleIds.size(), typeStr);
 
         Map<String,Integer> fieldsMap = Maps.newHashMap();
 
