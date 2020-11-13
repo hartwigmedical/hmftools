@@ -35,5 +35,4 @@ class DndsGeneName {
     public String dndsGeneName(DriverGene driverGene) {
         return dndsGeneFunction.apply(driverGene);
     }
-
 }

@@ -14,5 +14,4 @@ public abstract class DoidRestriction {
 
     @NotNull
     public abstract String fillerId();
-
 }

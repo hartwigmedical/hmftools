@@ -27,7 +27,7 @@ public abstract class DndsDriverGeneLikelihood {
     public abstract DndsDriverImpactLikelihood indel();
 
     @NotNull
-    public DndsDriverImpactLikelihood select(DriverImpact impact) {
+    public DndsDriverImpactLikelihood select(@NotNull DriverImpact impact) {
         switch (impact) {
             case NONSENSE:
                 return nonsense();
@@ -42,5 +42,4 @@ public abstract class DndsDriverGeneLikelihood {
                 throw new IllegalArgumentException();
         }
     }
-
 }

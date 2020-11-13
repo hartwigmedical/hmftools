@@ -34,7 +34,7 @@ public class PrimaryTumorCuratorTest {
         String desmoidTumor = "desmoïd tumor";
         CuratedPrimaryTumor primaryTumor = curator.search(desmoidTumor);
 
-        assertEquals("Bone/Soft tissue", primaryTumor.primaryTumorLocation());
+        assertEquals("Bone/Soft tissue", primaryTumor.location());
     }
 
     @Test
@@ -49,7 +49,7 @@ public class PrimaryTumorCuratorTest {
         PrimaryTumorCurator curator = TestCuratorFactory.primaryTumorCurator();
         CuratedPrimaryTumor primaryTumor = curator.search(searchTerm);
 
-        String location = primaryTumor.primaryTumorLocation();
+        String location = primaryTumor.location();
         assertNotNull(location);
         assertEquals("lung", location.toLowerCase());
     }

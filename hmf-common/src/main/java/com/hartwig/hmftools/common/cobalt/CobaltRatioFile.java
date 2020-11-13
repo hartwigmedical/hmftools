@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class CobaltRatioFile {
+
     public static final String TUMOR_ONLY_REFERENCE_SAMPLE = "DIPLOID";
 
     private static final DecimalFormat FORMAT = new DecimalFormat("#.####");
@@ -150,5 +151,4 @@ public final class CobaltRatioFile {
 
         return initialRatio;
     }
-
 }

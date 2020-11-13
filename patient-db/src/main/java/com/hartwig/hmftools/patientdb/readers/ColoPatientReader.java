@@ -22,11 +22,11 @@ public class ColoPatientReader {
         String patientId = isColo829 ? "COLO829" : Strings.EMPTY;
 
         CuratedPrimaryTumor curatedPrimaryTumor = isColo829 ? ImmutableCuratedPrimaryTumor.builder()
-                .primaryTumorLocation("Skin")
-                .primaryTumorSubLocation(Strings.EMPTY)
-                .primaryTumorType("Melanoma")
-                .primaryTumorSubType(Strings.EMPTY)
-                .primaryTumorExtraDetails(Strings.EMPTY)
+                .location("Skin")
+                .subLocation(Strings.EMPTY)
+                .type("Melanoma")
+                .subType(Strings.EMPTY)
+                .extraDetails(Strings.EMPTY)
                 .build() : ImmutableCuratedPrimaryTumor.builder().build();
 
         return new Patient(patientId,

@@ -33,11 +33,11 @@ public class PatientPrimaryTumorFile {
             String[] parts = line.split(TAB_DELIMITER);
             patientPrimaryTumors.add(ImmutablePatientPrimaryTumor.builder()
                     .patientIdentifier(parts[0])
-                    .primaryTumorLocation(parts[1])
-                    .primaryTumorSubLocation(parts[2])
-                    .primaryTumorType(parts[3])
-                    .primaryTumorSubType(parts[4])
-                    .primaryTumorExtraDetails(parts[5])
+                    .location(parts[1])
+                    .subLocation(parts[2])
+                    .type(parts[3])
+                    .subType(parts[4])
+                    .extraDetails(parts[5])
                     .doids(toDOIDs(parts[6]))
                     .isOverridden(Boolean.parseBoolean(parts[7]))
                     .build());
@@ -77,11 +77,11 @@ public class PatientPrimaryTumorFile {
     @NotNull
     private static String toString(@NotNull PatientPrimaryTumor patientPrimaryTumor) {
         return new StringJoiner(TAB_DELIMITER).add(patientPrimaryTumor.patientIdentifier())
-                .add(patientPrimaryTumor.primaryTumorLocation())
-                .add(patientPrimaryTumor.primaryTumorSubLocation())
-                .add(patientPrimaryTumor.primaryTumorType())
-                .add(patientPrimaryTumor.primaryTumorSubType())
-                .add(patientPrimaryTumor.primaryTumorExtraDetails())
+                .add(patientPrimaryTumor.location())
+                .add(patientPrimaryTumor.subLocation())
+                .add(patientPrimaryTumor.type())
+                .add(patientPrimaryTumor.subType())
+                .add(patientPrimaryTumor.extraDetails())
                 .add(fromDOIDs(patientPrimaryTumor.doids()))
                 .add(String.valueOf(patientPrimaryTumor.isOverridden()))
                 .toString();

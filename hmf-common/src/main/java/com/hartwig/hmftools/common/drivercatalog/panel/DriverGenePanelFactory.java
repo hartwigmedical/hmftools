@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLik
 
 import org.jetbrains.annotations.NotNull;
 
-public class DriverGenePanelFactory {
+public final class DriverGenePanelFactory {
 
     @NotNull
     public static DriverGenePanel empty() {

@@ -22,7 +22,7 @@ public final class SvAnalyzer {
     @NotNull
     public static SvAnalysis run(@NotNull LinxData linxData, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientPrimaryTumor patientPrimaryTumor) {
-        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.primaryTumorLocation() : null;
+        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.location() : null;
         Map<LinxFusion, List<EvidenceItem>> evidencePerFusion =
                 actionabilityAnalyzer.evidenceForFusions(linxData.fusions(), primaryTumorLocation);
 
@@ -40,7 +40,7 @@ public final class SvAnalyzer {
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientPrimaryTumor patientPrimaryTumor) {
         List<ReportableGeneDisruption> reportableGeneDisruptions = ReportableGeneDisruptionFactory.convert(disruptions);
 
-        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.primaryTumorLocation() : null;
+        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.location() : null;
 
         Map<LinxFusion, List<EvidenceItem>> evidencePerFusion = actionabilityAnalyzer.evidenceForFusions(fusions, primaryTumorLocation);
 

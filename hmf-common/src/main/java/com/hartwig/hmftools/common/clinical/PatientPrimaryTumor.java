@@ -15,19 +15,19 @@ public abstract class PatientPrimaryTumor {
     public abstract String patientIdentifier();
 
     @NotNull
-    public abstract String primaryTumorLocation();
+    public abstract String location();
 
     @NotNull
-    public abstract String primaryTumorSubLocation();
+    public abstract String subLocation();
 
     @NotNull
-    public abstract String primaryTumorType();
+    public abstract String type();
 
     @NotNull
-    public abstract String primaryTumorSubType();
+    public abstract String subType();
 
     @NotNull
-    public abstract String primaryTumorExtraDetails();
+    public abstract String extraDetails();
 
     @NotNull
     public abstract List<String> doids();

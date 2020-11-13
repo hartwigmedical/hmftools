@@ -77,7 +77,7 @@ public final class ExampleAnalysisTestFactory {
 
         ReportData reportData = PatientReporterTestFactory.loadTestReportData();
 
-        List<EvidenceItem> tumorLocationSpecificEvidence = createCOLO829TumorSpecificEvidence();
+        List<EvidenceItem> tumorSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
         List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
         List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(reportGermline);
@@ -120,7 +120,7 @@ public final class ExampleAnalysisTestFactory {
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
-                .tumorSpecificEvidence(tumorLocationSpecificEvidence)
+                .tumorSpecificEvidence(tumorSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)

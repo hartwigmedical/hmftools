@@ -25,7 +25,7 @@ public final class ReportableVariantAnalyzer {
         List<ReportableVariant> allReportableVariants =
                 ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
 
-        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.primaryTumorLocation() : null;
+        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.location() : null;
         // Extract somatic evidence for high drivers variants only (See DEV-824)
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
                 filterHighDriverLikelihood(actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation));
