@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneCoverage implements Consumer<GenomeRegion> {
+    private static final int MAX_BUCKET = 37;
+
     private final String chromosome;
     private final String gene;
     private final List<ExonCoverage> exonCoverage;
@@ -49,24 +51,34 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
     }
 
     @NotNull
-    public List<ExonCoverage> exonCoverage() {
-        return exonCoverage;
+    public GeneDepth geneDepth() {
+        return ImmutableGeneDepth.builder().gene(gene).depthCounts(baseCoverageSummary(exonCoverage)).build();
     }
 
-    @NotNull
-    public GeneDepth geneDepth(int maxDepth) {
-        return ImmutableGeneDepth.builder().gene(gene).depthCounts(baseCoverageSummary(maxDepth, exonCoverage)).build();
-    }
-
-    static int[] baseCoverageSummary(int maxDepth, Collection<ExonCoverage> exons) {
-        int[] geneDepth = new int[maxDepth + 1];
+    static int[] baseCoverageSummary(Collection<ExonCoverage> exons) {
+        int[] geneDepth = new int[MAX_BUCKET + 1];
         for (ExonCoverage exon : exons) {
             for (int baseDepth : exon.coverage()) {
-                geneDepth[Math.min(baseDepth, maxDepth)]++;
+                geneDepth[bucket(baseDepth)]++;
             }
         }
 
         return geneDepth;
     }
 
+    static int bucket(int depth) {
+        if (depth <= 30) {
+            return depth;
+        }
+
+        for (int i = 0; i < 7; i++) {
+            int maxDepth = 40 + 10 * i;
+            if (depth < maxDepth) {
+                return 30 + i;
+            }
+
+        }
+
+        return MAX_BUCKET;
+    }
 }

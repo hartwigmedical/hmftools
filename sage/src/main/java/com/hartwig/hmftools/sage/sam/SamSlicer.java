@@ -27,7 +27,7 @@ public class SamSlicer {
         this.regions = Collections.singletonList(slice);
     }
 
-    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice, @NotNull final List<GenomeRegion> panel) {
+    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice, @NotNull final List<? extends GenomeRegion> panel) {
         this.minMappingQuality = minMappingQuality;
         this.regions = Lists.newArrayList();
 

@@ -9,13 +9,13 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class ChromosomePartition {
     private final SageConfig config;
-    private final IndexedFastaSequenceFile refGenome;
+    private final ReferenceSequenceFile refGenome;
 
-    public ChromosomePartition(final SageConfig config, final IndexedFastaSequenceFile refGenome) {
+    public ChromosomePartition(final SageConfig config, final ReferenceSequenceFile refGenome) {
         this.config = config;
         this.refGenome = refGenome;
     }

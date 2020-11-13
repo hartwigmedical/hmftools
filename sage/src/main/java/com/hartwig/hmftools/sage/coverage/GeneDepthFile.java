@@ -22,7 +22,7 @@ public class GeneDepthFile {
     private static List<String> toLines(@NotNull final List<GeneDepth> depths) {
         if (!depths.isEmpty()) {
             final List<String> lines = Lists.newArrayList();
-            lines.add(header(depths.get(0)));
+            lines.add(header());
             depths.stream().map(GeneDepthFile::toString).forEach(lines::add);
             return lines;
         }
@@ -30,16 +30,17 @@ public class GeneDepthFile {
         return Collections.emptyList();
     }
 
-    static String header(@NotNull final GeneDepth depth) {
+    static String header() {
         StringJoiner joiner = new StringJoiner(DELIMITER).add("gene");
-        int[] depthCounts = depth.depthCounts();
-        for (int i = 0; i < depthCounts.length; i++) {
-            if (i == depthCounts.length - 1) {
-                joiner.add(i + "+");
-            } else {
-                joiner.add(String.valueOf(i));
-            }
+        for (int i = 0; i < 30; i++) {
+            joiner.add(String.valueOf(i));
         }
+
+        for (int i = 30; i < 100; i += 10) {
+            joiner.add(i + "-" + (i + 9));
+        }
+
+        joiner.add("100+");
 
         return joiner.toString();
     }
