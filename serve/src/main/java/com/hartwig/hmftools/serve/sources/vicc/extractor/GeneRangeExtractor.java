@@ -191,8 +191,8 @@ public class GeneRangeExtractor {
         if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
             List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
             if (genomeRegions != null && genomeRegions.size() == 1) {
-                long start = genomeRegions.get(0).start();
-                long end = genomeRegions.get(0).end();
+                long start = genomeRegions.get(0).start() -5;
+                long end = genomeRegions.get(0).end() -5;
                 String chromosome = genomeRegions.get(0).chromosome();
 
                 geneRangeAnnotations.add(ImmutableGeneRangeAnnotation.builder()
@@ -283,8 +283,8 @@ public class GeneRangeExtractor {
             @NotNull MutationTypeFilter specificMutationType) {
         List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
         HmfExonRegion hmfExonRegion = exonRegions.get(exonNumberList);
-        long start = hmfExonRegion.start();
-        long end = hmfExonRegion.end();
+        long start = hmfExonRegion.start() -5;
+        long end = hmfExonRegion.end() -5;
         String chromosome = hmfExonRegion.chromosome();
 
         return ImmutableGeneRangeAnnotation.builder()
