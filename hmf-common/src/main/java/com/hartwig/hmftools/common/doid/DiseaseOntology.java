@@ -53,7 +53,8 @@ public final class DiseaseOntology {
 
             String id = string(graphObject, "id");
             if (id.equals(ID_TO_READ)) {
-                LOGGER.info("Reading DOID entry with ID '{}'", id);
+                LOGGER.debug("Reading DOID entry with ID '{}'", id);
+
                 // Add data to doid entry
                 doidEntryBuilder.id(id);
                 doidEntryBuilder.nodes(extractNodes(graphObject.getAsJsonArray("nodes")));
