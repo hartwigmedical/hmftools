@@ -60,6 +60,7 @@ max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIG
 max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
 max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
+panel_coverage | true | Write file with counts of depth of each base of the gene panel
 
 The cardinality of `reference` must match `reference_bam`.
 
@@ -249,7 +250,7 @@ A similar principle applies to any repeat sequences. Spanning them in the read c
  
 # Algorithm
 
-There are 8 key steps in the SAGE algorithm described in detail below:
+There are 9 key steps in the SAGE algorithm described in detail below:
   1. [Alt Specific Base Quality Recalibration](#1-alt-specific-base-quality-recalibration)
   2. [Candidate Variants](#2-candidate-variants)
   3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
@@ -258,6 +259,7 @@ There are 8 key steps in the SAGE algorithm described in detail below:
   6. [Phasing](#6-phasing)
   7. [De-duplication](#7-de-duplication)
   8. [Realignment](#8-realignment)
+  9. [Gene Panel Coverage](#9-gene-panel-coverage)
 
 ## 1. Alt Specific Base Quality Recalibration
 
@@ -550,6 +552,31 @@ For example, because of the `AG` microhomology at this (hg19) location, the foll
 4:55593581 GAAACCCATGTATGAAGTACAGTGGAAG > G
 ```
 
+## 9. Gene Panel Coverage
+To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each sample. 
+This can be disabled by setting the `panel_coverage` parameter to `false`.
+
+The file shows the number of bases with 0 to 30 reads and then buckets reads in intervals of 10 up to 100+.
+
+For a reference sample with approximately 30x depth this may appear as: 
+
+```
+gene	0	1	2	...	27	28	29	30-39	40-49	50-59	60-69	70-79	80-89	90-99	100+
+BRCA1	0	0	0	...	23	54	116	1854	2834	875	5	0	0	0	0
+ERBB2	0	0	0	...	106	154	203	2315	832	83	0	0	0	0	0
+TP53	0	0	0	...	31	41	59	636	192	35	0	0	0	0	0
+```
+
+While a 100x tumor might appear something more like:
+
+```
+gene	0	1	2	...	27	28	29	30-39	40-49	50-59	60-69	70-79	80-89	90-99	100+
+BRCA1	0	0	0	...	0	0	0	0	0	0	0	8	390	1700	3672
+BRCA1	0	0	0	...	0	0	0	0	0	18	257	590	1311	1111	611
+TP53	0	0	0	...	0	0	0	0	0	0	0	90	423	343	376
+```
+
+
 # Variant Pipeline
 A number of post processing steps are applied to the SAGE output.
 
@@ -599,33 +626,35 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
- - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.4)
-   - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
-   - Do not hard filter germline variants in the same local phase set as passing somatic variants
-   - Large skipped reference sections (representating a splice junction gap in RNA) contribute towards FULL or PARTIAL matches.
- - [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.3)
-   - Extend local phase set detection to maximum of 60 bases
-   - Favour reads with variants closer to the centre when determining read context
-   - Fix bug creating BQR plots with too many quality scores
- - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.2)
-   - Realignment of inframe indels
-   - Improved MNV deduplication
-   - Detection of phased inframe indels
-   - Base Quality Recalibration
-   - Improved sensitivity in high depth regions
-   - Tumor only support
-   - Mitochondria support
-   - Multiple tumor support
-   - Multiple reference (or RNA) support
-   - Removed explicit RNA support (can use additional reference instead)
-   - Performance and memory improvements
- - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.1)
-   - Reduced memory footprint
-   - Add version info to VCF
-   - RNA support
-   - CRAM support
-   - Filter variants with ref containing bases other then G,A,T,C
-   - Look for read context of variants that are partially soft clipped
-   - HG38 support
- - 2.0
-   - Revamped small indel / SNV caller
+- Upcoming
+  - Gene panel coverage
+- [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.4)
+  - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
+  - Do not hard filter germline variants in the same local phase set as passing somatic variants
+  - Large skipped reference sections (representating a splice junction gap in RNA) contribute towards FULL or PARTIAL matches.
+- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.3)
+  - Extend local phase set detection to maximum of 60 bases
+  - Favour reads with variants closer to the centre when determining read context
+  - Fix bug creating BQR plots with too many quality scores
+- [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.2)
+  - Realignment of inframe indels
+  - Improved MNV deduplication
+  - Detection of phased inframe indels
+  - Base Quality Recalibration
+  - Improved sensitivity in high depth regions
+  - Tumor only support
+  - Mitochondria support
+  - Multiple tumor support
+  - Multiple reference (or RNA) support
+  - Removed explicit RNA support (can use additional reference instead)
+  - Performance and memory improvements
+- [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.1)
+  - Reduced memory footprint
+  - Add version info to VCF
+  - RNA support
+  - CRAM support
+  - Filter variants with ref containing bases other then G,A,T,C
+  - Look for read context of variants that are partially soft clipped
+  - HG38 support
+- 2.0
+  - Revamped small indel / SNV caller
