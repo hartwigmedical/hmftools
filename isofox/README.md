@@ -59,7 +59,7 @@ For instructions on how to generate the Ensembl data cache, see subsection below
 ### Optional
 Argument | Description
 ---|---
-ref_genome_version | HG19 (default), HG37 or HG38. Requires Ensembl reference files, BAM and ref genome to have the same version.
+ref_genome_version | HG37 (default), HG19 or HG38. Requires Ensembl reference files, BAM and ref genome to have the same version.
 gene_id_file | Restrict analysis to genes in file, format EnsemblGeneId,GeneName
 excluded_gene_id_file | Exclude genes in file, format EnsemblGeneId,GeneName
 enriched_gene_ids | List of EnsemblGeneIds separated by ';', see Enriched Genes information below

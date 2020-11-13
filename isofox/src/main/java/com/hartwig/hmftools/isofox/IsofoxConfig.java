@@ -220,7 +220,7 @@ public class IsofoxConfig
         else
         {
             RefGenomeVersion refGenVersionOverride = checkRefGenomeVersion();
-            RefGenVersion = refGenVersionOverride != null ? refGenVersionOverride : HG19;
+            RefGenVersion = refGenVersionOverride != null ? refGenVersionOverride : HG37;
         }
 
         RestrictedGeneIds = Lists.newArrayList();
@@ -482,9 +482,9 @@ public class IsofoxConfig
             return null;
 
         if(samReader.getFileHeader().getSequenceDictionary().getSequences().stream().anyMatch(x -> x.getSequenceName().contains(CHR_PREFIX)))
-            return HG37;
+            return HG19;
 
-        return HG19;
+        return HG37;
     }
 
     public IsofoxConfig()

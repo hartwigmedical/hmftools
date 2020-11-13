@@ -56,26 +56,26 @@ public class MiscTest
     @Test
     public void testChromosomeConversion()
     {
-        String chr19 = "10";
-        String chr37 = "chr10";
+        String chr37 = "10";
+        String chr19 = "chr10";
         String chr38 = "chr10";
 
-        RefGenomeVersion version = HG19;
-        assertEquals(chr19, refGenomeChromosome(chr19, version));
+        RefGenomeVersion version = HG37;
+        assertEquals(chr37, refGenomeChromosome(chr37, version));
 
         version = HG38;
-        assertEquals(chr38, refGenomeChromosome(chr19, version));
-
-        version = HG37;
-        assertEquals(chr37, refGenomeChromosome(chr19, version));
-
-        assertEquals(chr38, refGenomeChromosome(chr38, version));
+        assertEquals(chr38, refGenomeChromosome(chr37, version));
 
         version = HG19;
         assertEquals(chr19, refGenomeChromosome(chr37, version));
 
-        version = HG19;
-        assertEquals(chr19, refGenomeChromosome(chr38, version));
+        assertEquals(chr38, refGenomeChromosome(chr38, version));
+
+        version = HG37;
+        assertEquals(chr37, refGenomeChromosome(chr19, version));
+
+        version = HG37;
+        assertEquals(chr37, refGenomeChromosome(chr38, version));
     }
 
     @Test
