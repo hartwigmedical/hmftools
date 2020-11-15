@@ -68,7 +68,7 @@ public class DriverGenePanelConversion {
     static Set<String> somaticGenes(@NotNull final List<DriverGene> genePanel) {
         final Set<String> actionableGenes = Sets.newHashSet();
         for (DriverGene driverGene : genePanel) {
-            if (driverGene.reportVariant()) {
+            if (driverGene.reportSomatic()) {
                 actionableGenes.add(driverGene.gene());
             }
         }
@@ -80,7 +80,7 @@ public class DriverGenePanelConversion {
     static Set<String> germlineGenes(@NotNull final List<DriverGene> genePanel) {
         final Set<String> actionableGenes = Sets.newHashSet();
         for (DriverGene driverGene : genePanel) {
-            if (driverGene.reportGermlineBiallelic() || driverGene.reportGermlineNonBiallelic()) {
+            if (driverGene.reportGermlineVariant() || driverGene.reportGermlineVariant()) {
                 actionableGenes.add(driverGene.gene());
             }
 

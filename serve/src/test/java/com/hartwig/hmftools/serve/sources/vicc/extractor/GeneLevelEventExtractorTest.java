@@ -3,7 +3,7 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
@@ -38,7 +38,9 @@ public class GeneLevelEventExtractorTest {
                 .reportDeletion(true)
                 .reportDisruption(true)
                 .reportAmplification(true)
-                .reportHotspot(true)
+                .reportSomaticHotspot(true)
+                .reportGermlineVariant(false)
+                .reportGermlineHotspot(false)
                 .likelihoodType(TSG)
                 .build());
     }
@@ -52,7 +54,9 @@ public class GeneLevelEventExtractorTest {
                 .reportDeletion(true)
                 .reportDisruption(true)
                 .reportAmplification(true)
-                .reportHotspot(true)
+                .reportSomaticHotspot(true)
+                .reportGermlineVariant(false)
+                .reportGermlineHotspot(false)
                 .likelihoodType(ONCO)
                 .build());
     }

@@ -24,7 +24,7 @@ public class CanonicalAnnotation {
     private final Map<String, String> canonicalTranscriptGeneMap;
 
     public CanonicalAnnotation(@NotNull final List<DriverGene> driverGenes, @NotNull final List<CanonicalTranscript> transcripts) {
-        this.driverCatalogGenes = driverGenes.stream().filter(DriverGene::reportVariant).map(DriverGene::gene).collect(Collectors.toSet());
+        this.driverCatalogGenes = driverGenes.stream().filter(DriverGene::reportSomatic).map(DriverGene::gene).collect(Collectors.toSet());
 
         // The p14Arf transcript for CDKN2A is included in our canonical transcript map.
         // We need to filter it out since this map assumes only "real" canonical transcripts.

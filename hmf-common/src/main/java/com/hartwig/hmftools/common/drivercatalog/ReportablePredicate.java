@@ -21,7 +21,7 @@ public class ReportablePredicate implements Predicate<SomaticVariant> {
     public ReportablePredicate(@NotNull final DriverCategory type, @NotNull final DriverGenePanel driverGenePanel) {
         this.driverGeneMap = driverGenePanel.driverGenes()
                 .stream()
-                .filter(x -> x.likelihoodType().equals(type) && x.reportVariant())
+                .filter(x -> x.likelihoodType().equals(type) && x.reportSomatic())
                 .collect(Collectors.toMap(DriverGene::gene, x -> x));
         this.maxRepeatCount = type == DriverCategory.ONCO ? MAX_ONCO_REPEAT_COUNT : -1;
     }
@@ -37,7 +37,7 @@ public class ReportablePredicate implements Predicate<SomaticVariant> {
             return false;
         }
 
-        if (variant.isHotspot() && driverGene.reportHotspot()) {
+        if (variant.isHotspot() && driverGene.reportSomaticHotspot()) {
             return true;
         }
 

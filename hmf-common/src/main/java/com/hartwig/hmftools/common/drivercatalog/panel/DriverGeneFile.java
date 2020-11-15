@@ -38,10 +38,9 @@ public final class DriverGeneFile {
                 .add("reportDeletion")
                 .add("reportDisruption")
                 .add("reportAmplification")
-                .add("reportHotspot")
+                .add("reportSomaticHotspot")
                 .add("likelihoodType")
-                .add("reportGermlineNonBiallelic")
-                .add("reportGermlineBiallelic")
+                .add("reportGermlineVariant")
                 .add("reportGermlineHotspot")
                 .toString();
     }
@@ -55,38 +54,39 @@ public final class DriverGeneFile {
                 .add(String.valueOf(gene.reportDeletion()))
                 .add(String.valueOf(gene.reportDisruption()))
                 .add(String.valueOf(gene.reportAmplification()))
-                .add(String.valueOf(gene.reportHotspot()))
+                .add(String.valueOf(gene.reportSomaticHotspot()))
                 .add(String.valueOf(gene.likelihoodType()))
-                .add(String.valueOf(gene.reportGermlineNonBiallelic()))
-                .add(String.valueOf(gene.reportGermlineBiallelic()))
+                .add(String.valueOf(gene.reportGermlineVariant()))
                 .add(String.valueOf(gene.reportGermlineHotspot()))
                 .toString();
     }
 
     @NotNull
     public static DriverGene fromString(@NotNull final String line) {
-        String[] values = line.split(DELIMITER);
-        ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder()
-                .gene(values[0])
-                .reportMissenseAndInframe(Boolean.parseBoolean(values[1].toLowerCase()))
-                .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[2].toLowerCase()))
-                .reportSplice(Boolean.parseBoolean(values[3].toLowerCase()))
-                .reportDeletion(Boolean.parseBoolean(values[4].toLowerCase()))
-                .reportDisruption(Boolean.parseBoolean(values[5].toLowerCase()))
-                .reportAmplification(Boolean.parseBoolean(values[6].toLowerCase()))
-                .reportHotspot(Boolean.parseBoolean(values[7].toLowerCase()))
-                .likelihoodType(DriverCategory.valueOf(values[8]))
-                .reportGermlineBiallelic(false)
-                .reportGermlineNonBiallelic(false)
-                .reportGermlineHotspot(false);
+        try {
+            String[] values = line.split(DELIMITER);
+            ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder()
+                    .gene(values[0])
+                    .reportMissenseAndInframe(Boolean.parseBoolean(values[1].toLowerCase()))
+                    .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[2].toLowerCase()))
+                    .reportSplice(Boolean.parseBoolean(values[3].toLowerCase()))
+                    .reportDeletion(Boolean.parseBoolean(values[4].toLowerCase()))
+                    .reportDisruption(Boolean.parseBoolean(values[5].toLowerCase()))
+                    .reportAmplification(Boolean.parseBoolean(values[6].toLowerCase()))
+                    .reportSomaticHotspot(Boolean.parseBoolean(values[7].toLowerCase()))
+                    .likelihoodType(DriverCategory.valueOf(values[8]))
+                    .reportGermlineVariant(false)
+                    .reportGermlineHotspot(false);
 
-        if (values.length == 12) {
-            builder.reportGermlineBiallelic(Boolean.parseBoolean(values[9].toLowerCase()))
-                    .reportGermlineNonBiallelic(Boolean.parseBoolean(values[10].toLowerCase()))
-                    .reportGermlineHotspot(Boolean.parseBoolean(values[11].toLowerCase()));
+            if (values.length == 11) {
+                builder.reportGermlineVariant(Boolean.parseBoolean(values[9].toLowerCase())).reportGermlineHotspot(Boolean.parseBoolean(values[10].toLowerCase()));
+            }
+
+            return builder.build();
+        } catch (Exception e) {
+            throw e;
         }
 
-        return builder.build();
     }
 
     @NotNull

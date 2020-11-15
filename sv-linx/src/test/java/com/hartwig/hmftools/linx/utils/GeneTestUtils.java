@@ -155,9 +155,8 @@ public class GeneTestUtils
                 .reportDeletion(false)
                 .reportDisruption(true)
                 .reportAmplification(false)
-                .reportHotspot(false)
-                .reportGermlineBiallelic(false)
-                .reportGermlineNonBiallelic(false)
+                .reportSomaticHotspot(false)
+                .reportGermlineVariant(false)
                 .reportGermlineHotspot(false)
                 .likelihoodType(TSG)
                 .build();
