@@ -32,17 +32,22 @@ public class FusionExtractor {
             String fusion = feature.name();
             String fusionGeneStart = Strings.EMPTY;
             String fusionGeneEnd = Strings.EMPTY;
-            Integer exonUp = null;
-            Integer exonDown = null;
+            Integer minExonUp = null;
+            Integer maxExonUp = null;
+            Integer minExonDown = null;
+            Integer maxExonDown = null;
+
             if (feature.type() == FeatureType.FUSION_PAIR) {
                 String[] fusionArray = fusion.split("-");
 
                 if (fusionArray.length == 2) {
                     if (fusion.equals("EGFR-KDD")) {
                         fusionGeneStart = feature.geneSymbol();
-                        exonUp = 25;
+                        minExonUp = 25;
+                        maxExonUp = 26;
                         fusionGeneEnd = feature.geneSymbol();
-                        exonDown = 18;
+                        minExonDown = 14;
+                        maxExonDown = 18;
                     } else {
                         fusionGeneStart = fusionArray[0];
                         fusionGeneEnd = fusionArray[1].split(" ")[0];
@@ -50,19 +55,25 @@ public class FusionExtractor {
                 } else if (fusionArray.length == 1) {
                     if (fusion.equals("EGFRvII")) {
                         fusionGeneStart = feature.geneSymbol();
-                        exonUp = 13;
+                        minExonUp = 13;
+                        maxExonUp =13;
                         fusionGeneEnd = feature.geneSymbol();
-                        exonDown = 16;
+                        minExonDown = 16;
+                        maxExonDown = 16;
                     } else if (fusion.equals("EGFRvV")) {
                         fusionGeneStart = feature.geneSymbol();
-                        exonUp = 24;
+                        minExonUp = 24;
+                        maxExonUp =24;
                         fusionGeneEnd = feature.geneSymbol();
-                        exonDown = 29;
+                        minExonDown = 29;
+                        maxExonDown =29;
                     } else if (fusion.equals("EGFRvIII") || fusion.equals("VIII")) {
                         fusionGeneStart = feature.geneSymbol();
-                        exonUp = 1;
+                        minExonUp = 1;
+                        maxExonUp =1;
                         fusionGeneEnd = feature.geneSymbol();
-                        exonDown = 8;
+                        minExonDown = 8;
+                        maxExonDown =8;
                     } else {
                         LOGGER.warn("Fusion '{}' can not be interpreted!", fusion);
                     }
@@ -87,9 +98,11 @@ public class FusionExtractor {
                     fusionsPerFeature.put(feature,
                             ImmutableKnownFusionPair.builder()
                                     .geneUp(fusionGeneStart)
-                                    .exonUp(exonUp)
+                                    .minExonUp(minExonUp)
+                                    .maxExonUp(maxExonUp)
                                     .geneDown(fusionGeneEnd)
-                                    .exonDown(exonDown)
+                                    .minExonDown(minExonDown)
+                                    .maxExonDown(maxExonDown)
                                     .build());
                 }
 
@@ -98,14 +111,18 @@ public class FusionExtractor {
                         .description()
                         .equals("KIT Exon 11 deletions")) {
                     fusionGeneStart = feature.geneSymbol();
-                    exonUp = extractExonNumber(feature.name());
+                    minExonUp = extractExonNumber(feature.name());
+                    maxExonUp =extractExonNumber(feature.name());
                     fusionGeneEnd = feature.geneSymbol();
-                    exonDown = extractExonNumber(feature.name());
+                                     minExonDown = extractExonNumber(feature.name());
+                    maxExonDown =extractExonNumber(feature.name());
                 } else if (feature.description().equals("MET EXON 14 SKIPPING MUTATION")) {
                     fusionGeneStart = feature.geneSymbol();
-                    exonUp = extractExonNumber(feature.name()) - 1;
+                    minExonUp = extractExonNumber(feature.name()) - 1;
+                    maxExonUp =extractExonNumber(feature.name()) - 1;
                     fusionGeneEnd = feature.geneSymbol();
-                    exonDown = extractExonNumber(feature.name()) + 1;
+                    minExonDown = extractExonNumber(feature.name()) + 1;
+                    maxExonDown =extractExonNumber(feature.name()) + 1;
                 }
 
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(fusionGeneStart);
@@ -121,9 +138,11 @@ public class FusionExtractor {
                     fusionsPerFeature.put(feature,
                             ImmutableKnownFusionPair.builder()
                                     .geneUp(fusionGeneStart)
-                                    .exonUp(exonUp)
+                                    .minExonUp(minExonUp)
+                                    .maxExonUp(maxExonUp)
                                     .geneDown(fusionGeneEnd)
-                                    .exonDown(exonDown)
+                                    .minExonDown(minExonDown)
+                                    .maxExonDown(maxExonDown)
                                     .build());
                 }
             }

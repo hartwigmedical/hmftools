@@ -293,9 +293,11 @@ public final class ViccExtractor {
             actionableFusions.add(ImmutableActionableFusion.builder()
                     .from(actionableEvent)
                     .geneUp(fusion.geneUp())
-                    .exonUp(fusion.exonUp())
+                    .minExonUp(fusion.minExonUp())
+                    .maxExonUp(fusion.maxExonUp())
                     .geneDown(fusion.geneDown())
-                    .exonDown(fusion.exonDown())
+                    .minExonDown(fusion.minExonDown())
+                    .maxExonDown(fusion.maxExonDown())
                     .build());
         }
         return actionableFusions;
