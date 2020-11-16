@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
@@ -15,10 +16,13 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class FusionExtractor {
+    @NotNull
+    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
-    public FusionExtractor() {
+    public FusionExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
+        this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
     public Map<Feature, KnownFusionPair> extractKnownFusions(@NotNull ViccEntry viccEntry) {
@@ -63,13 +67,23 @@ public class FusionExtractor {
                     LOGGER.warn("Too many parts in fusion name: {}!", fusion);
                 }
 
-                fusionsPerFeature.put(feature,
-                        ImmutableKnownFusionPair.builder()
-                                .geneUp(fusionGeneStart)
-                                .exonUp(exonUp)
-                                .geneDown(fusionGeneEnd)
-                                .exonDown(exonDown)
-                                .build());
+                HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(fusionGeneStart);
+                HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(fusionGeneEnd);
+
+                if (canonicalTranscriptStart == null || canonicalTranscriptEnd == null) {
+                    LOGGER.warn("Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion extraction ",
+                            fusionGeneStart,
+                            fusionGeneEnd);
+                } else {
+                    fusionsPerFeature.put(feature,
+                            ImmutableKnownFusionPair.builder()
+                                    .geneUp(fusionGeneStart)
+                                    .exonUp(exonUp)
+                                    .geneDown(fusionGeneEnd)
+                                    .exonDown(exonDown)
+                                    .build());
+                }
+
             } else if (feature.type() == FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
                 if (feature.description().equals("KIT EXON 11 MUTATION") || feature.description().equals("KIT Exon 11 mutations") || feature
                         .description()
@@ -80,17 +94,27 @@ public class FusionExtractor {
                     exonDown = extractExonNumber(feature.name());
                 } else if (feature.description().equals("MET EXON 14 SKIPPING MUTATION")) {
                     fusionGeneStart = feature.geneSymbol();
-                    exonUp = extractExonNumber(feature.name()) -1;
+                    exonUp = extractExonNumber(feature.name()) - 1;
                     fusionGeneEnd = feature.geneSymbol();
                     exonDown = extractExonNumber(feature.name()) + 1;
                 }
-                fusionsPerFeature.put(feature,
-                        ImmutableKnownFusionPair.builder()
-                                .geneUp(fusionGeneStart)
-                                .exonUp(exonUp)
-                                .geneDown(fusionGeneEnd)
-                                .exonDown(exonDown)
-                                .build());
+
+                HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(fusionGeneStart);
+                HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(fusionGeneEnd);
+
+                if (canonicalTranscriptStart == null || canonicalTranscriptEnd == null) {
+                    LOGGER.warn("Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion extraction ",
+                            fusionGeneStart,
+                            fusionGeneEnd);
+                } else {
+                    fusionsPerFeature.put(feature,
+                            ImmutableKnownFusionPair.builder()
+                                    .geneUp(fusionGeneStart)
+                                    .exonUp(exonUp)
+                                    .geneDown(fusionGeneEnd)
+                                    .exonDown(exonDown)
+                                    .build());
+                }
             }
         }
         return fusionsPerFeature;
