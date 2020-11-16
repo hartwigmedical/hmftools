@@ -49,6 +49,7 @@ public interface FilterConfig {
             .minTumorQual(70)
             .minTumorVaf(0.005)
             .maxGermlineVaf(0.1)
+            .maxGermlineRelativeQual(0.5)
             .build();
 
     SoftFilterConfig DEFAULT_PANEL_FILTER = ImmutableSoftFilterConfig.builder()

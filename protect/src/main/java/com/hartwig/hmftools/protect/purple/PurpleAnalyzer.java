@@ -29,7 +29,7 @@ public final class PurpleAnalyzer {
             @NotNull List<DriverCatalog> purpleDriverCatalog) {
         FittedPurity bestFit = purityContext.bestFit();
         List<ReportableGainLoss> reportableGainsAndLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(purpleDriverCatalog);
-        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.primaryTumorLocation() : null;
+        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.location() : null;
         Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(reportableGainsAndLosses, primaryTumorLocation);
 

@@ -31,7 +31,6 @@ public class DndsGeneNameMap {
                     hg19Set.add(hg19);
                     hg19Map.put(hg19, hg38);
                 });
-
     }
 
     public boolean isValidHg38Gene(@NotNull final String hg38GeneId) {

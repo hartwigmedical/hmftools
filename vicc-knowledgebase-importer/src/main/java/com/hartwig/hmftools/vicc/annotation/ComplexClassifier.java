@@ -156,7 +156,9 @@ public final class ComplexClassifier {
                 "Truncating Mutations Upstream of Transactivation Domain");
         complexEventsPerGene.put("NOTCH1", notch1Set);
 
-        Set<String> notch2Set = Sets.newHashSet("2010_2471trunc", "1_2009trunc");
+        Set<String> notch2Set = Sets.newHashSet("2010_2471trunc",
+                "1_2009trunc",
+                "NOTCH2 activating mutation (missense in TAD or truncating in Cterm-PEST domain)");
         complexEventsPerGene.put("NOTCH2", notch2Set);
 
         Set<String> ntrk1Set = Sets.newHashSet("TRKAIII Splice Variant");

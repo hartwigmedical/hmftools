@@ -154,7 +154,7 @@ public class LoadEvidenceData {
 
         String patientPrimaryTumorLocation = Strings.EMPTY;
         if (patientPrimaryTumor != null) {
-            patientPrimaryTumorLocation = patientPrimaryTumor.primaryTumorLocation();
+            patientPrimaryTumorLocation = patientPrimaryTumor.location();
         }
 
         LOGGER.info(" Retrieved tumor location '{}' for sample {}", patientPrimaryTumorLocation, sampleId);

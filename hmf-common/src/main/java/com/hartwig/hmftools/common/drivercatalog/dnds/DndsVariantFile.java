@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class DndsVariantFile {
+public final class DndsVariantFile {
 
     private static final String DELIMITER = "\t";
 
@@ -106,7 +106,5 @@ public class DndsVariantFile {
                 .hotspot(Boolean.parseBoolean(values[9]))
                 .repeatCount(Integer.parseInt(values[10]))
                 .build();
-
     }
-
 }

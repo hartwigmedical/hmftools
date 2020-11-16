@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface DndsMutationalLoad {
 
+    @NotNull
     String sampleId();
 
     int snvBiallelic();

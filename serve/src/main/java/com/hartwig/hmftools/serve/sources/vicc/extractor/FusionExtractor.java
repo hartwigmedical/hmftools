@@ -37,22 +37,26 @@ public class FusionExtractor {
                     fusionGeneStart = fusionArray[0];
                     fusionGeneEnd = fusionArray[1].split(" ")[0];
                 } else if (fusionArray.length == 1) {
-                    if (fusion.equals("EGFRvII")) { //TODO implement correct genes and exons
+                    if (fusion.equals("EGFRvII")) {
                         fusionGeneStart = feature.geneSymbol();
-                        exonUp = 0;
+                        exonUp = 13;
                         fusionGeneEnd = feature.geneSymbol();
-                        exonDown = 0;
-                    } else if (fusion.equals("EGFRvV")) { //TODO implement correct genes and exons
+                        exonDown = 16;
+                    } else if (fusion.equals("EGFRvV")) {
                         fusionGeneStart = feature.geneSymbol();
-                        exonUp = 0;
+                        exonUp = 24;
                         fusionGeneEnd = feature.geneSymbol();
-                        exonDown = 0;
+                        exonDown = 29;
                     } else if (fusion.equals("EGFRvIII") || fusion.equals("VIII")) {
                         fusionGeneStart = feature.geneSymbol();
                         exonUp = 1;
                         fusionGeneEnd = feature.geneSymbol();
                         exonDown = 8;
                     } else {
+                        if (fusion.equals("TRB-NKX2-1 Fusion")) {
+                            fusionGeneStart = "TRB";
+                            fusionGeneEnd = "NKX2-1";
+                        }
                         LOGGER.warn("Fusion '{}' can not be interpreted!", fusion);
                     }
                 } else {

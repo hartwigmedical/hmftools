@@ -61,14 +61,14 @@ class BiopsyReader {
                     String location = biopsiesGroup.readItemString(FIELD_LOCATION);
 
                     String subTumorType = Strings.EMPTY;
-                    if (curatedPrimaryTumor.primaryTumorType() != null) {
-                        subTumorType = curatedPrimaryTumor.primaryTumorSubType().equals(Strings.EMPTY)
-                                ? curatedPrimaryTumor.primaryTumorType()
-                                : curatedPrimaryTumor.primaryTumorSubType();
+                    if (curatedPrimaryTumor.type() != null) {
+                        subTumorType = curatedPrimaryTumor.subType().equals(Strings.EMPTY)
+                                ? curatedPrimaryTumor.type()
+                                : curatedPrimaryTumor.subType();
                     }
 
                     CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(
-                            curatedPrimaryTumor.primaryTumorLocation(),
+                            curatedPrimaryTumor.location(),
                             subTumorType,
                             finalSite,
                             location);

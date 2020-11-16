@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DndsMutationalLoadFile {
+public final class DndsMutationalLoadFile {
 
     private static final String DELIMITER = "\t";
 
@@ -78,6 +78,5 @@ public class DndsMutationalLoadFile {
                 .indelBiallelic(Integer.parseInt(values[3]))
                 .indelNonBiallelic(Integer.parseInt(values[4]))
                 .build();
-
     }
 }

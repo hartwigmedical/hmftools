@@ -433,7 +433,7 @@ min_tumor_vaf|0.5%|1.5%|2.5%|2.5%|`AF`
 min_germline_depth|0|0|10 | 10 | Normal `RC_CNT[6]`
 min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
 max_germline_vaf***|10%|4%|4% | 4% | Normal`RC_CNT[1+2+3+4]` / `RC_CNT[6]`
-max_germline_rel_raw_base_qual|100%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1]` 
+max_germline_rel_raw_base_qual|50%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1]` 
 
 ** Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 
@@ -628,6 +628,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 # Version History and Download Links
 - Upcoming
   - Gene panel coverage
+  - Changed default value of max_germline_rel_raw_base_qual for HOTSPOTS to 50% (from 100%)
 - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.4)
   - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
   - Do not hard filter germline variants in the same local phase set as passing somatic variants

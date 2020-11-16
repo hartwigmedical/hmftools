@@ -297,7 +297,7 @@ public final class PatientValidator {
         List<ValidationFinding> findings = Lists.newArrayList();
 
         String searchTerm = baselineData.curatedPrimaryTumor().searchTerm();
-        if (searchTerm != null && !searchTerm.isEmpty() && baselineData.curatedPrimaryTumor().primaryTumorLocation() == null) {
+        if (searchTerm != null && !searchTerm.isEmpty() && baselineData.curatedPrimaryTumor().location() == null) {
             findings.add(ValidationFinding.of("primaryTumorCuration",
                     patientIdentifier,
                     "Failed to curate primary tumor",

@@ -15,24 +15,21 @@ public class PatientPrimaryTumorFunctionsTest {
 
     @Test
     public void canFindPatientPrimaryTumors() {
-        PatientPrimaryTumor cpct =
-                createTestBuilder().patientIdentifier("CPCT02020202").primaryTumorLocation("loc1").primaryTumorType("type1").build();
+        PatientPrimaryTumor cpct = createTestBuilder().patientIdentifier("CPCT02020202").location("loc1").type("type1").build();
 
-        PatientPrimaryTumor colo =
-                createTestBuilder().patientIdentifier("COLO829").primaryTumorLocation("loc2").primaryTumorType("type2").build();
+        PatientPrimaryTumor colo = createTestBuilder().patientIdentifier("COLO829").location("loc2").type("type2").build();
 
         List<PatientPrimaryTumor> patientPrimaryTumors = Lists.newArrayList(cpct, colo);
 
-        PatientPrimaryTumor primary1 =
-                PatientPrimaryTumorFunctions.findPrimaryTumorForSample(patientPrimaryTumors, "CPCT02020202T");
+        PatientPrimaryTumor primary1 = PatientPrimaryTumorFunctions.findPrimaryTumorForSample(patientPrimaryTumors, "CPCT02020202T");
         assertNotNull(primary1);
-        assertEquals(cpct.primaryTumorLocation(), primary1.primaryTumorLocation());
-        assertEquals(cpct.primaryTumorType(), primary1.primaryTumorType());
+        assertEquals(cpct.location(), primary1.location());
+        assertEquals(cpct.type(), primary1.type());
 
         PatientPrimaryTumor primary2 = PatientPrimaryTumorFunctions.findPrimaryTumorForSample(patientPrimaryTumors, "COLO829T");
         assertNotNull(primary2);
-        assertEquals(colo.primaryTumorLocation(), primary2.primaryTumorLocation());
-        assertEquals(colo.primaryTumorType(), primary2.primaryTumorType());
+        assertEquals(colo.location(), primary2.location());
+        assertEquals(colo.type(), primary2.type());
 
         PatientPrimaryTumor primary3 = PatientPrimaryTumorFunctions.findPrimaryTumorForSample(patientPrimaryTumors, "any");
         assertNull(primary3);
@@ -41,9 +38,9 @@ public class PatientPrimaryTumorFunctionsTest {
     @NotNull
     private static ImmutablePatientPrimaryTumor.Builder createTestBuilder() {
         return ImmutablePatientPrimaryTumor.builder()
-                .primaryTumorSubLocation("subLoc")
-                .primaryTumorSubType("subType")
-                .primaryTumorExtraDetails("details")
+                .subLocation("subLoc")
+                .subType("subType")
+                .extraDetails("details")
                 .doids(Lists.newArrayList("doid"))
                 .isOverridden(false);
     }

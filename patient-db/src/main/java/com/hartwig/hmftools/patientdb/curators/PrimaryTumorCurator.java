@@ -36,20 +36,20 @@ public class PrimaryTumorCurator implements CleanableCurator {
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_DELIMITER);
             String searchTerm = parts[0];
-            String primaryTumorLocation = parts[1];
-            String primaryTumorSubLocation = parts.length > 2 ? parts[2] : Strings.EMPTY;
-            String primaryTumorType = parts.length > 3 ? parts[3] : Strings.EMPTY;
-            String primaryTumorSubType = parts.length > 4 ? parts[4] : Strings.EMPTY;
-            String primaryTumorExtraDetails = parts.length > 5 ? parts[5] : Strings.EMPTY;
+            String location = parts[1];
+            String subLocation = parts.length > 2 ? parts[2] : Strings.EMPTY;
+            String type = parts.length > 3 ? parts[3] : Strings.EMPTY;
+            String subType = parts.length > 4 ? parts[4] : Strings.EMPTY;
+            String extraDetails = parts.length > 5 ? parts[5] : Strings.EMPTY;
             List<String> doids = parts.length > 6 ? Lists.newArrayList(parts[6].split(DOID_DELIMITER)) : Lists.newArrayList();
 
             primaryTumorMap.put(searchTerm,
                     ImmutableCuratedPrimaryTumor.builder()
-                            .primaryTumorLocation(primaryTumorLocation)
-                            .primaryTumorSubLocation(primaryTumorSubLocation)
-                            .primaryTumorType(primaryTumorType)
-                            .primaryTumorSubType(primaryTumorSubType)
-                            .primaryTumorExtraDetails(primaryTumorExtraDetails)
+                            .location(location)
+                            .subLocation(subLocation)
+                            .type(type)
+                            .subType(subType)
+                            .extraDetails(extraDetails)
                             .doidNodes(resolveDoidNodes(doidNodes, doids))
                             .searchTerm(searchTerm)
                             .build());

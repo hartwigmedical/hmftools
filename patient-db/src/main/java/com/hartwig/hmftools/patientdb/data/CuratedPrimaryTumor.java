@@ -17,19 +17,19 @@ public abstract class CuratedPrimaryTumor {
     public abstract String searchTerm();
 
     @Nullable
-    public abstract String primaryTumorLocation();
+    public abstract String location();
 
     @Nullable
-    public abstract String primaryTumorSubLocation();
+    public abstract String subLocation();
 
     @Nullable
-    public abstract String primaryTumorType();
+    public abstract String type();
 
     @Nullable
-    public abstract String primaryTumorSubType();
+    public abstract String subType();
 
     @Nullable
-    public abstract String primaryTumorExtraDetails();
+    public abstract String extraDetails();
 
     @Nullable
     public abstract List<DoidNode> doidNodes();

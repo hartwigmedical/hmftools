@@ -55,8 +55,8 @@ class BiopsyReader {
 
                     String location = tumorBiopsyGroup.readItemString(FIELD_LOCATION);
 
-                    CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedPrimaryTumor.primaryTumorLocation(),
-                            curatedPrimaryTumor.primaryTumorType(),
+                    CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedPrimaryTumor.location(),
+                            curatedPrimaryTumor.type(),
                             finalSite,
                             location);
 

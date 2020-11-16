@@ -97,10 +97,10 @@ public abstract class SampleReport {
     public String primaryTumorLocationString() {
         PatientPrimaryTumor entry = patientPrimaryTumor();
         if (entry != null) {
-            if (!entry.primaryTumorSubLocation().isEmpty()) {
-                return entry.primaryTumorLocation() + " (" + entry.primaryTumorSubLocation() + ")";
+            if (!entry.subLocation().isEmpty()) {
+                return entry.location() + " (" + entry.subLocation() + ")";
             } else {
-                return entry.primaryTumorLocation();
+                return entry.location();
             }
         } else {
             return Strings.EMPTY;
@@ -112,10 +112,10 @@ public abstract class SampleReport {
     public String primaryTumorTypeString() {
         PatientPrimaryTumor entry = patientPrimaryTumor();
         if (entry != null) {
-            if (!entry.primaryTumorSubType().isEmpty()) {
-                return entry.primaryTumorSubType();
+            if (!entry.subType().isEmpty()) {
+                return entry.subType();
             } else {
-                return entry.primaryTumorType();
+                return entry.type();
             }
         } else {
             return Strings.EMPTY;

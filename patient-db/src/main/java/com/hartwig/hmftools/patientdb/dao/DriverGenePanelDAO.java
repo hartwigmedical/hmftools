@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep10;
+import org.jooq.InsertValuesStep12;
 
 public class DriverGenePanelDAO {
 
@@ -24,7 +24,7 @@ public class DriverGenePanelDAO {
     void writePanel(@NotNull DriverGenePanel genePanel) {
         context.truncate(DRIVERGENEPANEL).execute();
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        InsertValuesStep10 inserter = context.insertInto(DRIVERGENEPANEL,
+        InsertValuesStep12 inserter = context.insertInto(DRIVERGENEPANEL,
                 DRIVERGENEPANEL.MODIFIED,
                 DRIVERGENEPANEL.GENE,
                 DRIVERGENEPANEL.REPORTMISSENSE,
@@ -33,7 +33,9 @@ public class DriverGenePanelDAO {
                 DRIVERGENEPANEL.REPORTDELETION,
                 DRIVERGENEPANEL.REPORTDISRUPTION,
                 DRIVERGENEPANEL.REPORTAMPLIFICATION,
-                DRIVERGENEPANEL.REPORTHOTSPOT,
+                DRIVERGENEPANEL.REPORTSOMATICHOTSPOT,
+                DRIVERGENEPANEL.REPORTGEMLINEVARIANT,
+                DRIVERGENEPANEL.REPORTGEMLINEHOTSPOT,
                 DRIVERGENEPANEL.LIKELIHOODTYPE);
 
         for (DriverGene driverGene : genePanel.driverGenes()) {
@@ -45,7 +47,9 @@ public class DriverGenePanelDAO {
                     driverGene.reportDeletion(),
                     driverGene.reportDisruption(),
                     driverGene.reportAmplification(),
-                    driverGene.reportHotspot(),
+                    driverGene.reportSomaticHotspot(),
+                    driverGene.reportGermlineVariant(),
+                    driverGene.reportGermlineHotspot(),
                     driverGene.likelihoodType().toString());
         }
 

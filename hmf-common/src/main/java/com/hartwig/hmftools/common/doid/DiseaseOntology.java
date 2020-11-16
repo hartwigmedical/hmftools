@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -29,6 +30,7 @@ public final class DiseaseOntology {
 
     private static final Logger LOGGER = LogManager.getLogger(DiseaseOntology.class);
 
+    @VisibleForTesting
     static final String ID_TO_READ = "http://purl.obolibrary.org/obo/doid.owl";
 
     private DiseaseOntology() {
@@ -53,7 +55,8 @@ public final class DiseaseOntology {
 
             String id = string(graphObject, "id");
             if (id.equals(ID_TO_READ)) {
-                LOGGER.info("Reading DOID entry with ID '{}'", id);
+                LOGGER.debug("Reading DOID entry with ID '{}'", id);
+
                 // Add data to doid entry
                 doidEntryBuilder.id(id);
                 doidEntryBuilder.nodes(extractNodes(graphObject.getAsJsonArray("nodes")));

@@ -25,11 +25,9 @@ public interface DriverGene extends Comparable<DriverGene> {
 
     boolean reportAmplification();
 
-    boolean reportHotspot();
+    boolean reportSomaticHotspot();
 
-    boolean reportGermlineNonBiallelic();
-
-    boolean reportGermlineBiallelic();
+    boolean reportGermlineVariant();
 
     boolean reportGermlineHotspot();
 
@@ -41,7 +39,7 @@ public interface DriverGene extends Comparable<DriverGene> {
         return gene().compareTo(o.gene());
     }
 
-    default boolean reportVariant() {
-        return reportMissenseAndInframe() || reportNonsenseAndFrameshift() || reportSplice() || reportHotspot();
+    default boolean reportSomatic() {
+        return reportMissenseAndInframe() || reportNonsenseAndFrameshift() || reportSplice() || reportSomaticHotspot();
     }
 }

@@ -14,7 +14,10 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
-public class MedianRatioFactory {
+public final class MedianRatioFactory {
+
+    private MedianRatioFactory() {
+    }
 
     @NotNull
     public static List<MedianRatio> createFromReadRatio(@NotNull Multimap<Chromosome, ReadRatio> ratios) {
@@ -51,5 +54,4 @@ public class MedianRatioFactory {
         }
         return results;
     }
-
 }
