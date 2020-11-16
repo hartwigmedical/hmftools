@@ -43,20 +43,25 @@ public class GeneLevelEventExtractor {
 
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-            if (canonicalTranscript == null) {
-                LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
-            } else {
-                if (feature.type() == FeatureType.GENE_LEVEL) {
+            if (feature.type() == FeatureType.GENE_LEVEL) {
+                if (canonicalTranscript == null) {
+                    LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
+                } else {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder()
                                     .gene(feature.geneSymbol())
                                     .event(extractGeneLevelEvent(feature, driverGenes))
                                     .build());
-                } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
+                }
+            } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
+                if (canonicalTranscript == null) {
+                    LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
+                } else {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
                 }
             }
+
         }
 
         return geneLevelEventsPerFeature;
