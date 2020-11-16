@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.serve.sources.vicc;
 
+import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
@@ -21,20 +23,20 @@ public final class ViccExtractorFactory {
     }
 
     @NotNull
-    public static ViccExtractor buildViccExtractor(@NotNull ProteinResolver proteinResolver) {
-        return buildViccExtractorWithInterpretationTsv(proteinResolver, null);
+    public static ViccExtractor buildViccExtractor(@NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes) {
+        return buildViccExtractorWithInterpretationTsv(proteinResolver, driverGenes, null);
     }
 
     @NotNull
     public static ViccExtractor buildViccExtractorWithInterpretationTsv(@NotNull ProteinResolver proteinResolver,
-            @Nullable String featureInterpretationTsv) {
+            @NotNull List<DriverGene> driverGenes, @Nullable String featureInterpretationTsv) {
         Map<String, HmfTranscriptRegion> transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
 
         return new ViccExtractor(new HotspotExtractor(proteinResolver),
                 new CopyNumberExtractor(transcriptPerGeneMap),
                 new FusionExtractor(transcriptPerGeneMap),
-                new GeneLevelEventExtractor(transcriptPerGeneMap),
-                new GeneRangeExtractor(transcriptPerGeneMap),
+                new GeneLevelEventExtractor(transcriptPerGeneMap, driverGenes),
+                new GeneRangeExtractor(transcriptPerGeneMap, driverGenes),
                 new SignaturesExtractor(),
                 featureInterpretationTsv);
     }

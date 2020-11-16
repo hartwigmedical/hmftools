@@ -28,89 +28,17 @@ public class GeneRangeExtractor {
 
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    @NotNull
+    private final List<DriverGene> driverGenes;
 
-    public GeneRangeExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
+    public GeneRangeExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
+            @NotNull final List<DriverGene> driverGenes) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
-    }
-
-    @VisibleForTesting
-    public static List<Integer> extractExonNumber(@NotNull String featureName) {
-        List<Integer> codons = Lists.newArrayList();
-        if (featureName.contains("or") && featureName.contains(",")) {
-            featureName = featureName.replace(" or ", ",");
-            String[] splitEvents = featureName.split(" ")[4].split(",");
-            for (String events : splitEvents) {
-                codons.add(Integer.valueOf(events));
-            }
-        } else if (featureName.contains("or")) {
-            featureName = featureName.replace(" or ", ",");
-            String[] splitEvents = featureName.split(" ")[4].split(",");
-            for (String events : splitEvents) {
-                codons.add(Integer.valueOf(events));
-            }
-        } else if (featureName.contains("-")) {
-            String[] splitEvents = featureName.split("-");
-            String[] eventStartextract = splitEvents[0].split(" ");
-            int eventStart = Integer.parseInt(eventStartextract[eventStartextract.length - 1]);
-            String[] eventEndextract = splitEvents[1].split(" ");
-            int eventEnd = Integer.parseInt(eventEndextract[0]);
-            for (int i = eventStart; i <= eventEnd; i++) {
-                codons.add(i);
-            }
-        } else if (featureName.contains("&")) {
-            featureName = featureName.replace(" & ", ",").replace(")", "");
-            String[] splitEvents = featureName.split(" ")[5].split(",");
-            for (String events : splitEvents) {
-                codons.add(Integer.valueOf(events));
-            }
-        } else {
-            String[] extraction = featureName.split(" ");
-            for (String event : extraction) {
-                if (event.matches("[0-9]+")) {
-                    codons.add(Integer.valueOf(event));
-                }
-            }
-        }
-
-        if (codons.size() == 0) {
-            LOGGER.warn("No exon number is extracted from event {}", featureName);
-        }
-        return codons;
-    }
-
-    @VisibleForTesting
-    public static Integer extractCodonNumber(@NotNull String featureName) {
-        if (featureName.split(" ").length == 1) {
-            if (!isInteger(featureName.replaceAll("\\D+", ""))) {
-                LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
-                return null;
-            } else {
-                return Integer.parseInt(featureName.replaceAll("\\D+", ""));
-            }
-        } else if (featureName.split(" ").length == 2) {
-            featureName = featureName.split(" ")[1];
-            if (!isInteger(featureName.replaceAll("\\D+", ""))) {
-                LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
-                return null;
-            } else {
-                return Integer.parseInt(featureName.replaceAll("\\D+", ""));
-            }
-        }
-        LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
-        return null;
-    }
-
-    private static boolean isInteger(@NotNull String string) {
-        try {
-            Integer.parseInt(string);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
+        this.driverGenes = driverGenes;
     }
 
     @NotNull
-    public Map<Feature, List<GeneRangeAnnotation>> extractGeneRanges(@NotNull ViccEntry viccEntry, @NotNull List<DriverGene> driverGenes) {
+    public Map<Feature, List<GeneRangeAnnotation>> extractGeneRanges(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         List<GeneRangeAnnotation> geneRangeAnnotation = Lists.newArrayList();
         for (Feature feature : viccEntry.features()) {
@@ -126,7 +54,7 @@ public class GeneRangeExtractor {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
 
-                        List<Integer> exonNumbers = extractExonNumber(feature.name());
+                        List<Integer> exonNumbers = extractExonNumbers(feature.name());
                         for (int exonNumber : exonNumbers) {
                             extractGeneRangesPerFeature(exonNumber,
                                     feature,
@@ -150,7 +78,7 @@ public class GeneRangeExtractor {
                 } else {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-                        List<Integer> exonNumbers = extractExonNumber(feature.name());
+                        List<Integer> exonNumbers = extractExonNumbers(feature.name());
                         for (int exonNumber : exonNumbers) {
                             extractGeneRangesPerFeature(exonNumber,
                                     feature,
@@ -188,8 +116,84 @@ public class GeneRangeExtractor {
                 }
             }
         }
-        return geneRangesPerFeature;
 
+        return geneRangesPerFeature;
+    }
+
+    @VisibleForTesting
+    static List<Integer> extractExonNumbers(@NotNull String featureName) {
+        List<Integer> codons = Lists.newArrayList();
+        if (featureName.contains("or") && featureName.contains(",")) {
+            String formattedFeatureName = featureName.replace(" or ", ",");
+            String[] splitEvents = formattedFeatureName.split(" ")[4].split(",");
+            for (String events : splitEvents) {
+                codons.add(Integer.valueOf(events));
+            }
+        } else if (featureName.contains("or")) {
+            String formattedFeatureName = featureName.replace(" or ", ",");
+            String[] splitEvents = formattedFeatureName.split(" ")[4].split(",");
+            for (String events : splitEvents) {
+                codons.add(Integer.valueOf(events));
+            }
+        } else if (featureName.contains("-")) {
+            String[] splitEvents = featureName.split("-");
+            String[] eventStartExtract = splitEvents[0].split(" ");
+            int eventStart = Integer.parseInt(eventStartExtract[eventStartExtract.length - 1]);
+            String[] eventEndExtract = splitEvents[1].split(" ");
+            int eventEnd = Integer.parseInt(eventEndExtract[0]);
+            for (int i = eventStart; i <= eventEnd; i++) {
+                codons.add(i);
+            }
+        } else if (featureName.contains("&")) {
+            String formattedFeatureName = featureName.replace(" & ", ",").replace(")", "");
+            String[] splitEvents = formattedFeatureName.split(" ")[5].split(",");
+            for (String events : splitEvents) {
+                codons.add(Integer.valueOf(events));
+            }
+        } else {
+            String[] extraction = featureName.split(" ");
+            for (String event : extraction) {
+                if (event.matches("[0-9]+")) {
+                    codons.add(Integer.valueOf(event));
+                }
+            }
+        }
+
+        if (codons.size() == 0) {
+            LOGGER.warn("No exon number is extracted from event {}", featureName);
+        }
+        return codons;
+    }
+
+    @VisibleForTesting
+    public static Integer extractCodonNumber(@NotNull String featureName) {
+        if (featureName.split(" ").length == 1) {
+            if (!isInteger(featureName.replaceAll("\\D+", ""))) {
+                LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
+                return null;
+            } else {
+                return Integer.parseInt(featureName.replaceAll("\\D+", ""));
+            }
+        } else if (featureName.split(" ").length == 2) {
+            String featureNamePart = featureName.split(" ")[1];
+            if (!isInteger(featureNamePart.replaceAll("\\D+", ""))) {
+                LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
+                return null;
+            } else {
+                return Integer.parseInt(featureNamePart.replaceAll("\\D+", ""));
+            }
+        }
+        LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
+        return null;
+    }
+
+    private static boolean isInteger(@NotNull String string) {
+        try {
+            Integer.parseInt(string);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     @NotNull
@@ -307,5 +311,4 @@ public class GeneRangeExtractor {
                 .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
                 .build();
     }
-
 }

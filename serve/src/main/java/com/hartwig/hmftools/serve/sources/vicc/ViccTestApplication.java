@@ -81,9 +81,9 @@ public class ViccTestApplication {
 
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor =
-                ViccExtractorFactory.buildViccExtractorWithInterpretationTsv(proteinResolver, viccFeatureInterpretationTsv);
+                ViccExtractorFactory.buildViccExtractorWithInterpretationTsv(proteinResolver, driverGenes, viccFeatureInterpretationTsv);
 
-        ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries, driverGenes);
+        ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries);
 
         ViccUtil.writeFeatures(viccFeatureTsv, viccEntries);
         ViccUtil.writeActionability(outputDir, viccExtractionOutput);

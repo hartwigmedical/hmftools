@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -24,15 +25,46 @@ public class GeneLevelEventExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
 
     private static final String GENE_ONLY = "gene_only";
+
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    @NotNull
+    private final List<DriverGene> driverGenes;
 
-    public GeneLevelEventExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
+    public GeneLevelEventExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
+            @NotNull final List<DriverGene> driverGenes) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
+        this.driverGenes = driverGenes;
     }
 
     @NotNull
-    public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
+    public Map<Feature, GeneLevelAnnotation> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry) {
+        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
+
+        for (Feature feature : viccEntry.features()) {
+            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+            if (canonicalTranscript == null) {
+                LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
+            } else {
+                if (feature.type() == FeatureType.GENE_LEVEL) {
+                    geneLevelEventsPerFeature.put(feature,
+                            ImmutableGeneLevelAnnotation.builder()
+                                    .gene(feature.geneSymbol())
+                                    .event(extractGeneLevelEvent(feature, driverGenes))
+                                    .build());
+                } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
+                    geneLevelEventsPerFeature.put(feature,
+                            ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
+                }
+            }
+        }
+
+        return geneLevelEventsPerFeature;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String eventDescription = feature.description().split(" ", 2)[1].trim();
         if (GeneRangeClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription) || feature.provenanceRule() != null) {
             for (DriverGene driverGene : driverGenes) {
@@ -67,45 +99,10 @@ public class GeneLevelEventExtractor {
         } else if (GeneRangeClassifier.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             return GeneLevelEvent.ACTIVATION;
         } else {
-           // LOGGER.warn("Unknown event {}", feature);
+            // LOGGER.warn("Unknown event {}", feature);
             return GeneLevelEvent.UNKNOWN;
         }
-      //  LOGGER.warn("Unknown event {}", feature);
+        //  LOGGER.warn("Unknown event {}", feature);
         return GeneLevelEvent.UNKNOWN;
     }
-
-    @NotNull
-    public Map<Feature, GeneLevelAnnotation> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry,
-            @NotNull List<DriverGene> driverGenes) {
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
-
-        for (Feature feature : viccEntry.features()) {
-            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-
-            if (feature.type() == FeatureType.GENE_LEVEL) {
-
-                if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
-                } else {
-                    geneLevelEventsPerFeature.put(feature,
-                            ImmutableGeneLevelAnnotation.builder()
-                                    .gene(feature.geneSymbol())
-                                    .event(extractGeneLevelEvent(feature, driverGenes))
-                                    .build());
-                }
-            } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
-
-                if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping promiscuous fusion extraction!", feature.geneSymbol());
-                } else {
-                    geneLevelEventsPerFeature.put(feature,
-                            ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
-                }
-
-            }
-
-        }
-        return geneLevelEventsPerFeature;
-    }
-
 }

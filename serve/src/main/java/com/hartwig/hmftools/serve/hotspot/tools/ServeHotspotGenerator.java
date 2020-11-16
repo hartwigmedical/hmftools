@@ -9,7 +9,6 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
@@ -71,9 +70,6 @@ public class ServeHotspotGenerator {
         boolean generateHotspots;
         String hotspotVcf = null;
 
-        // Could be empty because driverGenes are not used for determine hotspots
-        List<DriverGene> driverGenes = Lists.newArrayList();
-
         if (hostname.toLowerCase().contains("datastore")) {
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
             serveSourceDir = "/data/common/dbs/serve";
@@ -105,7 +101,7 @@ public class ServeHotspotGenerator {
                 ? ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
                 : ProteinResolverFactory.dummy();
 
-        List<KnownHotspot> viccHotspots = viccHotspots(viccJson, proteinResolver, driverGenes);
+        List<KnownHotspot> viccHotspots = viccHotspots(viccJson, proteinResolver);
         List<KnownHotspot> docmHotspots = docmHotspots(docmTsv, proteinResolver);
         List<KnownHotspot> hartwigCohortHotspots = hartwigCohortHotspots(hartwigCohortTsv, proteinResolver, generateHotspots);
         List<KnownHotspot> hartwigCuratedHotspots = hartwigCuratedHotspots(hartwigCuratedTsv, proteinResolver, generateHotspots);
@@ -139,12 +135,11 @@ public class ServeHotspotGenerator {
     }
 
     @NotNull
-    private static List<KnownHotspot> viccHotspots(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver,
-            @NotNull List<DriverGene> driverGenes) throws IOException {
+    private static List<KnownHotspot> viccHotspots(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver) throws IOException {
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
 
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
-        return viccExtractor.extractFromViccEntries(viccEntries, driverGenes).knownHotspots();
+        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver, Lists.newArrayList());
+        return viccExtractor.extractFromViccEntries(viccEntries).knownHotspots();
     }
 
     @NotNull
