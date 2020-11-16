@@ -59,7 +59,6 @@ public class ViccTestApplication {
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
                     "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
             driverGenes = DriverGenePanelConfig.driverGenes(cmd);
-
         } else {
             proteinResolver = ProteinResolverFactory.dummy();
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
