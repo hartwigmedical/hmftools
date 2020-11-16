@@ -13,7 +13,6 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class FusionEvidence {
 
@@ -62,14 +61,14 @@ public class FusionEvidence {
             return false;
         }
 
-        @Nullable
-        Integer actionableExonDown = actionable.exonDown();
+        // TODO implement min/max
+        Integer actionableExonDown = actionable.minExonDown();
         if (actionableExonDown != null && actionableExonDown != victim.fusedExonDown()) {
             return false;
         }
 
-        @Nullable
-        Integer actionableExonUp = actionable.exonUp();
+        // TODO implement min/max
+        Integer actionableExonUp = actionable.minExonUp();
         return actionableExonUp == null || actionableExonUp == victim.fusedExonUp();
     }
 
@@ -78,5 +77,4 @@ public class FusionEvidence {
             @NotNull ActionableEvent actionable) {
         return ProtectEvidenceItems.builder(doid, actionable).genomicEvent(reportable.genomicEvent()).reported(true).build();
     }
-
 }
