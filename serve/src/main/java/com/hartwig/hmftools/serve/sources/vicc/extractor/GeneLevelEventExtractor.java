@@ -67,10 +67,10 @@ public class GeneLevelEventExtractor {
         } else if (GeneRangeClassifier.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             return GeneLevelEvent.ACTIVATION;
         } else {
-            LOGGER.warn("Unknown event {}", feature);
+           // LOGGER.warn("Unknown event {}", feature);
             return GeneLevelEvent.UNKNOWN;
         }
-        LOGGER.warn("Unknown event {}", feature);
+      //  LOGGER.warn("Unknown event {}", feature);
         return GeneLevelEvent.UNKNOWN;
     }
 
