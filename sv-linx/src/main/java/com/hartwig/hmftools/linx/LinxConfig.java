@@ -119,15 +119,13 @@ public class LinxConfig
 
         if(cmd.hasOption(REF_GENOME_VERSION))
         {
-            RefGenomeVersion version = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION));
-
-            if(version == HG19 || version == HG38)
+            try
             {
-                RG_VERSION = version;
+                RG_VERSION = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION));
             }
-            else
+            catch(Exception e)
             {
-                LNX_LOGGER.error("invalid ref genome version({})", cmd.getOptionValue(REF_GENOME_VERSION));
+                LNX_LOGGER.error("invalid ref genome version({}), default to HG37", cmd.getOptionValue(REF_GENOME_VERSION));
             }
         }
 
