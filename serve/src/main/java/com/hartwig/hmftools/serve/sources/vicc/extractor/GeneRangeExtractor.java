@@ -250,7 +250,7 @@ public class GeneRangeExtractor {
                 }
             }
         }
-        LOGGER.warn("Gene {} is not present in driver catalog", gene);
+        LOGGER.warn("Gene {} is not present in driver catalog in gene range extractor", gene);
         return MutationTypeFilter.UNKNOWN;
     }
 

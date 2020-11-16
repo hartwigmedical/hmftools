@@ -61,7 +61,7 @@ public class GeneLevelEventExtractor {
                     }
                 }
             }
-            LOGGER.warn("Gene {} is not present in driver catalog", feature.geneSymbol());
+            LOGGER.warn("Gene {} is not present in driver catalog in gene level extractor", feature.geneSymbol());
         } else if (GeneRangeClassifier.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             return GeneLevelEvent.INACTIVATION;
         } else if (GeneRangeClassifier.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
