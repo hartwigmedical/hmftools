@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.serve;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public enum Source {
+public enum Knowledgebase {
     CGI("CGI", false),
     CIVIC("CIViC", false),
     DOCM("DoCM", false),
@@ -14,10 +14,10 @@ public enum Source {
     ONCOKB("OncoKB", false);
 
     @Nullable
-    public static Source fromDisplayString(@NotNull String display) {
-        for (Source source : Source.values()) {
-            if (source.display().equals(display)) {
-                return source;
+    public static Knowledgebase fromDisplayString(@NotNull String display) {
+        for (Knowledgebase knowledgebase : Knowledgebase.values()) {
+            if (knowledgebase.display().equals(display)) {
+                return knowledgebase;
             }
         }
 
@@ -28,7 +28,7 @@ public enum Source {
     private final String display;
     private final boolean trialSource;
 
-    Source(@NotNull final String display, final boolean trialSource) {
+    Knowledgebase(@NotNull final String display, final boolean trialSource) {
         this.display = display;
         this.trialSource = trialSource;
     }

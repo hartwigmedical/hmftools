@@ -15,6 +15,7 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViccExtractorFactory {
+
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 

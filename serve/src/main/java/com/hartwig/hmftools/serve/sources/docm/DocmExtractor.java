@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.docm;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
@@ -29,7 +30,7 @@ public class DocmExtractor {
             for (VariantHotspot hotspot : hotspots) {
                 knownHotspots.add(ImmutableKnownHotspot.builder()
                         .from(hotspot)
-                        .addSources("docm")
+                        .addSources(Knowledgebase.DOCM)
                         .gene(entry.gene())
                         .transcript(entry.transcript())
                         .proteinAnnotation(entry.proteinAnnotation())

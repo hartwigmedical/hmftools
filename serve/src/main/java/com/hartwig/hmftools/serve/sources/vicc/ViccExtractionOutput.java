@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ViccExtractionOutput {
 
     @NotNull
-    public abstract List<KnownHotspot> hotspots();
+    public abstract List<KnownHotspot> knownHotspots();
 
     @NotNull
     public abstract List<KnownCopyNumber> knownCopyNumbers();

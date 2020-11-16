@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
@@ -23,7 +24,7 @@ public class HotspotFunctionsTest {
 
     @Test
     public void canConsolidateHotspotsFromOneSource() {
-        String source = "x";
+        Knowledgebase source = Knowledgebase.HARTWIG_CURATED;
         List<KnownHotspot> knownHotspots = Lists.newArrayList();
         knownHotspots.add(ImmutableKnownHotspot.builder()
                 .from(hotspot1())
@@ -65,8 +66,8 @@ public class HotspotFunctionsTest {
 
     @Test
     public void canConsolidateHotspotsFromTwoSources() {
-        String source1 = "x";
-        String source2 = "x";
+        Knowledgebase source1 = Knowledgebase.HARTWIG_CURATED;
+        Knowledgebase source2 = Knowledgebase.HARTWIG_COHORT;
         List<KnownHotspot> knownHotspots = Lists.newArrayList();
         knownHotspots.add(ImmutableKnownHotspot.builder()
                 .from(hotspot1())

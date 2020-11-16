@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotImpl;
@@ -68,7 +69,7 @@ public final class HotspotFunctions {
             bestProteinAnnotation = annotation2.proteinAnnotation();
         }
 
-        Set<String> mergedSources = Sets.newHashSet();
+        Set<Knowledgebase> mergedSources = Sets.newHashSet();
         mergedSources.addAll(annotation1.sources());
         mergedSources.addAll(annotation2.sources());
 
@@ -78,7 +79,7 @@ public final class HotspotFunctions {
     private static class HotspotAnnotation {
 
         @NotNull
-        private final Set<String> sources;
+        private final Set<Knowledgebase> sources;
         @NotNull
         private final String gene;
         @Nullable
@@ -86,7 +87,7 @@ public final class HotspotFunctions {
         @NotNull
         private final String proteinAnnotation;
 
-        public HotspotAnnotation(@NotNull final Set<String> sources, @NotNull final String gene, @Nullable final String transcript,
+        public HotspotAnnotation(@NotNull final Set<Knowledgebase> sources, @NotNull final String gene, @Nullable final String transcript,
                 @NotNull final String proteinAnnotation) {
             this.sources = sources;
             this.gene = gene;
@@ -95,7 +96,7 @@ public final class HotspotFunctions {
         }
 
         @NotNull
-        public Set<String> sources() {
+        public Set<Knowledgebase> sources() {
             return sources;
         }
 

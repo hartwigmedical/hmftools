@@ -7,7 +7,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.EvidenceLevel;
-import com.hartwig.hmftools.common.serve.Source;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
@@ -194,16 +194,16 @@ final class ActionableEvidenceFactory {
     }
 
     @NotNull
-    private static Source fromViccSource(@NotNull ViccSource source) {
+    private static Knowledgebase fromViccSource(@NotNull ViccSource source) {
         switch (source) {
             case CIVIC:
-                return Source.CIVIC;
+                return Knowledgebase.CIVIC;
             case CGI:
-                return Source.CGI;
+                return Knowledgebase.CGI;
             case JAX:
-                return Source.JAX;
+                return Knowledgebase.JAX;
             case ONCOKB:
-                return Source.ONCOKB;
+                return Knowledgebase.ONCOKB;
             default:
                 throw new IllegalStateException("Source not supported by SERVE: " + source);
         }

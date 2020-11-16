@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.hartwig;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
@@ -20,12 +21,12 @@ public class HartwigExtractor {
     private static final Logger LOGGER = LogManager.getLogger(HartwigExtractor.class);
 
     @NotNull
-    private final String source;
+    private final Knowledgebase source;
     @NotNull
     private final ProteinResolver proteinResolver;
     private final boolean addExplicitHotspots;
 
-    public HartwigExtractor(@NotNull final String source, @NotNull final ProteinResolver proteinResolver,
+    public HartwigExtractor(@NotNull final Knowledgebase source, @NotNull final ProteinResolver proteinResolver,
             final boolean addExplicitHotspots) {
         this.source = source;
         this.proteinResolver = proteinResolver;

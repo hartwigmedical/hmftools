@@ -10,6 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
@@ -143,7 +144,7 @@ public class ServeHotspotGenerator {
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
         return viccExtractor.extractFromViccEntries(viccEntries, driverGenes, "")
-                .hotspots(); // empty string is file of interpretation of events
+                .knownHotspots(); // empty string is file of interpretation of events
     }
 
     @NotNull
@@ -170,7 +171,7 @@ public class ServeHotspotGenerator {
         List<HartwigEntry> hartwigCohortEntries = HartwigFileReader.read(hartwigCohortTsv);
         LOGGER.info(" Read {} entries", hartwigCohortEntries.size());
 
-        HartwigExtractor hartwigExtractor = new HartwigExtractor("hartwig_cohort", proteinResolver, addExplicitHotspots);
+        HartwigExtractor hartwigExtractor = new HartwigExtractor(Knowledgebase.HARTWIG_COHORT, proteinResolver, addExplicitHotspots);
 
         return hartwigExtractor.extractFromHartwigEntries(hartwigCohortEntries);
     }
@@ -182,7 +183,7 @@ public class ServeHotspotGenerator {
         List<HartwigEntry> hartwigCuratedEntries = HartwigFileReader.read(hartwigCuratedTsv);
         LOGGER.info(" Read {} entries", hartwigCuratedEntries.size());
 
-        HartwigExtractor hartwigExtractor = new HartwigExtractor("hartwig_curated", proteinResolver, addExplicitHotspots);
+        HartwigExtractor hartwigExtractor = new HartwigExtractor(Knowledgebase.HARTWIG_CURATED, proteinResolver, addExplicitHotspots);
 
         return hartwigExtractor.extractFromHartwigEntries(hartwigCuratedEntries);
     }
@@ -198,7 +199,7 @@ public class ServeHotspotGenerator {
         header.addMetaDataLine(new VCFInfoHeaderLine(INFO_SOURCES,
                 VCFHeaderLineCount.UNBOUNDED,
                 VCFHeaderLineType.String,
-                "sources [civic,cgi,docm,hartwig_curated,hartwig_cohort]"));
+                "sources [civic,cgi,docm,hartwigcurated,hartwigcohort]"));
 
         writer.writeHeader(header);
 
@@ -234,10 +235,10 @@ public class ServeHotspotGenerator {
 
     @VisibleForTesting
     @NotNull
-    static String buildSourcesString(@NotNull Set<String> sources) {
+    static String buildSourcesString(@NotNull Set<Knowledgebase> sources) {
         StringJoiner sourceJoiner = new StringJoiner(",");
-        for (String source : sources) {
-            sourceJoiner.add(source);
+        for (Knowledgebase source : sources) {
+            sourceJoiner.add(source.display().toLowerCase());
         }
         return sourceJoiner.toString();
     }

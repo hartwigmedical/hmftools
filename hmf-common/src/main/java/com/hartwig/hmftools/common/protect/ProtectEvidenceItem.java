@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.protect;
 
 import com.hartwig.hmftools.common.serve.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.EvidenceLevel;
-import com.hartwig.hmftools.common.serve.Source;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +17,7 @@ public abstract class ProtectEvidenceItem implements Comparable<ProtectEvidenceI
     public abstract String genomicEvent();
 
     @NotNull
-    public abstract Source source();
+    public abstract Knowledgebase source();
 
     public abstract boolean reported();
 
