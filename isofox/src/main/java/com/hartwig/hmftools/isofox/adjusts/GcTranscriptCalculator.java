@@ -3,7 +3,6 @@ package com.hartwig.hmftools.isofox.adjusts;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.stripChromosome;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVectors;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -32,9 +31,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 
@@ -139,15 +135,9 @@ public class GcTranscriptCalculator implements Callable
         int genesProcessed = 0;
         int nextLogCount = 100;
 
-        final RefGenome chrLengths = mConfig.RefGenVersion == RefGenomeVersion.HG38 ? RefGenome.HG38 : RefGenome.HG19;
-        long chromosomeLength = chrLengths.lengths().get(HumanChromosome.fromString(mChromosome));
-
         for(final EnsemblGeneData geneData : mGeneDataList)
         {
             final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
-
-            if(geneData.GeneEnd > chromosomeLength)
-                break;
 
             generateExpectedGeneCounts(geneData);
 
