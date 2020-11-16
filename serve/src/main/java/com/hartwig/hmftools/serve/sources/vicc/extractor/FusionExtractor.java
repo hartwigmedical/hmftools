@@ -38,8 +38,15 @@ public class FusionExtractor {
                 String[] fusionArray = fusion.split("-");
 
                 if (fusionArray.length == 2) {
-                    fusionGeneStart = fusionArray[0];
-                    fusionGeneEnd = fusionArray[1].split(" ")[0];
+                    if (fusion.equals("EGFR-KDD")) {
+                        fusionGeneStart = feature.geneSymbol();
+                        exonUp = 18;
+                        fusionGeneEnd = feature.geneSymbol();
+                        exonDown = 25;
+                    } else {
+                        fusionGeneStart = fusionArray[0];
+                        fusionGeneEnd = fusionArray[1].split(" ")[0];
+                    }
                 } else if (fusionArray.length == 1) {
                     if (fusion.equals("EGFRvII")) {
                         fusionGeneStart = feature.geneSymbol();
