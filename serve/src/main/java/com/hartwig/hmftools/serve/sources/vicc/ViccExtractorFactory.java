@@ -29,7 +29,7 @@ public final class ViccExtractorFactory {
         return new ViccExtractor(new HotspotExtractor(proteinResolver),
                 new CopyNumberExtractor(transcriptPerGeneMap),
                 new FusionExtractor(transcriptPerGeneMap),
-                new GeneLevelEventExtractor(),
+                new GeneLevelEventExtractor(transcriptPerGeneMap),
                 new GeneRangeExtractor(transcriptPerGeneMap),
                 new SignaturesExtractor());
     }
