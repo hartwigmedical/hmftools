@@ -40,9 +40,9 @@ public class FusionExtractor {
                 if (fusionArray.length == 2) {
                     if (fusion.equals("EGFR-KDD")) {
                         fusionGeneStart = feature.geneSymbol();
-                        exonUp = 18;
+                        exonUp = 25;
                         fusionGeneEnd = feature.geneSymbol();
-                        exonDown = 25;
+                        exonDown = 18;
                     } else {
                         fusionGeneStart = fusionArray[0];
                         fusionGeneEnd = fusionArray[1].split(" ")[0];
