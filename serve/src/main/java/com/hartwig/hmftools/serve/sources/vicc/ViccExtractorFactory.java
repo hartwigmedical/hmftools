@@ -13,18 +13,21 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractorFactory {
 
-    @NotNull
-    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
-
-    private ViccExtractorFactory(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
-        this.transcriptPerGeneMap = transcriptPerGeneMap;
+    private ViccExtractorFactory() {
     }
 
     @NotNull
     public static ViccExtractor buildViccExtractor(@NotNull ProteinResolver proteinResolver) {
+        return buildViccExtractorWithInterpretationTsv(proteinResolver, null);
+    }
+
+    @NotNull
+    public static ViccExtractor buildViccExtractorWithInterpretationTsv(@NotNull ProteinResolver proteinResolver,
+            @Nullable String featureInterpretationTsv) {
         Map<String, HmfTranscriptRegion> transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
 
         return new ViccExtractor(new HotspotExtractor(proteinResolver),
@@ -32,6 +35,7 @@ public final class ViccExtractorFactory {
                 new FusionExtractor(transcriptPerGeneMap),
                 new GeneLevelEventExtractor(transcriptPerGeneMap),
                 new GeneRangeExtractor(transcriptPerGeneMap),
-                new SignaturesExtractor());
+                new SignaturesExtractor(),
+                featureInterpretationTsv);
     }
 }

@@ -47,6 +47,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractor {
 
@@ -64,21 +65,25 @@ public final class ViccExtractor {
     private final GeneRangeExtractor geneRangeExtractor;
     @NotNull
     private final SignaturesExtractor signaturesExtractor;
+    @Nullable
+    private final String featureInterpretationTsv;
 
     public ViccExtractor(@NotNull final HotspotExtractor hotspotExtractor, @NotNull final CopyNumberExtractor copyNumberExtractor,
             @NotNull final FusionExtractor fusionExtractor, @NotNull final GeneLevelEventExtractor geneLevelEventExtractor,
-            @NotNull final GeneRangeExtractor geneRangeExtractor, @NotNull final SignaturesExtractor signaturesExtractor) {
+            @NotNull final GeneRangeExtractor geneRangeExtractor, @NotNull final SignaturesExtractor signaturesExtractor,
+            @Nullable final String featureInterpretationTsv) {
         this.hotspotExtractor = hotspotExtractor;
         this.copyNumberExtractor = copyNumberExtractor;
         this.fusionExtractor = fusionExtractor;
         this.geneLevelEventExtractor = geneLevelEventExtractor;
         this.geneRangeExtractor = geneRangeExtractor;
         this.signaturesExtractor = signaturesExtractor;
+        this.featureInterpretationTsv = featureInterpretationTsv;
     }
 
     @NotNull
-    public ViccExtractionOutput extractFromViccEntries(@NotNull List<ViccEntry> viccEntries, @NotNull List<DriverGene> driverGenes,
-            @NotNull String viccFeatureInterpretationTsv) throws IOException {
+    public ViccExtractionOutput extractFromViccEntries(@NotNull List<ViccEntry> viccEntries, @NotNull List<DriverGene> driverGenes)
+            throws IOException {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
         for (ViccEntry entry : viccEntries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
@@ -102,7 +107,12 @@ public final class ViccExtractor {
                             .actionableEvent(actionableEvidence)
                             .build());
         }
-        printResults(resultsPerEntry, viccFeatureInterpretationTsv);
+
+        printResults(resultsPerEntry);
+
+        if (featureInterpretationTsv != null) {
+            writeInterpretationToTsv(resultsPerEntry, featureInterpretationTsv);
+        }
 
         ImmutableViccExtractionOutput.Builder outputBuilder = ImmutableViccExtractionOutput.builder()
                 .knownHotspots(convertToHotspots(resultsPerEntry))
@@ -304,8 +314,7 @@ public final class ViccExtractor {
         return actionableSignatures;
     }
 
-    private static void printResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
-            @NotNull String viccFeatureInterpretationTsv) throws IOException {
+    private static void printResults(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
         List<Feature> featuresWithoutGenomicEvents = Lists.newArrayList();
         int totalFeatureCount = 0;
         int featuresWithHotspotsCount = 0;
@@ -316,10 +325,6 @@ public final class ViccExtractor {
         int featuresWithGeneRangeCount = 0;
         int totalRangeCount = 0;
         int featuresWithSignatureCount = 0;
-
-        List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner("\t").add("gene").add("event").add("type").add("interpretation").toString();
-        lines.add(header);
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             ViccEntry viccEntry = entry.getKey();
@@ -342,57 +347,27 @@ public final class ViccExtractor {
                     if (hotspotsForFeature != null) {
                         featuresWithHotspotsCount++;
                         totalHotspotsCount += hotspotsForFeature.size();
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
-                                .add(feature.name())
-                                .add(feature.type().name())
-                                .add(hotspotsForFeature.toString())
-                                .toString());
                     }
 
                     if (ampDelForFeature != null) {
                         featuresWithCopyNumberCount++;
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
-                                .add(feature.name())
-                                .add(feature.type().name())
-                                .add(ampDelForFeature.toString())
-                                .toString());
                     }
 
                     if (fusionForFeature != null) {
                         featuresWithFusionCount++;
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
-                                .add(feature.name())
-                                .add(feature.type().name())
-                                .add(fusionForFeature.toString())
-                                .toString());
                     }
 
                     if (geneLevelEventForFeature != null) {
                         featuresWithGeneLevelEventCount++;
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
-                                .add(feature.name())
-                                .add(feature.type().name())
-                                .add(geneLevelEventForFeature.toString())
-                                .toString());
                     }
 
                     if (geneRangesForFeature != null) {
                         featuresWithGeneRangeCount++;
                         totalRangeCount += geneRangesForFeature.size();
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
-                                .add(feature.name())
-                                .add(feature.type().name())
-                                .add(geneRangesForFeature.toString())
-                                .toString());
                     }
 
                     if (signatureForFeature != null) {
                         featuresWithSignatureCount++;
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
-                                .add(feature.name())
-                                .add(feature.type().name())
-                                .add(signatureForFeature.toString())
-                                .toString());
                     }
                 }
 
@@ -400,7 +375,6 @@ public final class ViccExtractor {
 
             }
         }
-        Files.write(new File(viccFeatureInterpretationTsv).toPath(), lines);
 
         LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
@@ -414,5 +388,58 @@ public final class ViccExtractor {
         LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
         LOGGER.info(" Extracted {} gene ranges for {} features", totalRangeCount, featuresWithGeneRangeCount);
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
+    }
+
+    private static void writeInterpretationToTsv(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
+            @NotNull String viccFeatureInterpretationTsv) throws IOException {
+        List<String> lines = Lists.newArrayList();
+        String header = new StringJoiner("\t").add("gene").add("event").add("type").add("interpretation").toString();
+        lines.add(header);
+
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+            ViccEntry viccEntry = entry.getKey();
+            ViccExtractionResult viccExtractionResult = entry.getValue();
+            for (Feature feature : viccEntry.features()) {
+                StringJoiner interpretation = new StringJoiner(",");
+
+                List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
+                if (hotspotsForFeature != null) {
+                    interpretation.add(hotspotsForFeature.toString());
+                }
+
+                KnownCopyNumber ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
+                if (ampDelForFeature != null) {
+                    interpretation.add(ampDelForFeature.toString());
+                }
+
+                KnownFusionPair fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
+                if (fusionForFeature != null) {
+                    interpretation.add(fusionForFeature.toString());
+                }
+
+                GeneLevelAnnotation geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
+                if (geneLevelEventForFeature != null) {
+                    interpretation.add(geneLevelEventForFeature.toString());
+                }
+
+                List<GeneRangeAnnotation> geneRangesForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
+                if (geneRangesForFeature != null) {
+                    interpretation.add(geneRangesForFeature.toString());
+                }
+
+                SignatureName signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
+                if (signatureForFeature != null) {
+                    interpretation.add(signatureForFeature.toString());
+                }
+
+                lines.add(new StringJoiner("\t").add(feature.geneSymbol())
+                        .add(feature.name())
+                        .add(feature.type().name())
+                        .add(interpretation.toString())
+                        .toString());
+            }
+
+        }
+        Files.write(new File(viccFeatureInterpretationTsv).toPath(), lines);
     }
 }

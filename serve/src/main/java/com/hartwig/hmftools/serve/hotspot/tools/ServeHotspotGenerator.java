@@ -142,9 +142,9 @@ public class ServeHotspotGenerator {
     private static List<KnownHotspot> viccHotspots(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver,
             @NotNull List<DriverGene> driverGenes) throws IOException {
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
+
         ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
-        return viccExtractor.extractFromViccEntries(viccEntries, driverGenes, "")
-                .knownHotspots(); // empty string is file of interpretation of events
+        return viccExtractor.extractFromViccEntries(viccEntries, driverGenes).knownHotspots();
     }
 
     @NotNull
