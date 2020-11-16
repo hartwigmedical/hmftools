@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.hartwig.cohort;
+package com.hartwig.hmftools.serve.sources.hartwig;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,15 +10,15 @@ import com.google.common.io.Resources;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class HartwigCohortFileReaderTest {
+public class HartwigFileReaderTest {
 
-    private static final String EXAMPLE_TSV = Resources.getResource("hartwig/cohort/example.tsv").getPath();
+    private static final String EXAMPLE_TSV = Resources.getResource("hartwig/example.tsv").getPath();
 
     @Test
-    public void canReadHartwigCohortFile() throws IOException {
-        List<HartwigCohortEntry> entries = HartwigCohortFileReader.readCohortFile(EXAMPLE_TSV);
+    public void canReadHartwigFile() throws IOException {
+        List<HartwigEntry> entries = HartwigFileReader.read(EXAMPLE_TSV);
 
-        assertEquals(2, entries.size());
+        assertEquals(3, entries.size());
 
         assertEquals("5", entries.get(0).chromosome());
         assertEquals(1295228, entries.get(0).position());
@@ -35,5 +35,13 @@ public class HartwigCohortFileReaderTest {
         assertEquals("BRAF", entries.get(1).gene());
         assertEquals("ENST00000288602", entries.get(1).transcript());
         assertEquals("V600E", entries.get(1).proteinAnnotation());
+
+        assertEquals("7", entries.get(2).chromosome());
+        assertEquals(140453136, entries.get(2).position());
+        assertEquals("A", entries.get(2).ref());
+        assertEquals("T", entries.get(2).alt());
+        assertEquals("BRAF", entries.get(2).gene());
+        assertEquals("ENST00000288602", entries.get(2).transcript());
+        assertEquals(Strings.EMPTY, entries.get(2).proteinAnnotation());
     }
 }

@@ -22,11 +22,9 @@ import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.sources.docm.DocmFileReader;
 import com.hartwig.hmftools.serve.sources.docm.curation.DocmCurator;
+import com.hartwig.hmftools.serve.sources.hartwig.HartwigEntry;
 import com.hartwig.hmftools.serve.sources.hartwig.HartwigExtractor;
-import com.hartwig.hmftools.serve.sources.hartwig.cohort.HartwigCohortEntry;
-import com.hartwig.hmftools.serve.sources.hartwig.cohort.HartwigCohortFileReader;
-import com.hartwig.hmftools.serve.sources.hartwig.curated.HartwigCuratedEntry;
-import com.hartwig.hmftools.serve.sources.hartwig.curated.HartwigCuratedFileReader;
+import com.hartwig.hmftools.serve.sources.hartwig.HartwigFileReader;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
@@ -169,7 +167,7 @@ public class ServeHotspotGenerator {
     private static List<KnownHotspot> hartwigCohortHotspots(@NotNull String hartwigCohortTsv, @NotNull ProteinResolver proteinResolver,
             boolean addExplicitHotspots) throws IOException {
         LOGGER.info("Reading Hartwig Cohort TSV from '{}'", hartwigCohortTsv);
-        List<HartwigCohortEntry> hartwigCohortEntries = HartwigCohortFileReader.readCohortFile(hartwigCohortTsv);
+        List<HartwigEntry> hartwigCohortEntries = HartwigFileReader.read(hartwigCohortTsv);
         LOGGER.info(" Read {} entries", hartwigCohortEntries.size());
 
         HartwigExtractor hartwigExtractor = new HartwigExtractor("hartwig_cohort", proteinResolver, addExplicitHotspots);
@@ -181,7 +179,7 @@ public class ServeHotspotGenerator {
     private static List<KnownHotspot> hartwigCuratedHotspots(@NotNull String hartwigCuratedTsv, @NotNull ProteinResolver proteinResolver,
             boolean addExplicitHotspots) throws IOException {
         LOGGER.info("Reading Hartwig Curated TSV from '{}'", hartwigCuratedTsv);
-        List<HartwigCuratedEntry> hartwigCuratedEntries = HartwigCuratedFileReader.readCuratedFile(hartwigCuratedTsv);
+        List<HartwigEntry> hartwigCuratedEntries = HartwigFileReader.read(hartwigCuratedTsv);
         LOGGER.info(" Read {} entries", hartwigCuratedEntries.size());
 
         HartwigExtractor hartwigExtractor = new HartwigExtractor("hartwig_curated", proteinResolver, addExplicitHotspots);

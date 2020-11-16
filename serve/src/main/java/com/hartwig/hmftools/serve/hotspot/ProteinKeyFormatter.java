@@ -9,11 +9,6 @@ public final class ProteinKeyFormatter {
     }
 
     @NotNull
-    public static String toProteinKey(@NotNull HotspotAnnotation annotation) {
-        return toProteinKey(annotation.gene(), annotation.transcript(), annotation.proteinAnnotation());
-    }
-
-    @NotNull
     public static String toProteinKey(@NotNull String gene, @Nullable String transcript, @NotNull String proteinAnnotation) {
         String formattedProteinAnnotation = !proteinAnnotation.isEmpty() ? "p." + proteinAnnotation : "-";
         return gene + "|" + transcript + "|" + formattedProteinAnnotation;

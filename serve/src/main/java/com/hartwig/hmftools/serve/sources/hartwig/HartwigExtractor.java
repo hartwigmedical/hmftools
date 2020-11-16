@@ -33,7 +33,7 @@ public class HartwigExtractor {
     }
 
     @NotNull
-    public List<KnownHotspot> extractFromHartwigEntries(@NotNull List<? extends HartwigEntry> entries) {
+    public List<KnownHotspot> extractFromHartwigEntries(@NotNull List<HartwigEntry> entries) {
         List<KnownHotspot> knownHotspots = Lists.newArrayList();
         for (HartwigEntry entry : entries) {
             List<VariantHotspot> hotspots = Lists.newArrayList();
