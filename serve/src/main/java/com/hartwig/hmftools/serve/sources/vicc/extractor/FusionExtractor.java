@@ -57,14 +57,15 @@ public class FusionExtractor {
                         fusionGeneEnd = feature.geneSymbol();
                         exonDown = 8;
                     } else {
-                        if (fusion.equals("TRB-NKX2-1 Fusion")) {
-                            fusionGeneStart = "TRB";
-                            fusionGeneEnd = "NKX2-1";
-                        }
                         LOGGER.warn("Fusion '{}' can not be interpreted!", fusion);
                     }
                 } else {
-                    LOGGER.warn("Too many parts in fusion name: {}!", fusion);
+                    if (fusion.equals("TRB-NKX2-1 Fusion")) {
+                        fusionGeneStart = "TRB";
+                        fusionGeneEnd = "NKX2-1";
+                    } else {
+                        LOGGER.warn("Too many parts in fusion name: {}!", fusion);
+                    }
                 }
 
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(fusionGeneStart);
