@@ -11,15 +11,18 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.compress.utils.Lists;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -149,15 +152,26 @@ public class EnsemblDAO
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,EntrezIds,KaryotypeBand,Synonyms");
+            writer.write("GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,KaryotypeBand,Synonyms");
             writer.newLine();
 
             Result<?> results = queryAllGeneData();
 
+            final Map<String,List<EnsemblGeneData>> chrGeneMap = Maps.newHashMap();
+
+            final Set<String> geneNames = Sets.newHashSet();
+
             for(final Record record : results)
             {
-                String geneId = (String)record.get("GeneId");
                 String geneName = (String)record.get("GeneName");
+                String geneId = (String)record.get("GeneId");
+
+                if(geneNames.contains(geneName) || mGeneIds.contains(geneId))
+                    continue;
+
+                geneNames.add(geneName);
+                mGeneIds.add(geneId);
+
                 String chromosome = (String)record.get("Chromosome");
                 UInteger geneStart = (UInteger) record.get("GeneStart");
                 UInteger geneEnd = (UInteger) record.get("GeneEnd");
@@ -165,15 +179,34 @@ public class EnsemblDAO
                 Object entrezId = record.get("EntrezId");
 
                 if(entrezId != null)
-                    geneName = (String)entrezId;
+                {
+                    geneName = (String) entrezId;
+                }
 
-                writer.write(String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s",
-                        geneId, geneName, chromosome, strand.intValue(), geneStart.intValue(), geneEnd.intValue(),
-                        record.get("EntrezIds"), record.get("KaryotypeBand"), record.get("Synonyms")));
+                EnsemblGeneData geneData = new EnsemblGeneData(
+                        geneId, geneName, chromosome, strand.byteValue(), geneStart.intValue(), geneEnd.intValue(),
+                        record.get("KaryotypeBand").toString());
 
-                writer.newLine();
+                geneData.addSynonyms(record.get("Synonyms").toString());
 
-                mGeneIds.add(geneId);
+                List<EnsemblGeneData> geneList = chrGeneMap.get(chromosome);
+
+                if(geneList == null)
+                    chrGeneMap.put(chromosome, Lists.newArrayList(geneData));
+                else
+                    geneList.add(geneData);
+            }
+
+            for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
+            {
+                for(EnsemblGeneData geneData : entry.getValue())
+                {
+                    writer.write(String.format("%s,%s,%s,%d,%d,%d,%s,%s",
+                            geneData.GeneId, geneData.GeneName, geneData.Chromosome, geneData.Strand,
+                            geneData.GeneStart, geneData.GeneEnd, geneData.KaryotypeBand, geneData.getSynonyms()));
+
+                    writer.newLine();
+                }
             }
 
             writer.close();
@@ -186,31 +219,8 @@ public class EnsemblDAO
 
     private Result<?> queryAllGeneData()
     {
-        final String queryStr = "select GeneId, GeneName, EntrezId, Chromosome, Strand, GeneStart, GeneEnd, EntrezIds, KaryotypeBand, Synonyms"
-                + " from ("
-                + " select max(gene.stable_id) as GeneId, display_xref.display_label as GeneName, max(entrez_xref.display_label) as EntrezId,"
-                + " max(case when entrez_xref.external_db_id = 1100 then 1100 else 0 end) as ExtDbId, max(seq_region.name) as Chromosome,"
-                + " max(gene.seq_region_strand) as Strand, max(gene.seq_region_start) as GeneStart, max(gene.seq_region_end) as GeneEnd,"
-                + " GROUP_CONCAT(DISTINCT entrez_xref.dbprimary_acc ORDER BY entrez_xref.dbprimary_acc SEPARATOR ';') as EntrezIds,"
-                + " GROUP_CONCAT(DISTINCT karyotype.band ORDER BY karyotype.band SEPARATOR '-') as KaryotypeBand,"
-                + " GROUP_CONCAT(DISTINCT syn_xref.dbprimary_acc ORDER BY syn_xref.dbprimary_acc SEPARATOR ';') as Synonyms"
-                + " from gene"
-                + " inner join object_xref as ox on gene.gene_id = ox.ensembl_id and ox.ensembl_object_type = 'GENE'"
-                + " inner join xref as display_xref on display_xref.xref_id = gene.display_xref_id"
-                + " inner join karyotype on gene.seq_region_id = karyotype.seq_region_id"
-                + " inner join seq_region on gene.seq_region_id = seq_region.seq_region_id"
-                + " left join xref as entrez_xref on (entrez_xref.xref_id = ox.xref_id and entrez_xref.external_db_id = 1100)"
-                + " inner join xref as syn_xref on syn_xref.xref_id = ox.xref_id"
-                + " where seq_region.name in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y')"
-                + " and ((gene.seq_region_start >= karyotype.seq_region_start and gene.seq_region_start <= karyotype.seq_region_end)"
-                + " or (gene.seq_region_end >= karyotype.seq_region_start and gene.seq_region_end <= karyotype.seq_region_end))"
-                + " and seq_region.coord_system_id = " + mCoordSystemId
-                + " group by GeneName order by ExtDbId desc"
-                + " ) as q1 order by Chromosome, GeneStart;";
-
-        /*
-                final String queryStr = "select gene.stable_id as GeneId, display_xref.display_label as GeneName, seq_region.name as Chromosome,"
-                + " max(entrez_xref.display_label) as EntrezId,"
+        final String queryStr = "select gene.stable_id as GeneId, display_xref.display_label as GeneName, entrez_xref.display_label as EntrezId,"
+                + " case when entrez_xref.external_db_id = 1100 then 1100 else 0 end as ExtDbId, seq_region.name as Chromosome,"
                 + " gene.seq_region_strand as Strand, gene.seq_region_start as GeneStart, gene.seq_region_end as GeneEnd,"
                 + " GROUP_CONCAT(DISTINCT entrez_xref.dbprimary_acc ORDER BY entrez_xref.dbprimary_acc SEPARATOR ';') as EntrezIds,"
                 + " GROUP_CONCAT(DISTINCT karyotype.band ORDER BY karyotype.band SEPARATOR '-') as KaryotypeBand,"
@@ -226,9 +236,8 @@ public class EnsemblDAO
                 + " and ((gene.seq_region_start >= karyotype.seq_region_start and gene.seq_region_start <= karyotype.seq_region_end)"
                 + " or (gene.seq_region_end >= karyotype.seq_region_start and gene.seq_region_end <= karyotype.seq_region_end))"
                 + " and seq_region.coord_system_id = " + mCoordSystemId
-                + " group by Chromosome, GeneStart, GeneEnd, GeneId, GeneName, Strand"
-                + " order by Chromosome, GeneStart;";
-        */
+                + " group by GeneId, GeneName, EntrezId, ExtDbId, Chromosome, Strand, GeneStart, GeneEnd"
+                + " order by GeneName, ExtDbId desc;";
 
         LNX_LOGGER.debug("gene query: {}", queryStr);
 

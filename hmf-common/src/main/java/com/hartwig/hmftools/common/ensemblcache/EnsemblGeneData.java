@@ -30,6 +30,7 @@ public class EnsemblGeneData
 
     public void addSynonyms(final String synonyms) { mSynonyms = synonyms; }
     public boolean hasSynonym(final String name) { return mSynonyms.contains(name); }
+    public String getSynonyms() { return mSynonyms; }
 
     public int length() { return GeneEnd - GeneStart; }
 
