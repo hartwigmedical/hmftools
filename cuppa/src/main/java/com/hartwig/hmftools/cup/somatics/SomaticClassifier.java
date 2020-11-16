@@ -8,10 +8,7 @@ import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
@@ -19,10 +16,8 @@ import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
@@ -32,9 +27,9 @@ import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateReportableSignatures;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSnvPosFrequences;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSampleCountsFromFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSamplePosFreqFromFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
@@ -45,11 +40,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -115,7 +108,7 @@ public class SomaticClassifier implements CuppaClassifier
         loadRefSignaturePercentileData(mConfig.RefSigContributionFile, mRefCancerSigContribPercentiles, mRefCancerSnvCountPercentiles);
         mRefSampleCounts = loadRefSampleCounts(mConfig.RefSnvCountsFile, mRefSampleNames);
 
-        mRefCancerSnvPosFrequencies = loadRefSnvPosFrequences(mConfig.RefSnvCancerPosFreqFile, mRefSnvPosFreqCancerTypes);
+        mRefCancerSnvPosFrequencies = loadRefSampleCounts(mConfig.RefSnvCancerPosFreqFile, mRefSnvPosFreqCancerTypes);
         mRefSampleSnvPosFrequencies = loadSamplePosFreqFromFile(mConfig.RefSnvSamplePosFreqFile, mRefSamplePosFreqIndex);
 
         if(mRefSampleCounts == null || mRefCancerSnvPosFrequencies == null)
@@ -488,26 +481,12 @@ public class SomaticClassifier implements CuppaClassifier
         }
     }
 
-    private static final Map<String,String> REPORTABLE_SIGS = Maps.newHashMap();
-
-    private static void populateReportableSignatures()
-    {
-        REPORTABLE_SIGS.put("Sig1", "SIG_1");
-        REPORTABLE_SIGS.put("Sig2", "SIG_2_13_AID_APOBEC");
-        REPORTABLE_SIGS.put("Sig4", "SIG_4_SMOKING");
-        REPORTABLE_SIGS.put("Sig6", "SIG_6_MMR");
-        REPORTABLE_SIGS.put("Sig7", "SIG_7_UV");
-        REPORTABLE_SIGS.put("Sig10", "SIG_10_POLE");
-        REPORTABLE_SIGS.put("Sig11", "SIG_11");
-        REPORTABLE_SIGS.put("Sig17", "SIG_17");
-    }
-
     private static final String SIG_NAME_2 = "Sig2";
     private static final String SIG_NAME_13 = "Sig13";
 
     private static final String signatureDisplayName(final String sigName)
     {
-        final String displayName = REPORTABLE_SIGS.get(sigName);
+        final String displayName = RefSomatics.REPORTABLE_SIGS.get(sigName);
         return displayName != null ? displayName : "UNKNOWN";
     }
 
@@ -523,7 +502,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         // report on every one of the designated set
 
-        for(final String sigName : REPORTABLE_SIGS.keySet())
+        for(final String sigName : RefSomatics.REPORTABLE_SIGS.keySet())
         {
             double sampleSigContrib = sampleSigContribs.containsKey(sigName) ? sampleSigContribs.get(sigName) : 0;
 
@@ -559,49 +538,4 @@ public class SomaticClassifier implements CuppaClassifier
         }
     }
 
-    private void populateSomaticCounts(final List<SomaticVariant> variants)
-    {
-        // PositionFrequencies
-        //             SigMatrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex
-
-        PositionFrequencies positionFrequencies = new PositionFrequencies(null, POS_FREQ_BUCKET_SIZE);
-        final Map<String,Integer> bucketNameMap = Maps.newHashMap();
-        populateBucketMap(bucketNameMap);
-
-        for(final SomaticVariant variant : variants)
-        {
-            if(variant.isFiltered())
-                continue;
-
-            if(variant.type() == INDEL)
-            {
-
-                continue;
-            }
-
-            if(variant.alt().length() != 1)
-                continue;
-
-            String rawContext = variant.trinucleotideContext();
-
-            if(rawContext.contains("N"))
-                continue;
-
-            // check filters
-            positionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
-
-            final String bucketName = contextFromVariant(variant);
-            Integer bucketIndex = bucketNameMap.get(bucketName);
-
-            if(bucketIndex == null)
-            {
-                CUP_LOGGER.error("invalid bucketName({}) from var({}>{}) context={})",
-                        bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
-
-                return;
-            }
-
-            // ++sampleCounts[bucketIndex][sampleIndex];
-        }
-    }
 }

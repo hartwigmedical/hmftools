@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.sig_analyser.analysers;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
+import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
-import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.MAX_SAMPLE_COUNT;
 
 import java.io.BufferedWriter;

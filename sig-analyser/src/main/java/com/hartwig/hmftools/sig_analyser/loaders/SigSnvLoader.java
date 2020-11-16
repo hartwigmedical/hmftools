@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
+import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 
@@ -41,6 +43,8 @@ public class SigSnvLoader
 
     private final List<PositionFrequencies> mPositionFrequencies;
 
+    private final List<BufferedWriter> mPosFreqWriters;
+
     private static final int SNV_BUCKET_COUNT = 96;
 
     private static final Logger LOGGER = LogManager.getLogger(SigSnvLoader.class);
@@ -54,6 +58,7 @@ public class SigSnvLoader
         populateBucketMap(mBucketStringToIndex);
 
         mPositionFrequencies = Lists.newArrayList();
+        mPosFreqWriters = Lists.newArrayList();
     }
 
     public void setSampleIds(final List<String> sampleIds)
@@ -65,7 +70,11 @@ public class SigSnvLoader
     public void initialisePositionFrequencies(final String outputDir, final List<Integer> bucketSizes)
     {
         mPositionFrequencies.clear();
-        bucketSizes.forEach(x -> mPositionFrequencies.add(new PositionFrequencies(outputDir, x)));
+
+        int maxSampleCount = DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
+        bucketSizes.forEach(x -> mPositionFrequencies.add(new PositionFrequencies(x, maxSampleCount)));
+
+        mPositionFrequencies.forEach(x -> mPosFreqWriters.add(PositionFrequencies.createFrequencyCountsWriter(outputDir, x.getBucketSize())));
     }
 
     public final List<PositionFrequencies> getPositionFrequencies() { return mPositionFrequencies; }
@@ -91,10 +100,11 @@ public class SigSnvLoader
 
             if(writePosFreqData)
             {
-                for(PositionFrequencies positionFrequencies : mPositionFrequencies)
+                for(int i = 0; i < mPositionFrequencies.size(); ++i)
                 {
-                    positionFrequencies.writeResults(sampleId);
-                    positionFrequencies.clear();
+                    final PositionFrequencies positionFrequency = mPositionFrequencies.get(i);
+                    positionFrequency.writeFrequencyCounts(mPosFreqWriters.get(i), sampleId);
+                    positionFrequency.clear();
                 }
             }
 
@@ -105,7 +115,7 @@ public class SigSnvLoader
         }
 
         if(writePosFreqData)
-            mPositionFrequencies.forEach(x -> x.close());
+            mPosFreqWriters.forEach(x -> closeBufferedWriter(x));
     }
 
     private List<SomaticVariant> loadSomaticVariants(final String vcfFile, final String sampleId)

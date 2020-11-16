@@ -100,8 +100,8 @@ public class CuppaConfig
 
     public static final String REF_SAMPLE_DATA_FILE = "ref_sample_data_file";
     public static final String REF_SNV_COUNTS_FILE = "ref_snv_counts_file";
+    public static final String REF_SNV_SAMPLE_POS_FREQ_FILE = "ref_sample_snv_pos_freq_file";
     private static final String REF_SNV_CANCER_POS_FREQ_FILE = "ref_cancer_snv_pos_freq_file";
-    private static final String REF_SNV_SAMPLE_POS_FREQ_FILE = "ref_sample_snv_pos_freq_file";
     private static final String REF_SIG_CONTRIB_FILE = "ref_sig_contrib_file";
     private static final String REF_FEAT_PREV_FILE = "ref_feature_prev_file";
     private static final String REF_DRIVER_AVG_FILE = "ref_feature_avg_file";

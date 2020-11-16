@@ -111,6 +111,17 @@ public class SigMatrix
         }
     }
 
+    public void setCol(int colIndex, final int[] data)
+    {
+        if(colIndex >= Cols)
+            return;
+
+        for(int i = 0; i < Rows; ++i)
+        {
+            mData[i][colIndex] = data[i];
+        }
+    }
+
     public double get(int row, int col)
     {
         if(row >= Rows || col >= Cols)

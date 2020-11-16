@@ -4,6 +4,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -51,12 +52,10 @@ public class PositionFreqBuilder
     private final String mSamplePosCountsFile;
 
     private final List<String> mSampleList;
-    private final Map<String,List<String>> mCancerSampleList;
     private final Map<String,int[]> mSamplePositionFrequencies;
 
     public static final String POSITION_BUCKET_SIZE = "position_bucket_size";
     public static final String MAX_SAMPLE_COUNT = "max_sample_count";
-    public static final int DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT = 20000;
 
     private static final String SAMPLE_DATA_FILE = "sample_data_file";
     private static final String POSITION_DATA_FILE = "position_data_file";
@@ -67,7 +66,6 @@ public class PositionFreqBuilder
         mChromosomePosIndex = Maps.newHashMap();
         mSamplePositionFrequencies = Maps.newHashMap();
         mSampleList = Lists.newArrayList();
-        mCancerSampleList = Maps.newHashMap();
 
         mBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE));
         mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
@@ -97,7 +95,6 @@ public class PositionFreqBuilder
         initialisePositionCache();
 
         mSampleList = null;
-        mCancerSampleList = null;
         mSamplePosCountsFile = null;
     }
 
@@ -133,10 +130,6 @@ public class PositionFreqBuilder
         SIG_LOGGER.info("writing sample position counts matrix");
 
         writeSampleData();
-
-        SIG_LOGGER.info("writing ref cancer position counts");
-
-        writeCancerRefData();
 
         SIG_LOGGER.info("position frequencies data sets complete");
     }
@@ -249,23 +242,9 @@ public class PositionFreqBuilder
                 String cancerType = fieldsIndexMap.containsKey("CancerType") ? items[fieldsIndexMap.get("CancerType")] : "";
 
                 mSampleList.add(sampleId);
-
-                if(!cancerType.isEmpty() && !cancerType.equals("Unknown"))
-                {
-                    List<String> sampleIds = mCancerSampleList.get(cancerType);
-
-                    if(sampleIds == null)
-                    {
-                        mCancerSampleList.put(cancerType, Lists.newArrayList(sampleId));
-                    }
-                    else
-                    {
-                        sampleIds.add(sampleId);
-                    }
-                }
             }
 
-            SIG_LOGGER.info("loaded {} samples and {} cancer types", mSampleList.size(), mCancerSampleList.size());
+            SIG_LOGGER.info("loaded {} samples", mSampleList.size());
         }
         catch (IOException e)
         {
@@ -360,78 +339,6 @@ public class PositionFreqBuilder
                 for(int i = 1; i < sampleIds.size(); ++i)
                 {
                     writer.write(String.format(",%d", mSamplePositionFrequencies.get(sampleIds.get(i))[b]));
-                }
-
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            SIG_LOGGER.error("failed to write sample pos data output: {}", e.toString());
-        }
-    }
-
-    private void writeCancerRefData()
-    {
-        if(mCancerSampleList.isEmpty())
-            return;
-
-        try
-        {
-            final String filename = mOutputDir + "cancer_ref_pos_freq_counts.csv";
-            BufferedWriter writer = createBufferedWriter(filename, false);
-
-            final Map<String,double[]> cancerPosCounts = Maps.newHashMap();
-
-            for(Map.Entry<String,List<String>> entry : mCancerSampleList.entrySet())
-            {
-                final String cancerType = entry.getKey();
-
-                if(cancerType.equals("Other"))
-                    continue;
-
-                final List<String> sampleIds = entry.getValue();
-
-                final double[] posCounts = new double[mPositionCacheSize];
-
-                for(final String sampleId : sampleIds)
-                {
-                    final int[] sampleCounts = mSamplePositionFrequencies.get(sampleId);
-
-                    if(sampleCounts == null)
-                        continue;
-
-                    int sampleTotal = Arrays.stream(sampleCounts).sum();
-
-                    double reductionFactor = sampleTotal > mMaxSampleCount ? mMaxSampleCount / (double)sampleTotal : 1;
-
-                    for(int b = 0; b < mPositionCacheSize; ++b)
-                    {
-                        posCounts[b] += reductionFactor * sampleCounts[b];
-                    }
-                }
-
-                cancerPosCounts.put(cancerType, posCounts);
-            }
-
-            final List<String> cancerTypes = cancerPosCounts.keySet().stream().collect(Collectors.toList());
-            writer.write(cancerTypes.get(0));
-            for(int i = 1; i < cancerTypes.size(); ++i)
-            {
-                writer.write(String.format(",%s", cancerTypes.get(i)));
-            }
-
-            writer.newLine();
-
-            for(int b = 0; b < mPositionCacheSize; ++b)
-            {
-                writer.write(String.format("%.1f", cancerPosCounts.get(cancerTypes.get(0))[b]));
-
-                for(int i = 1; i < cancerTypes.size(); ++i)
-                {
-                    writer.write(String.format(",%.1f", cancerPosCounts.get(cancerTypes.get(i))[b]));
                 }
 
                 writer.newLine();

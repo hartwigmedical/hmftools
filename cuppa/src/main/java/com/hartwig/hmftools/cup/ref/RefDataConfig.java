@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDi
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
+import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -33,7 +34,6 @@ public class RefDataConfig
     public static final String REF_SAMPLE_TRAITS_FILE = "ref_sample_traits_file";
     public static final String REF_SIG_CONTRIBS_FILE = "ref_sig_contribs_file";
     public static final String REF_SV_DATA_FILE = "ref_sv_data_file";
-    public static final String REF_SNV_POS_DATA_FILE = "ref_snv_pos_file";
     public static final String REF_RNA_GENE_EXP_DATA_FILE = "ref_rna_gene_exp_file";
 
     public RefDataConfig(final CommandLine cmd)
@@ -42,7 +42,7 @@ public class RefDataConfig
         RefSampleTraitsFile = cmd.getOptionValue(REF_SAMPLE_TRAITS_FILE, "");
         RefSigContribsFile = cmd.getOptionValue(REF_SIG_CONTRIBS_FILE, "");
         RefSampleSvDataFile = cmd.getOptionValue(REF_SV_DATA_FILE, "");
-        RefSnvPositionDataFile = cmd.getOptionValue(REF_SNV_POS_DATA_FILE, "");
+        RefSnvPositionDataFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
         RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
         RefRnaGeneExpFile = cmd.getOptionValue(REF_RNA_GENE_EXP_DATA_FILE, "");
 
@@ -57,8 +57,8 @@ public class RefDataConfig
         options.addOption(REF_SAMPLE_TRAITS_FILE, true, "Ref sample traits data file");
         options.addOption(REF_SIG_CONTRIBS_FILE, true, "Ref signature contributions data file");
         options.addOption(REF_SV_DATA_FILE, true, "Ref sample SV data file");
-        options.addOption(REF_SNV_POS_DATA_FILE, true, "Ref sample SNV position bucket data file");
-        options.addOption(REF_SNV_COUNTS_FILE, true, "Ref sample SNV position bucket data file");
+        options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
+        options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
         options.addOption(REF_RNA_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
 
         addDatabaseCmdLineArgs(options);

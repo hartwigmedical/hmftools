@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sig_analyser.fitter;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
@@ -22,7 +23,6 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.formOutputFilename;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleListFile;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.loadSampleMatrixCounts;
-import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder.POSITION_BUCKET_SIZE;
 
