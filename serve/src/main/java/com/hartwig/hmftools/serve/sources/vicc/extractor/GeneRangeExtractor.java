@@ -120,7 +120,8 @@ public class GeneRangeExtractor {
 
             if (featureType == FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene range extraction ", feature.geneSymbol());
+                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping fusion pair and gene range extraction for range!",
+                            feature.geneSymbol());
                 } else {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -145,7 +146,7 @@ public class GeneRangeExtractor {
             }
             if (featureType == FeatureType.GENE_RANGE_EXON) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene range extraction ", feature.geneSymbol());
+                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene range exon extraction!", feature.geneSymbol());
                 } else {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -168,7 +169,7 @@ public class GeneRangeExtractor {
                 }
             } else if (featureType == FeatureType.GENE_RANGE_CODON) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene range extraction ", feature.geneSymbol());
+                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene range codon extraction!", feature.geneSymbol());
                 } else {
                     Integer codonNumber = extractCodonNumber(feature.name());
                     if (codonNumber != null) {

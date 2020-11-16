@@ -33,17 +33,24 @@ public class CopyNumberExtractor {
         for (Feature feature : viccEntry.features()) {
 
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-            if (canonicalTranscript == null) {
-                LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping amplification and deletion extraction ",
-                        feature.geneSymbol());
-            } else {
-                if (feature.type() == FeatureType.AMPLIFICATION) {
+            if (feature.type() == FeatureType.AMPLIFICATION) {
+                if (canonicalTranscript == null) {
+                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping amplification extraction!",
+                            feature.geneSymbol());
+                } else {
                     ampsDelsPerFeature.put(feature,
                             ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.AMPLIFICATION).build());
-                } else if (feature.type() == FeatureType.DELETION) {
+                }
+
+            } else if (feature.type() == FeatureType.DELETION) {
+                if (canonicalTranscript == null) {
+                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping deletion extraction!",
+                            feature.geneSymbol());
+                } else {
                     ampsDelsPerFeature.put(feature,
                             ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.DELETION).build());
                 }
+
             }
         }
 

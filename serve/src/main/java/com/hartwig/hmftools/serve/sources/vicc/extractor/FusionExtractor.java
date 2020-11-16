@@ -71,7 +71,8 @@ public class FusionExtractor {
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(fusionGeneEnd);
 
                 if (canonicalTranscriptStart == null || canonicalTranscriptEnd == null) {
-                    LOGGER.warn("Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion extraction ",
+                    LOGGER.warn(
+                            "Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion pair extraction!",
                             fusionGeneStart,
                             fusionGeneEnd);
                 } else {
@@ -103,7 +104,9 @@ public class FusionExtractor {
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(fusionGeneEnd);
 
                 if (canonicalTranscriptStart == null || canonicalTranscriptEnd == null) {
-                    LOGGER.warn("Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion extraction ",
+                    LOGGER.warn(
+                            "Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion par and gene "
+                                    + "range exon extraction for internal fusion!",
                             fusionGeneStart,
                             fusionGeneEnd);
                 } else {

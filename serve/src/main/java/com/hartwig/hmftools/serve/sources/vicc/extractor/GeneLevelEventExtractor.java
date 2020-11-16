@@ -80,11 +80,12 @@ public class GeneLevelEventExtractor {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
+            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+
             if (feature.type() == FeatureType.GENE_LEVEL) {
-                HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene level extraction ", feature.geneSymbol());
+                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
                 } else {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder()
@@ -93,10 +94,9 @@ public class GeneLevelEventExtractor {
                                     .build());
                 }
             } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
-                HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping promiscuous fusion extraction ", feature.geneSymbol());
+                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping promiscuous fusion extraction!", feature.geneSymbol());
                 } else {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
