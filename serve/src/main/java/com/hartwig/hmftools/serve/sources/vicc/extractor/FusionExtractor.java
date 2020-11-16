@@ -56,24 +56,24 @@ public class FusionExtractor {
                     if (fusion.equals("EGFRvII")) {
                         fusionGeneStart = feature.geneSymbol();
                         minExonUp = 13;
-                        maxExonUp =13;
+                        maxExonUp = 13;
                         fusionGeneEnd = feature.geneSymbol();
                         minExonDown = 16;
                         maxExonDown = 16;
                     } else if (fusion.equals("EGFRvV")) {
                         fusionGeneStart = feature.geneSymbol();
                         minExonUp = 24;
-                        maxExonUp =24;
+                        maxExonUp = 24;
                         fusionGeneEnd = feature.geneSymbol();
                         minExonDown = 29;
-                        maxExonDown =29;
+                        maxExonDown = 29;
                     } else if (fusion.equals("EGFRvIII") || fusion.equals("VIII")) {
                         fusionGeneStart = feature.geneSymbol();
                         minExonUp = 1;
-                        maxExonUp =1;
+                        maxExonUp = 1;
                         fusionGeneEnd = feature.geneSymbol();
                         minExonDown = 8;
-                        maxExonDown =8;
+                        maxExonDown = 8;
                     } else {
                         LOGGER.warn("Fusion '{}' can not be interpreted!", fusion);
                     }
@@ -112,28 +112,25 @@ public class FusionExtractor {
                         .equals("KIT Exon 11 deletions")) {
                     fusionGeneStart = feature.geneSymbol();
                     minExonUp = extractExonNumber(feature.name());
-                    maxExonUp =extractExonNumber(feature.name());
+                    maxExonUp = extractExonNumber(feature.name());
                     fusionGeneEnd = feature.geneSymbol();
-                                     minExonDown = extractExonNumber(feature.name());
-                    maxExonDown =extractExonNumber(feature.name());
+                    minExonDown = extractExonNumber(feature.name());
+                    maxExonDown = extractExonNumber(feature.name());
                 } else if (feature.description().equals("MET EXON 14 SKIPPING MUTATION")) {
                     fusionGeneStart = feature.geneSymbol();
                     minExonUp = extractExonNumber(feature.name()) - 1;
-                    maxExonUp =extractExonNumber(feature.name()) - 1;
+                    maxExonUp = extractExonNumber(feature.name()) - 1;
                     fusionGeneEnd = feature.geneSymbol();
                     minExonDown = extractExonNumber(feature.name()) + 1;
-                    maxExonDown =extractExonNumber(feature.name()) + 1;
+                    maxExonDown = extractExonNumber(feature.name()) + 1;
                 }
 
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(fusionGeneStart);
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(fusionGeneEnd);
 
                 if (canonicalTranscriptStart == null || canonicalTranscriptEnd == null) {
-                    LOGGER.warn(
-                            "Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion par and gene "
-                                    + "range exon extraction for internal fusion!",
-                            fusionGeneStart,
-                            fusionGeneEnd);
+                    LOGGER.warn("Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion par and gene "
+                            + "range exon extraction for internal fusion!", fusionGeneStart, fusionGeneEnd);
                 } else {
                     fusionsPerFeature.put(feature,
                             ImmutableKnownFusionPair.builder()
