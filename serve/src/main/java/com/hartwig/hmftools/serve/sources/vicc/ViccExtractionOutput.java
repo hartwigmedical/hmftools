@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc;
 
 import java.util.List;
-import java.util.Map;
 
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
@@ -11,7 +9,7 @@ import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
+import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -22,9 +20,8 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ViccExtractionOutput {
 
-    // TODO This should be a simple list with annotated variants.
     @NotNull
-    public abstract Map<VariantHotspot, HotspotAnnotation> hotspots();
+    public abstract List<KnownHotspot> hotspots();
 
     @NotNull
     public abstract List<KnownCopyNumber> knownCopyNumbers();

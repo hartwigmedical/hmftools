@@ -10,10 +10,8 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
@@ -29,8 +27,9 @@ import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSig
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.hotspot.HotspotAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
+import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
+import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.CopyNumberExtractor;
@@ -45,7 +44,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViccExtractor {
@@ -115,29 +113,25 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static Map<VariantHotspot, HotspotAnnotation> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        Map<VariantHotspot, HotspotAnnotation> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
+    private static List<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        List<KnownHotspot> hotspots = Lists.newArrayList();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
             ViccEntry entry = entryResult.getKey();
             for (Map.Entry<Feature, List<VariantHotspot>> featureResult : entryResult.getValue().hotspotsPerFeature().entrySet()) {
                 Feature feature = featureResult.getKey();
                 for (VariantHotspot hotspot : featureResult.getValue()) {
-                    HotspotAnnotation currentAnnotation = convertedMap.get(hotspot);
-                    HotspotAnnotation newAnnotation = new HotspotAnnotation(Sets.newHashSet(entry.source().display()),
-                            feature.geneSymbol(),
-                            entry.transcriptId(),
-                            feature.proteinAnnotation());
-                    if (currentAnnotation != null) {
-                        convertedMap.put(hotspot, HotspotFunctions.mergeHotspotAnnotations(currentAnnotation, newAnnotation));
-                    } else {
-                        convertedMap.put(hotspot, newAnnotation);
-                    }
-
+                    hotspots.add(ImmutableKnownHotspot.builder()
+                            .from(hotspot)
+                            .addSources(entry.source().display())
+                            .gene(feature.geneSymbol())
+                            .transcript(entry.transcriptId())
+                            .proteinAnnotation(feature.proteinAnnotation())
+                            .build());
                 }
             }
         }
 
-        return convertedMap;
+        return HotspotFunctions.consolidateHotspots(hotspots);
     }
 
     @NotNull
@@ -305,12 +299,8 @@ public final class ViccExtractor {
         int totalRangeCount = 0;
         int featuresWithSignatureCount = 0;
 
-
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner("\t").add("gene").add("event")
-                .add("type")
-                .add("interpretation")
-                .toString();
+        String header = new StringJoiner("\t").add("gene").add("event").add("type").add("interpretation").toString();
         lines.add(header);
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
@@ -334,7 +324,8 @@ public final class ViccExtractor {
                     if (hotspotsForFeature != null) {
                         featuresWithHotspotsCount++;
                         totalHotspotsCount += hotspotsForFeature.size();
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
+                                .add(feature.name())
                                 .add(feature.type().name())
                                 .add(hotspotsForFeature.toString())
                                 .toString());
@@ -342,7 +333,8 @@ public final class ViccExtractor {
 
                     if (ampDelForFeature != null) {
                         featuresWithCopyNumberCount++;
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
+                                .add(feature.name())
                                 .add(feature.type().name())
                                 .add(ampDelForFeature.toString())
                                 .toString());
@@ -350,7 +342,8 @@ public final class ViccExtractor {
 
                     if (fusionForFeature != null) {
                         featuresWithFusionCount++;
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
+                                .add(feature.name())
                                 .add(feature.type().name())
                                 .add(fusionForFeature.toString())
                                 .toString());
@@ -358,7 +351,8 @@ public final class ViccExtractor {
 
                     if (geneLevelEventForFeature != null) {
                         featuresWithGeneLevelEventCount++;
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
+                                .add(feature.name())
                                 .add(feature.type().name())
                                 .add(geneLevelEventForFeature.toString())
                                 .toString());
@@ -367,7 +361,8 @@ public final class ViccExtractor {
                     if (geneRangesForFeature != null) {
                         featuresWithGeneRangeCount++;
                         totalRangeCount += geneRangesForFeature.size();
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
+                                .add(feature.name())
                                 .add(feature.type().name())
                                 .add(geneRangesForFeature.toString())
                                 .toString());
@@ -375,7 +370,8 @@ public final class ViccExtractor {
 
                     if (signatureForFeature != null) {
                         featuresWithSignatureCount++;
-                        lines.add(new StringJoiner("\t").add(feature.geneSymbol()).add(feature.name())
+                        lines.add(new StringJoiner("\t").add(feature.geneSymbol())
+                                .add(feature.name())
                                 .add(feature.type().name())
                                 .add(signatureForFeature.toString())
                                 .toString());

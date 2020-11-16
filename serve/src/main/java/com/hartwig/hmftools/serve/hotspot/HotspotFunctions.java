@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotImpl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,51 +23,38 @@ public final class HotspotFunctions {
     }
 
     @NotNull
-    public static Map<VariantHotspot, HotspotAnnotation> convertHotspotMap(@NotNull String source,
-            @NotNull Map<? extends HotspotSourceEntry, List<VariantHotspot>> hotspotsPerEntry) {
-        Map<VariantHotspot, HotspotAnnotation> convertedMap = Maps.newTreeMap(new VariantHotspotComparator());
-        for (Map.Entry<? extends HotspotSourceEntry, List<VariantHotspot>> entry : hotspotsPerEntry.entrySet()) {
-            HotspotSourceEntry sourceEntry = entry.getKey();
-            for (VariantHotspot hotspot : entry.getValue()) {
-                HotspotAnnotation newAnnotation = new HotspotAnnotation(Sets.newHashSet(source),
-                        sourceEntry.gene(),
-                        sourceEntry.transcript(),
-                        sourceEntry.proteinAnnotation());
-
-                HotspotAnnotation currentAnnotation = convertedMap.get(hotspot);
-                if (currentAnnotation != null) {
-                    LOGGER.debug("Annotation '{}' already found previously: '{}'", newAnnotation, currentAnnotation);
-                    convertedMap.put(hotspot, mergeHotspotAnnotations(currentAnnotation, newAnnotation));
-                } else {
-                    convertedMap.put(hotspot, newAnnotation);
-                }
+    public static List<KnownHotspot> consolidateHotspots(@NotNull List<KnownHotspot> hotspots) {
+        Map<VariantHotspot, HotspotAnnotation> annotationPerHotspot = Maps.newHashMap();
+        for (KnownHotspot hotspot : hotspots) {
+            HotspotAnnotation newAnnotation = new HotspotAnnotation(Sets.newHashSet(hotspot.sources()),
+                    hotspot.gene(),
+                    hotspot.transcript(),
+                    hotspot.proteinAnnotation());
+            VariantHotspotImpl key = ImmutableVariantHotspotImpl.builder().from(hotspot).build();
+            HotspotAnnotation existingAnnotation = annotationPerHotspot.get(key);
+            if (existingAnnotation == null) {
+                annotationPerHotspot.put(key, newAnnotation);
+            } else {
+                annotationPerHotspot.put(key, mergeHotspotAnnotations(newAnnotation, existingAnnotation));
             }
         }
 
-        return convertedMap;
-    }
-
-    @NotNull
-    public static Map<VariantHotspot, HotspotAnnotation> mergeHotspotMaps(@NotNull List<Map<VariantHotspot, HotspotAnnotation>> maps) {
-        Map<VariantHotspot, HotspotAnnotation> mergedMap = Maps.newTreeMap(new VariantHotspotComparator());
-        for (Map<VariantHotspot, HotspotAnnotation> map : maps) {
-            for (Map.Entry<VariantHotspot, HotspotAnnotation> entry : map.entrySet()) {
-                VariantHotspot hotspot = entry.getKey();
-                HotspotAnnotation newAnnotation = entry.getValue();
-                HotspotAnnotation currentAnnotation = mergedMap.get(hotspot);
-
-                if (currentAnnotation != null) {
-                    mergedMap.put(hotspot, mergeHotspotAnnotations(currentAnnotation, newAnnotation));
-                } else {
-                    mergedMap.put(hotspot, newAnnotation);
-                }
-            }
+        List<KnownHotspot> consolidatedHotspots = Lists.newArrayList();
+        for (Map.Entry<VariantHotspot, HotspotAnnotation> entry : annotationPerHotspot.entrySet()) {
+            HotspotAnnotation annotation = entry.getValue();
+            consolidatedHotspots.add(ImmutableKnownHotspot.builder()
+                    .from(entry.getKey())
+                    .sources(annotation.sources())
+                    .gene(annotation.gene())
+                    .transcript(annotation.transcript())
+                    .proteinAnnotation(annotation.proteinAnnotation())
+                    .build());
         }
-        return mergedMap;
+        return consolidatedHotspots;
     }
 
     @NotNull
-    public static HotspotAnnotation mergeHotspotAnnotations(@NotNull HotspotAnnotation annotation1,
+    private static HotspotAnnotation mergeHotspotAnnotations(@NotNull HotspotAnnotation annotation1,
             @NotNull HotspotAnnotation annotation2) {
         if (!annotation1.gene().equals(annotation2.gene())) {
             LOGGER.warn("Genes mismatch on identical hotspot: '{}' vs '{}'", annotation1.gene(), annotation2.gene());
