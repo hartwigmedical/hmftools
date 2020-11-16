@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.serve.sources.hartwig;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
+import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
+import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 
@@ -19,17 +21,21 @@ public class HartwigExtractor {
     private static final Logger LOGGER = LogManager.getLogger(HartwigExtractor.class);
 
     @NotNull
+    private final Knowledgebase source;
+    @NotNull
     private final ProteinResolver proteinResolver;
     private final boolean addExplicitHotspots;
 
-    public HartwigExtractor(@NotNull final ProteinResolver proteinResolver, final boolean addExplicitHotspots) {
+    public HartwigExtractor(@NotNull final Knowledgebase source, @NotNull final ProteinResolver proteinResolver,
+            final boolean addExplicitHotspots) {
+        this.source = source;
         this.proteinResolver = proteinResolver;
         this.addExplicitHotspots = addExplicitHotspots;
     }
 
     @NotNull
-    public Map<HartwigEntry, List<VariantHotspot>> extractFromHartwigEntries(@NotNull List<? extends HartwigEntry> entries) {
-        Map<HartwigEntry, List<VariantHotspot>> hotspotsPerEntry = Maps.newHashMap();
+    public List<KnownHotspot> extractFromHartwigEntries(@NotNull List<HartwigEntry> entries) {
+        List<KnownHotspot> knownHotspots = Lists.newArrayList();
         for (HartwigEntry entry : entries) {
             List<VariantHotspot> hotspots = Lists.newArrayList();
             if (!entry.proteinAnnotation().isEmpty()) {
@@ -50,10 +56,26 @@ public class HartwigExtractor {
                     hotspots.add(explicitHotspot);
                 }
             }
-            hotspotsPerEntry.put(entry, hotspots);
+
+            for (VariantHotspot hotspot : hotspots) {
+                knownHotspots.add(ImmutableKnownHotspot.builder()
+                        .from(hotspot)
+                        .addSources(source)
+                        .gene(entry.gene())
+                        .transcript(entry.transcript())
+                        .proteinAnnotation(entry.proteinAnnotation())
+                        .build());
+            }
         }
 
-        return hotspotsPerEntry;
+        List<KnownHotspot> consolidatedHotspots = HotspotFunctions.consolidateHotspots(knownHotspots);
+        if (consolidatedHotspots.size() != knownHotspots.size()) {
+            LOGGER.warn("Consolidating of '{}' hotspots changed number of hotspots from {} to {}",
+                    source,
+                    knownHotspots.size(),
+                    consolidatedHotspots.size());
+        }
+        return consolidatedHotspots;
     }
 
     @NotNull

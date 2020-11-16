@@ -17,8 +17,6 @@ public class CompassionateUseProgramFile {
     @NotNull
     public static List<CompassionateUseProgram> read(@NotNull String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
-
-
     }
 
     @NotNull

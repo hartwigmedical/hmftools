@@ -18,7 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ActionableEventsLoader {
+public final class ActionableEventsLoader {
+
     private static final Logger LOGGER = LogManager.getLogger(ActionableEventsLoader.class);
 
     @NotNull
@@ -52,6 +53,5 @@ public class ActionableEventsLoader {
                 .addAllFusions(fusions)
                 .addAllSignatures(signatures)
                 .build();
-
     }
 }

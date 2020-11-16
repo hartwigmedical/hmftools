@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.serve.actionability;
 
 import com.hartwig.hmftools.common.serve.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.Source;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -11,10 +11,10 @@ public final class ActionableEventFactory {
     }
 
     @NotNull
-    public static Source sourceFromFileValue(@NotNull String sourceFileValue) {
-        Source source = Source.fromDisplayString(sourceFileValue);
+    public static Knowledgebase sourceFromFileValue(@NotNull String sourceFileValue) {
+        Knowledgebase source = Knowledgebase.fromDisplayString(sourceFileValue);
         if (source == null) {
-            throw new IllegalStateException("Cannot resolve source: " + sourceFileValue);
+            throw new IllegalStateException("Cannot resolve source knowledgebase: " + sourceFileValue);
         }
         return source;
     }

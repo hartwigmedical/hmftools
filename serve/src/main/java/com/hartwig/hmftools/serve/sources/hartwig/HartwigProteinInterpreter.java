@@ -6,7 +6,7 @@ import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class HartwigProteinInterpreter {
+final class HartwigProteinInterpreter {
 
     @VisibleForTesting
     static final String IGNORE_PROTEIN_ANNOTATION = "-";

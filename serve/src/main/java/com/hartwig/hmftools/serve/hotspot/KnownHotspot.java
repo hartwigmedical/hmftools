@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.hotspot;
 
 import java.util.Set;
 
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.immutables.value.Value;
@@ -14,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class KnownHotspot implements VariantHotspot {
 
     @NotNull
-    public abstract Set<String> sources();
+    public abstract Set<Knowledgebase> sources();
 
     @NotNull
     public abstract String gene();

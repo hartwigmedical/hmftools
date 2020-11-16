@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.serve.sources.vicc;
 
+import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
@@ -13,6 +15,7 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractorFactory {
 
@@ -20,14 +23,21 @@ public final class ViccExtractorFactory {
     }
 
     @NotNull
-    public static ViccExtractor buildViccExtractor(@NotNull ProteinResolver proteinResolver) {
+    public static ViccExtractor buildViccExtractor(@NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes) {
+        return buildViccExtractorWithInterpretationTsv(proteinResolver, driverGenes, null);
+    }
+
+    @NotNull
+    public static ViccExtractor buildViccExtractorWithInterpretationTsv(@NotNull ProteinResolver proteinResolver,
+            @NotNull List<DriverGene> driverGenes, @Nullable String featureInterpretationTsv) {
         Map<String, HmfTranscriptRegion> transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
 
         return new ViccExtractor(new HotspotExtractor(proteinResolver),
-                new CopyNumberExtractor(),
-                new FusionExtractor(),
-                new GeneLevelEventExtractor(),
-                new GeneRangeExtractor(transcriptPerGeneMap),
-                new SignaturesExtractor());
+                new CopyNumberExtractor(transcriptPerGeneMap),
+                new FusionExtractor(transcriptPerGeneMap),
+                new GeneLevelEventExtractor(transcriptPerGeneMap, driverGenes),
+                new GeneRangeExtractor(transcriptPerGeneMap, driverGenes),
+                new SignaturesExtractor(),
+                featureInterpretationTsv);
     }
 }

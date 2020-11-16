@@ -59,7 +59,6 @@ public class ViccTestApplication {
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
                     "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
             driverGenes = DriverGenePanelConfig.driverGenes(cmd);
-
         } else {
             proteinResolver = ProteinResolverFactory.dummy();
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
@@ -80,9 +79,10 @@ public class ViccTestApplication {
         LOGGER.debug("Configured '{}' as the VICC feature output TSV", viccFeatureTsv);
 
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver);
+        ViccExtractor viccExtractor =
+                ViccExtractorFactory.buildViccExtractorWithInterpretationTsv(proteinResolver, driverGenes, viccFeatureInterpretationTsv);
 
-        ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries, driverGenes, viccFeatureInterpretationTsv);
+        ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries);
 
         ViccUtil.writeFeatures(viccFeatureTsv, viccEntries);
         ViccUtil.writeActionability(outputDir, viccExtractionOutput);

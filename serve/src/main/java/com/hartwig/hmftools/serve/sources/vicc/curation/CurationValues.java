@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.docm;
+package com.hartwig.hmftools.serve.sources.vicc.curation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,15 +7,13 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DocmEntry {
+public abstract class CurationValues {
 
     @NotNull
-    public abstract String gene();
+    public abstract String geneSymbol();
 
     @NotNull
-    public abstract String transcript();
+    public abstract String event();
 
-    @NotNull
-    public abstract String proteinAnnotation();
 
 }

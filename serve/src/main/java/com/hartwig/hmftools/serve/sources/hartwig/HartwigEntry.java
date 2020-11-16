@@ -1,19 +1,31 @@
 package com.hartwig.hmftools.serve.sources.hartwig;
 
-import com.hartwig.hmftools.serve.hotspot.HotspotSourceEntry;
-
+import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public interface HartwigEntry extends HotspotSourceEntry {
-
-    @NotNull
-    String chromosome();
-
-    long position();
-
-    @NotNull
-    String ref();
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class HartwigEntry {
 
     @NotNull
-    String alt();
+    public abstract String chromosome();
+
+    public abstract long position();
+
+    @NotNull
+    public abstract String ref();
+
+    @NotNull
+    public abstract String alt();
+
+    @NotNull
+    public abstract String gene();
+
+    @NotNull
+    public abstract String transcript();
+
+    @NotNull
+    public abstract String proteinAnnotation();
 }

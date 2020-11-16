@@ -1,4 +1,4 @@
-geneUp	exonUp	geneDown	exonDown	source	treatment	cancerType	doid	level	direction	url
-EML4		ALK		CIViC	Crizotinib	Lung Cancer	X	A	Responsive	https
-PCM1		JAK2		CGI	Ruxolitinib	Leukemia	X	B	Responsive	https
-EGFR	1	EGFR	8	CIViC	Osimertinib	Lung Cancer	X	A	Responsive
+geneUp	minExonUp	maxExonUp	geneDown	minExonDown	maxExonDown	source	treatment	cancerType	doid	level	direction	url
+EML4			ALK			CIViC	Crizotinib	Lung Cancer	X	A	Responsive	https
+PCM1			JAK2			CGI	Ruxolitinib	Leukemia	X	B	Responsive	https
+EGFR	1	1	EGFR	8	8	CIViC	Osimertinib	Lung Cancer	X	A	Responsive

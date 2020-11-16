@@ -61,14 +61,14 @@ public class ViccCurator {
             }
         }
 
-        for (CurationKey key : CurationFactory.FEATURE_NAME_MAPPINGS.keySet()) {
+        for (CurationKey key : CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.keySet()) {
             if (!evaluatedCurationKeys.contains(key)) {
                 unusedKeyCount++;
                 LOGGER.warn("Key '{}' hasn't been used during VICC name mapping curation", key);
             }
         }
 
-        int totalKeyCount = CurationFactory.FEATURE_BLACKLIST.size() + CurationFactory.FEATURE_NAME_MAPPINGS.keySet().size();
+        int totalKeyCount = CurationFactory.FEATURE_BLACKLIST.size() + CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.keySet().size();
         LOGGER.debug("Found {} unused VICC curation entries. {} keys have been requested against {} blacklist entries",
                 unusedKeyCount,
                 evaluatedCurationKeys.size(),
@@ -84,16 +84,17 @@ public class ViccCurator {
         if (CurationFactory.FEATURE_BLACKLIST.contains(key)) {
             LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
             return null;
-        } else {
-            String mappedFeatureName = CurationFactory.FEATURE_NAME_MAPPINGS.get(key);
-            if (mappedFeatureName != null) {
-                LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
-                        feature.name(),
-                        mappedFeatureName,
-                        feature.geneSymbol(),
-                        entry.source());
-                return ImmutableFeature.builder().from(feature).name(mappedFeatureName).build();
-            }
+        } else if (CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.containsKey(key)) {
+            String mappedGeneSymbol = CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.get(key).geneSymbol();
+            String mappedFeatureName = CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.get(key).event();
+
+            LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
+                    feature.name(),
+                    mappedFeatureName,
+                    feature.geneSymbol(),
+                    entry.source());
+            return ImmutableFeature.builder().from(feature).name(mappedFeatureName).geneSymbol(mappedGeneSymbol).build();
+
         }
 
         return feature;

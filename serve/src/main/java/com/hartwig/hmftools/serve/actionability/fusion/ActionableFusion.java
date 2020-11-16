@@ -15,11 +15,17 @@ public abstract class ActionableFusion implements ActionableEvent {
     public abstract String geneUp();
 
     @Nullable
-    public abstract Integer exonUp();
+    public abstract Integer minExonUp();
+
+    @Nullable
+    public abstract Integer maxExonUp();
 
     @NotNull
     public abstract String geneDown();
 
     @Nullable
-    public abstract Integer exonDown();
+    public abstract Integer minExonDown();
+
+    @Nullable
+    public abstract Integer maxExonDown();
 }
