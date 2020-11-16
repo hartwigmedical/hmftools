@@ -85,17 +85,16 @@ public class ViccCurator {
             LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
             return null;
         } else if (CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.containsKey(key)) {
-            String mappedFeatureName = CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.get(key).event();
             String mappedGeneSymbol = CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.get(key).geneSymbol();
+            String mappedFeatureName = CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.get(key).event();
 
-            if (mappedFeatureName != null) {
-                LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
-                        feature.name(),
-                        mappedFeatureName,
-                        feature.geneSymbol(),
-                        entry.source());
-                return ImmutableFeature.builder().from(feature).name(mappedFeatureName).geneSymbol(mappedGeneSymbol).build();
-            }
+            LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
+                    feature.name(),
+                    mappedFeatureName,
+                    feature.geneSymbol(),
+                    entry.source());
+            return ImmutableFeature.builder().from(feature).name(mappedFeatureName).geneSymbol(mappedGeneSymbol).build();
+
         }
 
         return feature;

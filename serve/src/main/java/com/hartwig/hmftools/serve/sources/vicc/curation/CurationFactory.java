@@ -26,53 +26,69 @@ final class CurationFactory {
     private static CurationValues createCurationValues(@NotNull String event, @NotNull String geneSymbol) {
         return ImmutableCurationValues.builder().event(event).geneSymbol(geneSymbol).build();
     }
+
     private static void populateCGICuration() {
         // These are not wrong but lead to inconsistencies downstream
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PIK3R1", null, "PIK3R1 p.E439delE"), createCurationValues("PIK3R1 p.E439del", "PIK3R1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PIK3R1", null, "PIK3R1 p.D560_S565delDKRMNS"), createCurationValues("PIK3R1 p.D560_S565del", "PIK3R1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PIK3R1", null, "PIK3R1 p.T576delT"), createCurationValues("PIK3R1 p.T576del", "PIK3R1"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PIK3R1", null, "PIK3R1 p.E439delE"), createCurationValues("PIK3R1", "PIK3R1 p.E439del"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PIK3R1", null, "PIK3R1 p.D560_S565delDKRMNS"),
+                createCurationValues("PIK3R1", "PIK3R1 p.D560_S565del"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PIK3R1", null, "PIK3R1 p.T576delT"), createCurationValues("PIK3R1", "PIK3R1 p.T576del"));
 
         // These fusions need to be swapped around.
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("ABL1", null, "ABL1-BCR fusion"), createCurationValues("BCR-ABL1 fusion", "BCR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("BCR", null, "ABL1-BCR fusion"), createCurationValues("BCR-ABL1 fusion", "BCR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("COL1A1", null, "PDGFB-COL1A1 fusion"), createCurationValues("COL1A1-PDGFB fusion", "COL1A1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PDGFB", null, "PDGFB-COL1A1 fusion"), createCurationValues("COL1A1-PDGFB fusion", "COL1A1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("FIP1L1", null, "PDGFRA-FIP1L1 fusion"), createCurationValues("FIP1L1-PDGFRA fusion", "FIP1L1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PDGFRA", null, "PDGFRA-FIP1L1 fusion"), createCurationValues("FIP1L1-PDGFRA fusion", "FIP1L1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PRKCH", null, "PRKCH amplification + ABL1-BCR fusion"), createCurationValues("PRKCH amplification + BCR-ABL1 fusion", "PRKCH"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("ABL1", null, "ABL1-BCR fusion"), createCurationValues("BCR", "BCR-ABL1 fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("BCR", null, "ABL1-BCR fusion"), createCurationValues("BCR", "BCR-ABL1 fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("COL1A1", null, "PDGFB-COL1A1 fusion"),
+                createCurationValues("COL1A1", "COL1A1-PDGFB fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PDGFB", null, "PDGFB-COL1A1 fusion"),
+                createCurationValues("COL1A1", "COL1A1-PDGFB fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("FIP1L1", null, "PDGFRA-FIP1L1 fusion"),
+                createCurationValues("FIP1L1", "FIP1L1-PDGFRA fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PDGFRA", null, "PDGFRA-FIP1L1 fusion"),
+                createCurationValues("FIP1L1", "FIP1L1-PDGFRA fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("PRKCH", null, "PRKCH amplification + ABL1-BCR fusion"),
+                createCurationValues("PRKCH", "PRKCH amplification + BCR-ABL1 fusion"));
 
         // These fusions are on synonym genes
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("BRD4", null, "BRD4-C15orf55 fusion"), createCurationValues("BRD4-NUTM1 fusion", "BRD4"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("C15orf55", null, "BRD4-C15orf55 fusion"), createCurationValues("BRD4-NUTM1 fusion", "BRD4"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("MLL", null, "MLL fusion"), createCurationValues("KMT2A fusion", "KMT2A"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("BRD4", null, "BRD4-C15orf55 fusion"), createCurationValues("BRD4", "BRD4-NUTM1 fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("C15orf55", null, "BRD4-C15orf55 fusion"),
+                createCurationValues("BRD4", "BRD4-NUTM1 fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("MLL", null, "MLL fusion"), createCurationValues("KMT2A", "KMT2A fusion"));
 
         // Improve for consistency
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("MET", null, "MET (Y1230C;Y1235D)"), createCurationValues("MET (Y1230C,Y1235D)", "MET"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(cgiKey("MET", null, "MET (Y1230C;Y1235D)"), createCurationValues("MET", "MET (Y1230C,Y1235D)"));
     }
 
     private static void populateCIViCCuration() {
         // These are not wrong but transvar can't resolve generic start lost variants so we update to something that transvar can interpret.
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("VHL", "ENST00000256474", "M1? (c.3G>A)"), createCurationValues("M1I (c.3G>A)", "VHL"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("VHL", "ENST00000256474", "M1? (c.1-1_20del21)"), createCurationValues("M1I (c.1-1_20del21)", "VHL"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("VHL", "ENST00000256474", "M1? (c.3G>A)"), createCurationValues("VHL", "M1I (c.3G>A)"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("VHL", "ENST00000256474", "M1? (c.1-1_20del21)"),
+                createCurationValues("VHL", "M1I (c.1-1_20del21)"));
 
         // Protein annotation is not formally correct, update to make it correct.
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("EGFR", "ENST00000275493", "V769_770insASV"), createCurationValues("V769_D770insASV", "EGFR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ERBB2", "ENST00000269571", "M774INSAYVM"), createCurationValues("M774_A775INSAYVM", "ERBB2"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("EGFR", "ENST00000275493", "V769_770insASV"),
+                createCurationValues("EGFR", "V769_D770insASV"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ERBB2", "ENST00000269571", "M774INSAYVM"),
+                createCurationValues("ERBB2", "M774_A775INSAYVM"));
 
         // Fusion needs to be flipped around
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("BRAF", "ENST00000288602", "BRAF-CUL1"), createCurationValues("CUL1-BRAF", "BRAF"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("BRAF", "ENST00000288602", "BRAF-CUL1"), createCurationValues("BRAF", "CUL1-BRAF"));
 
         // Fusions where gene is a synonym of our gene
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("FGFR1", null, "ZNF198-FGFR1"), createCurationValues("ZMYM2-FGFR1", "ZMYM2"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("KMT2A", null, "MLL-MLLT3"), createCurationValues("KMT2A-MLLT3", "KMT2A"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("FGFR1", null, "ZNF198-FGFR1"), createCurationValues("ZMYM2", "ZMYM2-FGFR1"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("KMT2A", null, "MLL-MLLT3"), createCurationValues("KMT2A", "KMT2A-MLLT3"));
 
         // Fusions are not correct
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000318560", "BCR-ABL G398R"), createCurationValues("BCR-ABL1 G398R", "BCR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000372348", "BCR-ABL T334I"), createCurationValues("BCR-ABL1 T334I", "BCR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000318560", "BCR-ABL E255K"), createCurationValues("BCR-ABL1 E255K", "BCR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000318560", "BCR-ABL F317L"), createCurationValues("BCR-ABL1 F317L", "BCR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000318560", "BCR-ABL F486S"), createCurationValues("BCR-ABL1 F486S", "BCR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000305877", "BCR-ABL"), createCurationValues("BCR-ABL1", "BCR"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000318560", "BCR-ABL G398R"),
+                createCurationValues("BCR", "BCR-ABL1 G398R"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000372348", "BCR-ABL T334I"),
+                createCurationValues("BCR", "BCR-ABL1 T334I"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000318560", "BCR-ABL E255K"),
+                createCurationValues("BCR", "BCR-ABL1 E255K"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000318560", "BCR-ABL F317L"),
+                createCurationValues("BCR", "BCR-ABL1 F317L"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000318560", "BCR-ABL F486S"),
+                createCurationValues("BCR", "BCR-ABL1 F486S"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(civicKey("ABL1", "ENST00000305877", "BCR-ABL"), createCurationValues("BCR", "BCR-ABL1"));
 
         // Variants that don't exist
         FEATURE_BLACKLIST.add(civicKey("NOTCH1", "ENST00000277541", "S2275FS"));
@@ -103,24 +119,25 @@ final class CurationFactory {
 
     private static void populateJaxCuration() {
         // Update protein annotation to be correct (should be capitalized).
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("PIK3CA", null, "PIK3CA E545k "), createCurationValues("PIK3CA E545K ", "PIK3CA"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("PIK3CA", null, "PIK3CA E545k "), createCurationValues("PIK3CA", "PIK3CA E545K "));
 
         // These mappings are to work around the missing transcripts in JAX.
         // We map every mutation that appears on both the canonical + non-canonical form to its canonical form in ensembl.
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EZH2", null, "EZH2 Y641F "), createCurationValues("EZH2 Y646F ", "EZH2"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EZH2", null, "EZH2 Y641H "), createCurationValues("EZH2 Y646H ", "EZH2"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EZH2", null, "EZH2 Y641N "), createCurationValues("EZH2 Y646N ", "EZH2"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EZH2", null, "EZH2 Y641S "), createCurationValues("EZH2 Y646S ", "EZH2"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("FGFR2", null, "FGFR2 V564I "), createCurationValues("FGFR2 V565I ", "FGFR2"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("FGFR3", null, "FGFR3 Y373C "), createCurationValues("FGFR3 Y375C ", "FGFR3"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("FGFR3", null, "FGFR3 K650E "), createCurationValues("FGFR3 K652E ", "FGFR3"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("MET", null, "MET L1195V "), createCurationValues("MET L1213V ", "MET"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("MET", null, "MET Y1230H "), createCurationValues("MET Y1248H ", "MET"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("MET", null, "MET M1250T "), createCurationValues("MET M1268T ", "MET"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EZH2", null, "EZH2 Y641F "), createCurationValues("EZH2", "EZH2 Y646F "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EZH2", null, "EZH2 Y641H "), createCurationValues("EZH2", "EZH2 Y646H "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EZH2", null, "EZH2 Y641N "), createCurationValues("EZH2", "EZH2 Y646N "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EZH2", null, "EZH2 Y641S "), createCurationValues("EZH2", "EZH2 Y646S "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("FGFR2", null, "FGFR2 V564I "), createCurationValues("FGFR2", "FGFR2 V565I "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("FGFR3", null, "FGFR3 Y373C "), createCurationValues("FGFR3", "FGFR3 Y375C "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("FGFR3", null, "FGFR3 K650E "), createCurationValues("FGFR3", "FGFR3 K652E "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("MET", null, "MET L1195V "), createCurationValues("MET", "MET L1213V "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("MET", null, "MET Y1230H "), createCurationValues("MET", "MET Y1248H "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("MET", null, "MET M1250T "), createCurationValues("MET", "MET M1268T "));
 
         // These mappings are identical but used concurrently. Confirmed to be replaced by I740_K745dup
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EGFR", null, "EGFR I744_K745insKIPVAI "), createCurationValues("EGFR K745_E746insIPVAIK ", "EGFR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("KIT", null, "KIT V559del "), createCurationValues("KIT V560del ", "KIT"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("EGFR", null, "EGFR I744_K745insKIPVAI "),
+                createCurationValues("EGFR", "EGFR K745_E746insIPVAIK "));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(jaxKey("KIT", null, "KIT V559del "), createCurationValues("KIT", "KIT V560del "));
 
         // The below variants in FLT3 are from a paper where an additional R was added in the ref sequence, shifting all AAs by one position.
         // This has been corrected in current live CKB.
@@ -146,48 +163,78 @@ final class CurationFactory {
 
     private static void populateOncoKBCuration() {
         // The dashes in these keys are not the usual dashes!
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR1", "ENST00000425967", "ERLIN2–FGFR1 Fusion"), createCurationValues("ERLIN2-FGFR1 Fusion", "ERLIN2"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR2", "ENST00000358487", "FGFR2–PPHLN1 Fusion"), createCurationValues("FGFR2-PPHLN1 Fusion", "FGFR2"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR1", "ENST00000425967", "ERLIN2–FGFR1 Fusion"),
+                createCurationValues("ERLIN2", "ERLIN2-FGFR1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR2", "ENST00000358487", "FGFR2–PPHLN1 Fusion"),
+                createCurationValues("FGFR2", "FGFR2-PPHLN1 Fusion"));
 
         // The spaces are not consistent
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR3", "ENST00000260795", "FGFR3 - BAIAP2L1 Fusion"), createCurationValues("FGFR3-BAIAP2L1 Fusion", "FGFR3"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR3", "ENST00000260795", "FGFR3 - BAIAP2L1 Fusion"),
+                createCurationValues("FGFR3", "FGFR3-BAIAP2L1 Fusion"));
 
         // These fusions need to be flipped.
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("CCND1", "ENST00000227507", "CCND1-IGH Fusion"), createCurationValues("IGH-CCND1 Fusion", "IGH"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("ROS1", "ENST00000368508", "ROS1-CD74 Fusion"), createCurationValues("CD74-ROS1 Fusion", "CD74"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("NSD1", "ENST00000439151", "NSD1-NUP98 Fusion"), createCurationValues("NUP98-NSD1 Fusion", "NUP98"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("RET", "ENST00000355710", "RET-CCDC6 Fusion"), createCurationValues("CCDC6-RET Fusion", "CCDC6"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EP300", "ENST00000263253", "EP300-MOZ Fusion"), createCurationValues("KAT6A-EP300 Fusion", "KAT6A"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EP300", "ENST00000263253", "EP300-MLL Fusion"), createCurationValues("KMT2A-EP300 Fusion", "KMT2A"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("CCND1", "ENST00000227507", "CCND1-IGH Fusion"),
+                createCurationValues("IGH", "IGH-CCND1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("ROS1", "ENST00000368508", "ROS1-CD74 Fusion"),
+                createCurationValues("CD74", "CD74-ROS1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("NSD1", "ENST00000439151", "NSD1-NUP98 Fusion"),
+                createCurationValues("NUP98", "NUP98-NSD1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("RET", "ENST00000355710", "RET-CCDC6 Fusion"),
+                createCurationValues("CCDC6", "CCDC6-RET Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EP300", "ENST00000263253", "EP300-MOZ Fusion"),
+                createCurationValues("KAT6A", "KAT6A-EP300 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EP300", "ENST00000263253", "EP300-MLL Fusion"),
+                createCurationValues("KMT2A", "KMT2A-EP300 Fusion"));
 
         // These fusions are incorrect but recoverable
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("PAX8", "ENST00000263334", "PAX8-PPARγ Fusion"), createCurationValues("PAX8-PPARG Fusion", "PAX8"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("ALK", "ENST00000389048", "NPM-ALK Fusion"), createCurationValues("NPM1-ALK Fusion", "NPM1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("BRD4", "ENST00000263377", "BRD4-NUT Fusion"), createCurationValues("BRD4-NUTM1 Fusion", "BRD4"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("NOTCH1", "ENST00000277541", "SEC16A1-NOTCH1 Fusion"), createCurationValues("SEC16A-NOTCH1 Fusion", "SEC16A"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR1", "ENST00000425967", "FGFR1OP1-FGFR1 Fusion"), createCurationValues("FGFR1OP-FGFR1 Fusion", "FGFR1OP"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("PAX8", "ENST00000263334", "PAX8-PPARγ Fusion"),
+                createCurationValues("PAX8", "PAX8-PPARG Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("ALK", "ENST00000389048", "NPM-ALK Fusion"),
+                createCurationValues("NPM1", "NPM1-ALK Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("BRD4", "ENST00000263377", "BRD4-NUT Fusion"),
+                createCurationValues("BRD4", "BRD4-NUTM1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("NOTCH1", "ENST00000277541", "SEC16A1-NOTCH1 Fusion"),
+                createCurationValues("SEC16A", "SEC16A-NOTCH1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR1", "ENST00000425967", "FGFR1OP1-FGFR1 Fusion"),
+                createCurationValues("FGFR1OP", "FGFR1OP-FGFR1 Fusion"));
 
         // These fusions are on synonym genes
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR1", "ENST00000425967", "ZNF198-FGFR1 Fusion"), createCurationValues("ZMYM2-FGFR1 Fusion", "ZMYM2"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("TET1", "ENST00000373644", "MLL-TET1 Fusion"), createCurationValues("KMT2A-TET1 Fusion", "KMT2A"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("ROS1", "ENST00000368508", "FIG-ROS1 Fusion"), createCurationValues("GOPC-ROS1 Fusion", "GOPC"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("PDGFRB", "ENST00000261799", "GPIAP1-PDGFRB Fusion"), createCurationValues("CAPRIN1-PDGFRB Fusion", "CAPRIN1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("PDGFRB", "ENST00000261799", "KIAA1509-PDGFRB Fusion"), createCurationValues("CCDC88C-PDGFRB Fusion", "CCDC88C"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("JAK2", "ENST00000381652", "TEL-JAK2 Fusion"), createCurationValues("ETV6-JAK2 Fusion", "ETV6"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("RUNX1", "ENST00000300305", "TEL-RUNX1 Fusion"), createCurationValues("ETV6-RUNX1 Fusion", "ETV6"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("RUNX1", "ENST00000300305", "RUNX1-EVI1 Fusion"), createCurationValues("RUNX1-MECOM Fusion", "RUNX1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR1", "ENST00000425967", "CEP110-FGFR1 Fusion"), createCurationValues("CNTRL-FGFR1 Fusion", "CNTRL"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR2", "ENST00000358487", "FGFR2-KIAA1967 Fusion"), createCurationValues("FGFR2-CCAR2 Fusion", "FGFR2"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR1", "ENST00000425967", "ZNF198-FGFR1 Fusion"),
+                createCurationValues("ZMYM2", "ZMYM2-FGFR1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("TET1", "ENST00000373644", "MLL-TET1 Fusion"),
+                createCurationValues("KMT2A", "KMT2A-TET1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("ROS1", "ENST00000368508", "FIG-ROS1 Fusion"),
+                createCurationValues("GOPC", "GOPC-ROS1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("PDGFRB", "ENST00000261799", "GPIAP1-PDGFRB Fusion"),
+                createCurationValues("CAPRIN1", "CAPRIN1-PDGFRB Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("PDGFRB", "ENST00000261799", "KIAA1509-PDGFRB Fusion"),
+                createCurationValues("CCDC88C", "CCDC88C-PDGFRB Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("JAK2", "ENST00000381652", "TEL-JAK2 Fusion"),
+                createCurationValues("ETV6", "ETV6-JAK2 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("RUNX1", "ENST00000300305", "TEL-RUNX1 Fusion"),
+                createCurationValues("ETV6", "ETV6-RUNX1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("RUNX1", "ENST00000300305", "RUNX1-EVI1 Fusion"),
+                createCurationValues("RUNX1", "RUNX1-MECOM Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR1", "ENST00000425967", "CEP110-FGFR1 Fusion"),
+                createCurationValues("CNTRL", "CNTRL-FGFR1 Fusion"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("FGFR2", "ENST00000358487", "FGFR2-KIAA1967 Fusion"),
+                createCurationValues("FGFR2", "FGFR2-CCAR2 Fusion"));
 
         // These are inconsistent or improperly aligned variants.
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("BRAF", "ENST00000288602", "T599insTT"), createCurationValues("T599_V600insTT", "BRAF"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EGFR", "ENST00000275493", "E746_T751insIP"), createCurationValues("E746_L747insIP", "EGFR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EGFR", "ENST00000275493", "H773insLGNP"), createCurationValues("H773_V774insLGNP", "EGFR"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EPAS1", "ENST00000263734", "533_534del"), createCurationValues("I533_P534del", "EPAS1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EPAS1", "ENST00000263734", "534_536del"), createCurationValues("P534_D536del", "EPAS1"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("KIT", "ENST00000288135", "V559del"), createCurationValues("V560del", "KIT"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("PTEN", "ENST00000371953", "I32del"), createCurationValues("I33del", "PTEN"));
-        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("RIT1", "ENST00000368323", "T76insTLDT"), createCurationValues("T76_A77insTLDT", "RIT1"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("BRAF", "ENST00000288602", "T599insTT"),
+                createCurationValues("BRAF", "T599_V600insTT"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EGFR", "ENST00000275493", "E746_T751insIP"),
+                createCurationValues("EGFR", "E746_L747insIP"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EGFR", "ENST00000275493", "H773insLGNP"),
+                createCurationValues("EGFR", "H773_V774insLGNP"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EPAS1", "ENST00000263734", "533_534del"),
+                createCurationValues("EPAS1", "I533_P534del"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("EPAS1", "ENST00000263734", "534_536del"),
+                createCurationValues("EPAS1", "P534_D536del"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("KIT", "ENST00000288135", "V559del"), createCurationValues("KIT", "V560del"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("PTEN", "ENST00000371953", "I32del"), createCurationValues("PTEN", "I33del"));
+        FEATURE_NAME_AND_GENE_MAPPINGS.put(oncoKbKey("RIT1", "ENST00000368323", "T76insTLDT"),
+                createCurationValues("RIT1", "T76_A77insTLDT"));
 
         // Fusions that we don't know what gene they are on
         FEATURE_BLACKLIST.add(oncoKbKey("NKX2-1", "ENST00000354822", "TRA-NKX2-1 Fusion"));

@@ -90,7 +90,7 @@ public final class ComplexClassifier {
                 "T34_A289del",
                 "EGFR T34_A289del",
                 "G983_A1210del",
-                "EGFR CTD", "EGFR-KDD");
+                "EGFR CTD");
         complexEventsPerGene.put("EGFR", egfrSet);
 
         Set<String> eif1axSet = Sets.newHashSet("A113_splice");

@@ -8,9 +8,12 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CurationValues {
-    @Nullable
+
+    @NotNull
+    public abstract String geneSymbol();
+
+    @NotNull
     public abstract String event();
 
-    @Nullable
-    public abstract String geneSymbol();
+
 }
