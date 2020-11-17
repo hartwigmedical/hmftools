@@ -10,8 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class FusionAnnotation {
 
-    private static final Map<String, KnownFusionPair> FUSION_WITH_SPECIFIC_EXONS = createFusionExonMap();
-
     @NotNull
     public static Map<String, KnownFusionPair> createFusionExonMap() {
         Map<String, KnownFusionPair> fusionExonMap = Maps.newHashMap();
