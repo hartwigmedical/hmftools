@@ -1,31 +1,8 @@
 package com.hartwig.hmftools.serve.actionability.fusion;
 
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.fusion.FusionPair;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public abstract class ActionableFusion implements FusionPair, ActionableEvent {
 
-@Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionableFusion implements ActionableEvent {
-
-    @NotNull
-    public abstract String geneUp();
-
-    @Nullable
-    public abstract Integer minExonUp();
-
-    @Nullable
-    public abstract Integer maxExonUp();
-
-    @NotNull
-    public abstract String geneDown();
-
-    @Nullable
-    public abstract Integer minExonDown();
-
-    @Nullable
-    public abstract Integer maxExonDown();
 }
