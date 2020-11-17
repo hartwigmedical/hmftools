@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
@@ -49,13 +50,19 @@ public class ChromosomePipeline implements AutoCloseable {
     public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config, @NotNull final Executor executor,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
             @NotNull final List<GenomeRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            final Consumer<VariantContext> consumer) throws IOException {
+            @NotNull final Coverage coverage, final Consumer<VariantContext> consumer) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         this.consumer = consumer;
-        this.sageVariantPipeline =
-                new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions, qualityRecalibrationMap);
+        this.sageVariantPipeline = new SomaticPipeline(config,
+                executor,
+                refGenome,
+                hotspots,
+                panelRegions,
+                highConfidenceRegions,
+                qualityRecalibrationMap,
+                coverage);
         this.partition = new ChromosomePartition(config, refGenome);
         this.phase = new Phase(config, chromosome, this::write);
     }

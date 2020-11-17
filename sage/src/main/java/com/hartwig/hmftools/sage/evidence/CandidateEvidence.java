@@ -7,11 +7,14 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefContextFactory;
+import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.coverage.GeneCoverage;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
@@ -35,23 +38,36 @@ public class CandidateEvidence {
     private final List<GenomeRegion> panel;
     private final ReferenceSequenceFile refGenome;
     private final SamSlicerFactory samSlicerFactory;
+    private final Coverage coverage;
 
     public CandidateEvidence(@NotNull final SageConfig config, @NotNull final List<VariantHotspot> hotspots, final List<GenomeRegion> panel,
-            @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome) {
+            @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome, final Coverage coverage) {
         this.config = config;
         this.panel = panel;
         this.samSlicerFactory = samSlicerFactory;
         this.hotspots = hotspots;
         this.refGenome = refGenome;
+        this.coverage = coverage;
     }
 
     @NotNull
     public List<AltContext> get(@NotNull final String sample, @NotNull final String bamFile, @NotNull final RefSequence refSequence,
             @NotNull final GenomeRegion bounds) {
         LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
+        final List<GeneCoverage> geneCoverage = coverage.coverage(sample, bounds.chromosome());
         final RefContextFactory candidates = new RefContextFactory(config, sample, hotspots, panel);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(config, bounds, refSequence, candidates);
-        return get(bamFile, bounds, refContextConsumer, candidates);
+
+        final Consumer<SAMRecord> consumer = record -> {
+            refContextConsumer.accept(record);
+            if (!geneCoverage.isEmpty()) {
+                final GenomeRegion alignment =
+                        GenomeRegions.create(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
+                geneCoverage.forEach(x -> x.accept(alignment));
+            }
+        };
+
+        return get(bamFile, bounds, consumer, candidates);
     }
 
     @NotNull
