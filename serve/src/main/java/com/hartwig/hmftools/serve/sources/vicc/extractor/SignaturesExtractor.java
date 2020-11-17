@@ -9,9 +9,14 @@ import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SignaturesExtractor {
+
+    private static final Logger LOGGER = LogManager.getLogger(SignaturesExtractor.class);
 
     public SignaturesExtractor() {
     }
@@ -22,25 +27,23 @@ public class SignaturesExtractor {
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == FeatureType.SIGNATURE) {
                 SignatureName signatureName = extractSignatureName(feature.name());
-                signaturesPerFeature.put(feature, signatureName);
+                if (signatureName != null) {
+                    signaturesPerFeature.put(feature, signatureName);
+                } else {
+                    LOGGER.warn("Could not extract signature from '{}'", feature.name());
+                }
             }
         }
         return signaturesPerFeature;
     }
 
-    @NotNull
+    @Nullable
     @VisibleForTesting
     static SignatureName extractSignatureName(@NotNull String featureName) {
         if (featureName.equals("Microsatellite Instability-High")) {
             return SignatureName.MICROSATELLITE_UNSTABLE;
-        } else {
-            return SignatureName.UNKNOWN;
         }
-        // AT this moment not needed because those events are not present
-//        else if (featureName.equals("XXX")) {
-//            return SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD;
-//        } else if (featureName.equals("XXX")) {
-//            return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENY;
-//        }
+
+        return null;
     }
 }
