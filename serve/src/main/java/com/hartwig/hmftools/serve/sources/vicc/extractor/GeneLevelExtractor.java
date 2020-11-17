@@ -20,9 +20,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class GeneLevelEventExtractor {
+public class GeneLevelExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(GeneLevelEventExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(GeneLevelExtractor.class);
 
     private static final String GENE_ONLY = "gene_only";
 
@@ -31,14 +31,14 @@ public class GeneLevelEventExtractor {
     @NotNull
     private final List<DriverGene> driverGenes;
 
-    public GeneLevelEventExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
+    public GeneLevelExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
             @NotNull final List<DriverGene> driverGenes) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
         this.driverGenes = driverGenes;
     }
 
     @NotNull
-    public Map<Feature, GeneLevelAnnotation> extractKnownGeneLevelEvents(@NotNull ViccEntry viccEntry) {
+    public Map<Feature, GeneLevelAnnotation> extractGeneLevelEvents(@NotNull ViccEntry viccEntry) {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {

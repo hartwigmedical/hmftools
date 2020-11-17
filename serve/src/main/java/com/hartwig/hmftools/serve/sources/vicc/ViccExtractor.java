@@ -34,7 +34,7 @@ import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.FusionExtractor;
-import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelEventExtractor;
+import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
@@ -59,7 +59,7 @@ public final class ViccExtractor {
     @NotNull
     private final FusionExtractor fusionExtractor;
     @NotNull
-    private final GeneLevelEventExtractor geneLevelEventExtractor;
+    private final GeneLevelExtractor geneLevelExtractor;
     @NotNull
     private final GeneRangeExtractor geneRangeExtractor;
     @NotNull
@@ -68,13 +68,13 @@ public final class ViccExtractor {
     private final String featureInterpretationTsv;
 
     public ViccExtractor(@NotNull final HotspotExtractor hotspotExtractor, @NotNull final CopyNumberExtractor copyNumberExtractor,
-            @NotNull final FusionExtractor fusionExtractor, @NotNull final GeneLevelEventExtractor geneLevelEventExtractor,
+            @NotNull final FusionExtractor fusionExtractor, @NotNull final GeneLevelExtractor geneLevelExtractor,
             @NotNull final GeneRangeExtractor geneRangeExtractor, @NotNull final SignaturesExtractor signaturesExtractor,
             @Nullable final String featureInterpretationTsv) {
         this.hotspotExtractor = hotspotExtractor;
         this.copyNumberExtractor = copyNumberExtractor;
         this.fusionExtractor = fusionExtractor;
-        this.geneLevelEventExtractor = geneLevelEventExtractor;
+        this.geneLevelExtractor = geneLevelExtractor;
         this.geneRangeExtractor = geneRangeExtractor;
         this.signaturesExtractor = signaturesExtractor;
         this.featureInterpretationTsv = featureInterpretationTsv;
@@ -85,9 +85,9 @@ public final class ViccExtractor {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
         for (ViccEntry entry : viccEntries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
-            Map<Feature, KnownCopyNumber> ampsDelsPerFeature = copyNumberExtractor.extractKnownAmplificationsDeletions(entry);
-            Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractKnownFusions(entry);
-            Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelEventExtractor.extractKnownGeneLevelEvents(entry);
+            Map<Feature, KnownCopyNumber> ampsDelsPerFeature = copyNumberExtractor.extractAmplificationsDeletions(entry);
+            Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(entry);
+            Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extractGeneLevelEvents(entry);
             Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry);
             Map<Feature, SignatureName> signaturesPerFeature = signaturesExtractor.extractSignatures(entry);
 

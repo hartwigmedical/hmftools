@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.FusionExtractor;
-import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelEventExtractor;
+import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
@@ -35,7 +35,7 @@ public final class ViccExtractorFactory {
         return new ViccExtractor(new HotspotExtractor(proteinResolver),
                 new CopyNumberExtractor(transcriptPerGeneMap),
                 new FusionExtractor(transcriptPerGeneMap),
-                new GeneLevelEventExtractor(transcriptPerGeneMap, driverGenes),
+                new GeneLevelExtractor(transcriptPerGeneMap, driverGenes),
                 new GeneRangeExtractor(transcriptPerGeneMap, driverGenes),
                 new SignaturesExtractor(),
                 featureInterpretationTsv);

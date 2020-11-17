@@ -14,10 +14,11 @@ import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class GeneLevelEventExtractorTest {
+public class GeneLevelExtractorTest {
 
     @Test
     @Ignore
@@ -25,10 +26,11 @@ public class GeneLevelEventExtractorTest {
         //TODO improve test
         Feature feature = ImmutableFeature.builder().geneSymbol("a").name("a").build();
 
-        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent(feature, createDriverGeneONCO()), GeneLevelEvent.ACTIVATION);
-        assertEquals(GeneLevelEventExtractor.extractGeneLevelEvent(feature, createDriverGeneTSG()), GeneLevelEvent.INACTIVATION);
+        assertEquals(GeneLevelExtractor.extractGeneLevelEvent(feature, createDriverGeneONCO()), GeneLevelEvent.ACTIVATION);
+        assertEquals(GeneLevelExtractor.extractGeneLevelEvent(feature, createDriverGeneTSG()), GeneLevelEvent.INACTIVATION);
     }
 
+    @NotNull
     private static List<DriverGene> createDriverGeneTSG() {
         return Lists.newArrayList(ImmutableDriverGene.builder()
                 .gene("a")
@@ -45,6 +47,7 @@ public class GeneLevelEventExtractorTest {
                 .build());
     }
 
+    @NotNull
     private static List<DriverGene> createDriverGeneONCO() {
         return Lists.newArrayList(ImmutableDriverGene.builder()
                 .gene("a")
@@ -60,5 +63,4 @@ public class GeneLevelEventExtractorTest {
                 .likelihoodType(ONCO)
                 .build());
     }
-
 }

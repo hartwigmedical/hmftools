@@ -25,7 +25,8 @@ public class FusionExtractor {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
-    public Map<Feature, KnownFusionPair> extractKnownFusions(@NotNull ViccEntry viccEntry) {
+    @NotNull
+    public Map<Feature, KnownFusionPair> extractFusionPairs(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
