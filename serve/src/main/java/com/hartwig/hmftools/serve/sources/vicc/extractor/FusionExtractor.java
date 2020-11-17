@@ -7,7 +7,6 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.vicc.annotation.FeatureType;
-import com.hartwig.hmftools.serve.sources.vicc.annotation.FusionAnnotation;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -30,7 +29,7 @@ public class FusionExtractor {
     public Map<Feature, KnownFusionPair> extractFusionPairs(@NotNull ViccEntry viccEntry,
             @NotNull Map<String, KnownFusionPair> fusionAnnotations) {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        KnownFusionPair annotatedFusion = ImmutableKnownFusionPair.builder().build();
+        KnownFusionPair annotatedFusion = ImmutableKnownFusionPair.builder().geneUp(Strings.EMPTY).geneDown(Strings.EMPTY).build();
 
         for (Feature feature : viccEntry.features()) {
             String fusion = feature.name();
@@ -43,7 +42,7 @@ public class FusionExtractor {
                         annotatedFusion = ImmutableKnownFusionPair.builder().from(fusionAnnotations.get(fusion)).build();
 
                     } else {
-                        annotatedFusion = ImmutableKnownFusionPair.builder().from(fusionAnnotations.get(fusion)).build();
+                        annotatedFusion = ImmutableKnownFusionPair.builder().geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
                     }
                 } else if (fusionArray.length == 1) {
                     if (fusionAnnotations.containsKey(fusion)) {
@@ -73,7 +72,7 @@ public class FusionExtractor {
 
             } else if (feature.type() == FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
                 if (fusionAnnotations.containsKey(feature.description())) {
-                    annotatedFusion = ImmutableKnownFusionPair.builder().from(fusionAnnotations.get(fusion)).build();
+                    annotatedFusion = ImmutableKnownFusionPair.builder().from(fusionAnnotations.get(feature.description())).build();
                 }
 
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
