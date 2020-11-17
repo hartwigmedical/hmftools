@@ -58,7 +58,7 @@
 
         <patient-db.version>3.51</patient-db.version>
         <id-generator.version>2.6</id-generator.version>
-        <sage.version>2.4</sage.version>
+        <sage.version>2.5</sage.version>
         <amber.version>3.5</amber.version>
         <cobalt.version>1.11</cobalt.version>
         <purple.version>2.51</purple.version>
