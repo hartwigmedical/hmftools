@@ -192,9 +192,23 @@ public class EnsemblDAO
                 List<EnsemblGeneData> geneList = chrGeneMap.get(chromosome);
 
                 if(geneList == null)
+                {
                     chrGeneMap.put(chromosome, Lists.newArrayList(geneData));
+                }
                 else
-                    geneList.add(geneData);
+                {
+                    // add in order
+                    int index = 0;
+                    while(index < geneList.size())
+                    {
+                        if(geneData.GeneStart < geneList.get(index).GeneStart)
+                            break;
+
+                        ++index;
+                    }
+
+                    geneList.add(index, geneData);
+                }
             }
 
             for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
