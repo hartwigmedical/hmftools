@@ -32,6 +32,7 @@ import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.sources.ExtractionOutput;
 import com.hartwig.hmftools.serve.sources.ImmutableExtractionOutput;
+import com.hartwig.hmftools.serve.sources.vicc.annotation.FusionAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.CopyNumberExtractor;
@@ -85,10 +86,12 @@ public final class ViccExtractor {
     @NotNull
     public ExtractionOutput extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) throws IOException {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
+        Map<String, KnownFusionPair> fusionAnnotations = FusionAnnotation.createFusionExonMap();
+
         for (ViccEntry entry : viccEntries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
             Map<Feature, KnownCopyNumber> ampsDelsPerFeature = copyNumberExtractor.extractAmplificationsDeletions(entry);
-            Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(entry);
+            Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(entry, fusionAnnotations);
             Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extractGeneLevelEvents(entry);
             Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry);
             Map<Feature, SignatureName> signaturesPerFeature = signaturesExtractor.extractSignatures(entry);

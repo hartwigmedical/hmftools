@@ -14,9 +14,9 @@ public final class FusionAnnotation {
     public static Map<String, KnownFusionPair> createFusionExonMap() {
         Map<String, KnownFusionPair> fusionExonMap = Maps.newHashMap();
 
-        KnownFusionPair fusionEGFR_KDD =
+        KnownFusionPair fusionEGFRKDD =
                 ImmutableKnownFusionPair.builder().geneUp("EGFR").minExonUp(25).maxExonUp(26).geneDown("EGFR").minExonDown(14).maxExonDown(18).build();
-        fusionExonMap.put("EGFR-KDD", fusionEGFR_KDD);
+        fusionExonMap.put("EGFR-KDD", fusionEGFRKDD);
 
         KnownFusionPair fusionEGFRvII =
                 ImmutableKnownFusionPair.builder().geneUp("EGFR").minExonUp(13).maxExonUp(13).geneDown("EGFR").minExonDown(16).maxExonDown(16).build();
@@ -34,21 +34,21 @@ public final class FusionAnnotation {
                 ImmutableKnownFusionPair.builder().geneUp("EGFR").minExonUp(1).maxExonUp(1).geneDown("EGFR").minExonDown(8).maxExonDown(8).build();
         fusionExonMap.put("EGFRvIII", fusionEGFRvIII);
 
-        KnownFusionPair fusionTRB_NKX2_1 =
+        KnownFusionPair fusionTRBwithNKX21 =
                 ImmutableKnownFusionPair.builder().geneUp("TRB").geneDown("NKX2-1").build();
-        fusionExonMap.put("TRB-NKX2-1 Fusion", fusionTRB_NKX2_1);
+        fusionExonMap.put("TRB-NKX2-1 Fusion", fusionTRBwithNKX21);
 
-        KnownFusionPair fusionKIT_exon11MUT =
+        KnownFusionPair fusionKITexon11MUT =
                 ImmutableKnownFusionPair.builder().geneUp("KIT").minExonUp(11).maxExonUp(11).geneDown("KIT").minExonDown(11).maxExonDown(11).build();
-        fusionExonMap.put("KIT EXON 11 MUTATION", fusionKIT_exon11MUT);
+        fusionExonMap.put("KIT EXON 11 MUTATION", fusionKITexon11MUT);
 
-        KnownFusionPair fusionKIT_exon11mut =
+        KnownFusionPair fusionKITexon11mut =
                 ImmutableKnownFusionPair.builder().geneUp("KIT").minExonUp(11).maxExonUp(11).geneDown("KIT").minExonDown(11).maxExonDown(11).build();
-        fusionExonMap.put("KIT Exon 11 mutations", fusionKIT_exon11mut);
+        fusionExonMap.put("KIT Exon 11 mutations", fusionKITexon11mut);
 
-        KnownFusionPair fusionKIT_exon11del =
+        KnownFusionPair fusionKITexon11del =
                 ImmutableKnownFusionPair.builder().geneUp("KIT").minExonUp(11).maxExonUp(11).geneDown("KIT").minExonDown(11).maxExonDown(11).build();
-        fusionExonMap.put("KIT Exon 11 deletions", fusionKIT_exon11del);
+        fusionExonMap.put("KIT Exon 11 deletions", fusionKITexon11del);
 
         KnownFusionPair fusionMETexon14 =
                 ImmutableKnownFusionPair.builder().geneUp("MET").minExonUp(13).maxExonUp(13).geneDown("MET").minExonDown(13).maxExonDown(13).build();
