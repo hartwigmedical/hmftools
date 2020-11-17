@@ -299,7 +299,7 @@ public class GeneRangeExtractor {
         List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
         HmfExonRegion hmfExonRegion = exonRegions.get(exonNumberList);
         long start = hmfExonRegion.start() - 5;
-        long end = hmfExonRegion.end() - 5;
+        long end = hmfExonRegion.end() + 5;
         String chromosome = hmfExonRegion.chromosome();
 
         return ImmutableGeneRangeAnnotation.builder()
