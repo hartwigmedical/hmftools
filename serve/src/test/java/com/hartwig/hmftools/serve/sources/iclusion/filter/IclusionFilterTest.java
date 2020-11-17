@@ -87,5 +87,4 @@ public class IclusionFilterTest {
     private static IclusionMutation negatedMutation() {
         return ImmutableIclusionMutation.builder().gene("gene").name("name").negation(true).build();
     }
-
 }
