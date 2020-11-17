@@ -29,7 +29,6 @@ public final class IclusionTrialFile {
     private static final String SUB_FIELD_DELIMITER = "|";
     private static final String SUB_SUB_FIELD_DELIMITER = "#";
     private static final String SUB_FIELD_SEPARATOR = " - ";
-    private static final String SUB_SUB_FIELD_SEPARATOR = " _ ";
 
     private static final String DOID_DELIMITER = ",";
 

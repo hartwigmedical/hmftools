@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
+import com.hartwig.hmftools.serve.sources.ExtractionOutput;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
@@ -82,10 +83,10 @@ public class ViccTestApplication {
         ViccExtractor viccExtractor =
                 ViccExtractorFactory.buildViccExtractorWithInterpretationTsv(proteinResolver, driverGenes, viccFeatureInterpretationTsv);
 
-        ViccExtractionOutput viccExtractionOutput = viccExtractor.extractFromViccEntries(viccEntries);
+        ExtractionOutput extractionOutput = viccExtractor.extractFromViccEntries(viccEntries);
 
         ViccUtil.writeFeatures(viccFeatureTsv, viccEntries);
-        ViccUtil.writeActionability(outputDir, viccExtractionOutput);
+        ViccUtil.writeActionability(outputDir, extractionOutput);
     }
 
     @NotNull

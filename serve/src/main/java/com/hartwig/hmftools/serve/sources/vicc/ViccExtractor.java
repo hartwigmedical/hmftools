@@ -30,6 +30,8 @@ import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.sources.ExtractionOutput;
+import com.hartwig.hmftools.serve.sources.ImmutableExtractionOutput;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.CopyNumberExtractor;
@@ -81,7 +83,7 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    public ViccExtractionOutput extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) throws IOException {
+    public ExtractionOutput extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) throws IOException {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
         for (ViccEntry entry : viccEntries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
@@ -111,7 +113,7 @@ public final class ViccExtractor {
             writeInterpretationToTsv(resultsPerEntry, featureInterpretationTsv);
         }
 
-        ImmutableViccExtractionOutput.Builder outputBuilder = ImmutableViccExtractionOutput.builder()
+        ImmutableExtractionOutput.Builder outputBuilder = ImmutableExtractionOutput.builder()
                 .knownHotspots(convertToHotspots(resultsPerEntry))
                 .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry))
                 .knownFusionPairs(convertToKnownFusions(resultsPerEntry));
@@ -177,7 +179,7 @@ public final class ViccExtractor {
         return fusions;
     }
 
-    private static void addActionability(@NotNull ImmutableViccExtractionOutput.Builder outputBuilder,
+    private static void addActionability(@NotNull ImmutableExtractionOutput.Builder outputBuilder,
             @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
         List<ActionableHotspot> actionableHotspots = Lists.newArrayList();
         List<ActionableRange> actionableRanges = Lists.newArrayList();
