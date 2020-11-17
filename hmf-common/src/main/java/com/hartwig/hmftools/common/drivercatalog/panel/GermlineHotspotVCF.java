@@ -49,7 +49,7 @@ class GermlineHotspotVCF {
             variantGenes.retainAll(germlineGenes);
 
             String clinsig = context.getAttributeAsString("CLNSIG", "unknown");
-            if (!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(clinsig)) {
+            if (!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(clinsig) && context.getAlleles().size() == 2) {
                 VariantContextBuilder builder = new VariantContextBuilder("clinvar",
                         contigPrefix + context.getContig(),
                         context.getStart(),
