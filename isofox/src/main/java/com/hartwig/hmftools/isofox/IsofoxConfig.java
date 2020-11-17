@@ -7,12 +7,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_SINGLE_MAP_QUALITY;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_1;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_2;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_3;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_4;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_5;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_6;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_HG19;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_HG38;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
@@ -233,12 +227,7 @@ public class IsofoxConfig
         }
         else
         {
-            EnrichedGeneIds.add(ENRICHED_GENE_1);
-            EnrichedGeneIds.add(ENRICHED_GENE_2);
-            EnrichedGeneIds.add(ENRICHED_GENE_3);
-            EnrichedGeneIds.add(ENRICHED_GENE_4);
-            EnrichedGeneIds.add(ENRICHED_GENE_5);
-            EnrichedGeneIds.add(ENRICHED_GENE_6);
+            IsofoxConstants.populateEnrichedGeneIds(EnrichedGeneIds, RefGenVersion);
         }
 
         if(cmd.hasOption(GENE_ID_FILE))

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.isofox;
 
+import java.util.List;
+
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
 
 public class IsofoxConstants
@@ -23,10 +26,25 @@ public class IsofoxConstants
     public static final SvRegion EXCLUDED_REGION_1_HG19 = new SvRegion("2", 33141260, 33141700);
     public static final SvRegion EXCLUDED_REGION_1_HG38 = new SvRegion("2", 32916190, 32916630);
 
-    public static final String ENRICHED_GENE_1 = "ENSG00000258486"; // RN7SL1
-    public static final String ENRICHED_GENE_2 = "ENSG00000265150"; // RN7SL2
-    public static final String ENRICHED_GENE_3 = "ENSG00000266037"; // RN7SL3
-    public static final String ENRICHED_GENE_4 = "ENSG00000263740"; // RN7SL4P
-    public static final String ENRICHED_GENE_5 = "ENSG00000265735"; // RN7SL5P
-    public static final String ENRICHED_GENE_6 = "ENSG00000202198"; // RN7SK
+    public static void populateEnrichedGeneIds(final List<String> geneIds, final RefGenomeVersion version)
+    {
+        if(version == RefGenomeVersion.HG38)
+        {
+            geneIds.add("ENSG00000276168");
+            geneIds.add("ENSG00000274012");
+            geneIds.add("ENSG00000278771");
+            geneIds.add("ENSG00000263740");
+            geneIds.add("ENSG00000283293");
+            geneIds.add("ENSG00000265735");
+        }
+        else
+        {
+            geneIds.add("ENSG00000265150");
+            geneIds.add("ENSG00000258486");
+            geneIds.add("ENSG00000202198");
+            geneIds.add("ENSG00000266037");
+            geneIds.add("ENSG00000263740");
+            geneIds.add("ENSG00000265735");
+        }
+    }
 }
