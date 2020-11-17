@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.gene;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -46,16 +47,11 @@ public class EnsemblDAO
     private final Set<String> mGeneIds;
     private final Set<Integer> mTranscriptIds;
 
-    private final List<String> IGNORED_TRANSCRIPTS;
-
     public EnsemblDAO(final CommandLine cmd)
     {
         mRefGenomeVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(HG19)));
         mGeneIds = Sets.newHashSet();
         mTranscriptIds = Sets.newHashSet();
-
-        IGNORED_TRANSCRIPTS = Lists.newArrayList();
-        populateTranscriptBlacklist();
 
         if(!connectDB(cmd))
         {
@@ -78,9 +74,12 @@ public class EnsemblDAO
     public boolean isValid() { return mDbContext != null && mCoordSystemId > 0; }
     public RefGenomeVersion refGenomeVersion() { return mRefGenomeVersion; }
 
-    private void populateTranscriptBlacklist()
+    private boolean ignoreTranscript(final String transName)
     {
-        IGNORED_TRANSCRIPTS.add("ENST00000467125"); // GOPC processed transcript which matches a ROS1 splice site
+        if(mRefGenomeVersion == HG38)
+            return false;
+
+        return transName.equals("ENST00000467125"); // GOPC processed transcript which matches a ROS1 splice site
     }
 
     private boolean connectDB(final CommandLine cmd)
@@ -276,7 +275,7 @@ public class EnsemblDAO
             {
                 String transName = (String)record.get("Trans");
 
-                if(IGNORED_TRANSCRIPTS.contains(transName))
+                if(ignoreTranscript(transName))
                     continue;
 
                 UInteger canTransId = (UInteger) record.get("CanonicalTranscriptId");
