@@ -18,7 +18,7 @@ public class ViccCuratorTest {
     @Test
     public void canCurateFeatures() {
         CurationKey firstOncoKbKey = firstOncoKbMappingKey();
-        String firstMappedFeature = CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.get(firstOncoKbKey).event();
+        String firstMappedFeature = CurationFactory.FEATURE_MAPPINGS.get(firstOncoKbKey).featureName();
 
         ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
                 ViccTestFactory.testOncoKbWithTranscript(firstOncoKbKey.transcript()));
@@ -61,7 +61,7 @@ public class ViccCuratorTest {
 
     @NotNull
     private static CurationKey firstOncoKbMappingKey() {
-        for (CurationKey key : CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.keySet()) {
+        for (CurationKey key : CurationFactory.FEATURE_MAPPINGS.keySet()) {
             if (key.source() == ViccSource.ONCOKB) {
                 return key;
             }

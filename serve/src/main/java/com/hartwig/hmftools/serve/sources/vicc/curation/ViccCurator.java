@@ -34,9 +34,6 @@ public class ViccCurator {
             List<Feature> curatedFeatures = Lists.newArrayList();
             boolean includeEntry = true;
             for (Feature feature : entry.features()) {
-                if (feature.name().startsWith("PAX8-PPAR")) {
-                    int x = 1;
-                }
                 Feature curatedFeature = curate(entry, feature);
                 if (curatedFeature != null) {
                     curatedFeatures.add(curatedFeature);
@@ -45,6 +42,7 @@ public class ViccCurator {
                 }
             }
 
+            // We want to exclude entries completely with at least one blacklisted feature.
             if (includeEntry) {
                 curatedViccEntries.add(ImmutableViccEntry.builder().from(entry).features(curatedFeatures).build());
             }
@@ -61,14 +59,14 @@ public class ViccCurator {
             }
         }
 
-        for (CurationKey key : CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.keySet()) {
+        for (CurationKey key : CurationFactory.FEATURE_MAPPINGS.keySet()) {
             if (!evaluatedCurationKeys.contains(key)) {
                 unusedKeyCount++;
                 LOGGER.warn("Key '{}' hasn't been used during VICC name mapping curation", key);
             }
         }
 
-        int totalKeyCount = CurationFactory.FEATURE_BLACKLIST.size() + CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.keySet().size();
+        int totalKeyCount = CurationFactory.FEATURE_BLACKLIST.size() + CurationFactory.FEATURE_MAPPINGS.keySet().size();
         LOGGER.debug("Found {} unused VICC curation entries. {} keys have been requested against {} blacklist entries",
                 unusedKeyCount,
                 evaluatedCurationKeys.size(),
@@ -84,17 +82,16 @@ public class ViccCurator {
         if (CurationFactory.FEATURE_BLACKLIST.contains(key)) {
             LOGGER.debug("Blacklisting feature '{}' for gene {} in {}", feature.name(), feature.geneSymbol(), entry.source());
             return null;
-        } else if (CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.containsKey(key)) {
-            String mappedGeneSymbol = CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.get(key).geneSymbol();
-            String mappedFeatureName = CurationFactory.FEATURE_NAME_AND_GENE_MAPPINGS.get(key).event();
+        } else if (CurationFactory.FEATURE_MAPPINGS.containsKey(key)) {
+            String mappedGeneSymbol = CurationFactory.FEATURE_MAPPINGS.get(key).geneSymbol();
+            String mappedFeatureName = CurationFactory.FEATURE_MAPPINGS.get(key).featureName();
 
             LOGGER.debug("Mapping feature '{}' to '{}' for gene {} in {}",
                     feature.name(),
                     mappedFeatureName,
                     feature.geneSymbol(),
                     entry.source());
-            return ImmutableFeature.builder().from(feature).name(mappedFeatureName).geneSymbol(mappedGeneSymbol).build();
-
+            return ImmutableFeature.builder().from(feature).geneSymbol(mappedGeneSymbol).name(mappedFeatureName).build();
         }
 
         return feature;
