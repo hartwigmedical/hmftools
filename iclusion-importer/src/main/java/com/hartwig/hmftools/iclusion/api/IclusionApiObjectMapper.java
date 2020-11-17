@@ -4,9 +4,11 @@ import static com.google.common.base.Strings.nullToEmpty;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.iclusion.data.IclusionMutation;
 import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
+import com.hartwig.hmftools.iclusion.data.IclusionMutationLogicType;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.data.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
@@ -129,11 +131,31 @@ final class IclusionApiObjectMapper {
             }
             mutationConditions.add(ImmutableIclusionMutationCondition.builder()
                     .mutations(mutations)
-                    .logicType(nullToEmpty(mutationConditionObject.logicType))
+                    .logicType(toLogicType(mutationConditionObject.logicType))
                     .build());
         }
 
         return mutationConditions;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static IclusionMutationLogicType toLogicType(@Nullable String logicType) {
+        if (logicType == null) {
+            return IclusionMutationLogicType.UNKNOWN;
+        }
+
+        String formattedLogicType = logicType.toLowerCase().trim();
+        switch (formattedLogicType) {
+            case "or":
+                return IclusionMutationLogicType.OR;
+            case "and":
+                return IclusionMutationLogicType.AND;
+            default: {
+                LOGGER.warn("Could not resolve mutation logic type '{}'", logicType);
+                return IclusionMutationLogicType.UNKNOWN;
+            }
+        }
     }
 
     @Nullable
