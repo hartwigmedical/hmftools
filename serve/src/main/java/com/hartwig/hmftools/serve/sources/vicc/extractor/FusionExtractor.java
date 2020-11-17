@@ -27,33 +27,33 @@ public class FusionExtractor {
     }
 
     @NotNull
-    public Map<Feature, KnownFusionPair> extractFusionPairs(@NotNull ViccEntry viccEntry) {
+    public Map<Feature, KnownFusionPair> extractFusionPairs(@NotNull ViccEntry viccEntry,
+            @NotNull Map<String, KnownFusionPair> fusionAnnotations) {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        Map<String, KnownFusionPair> fusionAnnotations = FusionAnnotation.createFusionExonMap();
-
+        KnownFusionPair annotatedFusion = ImmutableKnownFusionPair.builder().build();
 
         for (Feature feature : viccEntry.features()) {
             String fusion = feature.name();
-                       KnownFusionPair annotatedFusion = ImmutableKnownFusionPair.builder().build();
 
             if (feature.type() == FeatureType.FUSION_PAIR) {
                 String[] fusionArray = fusion.split("-");
 
                 if (fusionArray.length == 2) {
                     if (fusionAnnotations.containsKey(fusion)) {
-                        annotatedFusion = fusionAnnotations.get(fusion);
+                        annotatedFusion = ImmutableKnownFusionPair.builder().from(fusionAnnotations.get(fusion)).build();
+
                     } else {
-                        annotatedFusion = ImmutableKnownFusionPair.builder().geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
+                        annotatedFusion = ImmutableKnownFusionPair.builder().from(fusionAnnotations.get(fusion)).build();
                     }
                 } else if (fusionArray.length == 1) {
                     if (fusionAnnotations.containsKey(fusion)) {
-                        annotatedFusion = fusionAnnotations.get(fusion);
+                        annotatedFusion = ImmutableKnownFusionPair.builder().from(fusionAnnotations.get(fusion)).build();
                     } else {
                         LOGGER.warn("Fusion '{}' can not be interpreted!", fusion);
                     }
                 } else {
                     if (fusionAnnotations.containsKey(fusion)) {
-                        annotatedFusion = fusionAnnotations.get(fusion);
+                        annotatedFusion = ImmutableKnownFusionPair.builder().from(fusionAnnotations.get(fusion)).build();
                     } else {
                         LOGGER.warn("Too many parts in fusion name: {}!", fusion);
                     }
@@ -73,7 +73,7 @@ public class FusionExtractor {
 
             } else if (feature.type() == FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
                 if (fusionAnnotations.containsKey(feature.description())) {
-                    annotatedFusion = fusionAnnotations.get(fusion);
+                    annotatedFusion = ImmutableKnownFusionPair.builder().from(fusionAnnotations.get(fusion)).build();
                 }
 
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
