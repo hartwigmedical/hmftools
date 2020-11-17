@@ -41,7 +41,7 @@ public final class IclusionFilter {
                             if (!mutation.negation()) {
                                 filteredMutations.add(mutation);
                             } else {
-                                LOGGER.debug("Filtering negated mutation '{}' from {}", mutation, trial.acronym());
+                                LOGGER.debug("Filtering negated mutation from {}: '{}'", trial.acronym(), mutation);
                             }
                         }
 
@@ -52,7 +52,7 @@ public final class IclusionFilter {
                                     .build());
                         }
                     } else {
-                        LOGGER.debug("Filtering non-OR mutation condition '{}' for {}", condition, trial.acronym());
+                        LOGGER.debug("Filtering non-OR mutation condition from {}: '{}'", trial.acronym(), condition);
                     }
                 }
 
@@ -60,7 +60,7 @@ public final class IclusionFilter {
                     filteredTrials.add(ImmutableIclusionTrial.builder().from(trial).mutationConditions(filteredConditions).build());
                 }
             } else {
-                LOGGER.debug("Filtering trial '{}' for missing an acronym", trial);
+                LOGGER.debug("Filtering trial for missing an acronym: '{}'", trial);
             }
         }
 
