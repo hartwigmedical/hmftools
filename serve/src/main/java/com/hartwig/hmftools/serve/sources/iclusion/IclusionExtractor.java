@@ -2,10 +2,11 @@ package com.hartwig.hmftools.serve.sources.iclusion;
 
 import java.util.List;
 
+import com.hartwig.hmftools.iclusion.data.IclusionMutation;
 import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
-import com.hartwig.hmftools.iclusion.data.IclusionMutationLogicType;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.serve.sources.ExtractionOutput;
+import com.hartwig.hmftools.serve.sources.ImmutableExtractionOutput;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,14 +18,15 @@ public class IclusionExtractor {
 
     @NotNull
     public ExtractionOutput extractFromIclusionTrials(@NotNull List<IclusionTrial> trials) {
-        // We assume filtered trials.
+        // We assume filtered trials (no empty acronyms, only OR mutations, and no negated mutations
+
         for (IclusionTrial trial : trials) {
-            assert !trial.acronym().isEmpty() && !trial.mutationConditions().isEmpty();
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
-                assert mutationCondition.logicType() == IclusionMutationLogicType.OR;
-                // TODO implement.
+                for (IclusionMutation mutation : mutationCondition.mutations()) {
+                    LOGGER.info("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
+                }
             }
         }
-        return null;
+        return ImmutableExtractionOutput.builder().build();
     }
 }

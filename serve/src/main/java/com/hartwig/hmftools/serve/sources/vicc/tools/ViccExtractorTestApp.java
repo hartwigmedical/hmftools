@@ -1,7 +1,4 @@
-package com.hartwig.hmftools.serve.sources.vicc;
-
-import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+package com.hartwig.hmftools.serve.sources.vicc.tools;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,59 +9,54 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.cli.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.sources.ExtractionOutput;
+import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
+import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
+import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
+import com.hartwig.hmftools.serve.sources.vicc.ViccUtil;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.jetbrains.annotations.NotNull;
 
-public class ViccTestApplication {
+public class ViccExtractorTestApp {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccTestApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApp.class);
 
     private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE =
             Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
     private static final Integer MAX_VICC_ENTRIES = null;
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
-
-        Options options = ViccTestApplication.createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
 
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
 
         String viccJsonPath;
+        String driverGeneTsvPath;
         String outputDir;
         ProteinResolver proteinResolver;
-        List<DriverGene> driverGenes;
 
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
+            driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv";
             outputDir = System.getProperty("user.home") + "/tmp";
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
                     "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
-            driverGenes = DriverGenePanelConfig.driverGenes(cmd);
         } else {
-            proteinResolver = ProteinResolverFactory.dummy();
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
+            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
-            driverGenes = DriverGeneFile.read(System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv");
+            proteinResolver = ProteinResolverFactory.dummy();
         }
 
         Path outputPath = new File(outputDir).toPath();
@@ -74,10 +66,15 @@ public class ViccTestApplication {
         }
 
         String viccFeatureTsv = outputDir + "/viccFeatures.tsv";
-        String viccFeatureInterpretationTsv = outputDir + "/viccFeaturesInterpretation.tsv";
+        String viccFeatureInterpretationTsv = outputDir + "/viccInterpretation.tsv";
 
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
-        LOGGER.debug("Configured '{}' as the VICC feature output TSV", viccFeatureTsv);
+        LOGGER.debug("Configured '{}' as the VICC feature output TSV path", viccFeatureTsv);
+        LOGGER.debug("Configured '{}' as the VICC feature interpretation output TSV path", viccFeatureInterpretationTsv);
+        LOGGER.debug("Configured '{}' as the driver gene TSV path", driverGeneTsvPath);
+
+        List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsvPath);
+        LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
 
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ViccExtractor viccExtractor =
@@ -87,13 +84,5 @@ public class ViccTestApplication {
 
         ViccUtil.writeFeatures(viccFeatureTsv, viccEntries);
         ViccUtil.writeActionability(outputDir, extractionOutput);
-    }
-
-    @NotNull
-    private static Options createOptions() {
-        Options options = new Options();
-        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
-
-        return options;
     }
 }

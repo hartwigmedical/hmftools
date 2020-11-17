@@ -204,7 +204,8 @@ public final class IclusionTrialFile {
         for (String value : values) {
             // Format is "logicType(mutations)"
             int separatorPos = value.indexOf("(");
-            IclusionMutationLogicType logicType = IclusionMutationLogicType.valueOf(value.substring(0, separatorPos));
+            // TODO: Uppercase won't be necessary anymore when file is generated with v1.3+
+            IclusionMutationLogicType logicType = IclusionMutationLogicType.valueOf(value.substring(0, separatorPos).toUpperCase());
             String mutationEntries = value.substring(separatorPos + 1, value.length() - 1);
             List<IclusionMutation> mutations = Lists.newArrayList();
             for (String mutationEntry : mutationEntries.split(SUB_SUB_FIELD_DELIMITER)) {
