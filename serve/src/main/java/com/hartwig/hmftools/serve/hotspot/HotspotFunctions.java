@@ -37,6 +37,7 @@ public final class HotspotFunctions {
             if (existingAnnotation == null) {
                 annotationPerHotspot.put(key, newAnnotation);
             } else {
+                LOGGER.debug("Merging hotspots {} with {} on {}", newAnnotation, existingAnnotation, key);
                 annotationPerHotspot.put(key, mergeHotspotAnnotations(newAnnotation, existingAnnotation));
             }
         }
