@@ -24,6 +24,8 @@ public abstract class GeneRangeAnnotation {
     //TODO: can be removed when range positions are verified
     public abstract int rangeInfo();
 
+    //TODO include exonID for gene range events
+
     @NotNull
     public abstract MutationTypeFilter mutationType();
 
