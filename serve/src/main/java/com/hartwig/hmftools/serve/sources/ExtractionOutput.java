@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.vicc;
+package com.hartwig.hmftools.serve.sources;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ViccExtractionOutput {
+public abstract class ExtractionOutput {
 
     @NotNull
     public abstract List<KnownHotspot> knownHotspots();

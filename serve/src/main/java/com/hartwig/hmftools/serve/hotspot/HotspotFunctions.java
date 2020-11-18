@@ -37,6 +37,7 @@ public final class HotspotFunctions {
             if (existingAnnotation == null) {
                 annotationPerHotspot.put(key, newAnnotation);
             } else {
+                LOGGER.debug("Merging hotspots {} with {} on {}", newAnnotation, existingAnnotation, key);
                 annotationPerHotspot.put(key, mergeHotspotAnnotations(newAnnotation, existingAnnotation));
             }
         }
@@ -113,6 +114,12 @@ public final class HotspotFunctions {
         @NotNull
         public String proteinAnnotation() {
             return proteinAnnotation;
+        }
+
+        @Override
+        public String toString() {
+            return "HotspotAnnotation{" + "sources=" + sources + ", gene='" + gene + '\'' + ", transcript='" + transcript + '\''
+                    + ", proteinAnnotation='" + proteinAnnotation + '\'' + '}';
         }
     }
 }

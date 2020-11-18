@@ -9,6 +9,7 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.iclusion.data.IclusionMutationLogicType;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 
 import org.junit.Test;
@@ -83,5 +84,13 @@ public class IclusionApiObjectMapperTest {
         assertEquals(variant1.variantName, trials.get(0).mutationConditions().get(0).mutations().get(0).name());
         assertEquals(gene.geneName, trials.get(0).mutationConditions().get(0).mutations().get(1).gene());
         assertEquals(variant2.variantName, trials.get(0).mutationConditions().get(0).mutations().get(1).name());
+    }
+
+    @Test
+    public void canResolveLogicType() {
+        assertEquals(IclusionMutationLogicType.UNKNOWN, IclusionApiObjectMapper.toLogicType(null));
+        assertEquals(IclusionMutationLogicType.OR, IclusionApiObjectMapper.toLogicType(" or "));
+        assertEquals(IclusionMutationLogicType.AND, IclusionApiObjectMapper.toLogicType("AND"));
+        assertEquals(IclusionMutationLogicType.UNKNOWN, IclusionApiObjectMapper.toLogicType("any"));
     }
 }

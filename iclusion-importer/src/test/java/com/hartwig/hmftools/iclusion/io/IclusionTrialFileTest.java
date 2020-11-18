@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.iclusion.data.IclusionMutation;
+import com.hartwig.hmftools.iclusion.data.IclusionMutationLogicType;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutationCondition;
@@ -50,8 +51,14 @@ public class IclusionTrialFileTest {
                         .build())
                 .addTumorLocations(ImmutableIclusionTumorLocation.builder().primaryTumorLocation("loc2").build())
                 .addBlacklistedTumorLocations(ImmutableIclusionTumorLocation.builder().primaryTumorLocation("loc3").build())
-                .addMutationConditions(ImmutableIclusionMutationCondition.builder().addMutations(MUTATION1).logicType("or").build())
-                .addMutationConditions(ImmutableIclusionMutationCondition.builder().addMutations(MUTATION2).logicType("or").build())
+                .addMutationConditions(ImmutableIclusionMutationCondition.builder()
+                        .addMutations(MUTATION1)
+                        .logicType(IclusionMutationLogicType.OR)
+                        .build())
+                .addMutationConditions(ImmutableIclusionMutationCondition.builder()
+                        .addMutations(MUTATION2)
+                        .logicType(IclusionMutationLogicType.OR)
+                        .build())
                 .build();
 
         IclusionTrial trial2 = ImmutableIclusionTrial.builder()
@@ -72,7 +79,10 @@ public class IclusionTrialFileTest {
                 .nct("nct3")
                 .ipn("ipn3")
                 .ccmo("ccmo3")
-                .addMutationConditions(ImmutableIclusionMutationCondition.builder().addMutations(MUTATION3).logicType("or").build())
+                .addMutationConditions(ImmutableIclusionMutationCondition.builder()
+                        .addMutations(MUTATION3)
+                        .logicType(IclusionMutationLogicType.OR)
+                        .build())
                 .build();
 
         List<IclusionTrial> convertedTrials =
@@ -94,7 +104,7 @@ public class IclusionTrialFileTest {
         IclusionMutation invalidMutation = ImmutableIclusionMutation.builder().gene("gene1 - 2").name("name3").negation(false).build();
         IclusionTrial trialWithInvalidMutation = testBuilder().addMutationConditions(ImmutableIclusionMutationCondition.builder()
                 .addMutations(invalidMutation)
-                .logicType("or")
+                .logicType(IclusionMutationLogicType.OR)
                 .build()).build();
 
         List<IclusionTrial> convertedTrials = IclusionTrialFile.fromLines(IclusionTrialFile.toLines(Lists.newArrayList(

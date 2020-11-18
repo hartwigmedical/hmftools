@@ -10,6 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.iclusion.data.IclusionMutation;
 import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
+import com.hartwig.hmftools.iclusion.data.IclusionMutationLogicType;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.data.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
@@ -29,7 +30,6 @@ public final class IclusionTrialFile {
     private static final String SUB_FIELD_DELIMITER = "|";
     private static final String SUB_SUB_FIELD_DELIMITER = "#";
     private static final String SUB_FIELD_SEPARATOR = " - ";
-    private static final String SUB_SUB_FIELD_SEPARATOR = " _ ";
 
     private static final String DOID_DELIMITER = ",";
 
@@ -123,7 +123,7 @@ public final class IclusionTrialFile {
             }
             String finalMutationString = mutationString.toString();
             if (!finalMutationString.isEmpty()) {
-                mutationConditionString.add(mutationCondition.logicType() + "(" + mutationString.toString() + ")");
+                mutationConditionString.add(mutationCondition.logicType().toString() + "(" + mutationString.toString() + ")");
             }
         }
 
@@ -204,7 +204,8 @@ public final class IclusionTrialFile {
         for (String value : values) {
             // Format is "logicType(mutations)"
             int separatorPos = value.indexOf("(");
-            String logicType = value.substring(0, separatorPos);
+            // TODO: Uppercase won't be necessary anymore when file is generated with v1.3+
+            IclusionMutationLogicType logicType = IclusionMutationLogicType.valueOf(value.substring(0, separatorPos).toUpperCase());
             String mutationEntries = value.substring(separatorPos + 1, value.length() - 1);
             List<IclusionMutation> mutations = Lists.newArrayList();
             for (String mutationEntry : mutationEntries.split(SUB_SUB_FIELD_DELIMITER)) {

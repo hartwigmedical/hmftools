@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class IclusionMutationCondition {
 
     @NotNull
-    public abstract String logicType();
+    public abstract IclusionMutationLogicType logicType();
 
     @NotNull
     public abstract List<IclusionMutation> mutations();

@@ -101,10 +101,14 @@ public class ServeHotspotGenerator {
                 ? ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
                 : ProteinResolverFactory.dummy();
 
+        List<KnownHotspot> hartwigCohortHotspots = hartwigCohortHotspots(hartwigCohortTsv, proteinResolver, generateHotspots);
+
+        // Temporary code to just check cohort hotspot generation.
+        System.exit(0);
+
+        List<KnownHotspot> hartwigCuratedHotspots = hartwigCuratedHotspots(hartwigCuratedTsv, proteinResolver, generateHotspots);
         List<KnownHotspot> viccHotspots = viccHotspots(viccJson, proteinResolver);
         List<KnownHotspot> docmHotspots = docmHotspots(docmTsv, proteinResolver);
-        List<KnownHotspot> hartwigCohortHotspots = hartwigCohortHotspots(hartwigCohortTsv, proteinResolver, generateHotspots);
-        List<KnownHotspot> hartwigCuratedHotspots = hartwigCuratedHotspots(hartwigCuratedTsv, proteinResolver, generateHotspots);
 
         LOGGER.info("Merging {} VICC hotspots with {} DoCM hotspots and {} Hartwig Cohort hotspots and {} Hartwig Curated hotspots",
                 viccHotspots.size(),

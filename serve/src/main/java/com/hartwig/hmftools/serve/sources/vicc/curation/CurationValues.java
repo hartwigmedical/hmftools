@@ -13,7 +13,6 @@ public abstract class CurationValues {
     public abstract String geneSymbol();
 
     @NotNull
-    public abstract String event();
-
+    public abstract String featureName();
 
 }

@@ -68,14 +68,8 @@ public class HartwigExtractor {
             }
         }
 
-        List<KnownHotspot> consolidatedHotspots = HotspotFunctions.consolidateHotspots(knownHotspots);
-        if (consolidatedHotspots.size() != knownHotspots.size()) {
-            LOGGER.warn("Consolidating of '{}' hotspots changed number of hotspots from {} to {}",
-                    source,
-                    knownHotspots.size(),
-                    consolidatedHotspots.size());
-        }
-        return consolidatedHotspots;
+        // Even for Hartwig sources the extractor may generate duplicate hotspots, so we need to consolidate them.
+        return HotspotFunctions.consolidateHotspots(knownHotspots);
     }
 
     @NotNull

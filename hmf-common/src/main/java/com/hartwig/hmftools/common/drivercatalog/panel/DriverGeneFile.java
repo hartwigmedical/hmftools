@@ -63,30 +63,26 @@ public final class DriverGeneFile {
 
     @NotNull
     public static DriverGene fromString(@NotNull final String line) {
-        try {
-            String[] values = line.split(DELIMITER);
-            ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder()
-                    .gene(values[0])
-                    .reportMissenseAndInframe(Boolean.parseBoolean(values[1].toLowerCase()))
-                    .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[2].toLowerCase()))
-                    .reportSplice(Boolean.parseBoolean(values[3].toLowerCase()))
-                    .reportDeletion(Boolean.parseBoolean(values[4].toLowerCase()))
-                    .reportDisruption(Boolean.parseBoolean(values[5].toLowerCase()))
-                    .reportAmplification(Boolean.parseBoolean(values[6].toLowerCase()))
-                    .reportSomaticHotspot(Boolean.parseBoolean(values[7].toLowerCase()))
-                    .likelihoodType(DriverCategory.valueOf(values[8]))
-                    .reportGermlineVariant(false)
-                    .reportGermlineHotspot(false);
+        String[] values = line.split(DELIMITER);
+        ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder()
+                .gene(values[0])
+                .reportMissenseAndInframe(Boolean.parseBoolean(values[1].toLowerCase()))
+                .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[2].toLowerCase()))
+                .reportSplice(Boolean.parseBoolean(values[3].toLowerCase()))
+                .reportDeletion(Boolean.parseBoolean(values[4].toLowerCase()))
+                .reportDisruption(Boolean.parseBoolean(values[5].toLowerCase()))
+                .reportAmplification(Boolean.parseBoolean(values[6].toLowerCase()))
+                .reportSomaticHotspot(Boolean.parseBoolean(values[7].toLowerCase()))
+                .likelihoodType(DriverCategory.valueOf(values[8]))
+                .reportGermlineVariant(false)
+                .reportGermlineHotspot(false);
 
-            if (values.length == 11) {
-                builder.reportGermlineVariant(Boolean.parseBoolean(values[9].toLowerCase())).reportGermlineHotspot(Boolean.parseBoolean(values[10].toLowerCase()));
-            }
-
-            return builder.build();
-        } catch (Exception e) {
-            throw e;
+        if (values.length == 11) {
+            builder.reportGermlineVariant(Boolean.parseBoolean(values[9].toLowerCase()))
+                    .reportGermlineHotspot(Boolean.parseBoolean(values[10].toLowerCase()));
         }
 
+        return builder.build();
     }
 
     @NotNull
