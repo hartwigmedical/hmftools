@@ -1,19 +1,28 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 
+import org.apache.commons.compress.utils.Lists;
+
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 class GermlineHotspotVCF {
+
+    static final String WHITELIST_FLAG = "WHITELIST";
 
     private final String contigPrefix;
     private final Set<String> germlineGenes;
@@ -25,18 +34,15 @@ class GermlineHotspotVCF {
 
     public void process(final String inputFile, final String outputFile) {
 
-        VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
-                .modifyOption(Options.INDEX_ON_THE_FLY, true)
-                .modifyOption(Options.USE_ASYNC_IO, false)
-                .build();
+        // READ
+        final VCFFileReader reader = new VCFFileReader(new File(inputFile), false);
+        final VCFHeader readerHeader = reader.getFileHeader();
+        final String assembly = readerHeader.getMetaDataLine("reference").getValue();
+        if (!assembly.equals("GRCh37") && !assembly.equals("GRCh38")) {
+            throw new IllegalArgumentException();
+        }
 
-        VCFFileReader reader = new VCFFileReader(new File(inputFile), false);
-
-        VCFHeader readerHeader = reader.getFileHeader();
-        VCFHeader writerheader = new VCFHeader();
-        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine("GENEINFO"));
-        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine("CLNSIG"));
-        writer.writeHeader(writerheader);
+        final List<VariantContext> variants = Lists.newArrayList();
 
         for (VariantContext context : reader) {
             final Set<String> variantGenes = Sets.newHashSet();
@@ -56,11 +62,32 @@ class GermlineHotspotVCF {
                         context.getEnd(),
                         context.getAlleles()).attribute("GENEINFO", geneinfo).attribute("CLNSIG", clinsig);
 
-                writer.add(builder.make());
+                variants.add(builder.make());
             }
         }
-
         reader.close();
+
+        // ADD WHITE LIST (OUT OF ORDER)
+        variants.addAll(assembly.equals("GRCh37") ? GermlineHotspotWhitelist.grch37Whitelist() : GermlineHotspotWhitelist.grch38Whitelist());
+
+        // Get sorted contigs
+        final List<String> contigs = variants.stream().map(VariantContext::getContig).distinct().collect(Collectors.toList());
+
+
+        // WRITE
+        VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
+                .modifyOption(Options.INDEX_ON_THE_FLY, true)
+                .modifyOption(Options.USE_ASYNC_IO, false)
+                .build();
+
+        VCFHeader writerheader = new VCFHeader();
+        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine("GENEINFO"));
+        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine("CLNSIG"));
+        writerheader.addMetaDataLine(new VCFInfoHeaderLine(WHITELIST_FLAG, 1, VCFHeaderLineType.Flag, "Whitelisted hotspot"));
+        writer.writeHeader(writerheader);
+
+        variants.sort(new VariantContextComparator(contigs));
+        variants.forEach(writer::add);
         writer.close();
 
     }

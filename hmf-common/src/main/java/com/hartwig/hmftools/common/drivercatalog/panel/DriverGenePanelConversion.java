@@ -23,7 +23,7 @@ public class DriverGenePanelConversion {
         String outputFile38 = "/Users/jon/hmf/resources/DriverGenePanel.hg38.tsv";
 
         String clinvarFile19 = "/Users/jon/hmf/resources/clinvar.vcf.hg19.gz";
-        String clinvarFile38 = "/Users/jon/hmf/resources/clinvar.vcf.hg19.gz";
+        String clinvarFile38 = "/Users/jon/hmf/resources/clinvar.vcf.hg38.gz";
         String germlineHotspot19 = "/Users/jon/hmf/resources/KnownHotspots.germline.hg19.vcf.gz";
         String germlineHotspot38 = "/Users/jon/hmf/resources/KnownHotspots.germline.hg38.vcf.gz";
 
