@@ -44,10 +44,31 @@ public class SnpEffAnnotationFactoryTest {
 
     @Test
     public void testSnvSpliceDonorPlus5() {
-        assertEffect("splice_region_variant", "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+4G>T");
+        assertEffect("splice_region_variant",
+                "G",
+                "T",
+                Strings.EMPTY,
+                Strings.EMPTY,
+                0,
+                "splice_region_variant&intron_variant",
+                "c.375+4G>T");
         assertEffect(SPLICE_DONOR_VARIANT, "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+5G>T");
-        assertEffect(SPLICE_DONOR_VARIANT, "GG", "TT", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+5GG>TT");
-        assertEffect("splice_region_variant", "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+6G>T");
+        assertEffect(SPLICE_DONOR_VARIANT,
+                "GG",
+                "TT",
+                Strings.EMPTY,
+                Strings.EMPTY,
+                0,
+                "splice_region_variant&intron_variant",
+                "c.375+5GG>TT");
+        assertEffect("splice_region_variant",
+                "G",
+                "T",
+                Strings.EMPTY,
+                Strings.EMPTY,
+                0,
+                "splice_region_variant&intron_variant",
+                "c.375+6G>T");
 
         assertEffect("intron_variant", "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "intron_variant", "c.375+5G>T");
     }
@@ -79,9 +100,8 @@ public class SnpEffAnnotationFactoryTest {
         assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", Strings.EMPTY, "A", 3, "splice_region_variant", "c.1023+2_1023+3insA");
     }
 
-
-    void assertEffect(String expectedStart, String ref, String alt, String mh, String repeat, int repeatCount, String effects,
-            String hgvs) {
+    private void assertEffect(@NotNull String expectedStart, @NotNull String ref, @NotNull String alt, @NotNull String mh,
+            @NotNull String repeat, int repeatCount, String effects, @NotNull String hgvs) {
         VariantContext context = create(ref, alt, mh, repeat, repeatCount, effects, hgvs);
         List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(context);
         assertEquals(1, annotations.size());
@@ -89,9 +109,9 @@ public class SnpEffAnnotationFactoryTest {
     }
 
     @NotNull
-    private VariantContext create(String ref, String alt, String mh, String repeat, int repeatCount, String effects, String hgvs) {
-        final String annotation =
-                String.format("A|%s|LOW|GENE|GENEID|transcript|TRANSCIPTID|protein_coding|4/10|%s||||||", effects, hgvs);
+    private VariantContext create(@NotNull String ref, @NotNull String alt, @NotNull String mh, @NotNull String repeat, int repeatCount,
+            @NotNull String effects, @NotNull String hgvs) {
+        final String annotation = String.format("A|%s|LOW|GENE|GENEID|transcript|TRANSCIPTID|protein_coding|4/10|%s||||||", effects, hgvs);
 
         final StringJoiner infoJoiner = new StringJoiner(";").add(SNPEFF_IDENTIFIER + "=" + annotation);
         if (!mh.isEmpty()) {
@@ -115,5 +135,4 @@ public class SnpEffAnnotationFactoryTest {
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
         return codec;
     }
-
 }
