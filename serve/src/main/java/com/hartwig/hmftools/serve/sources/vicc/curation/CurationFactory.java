@@ -47,6 +47,9 @@ final class CurationFactory {
         FEATURE_MAPPINGS.put(cgi("C15orf55", null, "BRD4-C15orf55 fusion"), curation("BRD4", "BRD4-NUTM1 fusion"));
         FEATURE_MAPPINGS.put(cgi("MLL", null, "MLL fusion"), curation("KMT2A", "KMT2A fusion"));
 
+        // These genes are on synonym genes
+        FEATURE_MAPPINGS.put(cgi("MLL2", null, "MLL2 oncogenic mutation"), curation("KMT2D", "KMT2D oncogenic mutation"));
+
         // Improve for consistency
         FEATURE_MAPPINGS.put(cgi("MET", null, "MET (Y1230C;Y1235D)"), curation("MET", "MET (Y1230C,Y1235D)"));
     }
@@ -66,6 +69,10 @@ final class CurationFactory {
         // Fusions where gene is a synonym of our gene
         FEATURE_MAPPINGS.put(civic("FGFR1", null, "ZNF198-FGFR1"), curation("ZMYM2", "ZMYM2-FGFR1"));
         FEATURE_MAPPINGS.put(civic("KMT2A", null, "MLL-MLLT3"), curation("KMT2A", "KMT2A-MLLT3"));
+
+        // These genes are on synonym genes
+        FEATURE_MAPPINGS.put(civic("MRE11", "ENST00000323929", "LOSS"), curation("MRE11A", "LOSS"));
+        FEATURE_MAPPINGS.put(civic("MRE11", "ENST00000323929", "FRAMESHIFT MUTATION"), curation("MRE11A", "FRAMESHIFT MUTATION"));
 
         // Fusions are not correct
         FEATURE_MAPPINGS.put(civic("ABL1", "ENST00000318560", "BCR-ABL G398R"), curation("BCR", "BCR-ABL1 G398R"));
