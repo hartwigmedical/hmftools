@@ -1,48 +1,119 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.fromAnnotationList;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SPLICE_DONOR_VARIANT;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.google.common.collect.Sets;
 
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
 import org.junit.Test;
+
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderVersion;
 
 public class SnpEffAnnotationFactoryTest {
 
+    private VCFCodec codec;
+
+    @Before
+    public void setup() {
+        codec = createTestCodec();
+    }
+
     @Test
-    public void testSpliceDonorPlus5() {
+    public void testInitialSpliceBase() {
+        assertEquals(4, SnpEffAnnotationFactory.initialIndelSpliceBase(false, "c.5667+4_5667+9delAAGGGG"));
+        assertEquals(3, SnpEffAnnotationFactory.initialIndelSpliceBase(true, "c.1023+2_1023+3insA"));
+        assertEquals(5, SnpEffAnnotationFactory.initialIndelSpliceBase(false, "c.865+5dupT"));
+
+        assertEquals(-1, SnpEffAnnotationFactory.initialIndelSpliceBase(false, "c.2001+6_2001+40delAGCATTTATTTTAGGGGGAAAAAAAAAGTCGTACA"));
+    }
+
+    @Test
+    public void testSnvSpliceDonorPlus5() {
+        assertEffect("splice_region_variant", "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+4G>T");
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+5G>T");
+        assertEffect(SPLICE_DONOR_VARIANT, "GG", "TT", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+5GG>TT");
+        assertEffect("splice_region_variant", "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+6G>T");
+
+        assertEffect("intron_variant", "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "intron_variant", "c.375+5G>T");
+    }
+
+    @Test
+    public void testForwardStrandInsert() {
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", "G", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", "GG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect("splice_region_variant", "G", "TA", "GGG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", Strings.EMPTY, "A", 2, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect("splice_region_variant", "G", "TA", Strings.EMPTY, "A", 3, "splice_region_variant", "c.1023+2_1023+3insA");
+
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", Strings.EMPTY, "T", 24, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect("splice_region_variant", "G", "TTA", Strings.EMPTY, "TA", 24, "splice_region_variant", "c.1023+2_1023+3insTA");
+    }
+
+    @Test
+    public void testReverseStrandInsert() {
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", "G", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", "GG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", "GGG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", Strings.EMPTY, "A", 2, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", Strings.EMPTY, "A", 3, "splice_region_variant", "c.1023+2_1023+3insA");
+    }
+
+
+    void assertEffect(String expectedStart, String ref, String alt, String mh, String repeat, int repeatCount, String effects,
+            String hgvs) {
+        VariantContext context = create(ref, alt, mh, repeat, repeatCount, effects, hgvs);
+        List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(context);
+        assertEquals(1, annotations.size());
+        assertTrue(annotations.get(0).effects().startsWith(expectedStart));
+    }
+
+    @NotNull
+    private VariantContext create(String ref, String alt, String mh, String repeat, int repeatCount, String effects, String hgvs) {
         final String annotation =
-                "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000269305|protein_coding|4/10|c.375+5G>T||||||,"
-                        + "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000413465|protein_coding|3/6|c.375+5G>T||||||,"
-                        + "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000359597|protein_coding|3/8|c.375+5G>T||||||,"
-                        + "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000420246|protein_coding|4/11|c.375+5G>T||||||,"
-                        + "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000455263|protein_coding|4/11|c.375+5G>T||||||,"
-                        + "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000445888|protein_coding|4/10|c.375+5G>T||||||,"
-                        + "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000505014|retained_intron|3/4|n.631+5G>T||||||,"
-                        + "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000508793|protein_coding|4/4|c.375+5G>T||||||WARNING_TRANSCRIPT_INCOMPLETE,"
-                        + "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000604348|protein_coding|4/4|c.375+5G>T||||||WARNING_TRANSCRIPT_NO_STOP_CODON,"
-                        + "A|splice_region_variant&intron_variant|LOW|TP53|ENSG00000141510|transcript|ENST00000503591|protein_coding|5/5|c.375+5G>T||||||WARNING_TRANSCRIPT_INCOMPLETE,"
-                        + "A|upstream_gene_variant|MODIFIER|TP53|ENSG00000141510|transcript|ENST00000504290|retained_intron||n.-496G>T|||||496|,"
-                        + "A|upstream_gene_variant|MODIFIER|TP53|ENSG00000141510|transcript|ENST00000504937|retained_intron||n.-496G>T|||||496|,"
-                        + "A|upstream_gene_variant|MODIFIER|TP53|ENSG00000141510|transcript|ENST00000510385|retained_intron||n.-496G>T|||||496|,"
-                        + "A|upstream_gene_variant|MODIFIER|TP53|ENSG00000141510|transcript|ENST00000574684|processed_transcript||n.-870G>T|||||870|,"
-                        + "A|intron_variant|MODIFIER|TP53|ENSG00000141510|transcript|ENST00000509690|protein_coding|1/5|c.-21-753G>T||||||WARNING_TRANSCRIPT_NO_STOP_CODON,"
-                        + "A|intron_variant|MODIFIER|TP53|ENSG00000141510|transcript|ENST00000514944|protein_coding|3/5|c.96+393G>T||||||WARNING_TRANSCRIPT_INCOMPLETE";
+                String.format("A|%s|LOW|GENE|GENEID|transcript|TRANSCIPTID|protein_coding|4/10|%s||||||", effects, hgvs);
 
-        final List<String> annotationList = Lists.newArrayList(annotation.split(","));
-        assertEffect(CodingEffect.SPLICE, fromAnnotationList(false, annotationList));
-        assertEffect(CodingEffect.NONE, fromAnnotationList(true, annotationList));
+        final StringJoiner infoJoiner = new StringJoiner(";").add(SNPEFF_IDENTIFIER + "=" + annotation);
+        if (!mh.isEmpty()) {
+            infoJoiner.add(MICROHOMOLOGY_FLAG + "=" + mh);
+        }
+        if (repeatCount > 0) {
+            infoJoiner.add(REPEAT_COUNT_FLAG + "=" + repeatCount);
+            infoJoiner.add(REPEAT_SEQUENCE_FLAG + "=" + repeat);
+        }
+
+        final String line =
+                String.format("15\t12345678\trs1;UCSC\t%s\t%s\t2\tPASS\t%s\tGT:AD:DP\t0/1:59,60:120", ref, alt, infoJoiner.toString());
+
+        return codec.decode(line);
     }
 
-    private void assertEffect(CodingEffect expected, List<SnpEffAnnotation> annotations) {
-        final SnpEffAnnotation first = annotations.get(0);
-        final CodingEffect codingEffect = CodingEffect.effect("RANDOM", first.consequences());
-        assertEquals(expected, codingEffect);
+    @NotNull
+    private static VCFCodec createTestCodec() {
+        VCFCodec codec = new VCFCodec();
+        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet("SAMPLE"));
+        codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
+        return codec;
     }
-
 
 }

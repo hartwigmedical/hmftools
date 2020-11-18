@@ -1033,6 +1033,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Version History and Download Links
 - Upcoming
   - Support for COBALT tumor only mode
+  - Indels over splice regions should be marked as such
 - [2.51](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.51) 
   - Correctly identify SV genotypes in tumor-only mode
   - Allow overwrites of MH field in somatic VCF
