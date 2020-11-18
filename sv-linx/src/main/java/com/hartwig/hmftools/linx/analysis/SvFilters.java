@@ -314,7 +314,7 @@ public class SvFilters
         if(breakend.getSV().getSvData().insertSequence().length() >= MIN_TEMPLATED_INSERTION_LENGTH
         && !nextBreakend.getSV().getTIAssemblies(!nextBreakend.usesStart()).isEmpty())
         {
-            int posLimitDown = nextBreakend.position() - 1; // nextBreakend.getSV().getSvData().startIntervalOffsetEnd()
+            int posLimitDown = nextBreakend.position() - 1;
             int posLimitUp = nextBreakend.position() + 1;
 
             if(breakend.position() >= posLimitDown && breakend.position() <= posLimitUp)
