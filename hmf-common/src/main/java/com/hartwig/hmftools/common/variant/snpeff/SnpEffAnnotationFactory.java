@@ -11,6 +11,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
@@ -54,16 +55,6 @@ public final class SnpEffAnnotationFactory {
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    // TODO: Doesn't really belong here..
-    public static List<String> rawAnnotations(@NotNull final VariantContext context) {
-        if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
-            return context.getAttributeAsStringList(SNPEFF_IDENTIFIER, "");
-        }
-
-        return Collections.emptyList();
-    }
-
     private static boolean isCorrectNumberOfParts(@NotNull String[] parts) {
         if (parts.length == EXPECTED_FIELD_SIZE_PER_ANNOTATION) {
             return true;
@@ -77,9 +68,18 @@ public final class SnpEffAnnotationFactory {
     }
 
     @NotNull
-    private static SnpEffAnnotation fromParts(VariantContext context, @NotNull final String[] parts) {
+    // TODO: Doesn't really belong here..
+    public static List<String> rawAnnotations(@NotNull VariantContext context) {
+        if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
+            return context.getAttributeAsStringList(SNPEFF_IDENTIFIER, "");
+        }
 
-        final String hgvsCoding = parts[9];
+        return Collections.emptyList();
+    }
+
+    @NotNull
+    private static SnpEffAnnotation fromParts(@NotNull VariantContext context, @NotNull String[] parts) {
+        String hgvsCoding = parts[9];
         String effects = effect(context, parts);
 
         return ImmutableSnpEffAnnotation.builder()
@@ -104,16 +104,17 @@ public final class SnpEffAnnotationFactory {
     }
 
     @NotNull
-    static String effect(@NotNull final VariantContext variant, @NotNull final String[] parts) {
-        final String hgvsCoding = parts[9];
-        final String effects = parts[1];
+    static String effect(@NotNull VariantContext variant, @NotNull String[] parts) {
+        String hgvsCoding = parts[9];
+        String effects = parts[1];
         if (!effects.contains("splice")) {
             return effects;
         }
 
+        // Below is to support additional donor annotation for variants affecting +5 base. See also DEV-1650
         boolean indel = variant.isIndel();
         if (!indel) {
-            return hgvsCoding.contains("+5") ? "splice_donor_variant" + CONSEQUENCE_SEPARATOR + effects : effects;
+            return hgvsCoding.contains("+5") ? SPLICE_DONOR_VARIANT + CONSEQUENCE_SEPARATOR + effects : effects;
         }
 
         final String hgvsCodingType;
@@ -146,16 +147,10 @@ public final class SnpEffAnnotationFactory {
             adjustedSpliceBase = initialSpliceBase;
         }
 
-        return adjustedSpliceBase <= 5 ? "splice_donor_variant" + CONSEQUENCE_SEPARATOR + effects : effects;
+        return adjustedSpliceBase <= 5 ? SPLICE_DONOR_VARIANT + CONSEQUENCE_SEPARATOR + effects : effects;
     }
 
-    private static boolean isPositiveStrand(@NotNull final String ref, final String alt, final String hgvsCoding) {
-        char lastBaseOfCoding = hgvsCoding.charAt(hgvsCoding.length() - 1);
-        return ref.length() > alt.length()
-                ? ref.charAt(ref.length() - 1) == lastBaseOfCoding
-                : alt.charAt(alt.length() - 1) == lastBaseOfCoding;
-    }
-
+    @VisibleForTesting
     static int initialIndelSpliceBase(final boolean isInsert, final String hgvsCoding) {
         int firstIndexOfPlus = hgvsCoding.indexOf("+");
         if (firstIndexOfPlus < 0) {
@@ -170,6 +165,13 @@ public final class SnpEffAnnotationFactory {
         } catch (NumberFormatException e) {
             return -1;
         }
+    }
+
+    private static boolean isPositiveStrand(@NotNull final String ref, final String alt, final String hgvsCoding) {
+        char lastBaseOfCoding = hgvsCoding.charAt(hgvsCoding.length() - 1);
+        return ref.length() > alt.length()
+                ? ref.charAt(ref.length() - 1) == lastBaseOfCoding
+                : alt.charAt(alt.length() - 1) == lastBaseOfCoding;
     }
 
     @NotNull
@@ -191,5 +193,4 @@ public final class SnpEffAnnotationFactory {
     private static List<String> toEffects(@NotNull final String effectString) {
         return Lists.newArrayList(effectString.split(CONSEQUENCE_SEPARATOR));
     }
-
 }
