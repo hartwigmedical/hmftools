@@ -92,6 +92,7 @@ public class SageConfigTest {
         return ImmutableFilterConfig.builder()
                 .hardFilter(false)
                 .softFilter(true)
+                .mnvFilter(true)
                 .hardMinTumorQual(DEFAULT_HARD_MIN_TUMOR_QUAL)
                 .hardMinTumorRawAltSupport(DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT)
                 .hardMinTumorRawBaseQuality(DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY)

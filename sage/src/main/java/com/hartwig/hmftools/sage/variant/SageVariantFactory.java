@@ -107,7 +107,7 @@ public class SageVariantFactory {
         }
 
         // MNV Tests
-        if (tier != SageVariantTier.HOTSPOT && normal.variant().isMNV()) {
+        if (tier != SageVariantTier.HOTSPOT && normal.variant().isMNV() && this.config.mnvFilter()) {
             if (normal.altSupport() != 0) {
                 result.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
             }

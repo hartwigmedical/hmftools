@@ -22,6 +22,7 @@ public interface FilterConfig {
 
     String SOFT_FILTER = "soft_filter_enabled";
     String HARD_FILTER = "hard_filter_enabled";
+    String MNV_FILTER = "mnv_filter_enabled";
 
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
@@ -29,6 +30,7 @@ public interface FilterConfig {
 
     boolean DEFAULT_SOFT_FILTER_ENABLED = true;
     boolean DEFAULT_HARD_FILTER_ENABLED = false;
+    boolean DEFAULT_MNV_FILTER_ENABLED = true;
 
     int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
     int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
@@ -82,6 +84,10 @@ public interface FilterConfig {
 
     boolean hardFilter();
 
+    boolean softFilter();
+
+    boolean mnvFilter();
+
     int hardMinTumorQual();
 
     int hardMinTumorRawAltSupport();
@@ -99,8 +105,6 @@ public interface FilterConfig {
     default int hotspotMinTumorAltSupportToSkipQualCheck() {
         return 8;
     }
-
-    boolean softFilter();
 
     @NotNull
     SoftFilterConfig softHotspotFilter();
@@ -120,6 +124,7 @@ public interface FilterConfig {
 
         options.addOption(SOFT_FILTER, false, "Enable soft filters [" + DEFAULT_SOFT_FILTER_ENABLED + "]");
         options.addOption(HARD_FILTER, false, "All filters are hard [" + DEFAULT_HARD_FILTER_ENABLED + "]");
+        options.addOption(MNV_FILTER, false, "Enable max_germline_alt_support mnv filter [" + DEFAULT_MNV_FILTER_ENABLED + "]");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true, "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true, "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
@@ -137,6 +142,7 @@ public interface FilterConfig {
         return ImmutableFilterConfig.builder()
                 .softFilter(defaultBooleanValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED))
                 .hardFilter(defaultBooleanValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED))
+                .mnvFilter(defaultBooleanValue(cmd, MNV_FILTER, DEFAULT_MNV_FILTER_ENABLED))
                 .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
                 .hardMinTumorRawAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
                 .hardMinTumorRawBaseQuality(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))
