@@ -61,7 +61,7 @@ public class ExpectedCountsCache
         geneSetCountsData.forEach(x -> x.unsplicedGeneIds().forEach(y -> geneTransSet.add(y)));
 
         // confirm that the genes in the collection match
-        return !geneIds.stream().anyMatch(x -> !geneTransSet.contains(x));
+        return geneIds.stream().allMatch(x -> geneTransSet.contains(x));
     }
 
     private final List<CategoryCountsData> findGeneSetCountsData(final List<String> geneIds)

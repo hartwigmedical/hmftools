@@ -122,15 +122,15 @@ public class GeneReadData
         {
             GeneReadData geneReadData = new GeneReadData(geneData);
 
-            List<TranscriptData> transDataList = Lists.newArrayList(geneTransCache.getTranscripts(geneData.GeneId));
+            final List<TranscriptData> geneTranscripts = geneTransCache.getTranscripts(geneData.GeneId);
 
-            if(transDataList.isEmpty())
+            if(geneTranscripts == null || geneTranscripts.isEmpty())
             {
-                ISF_LOGGER.warn("no transcripts found for gene({}:{})", geneData.GeneId, geneData.GeneName);
+                ISF_LOGGER.warn("no transcripts found for gene({}:{} chr={})", geneData.GeneId, geneData.GeneName, geneData.Chromosome);
                 continue;
             }
 
-            geneReadData.setTranscripts(transDataList);
+            geneReadData.setTranscripts(geneTranscripts);
             geneReadDataList.add(geneReadData);
         }
 
