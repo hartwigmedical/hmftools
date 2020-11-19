@@ -131,6 +131,7 @@ Note that for DSB and hotspot rescue, neither the rescued variant nor the rescui
 
 ## Version History and Download Links
 - Upcoming
+  - Warn if malformed BEALN field in input
   - Only include specified samples in VCF output
   - `tumor` argument is now mandatory
   - `reference` argument is still optional but excluding it will run in [tumor-only mode](#tumor-only-mode)

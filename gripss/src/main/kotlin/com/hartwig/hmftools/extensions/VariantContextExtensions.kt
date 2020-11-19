@@ -4,6 +4,7 @@ import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.gripss.ContigComparator
 import com.hartwig.hmftools.gripss.VariantType
 import htsjdk.variant.variantcontext.VariantContext
+import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.util.Strings
 import java.util.*
 import kotlin.math.max
@@ -13,6 +14,8 @@ const val CIRPOS = "CIRPOS"
 const val BEALN = "BEALN"
 const val REPEAT_MASKER_REPEAT_CLASS = "INSRMRC"
 const val REPEAT_MASKER_REPEAT_TYPE = "INSRMRT"
+
+
 
 fun VariantContext.breakendAssemblyReadPairs(): Int {
     return this.getAttributeAsInt("BASRP", 0)
@@ -88,8 +91,20 @@ fun VariantContext.hasViralSequenceAlignment(comparator: ContigComparator): Bool
 }
 
 fun VariantContext.potentialAlignmentLocations(): List<Breakend> {
+    val logger = LogManager.getLogger(this.javaClass)
+
     if (this.hasAttribute(BEALN)) {
-        return this.getAttributeAsStringList(BEALN, "").map { Breakend.fromBealn(it) }
+        val result = mutableListOf<Breakend>()
+        val stringBeans = this.getAttributeAsStringList(BEALN, "");
+        for (stringBean in stringBeans) {
+            try {
+                result.add(Breakend.fromBealn(stringBean))
+            } catch (e: Exception) {
+                logger.warn("Malformed bealn field: $stringBean")
+            }
+        }
+
+        return result
     }
 
     return listOf()
