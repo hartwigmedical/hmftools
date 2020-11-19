@@ -66,7 +66,7 @@ public class DriverGenePanelConversion {
         all19Genes.addAll(somatic19Genes);
 
         final Set<String> all38Genes = new HashSet<>(germline38Genes);
-        all19Genes.addAll(somatic38Genes);
+        all38Genes.addAll(somatic38Genes);
 
         // Write out actionable bed files
         final List<HmfTranscriptRegion> hg19Transcripts = HmfGenePanelSupplier.allGeneList37();
