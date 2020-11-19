@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.drivercatalog.panel;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -61,13 +62,19 @@ public class DriverGenePanelConversion {
         final Set<String> somatic19Genes = somaticGenes(inputDriverGenes);
         final Set<String> somatic38Genes = somaticGenes(outputDriverGenes);
 
+        final Set<String> all19Genes = new HashSet<>(germline19Genes);
+        all19Genes.addAll(somatic19Genes);
+
+        final Set<String> all38Genes = new HashSet<>(germline38Genes);
+        all19Genes.addAll(somatic38Genes);
+
         // Write out actionable bed files
         final List<HmfTranscriptRegion> hg19Transcripts = HmfGenePanelSupplier.allGeneList37();
         final List<HmfTranscriptRegion> hg38Transcripts = HmfGenePanelSupplier.allGeneList38();
         createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.somatic.hg19.bed", somatic19Genes, hg19Transcripts);
-        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.germline.hg19.bed", germline19Genes, hg19Transcripts);
+        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.germline.hg19.bed", all19Genes, hg19Transcripts);
         createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.somatic.hg38.bed", somatic38Genes, hg38Transcripts);
-        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.germline.hg38.bed", germline38Genes, hg38Transcripts);
+        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.germline.hg38.bed", all38Genes, hg38Transcripts);
 
         // Write out germline hotspot files
         new GermlineHotspotVCF("", germline19Genes).process(clinvarFile19, germlineHotspot19);
