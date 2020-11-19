@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 
 import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
@@ -23,12 +24,9 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 class GermlineHotspotVCF {
 
     static final String WHITELIST_FLAG = "WHITELIST";
-
-    private final String contigPrefix;
     private final Set<String> germlineGenes;
 
-    public GermlineHotspotVCF(final String contigPrefix, final Set<String> genes) {
-        this.contigPrefix = contigPrefix;
+    public GermlineHotspotVCF(final Set<String> genes) {
         this.germlineGenes = genes;
     }
 
@@ -42,6 +40,7 @@ class GermlineHotspotVCF {
             throw new IllegalArgumentException();
         }
 
+        final String contigPrefix = assembly.equals("GRCh38") ? "chr" : Strings.EMPTY;
         final List<VariantContext> variants = Lists.newArrayList();
 
         for (VariantContext context : reader) {
