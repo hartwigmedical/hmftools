@@ -67,7 +67,7 @@ class GermlineHotspotVCF {
         reader.close();
 
         // ADD WHITE LIST (OUT OF ORDER)
-        variants.addAll(assembly.equals("GRCh37") ? GermlineHotspotWhitelist.grch37Whitelist() : GermlineHotspotWhitelist.grch38Whitelist());
+        variants.addAll(assembly.equals("GRCh37") ? GermlineWhitelist.grch37Whitelist() : GermlineWhitelist.grch38Whitelist());
 
         // Get sorted contigs
         final List<String> contigs = variants.stream().map(VariantContext::getContig).distinct().collect(Collectors.toList());

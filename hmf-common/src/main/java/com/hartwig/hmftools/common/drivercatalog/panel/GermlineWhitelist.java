@@ -8,7 +8,7 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-class GermlineHotspotWhitelist {
+class GermlineWhitelist {
 
     static List<VariantContext> grch37Whitelist() {
         List<VariantContext> result = Lists.newArrayList();
@@ -25,6 +25,10 @@ class GermlineHotspotWhitelist {
     }
 
     private static VariantContext create(String contig, int position, String ref, String alt) {
+        return create(contig, position, ref, alt, GermlineHotspotVCF.WHITELIST_FLAG);
+    }
+
+    static VariantContext create(String contig, int position, String ref, String alt, String flag) {
         List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(ref, true));
         alleles.add(Allele.create(alt, false));
@@ -33,7 +37,7 @@ class GermlineHotspotWhitelist {
                 .chr(contig)
                 .start(position)
                 .computeEndFromAlleles(alleles, position)
-                .attribute(GermlineHotspotVCF.WHITELIST_FLAG, true)
+                .attribute(flag, true)
                 .make();
     }
 
