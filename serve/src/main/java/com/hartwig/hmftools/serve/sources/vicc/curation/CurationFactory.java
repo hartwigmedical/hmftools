@@ -186,7 +186,6 @@ final class CurationFactory {
         FEATURE_MAPPINGS.put(oncoKb("RUNX1", "ENST00000300305", "RUNX1-EVI1 Fusion"), curation("RUNX1", "RUNX1-MECOM Fusion"));
         FEATURE_MAPPINGS.put(oncoKb("FGFR1", "ENST00000425967", "CEP110-FGFR1 Fusion"), curation("CNTRL", "CNTRL-FGFR1 Fusion"));
         FEATURE_MAPPINGS.put(oncoKb("FGFR2", "ENST00000358487", "FGFR2-KIAA1967 Fusion"), curation("FGFR2", "FGFR2-CCAR2 Fusion"));
-        FEATURE_MAPPINGS.put(oncoKb("MYC", "ENST00000377970", "IGL-MYC Fusion"), curation("IGLC6", "IGLC6-MYC Fusion"));
 
         // These are inconsistent or improperly aligned variants.
         FEATURE_MAPPINGS.put(oncoKb("BRAF", "ENST00000288602", "T599insTT"), curation("BRAF", "T599_V600insTT"));
@@ -200,10 +199,8 @@ final class CurationFactory {
 
         // Fusions that we don't know what gene they are on
         FEATURE_BLACKLIST.add(oncoKb("NKX2-1", "ENST00000354822", "TRA-NKX2-1 Fusion"));
-        FEATURE_BLACKLIST.add(oncoKb("NTRK1", "ENST00000524377", "Delta-NTRK1 Fusion"));
-        FEATURE_BLACKLIST.add(oncoKb("CCND1", "ENST00000227507", "IGH-CCND1 Fusion"));
-        FEATURE_BLACKLIST.add(oncoKb("MYC", "ENST00000377970", "IGK-MYC Fusion"));
         FEATURE_BLACKLIST.add(oncoKb("NKX2-1", "ENST00000354822", "TRB-NKX2-1 Fusion"));
+        FEATURE_BLACKLIST.add(oncoKb("NTRK1", "ENST00000524377", "Delta-NTRK1 Fusion"));
 
         // Variants are unlikely as they span multiple exons (and hence are more fusions than inframes)
         FEATURE_BLACKLIST.add(oncoKb("PDGFRA", "ENST00000257290", "E311_K312del"));
