@@ -26,6 +26,10 @@ public class HotspotClassifier implements EventMatcher {
         return new CompositeEventMatcher(noMatchEventMatchers, new HotspotClassifier(preprocessor));
     }
 
+    public static boolean isProteinAnnotation(@NotNull String event) {
+        return isBoundedProteinAnnotation(event, null);
+    }
+
     @NotNull
     private final EventPreprocessor preprocessor;
 
@@ -42,10 +46,6 @@ public class HotspotClassifier implements EventMatcher {
         }
 
         return false;
-    }
-
-    public static boolean isProteinAnnotation(@NotNull String event) {
-        return isBoundedProteinAnnotation(event, null);
     }
 
     private static boolean isBoundedProteinAnnotation(@NotNull String event, @Nullable Integer maxLength) {
@@ -112,8 +112,11 @@ public class HotspotClassifier implements EventMatcher {
     }
 
     private static int extractComplexDeletionInsertionLength(@NotNull String event) {
+        assert event.contains(HGVS_DELETION + HGVS_INSERTION);
+
         String[] parts = event.split(HGVS_DELETION + HGVS_INSERTION);
 
+        // Format is expected to be something like D770delinsGY
         if (isInteger(parts[0].substring(1))) {
             return 3 * parts[1].length();
         } else {
@@ -122,7 +125,7 @@ public class HotspotClassifier implements EventMatcher {
     }
 
     private static boolean isValidSingleCodonMutation(@NotNull String event) {
-        // Single codon mutations are expected to look something like V600E (1 char - N digits - 1 chars (or "del" or "dup"))
+        // Single codon mutations are expected to look something like V600E (1 char - N digits - M chars (1 char, or "del" or "dup"))
         if (event.length() < 3) {
             return false;
         }
