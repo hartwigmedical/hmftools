@@ -5,24 +5,29 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.serve.classification.CompositeEventMatcher;
 import com.hartwig.hmftools.common.serve.classification.EventMatcher;
+import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.jetbrains.annotations.NotNull;
 
 class GeneRangeCodonClassifier implements EventMatcher {
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new GeneRangeCodonClassifier());
+    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers, @NotNull EventPreprocessor preprocessor) {
+        return new CompositeEventMatcher(noMatchEventMatchers, new GeneRangeCodonClassifier(preprocessor));
     }
 
-    private GeneRangeCodonClassifier() {
+    @NotNull
+    private final EventPreprocessor preprocessor;
+
+    private GeneRangeCodonClassifier(@NotNull final EventPreprocessor preprocessor) {
+        this.preprocessor = preprocessor;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        String proteinAnnotation = HotspotClassifier.extractProteinAnnotation(event);
+        String processedEvent = preprocessor.apply(event);
 
-        return isValidSingleCodonRange(proteinAnnotation);
+        return isValidSingleCodonRange(processedEvent);
     }
 
     private static boolean isValidSingleCodonRange(@NotNull String event) {
@@ -43,8 +48,7 @@ class GeneRangeCodonClassifier implements EventMatcher {
         }
 
         // Some characters are definitely not single codon ranges
-        if (strippedEvent.contains("*") || strippedEvent.contains("/") || strippedEvent.contains("fs")
-                || strippedEvent.contains(",")) {
+        if (strippedEvent.contains("*") || strippedEvent.contains("/") || strippedEvent.contains("fs") || strippedEvent.contains(",")) {
             return false;
         }
 

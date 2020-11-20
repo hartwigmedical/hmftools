@@ -14,7 +14,7 @@ public class GeneRangeCodonClassifierTest {
 
     @Test
     public void canAssessWhetherEventIsGeneRangeCodon() {
-        EventMatcher classifier = GeneRangeCodonClassifier.create(Lists.newArrayList());
+        EventMatcher classifier = GeneRangeCodonClassifier.create(Lists.newArrayList(), new ProteinAnnotationExtractor());
 
         assertTrue(classifier.matches("GNAS", "GNAS (R201)"));
         assertTrue(classifier.matches("EGFR", "E709X"));

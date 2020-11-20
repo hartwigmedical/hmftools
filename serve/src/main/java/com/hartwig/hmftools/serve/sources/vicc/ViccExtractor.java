@@ -41,7 +41,6 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
-import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -116,7 +115,7 @@ public final class ViccExtractor {
         }
 
         ImmutableExtractionOutput.Builder outputBuilder = ImmutableExtractionOutput.builder()
-                .knownHotspots(convertToHotspots(resultsPerEntry))
+                .knownHotspots(convertToHotspots(resultsPerEntry, hotspotExtractor))
                 .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry))
                 .knownFusionPairs(convertToKnownFusions(resultsPerEntry));
 
@@ -126,7 +125,8 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+    private static List<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
+            @NotNull HotspotExtractor hotspotExtractor) {
         List<KnownHotspot> hotspots = Lists.newArrayList();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
             ViccEntry entry = entryResult.getKey();
@@ -138,7 +138,7 @@ public final class ViccExtractor {
                             .addSources(toKnowledgebase(entry.source()))
                             .gene(feature.geneSymbol())
                             .transcript(entry.transcriptId())
-                            .proteinAnnotation(ProteinAnnotationExtractor.proteinAnnotation(feature))
+                            .proteinAnnotation(hotspotExtractor.extractProteinAnnotation(feature))
                             .build());
                 }
             }

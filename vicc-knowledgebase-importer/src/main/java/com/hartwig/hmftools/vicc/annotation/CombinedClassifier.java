@@ -40,7 +40,7 @@ class CombinedClassifier implements EventMatcher {
             String[] parts = event.trim().replace("  ", " ").split(" ");
             if (parts[0].contains("-")) {
                 // Hotspots or amplifications on fusion genes are considered combined.
-                return HotspotClassifier.isTypicalProteinAnnotation(parts[1]) || AmplificationClassifier.isTypicalAmplification(parts[1]);
+                return HotspotClassifier.isValidProteinAnnotation(parts[1]) || AmplificationClassifier.isTypicalAmplification(parts[1]);
             }
         }
 

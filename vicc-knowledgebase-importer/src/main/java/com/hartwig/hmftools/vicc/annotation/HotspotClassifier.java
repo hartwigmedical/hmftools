@@ -13,6 +13,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.CompositeEventMatcher;
 import com.hartwig.hmftools.common.serve.classification.EventMatcher;
+import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,76 +24,40 @@ public class HotspotClassifier implements EventMatcher {
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new HotspotClassifier());
+    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers, @NotNull EventPreprocessor preprocessor) {
+        return new CompositeEventMatcher(noMatchEventMatchers, new HotspotClassifier(preprocessor));
     }
 
-    private HotspotClassifier() {
+    @NotNull
+    private final EventPreprocessor preprocessor;
+
+    private HotspotClassifier(@NotNull final EventPreprocessor preprocessor) {
+        this.preprocessor = preprocessor;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        if (isTypicalProteinAnnotation(event)) {
+        String processedEvent = preprocessor.apply(event);
+
+        if (isValidProteinAnnotation(processedEvent)) {
             return !isHotspotOnFusionGene(event);
         }
 
         return false;
     }
 
-    public static boolean isTypicalProteinAnnotation(@NotNull String event) {
-        String proteinAnnotation = extractProteinAnnotation(event);
-
-        if (isFrameshift(proteinAnnotation)) {
-            return isValidFrameshift(proteinAnnotation);
-        } else if (proteinAnnotation.contains(HGVS_RANGE_INDICATOR)) {
-            return isValidRangeMutation(proteinAnnotation);
-        } else if (proteinAnnotation.contains(HGVS_DELETION + HGVS_INSERTION)) {
-            return isValidComplexDeletionInsertion(proteinAnnotation);
-        } else if (proteinAnnotation.startsWith("*")) {
+    public static boolean isValidProteinAnnotation(@NotNull String event) {
+        if (isFrameshift(event)) {
+            return isValidFrameshift(event);
+        } else if (event.contains(HGVS_RANGE_INDICATOR)) {
+            return isValidRangeMutation(event);
+        } else if (event.contains(HGVS_DELETION + HGVS_INSERTION)) {
+            return isValidComplexDeletionInsertion(event);
+        } else if (event.startsWith("*")) {
             return true;
         } else {
-            return isValidSingleCodonMutation(proteinAnnotation);
+            return isValidSingleCodonMutation(event);
         }
-    }
-
-    @NotNull
-    public static String extractProteinAnnotation(@NotNull String event) {
-        String trimmedName = event.trim();
-        // Many KBs include the gene in the feature name in some form (eg "EGFR E709K" or "EGFR:E709K").
-        // Other KBs put the coding info behind the protein annotation ("V130L (c.388G>C)" rather than the gene in front of it)
-        String proteinAnnotation;
-        if (trimmedName.contains(" ")) {
-            String[] trimmedParts = trimmedName.split(" ");
-            if (trimmedParts[1].contains("(c.")) {
-                proteinAnnotation = trimmedParts[0];
-            } else {
-                proteinAnnotation = trimmedParts[1];
-            }
-        } else if (trimmedName.contains(":")) {
-            proteinAnnotation = trimmedName.split(":")[1];
-        } else {
-            proteinAnnotation = trimmedName;
-        }
-
-        // Some KBs include "p." in front of the protein annotation
-        proteinAnnotation = proteinAnnotation.startsWith("p.") ? proteinAnnotation.substring(2) : proteinAnnotation;
-
-        // Some KBs use DEL/INS/FS rather than del/ins/fs
-        for (String stringToLookFor : CAPITALIZED_STRINGS_TO_UNCAPITALIZE) {
-            int position = proteinAnnotation.indexOf(stringToLookFor);
-            if (position > 0 && Character.isDigit(proteinAnnotation.charAt(position - 1))) {
-                proteinAnnotation = proteinAnnotation.substring(0, position) + stringToLookFor.toLowerCase() + proteinAnnotation.substring(
-                        position + stringToLookFor.length());
-            }
-        }
-
-        // Cut out the trailing stop gained in case a stop gained is following on a frameshift
-        int trailingStopGained = proteinAnnotation.indexOf("fs*");
-        if (trailingStopGained > 0) {
-            proteinAnnotation = proteinAnnotation.substring(0, trailingStopGained + 2);
-        }
-
-        return proteinAnnotation;
     }
 
     private static boolean isFrameshift(@NotNull String proteinAnnotation) {

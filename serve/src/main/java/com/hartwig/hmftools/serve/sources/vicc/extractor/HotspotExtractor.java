@@ -11,15 +11,20 @@ import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class HotspotExtractor {
 
     @NotNull
     private final ProteinResolver proteinResolver;
+    @NotNull
+    private final ProteinAnnotationExtractor proteinAnnotationExtractor;
 
-    public HotspotExtractor(@NotNull final ProteinResolver proteinResolver) {
+    public HotspotExtractor(@NotNull final ProteinResolver proteinResolver,
+            @NotNull final ProteinAnnotationExtractor proteinAnnotationExtractor) {
         this.proteinResolver = proteinResolver;
+        this.proteinAnnotationExtractor = proteinAnnotationExtractor;
     }
 
     @NotNull
@@ -30,10 +35,15 @@ public class HotspotExtractor {
                 hotspotsPerFeature.put(feature,
                         proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                                 viccEntry.transcriptId(),
-                                ProteinAnnotationExtractor.proteinAnnotation(feature)));
+                                extractProteinAnnotation(feature)));
             }
         }
 
         return hotspotsPerFeature;
+    }
+
+    @NotNull
+    public String extractProteinAnnotation(@NotNull Feature feature) {
+        return feature.type() == MutationType.HOTSPOT ? proteinAnnotationExtractor.apply(feature.name()) : Strings.EMPTY;
     }
 }

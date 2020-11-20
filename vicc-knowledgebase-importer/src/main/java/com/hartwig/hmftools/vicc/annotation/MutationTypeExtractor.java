@@ -45,8 +45,8 @@ public final class MutationTypeExtractor {
                 Lists.newArrayList(complexClassifier, combinedClassifier, fusionPairAndExonRangeClassifier);
 
         Map<MutationType, EventMatcher> map = Maps.newHashMap();
-        map.put(MutationType.HOTSPOT, HotspotClassifier.create(firstTierEventMatchers));
-        map.put(MutationType.GENE_RANGE_CODON, GeneRangeCodonClassifier.create(firstTierEventMatchers));
+        map.put(MutationType.HOTSPOT, HotspotClassifier.create(firstTierEventMatchers, new ProteinAnnotationExtractor()));
+        map.put(MutationType.GENE_RANGE_CODON, GeneRangeCodonClassifier.create(firstTierEventMatchers, new ProteinAnnotationExtractor()));
         map.put(MutationType.GENE_RANGE_EXON, GeneRangeExonClassifier.create(firstTierEventMatchers));
         map.put(MutationType.FUSION_PAIR_AND_GENE_RANGE_EXON, fusionPairAndExonRangeClassifier);
         map.put(MutationType.GENE_LEVEL, GeneLevelClassifier.create(firstTierEventMatchers));
