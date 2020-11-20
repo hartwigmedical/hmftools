@@ -109,14 +109,6 @@ final class FilterFactory {
         // A similar type of filtered variant to RS variants.
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "MDM2", "SNP309"));
 
-        // Event with this gene can be remove
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "BCL2", "IGH-BCL2"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "BCL2", "IGH-BCL2 Fusion"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "CCND1", "IGH-CCND1 Fusion"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "FGFR3", "IGH-FGFR3 Fusion"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "MYC", "IGH-MYC Fusion"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "NKX2-1", "IGH-NKX2 Fusion"));
-
         // We don't observe phosphorylation
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "EGFR", "Y1092 PHOSPHORYLATION"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "PRKAA2", "T172 PHOSPHORYLATION"));
