@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.serve.classification;
 
-public enum EventType {
+public enum MutationType {
     HOTSPOT,
     GENE_RANGE_CODON,
     GENE_RANGE_EXON,

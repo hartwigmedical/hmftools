@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.classification.CompositeEventMatcher;
 import com.hartwig.hmftools.common.serve.classification.EventMatcher;
-import com.hartwig.hmftools.common.serve.classification.ExclusiveEventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,8 +17,8 @@ class AmplificationClassifier implements EventMatcher {
     private static final Set<String> AMPLIFICATION_KEY_PHRASES = Sets.newHashSet("over exp");
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> excludingEventMatchers) {
-        return new ExclusiveEventMatcher(excludingEventMatchers, new AmplificationClassifier());
+    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
+        return new CompositeEventMatcher(noMatchEventMatchers, new AmplificationClassifier());
     }
 
     private AmplificationClassifier() {

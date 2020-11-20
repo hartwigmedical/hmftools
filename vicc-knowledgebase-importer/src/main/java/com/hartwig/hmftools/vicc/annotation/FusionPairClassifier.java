@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.classification.CompositeEventMatcher;
 import com.hartwig.hmftools.common.serve.classification.EventMatcher;
-import com.hartwig.hmftools.common.serve.classification.ExclusiveEventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,8 +17,8 @@ class FusionPairClassifier implements EventMatcher {
             Sets.newHashSet("AR-V7", "Gain-of-Function", "LOSS-OF-FUNCTION", "LCS6-variant", "DI842-843VM", "FLT3-ITD");
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> excludingEventMatchers) {
-        return new ExclusiveEventMatcher(excludingEventMatchers, new FusionPairClassifier());
+    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
+        return new CompositeEventMatcher(noMatchEventMatchers, new FusionPairClassifier());
     }
 
     private FusionPairClassifier() {

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
@@ -26,7 +26,7 @@ public class HotspotExtractor {
     public Map<Feature, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            if (feature.type() == EventType.HOTSPOT) {
+            if (feature.type() == MutationType.HOTSPOT) {
                 hotspotsPerFeature.put(feature,
                         proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                                 viccEntry.transcriptId(),

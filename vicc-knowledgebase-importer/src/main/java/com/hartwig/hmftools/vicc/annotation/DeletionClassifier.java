@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.classification.CompositeEventMatcher;
 import com.hartwig.hmftools.common.serve.classification.EventMatcher;
-import com.hartwig.hmftools.common.serve.classification.ExclusiveEventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,8 +19,8 @@ class DeletionClassifier implements EventMatcher {
     private static final Set<String> KEYWORDS_TO_SKIP_FOR_DELETION = Sets.newHashSet("exon", "EXON", "Exon", "Ex19", "inframe");
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> excludingEventMatchers) {
-        return new ExclusiveEventMatcher(excludingEventMatchers, new DeletionClassifier());
+    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
+        return new CompositeEventMatcher(noMatchEventMatchers, new DeletionClassifier());
     }
 
     private DeletionClassifier() {

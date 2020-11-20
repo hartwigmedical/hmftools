@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.classification.CompositeEventMatcher;
 import com.hartwig.hmftools.common.serve.classification.EventMatcher;
-import com.hartwig.hmftools.common.serve.classification.ExclusiveEventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,8 +23,8 @@ public class HotspotClassifier implements EventMatcher {
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> excludingEventMatchers) {
-        return new ExclusiveEventMatcher(excludingEventMatchers, new HotspotClassifier());
+    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
+        return new CompositeEventMatcher(noMatchEventMatchers, new HotspotClassifier());
     }
 
     private HotspotClassifier() {

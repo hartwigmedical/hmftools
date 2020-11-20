@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
@@ -33,7 +33,7 @@ public class CopyNumberExtractor {
         for (Feature feature : viccEntry.features()) {
 
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-            if (feature.type() == EventType.AMPLIFICATION) {
+            if (feature.type() == MutationType.AMPLIFICATION) {
                 if (canonicalTranscript == null) {
                     LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping amplification extraction!",
                             feature.geneSymbol());
@@ -42,7 +42,7 @@ public class CopyNumberExtractor {
                             ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.AMPLIFICATION).build());
                 }
 
-            } else if (feature.type() == EventType.DELETION) {
+            } else if (feature.type() == MutationType.DELETION) {
                 if (canonicalTranscript == null) {
                     LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping deletion extraction!",
                             feature.geneSymbol());

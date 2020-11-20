@@ -11,7 +11,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -342,7 +342,7 @@ public final class ViccExtractor {
 
                 if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null && geneLevelEventForFeature == null
                         && geneRangesForFeature == null && signatureForFeature == null) {
-                    if (feature.type() != EventType.COMBINED && feature.type() != EventType.COMPLEX) {
+                    if (feature.type() != MutationType.COMBINED && feature.type() != MutationType.COMPLEX) {
                         // For both combined and complex events we expect no genomic events to be derived.
                         featuresWithoutGenomicEvents.add(feature);
                     }
@@ -381,8 +381,8 @@ public final class ViccExtractor {
 
         LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
-            EventType type = feature.type();
-            if (type != EventType.UNKNOWN && type != EventType.COMBINED && type != EventType.COMPLEX) {
+            MutationType type = feature.type();
+            if (type != MutationType.UNKNOWN && type != MutationType.COMBINED && type != MutationType.COMPLEX) {
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
             }
         }

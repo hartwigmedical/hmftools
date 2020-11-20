@@ -15,22 +15,22 @@ public class EventClassifier {
     private static final Logger LOGGER = LogManager.getLogger(EventClassifier.class);
 
     @NotNull
-    private final Map<EventType, EventMatcher> matchers;
+    private final Map<MutationType, EventMatcher> matchers;
 
-    public EventClassifier(@NotNull final Map<EventType, EventMatcher> matchers) {
+    public EventClassifier(@NotNull final Map<MutationType, EventMatcher> matchers) {
         this.matchers = matchers;
     }
 
     @NotNull
-    public EventType determineType(@NotNull String gene, @NotNull String event) {
-        Map<EventType, Boolean> evaluations = Maps.newHashMap();
+    public MutationType determineType(@NotNull String gene, @NotNull String event) {
+        Map<MutationType, Boolean> evaluations = Maps.newHashMap();
 
-        for (Map.Entry<EventType, EventMatcher> entry : matchers.entrySet()){
+        for (Map.Entry<MutationType, EventMatcher> entry : matchers.entrySet()){
             evaluations.put(entry.getKey(), entry.getValue().matches(gene, event));
         }
 
-        Set<EventType> positiveTypes = Sets.newHashSet();
-        for (Map.Entry<EventType, Boolean> evaluation : evaluations.entrySet()) {
+        Set<MutationType> positiveTypes = Sets.newHashSet();
+        for (Map.Entry<MutationType, Boolean> evaluation : evaluations.entrySet()) {
             if (evaluation.getValue()) {
                 positiveTypes.add(evaluation.getKey());
             }
@@ -42,6 +42,6 @@ public class EventClassifier {
             return positiveTypes.iterator().next();
         }
 
-        return EventType.UNKNOWN;
+        return MutationType.UNKNOWN;
     }
 }

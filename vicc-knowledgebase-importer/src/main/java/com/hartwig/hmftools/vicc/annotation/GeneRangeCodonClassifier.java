@@ -3,16 +3,16 @@ package com.hartwig.hmftools.vicc.annotation;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.serve.classification.CompositeEventMatcher;
 import com.hartwig.hmftools.common.serve.classification.EventMatcher;
-import com.hartwig.hmftools.common.serve.classification.ExclusiveEventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
 class GeneRangeCodonClassifier implements EventMatcher {
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> excludingEventMatchers) {
-        return new ExclusiveEventMatcher(excludingEventMatchers, new GeneRangeCodonClassifier());
+    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
+        return new CompositeEventMatcher(noMatchEventMatchers, new GeneRangeCodonClassifier());
     }
 
     private GeneRangeCodonClassifier() {
