@@ -2,7 +2,7 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.annotation.EventType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.vicc.annotation.EventTypeExtractor;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 

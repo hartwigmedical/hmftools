@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.annotation;
+package com.hartwig.hmftools.common.serve.classification;
 
 public enum EventType {
     HOTSPOT,

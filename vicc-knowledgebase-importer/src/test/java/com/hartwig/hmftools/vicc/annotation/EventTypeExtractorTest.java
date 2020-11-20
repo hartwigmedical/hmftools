@@ -2,6 +2,7 @@ package com.hartwig.hmftools.vicc.annotation;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 
