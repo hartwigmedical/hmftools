@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class HotspotEnrichment implements SomaticEnrichment {
+public class HotspotEnrichment  {
 
     public static final int DISTANCE = 5;
     public static final String HOTSPOT_FLAG = "HOTSPOT";
@@ -28,7 +28,6 @@ public class HotspotEnrichment implements SomaticEnrichment {
     }
 
     @NotNull
-    @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
             @NotNull final VariantContext context) {
         if (isOnHotspot(context)) {

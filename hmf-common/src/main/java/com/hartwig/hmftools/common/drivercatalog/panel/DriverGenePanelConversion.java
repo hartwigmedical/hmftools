@@ -98,7 +98,7 @@ public class DriverGenePanelConversion {
     static Set<String> germlineGenes(@NotNull final List<DriverGene> genePanel) {
         final Set<String> actionableGenes = Sets.newHashSet();
         for (DriverGene driverGene : genePanel) {
-            if (driverGene.reportGermlineVariant() || driverGene.reportGermlineHotspot()) {
+            if (driverGene.reportGermline()) {
                 actionableGenes.add(driverGene.gene());
             }
 

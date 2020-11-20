@@ -14,7 +14,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class ClinvarEnrichment implements VariantContextEnrichment  {
+public class GermlineClinvarEnrichment implements VariantContextEnrichment  {
 
     private static final String CLNSIG = "CLNSIG";
     private static final String CLNSIGCONF = "CLNSIGCONF";
@@ -22,7 +22,7 @@ public class ClinvarEnrichment implements VariantContextEnrichment  {
 
     private final Consumer<VariantContext> consumer;
 
-    public ClinvarEnrichment(final Consumer<VariantContext> consumer) {
+    public GermlineClinvarEnrichment(final Consumer<VariantContext> consumer) {
         this.consumer = consumer;
     }
 

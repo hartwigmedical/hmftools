@@ -2,9 +2,9 @@ package com.hartwig.hmftools.common.variant.snpeff;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
@@ -21,7 +21,7 @@ public class SnpEffSummaryFactory {
 
     private final CanonicalAnnotation canonicalAnnotationFactory;
 
-    public SnpEffSummaryFactory(@NotNull final List<DriverGene> driverGenes, @NotNull final List<CanonicalTranscript> transcripts) {
+    public SnpEffSummaryFactory(@NotNull final Set<String> driverGenes, @NotNull final List<CanonicalTranscript> transcripts) {
         this.canonicalAnnotationFactory = new CanonicalAnnotation(driverGenes, transcripts);
     }
 

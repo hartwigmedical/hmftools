@@ -3,8 +3,11 @@ package com.hartwig.hmftools.common.variant.enrich;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
@@ -27,6 +30,7 @@ public class SnpEffEnrichmentTest {
 
     private final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create37();
     private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
+    private final Set<String> driverGenes = genePanel.driverGenes().stream().map(DriverGene::gene).collect(Collectors.toSet());
     private VCFCodec codec;
     private SnpEffEnrichment victim;
     private List<VariantContext> capture;
@@ -35,7 +39,7 @@ public class SnpEffEnrichmentTest {
     public void setup() {
         codec = createTestCodec();
         capture = Lists.newArrayList();
-        victim = new SnpEffEnrichment(genePanel.driverGenes(), transcripts, capture::add);
+        victim = new SnpEffEnrichment(driverGenes, transcripts, capture::add);
     }
 
     @NotNull
@@ -99,7 +103,8 @@ public class SnpEffEnrichmentTest {
 
     @Test
     public void testInframeIndel() {
-        final String template = "16\t50813650\t.\tCCTCCTGTGAACTCACT\tC\t143\tPASS\tANN=C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000311559|protein_coding|10/20|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1605/5371|1214/2871|405/956||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000569418|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1483/3513|1205/2862|402/953||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000540145|protein_coding|9/19|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1629/8713|1214/2871|405/956||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000564326|protein_coding|7/17|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1399/3259|1205/2862|402/953||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000566206|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1455/3104|1205/2733|402/910||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000398568|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1505/3536|1205/2862|402/953||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000427738|protein_coding|8/18|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1419/8503|1214/2871|405/956||,C|sequence_feature|MODERATE|CYLD|ENSG00000083799|modified-residue:phosphoserine|ENST00000311559|protein_coding|10/20|c.1214_1229delCTCCTGTGAACTCACT||||||,C|sequence_feature|MODERATE|CYLD|ENSG00000083799|modified-residue:phosphoserine|ENST00000398568|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT||||||,C|intron_variant|MODIFIER|CYLD|ENSG00000083799|transcript|ENST00000568704|protein_coding|5/13|c.1129+1799_1129+1814delCTCCTGTGAACTCACT||||||,C|non_coding_transcript_exon_variant|MODIFIER|CYLD|ENSG00000083799|transcript|ENST00000569891|retained_intron|9/12|n.1600_1615delCTCCTGTGAACTCACT||||||,C|non_coding_transcript_exon_variant|MODIFIER|CYLD|ENSG00000083799|transcript|ENST00000563629|retained_intron|6/10|n.941_956delCTCCTGTGAACTCACT||||||;LOF=(CYLD|ENSG00000083799|17|0.41);LPS=6910;MAPPABILITY=1;MH;%sPURPLE_AF=0.0871;PURPLE_CN=3.97;PURPLE_GERMLINE=AMPLIFICATION;PURPLE_MACN=0.00;PURPLE_VCN=0.346;RC=ACGGCGACCAC;RC_NM=2;REPORTED;REP_C=3;REP_S=CCT;SEC=CYLD,ENST00000427738,frameshift_variant,MISSENSE,c.1214_1229delCTCCTGTGAACTCACT,p.Pro405fs;SEW=CYLD,ENST00000311559,frameshift_variant,MISSENSE,1;SUBCL=0.140;TIER=PANEL;TNC=TCC\tGT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t0/0:36,1:0.026:38:1389,0:39,0:1,0,0,0,36,38:0:0,0,0:28,0,0,0,880,908:40\t0/1:119,6:0.047:128:4472,193:125,5:6,0,0,0,119,128:0:0,0,0:143,0,0,0,2582,2738:133";
+        final String template =
+                "16\t50813650\t.\tCCTCCTGTGAACTCACT\tC\t143\tPASS\tANN=C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000311559|protein_coding|10/20|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1605/5371|1214/2871|405/956||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000569418|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1483/3513|1205/2862|402/953||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000540145|protein_coding|9/19|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1629/8713|1214/2871|405/956||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000564326|protein_coding|7/17|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1399/3259|1205/2862|402/953||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000566206|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1455/3104|1205/2733|402/910||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000398568|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT|p.Pro402fs|1505/3536|1205/2862|402/953||,C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|ENST00000427738|protein_coding|8/18|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1419/8503|1214/2871|405/956||,C|sequence_feature|MODERATE|CYLD|ENSG00000083799|modified-residue:phosphoserine|ENST00000311559|protein_coding|10/20|c.1214_1229delCTCCTGTGAACTCACT||||||,C|sequence_feature|MODERATE|CYLD|ENSG00000083799|modified-residue:phosphoserine|ENST00000398568|protein_coding|8/18|c.1205_1220delCTCCTGTGAACTCACT||||||,C|intron_variant|MODIFIER|CYLD|ENSG00000083799|transcript|ENST00000568704|protein_coding|5/13|c.1129+1799_1129+1814delCTCCTGTGAACTCACT||||||,C|non_coding_transcript_exon_variant|MODIFIER|CYLD|ENSG00000083799|transcript|ENST00000569891|retained_intron|9/12|n.1600_1615delCTCCTGTGAACTCACT||||||,C|non_coding_transcript_exon_variant|MODIFIER|CYLD|ENSG00000083799|transcript|ENST00000563629|retained_intron|6/10|n.941_956delCTCCTGTGAACTCACT||||||;LOF=(CYLD|ENSG00000083799|17|0.41);LPS=6910;MAPPABILITY=1;MH;%sPURPLE_AF=0.0871;PURPLE_CN=3.97;PURPLE_GERMLINE=AMPLIFICATION;PURPLE_MACN=0.00;PURPLE_VCN=0.346;RC=ACGGCGACCAC;RC_NM=2;REPORTED;REP_C=3;REP_S=CCT;SEC=CYLD,ENST00000427738,frameshift_variant,MISSENSE,c.1214_1229delCTCCTGTGAACTCACT,p.Pro405fs;SEW=CYLD,ENST00000311559,frameshift_variant,MISSENSE,1;SUBCL=0.140;TIER=PANEL;TNC=TCC\tGT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t0/0:36,1:0.026:38:1389,0:39,0:1,0,0,0,36,38:0:0,0,0:28,0,0,0,880,908:40\t0/1:119,6:0.047:128:4472,193:125,5:6,0,0,0,119,128:0:0,0,0:143,0,0,0,2582,2738:133";
         final String line1 = String.format(template, "");
         final String line2 = String.format(template, "PII=1;");
 

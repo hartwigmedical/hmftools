@@ -2,8 +2,11 @@ package com.hartwig.hmftools.common.variant.enrich;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -26,11 +29,12 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
             @NotNull final IndexedFastaSequenceFile reference, @NotNull final PurityAdjuster purityAdjuster,
             @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final DriverGenePanel genePanel,
             @NotNull final List<CanonicalTranscript> transcripts, @NotNull final Consumer<VariantContext> consumer) {
-        this.clinvarEnrichment = new ClinvarEnrichment(consumer);
+        this.clinvarEnrichment = new GermlineClinvarEnrichment(consumer);
         this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, clinvarEnrichment);
-        this.snpEffEnrichment = new SnpEffEnrichment(genePanel.driverGenes(), transcripts, refGenomeEnrichment);
 
-
+        final Set<String> germlineGenes =
+                genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
+        this.snpEffEnrichment = new SnpEffEnrichment(germlineGenes, transcripts, refGenomeEnrichment);
         this.purityEnrichment =
                 new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, Collections.emptyList(), snpEffEnrichment);
     }

@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.clonality.PeakModel;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentPurple;
+import com.hartwig.hmftools.common.variant.enrich.SomaticVariantEnrichment;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
@@ -128,7 +128,7 @@ public class SomaticStream {
                 final Consumer<VariantContext> consumer =
                         microsatelliteIndels.andThen(driverConsumer).andThen(writer::add).andThen(rChartData);
 
-                final VariantContextEnrichmentPurple enricher = new VariantContextEnrichmentPurple(driverCatalogConfig.enabled(),
+                final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(driverCatalogConfig.enabled(),
                         somaticFitConfig.clonalityMaxPloidy(),
                         somaticFitConfig.clonalityBinWidth(),
                         commonConfig.version(),
