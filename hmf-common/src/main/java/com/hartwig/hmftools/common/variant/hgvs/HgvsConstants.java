@@ -9,4 +9,5 @@ public final class HgvsConstants {
 
     public static final String HGVS_FRAMESHIFT_SUFFIX = "fs";
     public static final String HGVS_FRAMESHIFT_SUFFIX_WITH_STOP_GAINED = "fs*";
+    public static final String HGVS_START_LOST = "*";
 }

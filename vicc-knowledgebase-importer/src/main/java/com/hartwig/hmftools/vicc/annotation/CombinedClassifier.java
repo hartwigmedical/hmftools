@@ -38,9 +38,9 @@ class CombinedClassifier implements EventMatcher {
             return false;
         } else if (event.trim().contains(" ")) {
             String[] parts = event.trim().replace("  ", " ").split(" ");
-            if (parts[0].contains("-")) {
+            if (FusionPairClassifier.isFusionPair(parts[0])) {
                 // Hotspots or amplifications on fusion genes are considered combined.
-                return HotspotClassifier.isValidProteinAnnotation(parts[1]) || AmplificationClassifier.isTypicalAmplification(parts[1]);
+                return HotspotClassifier.isProteinAnnotation(parts[1]) || AmplificationClassifier.isAmplification(parts[1]);
             }
         }
 

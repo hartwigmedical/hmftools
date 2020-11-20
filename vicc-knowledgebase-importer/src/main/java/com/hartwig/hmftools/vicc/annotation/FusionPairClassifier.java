@@ -30,10 +30,10 @@ class FusionPairClassifier implements EventMatcher {
             return false;
         }
 
-        return EXON_DEL_DUP_FUSION_PAIRS.contains(event) || isTypicalFusionPair(event);
+        return EXON_DEL_DUP_FUSION_PAIRS.contains(event) || isFusionPair(event);
     }
 
-    public static boolean isTypicalFusionPair(@NotNull String event) {
+    public static boolean isFusionPair(@NotNull String event) {
         String trimmedEvent = event.trim();
         String potentialFusion;
         if (trimmedEvent.contains(" ")) {

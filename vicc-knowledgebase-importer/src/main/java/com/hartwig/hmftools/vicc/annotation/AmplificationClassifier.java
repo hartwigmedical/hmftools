@@ -26,10 +26,10 @@ class AmplificationClassifier implements EventMatcher {
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        return isTypicalAmplification(event);
+        return isAmplification(event);
     }
 
-    public static boolean isTypicalAmplification(@NotNull String event) {
+    public static boolean isAmplification(@NotNull String event) {
         String[] words = event.split(" ");
         for (String keyword : AMPLIFICATION_KEYWORDS) {
             for (String word : words) {
