@@ -8,7 +8,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CurationKey {
+class CurationKey {
 
     @NotNull
     private final ViccSource source;
