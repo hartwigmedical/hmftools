@@ -2,7 +2,6 @@ package com.hartwig.hmftools.vicc.annotation;
 
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ProteinAnnotationExtractor {
@@ -12,7 +11,6 @@ public final class ProteinAnnotationExtractor {
 
     @NotNull
     public static String proteinAnnotation(@NotNull Feature feature) {
-        String featureName = feature.name();
-        return HotspotClassifier.isHotspot(featureName) ? HotspotClassifier.extractProteinAnnotation(featureName) : Strings.EMPTY;
+        return HotspotClassifier.extractProteinAnnotation(feature.name());
     }
 }

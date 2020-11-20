@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.vicc.annotation.EventTypeExtractor;
-import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -18,12 +17,6 @@ public abstract class Feature {
     @Value.Derived
     public EventType type() {
         return EventTypeExtractor.extractType(this);
-    }
-
-    @NotNull
-    @Value.Derived
-    public String proteinAnnotation() {
-        return ProteinAnnotationExtractor.proteinAnnotation(this);
     }
 
     @NotNull

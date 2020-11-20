@@ -7,42 +7,52 @@ import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_FRAMES
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_INSERTION;
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_RANGE_INDICATOR;
 
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.classification.EventClassifier;
+import com.hartwig.hmftools.common.serve.classification.ExclusiveEventClassifier;
 
 import org.jetbrains.annotations.NotNull;
 
-final class HotspotClassifier {
+public class HotspotClassifier implements EventClassifier {
 
     private static final Set<String> CAPITALIZED_STRINGS_TO_UNCAPITALIZE = Sets.newHashSet("DELINS", "DEL", "INS", "DUP", "FS");
 
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
+    @NotNull
+    public static EventClassifier create(@NotNull List<EventClassifier> excludingEventClassifiers) {
+        return new ExclusiveEventClassifier(excludingEventClassifiers, new HotspotClassifier());
+    }
+
     private HotspotClassifier() {
     }
 
-    public static boolean isHotspot(@NotNull String event) {
-        String proteinAnnotation = extractProteinAnnotation(event);
-
-        boolean isHotspot;
-        if (isFrameshift(proteinAnnotation)) {
-            isHotspot = isValidFrameshift(proteinAnnotation);
-        } else if (proteinAnnotation.contains(HGVS_RANGE_INDICATOR)) {
-            isHotspot = isValidRangeMutation(proteinAnnotation);
-        } else if (proteinAnnotation.contains(HGVS_DELETION + HGVS_INSERTION)) {
-            isHotspot = isValidComplexDeletionInsertion(proteinAnnotation);
-        } else if (proteinAnnotation.startsWith("*")) {
-            isHotspot = true;
-        } else {
-            isHotspot = isValidSingleCodonMutation(proteinAnnotation);
-        }
-
-        if (isHotspot) {
+    @Override
+    public boolean matches(@NotNull String gene, @NotNull String event) {
+        if (isTypicalProteinAnnotation(event)) {
             return !isHotspotOnFusionGene(event);
         }
 
         return false;
+    }
+
+    public static boolean isTypicalProteinAnnotation(@NotNull String event) {
+        String proteinAnnotation = extractProteinAnnotation(event);
+
+        if (isFrameshift(proteinAnnotation)) {
+            return isValidFrameshift(proteinAnnotation);
+        } else if (proteinAnnotation.contains(HGVS_RANGE_INDICATOR)) {
+            return isValidRangeMutation(proteinAnnotation);
+        } else if (proteinAnnotation.contains(HGVS_DELETION + HGVS_INSERTION)) {
+            return isValidComplexDeletionInsertion(proteinAnnotation);
+        } else if (proteinAnnotation.startsWith("*")) {
+            return true;
+        } else {
+            return isValidSingleCodonMutation(proteinAnnotation);
+        }
     }
 
     @NotNull
@@ -179,11 +189,11 @@ final class HotspotClassifier {
         return !newAminoAcid.equals("X") && !newAminoAcid.contains("/");
     }
 
-    private static boolean isHotspotOnFusionGene(@NotNull String featureName) {
-        String trimmedName = featureName.trim();
-        if (trimmedName.contains(" ")) {
-            String[] parts = trimmedName.split(" ");
-            return FusionClassifier.extractFusionEvent(parts[0]) != null;
+    private static boolean isHotspotOnFusionGene(@NotNull String event) {
+        String trimmedEvent = event.trim();
+        if (trimmedEvent.contains(" ")) {
+            String[] parts = trimmedEvent.split(" ");
+            return FusionPairClassifier.isTypicalFusionPair(parts[0]);
         }
         return false;
     }

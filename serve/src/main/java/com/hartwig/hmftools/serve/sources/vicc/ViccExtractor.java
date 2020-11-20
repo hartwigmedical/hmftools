@@ -41,6 +41,7 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
+import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -137,7 +138,7 @@ public final class ViccExtractor {
                             .addSources(toKnowledgebase(entry.source()))
                             .gene(feature.geneSymbol())
                             .transcript(entry.transcriptId())
-                            .proteinAnnotation(feature.proteinAnnotation())
+                            .proteinAnnotation(ProteinAnnotationExtractor.proteinAnnotation(feature))
                             .build());
                 }
             }

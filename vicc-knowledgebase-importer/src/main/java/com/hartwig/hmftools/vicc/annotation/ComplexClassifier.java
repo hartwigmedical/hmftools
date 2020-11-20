@@ -5,14 +5,19 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ComplexClassifier {
+class ComplexClassifier implements EventClassifier {
 
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = createComplexEventMap();
 
-    public static boolean isComplexEvent(@NotNull String gene, @NotNull String event) {
+    public ComplexClassifier() {
+    }
+
+    @Override
+    public boolean matches(@NotNull String gene, @NotNull String event) {
         Set<String> entriesForGene = COMPLEX_EVENTS_PER_GENE.get(gene);
         if (entriesForGene != null && entriesForGene.contains(event.trim())) {
             return true;

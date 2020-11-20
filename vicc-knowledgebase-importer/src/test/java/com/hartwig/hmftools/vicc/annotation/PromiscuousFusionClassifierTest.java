@@ -8,13 +8,14 @@ import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 
 import org.junit.Test;
 
-public class SignatureClassifierTest {
+public class PromiscuousFusionClassifierTest {
 
     @Test
-    public void canAssessWhetherEventIsSignature() {
-        EventClassifier classifier = SignatureClassifier.create(Lists.newArrayList());
+    public void canAssessWhetherEventIsPromiscuousFusion() {
+        EventClassifier classifier = PromiscuousFusionClassifier.create(Lists.newLinkedList());
 
-        assertTrue(classifier.matches("-", "Microsatellite Instability-High"));
+        assertTrue(classifier.matches("BRAF", "BRAF fusion"));
+        assertTrue(classifier.matches("ROS1", "ROS1 REARRANGEMENT"));
 
         assertFalse(classifier.matches("BRAF", "V600E"));
     }

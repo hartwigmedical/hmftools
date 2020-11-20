@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.vicc.annotation;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 
@@ -12,11 +15,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class EventTypeExtractor {
+public class EventTypeExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(EventTypeExtractor.class);
 
-    private EventTypeExtractor() {
+    @NotNull
+    private static final Map<EventType, EventClassifier> MATCHERS = buildMatcherMap();
+
+    public EventTypeExtractor() {
     }
 
     @NotNull
@@ -34,18 +40,9 @@ public final class EventTypeExtractor {
     private static EventType extractType(@NotNull String gene, @NotNull String event) {
         Map<EventType, Boolean> evaluations = Maps.newHashMap();
 
-        evaluations.put(EventType.HOTSPOT, HotspotClassifier.isHotspot(event));
-        evaluations.put(EventType.GENE_RANGE_CODON, GeneRangeClassifier.isGeneRangeCodonEvent(event));
-        evaluations.put(EventType.GENE_RANGE_EXON, GeneRangeClassifier.isGeneRangeExonEvent(gene, event));
-        evaluations.put(EventType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(gene, event));
-        evaluations.put(EventType.AMPLIFICATION, CopyNumberClassifier.isAmplification(gene, event));
-        evaluations.put(EventType.DELETION, CopyNumberClassifier.isDeletion(gene, event));
-        evaluations.put(EventType.FUSION_PAIR, FusionClassifier.isFusionPair(gene, event));
-        evaluations.put(EventType.PROMISCUOUS_FUSION, FusionClassifier.isPromiscuousFusion(gene, event));
-        evaluations.put(EventType.FUSION_PAIR_AND_GENE_RANGE_EXON, CombinedClassifier.isFusionPairAndGeneRangeExon(gene, event));
-        evaluations.put(EventType.SIGNATURE, SignatureClassifier.isSignature(event));
-        evaluations.put(EventType.COMBINED, CombinedClassifier.isCombinedEvent(gene, event));
-        evaluations.put(EventType.COMPLEX, ComplexClassifier.isComplexEvent(gene, event));
+        for (Map.Entry<EventType, EventClassifier> entry : MATCHERS.entrySet()){
+            evaluations.put(entry.getKey(), entry.getValue().matches(gene, event));
+        }
 
         Set<EventType> positiveTypes = Sets.newHashSet();
         for (Map.Entry<EventType, Boolean> evaluation : evaluations.entrySet()) {
@@ -61,5 +58,31 @@ public final class EventTypeExtractor {
         }
 
         return EventType.UNKNOWN;
+    }
+
+    @NotNull
+    private static Map<EventType, EventClassifier> buildMatcherMap() {
+        EventClassifier complexClassifier = new ComplexClassifier();
+        EventClassifier combinedClassifier = new CombinedClassifier();
+        EventClassifier fusionPairAndExonRangeClassifier = new FusionPairAndExonRangeClassifier();
+
+        List<EventClassifier> firstTierEventClassifiers =
+                Lists.newArrayList(complexClassifier, combinedClassifier, fusionPairAndExonRangeClassifier);
+
+        Map<EventType, EventClassifier> map = Maps.newHashMap();
+        map.put(EventType.HOTSPOT, HotspotClassifier.create(firstTierEventClassifiers));
+        map.put(EventType.GENE_RANGE_CODON, GeneRangeCodonClassifier.create(firstTierEventClassifiers));
+        map.put(EventType.GENE_RANGE_EXON, GeneRangeExonClassifier.create(firstTierEventClassifiers));
+        map.put(EventType.FUSION_PAIR_AND_GENE_RANGE_EXON, fusionPairAndExonRangeClassifier);
+        map.put(EventType.GENE_LEVEL, GeneLevelClassifier.create(firstTierEventClassifiers));
+        map.put(EventType.AMPLIFICATION, AmplificationClassifier.create(firstTierEventClassifiers));
+        map.put(EventType.DELETION, DeletionClassifier.create(firstTierEventClassifiers));
+        map.put(EventType.FUSION_PAIR, FusionPairClassifier.create(firstTierEventClassifiers));
+        map.put(EventType.PROMISCUOUS_FUSION, PromiscuousFusionClassifier.create(firstTierEventClassifiers));
+        map.put(EventType.SIGNATURE, SignatureClassifier.create(firstTierEventClassifiers));
+        map.put(EventType.COMBINED, combinedClassifier);
+        map.put(EventType.COMPLEX, complexClassifier);
+
+        return map;
     }
 }

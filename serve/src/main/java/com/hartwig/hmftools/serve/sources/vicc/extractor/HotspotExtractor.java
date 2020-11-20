@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
+import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -29,7 +30,7 @@ public class HotspotExtractor {
                 hotspotsPerFeature.put(feature,
                         proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                                 viccEntry.transcriptId(),
-                                feature.proteinAnnotation()));
+                                ProteinAnnotationExtractor.proteinAnnotation(feature)));
             }
         }
 

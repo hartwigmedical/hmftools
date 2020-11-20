@@ -9,20 +9,27 @@ import com.hartwig.hmftools.common.serve.classification.ExclusiveEventClassifier
 
 import org.jetbrains.annotations.NotNull;
 
-class SignatureClassifier implements EventClassifier {
+public class PromiscuousFusionClassifier implements EventClassifier {
 
-    private static final Set<String> SIGNATURES = Sets.newHashSet("Microsatellite Instability-High");
+    private static final Set<String> FUSION_KEYWORDS =
+            Sets.newHashSet("Fusion", "fusion", "FUSION", "Fusions", "FUSIONS", "REARRANGEMENT", "rearrange");
 
     @NotNull
     public static EventClassifier create(@NotNull List<EventClassifier> excludingEventClassifiers) {
-        return new ExclusiveEventClassifier(excludingEventClassifiers, new SignatureClassifier());
+        return new ExclusiveEventClassifier(excludingEventClassifiers, new PromiscuousFusionClassifier());
     }
 
-    private SignatureClassifier() {
+    private PromiscuousFusionClassifier() {
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        return SIGNATURES.contains(event);
+        for (String keyword : FUSION_KEYWORDS) {
+            if (event.contains(keyword)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

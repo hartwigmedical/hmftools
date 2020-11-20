@@ -8,13 +8,14 @@ import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 
 import org.junit.Test;
 
-public class SignatureClassifierTest {
+public class DeletionClassifierTest {
 
     @Test
-    public void canAssessWhetherEventIsSignature() {
-        EventClassifier classifier = SignatureClassifier.create(Lists.newArrayList());
+    public void canAssessWhetherEventIsDeletion() {
+        EventClassifier classifier = DeletionClassifier.create(Lists.newArrayList());
 
-        assertTrue(classifier.matches("-", "Microsatellite Instability-High"));
+        assertTrue(classifier.matches("CDKN2A", "CDKN2A del"));
+        assertTrue(classifier.matches("CDKN2A", "CDKN2A dec exp"));
 
         assertFalse(classifier.matches("BRAF", "V600E"));
     }

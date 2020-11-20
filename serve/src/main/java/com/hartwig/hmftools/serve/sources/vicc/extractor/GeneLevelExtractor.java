@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
-import com.hartwig.hmftools.vicc.annotation.GeneRangeClassifier;
+import com.hartwig.hmftools.vicc.annotation.GeneLevelClassifier;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -71,7 +71,7 @@ public class GeneLevelExtractor {
     @VisibleForTesting
     static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String eventDescription = feature.description().split(" ", 2)[1].trim();
-        if (GeneRangeClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription) || feature.provenanceRule() != null) {
+        if (GeneLevelClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription) || feature.provenanceRule() != null) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
@@ -82,7 +82,7 @@ public class GeneLevelExtractor {
                             } else {
                                 return GeneLevelEvent.ACTIVATION;
                             }
-                        } else if (GeneRangeClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+                        } else if (GeneLevelClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
                             return GeneLevelEvent.ACTIVATION;
                         }
                     } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
@@ -92,16 +92,16 @@ public class GeneLevelExtractor {
                             } else {
                                 return GeneLevelEvent.INACTIVATION;
                             }
-                        } else if (GeneRangeClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+                        } else if (GeneLevelClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
                             return GeneLevelEvent.INACTIVATION;
                         }
                     }
                 }
             }
             LOGGER.warn("Gene {} is not present in driver catalog in gene level extractor", feature.geneSymbol());
-        } else if (GeneRangeClassifier.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        } else if (GeneLevelClassifier.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (GeneRangeClassifier.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        } else if (GeneLevelClassifier.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             return GeneLevelEvent.ACTIVATION;
         } else {
             // LOGGER.warn("Unknown event {}", feature);

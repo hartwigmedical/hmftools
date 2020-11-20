@@ -8,13 +8,14 @@ import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 
 import org.junit.Test;
 
-public class SignatureClassifierTest {
+public class AmplificationClassifierTest {
 
     @Test
-    public void canAssessWhetherEventIsSignature() {
-        EventClassifier classifier = SignatureClassifier.create(Lists.newArrayList());
+    public void canAssessWhetherEventIsAmplification() {
+        EventClassifier classifier = AmplificationClassifier.create(Lists.newArrayList());
 
-        assertTrue(classifier.matches("-", "Microsatellite Instability-High"));
+        assertTrue(classifier.matches("ALK", "ALK over exp"));
+        assertTrue(classifier.matches("ALK", "ALK  amp"));
 
         assertFalse(classifier.matches("BRAF", "V600E"));
     }
