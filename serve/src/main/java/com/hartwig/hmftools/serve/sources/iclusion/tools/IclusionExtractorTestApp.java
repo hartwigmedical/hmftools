@@ -66,8 +66,10 @@ public class IclusionExtractorTestApp {
         List<IclusionTrial> trials = IclusionTrialFile.read(iclusionTrialTsv);
         LOGGER.info(" Read {} trials from {}", trials.size(), iclusionTrialTsv);
 
-        List<IclusionTrial> filteredTrials = IclusionFilter.run(trials);
+        IclusionFilter filter = new IclusionFilter();
+        List<IclusionTrial> filteredTrials = filter.run(trials);
         LOGGER.info("  {} trials remaining after filtering", filteredTrials.size());
+        filter.reportUnusedFilterEntries();
 
         ExtractionOutput output = new IclusionExtractor().extractFromIclusionTrials(filteredTrials);
         LOGGER.info("Generated {}", output);

@@ -1,31 +1,21 @@
-package com.hartwig.hmftools.serve.sources.vicc.filter;
+package com.hartwig.hmftools.serve.sources.iclusion.filter;
 
 import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.jetbrains.annotations.NotNull;
 
 class FilterKey {
 
     @NotNull
-    private final ViccSource source;
-    @NotNull
     private final String gene;
     @NotNull
     private final String name;
 
-    public FilterKey(@NotNull final ViccSource source, @NotNull final String gene, @NotNull final String name) {
-        this.source = source;
+    public FilterKey(@NotNull final String gene, @NotNull final String name) {
         this.gene = gene;
         this.name = name;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    ViccSource source() {
-        return source;
     }
 
     @NotNull
@@ -49,16 +39,16 @@ class FilterKey {
             return false;
         }
         final FilterKey filterKey = (FilterKey) o;
-        return source == filterKey.source && gene.equals(filterKey.gene) && name.equals(filterKey.name);
+        return gene.equals(filterKey.gene) && name.equals(filterKey.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(source, gene, name);
+        return Objects.hash(gene, name);
     }
 
     @Override
     public String toString() {
-        return "FilterKey{" + "source=" + source + ", gene='" + gene + '\'' + ", name='" + name + '\'' + '}';
+        return "FilterKey{" + "gene='" + gene + '\'' + ", name='" + name + '\'' + '}';
     }
 }
