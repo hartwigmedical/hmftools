@@ -89,10 +89,4 @@ public class FusionExtractor {
         }
         return fusionsPerFeature;
     }
-
-    @NotNull
-    public static Integer extractExonNumber(@NotNull String featureName) {
-        String exonNumberAsString = featureName.split(" ")[1];
-        return Integer.valueOf(exonNumberAsString);
-    }
 }

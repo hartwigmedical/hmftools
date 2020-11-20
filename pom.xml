@@ -58,13 +58,13 @@
 
         <patient-db.version>3.51</patient-db.version>
         <id-generator.version>2.6</id-generator.version>
-        <sage.version>2.4</sage.version>
+        <sage.version>2.5</sage.version>
         <amber.version>3.5</amber.version>
         <cobalt.version>1.11</cobalt.version>
         <purple.version>2.51</purple.version>
         <bam-slicer.version>1.5</bam-slicer.version>
         <bachelor.version>1.12</bachelor.version>
-        <gripss.version>1.8</gripss.version>
+        <gripss.version>1.9</gripss.version>
         <sv-linx.version>1.12</sv-linx.version>
         <health-checker.version>3.2</health-checker.version>
         <patient-reporter.version>7.18</patient-reporter.version>

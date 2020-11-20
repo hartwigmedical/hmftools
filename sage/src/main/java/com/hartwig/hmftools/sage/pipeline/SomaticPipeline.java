@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounters;
@@ -38,11 +39,12 @@ public class SomaticPipeline implements SageVariantPipeline {
     SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final ReferenceSequenceFile refGenome,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
             @NotNull final List<GenomeRegion> highConfidenceRegions,
-            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
+            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
+            @NotNull final Coverage coverage) {
         this.config = config;
         this.executor = executor;
         this.refGenome = refGenome;
-        this.candidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions);
+        this.candidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage);
         this.evidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
     }
 

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -10,6 +11,7 @@ import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
@@ -27,7 +29,6 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneDepthFile;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
-import com.hartwig.hmftools.sage.pipeline.CoveragePipeline;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationSupplier;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
@@ -96,9 +97,20 @@ public class SageApplication implements AutoCloseable {
         LOGGER.info("Writing to file: {}", config.outputFile());
     }
 
+    @NotNull
+    private Coverage createCoverage() {
+        Set<String> samples = Sets.newHashSet();
+        if (config.panelCoverage()) {
+            samples.addAll(config.tumor());
+        }
+        return new Coverage(samples, panelWithoutHotspots.values());
+
+    }
+
     private void run() throws InterruptedException, ExecutionException, IOException {
 
         long timeStamp = System.currentTimeMillis();
+        final Coverage coverage = createCoverage();
 
         final Map<String, QualityRecalibrationMap> recalibrationMap = qualityRecalibrationSupplier.get();
         final SAMSequenceDictionary dictionary = dictionary();
@@ -106,7 +118,7 @@ public class SageApplication implements AutoCloseable {
             final String contig = samSequenceRecord.getSequenceName();
             if (config.chromosomes().isEmpty() || config.chromosomes().contains(contig)) {
                 if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
-                    try (final ChromosomePipeline pipeline = createChromosomePipeline(contig, recalibrationMap)) {
+                    try (final ChromosomePipeline pipeline = createChromosomePipeline(contig, coverage, recalibrationMap)) {
                         pipeline.process();
                     }
                     System.gc();
@@ -116,14 +128,10 @@ public class SageApplication implements AutoCloseable {
 
         //                createChromosomePipeline("10", recalibrationMap).process(130404941, 130405950);
 
-        if (config.panelCoverage()) {
-            LOGGER.info("Calculating panel coverage");
-            CoveragePipeline coveragePipeline = new CoveragePipeline(config, refGenome, panelWithoutHotspots, executorService);
-            Coverage coverage = coveragePipeline.process();
-            for (String sample : coverage.samples()) {
-                String filename = config.geneCoverageFile(sample);
-                GeneDepthFile.write(filename, coverage.depth(sample));
-            }
+        // Write out coverage
+        for (String sample : coverage.samples()) {
+            String filename = config.geneCoverageFile(sample);
+            GeneDepthFile.write(filename, coverage.depth(sample));
         }
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
@@ -138,8 +146,8 @@ public class SageApplication implements AutoCloseable {
         return dictionary;
     }
 
-    private ChromosomePipeline createChromosomePipeline(@NotNull final String contig,
-            Map<String, QualityRecalibrationMap> qualityRecalibrationMap) throws IOException {
+    private ChromosomePipeline createChromosomePipeline(@NotNull final String contig, @NotNull final Coverage coverage,
+            @NotNull Map<String, QualityRecalibrationMap> qualityRecalibrationMap) throws IOException {
         final Chromosome chromosome =
                 HumanChromosome.contains(contig) ? HumanChromosome.fromString(contig) : MitochondrialChromosome.fromString(contig);
         return new ChromosomePipeline(contig,
@@ -149,6 +157,7 @@ public class SageApplication implements AutoCloseable {
                 panelWithHotspots.get(chromosome),
                 highConfidence.get(chromosome),
                 qualityRecalibrationMap,
+                coverage,
                 vcf::write);
     }
 

@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
@@ -30,14 +31,14 @@ public class CandidateStage {
 
     public CandidateStage(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
-            @NotNull final List<GenomeRegion> highConfidenceRegions) {
+            @NotNull final List<GenomeRegion> highConfidenceRegions, final Coverage coverage) {
 
         this.config = config;
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
         this.highConfidenceRegions = highConfidenceRegions;
-        this.candidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, samSlicerFactory, refGenome);
+        this.candidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, samSlicerFactory, refGenome, coverage);
     }
 
     @NotNull

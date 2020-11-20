@@ -47,6 +47,9 @@ final class CurationFactory {
         FEATURE_MAPPINGS.put(cgi("C15orf55", null, "BRD4-C15orf55 fusion"), curation("BRD4", "BRD4-NUTM1 fusion"));
         FEATURE_MAPPINGS.put(cgi("MLL", null, "MLL fusion"), curation("KMT2A", "KMT2A fusion"));
 
+        // These genes are on synonym genes
+        FEATURE_MAPPINGS.put(cgi("MLL2", null, "MLL2 oncogenic mutation"), curation("KMT2D", "KMT2D oncogenic mutation"));
+
         // Improve for consistency
         FEATURE_MAPPINGS.put(cgi("MET", null, "MET (Y1230C;Y1235D)"), curation("MET", "MET (Y1230C,Y1235D)"));
     }
@@ -66,6 +69,10 @@ final class CurationFactory {
         // Fusions where gene is a synonym of our gene
         FEATURE_MAPPINGS.put(civic("FGFR1", null, "ZNF198-FGFR1"), curation("ZMYM2", "ZMYM2-FGFR1"));
         FEATURE_MAPPINGS.put(civic("KMT2A", null, "MLL-MLLT3"), curation("KMT2A", "KMT2A-MLLT3"));
+
+        // These genes are on synonym genes
+        FEATURE_MAPPINGS.put(civic("MRE11", "ENST00000323929", "LOSS"), curation("MRE11A", "LOSS"));
+        FEATURE_MAPPINGS.put(civic("MRE11", "ENST00000323929", "FRAMESHIFT MUTATION"), curation("MRE11A", "FRAMESHIFT MUTATION"));
 
         // Fusions are not correct
         FEATURE_MAPPINGS.put(civic("ABL1", "ENST00000318560", "BCR-ABL G398R"), curation("BCR", "BCR-ABL1 G398R"));
@@ -179,6 +186,7 @@ final class CurationFactory {
         FEATURE_MAPPINGS.put(oncoKb("RUNX1", "ENST00000300305", "RUNX1-EVI1 Fusion"), curation("RUNX1", "RUNX1-MECOM Fusion"));
         FEATURE_MAPPINGS.put(oncoKb("FGFR1", "ENST00000425967", "CEP110-FGFR1 Fusion"), curation("CNTRL", "CNTRL-FGFR1 Fusion"));
         FEATURE_MAPPINGS.put(oncoKb("FGFR2", "ENST00000358487", "FGFR2-KIAA1967 Fusion"), curation("FGFR2", "FGFR2-CCAR2 Fusion"));
+        FEATURE_MAPPINGS.put(oncoKb("MYC", "ENST00000377970", "IGL-MYC Fusion"), curation("IGLC6", "IGLC6-MYC Fusion"));
 
         // These are inconsistent or improperly aligned variants.
         FEATURE_MAPPINGS.put(oncoKb("BRAF", "ENST00000288602", "T599insTT"), curation("BRAF", "T599_V600insTT"));
@@ -193,6 +201,9 @@ final class CurationFactory {
         // Fusions that we don't know what gene they are on
         FEATURE_BLACKLIST.add(oncoKb("NKX2-1", "ENST00000354822", "TRA-NKX2-1 Fusion"));
         FEATURE_BLACKLIST.add(oncoKb("NTRK1", "ENST00000524377", "Delta-NTRK1 Fusion"));
+        FEATURE_BLACKLIST.add(oncoKb("CCND1", "ENST00000227507", "IGH-CCND1 Fusion"));
+        FEATURE_BLACKLIST.add(oncoKb("MYC", "ENST00000377970", "IGK-MYC Fusion"));
+        FEATURE_BLACKLIST.add(oncoKb("NKX2-1", "ENST00000354822", "TRB-NKX2-1 Fusion"));
 
         // Variants are unlikely as they span multiple exons (and hence are more fusions than inframes)
         FEATURE_BLACKLIST.add(oncoKb("PDGFRA", "ENST00000257290", "E311_K312del"));

@@ -67,11 +67,11 @@ public class CoveragePipeline {
             if (config.chromosomes().isEmpty() || config.chromosomes().contains(contig)) {
                 for (GenomeRegion region : partition.partition(contig)) {
 
-                    for (int i = 0; i < config.tumor().size(); i++) {
-                        final String sample = config.tumor().get(i);
-                        final String sampleBam = config.tumorBam().get(i);
-                        futures.add(submit(sample, sampleBam, region));
-                    }
+//                    for (int i = 0; i < config.tumor().size(); i++) {
+//                        final String sample = config.tumor().get(i);
+//                        final String sampleBam = config.tumorBam().get(i);
+//                        futures.add(submit(sample, sampleBam, region));
+//                    }
 
                     for (int i = 0; i < config.reference().size(); i++) {
                         final String sample = config.reference().get(i);

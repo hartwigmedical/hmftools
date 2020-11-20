@@ -19,13 +19,6 @@ public class DriverGenePanelConversion {
 
     public static void main(String[] args) throws IOException {
         String templateFile = "/Users/jon/hmf/resources/DriverGenePanel.template.txt";
-        String outputFile19 = "/Users/jon/hmf/resources/DriverGenePanel.hg19.tsv";
-        String outputFile38 = "/Users/jon/hmf/resources/DriverGenePanel.hg38.tsv";
-
-        String clinvarFile19 = "/Users/jon/hmf/resources/clinvar.vcf.hg19.gz";
-        String clinvarFile38 = "/Users/jon/hmf/resources/clinvar.vcf.hg19.gz";
-        String germlineHotspot19 = "/Users/jon/hmf/resources/KnownHotspots.germline.hg19.vcf.gz";
-        String germlineHotspot38 = "/Users/jon/hmf/resources/KnownHotspots.germline.hg38.vcf.gz";
 
         DndsGeneNameMap geneNameMap = new DndsGeneNameMap();
         List<DriverGene> inputDriverGenes = DriverGeneFile.read(templateFile);
@@ -43,36 +36,45 @@ public class DriverGenePanelConversion {
             }
         }
 
-        // Sort
-        Collections.sort(inputDriverGenes);
-        Collections.sort(outputDriverGenes);
+        process(DriverGenePanelAssembly.HG19, inputDriverGenes);
+        process(DriverGenePanelAssembly.HG38, outputDriverGenes);
+
+    }
+
+    private static void process(@NotNull final DriverGenePanelAssembly assembly, @NotNull final List<DriverGene> driverGenes) throws IOException {
+
+        final String resourceDir = "/Users/jon/hmf/resources";
+        final String extension = assembly.toString().toLowerCase();
+        final String driverGeneFile = String.format("%s/DriverGenePanel.%s.tsv", resourceDir, extension);
+        final String somaticActionableFile = String.format("%s/ActionableCodingPanel.somatic.%s.bed", resourceDir, extension);
+        final String germlineActionableFile = String.format("%s/ActionableCodingPanel.germline.%s.bed", resourceDir, extension);
+        final String germlineHotspotFile = String.format("%s/KnownHotspots.germline.%s.vcf.gz", resourceDir, extension);
+        final String clinvarFile = String.format("%s/clinvar.vcf.%s.gz", resourceDir, extension);
+
+        Collections.sort(driverGenes);
 
         // Validate
-        DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, inputDriverGenes);
-        DriverGenePanelFactory.create(DriverGenePanelAssembly.HG38, outputDriverGenes);
+        DriverGenePanelFactory.create(assembly, driverGenes);
 
         // Write out driver gene panel
-        DriverGeneFile.write(outputFile19, inputDriverGenes);
-        DriverGeneFile.write(outputFile38, outputDriverGenes);
+        DriverGeneFile.write(driverGeneFile, driverGenes);
 
-        final Set<String> germline19Genes = germlineGenes(inputDriverGenes);
-        final Set<String> germline38Genes = germlineGenes(outputDriverGenes);
-
-        final Set<String> somatic19Genes = somaticGenes(inputDriverGenes);
-        final Set<String> somatic38Genes = somaticGenes(outputDriverGenes);
+        final Set<String> germlineGenes = germlineGenes(driverGenes);
+        final Set<String> somaticGenes = somaticGenes(driverGenes);
+        final Set<String> allGenes = Sets.newHashSet();
+        allGenes.addAll(germlineGenes);
+        allGenes.addAll(somaticGenes);
 
         // Write out actionable bed files
-        final List<HmfTranscriptRegion> hg19Transcripts = HmfGenePanelSupplier.allGeneList37();
-        final List<HmfTranscriptRegion> hg38Transcripts = HmfGenePanelSupplier.allGeneList38();
-        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.somatic.hg19.bed", somatic19Genes, hg19Transcripts);
-        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.germline.hg19.bed", germline19Genes, hg19Transcripts);
-        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.somatic.hg38.bed", somatic38Genes, hg38Transcripts);
-        createBedFiles("/Users/jon/hmf/resources/ActionableCodingPanel.germline.hg38.bed", germline38Genes, hg38Transcripts);
+        final List<HmfTranscriptRegion> transcripts =
+                assembly.equals(DriverGenePanelAssembly.HG19) ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
+
+        // Write out driver gene panel
+        createBedFiles(somaticActionableFile, somaticGenes, transcripts);
+        createBedFiles(germlineActionableFile, allGenes, transcripts);
 
         // Write out germline hotspot files
-        new GermlineHotspotVCF("", germline19Genes).process(clinvarFile19, germlineHotspot19);
-        new GermlineHotspotVCF("chr", germline38Genes).process(clinvarFile38, germlineHotspot38);
-
+        new GermlineHotspotVCF(germlineGenes).process(clinvarFile, germlineHotspotFile);
     }
 
     private static void createBedFiles(String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {

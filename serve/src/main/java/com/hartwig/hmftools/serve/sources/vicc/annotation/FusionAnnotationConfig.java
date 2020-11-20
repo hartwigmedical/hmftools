@@ -57,10 +57,6 @@ public final class FusionAnnotationConfig {
                 .build();
         fusionExonMap.put("EGFRvV", fusionEGFRvV);
 
-        // TODO: This does not belong here.
-        KnownFusionPair fusionTRBWithNKX21 = ImmutableKnownFusionPair.builder().geneUp("TRB").geneDown("NKX2-1").build();
-        fusionExonMap.put("TRB-NKX2-1 Fusion", fusionTRBWithNKX21);
-
         KnownFusionPair fusionKITExon11 = ImmutableKnownFusionPair.builder()
                 .geneUp("KIT")
                 .minExonUp(11)

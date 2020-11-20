@@ -130,7 +130,8 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
-- Upcoming
+- [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.9)
+  - Warn if malformed BEALN field in input
   - Only include specified samples in VCF output
   - `tumor` argument is now mandatory
   - `reference` argument is still optional but excluding it will run in [tumor-only mode](#tumor-only-mode)

@@ -553,12 +553,12 @@ For example, because of the `AG` microhomology at this (hg19) location, the foll
 ```
 
 ## 9. Gene Panel Coverage
-To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each sample. 
+To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each tumor sample. 
 This can be disabled by setting the `panel_coverage` parameter to `false`.
 
 The file shows the number of bases with 0 to 30 reads and then buckets reads in intervals of 10 up to 100+.
 
-For a reference sample with approximately 30x depth this may appear as: 
+For a sample with approximately 30x depth this may appear as: 
 
 ```
 gene	0	1	2	...	27	28	29	30-39	40-49	50-59	60-69	70-79	80-89	90-99	100+
