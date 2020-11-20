@@ -23,7 +23,7 @@ final class CombinedClassifier {
         FUSION_PAIR_AND_EXON_RANGES_PER_GENE.put("MET", metSet);
 
         COMBINED_EVENTS_PER_GENE.put("EGFR", Sets.newHashSet("Ex19 del L858R"));
-        COMBINED_EVENTS_PER_GENE.put("BRAF", Sets.newHashSet("p61BRAF-V600E"));
+        COMBINED_EVENTS_PER_GENE.put("BRAF", Sets.newHashSet("p61BRAF-V600E", "V600E AMPLIFICATION"));
     }
 
     private CombinedClassifier() {
