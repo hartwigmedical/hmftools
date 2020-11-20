@@ -16,6 +16,7 @@ import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.sources.ExtractionOutput;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
+import com.hartwig.hmftools.serve.sources.iclusion.curation.IclusionCurator;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
 
 import org.apache.logging.log4j.Level;
@@ -71,7 +72,12 @@ public class IclusionExtractorTestApp {
         LOGGER.info("  {} trials remaining after filtering", filteredTrials.size());
         filter.reportUnusedFilterEntries();
 
-        ExtractionOutput output = new IclusionExtractor().extractFromIclusionTrials(filteredTrials);
+        LOGGER.info(" Starting iClusion trial curation");
+        IclusionCurator curator = new IclusionCurator();
+        List<IclusionTrial> curatedTrials = curator.run(filteredTrials);
+        curator.reportUnusedCurationEntries();
+
+        ExtractionOutput output = new IclusionExtractor().extractFromIclusionTrials(curatedTrials);
         LOGGER.info("Generated {}", output);
     }
 }

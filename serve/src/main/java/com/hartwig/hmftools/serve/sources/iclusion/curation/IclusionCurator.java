@@ -56,7 +56,7 @@ public class IclusionCurator {
             }
         }
 
-        LOGGER.debug("Found {} unused iClusion curation entries. {} keys have been requested against {} entries",
+        LOGGER.debug("Found {} unused iClusion curation entries. {} keys have been requested against {} curation entries",
                 unusedEntryCount,
                 evaluatedCurationEntries.size(),
                 CurationFactory.MUTATION_MAPPINGS.size());
@@ -69,7 +69,7 @@ public class IclusionCurator {
             }
         }
 
-        LOGGER.debug("Found {} unused iClusion curation genes. {} genes have been requested against {} genes",
+        LOGGER.debug("Found {} unused iClusion curation genes. {} genes have been requested against {} curation genes",
                 unusedGeneCount,
                 evaluatedGenes.size(),
                 CurationFactory.GENE_MAPPINGS.size());
@@ -88,13 +88,13 @@ public class IclusionCurator {
             String mappedName = CurationFactory.MUTATION_MAPPINGS.get(entry).name();
             String mappedGene = CurationFactory.MUTATION_MAPPINGS.get(entry).gene();
 
-            LOGGER.debug("Mapping mutation '{} on {}' to '{} on {}'", entry.name(), entry.gene(), mappedName, mappedGene);
+            LOGGER.debug("Mapping mutation '{}' on '{}' to '{}' on '{}'", entry.name(), entry.gene(), mappedName, mappedGene);
             curatedMutation = ImmutableIclusionMutation.builder().from(curatedMutation).gene(mappedGene).name(mappedName).build();
         }
 
         if (CurationFactory.GENE_MAPPINGS.containsKey(gene)) {
             String mappedGene = CurationFactory.GENE_MAPPINGS.get(gene);
-            LOGGER.debug("Mapping mutation '{} on {}' to '{} on {}'", entry.name(), entry.gene(), entry.name(), mappedGene);
+            LOGGER.debug("Mapping mutation '{}' on '{}' to '{}' on '{}'", entry.name(), entry.gene(), entry.name(), mappedGene);
             curatedMutation = ImmutableIclusionMutation.builder().from(curatedMutation).gene(mappedGene).build();
         }
 
