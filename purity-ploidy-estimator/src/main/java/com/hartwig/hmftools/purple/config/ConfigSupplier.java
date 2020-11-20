@@ -67,6 +67,7 @@ public class ConfigSupplier {
         RefGenomeData.addOptions(options);
         ChartConfig.addOptions(options);
         DriverCatalogConfig.addOptions(options);
+        GermlineConfig.addOptions(options);
     }
 
     private final CommonConfig commonConfig;
@@ -79,6 +80,7 @@ public class ConfigSupplier {
     private final FitScoreConfig fitScoreConfig;
     private final RefGenomeData refGenomeData;
     private final DriverCatalogConfig driverCatalogConfig;
+    private final GermlineConfig germlineConfig;
 
     private final CobaltData cobaltData;
     private final AmberData amberData;
@@ -93,8 +95,7 @@ public class ConfigSupplier {
         if (isTumorOnly) {
             if (cmd.hasOption(REF_SAMPLE)) {
                 throw new ParseException(REF_SAMPLE + " not supported in tumor only mode");
-            }
-            else {
+            } else {
                 refSample = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
             }
         } else {
@@ -151,6 +152,7 @@ public class ConfigSupplier {
         amberData = AmberData.createAmberData(commonConfig);
         cobaltData = CobaltData.createCobaltData(commonConfig, amberData.gender());
         somaticFitConfig = SomaticFitConfig.createSomaticConfig(cmd, amberData);
+        germlineConfig = GermlineConfig.createGermlineConfig(cmd);
     }
 
     @NotNull
@@ -208,8 +210,14 @@ public class ConfigSupplier {
         return smoothingConfig;
     }
 
+    @NotNull
     public DriverCatalogConfig driverCatalogConfig() {
         return driverCatalogConfig;
+    }
+
+    @NotNull
+    public GermlineConfig germlineConfig() {
+        return germlineConfig;
     }
 
     @NotNull
