@@ -5,7 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.classification.EventClassifier;
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -14,7 +14,7 @@ public class GeneRangeCodonClassifierTest {
 
     @Test
     public void canAssessWhetherEventIsGeneRangeCodon() {
-        EventClassifier classifier = GeneRangeCodonClassifier.create(Lists.newArrayList());
+        EventMatcher classifier = GeneRangeCodonClassifier.create(Lists.newArrayList());
 
         assertTrue(classifier.matches("GNAS", "GNAS (R201)"));
         assertTrue(classifier.matches("EGFR", "E709X"));

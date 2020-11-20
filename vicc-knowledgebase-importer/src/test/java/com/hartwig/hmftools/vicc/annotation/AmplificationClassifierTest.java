@@ -4,7 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.classification.EventClassifier;
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.junit.Test;
 
@@ -12,7 +12,7 @@ public class AmplificationClassifierTest {
 
     @Test
     public void canAssessWhetherEventIsAmplification() {
-        EventClassifier classifier = AmplificationClassifier.create(Lists.newArrayList());
+        EventMatcher classifier = AmplificationClassifier.create(Lists.newArrayList());
 
         assertTrue(classifier.matches("ALK", "ALK over exp"));
         assertTrue(classifier.matches("ALK", "ALK  amp"));

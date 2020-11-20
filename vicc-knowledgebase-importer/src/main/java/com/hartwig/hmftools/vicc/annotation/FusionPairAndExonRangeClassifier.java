@@ -5,11 +5,11 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.EventClassifier;
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-class FusionPairAndExonRangeClassifier implements EventClassifier {
+class FusionPairAndExonRangeClassifier implements EventMatcher {
 
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXON_RANGES_PER_GENE = Maps.newHashMap();
 

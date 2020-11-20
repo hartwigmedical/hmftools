@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.EventClassifier;
-import com.hartwig.hmftools.common.serve.classification.ExclusiveEventClassifier;
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
+import com.hartwig.hmftools.common.serve.classification.ExclusiveEventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GeneLevelClassifier implements EventClassifier {
+public class GeneLevelClassifier implements EventMatcher {
 
     public static final Set<String> GENERIC_GENE_LEVEL_KEYWORDS = Sets.newHashSet("MUTATION",
             "mutant",
@@ -42,8 +42,8 @@ public class GeneLevelClassifier implements EventClassifier {
     private static final String EXON_KEYWORD = "exon";
 
     @NotNull
-    public static EventClassifier create(@NotNull List<EventClassifier> excludingEventClassifiers) {
-        return new ExclusiveEventClassifier(excludingEventClassifiers, new GeneLevelClassifier());
+    public static EventMatcher create(@NotNull List<EventMatcher> excludingEventMatchers) {
+        return new ExclusiveEventMatcher(excludingEventMatchers, new GeneLevelClassifier());
     }
 
     private GeneLevelClassifier() {

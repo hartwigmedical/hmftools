@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.EventClassifier;
-import com.hartwig.hmftools.common.serve.classification.ExclusiveEventClassifier;
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
+import com.hartwig.hmftools.common.serve.classification.ExclusiveEventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-class GeneRangeExonClassifier implements EventClassifier {
+class GeneRangeExonClassifier implements EventMatcher {
 
     private static final String EXON_KEYWORD = "exon";
     private static final Set<String> EXON_RANGE_EXACT_TERMS = Sets.newHashSet("RARE EX 18-21 MUT");
@@ -18,8 +18,8 @@ class GeneRangeExonClassifier implements EventClassifier {
             Sets.newHashSet("deletion", "insertion", "proximal", "mutation", "splice site insertion", "frameshift");
 
     @NotNull
-    public static EventClassifier create(@NotNull List<EventClassifier> excludingEventClassifiers) {
-        return new ExclusiveEventClassifier(excludingEventClassifiers, new GeneRangeExonClassifier());
+    public static EventMatcher create(@NotNull List<EventMatcher> excludingEventMatchers) {
+        return new ExclusiveEventMatcher(excludingEventMatchers, new GeneRangeExonClassifier());
     }
 
     private GeneRangeExonClassifier() {

@@ -4,7 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.classification.EventClassifier;
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.junit.Test;
 
@@ -12,7 +12,7 @@ public class GeneRangeExonClassifierTest {
 
     @Test
     public void canAssessWhetherEventIsGeneRangeExon() {
-        EventClassifier classifier = GeneRangeExonClassifier.create(Lists.newArrayList());
+        EventMatcher classifier = GeneRangeExonClassifier.create(Lists.newArrayList());
 
         assertTrue(classifier.matches("EGFR", "RARE EX 18-21 MUT"));
         assertTrue(classifier.matches("EGFR", "EGFR exon 19 deletions"));

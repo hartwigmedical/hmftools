@@ -5,11 +5,11 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.EventClassifier;
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
-class ComplexClassifier implements EventClassifier {
+class ComplexClassifier implements EventMatcher {
 
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = createComplexEventMap();
 

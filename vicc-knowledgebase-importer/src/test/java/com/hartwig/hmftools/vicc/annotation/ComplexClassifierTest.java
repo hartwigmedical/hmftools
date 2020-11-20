@@ -3,7 +3,7 @@ package com.hartwig.hmftools.vicc.annotation;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.serve.classification.EventClassifier;
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ public class ComplexClassifierTest {
 
     @Test
     public void canAssessWhetherEventIsComplexEvent() {
-        EventClassifier classifier = new ComplexClassifier();
+        EventMatcher classifier = new ComplexClassifier();
 
         assertTrue(classifier.matches("VHL", "Splicing alteration (c.464-2A>G)"));
         assertTrue(classifier.matches("KRAS", "KRAS ."));
