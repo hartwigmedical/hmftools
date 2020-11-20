@@ -7,29 +7,28 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ComplexClassifier {
 
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = createComplexEventMap();
 
-    public static boolean isComplexEvent(@NotNull String featureName, @Nullable String gene) {
+    public static boolean isComplexEvent(@NotNull String gene, @NotNull String event) {
         Set<String> entriesForGene = COMPLEX_EVENTS_PER_GENE.get(gene);
-        if (entriesForGene != null && entriesForGene.contains(featureName.trim())) {
+        if (entriesForGene != null && entriesForGene.contains(event.trim())) {
             return true;
-        } else if (featureName.trim().endsWith(".")) {
+        } else if (event.trim().endsWith(".")) {
             // Not sure what a dot means!
             return true;
-        } else if (featureName.split("\\*").length > 2) {
+        } else if (event.split("\\*").length > 2) {
             // Some hotspots contain multiple stop codons.
             return true;
-        } else if (featureName.contains("/")) {
+        } else if (event.contains("/")) {
             // Some hotspots appear as V600E/K
-            return !featureName.toLowerCase().contains("exon");
+            return !event.toLowerCase().contains("exon");
         } else {
             // Some frameshifts also change the amino acid itself in the position of the frameshift.
-            int fsLocation = featureName.indexOf("fs");
-            return fsLocation > 1 && !isInteger(featureName.substring(fsLocation - 1, fsLocation));
+            int fsLocation = event.indexOf("fs");
+            return fsLocation > 1 && !isInteger(event.substring(fsLocation - 1, fsLocation));
         }
     }
 

@@ -11,25 +11,25 @@ public class GeneRangeClassifierTest {
 
     @Test
     public void canClassifyGeneLevelEvents() {
-        assertTrue(GeneRangeClassifier.isGeneLevelEvent("AKT1 act mut", "AKT1"));
+        assertTrue(GeneRangeClassifier.isGeneLevelEvent("AKT1", "AKT1 act mut"));
         assertTrue(GeneRangeClassifier.isGeneLevelEvent("AKT1", "AKT1"));
-        assertTrue(GeneRangeClassifier.isGeneLevelEvent("positive", "AKT1"));
-        assertTrue(GeneRangeClassifier.isGeneLevelEvent("biallelic inactivation", "TP53"));
+        assertTrue(GeneRangeClassifier.isGeneLevelEvent("ATK1", "positive"));
+        assertTrue(GeneRangeClassifier.isGeneLevelEvent("TP53", "biallelic inactivation"));
 
-        assertFalse(GeneRangeClassifier.isGeneLevelEvent("3' UTR MUTATION", "KIT"));
-        assertFalse(GeneRangeClassifier.isGeneLevelEvent("Exon 12 mutation", "NPM"));
-        assertFalse(GeneRangeClassifier.isGeneLevelEvent("V600E", "BRAF"));
+        assertFalse(GeneRangeClassifier.isGeneLevelEvent("KIT", "3' UTR MUTATION"));
+        assertFalse(GeneRangeClassifier.isGeneLevelEvent("NPM", "Exon 12 mutation"));
+        assertFalse(GeneRangeClassifier.isGeneLevelEvent("BRAF", "V600E"));
     }
 
     @Test
     public void canClassifyGeneRangeExonEvents() {
-        assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("RARE EX 18-21 MUT", "EGFR"));
-        assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("EGFR exon 19 deletions", "EGFR"));
-        assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("EXON 12 MUTATION", "AXSL1"));
+        assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("EGFR", "RARE EX 18-21 MUT"));
+        assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("EGFR", "EGFR exon 19 deletions"));
+        assertTrue(GeneRangeClassifier.isGeneRangeExonEvent("AXSL1", "EXON 12 MUTATION"));
 
-        assertFalse(GeneRangeClassifier.isGeneRangeExonEvent("3' EXON DELETION", "EPCAM"));
-        assertFalse(GeneRangeClassifier.isGeneRangeExonEvent("EGFR exon 19 deletions + amp", "EGFR"));
-        assertFalse(GeneRangeClassifier.isGeneRangeExonEvent("V600E", "BRAF"));
+        assertFalse(GeneRangeClassifier.isGeneRangeExonEvent("EPCAM", "3' EXON DELETION"));
+        assertFalse(GeneRangeClassifier.isGeneRangeExonEvent("EGFR", "EGFR exon 19 deletions + amp"));
+        assertFalse(GeneRangeClassifier.isGeneRangeExonEvent("BRAF", "V600E"));
     }
 
     @Test

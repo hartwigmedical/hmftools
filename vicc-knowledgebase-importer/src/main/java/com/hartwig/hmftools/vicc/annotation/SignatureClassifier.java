@@ -13,7 +13,7 @@ final class SignatureClassifier {
     private SignatureClassifier() {
     }
 
-    public static boolean isSignature(@NotNull String featureName) {
-        return SIGNATURES.contains(featureName);
+    public static boolean isSignature(@NotNull String event) {
+        return SIGNATURES.contains(event);
     }
 }

@@ -9,23 +9,23 @@ public class FusionClassifierTest {
 
     @Test
     public void canAssessWhetherFeatureIsFusionPair() {
-        assertTrue(FusionClassifier.isFusionPair("ABL1-BCR fusion", "ABL1"));
-        assertTrue(FusionClassifier.isFusionPair("EML4-ALK", "ALK"));
-        assertTrue(FusionClassifier.isFusionPair("VIII", "EGFR"));
-        assertTrue(FusionClassifier.isFusionPair("TRB-NKX2-1 Fusion", "NKX2-1"));
+        assertTrue(FusionClassifier.isFusionPair("ABL1", "ABL1-BCR fusion"));
+        assertTrue(FusionClassifier.isFusionPair("ALK", "EML4-ALK"));
+        assertTrue(FusionClassifier.isFusionPair("EGFR", "VIII"));
+        assertTrue(FusionClassifier.isFusionPair("NKX2-1", "TRB-NKX2-1 Fusion"));
 
-        assertFalse(FusionClassifier.isFusionPair("BRAF amp", "BRAF"));
-        assertFalse(FusionClassifier.isFusionPair("AR-V7", "AR"));
-        assertFalse(FusionClassifier.isFusionPair("BRAF fusion + mutation", "BRAF"));
-        assertFalse(FusionClassifier.isFusionPair("V600E", "BRAF"));
+        assertFalse(FusionClassifier.isFusionPair("BRAF", "BRAF amp"));
+        assertFalse(FusionClassifier.isFusionPair("AR", "AR-V7"));
+        assertFalse(FusionClassifier.isFusionPair("BRAF", "BRAF fusion + mutation"));
+        assertFalse(FusionClassifier.isFusionPair("BRAF", "V600E"));
     }
 
     @Test
     public void canAssessWhetherFeatureIsPromiscuousFusion() {
-        assertTrue(FusionClassifier.isPromiscuousFusion("BRAF fusion", "BRAF"));
-        assertTrue(FusionClassifier.isPromiscuousFusion("ROS1 REARRANGEMENT", "ROS1"));
+        assertTrue(FusionClassifier.isPromiscuousFusion("BRAF", "BRAF fusion"));
+        assertTrue(FusionClassifier.isPromiscuousFusion("ROS1", "ROS1 REARRANGEMENT"));
 
-        assertFalse(FusionClassifier.isPromiscuousFusion("BRAF fusion + mutation", "BRAF"));
-        assertFalse(FusionClassifier.isPromiscuousFusion("V600E", "BRAF"));
+        assertFalse(FusionClassifier.isPromiscuousFusion("BRAF", "BRAF fusion + mutation"));
+        assertFalse(FusionClassifier.isPromiscuousFusion("BRAF", "V600E"));
     }
 }

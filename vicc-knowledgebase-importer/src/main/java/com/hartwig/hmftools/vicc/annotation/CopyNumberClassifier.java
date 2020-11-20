@@ -24,31 +24,31 @@ final class CopyNumberClassifier {
     private CopyNumberClassifier() {
     }
 
-    public static boolean isAmplification(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isCombinedEvent(featureName, gene)) {
+    public static boolean isAmplification(@NotNull String gene, @NotNull String event) {
+        if (CombinedClassifier.isCombinedEvent(gene, event)) {
             return false;
         }
 
-        return extractAmplificationDeletionType(featureName) == CopyNumberType.AMPLIFICATION;
+        return extractAmplificationDeletionType(event) == CopyNumberType.AMPLIFICATION;
     }
 
-    public static boolean isDeletion(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isCombinedEvent(featureName, gene)) {
+    public static boolean isDeletion(@NotNull String gene, @NotNull String event) {
+        if (CombinedClassifier.isCombinedEvent(gene, event)) {
             return false;
         } else {
             for (String skipTerm : KEYWORDS_TO_SKIP_FOR_DELETION) {
-                if (featureName.contains(skipTerm)) {
+                if (event.contains(skipTerm)) {
                     return false;
                 }
             }
 
-            return extractAmplificationDeletionType(featureName) == CopyNumberType.DELETION;
+            return extractAmplificationDeletionType(event) == CopyNumberType.DELETION;
         }
     }
 
     @Nullable
-    private static CopyNumberType extractAmplificationDeletionType(@NotNull String featureName) {
-        String[] words = featureName.split(" ");
+    private static CopyNumberType extractAmplificationDeletionType(@NotNull String event) {
+        String[] words = event.split(" ");
         for (String keyword : AMPLIFICATION_KEYWORDS) {
             for (String word : words) {
                 if (word.equals(keyword)) {
@@ -66,13 +66,13 @@ final class CopyNumberClassifier {
         }
 
         for (String keyPhrase : AMPLIFICATION_KEY_PHRASES) {
-            if (featureName.contains(keyPhrase)) {
+            if (event.contains(keyPhrase)) {
                 return CopyNumberType.AMPLIFICATION;
             }
         }
 
         for (String keyPhrase : DELETION_KEY_PHRASES) {
-            if (featureName.contains(keyPhrase)) {
+            if (event.contains(keyPhrase)) {
                 return CopyNumberType.DELETION;
             }
         }

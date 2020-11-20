@@ -14,63 +14,63 @@ final class FusionClassifier {
 
     private static final Set<String> EXON_DEL_DUP_FUSION_PAIRS = Sets.newHashSet("EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD");
 
-    private static final Set<String> FEATURE_NAMES_TO_SKIP =
+    private static final Set<String> EVENTS_TO_SKIP =
             Sets.newHashSet("AR-V7", "Gain-of-Function", "LOSS-OF-FUNCTION", "LCS6-variant", "DI842-843VM", "FLT3-ITD");
 
     private FusionClassifier() {
     }
 
-    public static boolean isFusionPair(@NotNull String featureName, @Nullable String gene) {
-        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) && !CombinedClassifier.isCombinedEvent(featureName, gene)) {
-            return extractFusionEvent(featureName) == FusionEvent.FUSION_PAIR;
+    public static boolean isFusionPair(@NotNull String gene, @NotNull String event) {
+        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(gene, event) && !CombinedClassifier.isCombinedEvent(gene, event)) {
+            return extractFusionEvent(event) == FusionEvent.FUSION_PAIR;
         }
 
         return false;
     }
 
-    public static boolean isPromiscuousFusion(@NotNull String featureName, @Nullable String gene) {
-        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) && !CombinedClassifier.isCombinedEvent(featureName, gene)) {
-            return extractFusionEvent(featureName) == FusionEvent.PROMISCUOUS_FUSION;
+    public static boolean isPromiscuousFusion(@NotNull String gene, @NotNull String event) {
+        if (!CombinedClassifier.isFusionPairAndGeneRangeExon(gene, event) && !CombinedClassifier.isCombinedEvent(gene, event)) {
+            return extractFusionEvent(event) == FusionEvent.PROMISCUOUS_FUSION;
         }
 
         return false;
     }
 
     @Nullable
-    public static FusionEvent extractFusionEvent(@NotNull String featureName) {
-        if (FEATURE_NAMES_TO_SKIP.contains(featureName)) {
+    public static FusionEvent extractFusionEvent(@NotNull String event) {
+        if (EVENTS_TO_SKIP.contains(event)) {
             return null;
         }
 
-        if (EXON_DEL_DUP_FUSION_PAIRS.contains(featureName) || isTypicalFusionPair(featureName)) {
+        if (EXON_DEL_DUP_FUSION_PAIRS.contains(event) || isTypicalFusionPair(event)) {
             return FusionEvent.FUSION_PAIR;
-        } else if (hasFusionKeyword(featureName)) {
+        } else if (hasFusionKeyword(event)) {
             return FusionEvent.PROMISCUOUS_FUSION;
         }
 
         return null;
     }
 
-    private static boolean hasFusionKeyword(@NotNull String featureName) {
+    private static boolean hasFusionKeyword(@NotNull String event) {
         for (String keyword : FUSION_KEYWORDS) {
-            if (featureName.contains(keyword)) {
+            if (event.contains(keyword)) {
                 return true;
             }
         }
         return false;
     }
 
-    private static boolean isTypicalFusionPair(@NotNull String featureName) {
-        String trimmedFeature = featureName.trim();
+    private static boolean isTypicalFusionPair(@NotNull String event) {
+        String trimmedEvent = event.trim();
         String potentialFusion;
-        if (trimmedFeature.contains(" ")) {
-            String[] parts = trimmedFeature.split(" ");
+        if (trimmedEvent.contains(" ")) {
+            String[] parts = trimmedEvent.split(" ");
             if (!parts[1].equalsIgnoreCase("fusion")) {
                 return false;
             }
             potentialFusion = parts[0];
         } else {
-            potentialFusion = trimmedFeature;
+            potentialFusion = trimmedEvent;
         }
 
         if (potentialFusion.contains("-")) {

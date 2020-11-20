@@ -9,21 +9,21 @@ public class CopyNumberClassifierTest {
 
     @Test
     public void canAssessWhetherFeatureIsAmplification() {
-        assertTrue(CopyNumberClassifier.isAmplification("ALK over exp", "ALK"));
-        assertTrue(CopyNumberClassifier.isAmplification("ALK  amp", "ALK"));
+        assertTrue(CopyNumberClassifier.isAmplification("ALK", "ALK over exp"));
+        assertTrue(CopyNumberClassifier.isAmplification("ALK", "ALK  amp"));
 
-        assertFalse(CopyNumberClassifier.isAmplification("MET amplification + mutation", "MET"));
-        assertFalse(CopyNumberClassifier.isAmplification("NPM1-ALK  amp", "ALK"));
-        assertFalse(CopyNumberClassifier.isAmplification("V600E", "BRAF"));
+        assertFalse(CopyNumberClassifier.isAmplification("MET", "MET amplification + mutation"));
+        assertFalse(CopyNumberClassifier.isAmplification("ALK", "NPM1-ALK  amp"));
+        assertFalse(CopyNumberClassifier.isAmplification("BRAF", "V600E"));
     }
 
     @Test
     public void canAssessWhetherFeatureIsDeletion() {
-        assertTrue(CopyNumberClassifier.isDeletion("CDKN2A del", "CDKN2A"));
-        assertTrue(CopyNumberClassifier.isDeletion("CDKN2A dec exp", "CDKN2A"));
+        assertTrue(CopyNumberClassifier.isDeletion("CDKN2A", "CDKN2A del"));
+        assertTrue(CopyNumberClassifier.isDeletion("CDKN2A", "CDKN2A dec exp"));
 
-        assertFalse(CopyNumberClassifier.isDeletion("MET deletion + mutation", "MET"));
-        assertFalse(CopyNumberClassifier.isDeletion("EGFR inframe deletion", "EGFR"));
-        assertFalse(CopyNumberClassifier.isDeletion("V600E", "BRAF"));
+        assertFalse(CopyNumberClassifier.isDeletion("MET", "MET deletion + mutation"));
+        assertFalse(CopyNumberClassifier.isDeletion("EGFR", "EGFR inframe deletion"));
+        assertFalse(CopyNumberClassifier.isDeletion("BRAF", "V600E"));
     }
 }

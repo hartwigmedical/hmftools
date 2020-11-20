@@ -6,7 +6,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class GeneRangeClassifier {
 
@@ -47,49 +46,49 @@ public final class GeneRangeClassifier {
     private GeneRangeClassifier() {
     }
 
-    public static boolean isGeneLevelEvent(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isCombinedEvent(featureName, gene) || ComplexClassifier.isComplexEvent(featureName, gene)) {
+    public static boolean isGeneLevelEvent(@NotNull String gene, @NotNull String event) {
+        if (CombinedClassifier.isCombinedEvent(gene, event) || ComplexClassifier.isComplexEvent(gene, event)) {
             return false;
         }
 
-        if (featureName.toLowerCase().contains(EXON_KEYWORD)) {
+        if (event.toLowerCase().contains(EXON_KEYWORD)) {
             return false;
         }
 
         for (String keyword : GENERIC_GENE_LEVEL_KEYWORDS) {
-            if (featureName.contains(keyword)) {
+            if (event.contains(keyword)) {
                 return true;
             }
         }
 
         for (String keyword : INACTIVATING_GENE_LEVEL_KEYWORDS) {
-            if (featureName.contains(keyword)) {
+            if (event.contains(keyword)) {
                 return true;
             }
         }
 
         for (String keyword : ACTIVATING_GENE_LEVEL_KEYWORDS) {
-            if (featureName.contains(keyword)) {
+            if (event.contains(keyword)) {
                 return true;
             }
         }
 
-        return featureName.trim().equals(gene);
+        return event.trim().equals(gene);
     }
 
-    public static boolean isGeneRangeExonEvent(@NotNull String featureName, @Nullable String gene) {
-        if (CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene) || CombinedClassifier.isCombinedEvent(featureName, gene)
-                || ComplexClassifier.isComplexEvent(featureName, gene)) {
+    public static boolean isGeneRangeExonEvent(@NotNull String gene, @NotNull String event) {
+        if (CombinedClassifier.isFusionPairAndGeneRangeExon(gene, event) || CombinedClassifier.isCombinedEvent(gene, event)
+                || ComplexClassifier.isComplexEvent(gene, event)) {
             return false;
         }
 
-        if (EXON_RANGE_EXACT_TERMS.contains(featureName)) {
+        if (EXON_RANGE_EXACT_TERMS.contains(event)) {
             return true;
         } else {
-            String lowerCaseFeatureName = featureName.toLowerCase();
-            if (lowerCaseFeatureName.contains(EXON_KEYWORD)) {
+            String lowerCaseEvent = event.toLowerCase();
+            if (lowerCaseEvent.contains(EXON_KEYWORD)) {
                 for (String keyword : EXON_RANGE_KEYWORDS) {
-                    if (lowerCaseFeatureName.contains(keyword)) {
+                    if (lowerCaseEvent.contains(keyword)) {
                         return true;
                     }
                 }
@@ -99,42 +98,42 @@ public final class GeneRangeClassifier {
         return false;
     }
 
-    public static boolean isGeneRangeCodonEvent(@NotNull String featureName) {
-        String proteinAnnotation = HotspotClassifier.extractProteinAnnotation(featureName);
+    public static boolean isGeneRangeCodonEvent(@NotNull String event) {
+        String proteinAnnotation = HotspotClassifier.extractProteinAnnotation(event);
 
         return isValidSingleCodonRange(proteinAnnotation);
     }
 
-    private static boolean isValidSingleCodonRange(@NotNull String featureName) {
+    private static boolean isValidSingleCodonRange(@NotNull String event) {
         // Feature codon ranges occasionally come with parentheses
-        String strippedFeature = featureName.replace("(", "").replace(")", "");
+        String strippedEvent = event.replace("(", "").replace(")", "");
 
         // Features are expected to look something like V600 (1 char - N digits)
-        if (strippedFeature.length() < 2) {
+        if (strippedEvent.length() < 2) {
             return false;
         }
 
-        if (!Character.isLetter(strippedFeature.charAt(0))) {
+        if (!Character.isLetter(strippedEvent.charAt(0))) {
             return false;
         }
 
-        if (!Character.isDigit(strippedFeature.charAt(1))) {
+        if (!Character.isDigit(strippedEvent.charAt(1))) {
             return false;
         }
 
         // Some characters are definitely not single codon ranges
-        if (strippedFeature.contains("*") || strippedFeature.contains("/") || strippedFeature.contains("fs")
-                || strippedFeature.contains(",")) {
+        if (strippedEvent.contains("*") || strippedEvent.contains("/") || strippedEvent.contains("fs")
+                || strippedEvent.contains(",")) {
             return false;
         }
 
-        // Some features contain multiple digit sequences.
-        if (countDigitSequences(strippedFeature) > 1) {
+        // Some events contain multiple digit sequences.
+        if (countDigitSequences(strippedEvent) > 1) {
             return false;
         }
 
         // Codon range should end with X or with a digit!
-        return Character.isDigit(strippedFeature.charAt(strippedFeature.length() - 1)) || strippedFeature.endsWith("X");
+        return Character.isDigit(strippedEvent.charAt(strippedEvent.length() - 1)) || strippedEvent.endsWith("X");
     }
 
     @VisibleForTesting

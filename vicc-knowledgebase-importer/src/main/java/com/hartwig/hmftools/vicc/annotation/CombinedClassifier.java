@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 final class CombinedClassifier {
 
@@ -29,34 +28,34 @@ final class CombinedClassifier {
     private CombinedClassifier() {
     }
 
-    public static boolean isFusionPairAndGeneRangeExon(@NotNull String featureName, @Nullable String gene) {
+    public static boolean isFusionPairAndGeneRangeExon(@NotNull String gene, @NotNull String event) {
         Set<String> entries = FUSION_PAIR_AND_EXON_RANGES_PER_GENE.get(gene);
         if (entries != null) {
-            return entries.contains(featureName);
+            return entries.contains(event);
         }
 
         return false;
     }
 
-    public static boolean isCombinedEvent(@NotNull String featureName, @Nullable String gene) {
+    public static boolean isCombinedEvent(@NotNull String gene, @NotNull String event) {
         Set<String> entriesForGene = COMBINED_EVENTS_PER_GENE.get(gene);
         if (entriesForGene != null) {
-            if (entriesForGene.contains(featureName)) {
+            if (entriesForGene.contains(event)) {
                 return true;
             }
         }
 
-        if ((featureName.contains(",") || featureName.contains(";")) && !featureName.toLowerCase().contains(" or ")) {
+        if ((event.contains(",") || event.contains(";")) && !event.toLowerCase().contains(" or ")) {
             return true;
-        } else if (featureName.contains("+") && !featureName.toLowerCase().contains("c.") && !featureName.contains(">")) {
+        } else if (event.contains("+") && !event.toLowerCase().contains("c.") && !event.contains(">")) {
             return true;
-        } else if (featureName.contains("/")) {
+        } else if (event.contains("/")) {
             return false;
-        } else if (featureName.trim().contains(" ")) {
-            String[] parts = featureName.trim().replace("  ", " ").split(" ");
+        } else if (event.trim().contains(" ")) {
+            String[] parts = event.trim().replace("  ", " ").split(" ");
             if (parts[0].contains("-")) {
                 // Hotspots or amplifications on fusion genes are considered combined.
-                return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(parts[1], gene);
+                return HotspotClassifier.isHotspot(parts[1]) || CopyNumberClassifier.isAmplification(gene, parts[1]);
             }
         }
 

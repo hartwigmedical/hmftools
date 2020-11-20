@@ -10,7 +10,6 @@ import com.hartwig.hmftools.vicc.datamodel.Feature;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class FeatureTypeExtractor {
 
@@ -21,25 +20,31 @@ public final class FeatureTypeExtractor {
 
     @NotNull
     public static FeatureType extractType(@NotNull Feature feature) {
-        return extractType(feature.name(), feature.geneSymbol());
+        String gene = feature.geneSymbol();
+        if (gene == null) {
+            LOGGER.debug("Skipping extraction for '{}' since gene is missing", feature.name());
+            return FeatureType.UNKNOWN;
+        } else {
+            return extractType(gene, feature.name());
+        }
     }
 
     @NotNull
-    private static FeatureType extractType(@NotNull String featureName, @Nullable String gene) {
+    private static FeatureType extractType(@NotNull String gene, @NotNull String event) {
         Map<FeatureType, Boolean> evaluations = Maps.newHashMap();
 
-        evaluations.put(FeatureType.HOTSPOT, HotspotClassifier.isHotspot(featureName));
-        evaluations.put(FeatureType.GENE_RANGE_CODON, GeneRangeClassifier.isGeneRangeCodonEvent(featureName));
-        evaluations.put(FeatureType.GENE_RANGE_EXON, GeneRangeClassifier.isGeneRangeExonEvent(featureName, gene));
-        evaluations.put(FeatureType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(featureName, gene));
-        evaluations.put(FeatureType.AMPLIFICATION, CopyNumberClassifier.isAmplification(featureName, gene));
-        evaluations.put(FeatureType.DELETION, CopyNumberClassifier.isDeletion(featureName, gene));
-        evaluations.put(FeatureType.FUSION_PAIR, FusionClassifier.isFusionPair(featureName, gene));
-        evaluations.put(FeatureType.PROMISCUOUS_FUSION, FusionClassifier.isPromiscuousFusion(featureName, gene));
-        evaluations.put(FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON, CombinedClassifier.isFusionPairAndGeneRangeExon(featureName, gene));
-        evaluations.put(FeatureType.SIGNATURE, SignatureClassifier.isSignature(featureName));
-        evaluations.put(FeatureType.COMBINED, CombinedClassifier.isCombinedEvent(featureName, gene));
-        evaluations.put(FeatureType.COMPLEX, ComplexClassifier.isComplexEvent(featureName, gene));
+        evaluations.put(FeatureType.HOTSPOT, HotspotClassifier.isHotspot(event));
+        evaluations.put(FeatureType.GENE_RANGE_CODON, GeneRangeClassifier.isGeneRangeCodonEvent(event));
+        evaluations.put(FeatureType.GENE_RANGE_EXON, GeneRangeClassifier.isGeneRangeExonEvent(gene, event));
+        evaluations.put(FeatureType.GENE_LEVEL, GeneRangeClassifier.isGeneLevelEvent(gene, event));
+        evaluations.put(FeatureType.AMPLIFICATION, CopyNumberClassifier.isAmplification(gene, event));
+        evaluations.put(FeatureType.DELETION, CopyNumberClassifier.isDeletion(gene, event));
+        evaluations.put(FeatureType.FUSION_PAIR, FusionClassifier.isFusionPair(gene, event));
+        evaluations.put(FeatureType.PROMISCUOUS_FUSION, FusionClassifier.isPromiscuousFusion(gene, event));
+        evaluations.put(FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON, CombinedClassifier.isFusionPairAndGeneRangeExon(gene, event));
+        evaluations.put(FeatureType.SIGNATURE, SignatureClassifier.isSignature(event));
+        evaluations.put(FeatureType.COMBINED, CombinedClassifier.isCombinedEvent(gene, event));
+        evaluations.put(FeatureType.COMPLEX, ComplexClassifier.isComplexEvent(gene, event));
 
         Set<FeatureType> positiveTypes = Sets.newHashSet();
         for (Map.Entry<FeatureType, Boolean> evaluation : evaluations.entrySet()) {
@@ -49,7 +54,7 @@ public final class FeatureTypeExtractor {
         }
 
         if (positiveTypes.size() > 1) {
-            LOGGER.warn("More than one type evaluated to true for '{}' on '{}': {}", featureName, gene, positiveTypes);
+            LOGGER.warn("More than one type evaluated to true for '{}' on '{}': {}", event, gene, positiveTypes);
         } else if (positiveTypes.size() == 1) {
             return positiveTypes.iterator().next();
         }

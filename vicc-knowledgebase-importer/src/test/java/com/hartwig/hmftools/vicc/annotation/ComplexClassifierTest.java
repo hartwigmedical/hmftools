@@ -9,16 +9,16 @@ public class ComplexClassifierTest {
 
     @Test
     public void canAssessWhetherEventIsComplexEvent() {
-        assertTrue(ComplexClassifier.isComplexEvent("Splicing alteration (c.464-2A>G)", "VHL"));
+        assertTrue(ComplexClassifier.isComplexEvent("VHL", "Splicing alteration (c.464-2A>G)"));
 
-        assertTrue(ComplexClassifier.isComplexEvent("KRAS .", "KRAS"));
-        assertTrue(ComplexClassifier.isComplexEvent("APC p.I1557*fs*1", "APC"));
-        assertTrue(ComplexClassifier.isComplexEvent("BRCA1 L631Qfs*4", "BRCA1"));
-        assertFalse(ComplexClassifier.isComplexEvent("APC p.I1557fs", "APC"));
+        assertTrue(ComplexClassifier.isComplexEvent("KRAS", "KRAS ."));
+        assertTrue(ComplexClassifier.isComplexEvent("APC", "APC p.I1557*fs*1"));
+        assertTrue(ComplexClassifier.isComplexEvent("BRCA1", "BRCA1 L631Qfs*4"));
+        assertFalse(ComplexClassifier.isComplexEvent("APC", "APC p.I1557fs"));
 
-        assertTrue(ComplexClassifier.isComplexEvent("S310F/Y", "ERBB2"));
-        assertFalse(ComplexClassifier.isComplexEvent("Exon 19 deletion/insertion", "EGFR"));
+        assertTrue(ComplexClassifier.isComplexEvent("ERBB2", "S310F/Y"));
+        assertFalse(ComplexClassifier.isComplexEvent("EGFR", "Exon 19 deletion/insertion"));
 
-        assertFalse(ComplexClassifier.isComplexEvent("BRCA1 L631QFS", "BRCA1"));
+        assertFalse(ComplexClassifier.isComplexEvent("BRCA1", "BRCA1 L631QFS"));
     }
 }

@@ -22,8 +22,8 @@ final class HotspotClassifier {
     private HotspotClassifier() {
     }
 
-    public static boolean isHotspot(@NotNull String featureName) {
-        String proteinAnnotation = extractProteinAnnotation(featureName);
+    public static boolean isHotspot(@NotNull String event) {
+        String proteinAnnotation = extractProteinAnnotation(event);
 
         boolean isHotspot;
         if (isFrameshift(proteinAnnotation)) {
@@ -39,15 +39,15 @@ final class HotspotClassifier {
         }
 
         if (isHotspot) {
-            return !isHotspotOnFusionGene(featureName);
+            return !isHotspotOnFusionGene(event);
         }
 
         return false;
     }
 
     @NotNull
-    public static String extractProteinAnnotation(@NotNull String featureName) {
-        String trimmedName = featureName.trim();
+    public static String extractProteinAnnotation(@NotNull String event) {
+        String trimmedName = event.trim();
         // Many KBs include the gene in the feature name in some form (eg "EGFR E709K" or "EGFR:E709K").
         // Other KBs put the coding info behind the protein annotation ("V130L (c.388G>C)" rather than the gene in front of it)
         String proteinAnnotation;
