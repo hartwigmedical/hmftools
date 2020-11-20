@@ -61,10 +61,10 @@ public class RefDataBuilder
 
     private void loadSampleData(final CommandLine cmd)
     {
-        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE), false);
+        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
 
         CUP_LOGGER.info("loaded {} reference samples, {} cancer types",
-                mSampleDataCache.SampleIds.size(), mSampleDataCache.RefCancerSampleData.size());
+                mSampleDataCache.RefSampleDataList.size(), mSampleDataCache.RefCancerSampleData.size());
     }
 
     public void run()

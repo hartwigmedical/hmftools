@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
+import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
 
 import java.io.BufferedWriter;
@@ -61,7 +62,7 @@ public class RefSvData implements RefClassifier
         if(mConfig.RefSampleSvDataFile.isEmpty())
         {
             final Map<String,SvData> sampleSvData = Maps.newHashMap();
-            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleSvData);
+            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleSvData);
             sampleSvData.values().forEach(x -> assignSampleData(x));
         }
         else
@@ -136,6 +137,9 @@ public class RefSvData implements RefClassifier
             CUP_LOGGER.error("sample({}) SV missing cancer type", svData.SampleId);
             return;
         }
+
+        if(!isKnownCancerType(cancerType))
+            return;
 
         List<SvData> svDataList = mCancerSvData.get(cancerType);
         if(svDataList == null)

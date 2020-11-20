@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
+import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
 
 import java.io.BufferedWriter;
@@ -63,7 +64,7 @@ public class RefSampleTraits implements RefClassifier
         if(mConfig.RefSampleTraitsFile.isEmpty())
         {
             final Map<String,SampleTraitsData> sampleTraitsData = Maps.newHashMap();
-            loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleTraitsData);
+            loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleTraitsData);
 
             sampleTraitsData. values().forEach(x -> assignSampleTraitsData(x));
         }
@@ -186,6 +187,9 @@ public class RefSampleTraits implements RefClassifier
             CUP_LOGGER.error("sample({}) traits missing cancer type", traitsData.SampleId);
             return;
         }
+
+        if(!isKnownCancerType(cancerType))
+            return;
 
         List<SampleTraitsData> traitsList = mCancerTraitsData.get(cancerType);
         if(traitsList == null)

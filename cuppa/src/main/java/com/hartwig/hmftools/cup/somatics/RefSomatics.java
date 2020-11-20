@@ -119,41 +119,42 @@ public class RefSomatics implements RefClassifier
         // check if complete file has already been provided (eg if only other reference data is being built)
         SigMatrix refMatrix = null;
 
-        final List<String> sampleIds = Lists.newArrayList();
-        final SigMatrix refSampleCounts = loadRefSampleCounts(refFilename, sampleIds);
+        final List<String> existingRefSampleIds = Lists.newArrayList();
+        final SigMatrix existingRefSampleCounts = loadRefSampleCounts(refFilename, existingRefSampleIds);
 
-        boolean hasMissingSamples = mSampleDataCache.SampleIds.stream().anyMatch(x -> !sampleIds.contains(x));
+        final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
+        boolean hasMissingSamples = refSampleIds.stream().anyMatch(x -> !existingRefSampleIds.contains(x));
 
-        if(!hasMissingSamples && sampleIds.size() == mSampleDataCache.SampleIds.size())
+        if(!hasMissingSamples && existingRefSampleIds.size() == refSampleIds.size())
         {
             CUP_LOGGER.debug("using existing SNV {} reference counts", type);
 
-            for(int i = 0; i < sampleIds.size(); ++i)
+            for(int i = 0; i < existingRefSampleIds.size(); ++i)
             {
-                sampleCountsIndex.put(sampleIds.get(i), i);
+                sampleCountsIndex.put(existingRefSampleIds.get(i), i);
             }
 
-            return refSampleCounts;
+            return existingRefSampleCounts;
         }
 
-        // take any existng counts
-        if(refSampleCounts != null)
+        // take any existing counts
+        if(existingRefSampleCounts != null)
         {
-            refSampleCounts.cacheTranspose();
+            existingRefSampleCounts.cacheTranspose();
 
-            refMatrix = new SigMatrix(refSampleCounts.Cols, mSampleDataCache.SampleIds.size());
+            refMatrix = new SigMatrix(existingRefSampleCounts.Rows, refSampleIds.size());
 
             int refSampleIndex = 0;
 
-            for(int i = 0; i < sampleIds.size(); ++i)
+            for(int i = 0; i < existingRefSampleIds.size(); ++i)
             {
-                final String sampleId = sampleIds.get(i);
+                final String sampleId = existingRefSampleIds.get(i);
 
                 if(!mSampleDataCache.hasRefSample(sampleId))
                     continue;
 
-                refMatrix.setCol(refSampleIndex, refSampleCounts.getCol(i));
-                sampleCountsIndex.put(sampleIds.get(i), i);
+                refMatrix.setCol(refSampleIndex, existingRefSampleCounts.getCol(i));
+                sampleCountsIndex.put(existingRefSampleIds.get(i), i);
                 ++refSampleIndex;
             }
         }
@@ -163,22 +164,25 @@ public class RefSomatics implements RefClassifier
 
     private void retrieveMissingSampleCounts()
     {
-        long missingSamples = mSampleDataCache.SampleIds.stream()
+        final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
+
+        long missingSamples = refSampleIds.stream()
                 .filter(x -> !mTriNucCountsIndex.containsKey(x) || !mPosFreqCountsIndex.containsKey(x)).count();
 
         if(missingSamples == 0)
             return;
 
-        CUP_LOGGER.debug("retrieving SNV data for {} samples", missingSamples);
+        int refSampleCount = refSampleIds.size();
+        CUP_LOGGER.debug("retrieving SNV data for {} samples from refSampleCount({})", missingSamples, refSampleCount);
 
         if(mTriNucCounts == null)
         {
-            mTriNucCounts = new SigMatrix(SNV_TRINUCLEOTIDE_BUCKET_COUNT, mSampleDataCache.SampleIds.size());
+            mTriNucCounts = new SigMatrix(SNV_TRINUCLEOTIDE_BUCKET_COUNT, refSampleCount);
         }
 
         if(mPosFreqCounts == null)
         {
-            mPosFreqCounts = new SigMatrix(mPositionFrequencies.getBucketCount(), mSampleDataCache.SampleIds.size());
+            mPosFreqCounts = new SigMatrix(mPositionFrequencies.getBucketCount(), refSampleCount);
         }
 
         final Map<String,Integer> triNucBucketNameMap = Maps.newHashMap();
@@ -187,9 +191,9 @@ public class RefSomatics implements RefClassifier
         int nextLog = 100;
         int retrievedSamples = 0;
 
-        for(int i = 0; i < mSampleDataCache.SampleIds.size(); ++i)
+        for(int i = 0; i < refSampleCount; ++i)
         {
-            final String sampleId = mSampleDataCache.SampleIds.get(i);
+            final String sampleId = refSampleIds.get(i);
             boolean needsTriNucCounts = !mTriNucCountsIndex.containsKey(sampleId);
             boolean needsPosFreqCounts = !mPosFreqCountsIndex.containsKey(sampleId);
 
@@ -206,17 +210,23 @@ public class RefSomatics implements RefClassifier
 
             final List<SomaticVariant> variants = loadSomaticVariants(sampleId, mConfig.DbAccess);
 
-            final double[] triNucCounts = extractTrinucleotideCounts(variants, triNucBucketNameMap);
+            if(needsTriNucCounts)
+            {
+                final double[] triNucCounts = extractTrinucleotideCounts(variants, triNucBucketNameMap);
 
-            int refSampleIndex = mTriNucCountsIndex.size();
-            mTriNucCounts.setCol(refSampleIndex, triNucCounts);
-            mTriNucCountsIndex.put(sampleId, refSampleIndex);
+                int refSampleIndex = mTriNucCountsIndex.size();
+                mTriNucCounts.setCol(refSampleIndex, triNucCounts);
+                mTriNucCountsIndex.put(sampleId, refSampleIndex);
+            }
 
-            extractPositionFrequencyCounts(variants, mPositionFrequencies);
+            if(needsPosFreqCounts)
+            {
+                extractPositionFrequencyCounts(variants, mPositionFrequencies);
 
-            refSampleIndex = mPosFreqCountsIndex.size();
-            mPosFreqCounts.setCol(refSampleIndex, mPositionFrequencies.getCounts());
-            mPosFreqCountsIndex.put(sampleId, refSampleIndex);
+                int refSampleIndex = mPosFreqCountsIndex.size();
+                mPosFreqCounts.setCol(refSampleIndex, mPositionFrequencies.getCounts());
+                mPosFreqCountsIndex.put(sampleId, refSampleIndex);
+            }
         }
 
         mTriNucCounts.cacheTranspose();
@@ -250,6 +260,14 @@ public class RefSomatics implements RefClassifier
 
                 for(int i = 1; i < sampleIds.size(); ++i)
                 {
+                    int index = sampleCountsIndex.get(sampleIds.get(i));
+
+                    if(index >= matrix.Cols)
+                    {
+                        CUP_LOGGER.error("file({}) invalid col({})", filename, i);
+                        return;
+                    }
+
                     writer.write(String.format(",%.0f", matrixData[b][sampleCountsIndex.get(sampleIds.get(i))]));
                 }
 
@@ -278,7 +296,8 @@ public class RefSomatics implements RefClassifier
         }
         else if(mConfig.DbAccess != null)
         {
-            SomaticDataLoader.loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, sampleSigContributions);
+            SomaticDataLoader.loadSigContribsFromDatabase(
+                    mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleSigContributions);
         }
 
         for(Map.Entry<String,Map<String,Double>> entry : sampleSigContributions.entrySet())

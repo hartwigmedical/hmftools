@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -22,8 +23,9 @@ public class SampleDataCache
     public final List<SampleData> SampleDataList;
     public SampleData SpecificSample;
 
-    public final Map<String,List<SampleData>> RefCancerSampleData;
-    public final Map<String,String> RefSampleCancerTypeMap;
+    public final Map<String,List<SampleData>> RefCancerSampleData; // map of known cancer types to their ref samples
+    public final Map<String,String> RefSampleCancerTypeMap; // map of ref sample to cancer type
+    public final List<SampleData> RefSampleDataList; // includes type 'Other' if in ref data
 
     private boolean mIsValid;
 
@@ -31,8 +33,11 @@ public class SampleDataCache
     {
         SampleIds = Lists.newArrayList();
         SampleDataList = Lists.newArrayList();
+
         RefCancerSampleData = Maps.newHashMap();
         RefSampleCancerTypeMap = Maps.newHashMap();
+        RefSampleDataList = Lists.newArrayList();
+
         SpecificSample = null;
         mIsValid = true;
     }
@@ -50,6 +55,13 @@ public class SampleDataCache
 
     public boolean hasRefSample(final String sampleId) { return RefSampleCancerTypeMap.containsKey(sampleId); }
     public boolean hasRefCancerType(final String cancerType) { return RefCancerSampleData.containsKey(cancerType); }
+
+    public final List<String> refSampleIds(boolean onlyKnownTypes)
+    {
+        return RefSampleDataList.stream()
+                .filter(x -> !onlyKnownTypes || x.isKnownCancerType())
+                .map(x -> x.Id).collect(Collectors.toList());
+    }
 
     public SampleData findRefSampleData(final String sampleId)
     {
@@ -120,7 +132,7 @@ public class SampleDataCache
         SampleDataList.forEach(x -> SampleIds.add(x.Id));
     }
 
-    public void loadReferenceSampleData(final String refSampleDataFile, boolean populateRefOnly)
+    public void loadReferenceSampleData(final String refSampleDataFile)
     {
         if(refSampleDataFile == null)
         {
@@ -149,14 +161,10 @@ public class SampleDataCache
                         RefCancerSampleData.put(sample.CancerType, Lists.newArrayList(sample));
                     else
                         cancerSampleData.add(sample);
-
-                    RefSampleCancerTypeMap.put(sample.Id, sample.CancerType);
                 }
 
-                if(!populateRefOnly && sample.isKnownCancerType())
-                {
-                    SampleDataList.add(sample);
-                }
+                RefSampleCancerTypeMap.put(sample.Id, sample.CancerType);
+                RefSampleDataList.add(sample);
             }
         }
         catch (IOException e)
@@ -164,9 +172,6 @@ public class SampleDataCache
             CUP_LOGGER.error("failed to read sample data file({}): {}", refSampleDataFile, e.toString());
             mIsValid = false;
         }
-
-        if(!populateRefOnly)
-            SampleDataList.forEach(x -> SampleIds.add(x.Id));
     }
 
 }
