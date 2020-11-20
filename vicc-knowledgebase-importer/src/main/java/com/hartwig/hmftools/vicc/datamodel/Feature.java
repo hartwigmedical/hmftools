@@ -2,8 +2,8 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.annotation.FeatureType;
-import com.hartwig.hmftools.vicc.annotation.FeatureTypeExtractor;
+import com.hartwig.hmftools.vicc.annotation.EventType;
+import com.hartwig.hmftools.vicc.annotation.EventTypeExtractor;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.immutables.value.Value;
@@ -16,8 +16,8 @@ public abstract class Feature {
 
     @NotNull
     @Value.Derived
-    public FeatureType type() {
-        return FeatureTypeExtractor.extractType(this);
+    public EventType type() {
+        return EventTypeExtractor.extractType(this);
     }
 
     @NotNull

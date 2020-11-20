@@ -9,15 +9,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class FeatureTypeExtractorTest {
+public class EventTypeExtractorTest {
 
     @Test
-    public void canDetermineFeatureTypes() {
-        assertEquals(FeatureType.HOTSPOT, FeatureTypeExtractor.extractType(createFeatureWithGeneAndName("BRAF", "V600E")));
+    public void canDetermineEventTypes() {
+        assertEquals(EventType.HOTSPOT, EventTypeExtractor.extractType(createFeatureWithGeneAndName("BRAF", "V600E")));
 
-        assertEquals(FeatureType.UNKNOWN, FeatureTypeExtractor.extractType(createFeatureWithGeneAndName("BRAF", "what is this?")));
+        assertEquals(EventType.UNKNOWN, EventTypeExtractor.extractType(createFeatureWithGeneAndName("BRAF", "what is this?")));
 
-        assertEquals(FeatureType.UNKNOWN, FeatureTypeExtractor.extractType(createFeatureWithGeneAndName(null, "V600E")));
+        assertEquals(EventType.UNKNOWN, EventTypeExtractor.extractType(createFeatureWithGeneAndName(null, "V600E")));
     }
 
     @NotNull

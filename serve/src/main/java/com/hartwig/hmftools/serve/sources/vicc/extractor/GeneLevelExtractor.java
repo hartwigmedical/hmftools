@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
-import com.hartwig.hmftools.vicc.annotation.FeatureType;
+import com.hartwig.hmftools.vicc.annotation.EventType;
 import com.hartwig.hmftools.vicc.annotation.GeneRangeClassifier;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -43,7 +43,7 @@ public class GeneLevelExtractor {
 
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-            if (feature.type() == FeatureType.GENE_LEVEL) {
+            if (feature.type() == EventType.GENE_LEVEL) {
                 if (canonicalTranscript == null) {
                     LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
                 } else {
@@ -53,7 +53,7 @@ public class GeneLevelExtractor {
                                     .event(extractGeneLevelEvent(feature, driverGenes))
                                     .build());
                 }
-            } else if (feature.type() == FeatureType.PROMISCUOUS_FUSION) {
+            } else if (feature.type() == EventType.PROMISCUOUS_FUSION) {
                 if (canonicalTranscript == null) {
                     LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
                 } else {

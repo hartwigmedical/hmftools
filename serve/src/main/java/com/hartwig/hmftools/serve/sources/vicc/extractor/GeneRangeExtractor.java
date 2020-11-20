@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneRangeAnnotation;
-import com.hartwig.hmftools.vicc.annotation.FeatureType;
+import com.hartwig.hmftools.vicc.annotation.EventType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -44,9 +44,9 @@ public class GeneRangeExtractor {
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-            FeatureType featureType = feature.type();
+            EventType eventType = feature.type();
 
-            if (featureType == FeatureType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
+            if (eventType == EventType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
                 if (canonicalTranscript == null) {
                     LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping fusion pair and gene range extraction for range!",
                             feature.geneSymbol());
@@ -72,7 +72,7 @@ public class GeneRangeExtractor {
                     }
                 }
             }
-            if (featureType == FeatureType.GENE_RANGE_EXON) {
+            if (eventType == EventType.GENE_RANGE_EXON) {
                 if (canonicalTranscript == null) {
                     LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene range exon extraction!", feature.geneSymbol());
                 } else {
@@ -95,7 +95,7 @@ public class GeneRangeExtractor {
                                 feature);
                     }
                 }
-            } else if (featureType == FeatureType.GENE_RANGE_CODON) {
+            } else if (eventType == EventType.GENE_RANGE_CODON) {
                 if (canonicalTranscript == null) {
                     LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene range codon extraction!", feature.geneSymbol());
                 } else {

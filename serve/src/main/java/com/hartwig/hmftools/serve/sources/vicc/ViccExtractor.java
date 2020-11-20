@@ -40,7 +40,7 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
-import com.hartwig.hmftools.vicc.annotation.FeatureType;
+import com.hartwig.hmftools.vicc.annotation.EventType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -341,7 +341,7 @@ public final class ViccExtractor {
 
                 if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null && geneLevelEventForFeature == null
                         && geneRangesForFeature == null && signatureForFeature == null) {
-                    if (feature.type() != FeatureType.COMBINED && feature.type() != FeatureType.COMPLEX) {
+                    if (feature.type() != EventType.COMBINED && feature.type() != EventType.COMPLEX) {
                         // For both combined and complex events we expect no genomic events to be derived.
                         featuresWithoutGenomicEvents.add(feature);
                     }
@@ -380,8 +380,8 @@ public final class ViccExtractor {
 
         LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
-            FeatureType type = feature.type();
-            if (type != FeatureType.UNKNOWN && type != FeatureType.COMBINED && type != FeatureType.COMPLEX) {
+            EventType type = feature.type();
+            if (type != EventType.UNKNOWN && type != EventType.COMBINED && type != EventType.COMPLEX) {
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
             }
         }
