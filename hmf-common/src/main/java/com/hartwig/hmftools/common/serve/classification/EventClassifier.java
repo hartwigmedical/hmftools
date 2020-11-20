@@ -10,14 +10,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ComprehensiveEventClassifier {
+public class EventClassifier {
 
-    private static final Logger LOGGER = LogManager.getLogger(ComprehensiveEventClassifier.class);
+    private static final Logger LOGGER = LogManager.getLogger(EventClassifier.class);
 
     @NotNull
     private final Map<EventType, EventMatcher> matchers;
 
-    public ComprehensiveEventClassifier(@NotNull final Map<EventType, EventMatcher> matchers) {
+    public EventClassifier(@NotNull final Map<EventType, EventMatcher> matchers) {
         this.matchers = matchers;
     }
 

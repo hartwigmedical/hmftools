@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.serve.classification.ComprehensiveEventClassifier;
+import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -19,7 +19,7 @@ public final class EventTypeExtractor {
     private static final Logger LOGGER = LogManager.getLogger(EventTypeExtractor.class);
 
     @NotNull
-    private static final ComprehensiveEventClassifier CLASSIFIER = new ComprehensiveEventClassifier(buildMatcherMap());
+    private static final EventClassifier CLASSIFIER = new EventClassifier(buildMatcherMap());
 
     public EventTypeExtractor() {
     }
