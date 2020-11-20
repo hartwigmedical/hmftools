@@ -34,15 +34,24 @@ public class ViccFilterTest {
     public void canFilterIndividualFeatures() {
         ViccFilter filter = new ViccFilter();
 
-        String nameToFilter = FilterFactory.FEATURE_KEYWORDS_TO_FILTER.iterator().next() + " filter me";
-        Feature featureWithFilterKeyword = ImmutableFeature.builder().name(nameToFilter).build();
-        Feature featureWithoutFilterKeyword = ImmutableFeature.builder().name("don't filter me").build();
+        String keywordToFilter = FilterFactory.FEATURE_KEYWORDS_TO_FILTER.iterator().next();
+        Feature featureWithExactKeyword = ImmutableFeature.builder().name(keywordToFilter).build();
+        Feature featureWithFilterKeyword = ImmutableFeature.builder().name(keywordToFilter + " filter me").build();
+        assertFalse(filter.include(ViccSource.CIVIC, featureWithExactKeyword));
         assertFalse(filter.include(ViccSource.CIVIC, featureWithFilterKeyword));
-        assertTrue(filter.include(ViccSource.CIVIC, featureWithoutFilterKeyword));
+
+        String nameToFilter = FilterFactory.FEATURES_TO_FILTER.iterator().next();
+        Feature featureWithExactName = ImmutableFeature.builder().name(nameToFilter).build();
+        Feature featureWithFilterName = ImmutableFeature.builder().name(nameToFilter + " filter me").build();
+        assertFalse(filter.include(ViccSource.CIVIC, featureWithExactName));
+        assertTrue(filter.include(ViccSource.CIVIC, featureWithFilterName));
 
         FilterKey keyToFilter = FilterFactory.FEATURE_KEYS_TO_FILTER.iterator().next();
         Feature featureToFilter = ImmutableFeature.builder().geneSymbol(keyToFilter.gene()).name(keyToFilter.name()).build();
         assertFalse(filter.include(keyToFilter.source(), featureToFilter));
+
+        Feature featureWithoutFilterName = ImmutableFeature.builder().name("don't filter me").build();
+        assertTrue(filter.include(ViccSource.CIVIC, featureWithoutFilterName));
 
         filter.reportUnusedFilterEntries();
     }

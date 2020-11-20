@@ -9,48 +9,59 @@ final class FilterFactory {
 
     static final Set<String> FEATURE_KEYWORDS_TO_FILTER = Sets.newHashSet();
 
+    static final Set<String> FEATURES_TO_FILTER = Sets.newHashSet();
+
     static final Set<FilterKey> FEATURE_KEYS_TO_FILTER = Sets.newHashSet();
 
     static {
         populateFeatureKeywordsToFilter();
+        populateFeaturesToFilter();
         populateFeatureKeysToFilter();
     }
 
     private static void populateFeatureKeywordsToFilter() {
-        // We cannot determine methylation with WGS/WTS
-        FEATURE_KEYWORDS_TO_FILTER.add("METHYLATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("Hypermethylation");
-
-        // We cannot determine epigenetic silencing with WGS/WTS
-        FEATURE_KEYWORDS_TO_FILTER.add("Epigenetic Silencing");
-
-        // We cannot determine phosphorylation with WGS/WTS
-        FEATURE_KEYWORDS_TO_FILTER.add("PHOSPHORYLATION");
-
-        // We cannot determine the below events
-        FEATURE_KEYWORDS_TO_FILTER.add("SERUM LEVELS");
-        FEATURE_KEYWORDS_TO_FILTER.add("CYTOPLASMIC MISLOCALIZATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("NUCLEAR TRANSLOCATION");
-
-        // "Any" polymorphism is considered too vague.
-        FEATURE_KEYWORDS_TO_FILTER.add("POLYMORPHISM");
-        FEATURE_KEYWORDS_TO_FILTER.add("Single Nucleotide Polymorphism");
-        FEATURE_KEYWORDS_TO_FILTER.add("3' UTR Polymorphism");
-
-        // Copy number variation is too vague.
-        FEATURE_KEYWORDS_TO_FILTER.add("COPY NUMBER VARIATION");
-        FEATURE_KEYWORDS_TO_FILTER.add("COPY-NEUTRAL LOSS OF HETEROZYGOSITY");
-
-        // "Expression" is not observed on DNA level
-        FEATURE_KEYWORDS_TO_FILTER.add("EXPRESSION");
-        FEATURE_KEYWORDS_TO_FILTER.add("expression");
-
-        // Wildtype evidence is ignored at this point.
+        // Any wildtype evidence is ignored at this point.
         FEATURE_KEYWORDS_TO_FILTER.add("WILDTYPE");
         FEATURE_KEYWORDS_TO_FILTER.add("WILD TYPE");
         FEATURE_KEYWORDS_TO_FILTER.add("wild-type");
         FEATURE_KEYWORDS_TO_FILTER.add("wildtype");
         FEATURE_KEYWORDS_TO_FILTER.add("Wildtype");
+    }
+
+    private static void populateFeaturesToFilter() {
+        // We cannot determine methylation with WGS/WTS
+        FEATURES_TO_FILTER.add("METHYLATION");
+        FEATURES_TO_FILTER.add("Hypermethylation");
+        FEATURES_TO_FILTER.add("Promoter Hypermethylation");
+        FEATURES_TO_FILTER.add("PROMOTER HYPERMETHYLATION");
+        FEATURES_TO_FILTER.add("PROMOTER METHYLATION");
+        FEATURES_TO_FILTER.add("PROMOTER DEMETHYLATION");
+
+        // We cannot determine epigenetic silencing with WGS/WTS
+        FEATURES_TO_FILTER.add("Epigenetic Silencing");
+
+        // We cannot determine phosphorylation with WGS/WTS
+        FEATURES_TO_FILTER.add("PHOSPHORYLATION");
+
+        // We cannot determine the below events
+        FEATURES_TO_FILTER.add("SERUM LEVELS");
+        FEATURES_TO_FILTER.add("CYTOPLASMIC MISLOCALIZATION");
+        FEATURES_TO_FILTER.add("NUCLEAR TRANSLOCATION");
+        FEATURES_TO_FILTER.add("NUCLEAR EXPRESSION");
+
+        // "Any" polymorphism is considered too vague.
+        FEATURES_TO_FILTER.add("POLYMORPHISM");
+        FEATURES_TO_FILTER.add("Single Nucleotide Polymorphism");
+        FEATURES_TO_FILTER.add("3' UTR Polymorphism");
+
+        // Copy number variation is too vague.
+        FEATURES_TO_FILTER.add("COPY NUMBER VARIATION");
+        FEATURES_TO_FILTER.add("COPY-NEUTRAL LOSS OF HETEROZYGOSITY");
+
+        // "Expression" is not observed on DNA level
+        FEATURES_TO_FILTER.add("CYTOPLASMIC EXPRESSION");
+        FEATURES_TO_FILTER.add("ISOFORM EXPRESSION");
+        FEATURES_TO_FILTER.add("EXPRESSION");
     }
 
     private static void populateFeatureKeysToFilter() {
@@ -106,6 +117,13 @@ final class FilterFactory {
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "MYC", "IGH-MYC Fusion"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "NKX2-1", "IGH-NKX2 Fusion"));
 
+        // We don't observe phosphorylation
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "EGFR", "Y1092 PHOSPHORYLATION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "PRKAA2", "T172 PHOSPHORYLATION"));
+
+        // We ignore generic "expression"
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "CYP17A1", "CYP17A1 expression"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "CDKN2A", "p16 EXPRESSION"));
     }
 
     private FilterFactory() {
