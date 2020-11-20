@@ -25,7 +25,7 @@ public class PromiscuousFusionClassifier implements EventClassifier {
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
         for (String keyword : FUSION_KEYWORDS) {
-            if (event.contains(keyword)) {
+            if (event.contains(keyword) && !FusionPairClassifier.isTypicalFusionPair(event)) {
                 return true;
             }
         }

@@ -18,5 +18,6 @@ public class PromiscuousFusionClassifierTest {
         assertTrue(classifier.matches("ROS1", "ROS1 REARRANGEMENT"));
 
         assertFalse(classifier.matches("BRAF", "V600E"));
+        assertFalse(classifier.matches("ALK", "EML4-ALK"));
     }
 }
