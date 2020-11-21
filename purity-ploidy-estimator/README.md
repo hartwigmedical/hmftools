@@ -297,7 +297,7 @@ Tumor only mode impacts PURPLE in the following ways:
   - X and Y chromosomes are excluded from fitting
   - Gender is determined only from AMBER
   - COBALT allosome reference ratios are adjusted accoring to AMBER gender
-  - No chromosomal aberrations are detected 
+  - No germline chromosomal aberrations are detected 
 
 
 ## Algorithm
