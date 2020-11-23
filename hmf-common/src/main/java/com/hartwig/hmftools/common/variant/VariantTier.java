@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.variant;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.variant.variantcontext.VariantContext;
+
 public enum VariantTier {
     HOTSPOT,
     PANEL,
@@ -10,6 +12,11 @@ public enum VariantTier {
     UNKNOWN;
 
     public static final String TIER = "TIER";
+
+    @NotNull
+    public static VariantTier fromContext(@NotNull final VariantContext context) {
+        return fromString(context.getAttributeAsString(TIER, UNKNOWN.toString()));
+    }
 
     @NotNull
     public static VariantTier fromString(@NotNull final String string) {

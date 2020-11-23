@@ -1,19 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -21,19 +9,15 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.StringJoiner;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.sage.SageMetaData;
-import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SubclonalLikelihoodEnrichment;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -57,7 +40,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
         return new SomaticVariantFactory(new PassingVariantFilter());
     }
 
-    private static final String MAPPABILITY_TAG = "MAPPABILITY";
+    public static final String MAPPABILITY_TAG = "MAPPABILITY";
     private static final String RECOVERED_FLAG = "RECOVERED";
 
     static final String PASS_FILTER = "PASS";
@@ -155,32 +138,46 @@ public class SomaticVariantFactory implements VariantContextFilter {
     @NotNull
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context) {
+        final VariantContextDecorator decorator = new VariantContextDecorator(context);
+        final SnpEffSummary snpEffSummary = decorator.snpEffSummary();
+
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
-                .qual(context.getPhredScaledQual())
-                .chromosome(context.getContig())
-                .position(context.getStart())
-                .ref(context.getReference().getBaseString())
-                .alt(alt(context))
+                .qual(decorator.qual())
+                .type(decorator.type())
+                .filter(decorator.filter())
+                .chromosome(decorator.chromosome())
+                .position(decorator.position())
+                .ref(decorator.ref())
+                .alt(decorator.alt())
                 .alleleReadCount(allelicDepth.alleleReadCount())
                 .totalReadCount(allelicDepth.totalReadCount())
-                .hotspot(HotspotEnrichment.fromVariant(context))
-                .minorAlleleCopyNumber(minorAlleleCopyNumber(context))
-                .adjustedCopyNumber(context.getAttributeAsDouble(PURPLE_CN_INFO, 0))
-                .adjustedVAF(context.getAttributeAsDouble(PURPLE_AF_INFO, 0))
-                .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
-                .variantCopyNumber(variantCopyNumber(context))
-                .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
-                .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
-                .tier(VariantTier.fromString(context.getAttributeAsString("TIER", VariantTier.UNKNOWN.toString())))
-                .trinucleotideContext(context.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY))
-                .microhomology(context.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY))
-                .repeatCount(context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0))
-                .repeatSequence(context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY))
-                .subclonalLikelihood(context.getAttributeAsDouble(SubclonalLikelihoodEnrichment.SUBCLONAL_LIKELIHOOD_FLAG, 0))
+                .hotspot(decorator.hotspot())
+                .minorAlleleCopyNumber(decorator.minorAlleleCopyNumber())
+                .adjustedCopyNumber(decorator.adjustedCopyNumber())
+                .adjustedVAF(decorator.adjustedVaf())
+                .variantCopyNumber(decorator.variantCopyNumber())
+                .mappability(decorator.mappability())
+                .tier(decorator.tier())
+                .trinucleotideContext(decorator.trinucleotideContext())
+                .microhomology(decorator.microhomology())
+                .repeatCount(decorator.repeatCount())
+                .repeatSequence(decorator.repeatSequence())
                 // Note: getAttributeAsBoolean(x, false) is safer than hasAttribute(x)
-                .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
-                .reported(context.getAttributeAsBoolean(REPORTED_FLAG, false))
-                .biallelic(context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false));
+                .reported(decorator.reported())
+                .biallelic(decorator.biallelic())
+                .worstEffect(snpEffSummary.worstEffect())
+                .worstCodingEffect(snpEffSummary.worstCodingEffect())
+                .worstEffectTranscript(snpEffSummary.worstTranscript())
+                .canonicalEffect(snpEffSummary.canonicalEffect())
+                .canonicalCodingEffect(snpEffSummary.canonicalCodingEffect())
+                .canonicalHgvsCodingImpact(snpEffSummary.canonicalHgvsCodingImpact())
+                .canonicalHgvsProteinImpact(snpEffSummary.canonicalHgvsProteinImpact())
+                .gene(snpEffSummary.gene())
+                .genesAffected(snpEffSummary.genesAffected())
+                .subclonalLikelihood(context.getAttributeAsDouble(SubclonalLikelihoodEnrichment.SUBCLONAL_LIKELIHOOD_FLAG, 0))
+                .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
+                .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
+                .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false));
 
         if (context.hasAttribute(SageMetaData.PHASED_INFRAME_INDEL)) {
             builder.phasedInframeIndelIdentifier(context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0));
@@ -194,70 +191,11 @@ public class SomaticVariantFactory implements VariantContextFilter {
             builder.localRealignmentSet(context.getAttributeAsInt(SageMetaData.LOCAL_REALIGN_SET, 0));
         }
 
-        attachSnpEffAnnotations(builder, context);
-        attachFilter(builder, context);
-        attachType(builder, context);
-
         return builder;
-    }
-
-    private static double minorAlleleCopyNumber(@NotNull final VariantContext context) {
-        return context.getAttributeAsDouble(PURPLE_MINOR_ALLELE_CN_INFO, context.getAttributeAsDouble(PURPLE_MINOR_ALLELE_PLOIDY_INFO, 0));
-    }
-
-    private static double variantCopyNumber(@NotNull final VariantContext context) {
-        return context.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, context.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
-    }
-
-    private static void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
-        final SnpEffSummary snpEffSummary = SnpEffSummaryFactory.fromSage(context);
-
-        builder.worstEffect(snpEffSummary.worstEffect())
-                .worstCodingEffect(snpEffSummary.worstCodingEffect())
-                .worstEffectTranscript(snpEffSummary.worstTranscript())
-                .canonicalEffect(snpEffSummary.canonicalEffect())
-                .canonicalCodingEffect(snpEffSummary.canonicalCodingEffect())
-                .canonicalHgvsCodingImpact(snpEffSummary.canonicalHgvsCodingImpact())
-                .canonicalHgvsProteinImpact(snpEffSummary.canonicalHgvsProteinImpact())
-                .gene(snpEffSummary.gene())
-                .genesAffected(snpEffSummary.genesAffected());
-    }
-
-    private static void attachFilter(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
-        if (context.isFiltered()) {
-            StringJoiner joiner = new StringJoiner(";");
-            context.getFilters().forEach(joiner::add);
-            builder.filter(joiner.toString());
-        } else {
-            builder.filter(PASS_FILTER);
-        }
-    }
-
-    @NotNull
-    public static VariantType type(@NotNull VariantContext context) {
-        switch (context.getType()) {
-            case MNP:
-                return VariantType.MNP;
-            case SNP:
-                return VariantType.SNP;
-            case INDEL:
-                return VariantType.INDEL;
-        }
-        return VariantType.UNDEFINED;
-    }
-
-    private static void attachType(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
-        builder.type(type(context));
     }
 
     private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header) {
         return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
-    }
-
-    @NotNull
-    private static String alt(@NotNull final VariantContext context) {
-        return context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
     }
 
     @Override
