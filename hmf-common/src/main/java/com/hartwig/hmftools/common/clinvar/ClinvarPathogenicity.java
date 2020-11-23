@@ -4,14 +4,21 @@ import org.jetbrains.annotations.NotNull;
 
 public enum ClinvarPathogenicity {
 
-    PATHOGENIC(),
-    LIKELY_PATHOGENIC(),
-    BENIGN(),
-    LIKELY_BENIGN(),
-    CONFLICTING(),
-    UNKNOWN();
+    PATHOGENIC(true),
+    LIKELY_PATHOGENIC(true),
+    BENIGN(false),
+    LIKELY_BENIGN(false),
+    CONFLICTING(false),
+    UNKNOWN(false);
 
-    ClinvarPathogenicity() {
+    private final boolean pathogenic;
+
+    ClinvarPathogenicity(final boolean pathogenic) {
+        this.pathogenic = pathogenic;
+    }
+
+    public boolean isPathogenic() {
+        return pathogenic;
     }
 
     @NotNull
