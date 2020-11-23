@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.ALT_SPLICE_J
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.fromCsv;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -36,7 +37,8 @@ public class AltSpliceJunctionCohort
 
     // other config
     private final int mMinSampleThreshold;
-    private final int mMinFragsUnrequiredGenes;
+    private final int mMinCancerSampleThreshold;
+    private final int mMinFragments;
     private final double mProbabilityThreshold;
     private final String mSpliceVariantFile;
     private final boolean mRewriteCohortFile;
@@ -44,15 +46,16 @@ public class AltSpliceJunctionCohort
     private BufferedWriter mSampleDataWriter;
 
     private static final String ALT_SJ_MIN_SAMPLES = "alt_sj_min_samples";
+    private static final String ALT_SJ_MIN_CANCER_SAMPLES = "alt_sj_min_cancer_samples";
     private static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
-    private static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
+    private static final String ALT_SJ_MIN_FRAGS = "alt_sj_min_frags";
     private static final String ALT_SJ_REWRITE_COHORT = "alt_sj_rewrite_cohort";
     private static final String SPLICE_VARIANT_FILE = "splice_variant_file";
 
     private final Map<String,Integer> mFieldsMap;
 
     // map of chromosomes to a map of genes to a list of alternate splice junctions
-    private final Map<String, Map<String,List<AltSpliceJuncCohortData>>> mAltSpliceJunctions;
+    private final Map<String,Map<String,List<AltSpliceJuncCohortData>>> mAltSpliceJunctions;
 
     private final SpliceVariantMatching mSpliceVariantMatching;
 
@@ -66,7 +69,8 @@ public class AltSpliceJunctionCohort
         mFieldsMap = Maps.newHashMap();
 
         mMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
-        mMinFragsUnrequiredGenes = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS_REQ_GENES, "0"));
+        mMinCancerSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_CANCER_SAMPLES, "0"));
+        mMinFragments = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS, "0"));
         mProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
         mSpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
         mRewriteCohortFile = cmd.hasOption(ALT_SJ_REWRITE_COHORT);
@@ -79,7 +83,8 @@ public class AltSpliceJunctionCohort
     public static void addCmdLineOptions(final Options options)
     {
         options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min number of samples to report an alt SJ");
-        options.addOption(ALT_SJ_MIN_FRAGS_REQ_GENES, true, "Min frag count supporting alt-SJs outside gene panel");
+        options.addOption(ALT_SJ_MIN_CANCER_SAMPLES, true, "Min number of samples to report an alt SJ");
+        options.addOption(ALT_SJ_MIN_FRAGS, true, "Min frag count supporting alt-SJs outside gene panel");
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
         options.addOption(ALT_SJ_REWRITE_COHORT, false, "Combined alt SJs from multiple samples into a single file");
         options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
@@ -93,6 +98,7 @@ public class AltSpliceJunctionCohort
             return;
 
         int totalProcessed = 0;
+        int nextLog = 10000;
 
         // load each sample's alt SJs and consolidate into a single list
         for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
@@ -105,7 +111,17 @@ public class AltSpliceJunctionCohort
             ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", i, sampleId, altSJs.size());
             totalProcessed += altSJs.size();
 
-            altSJs.forEach(x -> addAltSpliceJunction(x, sampleId));
+            final String cancerType = mConfig.SampleData.SampleCancerType.get(sampleId);
+
+            altSJs.forEach(x -> addAltSpliceJunction(x, sampleId, cancerType));
+
+            int totalAltSJs = mAltSpliceJunctions.values().stream().mapToInt(x -> x.values().size()).sum();
+
+            if(totalAltSJs >= nextLog)
+            {
+                ISF_LOGGER.debug("cached alt-SJ count({})", totalAltSJs);
+                nextLog += 10000;
+            }
 
             if(mRewriteCohortFile)
                 altSJs.forEach(x -> writeAltSpliceJunctionData(sampleId, x));
@@ -156,18 +172,11 @@ public class AltSpliceJunctionCohort
 
     private boolean passesFilter(final AltSpliceJunction altSJ)
     {
+        if(mMinFragments > 0 && altSJ.getFragmentCount() < mMinFragments)
+            return false;
+
         if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(altSJ.getGeneId()))
-        {
-            if(mMinFragsUnrequiredGenes > 0)
-            {
-                if(altSJ.getFragmentCount() < mMinFragsUnrequiredGenes)
-                    return false;
-            }
-            else
-            {
-                return false;
-            }
-        }
+            return false;
 
         if(!mConfig.ExcludedGeneIds.isEmpty() && mConfig.ExcludedGeneIds.contains(altSJ.getGeneId()))
             return false;
@@ -175,7 +184,7 @@ public class AltSpliceJunctionCohort
         return true;
     }
 
-    private void addAltSpliceJunction(final AltSpliceJunction altSJ, final String sampleId)
+    private void addAltSpliceJunction(final AltSpliceJunction altSJ, final String sampleId, final String cancerType)
     {
         Map<String,List<AltSpliceJuncCohortData>> chrSJs = mAltSpliceJunctions.get(altSJ.Chromosome);
 
@@ -204,11 +213,11 @@ public class AltSpliceJunctionCohort
         if(!mConfig.SampleData.SampleCohort.isEmpty())
         {
             boolean isCohortA = mConfig.SampleData.sampleInCohort(sampleId, SampleDataCache.COHORT_A);
-            altSjData.addSampleAndCount(sampleId, altSJ.getFragmentCount(), isCohortA);
+            altSjData.addSampleCount(sampleId, altSJ.getFragmentCount(), isCohortA);
         }
         else
         {
-            altSjData.addSampleAndCount(sampleId, altSJ.getFragmentCount());
+            altSjData.addSampleCount(sampleId, altSJ.getFragmentCount(), cancerType);
         }
 
         altSjData.addPositionCount(SE_START, altSJ.getPositionCount(SE_START));
@@ -217,7 +226,7 @@ public class AltSpliceJunctionCohort
 
     private void writeAltSpliceJunctionData(final String sampleId, final AltSpliceJunction altSJ)
     {
-        if(altSJ.getFragmentCount() < mMinFragsUnrequiredGenes)
+        if(altSJ.getFragmentCount() < mMinFragments)
             return;
 
         try
@@ -256,9 +265,8 @@ public class AltSpliceJunctionCohort
             final String outputFileName = mConfig.formCohortFilename("alt_sj_cohort.csv");
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("GeneId,Chromosome,Type,SjStart,SjEnd,SampleCount");
-            writer.write(",StartContext,EndContext,BaseMotif");
-            writer.write(",AvgFrags,MaxFrags,AvgStartDepth,AvgEndDepth,SampleIds");
+            writer.write("GeneId,CancerType,SampleCount,Chromosome,Type,SjStart,SjEnd");
+            writer.write(",StartContext,EndContext,BaseMotif,AvgFrags,MaxFrags,AvgStartDepth,AvgEndDepth,SampleIds");
             writer.newLine();
 
             for(Map.Entry<String,Map<String,List<AltSpliceJuncCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
@@ -279,21 +287,44 @@ public class AltSpliceJunctionCohort
                         if(sampleCount < mMinSampleThreshold)
                             continue;
 
-                        writer.write(String.format("%s,%s,%s,%d,%d,%d",
-                                geneId, chromosome, altSJ.type(), altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END], sampleCount));
+                        Map<String,List<String>> cancerSamples = Maps.newHashMap();
 
-                        writer.write(String.format(",%s,%s,%s",
-                                altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END], altSJ.getDonorAcceptorBases()));
+                        if(mMinCancerSampleThreshold > 0)
+                        {
+                            for(Map.Entry<String,List<String>> entry : altSjData.cancerSampleIds().entrySet())
+                            {
+                                if(entry.getValue().size() < mMinCancerSampleThreshold)
+                                    continue;
 
-                        writer.write(String.format(",%.0f,%d,%.0f,%.0f",
-                                altSjData.getAvgFragmentCount(), altSjData.getMaxFragmentCount(),
-                                altSjData.getPositionCount(SE_START)/(double)sampleCount,
-                                altSjData.getPositionCount(SE_END)/(double)sampleCount));
+                                cancerSamples.put(entry.getKey(), entry.getValue());
+                            }
+                        }
+                        else
+                        {
+                            cancerSamples.put("ALL", altSjData.getSampleIds());
+                        }
 
-                        writer.write(String.format(",%s",
-                                appendStrList(altSjData.getSampleIds(), ';')));
+                        for(Map.Entry<String,List<String>> entry : cancerSamples.entrySet())
+                        {
+                            sampleCount = entry.getValue().size();
 
-                        writer.newLine();
+                            writer.write(String.format("%s,%s,%d,%s,%s,%d,%d",
+                                    geneId, entry.getKey(), sampleCount,
+                                    chromosome, altSJ.type(), altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]));
+
+                            writer.write(String.format(",%s,%s,%s",
+                                    altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END], altSJ.getDonorAcceptorBases()));
+
+                            writer.write(String.format(",%.0f,%d,%.0f,%.0f",
+                                    altSjData.getAvgFragmentCount(), altSjData.getMaxFragmentCount(),
+                                    altSjData.getPositionCount(SE_START) / (double) sampleCount,
+                                    altSjData.getPositionCount(SE_END) / (double) sampleCount));
+
+                            writer.write(String.format(",%s",
+                                    appendStrList(entry.getValue(), ITEM_DELIM.charAt(0))));
+
+                            writer.newLine();
+                        }
                     }
                 }
             }

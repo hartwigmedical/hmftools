@@ -49,6 +49,9 @@ public class CohortAnalyser
 
     public boolean load()
     {
+        if(!mConfig.SampleData.isValid())
+            return false;
+
         for(CohortAnalysisType type : mConfig.LoadTypes)
         {
             switch(type)

@@ -5,8 +5,10 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 public class AltSpliceJuncCohortData
@@ -15,8 +17,10 @@ public class AltSpliceJuncCohortData
 
     // cohort data
     private final List<String> mSampleIds;
-    private final List<String> mSampleIdsCohortA;
-    private final List<String> mSampleIdsCohortB;
+
+    private List<String> mSampleIdsCohortA;
+    private List<String> mSampleIdsCohortB;
+    private Map<String,List<String>> mCancerSampleIds;
 
     private int mTotalFragmentCount;
     private int mTotalFragmentCountCohortA;
@@ -31,8 +35,9 @@ public class AltSpliceJuncCohortData
     {
         AltSJ = altSJ;
         mSampleIds = Lists.newArrayList();
-        mSampleIdsCohortA = Lists.newArrayList();
-        mSampleIdsCohortB = Lists.newArrayList();
+        mSampleIdsCohortA = null;
+        mSampleIdsCohortB = null;
+        mCancerSampleIds = null;
 
         mTotalFragmentCount = 0;
         mTotalFragmentCountCohortA = 0;
@@ -44,15 +49,33 @@ public class AltSpliceJuncCohortData
         mPositionCounts = new int[SE_PAIR];
     }
 
-    public void addSampleAndCount(final String sampleId, int fragCount)
+    public void addSampleCount(final String sampleId, int fragCount, final String cancerType)
     {
         mSampleIds.add(sampleId);
         mTotalFragmentCount += fragCount;
         mMaxFragmentCount = max(mMaxFragmentCount, fragCount);
+
+        if(cancerType != null && mCancerSampleIds == null)
+        {
+            mCancerSampleIds = Maps.newHashMap();
+        }
+
+        List<String> samples = mCancerSampleIds.get(cancerType);
+
+        if(samples == null)
+            mCancerSampleIds.put(cancerType, Lists.newArrayList(sampleId));
+        else
+            samples.add(sampleId);
     }
 
-    public void addSampleAndCount(final String sampleId, int fragCount, boolean isCohortA)
+    public void addSampleCount(final String sampleId, int fragCount, boolean isCohortA)
     {
+        if(mSampleIdsCohortA == null)
+            mSampleIdsCohortA = Lists.newArrayList();
+
+        if(mSampleIdsCohortB == null)
+            mSampleIdsCohortB = Lists.newArrayList();
+
         if(isCohortA)
         {
             mSampleIdsCohortA.add(sampleId);
@@ -69,6 +92,7 @@ public class AltSpliceJuncCohortData
 
     public final List<String> getSampleIds() { return mSampleIds; }
     public final List<String> getCohortSampleIds(boolean isCohortA) { return isCohortA ? mSampleIdsCohortA : mSampleIdsCohortB; }
+    public final Map<String,List<String>> cancerSampleIds() { return mCancerSampleIds; }
 
     public int getMaxFragmentCount() { return mMaxFragmentCount; }
     public int getMaxFragmentCount(boolean isCohortA) { return isCohortA ? mMaxFragmentCountCohortA : mMaxFragmentCountCohortB; }

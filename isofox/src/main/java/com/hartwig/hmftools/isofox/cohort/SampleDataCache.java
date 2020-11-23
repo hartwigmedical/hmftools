@@ -15,12 +15,12 @@ import com.google.common.collect.Maps;
 
 public class SampleDataCache
 {
-    public final Map<String, List<String>> CancerTypeSamples; // cancer type to list of samples
-    public final Map<String, String> SampleCancerType; // sample to cancer type
-    public final Map<String, String> SampleCohort; // sample to cohort name
+    public final Map<String,List<String>> CancerTypeSamples; // cancer type to list of samples
+    public final Map<String,String> SampleCancerType; // sample to cancer type
+    public final Map<String,String> SampleCohort; // sample to cohort name
     public final List<String> SampleIds;
     public final List<String> CohortNames;
-    public final Map<String, List<String>> SampleGeneIds; // list of genes per sample
+    public final Map<String,List<String>> SampleGeneIds; // list of genes per sample
 
     private boolean mIsValid;
 
