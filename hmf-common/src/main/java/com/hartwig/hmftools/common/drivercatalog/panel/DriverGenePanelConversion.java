@@ -49,7 +49,7 @@ public class DriverGenePanelConversion {
         final String somaticActionableFile = String.format("%s/ActionableCodingPanel.somatic.%s.bed", resourceDir, extension);
         final String germlineActionableFile = String.format("%s/ActionableCodingPanel.germline.%s.bed", resourceDir, extension);
         final String germlineHotspotFile = String.format("%s/KnownHotspots.germline.%s.vcf.gz", resourceDir, extension);
-        final String clinvarFile = String.format("%s/clinvar.vcf.%s.gz", resourceDir, extension);
+        final String clinvarFile = String.format("%s/clinvar.%s.vcf.gz", resourceDir, extension);
 
         Collections.sort(driverGenes);
 
