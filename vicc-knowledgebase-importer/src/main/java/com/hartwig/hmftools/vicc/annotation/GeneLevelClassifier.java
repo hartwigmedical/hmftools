@@ -28,7 +28,8 @@ public class GeneLevelClassifier implements EventMatcher {
             "DELETERIOUS MUTATION",
             "negative",
             "BIALLELIC INACTIVATION",
-            "LOSS-OF-FUNCTION");
+            "LOSS-OF-FUNCTION",
+            "INACTIVATING MUTATION");
 
     public static final Set<String> ACTIVATING_GENE_LEVEL_KEYWORDS = Sets.newHashSet("Gain-of-function Mutations",
             "Gain-of-Function",
