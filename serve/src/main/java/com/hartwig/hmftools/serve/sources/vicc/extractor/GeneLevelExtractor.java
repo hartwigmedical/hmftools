@@ -71,38 +71,21 @@ public class GeneLevelExtractor {
     @VisibleForTesting
     static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String eventDescription = feature.description().split(" ", 2)[1].trim();
-        if (GeneLevelClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription) || feature.provenanceRule() != null) {
+        if (GeneLevelClassifier.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+            return GeneLevelEvent.INACTIVATION;
+        } else if (GeneLevelClassifier.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+            return GeneLevelEvent.ACTIVATION;
+        } else if (GeneLevelClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
-
-                        if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(GENE_ONLY)) {
-                                return GeneLevelEvent.ACTIVATION;
-                            } else {
-                                return GeneLevelEvent.ACTIVATION;
-                            }
-                        } else if (GeneLevelClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
-                            return GeneLevelEvent.ACTIVATION;
-                        }
+                        return GeneLevelEvent.ACTIVATION;
                     } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
-                        if (feature.provenanceRule() != null) {
-                            if (feature.provenanceRule().equals(GENE_ONLY)) {
-                                return GeneLevelEvent.INACTIVATION;
-                            } else {
-                                return GeneLevelEvent.INACTIVATION;
-                            }
-                        } else if (GeneLevelClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
-                            return GeneLevelEvent.INACTIVATION;
-                        }
+                        return GeneLevelEvent.INACTIVATION;
                     }
                 }
             }
             LOGGER.warn("Gene {} is not present in driver catalog in gene level extractor", feature.geneSymbol());
-        } else if (GeneLevelClassifier.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
-            return GeneLevelEvent.INACTIVATION;
-        } else if (GeneLevelClassifier.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
-            return GeneLevelEvent.ACTIVATION;
         } else {
             // LOGGER.warn("Unknown event {}", feature);
             return GeneLevelEvent.UNKNOWN;
