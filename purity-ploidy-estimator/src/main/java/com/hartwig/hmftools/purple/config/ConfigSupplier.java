@@ -147,12 +147,12 @@ public class ConfigSupplier {
         fitScoreConfig = FitScoreConfig.createConfig(cmd);
         structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
         refGenomeData = RefGenomeData.createRefGenomeConfig(cmd);
-        driverCatalogConfig = DriverCatalogConfig.createConfig(cmd, refGenomeData);
 
         amberData = AmberData.createAmberData(commonConfig);
         cobaltData = CobaltData.createCobaltData(commonConfig, amberData.gender());
         somaticFitConfig = SomaticFitConfig.createSomaticConfig(cmd, amberData);
         germlineConfig = GermlineConfig.createGermlineConfig(cmd);
+        driverCatalogConfig = DriverCatalogConfig.createConfig(cmd, refGenomeData, germlineConfig);
     }
 
     @NotNull

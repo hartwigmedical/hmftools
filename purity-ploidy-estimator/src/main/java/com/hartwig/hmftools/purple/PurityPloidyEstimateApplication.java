@@ -395,7 +395,7 @@ public class PurityPloidyEstimateApplication {
             final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
             final Consumer<VariantContext> convertThenSave = context -> factory.createVariant(sample, context).ifPresent(result::add);
             final VariantHotspotEnrichment enrich =
-                    new VariantHotspotEnrichment(configSupplier.driverCatalogConfig().hotspots(), convertThenSave);
+                    new VariantHotspotEnrichment(configSupplier.driverCatalogConfig().somaticHotspots(), convertThenSave);
 
             LOGGER.info("Loading somatic variants from {}", somaticConfig.file().get().toString());
             try (VCFFileReader vcfReader = new VCFFileReader(somaticConfig.file().get(), false)) {

@@ -5,8 +5,9 @@ import java.util.StringJoiner;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.clinvar.ClinvarPathogenicity;
+import com.hartwig.hmftools.common.clinvar.ClinvarSummary;
+import com.hartwig.hmftools.common.clinvar.ClinvarSummaryFactory;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -14,10 +15,8 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class GermlineClinvarEnrichment implements VariantContextEnrichment  {
+public class GermlineClinvarEnrichment implements VariantContextEnrichment {
 
-    private static final String CLNSIG = "CLNSIG";
-    private static final String CLNSIGCONF = "CLNSIGCONF";
     private static final String CLINVAR_PATHOGENICITY = "CLNPATH";
 
     private final Consumer<VariantContext> consumer;
@@ -28,11 +27,8 @@ public class GermlineClinvarEnrichment implements VariantContextEnrichment  {
 
     @Override
     public void accept(@NotNull final VariantContext context) {
-        final String clnSig = context.getAttributeAsString(CLNSIG, Strings.EMPTY);
-        final String clnSigConf = context.getAttributeAsString(CLNSIGCONF, Strings.EMPTY);
-        final String clnPath = ClinvarPathogenicity.fromClinvarAnnotation(clnSig, clnSigConf).toString();
-
-        context.getCommonInfo().putAttribute(CLINVAR_PATHOGENICITY, clnPath);
+        final ClinvarSummary summary = ClinvarSummaryFactory.fromContext(context);
+        context.getCommonInfo().putAttribute(CLINVAR_PATHOGENICITY, summary.pathogenicity().toString());
         consumer.accept(context);
     }
 
@@ -46,7 +42,10 @@ public class GermlineClinvarEnrichment implements VariantContextEnrichment  {
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
         StringJoiner joiner = new StringJoiner(",");
         Arrays.stream(ClinvarPathogenicity.values()).forEach(x -> joiner.add(x.toString()));
-        template.addMetaDataLine(new VCFInfoHeaderLine(CLINVAR_PATHOGENICITY, 1, VCFHeaderLineType.String, "Clinical pathogenicity [" + joiner.toString() + "]"));
+        template.addMetaDataLine(new VCFInfoHeaderLine(CLINVAR_PATHOGENICITY,
+                1,
+                VCFHeaderLineType.String,
+                "Clinical pathogenicity [" + joiner.toString() + "]"));
         return template;
     }
 }

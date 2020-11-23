@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.bachelor.types.PathogenicType.BLACK_LIST;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.type;
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
@@ -193,7 +192,7 @@ class VariantEnricher
             // enrich with data from the ref genome
             if(mRefGenomeEnrichment.isValid())
             {
-                final VariantType variantType = type(variantContext);
+                final VariantType variantType = VariantType.type(variantContext);
 
                 final String sequence = mRefGenomeEnrichment.getSequence(bachRecord.Chromosome, bachRecord.Position, bachRecord.Ref);
 

@@ -139,7 +139,7 @@ public class SomaticStream {
                         copyNumbers,
                         fittedRegions,
                         somaticPeaks,
-                        driverCatalogConfig.hotspots(),
+                        driverCatalogConfig.somaticHotspots(),
                         transcripts,
                         consumer);
 

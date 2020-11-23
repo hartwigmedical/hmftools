@@ -65,6 +65,7 @@ public class GermlineVariants {
                         copyNumbers,
                         genePanel,
                         transcripts,
+                        configSupplier.driverCatalogConfig().germlineHotspots(),
                         writer::add);
 
                 writer.writeHeader(enrichment.enrichHeader(vcfReader.getFileHeader()));
