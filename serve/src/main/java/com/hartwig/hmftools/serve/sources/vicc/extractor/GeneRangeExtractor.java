@@ -265,9 +265,10 @@ public class GeneRangeExtractor {
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
         if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
             return MutationTypeFilter.SPLICE;
-        } else if (extractSpecificInfoOfEvent.equals("deletions")) {
+        } else if (extractSpecificInfoOfEvent.equals("deletions") || extractSpecificInfoOfEvent.equals("deletion")
+                || extractSpecificInfoOfEvent.contains("Partial deletion of Exons")) {
             return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
-        } else if (extractSpecificInfoOfEvent.equals("insertions")) {
+        } else if (extractSpecificInfoOfEvent.equals("insertions") || extractSpecificInfoOfEvent.equals("insertion")) {
             return MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
         } else if (extractSpecificInfoOfEvent.equals("deletion/insertion") || extractSpecificInfoOfEvent.equals("insertions/deletions")) {
             return MutationTypeFilter.MISSENSE_INFRAME_ANY;
