@@ -19,6 +19,9 @@ LINX is an annotation, interpretation and [visualisation](./README_VIS.md) tool 
 * [Visualisation](#visualisation)  
 * [Version History](#version-history)
 
+## Installation
+The latest version of LINX can be downloaded from the [Hartwig releases page](https://github.com/hartwigmedical/hmftools/releases/)
+
 ## Configuration
 All values are optional unless otherwise specified.
 
