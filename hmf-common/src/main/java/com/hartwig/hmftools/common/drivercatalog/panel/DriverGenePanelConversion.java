@@ -70,16 +70,16 @@ public class DriverGenePanelConversion {
                 assembly.equals(DriverGenePanelAssembly.HG19) ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
         // Write out driver gene panel
-        createBedFiles(somaticActionableFile, somaticGenes, transcripts);
-        createBedFiles(germlineActionableFile, allGenes, transcripts);
+        createBedFiles(false, somaticActionableFile, somaticGenes, transcripts);
+        createBedFiles(true, germlineActionableFile, allGenes, transcripts);
 
         // Write out germline hotspot files
         new GermlineHotspotVCF(germlineGenes).process(clinvarFile, germlineHotspotFile);
     }
 
-    private static void createBedFiles(String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {
-        final List<NamedBed> somaticBed = HmfExonPanelBed.createRegions(genes, transcripts);
-        NamedBedFile.toBedFile(file, somaticBed);
+    private static void createBedFiles(boolean includeUTR, String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {
+        final List<NamedBed> somaticBed = HmfExonPanelBed.createRegions(includeUTR, genes, transcripts);
+        NamedBedFile.writeBedFile(file, somaticBed);
     }
 
     @NotNull

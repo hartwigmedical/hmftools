@@ -209,7 +209,7 @@ public class SageApplication implements AutoCloseable {
         final ListMultimap<Chromosome, NamedBed> panel = ArrayListMultimap.create();
         if (!panelBed.isEmpty()) {
             LOGGER.info("Reading bed file: {}", panelBed);
-            for (NamedBed bed : NamedBedFile.fromBedFile(panelBed)) {
+            for (NamedBed bed : NamedBedFile.readBedFile(panelBed)) {
                 if (HumanChromosome.contains(bed.chromosome())) {
                     panel.put(HumanChromosome.fromString(bed.chromosome()), bed);
                 }
