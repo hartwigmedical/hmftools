@@ -48,6 +48,7 @@ final class FilterFactory {
         FEATURES_TO_FILTER.add("CYTOPLASMIC MISLOCALIZATION");
         FEATURES_TO_FILTER.add("NUCLEAR TRANSLOCATION");
         FEATURES_TO_FILTER.add("NUCLEAR EXPRESSION");
+        FEATURES_TO_FILTER.add("SH2 DOMAIN MUTATION");
 
         // "Any" polymorphism is considered too vague.
         FEATURES_TO_FILTER.add("POLYMORPHISM");
