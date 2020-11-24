@@ -69,13 +69,17 @@ public class SpliceVariantMatcher
     private final Map<String,EnsemblGeneData> mGeneDataMap;
     private final AltSjFilter mAltSjFilter;
 
+    private final Map<String,Integer> mCohortAltSJs;
+
     private static final String SOMATIC_VARIANT_FILE = "somatic_variant_file";
+    private static final String COHORT_ALT_SJ_FILE = "cohort_alt_sj_file";
 
     public SpliceVariantMatcher(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
         mFieldsMap = Maps.newHashMap();
         mGeneDataMap = Maps.newHashMap();
+        mCohortAltSJs = Maps.newHashMap();
 
         mGeneTransCache = new EnsemblDataCache(mConfig.EnsemblDataCache, RefGenomeVersion.HG37);
         mGeneTransCache.setRequiredData(true, false, false, false);
@@ -92,6 +96,11 @@ public class SpliceVariantMatcher
             loadSpliceVariants(cmd.getOptionValue(SOMATIC_VARIANT_FILE));
         }
 
+        if(cmd.hasOption(COHORT_ALT_SJ_FILE))
+        {
+            loadCohortAltSJs(cmd.getOptionValue(COHORT_ALT_SJ_FILE));
+        }
+
         for(String geneId : mConfig.RestrictedGeneIds)
         {
             final EnsemblGeneData geneData = mGeneTransCache.getGeneDataById(geneId);
@@ -106,6 +115,7 @@ public class SpliceVariantMatcher
     public static void addCmdLineOptions(final Options options)
     {
         options.addOption(SOMATIC_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
+        options.addOption(COHORT_ALT_SJ_FILE, true, "Cohort frequency for alt SJs");
     }
 
     public void processAltSpliceJunctions()
@@ -369,7 +379,7 @@ public class SpliceVariantMatcher
             mWriter.write("SampleId,MatchType,GeneId,GeneName,Chromosome,Strand");
             mWriter.write(",Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,AccDonType,ExonDistance");
             mWriter.write(",AsjType,AsjContextStart,AsjContextEnd,AsjPosStart,AsjPosEnd,AsjFragmentCount,AsjDepthStart,AsjDepthEnd");
-            mWriter.write(",AsjTransData");
+            mWriter.write(",AsjCohortCount,AsjTransData");
 
             mWriter.newLine();
         }
@@ -394,11 +404,11 @@ public class SpliceVariantMatcher
 
             if(altSJ != null)
             {
-                mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%s",
+                mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d,%s",
                         altSJ.type(), altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
                         altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END],
                         altSJ.getFragmentCount(), altSJ.getPositionCount(SE_START), altSJ.getPositionCount(SE_END),
-                        transDataStr));
+                        getCohortAltSjFrequency(altSJ), transDataStr));
             }
             else
             {
@@ -411,6 +421,61 @@ public class SpliceVariantMatcher
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to write splice variant file: {}", e.toString());
+        }
+    }
+
+    private int getCohortAltSjFrequency(final AltSpliceJunction altSJ)
+    {
+        if(mCohortAltSJs.isEmpty())
+            return 0;
+
+        final String altSjKey = String.format("%s;%s;%s;%s",
+            altSJ.type(), altSJ.Chromosome, altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]);
+
+        Integer cohortCount = mCohortAltSJs.get(altSjKey);
+        return cohortCount != null ? cohortCount : 0;
+    }
+
+    private void loadCohortAltSJs(final String filename)
+    {
+        if(!Files.exists(Paths.get(filename)))
+        {
+            ISF_LOGGER.error("invalid cohort alt-SJ file({})", filename);
+            return;
+        }
+
+        try
+        {
+
+            final List<String> lines = Files.readAllLines(Paths.get(filename));
+
+            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+
+            lines.remove(0);
+
+            // GeneId,CancerType,SampleCount,Chromosome,Type,SjStart,SjEnd
+            int sampleCountIndex = fieldsMap.get("SampleCount");
+            int typeIndex = fieldsMap.get("Type");
+            int chromosomeIndex = fieldsMap.get("Chromosome");
+            int sjStartPosIndex = fieldsMap.get("SjStart");
+            int sjEndPosIndex = fieldsMap.get("SjEnd");
+
+            for(final String data : lines)
+            {
+                final String[] items = data.split(DELIMITER);
+
+                final String altSjKey = String.format("%s;%s;%s;%s",
+                        items[typeIndex], items[chromosomeIndex], items[sjStartPosIndex], items[sjEndPosIndex]);
+
+                final int sampleCount = Integer.parseInt(items[sampleCountIndex]);
+
+                mCohortAltSJs.put(altSjKey, sampleCount);
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to load cohort alt-SJ data file({}): {}", filename, e.toString());
+            return;
         }
     }
 
