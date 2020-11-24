@@ -55,17 +55,19 @@ public class AltSpliceJuncCohortData
         mTotalFragmentCount += fragCount;
         mMaxFragmentCount = max(mMaxFragmentCount, fragCount);
 
-        if(cancerType != null && mCancerSampleIds == null)
+        if(cancerType != null)
         {
-            mCancerSampleIds = Maps.newHashMap();
+            if(mCancerSampleIds == null)
+                mCancerSampleIds = Maps.newHashMap();
+
+            List<String> samples = mCancerSampleIds.get(cancerType);
+
+            if(samples == null)
+                mCancerSampleIds.put(cancerType, Lists.newArrayList(sampleId));
+            else
+                samples.add(sampleId);
         }
 
-        List<String> samples = mCancerSampleIds.get(cancerType);
-
-        if(samples == null)
-            mCancerSampleIds.put(cancerType, Lists.newArrayList(sampleId));
-        else
-            samples.add(sampleId);
     }
 
     public void addSampleCount(final String sampleId, int fragCount, boolean isCohortA)

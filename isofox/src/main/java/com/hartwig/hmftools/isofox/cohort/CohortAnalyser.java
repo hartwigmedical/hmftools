@@ -52,7 +52,7 @@ public class CohortAnalyser
         if(!mConfig.SampleData.isValid())
             return false;
 
-        for(CohortAnalysisType type : mConfig.LoadTypes)
+        for(CohortAnalysisType type : mConfig.AnalysisTypes)
         {
             switch(type)
             {

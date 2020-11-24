@@ -265,11 +265,39 @@ public class BamFragmentAllocator
 
         for(final List<ReadRecord> reads : mChimericReads.getLocalChimericReads())
         {
-            if(reads.size() != 2)
-                continue;
+            ReadRecord read1 = null;
+            ReadRecord read2 = null;
 
-            final ReadRecord read1 = reads.get(0);
-            final ReadRecord read2 = reads.get(1);
+            if(reads.size() == 2)
+            {
+                read1 = reads.get(0);
+                read2 = reads.get(1);
+            }
+            else if(reads.size() == 3)
+            {
+                /*
+                for(ReadRecord read : reads)
+                {
+                    if(read.hasSuppAlignment())
+                    {
+                        if(read1 == null)
+                        {
+                            read1 = read;
+                        }
+                        else
+                        {
+                            read2 = read;
+                            break;
+                        }
+                    }
+                }
+                */
+
+                continue;
+            }
+
+            if(read1 == null || read2 == null)
+                continue;
 
             int readPosMin = min(read1.PosStart, read2.PosStart);
             int readPosMax = max(read1.PosEnd, read2.PosEnd);
@@ -323,7 +351,7 @@ public class BamFragmentAllocator
     }
 
     private static final String LOG_READ_ID = "";
-    // private static final String LOG_READ_ID = "NB500901:113:H2MG5BGXB:2:11102:25355:5828";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:12209:23039:5722";
 
     private void processRead(ReadRecord read)
     {

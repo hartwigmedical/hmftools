@@ -19,6 +19,8 @@ import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_E
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.getFileId;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -32,6 +34,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSpliceJunctionCohort;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -42,7 +45,7 @@ public class CohortConfig
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
     public static final String USE_SAMPLE_DIRS = "use_sample_dir";
     public static final String ALL_AVAILABLE_FILES = "all_available_files";
-    public static final String LOAD_TYPES = "load_types";
+    public static final String ANALYSIS_TYPES = "analyses";
     public static final String FAIL_MISSING = "fail_on_missing_file";
 
     public static final String SAMPLE_MUT_FILE = "sample_mut_file";
@@ -59,7 +62,9 @@ public class CohortConfig
     public final boolean FailOnMissingSample;
     public final boolean ConvertUnmatchedCancerToOther;
 
-    public final List<CohortAnalysisType> LoadTypes;
+    public final List<CohortAnalysisType> AnalysisTypes;
+
+    public final DatabaseAccess DbAccess;
 
     public final String EnsemblDataCache;
 
@@ -99,7 +104,7 @@ public class CohortConfig
             ISF_LOGGER.warn("invalid sample data file({})", sampleDataFile);
         }
 
-        LoadTypes = Arrays.stream(cmd.getOptionValue(LOAD_TYPES).split(ITEM_DELIM))
+        AnalysisTypes = Arrays.stream(cmd.getOptionValue(ANALYSIS_TYPES).split(ITEM_DELIM))
                 .map(x -> CohortAnalysisType.valueOf(x)).collect(Collectors.toList());
 
         RestrictedGeneIds = Lists.newArrayList();
@@ -125,9 +130,11 @@ public class CohortConfig
 
         SampleMutationsFile = cmd.getOptionValue(SAMPLE_MUT_FILE);
 
-        Fusions = LoadTypes.contains(FUSION) ? new FusionCohortConfig(cmd) : null;
+        Fusions = AnalysisTypes.contains(FUSION) ? new FusionCohortConfig(cmd) : null;
 
-        Expression = requiresExpressionConfig(LoadTypes) ? new ExpressionCohortConfig(cmd) : null;
+        Expression = requiresExpressionConfig(AnalysisTypes) ? new ExpressionCohortConfig(cmd) : null;
+
+        DbAccess = createDatabaseAccess(cmd);
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
     }
@@ -143,7 +150,7 @@ public class CohortConfig
     public static boolean isValid(final CommandLine cmd)
     {
         if(!cmd.hasOption(ROOT_DATA_DIRECTORY) || !cmd.hasOption(DATA_OUTPUT_DIR) || !cmd.hasOption(SAMPLE_DATA_FILE)
-        || !cmd.hasOption(LOAD_TYPES))
+        || !cmd.hasOption(ANALYSIS_TYPES))
         {
             return false;
         }
@@ -214,18 +221,19 @@ public class CohortConfig
         options.addOption(USE_SAMPLE_DIRS, false, "File with list of samples to load data for");
         options.addOption(FAIL_MISSING, false, "Exit if sample input file isn't found");
         options.addOption(ALL_AVAILABLE_FILES, false, "Load all files in root directory matching expeted Isofox file names");
-        options.addOption(LOAD_TYPES, true, "List of data types to load & process");
+        options.addOption(ANALYSIS_TYPES, true, "List of data types to load & process");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
-
 
         options.addOption(SAMPLE_MUT_FILE, true, "Sample mutations by gene and cancer type");
 
         AltSpliceJunctionCohort.addCmdLineOptions(options);
         FusionCohortConfig.addCmdLineOptions(options);
         ExpressionCohortConfig.addCmdLineOptions(options);
+
+        addDatabaseCmdLineArgs(options);
 
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(THREADS, true, "Number of threads for task execution, default is 0 (off)");

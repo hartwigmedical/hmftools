@@ -40,8 +40,10 @@ public class AltSpliceJunctionCohort
     private final int mMinCancerSampleThreshold;
     private final int mMinFragments;
     private final double mProbabilityThreshold;
-    private final String mSpliceVariantFile;
     private final boolean mRewriteCohortFile;
+
+    private final boolean mRunVariantMatching;
+    private final String mSpliceVariantFile;
 
     private BufferedWriter mSampleDataWriter;
 
@@ -50,7 +52,9 @@ public class AltSpliceJunctionCohort
     private static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
     private static final String ALT_SJ_MIN_FRAGS = "alt_sj_min_frags";
     private static final String ALT_SJ_REWRITE_COHORT = "alt_sj_rewrite_cohort";
-    private static final String SPLICE_VARIANT_FILE = "splice_variant_file";
+    
+    private static final String RUN_VARIANT_MATCHING = "run_variant_matching";
+    private static final String SOMATIC_VARIANT_FILE = "somatic_variant_file";
 
     private final Map<String,Integer> mFieldsMap;
 
@@ -72,12 +76,14 @@ public class AltSpliceJunctionCohort
         mMinCancerSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_CANCER_SAMPLES, "0"));
         mMinFragments = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS, "0"));
         mProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
-        mSpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
         mRewriteCohortFile = cmd.hasOption(ALT_SJ_REWRITE_COHORT);
 
         mSampleDataWriter = null;
 
-        mSpliceVariantMatching = mSpliceVariantFile != null ? new SpliceVariantMatching(mConfig, mSpliceVariantFile) : null;
+        mRunVariantMatching = cmd.hasOption(RUN_VARIANT_MATCHING);
+        mSpliceVariantFile = cmd.getOptionValue(SOMATIC_VARIANT_FILE);
+
+        mSpliceVariantMatching = mRunVariantMatching ? new SpliceVariantMatching(mConfig, mSpliceVariantFile) : null;
     }
 
     public static void addCmdLineOptions(final Options options)
@@ -87,7 +93,9 @@ public class AltSpliceJunctionCohort
         options.addOption(ALT_SJ_MIN_FRAGS, true, "Min frag count supporting alt-SJs outside gene panel");
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
         options.addOption(ALT_SJ_REWRITE_COHORT, false, "Combined alt SJs from multiple samples into a single file");
-        options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
+
+        options.addOption(RUN_VARIANT_MATCHING, false, "Match somatic variants with alt SJs");
+        options.addOption(SOMATIC_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
     }
 
     public void processAltSpliceJunctions()
