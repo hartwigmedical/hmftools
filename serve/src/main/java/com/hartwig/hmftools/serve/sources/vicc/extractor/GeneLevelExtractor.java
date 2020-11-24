@@ -19,6 +19,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneLevelExtractor {
@@ -72,12 +73,17 @@ public class GeneLevelExtractor {
     @NotNull
     @VisibleForTesting
     static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
-        String eventDescription = feature.description().split(" ", 2)[1].trim();
-        if (GeneLevelMatcher.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        String event = Strings.EMPTY;
+        if (feature.name().split(" ").length > 1) {
+            event = feature.name().split(" ", 2)[1].trim();
+        } else {
+            event = feature.name();
+        }
+        if (GeneLevelMatcher.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (GeneLevelMatcher.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        } else if (GeneLevelMatcher.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
             return GeneLevelEvent.ACTIVATION;
-        } else if (GeneLevelMatcher.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        } else if (GeneLevelMatcher.GENERIC_GENE_LEVEL_KEYWORDS.contains(event)) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
