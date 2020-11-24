@@ -13,11 +13,13 @@ import com.hartwig.hmftools.common.serve.classification.matchers.GeneLevelMatche
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
+import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneLevelExtractor {
@@ -45,7 +47,8 @@ public class GeneLevelExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
             if (feature.type() == MutationType.GENE_LEVEL) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
+
                 } else {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder()
@@ -55,7 +58,7 @@ public class GeneLevelExtractor {
                 }
             } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
@@ -70,12 +73,17 @@ public class GeneLevelExtractor {
     @NotNull
     @VisibleForTesting
     static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
-        String eventDescription = feature.description().split(" ", 2)[1].trim();
-        if (GeneLevelMatcher.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        String event = Strings.EMPTY;
+        if (feature.name().split(" ").length > 1) {
+            event = feature.name().split(" ", 2)[1].trim();
+        } else {
+            event = feature.name();
+        }
+        if (GeneLevelMatcher.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (GeneLevelMatcher.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        } else if (GeneLevelMatcher.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
             return GeneLevelEvent.ACTIVATION;
-        } else if (GeneLevelMatcher.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        } else if (GeneLevelMatcher.GENERIC_GENE_LEVEL_KEYWORDS.contains(event)) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {
@@ -85,7 +93,7 @@ public class GeneLevelExtractor {
                     }
                 }
             }
-            LOGGER.warn("Gene {} is not present in driver catalog in gene level extractor", feature.geneSymbol());
+            CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
         } else {
             // LOGGER.warn("Unknown event {}", feature);
             return GeneLevelEvent.UNKNOWN;

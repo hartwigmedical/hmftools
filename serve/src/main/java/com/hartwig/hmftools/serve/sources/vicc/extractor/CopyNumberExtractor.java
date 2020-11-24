@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -35,8 +36,7 @@ public class CopyNumberExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
             if (feature.type() == MutationType.AMPLIFICATION) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping amplification extraction!",
-                            feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
                     ampsDelsPerFeature.put(feature,
                             ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.AMPLIFICATION).build());
@@ -44,8 +44,7 @@ public class CopyNumberExtractor {
 
             } else if (feature.type() == MutationType.DELETION) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping deletion extraction!",
-                            feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
                     ampsDelsPerFeature.put(feature,
                             ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.DELETION).build());

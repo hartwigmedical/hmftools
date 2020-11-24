@@ -45,7 +45,7 @@ public class ViccFilter {
                         filteredFeatures.add(feature);
                     } else {
                         hasFilteredFeatures = true;
-                        LOGGER.debug("Filtering feature '{}' on '{}'", feature.name(), feature.geneSymbol());
+                      //  LOGGER.debug("Filtering feature '{}' on '{}'", feature.name(), feature.geneSymbol());
                     }
                 }
 
