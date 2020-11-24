@@ -8,7 +8,7 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PromiscuousFusionMatcher implements EventMatcher {
+class PromiscuousFusionMatcher implements EventMatcher {
 
     private static final Set<String> FUSION_KEYWORDS =
             Sets.newHashSet("Fusion", "fusion", "FUSION", "Fusions", "FUSIONS", "REARRANGEMENT", "rearrange");

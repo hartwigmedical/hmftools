@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CompositeEventMatcher implements EventMatcher {
+class CompositeEventMatcher implements EventMatcher {
 
     @NotNull
     private final List<EventMatcher> noMatchEventMatchers;

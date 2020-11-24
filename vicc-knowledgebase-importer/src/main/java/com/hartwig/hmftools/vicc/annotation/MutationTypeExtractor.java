@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.vicc.annotation;
 
 import com.hartwig.hmftools.common.serve.classification.EventClassifier;
-import com.hartwig.hmftools.common.serve.classification.EventMatcherFactory;
+import com.hartwig.hmftools.common.serve.classification.EventClassifierFactory;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 
 import org.apache.logging.log4j.LogManager;
@@ -18,7 +18,7 @@ public class MutationTypeExtractor {
 
     @NotNull
     public static MutationTypeExtractor buildProductionExtractor() {
-        EventClassifier eventClassifier = new EventClassifier(EventMatcherFactory.buildMatcherMap(new ProteinAnnotationExtractor()));
+        EventClassifier eventClassifier = EventClassifierFactory.buildClassifier(new ProteinAnnotationExtractor());
         return new MutationTypeExtractor(eventClassifier);
     }
 

@@ -8,13 +8,18 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class EventMatcherFactory {
+public final class EventClassifierFactory {
 
-    private EventMatcherFactory() {
+    private EventClassifierFactory() {
     }
 
     @NotNull
-    public static Map<MutationType, EventMatcher> buildMatcherMap(@NotNull EventPreprocessor proteinAnnotationPreprocessor) {
+    public static EventClassifier buildClassifier(@NotNull EventPreprocessor proteinAnnotationPreprocessor) {
+        return new EventClassifier(buildMatcherMap(proteinAnnotationPreprocessor));
+    }
+
+    @NotNull
+    private static Map<MutationType, EventMatcher> buildMatcherMap(@NotNull EventPreprocessor proteinAnnotationPreprocessor) {
         EventMatcher complexClassifier = new ComplexMatcher();
         EventMatcher combinedClassifier = new CombinedMatcher();
         EventMatcher fusionPairAndExonRangeClassifier = new FusionPairAndExonRangeMatcher();
