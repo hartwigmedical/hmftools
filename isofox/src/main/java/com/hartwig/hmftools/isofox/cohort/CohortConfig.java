@@ -33,7 +33,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
-import com.hartwig.hmftools.isofox.novel.cohort.AltSpliceJunctionCohort;
+import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
+import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -229,7 +230,8 @@ public class CohortConfig
 
         options.addOption(SAMPLE_MUT_FILE, true, "Sample mutations by gene and cancer type");
 
-        AltSpliceJunctionCohort.addCmdLineOptions(options);
+        AltSjCohortAnalyser.addCmdLineOptions(options);
+        SpliceVariantMatcher.addCmdLineOptions(options);
         FusionCohortConfig.addCmdLineOptions(options);
         ExpressionCohortConfig.addCmdLineOptions(options);
 

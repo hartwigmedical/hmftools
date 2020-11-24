@@ -14,6 +14,7 @@ public enum CohortAnalysisType
     SAMPLE_GENE_PERCENTILES,
     TRANSCRIPT_DISTRIBUTION,
     ALT_SPLICE_JUNCTION,
+    SPLICE_VARIANT_MATCHING,
     FUSION,
     PASSING_FUSION,
     RETAINED_INTRON,
@@ -39,6 +40,7 @@ public enum CohortAnalysisType
                 return SUMMARY_FILE;
 
             case ALT_SPLICE_JUNCTION:
+            case SPLICE_VARIANT_MATCHING:
                 return ALT_SJ_FILE_ID;
 
             case FUSION:

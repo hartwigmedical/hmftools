@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
-public class AltSpliceJuncCohortData
+public class AltSjCohortData
 {
     public final AltSpliceJunction AltSJ;
 
@@ -31,7 +31,7 @@ public class AltSpliceJuncCohortData
     private int mMaxFragmentCountCohortB;
     private final int[] mPositionCounts; // counts at the start and end
 
-    public AltSpliceJuncCohortData(final AltSpliceJunction altSJ)
+    public AltSjCohortData(final AltSpliceJunction altSJ)
     {
         AltSJ = altSJ;
         mSampleIds = Lists.newArrayList();

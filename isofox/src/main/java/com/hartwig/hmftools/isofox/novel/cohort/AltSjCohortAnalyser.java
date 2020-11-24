@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.ALT_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.fromCsv;
@@ -31,7 +32,7 @@ import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-public class AltSpliceJunctionCohort
+public class AltSjCohortAnalyser
 {
     private final CohortConfig mConfig;
 
@@ -42,30 +43,23 @@ public class AltSpliceJunctionCohort
     private final double mProbabilityThreshold;
     private final boolean mRewriteCohortFile;
 
-    private final boolean mRunVariantMatching;
-    private final String mSpliceVariantFile;
-
     private BufferedWriter mSampleDataWriter;
+
+    private final AltSjFilter mAltSjFilter;
+    private final Map<String,Integer> mFieldsMap;
+
+    // map of chromosomes to a map of genes to a list of alternate splice junctions
+    private final Map<String,Map<String,List<AltSjCohortData>>> mAltSpliceJunctions;
+
+    private final FisherExactTest mFisherET;
 
     private static final String ALT_SJ_MIN_SAMPLES = "alt_sj_min_samples";
     private static final String ALT_SJ_MIN_CANCER_SAMPLES = "alt_sj_min_cancer_samples";
     private static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
     private static final String ALT_SJ_MIN_FRAGS = "alt_sj_min_frags";
     private static final String ALT_SJ_REWRITE_COHORT = "alt_sj_rewrite_cohort";
-    
-    private static final String RUN_VARIANT_MATCHING = "run_variant_matching";
-    private static final String SOMATIC_VARIANT_FILE = "somatic_variant_file";
 
-    private final Map<String,Integer> mFieldsMap;
-
-    // map of chromosomes to a map of genes to a list of alternate splice junctions
-    private final Map<String,Map<String,List<AltSpliceJuncCohortData>>> mAltSpliceJunctions;
-
-    private final SpliceVariantMatching mSpliceVariantMatching;
-
-    private final FisherExactTest mFisherET;
-
-    public AltSpliceJunctionCohort(final CohortConfig config, final CommandLine cmd)
+    public AltSjCohortAnalyser(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
         mAltSpliceJunctions = Maps.newHashMap();
@@ -78,12 +72,9 @@ public class AltSpliceJunctionCohort
         mProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
         mRewriteCohortFile = cmd.hasOption(ALT_SJ_REWRITE_COHORT);
 
+        mAltSjFilter = new AltSjFilter(mConfig.RestrictedGeneIds, mConfig.ExcludedGeneIds, mMinFragments);
+
         mSampleDataWriter = null;
-
-        mRunVariantMatching = cmd.hasOption(RUN_VARIANT_MATCHING);
-        mSpliceVariantFile = cmd.getOptionValue(SOMATIC_VARIANT_FILE);
-
-        mSpliceVariantMatching = mRunVariantMatching ? new SpliceVariantMatching(mConfig, mSpliceVariantFile) : null;
     }
 
     public static void addCmdLineOptions(final Options options)
@@ -93,9 +84,6 @@ public class AltSpliceJunctionCohort
         options.addOption(ALT_SJ_MIN_FRAGS, true, "Min frag count supporting alt-SJs outside gene panel");
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
         options.addOption(ALT_SJ_REWRITE_COHORT, false, "Combined alt SJs from multiple samples into a single file");
-
-        options.addOption(RUN_VARIANT_MATCHING, false, "Match somatic variants with alt SJs");
-        options.addOption(SOMATIC_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
     }
 
     public void processAltSpliceJunctions()
@@ -114,7 +102,7 @@ public class AltSpliceJunctionCohort
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final Path altSJFile = filenames.get(i);
 
-            final List<AltSpliceJunction> altSJs = loadFile(altSJFile);
+            final List<AltSpliceJunction> altSJs = loadFile(altSJFile, mFieldsMap, mAltSjFilter);
 
             ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", i, sampleId, altSJs.size());
             totalProcessed += altSJs.size();
@@ -133,9 +121,6 @@ public class AltSpliceJunctionCohort
 
             if(mRewriteCohortFile)
                 altSJs.forEach(x -> writeAltSpliceJunctionData(sampleId, x));
-
-            if(mSpliceVariantMatching != null)
-                mSpliceVariantMatching.evaluateSpliceVariants(sampleId, altSJs);
         }
 
         ISF_LOGGER.info("loaded {} alt-SJ records", totalProcessed);
@@ -149,26 +134,23 @@ public class AltSpliceJunctionCohort
         // write a cohort file
         writeCombinedAltSpliceJunctions();
 
-        if(mSpliceVariantMatching != null)
-            mSpliceVariantMatching.close();
-
         closeBufferedWriter(mSampleDataWriter);
     }
 
-    private List<AltSpliceJunction> loadFile(final Path filename)
+    public static List<AltSpliceJunction> loadFile(final Path filename, final Map<String,Integer> fieldsIndexMap, final AltSjFilter filter)
     {
         try
         {
             final List<String> lines = Files.readAllLines(filename);
 
-            if(mFieldsMap.isEmpty())
-                mFieldsMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
+            if(fieldsIndexMap.isEmpty())
+                fieldsIndexMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
 
             lines.remove(0);
 
             return lines.stream()
-                    .map(x -> fromCsv(x, mFieldsMap))
-                    .filter(x -> passesFilter(x))
+                    .map(x -> fromCsv(x, fieldsIndexMap))
+                    .filter(x -> filter.passesFilter(x))
                     .collect(Collectors.toList());
         }
         catch(IOException e)
@@ -178,23 +160,9 @@ public class AltSpliceJunctionCohort
         }
     }
 
-    private boolean passesFilter(final AltSpliceJunction altSJ)
-    {
-        if(mMinFragments > 0 && altSJ.getFragmentCount() < mMinFragments)
-            return false;
-
-        if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(altSJ.getGeneId()))
-            return false;
-
-        if(!mConfig.ExcludedGeneIds.isEmpty() && mConfig.ExcludedGeneIds.contains(altSJ.getGeneId()))
-            return false;
-
-        return true;
-    }
-
     private void addAltSpliceJunction(final AltSpliceJunction altSJ, final String sampleId, final String cancerType)
     {
-        Map<String,List<AltSpliceJuncCohortData>> chrSJs = mAltSpliceJunctions.get(altSJ.Chromosome);
+        Map<String,List<AltSjCohortData>> chrSJs = mAltSpliceJunctions.get(altSJ.Chromosome);
 
         if(chrSJs == null)
         {
@@ -202,7 +170,7 @@ public class AltSpliceJunctionCohort
             mAltSpliceJunctions.put(altSJ.Chromosome, chrSJs);
         }
 
-        List<AltSpliceJuncCohortData> geneList = chrSJs.get(altSJ.getGeneId());
+        List<AltSjCohortData> geneList = chrSJs.get(altSJ.getGeneId());
 
         if(geneList == null)
         {
@@ -210,11 +178,11 @@ public class AltSpliceJunctionCohort
             chrSJs.put(altSJ.getGeneId(), geneList);
         }
 
-        AltSpliceJuncCohortData altSjData = geneList.stream().filter(x -> x.AltSJ.matches(altSJ)).findFirst().orElse(null);
+        AltSjCohortData altSjData = geneList.stream().filter(x -> x.AltSJ.matches(altSJ)).findFirst().orElse(null);
 
         if(altSjData == null)
         {
-            altSjData = new AltSpliceJuncCohortData(altSJ);
+            altSjData = new AltSjCohortData(altSJ);
             geneList.add(altSjData);
         }
 
@@ -277,16 +245,16 @@ public class AltSpliceJunctionCohort
             writer.write(",StartContext,EndContext,BaseMotif,AvgFrags,MaxFrags,AvgStartDepth,AvgEndDepth,SampleIds");
             writer.newLine();
 
-            for(Map.Entry<String,Map<String,List<AltSpliceJuncCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
+            for(Map.Entry<String,Map<String,List<AltSjCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
             {
                 final String chromosome = chrEntry.getKey();
-                final Map<String,List<AltSpliceJuncCohortData>> geneMap = chrEntry.getValue();
+                final Map<String,List<AltSjCohortData>> geneMap = chrEntry.getValue();
 
-                for(Map.Entry<String,List<AltSpliceJuncCohortData>> geneEntry : geneMap.entrySet())
+                for(Map.Entry<String,List<AltSjCohortData>> geneEntry : geneMap.entrySet())
                 {
                     final String geneId = geneEntry.getKey();
 
-                    for (AltSpliceJuncCohortData altSjData : geneEntry.getValue())
+                    for (AltSjCohortData altSjData : geneEntry.getValue())
                     {
                         final AltSpliceJunction altSJ = altSjData.AltSJ;
 
@@ -364,16 +332,16 @@ public class AltSpliceJunctionCohort
 
             int scCohortA = mConfig.SampleData.sampleCountInCohort(mConfig.SampleData.SampleIds, SampleDataCache.COHORT_A);
 
-            for(Map.Entry<String,Map<String,List<AltSpliceJuncCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
+            for(Map.Entry<String,Map<String,List<AltSjCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
             {
                 final String chromosome = chrEntry.getKey();
-                final Map<String,List<AltSpliceJuncCohortData>> geneMap = chrEntry.getValue();
+                final Map<String,List<AltSjCohortData>> geneMap = chrEntry.getValue();
 
-                for(Map.Entry<String,List<AltSpliceJuncCohortData>> geneEntry : geneMap.entrySet())
+                for(Map.Entry<String,List<AltSjCohortData>> geneEntry : geneMap.entrySet())
                 {
                     final String geneId = geneEntry.getKey();
 
-                    for (AltSpliceJuncCohortData altSjData : geneEntry.getValue())
+                    for (AltSjCohortData altSjData : geneEntry.getValue())
                     {
                         final AltSpliceJunction altSJ = altSjData.AltSJ;
 

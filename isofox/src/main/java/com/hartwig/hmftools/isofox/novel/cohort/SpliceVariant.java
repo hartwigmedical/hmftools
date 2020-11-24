@@ -3,7 +3,6 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.isofox.fusion.ChrGeneCollectionPair;
 
 public class SpliceVariant
 {
@@ -14,12 +13,13 @@ public class SpliceVariant
     public final String Ref;
     public final String Alt;
     public final VariantType Type;
-    public final String TransName;
     public final String CodingEffect;
+    public final String HgvsCodingImpact;
+    public final String TriNucContext;
 
     public SpliceVariant(
             final String geneName, final String chromosome, int position, final VariantType type,
-            final String ref, final String alt, final String transName, final String codingEffect)
+            final String ref, final String alt, final String codingEffect, final String hgvsCodingImpact, final String triNucContext)
     {
         GeneName = geneName;
         Chromosome = chromosome;
@@ -27,7 +27,8 @@ public class SpliceVariant
         Ref = ref;
         Alt = alt;
         Type = type;
-        TransName = transName;
+        HgvsCodingImpact = hgvsCodingImpact;
+        TriNucContext = triNucContext;
         CodingEffect = codingEffect;
     }
 
@@ -40,8 +41,9 @@ public class SpliceVariant
                 VariantType.valueOf(items[fieldIndexMap.get("Type")]),
                 items[fieldIndexMap.get("Ref")],
                 items[fieldIndexMap.get("Alt")],
-                items[fieldIndexMap.get("TransName")],
-                items[fieldIndexMap.get("CodingEffect")]);
+                items[fieldIndexMap.get("CodingEffect")],
+                items[fieldIndexMap.get("HgvsCodingImpact")],
+                items[fieldIndexMap.get("TriNucContext")]);
 
     }
 

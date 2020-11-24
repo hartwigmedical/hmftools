@@ -24,7 +24,8 @@ import com.hartwig.hmftools.isofox.expression.cohort.GeneExpressionDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
 import com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort;
-import com.hartwig.hmftools.isofox.novel.cohort.AltSpliceJunctionCohort;
+import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
+import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
 import org.apache.commons.cli.CommandLine;
@@ -62,8 +63,15 @@ public class CohortAnalyser
 
                 case ALT_SPLICE_JUNCTION:
                 {
-                    AltSpliceJunctionCohort altSjCohort = new AltSpliceJunctionCohort(mConfig, mCmdLineArgs);
+                    AltSjCohortAnalyser altSjCohort = new AltSjCohortAnalyser(mConfig, mCmdLineArgs);
                     altSjCohort.processAltSpliceJunctions();
+                    break;
+                }
+
+                case SPLICE_VARIANT_MATCHING:
+                {
+                    SpliceVariantMatcher spliceVariantMatcher = new SpliceVariantMatcher(mConfig, mCmdLineArgs);
+                    spliceVariantMatcher.processAltSpliceJunctions();
                     break;
                 }
 
