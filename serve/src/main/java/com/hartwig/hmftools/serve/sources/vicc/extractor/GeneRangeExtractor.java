@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneRangeAnnotation;
+import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -48,8 +49,8 @@ public class GeneRangeExtractor {
 
             if (mutationType == MutationType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping fusion pair and gene range extraction for range!",
-                            feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
+
                 } else {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -74,7 +75,7 @@ public class GeneRangeExtractor {
             }
             if (mutationType == MutationType.GENE_RANGE_EXON) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene range exon extraction!", feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -97,7 +98,7 @@ public class GeneRangeExtractor {
                 }
             } else if (mutationType == MutationType.GENE_RANGE_CODON) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping gene range codon extraction!", feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
                     Integer codonNumber = extractCodonNumber(feature.name());
                     if (codonNumber != null) {
@@ -255,7 +256,7 @@ public class GeneRangeExtractor {
                 }
             }
         }
-        LOGGER.warn("Gene {} is not present in driver catalog in gene range extractor", gene);
+        CheckGenes.checkGensInPanel(gene, feature.name());
         return MutationTypeFilter.UNKNOWN;
     }
 

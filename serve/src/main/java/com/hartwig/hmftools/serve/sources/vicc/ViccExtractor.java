@@ -383,7 +383,7 @@ public final class ViccExtractor {
         for (Feature feature : featuresWithoutGenomicEvents) {
             MutationType type = feature.type();
             if (type != MutationType.UNKNOWN && type != MutationType.COMBINED && type != MutationType.COMPLEX) {
-                LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+               // LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
             }
         }
 

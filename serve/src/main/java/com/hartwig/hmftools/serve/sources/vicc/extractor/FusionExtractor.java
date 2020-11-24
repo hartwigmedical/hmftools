@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
+import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -41,9 +42,9 @@ public class FusionExtractor {
                 if (fusionArray.length == 2) {
                     if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
                         annotatedFusion = ImmutableKnownFusionPair.builder().from(EXONIC_FUSIONS_MAP.get(fusion)).build();
-
                     } else {
-                        annotatedFusion = ImmutableKnownFusionPair.builder().geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
+                        annotatedFusion =
+                                ImmutableKnownFusionPair.builder().geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
                     }
                 } else if (fusionArray.length == 1) {
                     if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
@@ -62,11 +63,10 @@ public class FusionExtractor {
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
 
-                if (canonicalTranscriptStart == null || canonicalTranscriptEnd == null) {
-                    LOGGER.warn(
-                            "Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion pair extraction!",
-                            annotatedFusion.geneUp(),
-                            annotatedFusion.geneDown());
+                if (canonicalTranscriptStart == null) {
+                    CheckGenes.checkGensInPanel(annotatedFusion.geneUp(), feature.name());
+                } else if (canonicalTranscriptEnd == null) {
+                    CheckGenes.checkGensInPanel(annotatedFusion.geneDown(), feature.name());
                 } else {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
@@ -79,14 +79,14 @@ public class FusionExtractor {
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
 
-                if (canonicalTranscriptStart == null || canonicalTranscriptEnd == null) {
-                    LOGGER.warn("Could not find fusion gene start {} or fusion gene end {} in HMF gene panel. Skipping fusion par and gene "
-                            + "range exon extraction for internal fusion!", annotatedFusion.geneUp(), annotatedFusion.geneDown());
+                if (canonicalTranscriptStart == null) {
+                    CheckGenes.checkGensInPanel(annotatedFusion.geneUp(), feature.name());
+                } else if (canonicalTranscriptEnd == null) {
+                    CheckGenes.checkGensInPanel(annotatedFusion.geneDown(), feature.name());
                 } else {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
             }
-        }
-        return fusionsPerFeature;
+        } return fusionsPerFeature;
     }
 }

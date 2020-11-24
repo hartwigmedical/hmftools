@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.serve.classification.matchers.GeneLevelMatche
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
+import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -45,7 +46,8 @@ public class GeneLevelExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
             if (feature.type() == MutationType.GENE_LEVEL) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
+
                 } else {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder()
@@ -55,7 +57,7 @@ public class GeneLevelExtractor {
                 }
             } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping gene level extraction!", feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
