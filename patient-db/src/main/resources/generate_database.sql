@@ -939,6 +939,60 @@ CREATE TABLE pgxGenotype
     PRIMARY KEY (id)
 );
 
+DROP TABLE IF EXISTS pgxVariant;
+CREATE TABLE pgxVariant
+(   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    position int not null,
+    filter varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    ref varchar(255) NOT NULL,
+    alt varchar(255) NOT NULL,
+    gene varchar(255) NOT NULL,
+    genesEffected int not null,
+    worstEffectTranscript varchar(255) NOT NULL,
+    worstEffect varchar(255) NOT NULL,
+    worstCodingEffect varchar(255) NOT NULL,
+    canonicalEffect varchar(255) NOT NULL,
+    canonicalCodingEffect varchar(255) NOT NULL,
+    canonicalHgvsCodingImpact varchar(255) NOT NULL,
+    canonicalHgvsProteinImpact varchar(255) NOT NULL,
+    microhomology varchar(255) NOT NULL,
+    repeatSequence varchar(255) NOT NULL,
+    repeatCount int NOT NULL,
+    alleleReadCount int NOT NULL,
+    totalReadCount int NOT NULL,
+    adjustedVaf DOUBLE PRECISION NOT NULL,
+    variantCopyNumber DOUBLE PRECISION NOT NULL,
+    copyNumber DOUBLE PRECISION NOT NULL,
+    tier varchar(20) NOT NULL,
+    trinucleotideContext varchar(3) NOT NULL,
+    subclonalLikelihood DOUBLE PRECISION NOT NULL,
+    biallelic BOOLEAN NOT NULL,
+    hotspot varchar(20) NOT NULL,
+    mappability DOUBLE PRECISION NOT NULL,
+    germlineStatus varchar(255) NOT NULL,
+    minorAlleleCopyNumber DOUBLE PRECISION NOT NULL,
+    recovered BOOLEAN NOT NULL,
+    kataegis varchar(20) NOT NULL,
+    referenceAlleleReadCount int,
+    referenceTotalReadCount int,
+    rnaAlleleReadCount int,
+    rnaTotalReadCount int,
+    localPhaseSet int,
+    localRealignmentSet int,
+    phasedInframeIndel int,
+    qual double precision not null,
+    reported BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId),
+    INDEX(filter),
+    INDEX(type),
+    INDEX(gene)
+);
+
 DROP TABLE IF EXISTS amberPatient;
 CREATE TABLE amberPatient
 (

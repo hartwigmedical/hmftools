@@ -398,8 +398,9 @@ public class DatabaseAccess implements AutoCloseable {
         metricDAO.writeMetrics(sample, metrics);
     }
 
-    public void writePGX(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls) {
-        pgxDAO.writePgx(sample, pgxGenotype, pgxCalls);
+    public void writePGX(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls,
+            @NotNull List<SomaticVariant> pgxVariants) {
+        pgxDAO.writePgx(sample, pgxGenotype, pgxCalls, pgxVariants);
     }
 
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidenceItem> evidence) {

@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCallsFile;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotypeFile;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -28,6 +30,7 @@ public class LoadPgxData {
     private static final String SAMPLE = "sample";
     private static final String PGX_CALLS_TXT = "pgx_calls_txt";
     private static final String PGX_GENOTYPE_TXT = "pgx_genotype_txt";
+    private static final String PGX_VCF = "pgx_vcf";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();
@@ -37,6 +40,8 @@ public class LoadPgxData {
 
         String pgxCallsFileName = cmd.getOptionValue(PGX_CALLS_TXT);
         String pgxGenotypeFileName = cmd.getOptionValue(PGX_GENOTYPE_TXT);
+        String pgxVCFFileName = cmd.getOptionValue(PGX_VCF);
+
 
         if (Utils.anyNull(sample, pgxCallsFileName, pgxGenotypeFileName)) {
             HelpFormatter formatter = new HelpFormatter();
@@ -52,8 +57,12 @@ public class LoadPgxData {
             List<PGXGenotype> pgxGenotype = PGXGenotypeFile.read(pgxGenotypeFileName);
             LOGGER.info(" Read {} pgx genotypes", pgxGenotype.size());
 
+            LOGGER.info("Reading pgx vcf file {}", pgxVCFFileName);
+            List<SomaticVariant> pgxVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, pgxVCFFileName);
+            LOGGER.info("Read {} PGX variants from {}", pgxVariants.size(), pgxVCFFileName);
+
             LOGGER.info("Writing pgx into database for {}", sample);
-            dbWriter.writePGX(sample, pgxGenotype, pgxCalls);
+            dbWriter.writePGX(sample, pgxGenotype, pgxCalls, pgxVariants);
             LOGGER.info("Complete");
         }
     }
@@ -66,6 +75,8 @@ public class LoadPgxData {
 
         options.addOption(PGX_CALLS_TXT, true, "Path towards the pgx calls txt file");
         options.addOption(PGX_GENOTYPE_TXT, true, "Path towards the pgx genotype txt file");
+        options.addOption(PGX_VCF, true, "Path towards the pgx vcf file");
+
 
         addDatabaseCmdLineArgs(options);
 
