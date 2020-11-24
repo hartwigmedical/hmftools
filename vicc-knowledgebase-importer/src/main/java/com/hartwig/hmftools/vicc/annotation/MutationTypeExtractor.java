@@ -13,7 +13,7 @@ public class MutationTypeExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(MutationTypeExtractor.class);
 
-    private static final EventClassifier classifier = EventClassifierFactory.buildClassifier(new ProteinAnnotationExtractor());
+    private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(new ProteinAnnotationExtractor());
 
     @NotNull
     public static MutationType extractType(@NotNull Feature feature) {
@@ -22,7 +22,7 @@ public class MutationTypeExtractor {
             LOGGER.debug("Skipping extraction for '{}' since gene is missing", feature.name());
             return MutationType.UNKNOWN;
         } else {
-            return classifier.determineType(gene, feature.name());
+            return CLASSIFIER.determineType(gene, feature.name());
         }
     }
 }
