@@ -8,11 +8,11 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-class ComplexClassifier implements EventMatcher {
+class ComplexMatcher implements EventMatcher {
 
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = createComplexEventMap();
 
-    public ComplexClassifier() {
+    public ComplexMatcher() {
     }
 
     @Override

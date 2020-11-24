@@ -8,7 +8,7 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-class FusionPairAndExonRangeClassifier implements EventMatcher {
+class FusionPairAndExonRangeMatcher implements EventMatcher {
 
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXON_RANGES_PER_GENE = Maps.newHashMap();
 
@@ -20,7 +20,7 @@ class FusionPairAndExonRangeClassifier implements EventMatcher {
         FUSION_PAIR_AND_EXON_RANGES_PER_GENE.put("MET", metSet);
     }
 
-    public FusionPairAndExonRangeClassifier() {
+    public FusionPairAndExonRangeMatcher() {
     }
 
     @Override

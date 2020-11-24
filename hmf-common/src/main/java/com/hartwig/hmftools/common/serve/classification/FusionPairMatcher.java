@@ -3,11 +3,12 @@ package com.hartwig.hmftools.common.serve.classification;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-class FusionPairClassifier implements EventMatcher {
+class FusionPairMatcher implements EventMatcher {
 
     private static final Set<String> EXON_DEL_DUP_FUSION_PAIRS = Sets.newHashSet("EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD");
 
@@ -16,10 +17,11 @@ class FusionPairClassifier implements EventMatcher {
 
     @NotNull
     public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new FusionPairClassifier());
+        return new CompositeEventMatcher(noMatchEventMatchers, new FusionPairMatcher());
     }
 
-    private FusionPairClassifier() {
+    @VisibleForTesting
+    FusionPairMatcher() {
     }
 
     @Override

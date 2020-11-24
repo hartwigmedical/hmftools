@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.serve.classification.GeneLevelClassifier;
+import com.hartwig.hmftools.common.serve.classification.GeneLevelMatcher;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
@@ -71,11 +71,11 @@ public class GeneLevelExtractor {
     @VisibleForTesting
     static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String eventDescription = feature.description().split(" ", 2)[1].trim();
-        if (GeneLevelClassifier.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        if (GeneLevelMatcher.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (GeneLevelClassifier.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        } else if (GeneLevelMatcher.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             return GeneLevelEvent.ACTIVATION;
-        } else if (GeneLevelClassifier.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
+        } else if (GeneLevelMatcher.GENERIC_GENE_LEVEL_KEYWORDS.contains(eventDescription)) {
             for (DriverGene driverGene : driverGenes) {
                 if (driverGene.gene().equals(feature.geneSymbol())) {
                     if (driverGene.likelihoodType() == DriverCategory.ONCO) {

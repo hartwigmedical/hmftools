@@ -6,17 +6,18 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.jetbrains.annotations.NotNull;
 
-class GeneRangeCodonClassifier implements EventMatcher {
+class GeneRangeCodonMatcher implements EventMatcher {
 
     @NotNull
     public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers, @NotNull EventPreprocessor preprocessor) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new GeneRangeCodonClassifier(preprocessor));
+        return new CompositeEventMatcher(noMatchEventMatchers, new GeneRangeCodonMatcher(preprocessor));
     }
 
     @NotNull
     private final EventPreprocessor preprocessor;
 
-    private GeneRangeCodonClassifier(@NotNull final EventPreprocessor preprocessor) {
+    @VisibleForTesting
+    GeneRangeCodonMatcher(@NotNull final EventPreprocessor preprocessor) {
         this.preprocessor = preprocessor;
     }
 

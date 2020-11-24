@@ -3,11 +3,12 @@ package com.hartwig.hmftools.common.serve.classification;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-class AmplificationClassifier implements EventMatcher {
+class AmplificationMatcher implements EventMatcher {
 
     private static final Set<String> AMPLIFICATION_KEYWORDS =
             Sets.newHashSet("Amplification", "amplification", "AMPLIFICATION", "amp", "overexpression", "OVEREXPRESSION", "Overexpression");
@@ -16,10 +17,11 @@ class AmplificationClassifier implements EventMatcher {
 
     @NotNull
     public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new AmplificationClassifier());
+        return new CompositeEventMatcher(noMatchEventMatchers, new AmplificationMatcher());
     }
 
-    private AmplificationClassifier() {
+    @VisibleForTesting
+    AmplificationMatcher() {
     }
 
     @Override

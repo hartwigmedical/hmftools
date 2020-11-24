@@ -3,11 +3,12 @@ package com.hartwig.hmftools.common.serve.classification;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-class GeneRangeExonClassifier implements EventMatcher {
+class GeneRangeExonMatcher implements EventMatcher {
 
     private static final String EXON_KEYWORD = "exon";
     private static final Set<String> EXON_RANGE_EXACT_TERMS = Sets.newHashSet("RARE EX 18-21 MUT");
@@ -17,10 +18,11 @@ class GeneRangeExonClassifier implements EventMatcher {
 
     @NotNull
     public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new GeneRangeExonClassifier());
+        return new CompositeEventMatcher(noMatchEventMatchers, new GeneRangeExonMatcher());
     }
 
-    private GeneRangeExonClassifier() {
+    @VisibleForTesting
+    GeneRangeExonMatcher() {
     }
 
     @Override

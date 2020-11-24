@@ -3,11 +3,12 @@ package com.hartwig.hmftools.common.serve.classification;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GeneLevelClassifier implements EventMatcher {
+public class GeneLevelMatcher implements EventMatcher {
 
     public static final Set<String> GENERIC_GENE_LEVEL_KEYWORDS = Sets.newHashSet("MUTATION",
             "mutant",
@@ -42,10 +43,11 @@ public class GeneLevelClassifier implements EventMatcher {
 
     @NotNull
     public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new GeneLevelClassifier());
+        return new CompositeEventMatcher(noMatchEventMatchers, new GeneLevelMatcher());
     }
 
-    private GeneLevelClassifier() {
+    @VisibleForTesting
+    GeneLevelMatcher() {
     }
 
     @Override

@@ -3,11 +3,12 @@ package com.hartwig.hmftools.common.serve.classification;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-class DeletionClassifier implements EventMatcher {
+class DeletionMatcher implements EventMatcher {
 
     private static final Set<String> DELETION_KEYWORDS =
             Sets.newHashSet("Deletion", "deletion", "DELETION", "del", "undexpression", "UNDEREXPRESSION", "loss", "LOSS");
@@ -18,10 +19,11 @@ class DeletionClassifier implements EventMatcher {
 
     @NotNull
     public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new DeletionClassifier());
+        return new CompositeEventMatcher(noMatchEventMatchers, new DeletionMatcher());
     }
 
-    private DeletionClassifier() {
+    @VisibleForTesting
+    DeletionMatcher() {
     }
 
     @Override

@@ -10,16 +10,18 @@ import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_START_
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HotspotClassifier implements EventMatcher {
+public class HotspotMatcher implements EventMatcher {
 
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
     @NotNull
     public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers, @NotNull EventPreprocessor preprocessor) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new HotspotClassifier(preprocessor));
+        return new CompositeEventMatcher(noMatchEventMatchers, new HotspotMatcher(preprocessor));
     }
 
     public static boolean isProteinAnnotation(@NotNull String event) {
@@ -30,7 +32,8 @@ public class HotspotClassifier implements EventMatcher {
     @NotNull
     private final EventPreprocessor preprocessor;
 
-    private HotspotClassifier(@NotNull final EventPreprocessor preprocessor) {
+    @VisibleForTesting
+    HotspotMatcher(@NotNull final EventPreprocessor preprocessor) {
         this.preprocessor = preprocessor;
     }
 
@@ -159,7 +162,7 @@ public class HotspotClassifier implements EventMatcher {
         String trimmedEvent = event.trim();
         if (trimmedEvent.contains(" ")) {
             String[] parts = trimmedEvent.split(" ");
-            return FusionPairClassifier.isFusionPair(parts[0]);
+            return FusionPairMatcher.isFusionPair(parts[0]);
         }
         return false;
     }

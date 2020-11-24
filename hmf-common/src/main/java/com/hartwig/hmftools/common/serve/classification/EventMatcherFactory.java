@@ -15,24 +15,24 @@ public final class EventMatcherFactory {
 
     @NotNull
     public static Map<MutationType, EventMatcher> buildMatcherMap(@NotNull EventPreprocessor proteinAnnotationPreprocessor) {
-        EventMatcher complexClassifier = new ComplexClassifier();
-        EventMatcher combinedClassifier = new CombinedClassifier();
-        EventMatcher fusionPairAndExonRangeClassifier = new FusionPairAndExonRangeClassifier();
+        EventMatcher complexClassifier = new ComplexMatcher();
+        EventMatcher combinedClassifier = new CombinedMatcher();
+        EventMatcher fusionPairAndExonRangeClassifier = new FusionPairAndExonRangeMatcher();
 
         List<EventMatcher> firstTierEventMatchers =
                 Lists.newArrayList(complexClassifier, combinedClassifier, fusionPairAndExonRangeClassifier);
 
         Map<MutationType, EventMatcher> map = Maps.newHashMap();
-        map.put(MutationType.HOTSPOT, HotspotClassifier.create(firstTierEventMatchers, proteinAnnotationPreprocessor));
-        map.put(MutationType.GENE_RANGE_CODON, GeneRangeCodonClassifier.create(firstTierEventMatchers, proteinAnnotationPreprocessor));
-        map.put(MutationType.GENE_RANGE_EXON, GeneRangeExonClassifier.create(firstTierEventMatchers));
+        map.put(MutationType.HOTSPOT, HotspotMatcher.create(firstTierEventMatchers, proteinAnnotationPreprocessor));
+        map.put(MutationType.GENE_RANGE_CODON, GeneRangeCodonMatcher.create(firstTierEventMatchers, proteinAnnotationPreprocessor));
+        map.put(MutationType.GENE_RANGE_EXON, GeneRangeExonMatcher.create(firstTierEventMatchers));
         map.put(MutationType.FUSION_PAIR_AND_GENE_RANGE_EXON, fusionPairAndExonRangeClassifier);
-        map.put(MutationType.GENE_LEVEL, GeneLevelClassifier.create(firstTierEventMatchers));
-        map.put(MutationType.AMPLIFICATION, AmplificationClassifier.create(firstTierEventMatchers));
-        map.put(MutationType.DELETION, DeletionClassifier.create(firstTierEventMatchers));
-        map.put(MutationType.FUSION_PAIR, FusionPairClassifier.create(firstTierEventMatchers));
-        map.put(MutationType.PROMISCUOUS_FUSION, PromiscuousFusionClassifier.create(firstTierEventMatchers));
-        map.put(MutationType.SIGNATURE, SignatureClassifier.create(firstTierEventMatchers));
+        map.put(MutationType.GENE_LEVEL, GeneLevelMatcher.create(firstTierEventMatchers));
+        map.put(MutationType.AMPLIFICATION, AmplificationMatcher.create(firstTierEventMatchers));
+        map.put(MutationType.DELETION, DeletionMatcher.create(firstTierEventMatchers));
+        map.put(MutationType.FUSION_PAIR, FusionPairMatcher.create(firstTierEventMatchers));
+        map.put(MutationType.PROMISCUOUS_FUSION, PromiscuousFusionMatcher.create(firstTierEventMatchers));
+        map.put(MutationType.SIGNATURE, SignatureMatcher.create(firstTierEventMatchers));
         map.put(MutationType.COMBINED, combinedClassifier);
         map.put(MutationType.COMPLEX, complexClassifier);
 
