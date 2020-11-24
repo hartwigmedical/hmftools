@@ -8,11 +8,11 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.classification.GeneLevelClassifier;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
-import com.hartwig.hmftools.vicc.annotation.GeneLevelClassifier;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 

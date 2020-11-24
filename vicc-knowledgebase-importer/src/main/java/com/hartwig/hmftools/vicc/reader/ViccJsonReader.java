@@ -23,6 +23,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
+import com.hartwig.hmftools.vicc.annotation.MutationTypeExtractor;
+import com.hartwig.hmftools.vicc.annotation.TranscriptExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
@@ -46,6 +48,7 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableSequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableTaxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
@@ -59,21 +62,34 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class ViccJsonReader {
+public class ViccJsonReader {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
 
-    private ViccJsonReader() {
+    @NotNull
+    private final TranscriptExtractor transcriptExtractor;
+    @NotNull
+    private final MutationTypeExtractor mutationTypeExtractor;
+
+    @NotNull
+    public static ViccJsonReader buildProductionReader() {
+        return new ViccJsonReader(new TranscriptExtractor(), MutationTypeExtractor.buildProductionExtractor());
+    }
+
+    private ViccJsonReader(@NotNull final TranscriptExtractor transcriptExtractor,
+            @NotNull final MutationTypeExtractor mutationTypeExtractor) {
+        this.transcriptExtractor = transcriptExtractor;
+        this.mutationTypeExtractor = mutationTypeExtractor;
     }
 
     @NotNull
-    public static List<ViccEntry> readAll(@NotNull String jsonPath) throws IOException {
+    public List<ViccEntry> readAll(@NotNull String jsonPath) throws IOException {
         ViccQuerySelection includeAll = ImmutableViccQuerySelection.builder().build();
         return readSelection(jsonPath, includeAll);
     }
 
     @NotNull
-    public static List<ViccEntry> readSelection(@NotNull String jsonPath, @NotNull ViccQuerySelection querySelection) throws IOException {
+    public List<ViccEntry> readSelection(@NotNull String jsonPath, @NotNull ViccQuerySelection querySelection) throws IOException {
         List<ViccEntry> entries = Lists.newArrayList();
 
         JsonParser parser = new JsonParser();
@@ -85,7 +101,7 @@ public final class ViccJsonReader {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
             ViccSource source = ViccSource.fromViccKnowledgebaseString(string(viccEntryObject, "source"));
             if (querySelection.sourcesToFilterOn() == null || querySelection.sourcesToFilterOn().contains(source)) {
-                entries.add(createViccEntry(viccEntryObject));
+                entries.add(createViccEntry(source, viccEntryObject));
             }
         }
 
@@ -95,11 +111,11 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static ViccEntry createViccEntry(@NotNull JsonObject viccEntryObject) {
+    private ViccEntry createViccEntry(@NotNull ViccSource source, @NotNull JsonObject viccEntryObject) {
         ViccDatamodelCheckerFactory.viccEntryChecker().check(viccEntryObject);
 
         ImmutableViccEntry.Builder viccEntryBuilder = ImmutableViccEntry.builder();
-        viccEntryBuilder.source(ViccSource.fromViccKnowledgebaseString(string(viccEntryObject, "source")));
+        viccEntryBuilder.source(source);
         viccEntryBuilder.genes(stringList(viccEntryObject, "genes"));
         viccEntryBuilder.geneIdentifiers(createGeneIdentifiers(viccEntryObject.getAsJsonArray("gene_identifiers")));
         viccEntryBuilder.featureNames(optionalStringList(viccEntryObject, "feature_names"));
@@ -108,30 +124,33 @@ public final class ViccJsonReader {
         viccEntryBuilder.tags(stringList(viccEntryObject, "tags"));
         viccEntryBuilder.devTags(stringList(viccEntryObject, "dev_tags"));
 
+        KbSpecificObject kbSpecificObject;
         if (viccEntryObject.has("cgi")) {
-            viccEntryBuilder.kbSpecificObject(CgiObjectFactory.create(viccEntryObject.getAsJsonObject("cgi")));
+            kbSpecificObject = CgiObjectFactory.create(viccEntryObject.getAsJsonObject("cgi"));
         } else if (viccEntryObject.has("brca")) {
-            viccEntryBuilder.kbSpecificObject(BRCAObjectFactory.create(viccEntryObject.getAsJsonObject("brca")));
+            kbSpecificObject = BRCAObjectFactory.create(viccEntryObject.getAsJsonObject("brca"));
         } else if (viccEntryObject.has("sage")) {
-            viccEntryBuilder.kbSpecificObject(SageObjectFactory.create(viccEntryObject.getAsJsonObject("sage")));
+            kbSpecificObject = SageObjectFactory.create(viccEntryObject.getAsJsonObject("sage"));
         } else if (viccEntryObject.has("pmkb")) {
-            viccEntryBuilder.kbSpecificObject(PmkbObjectFactory.create(viccEntryObject.getAsJsonObject("pmkb")));
+            kbSpecificObject = PmkbObjectFactory.create(viccEntryObject.getAsJsonObject("pmkb"));
         } else if (viccEntryObject.has("oncokb")) {
-            viccEntryBuilder.kbSpecificObject(OncokbObjectFactory.create(viccEntryObject.getAsJsonObject("oncokb")));
+            kbSpecificObject = OncokbObjectFactory.create(viccEntryObject.getAsJsonObject("oncokb"));
         } else if (viccEntryObject.has("jax")) {
-            viccEntryBuilder.kbSpecificObject(JaxObjectFactory.create(viccEntryObject.getAsJsonObject("jax")));
+            kbSpecificObject = JaxObjectFactory.create(viccEntryObject.getAsJsonObject("jax"));
         } else if (viccEntryObject.has("jax_trials")) {
-            viccEntryBuilder.kbSpecificObject(JaxTrialsObjectFactory.create(viccEntryObject.getAsJsonObject("jax_trials")));
+            kbSpecificObject = JaxTrialsObjectFactory.create(viccEntryObject.getAsJsonObject("jax_trials"));
         } else if (viccEntryObject.has("molecularmatch")) {
-            viccEntryBuilder.kbSpecificObject(MolecularMatchObjectFactory.create(viccEntryObject.getAsJsonObject("molecularmatch")));
+            kbSpecificObject = MolecularMatchObjectFactory.create(viccEntryObject.getAsJsonObject("molecularmatch"));
         } else if (viccEntryObject.has("molecularmatch_trials")) {
-            viccEntryBuilder.kbSpecificObject(MolecularMatchTrialsObjectFactory.create(viccEntryObject.getAsJsonObject(
-                    "molecularmatch_trials")));
+            kbSpecificObject = MolecularMatchTrialsObjectFactory.create(viccEntryObject.getAsJsonObject("molecularmatch_trials"));
         } else if (viccEntryObject.has("civic")) {
-            viccEntryBuilder.kbSpecificObject(CivicObjectFactory.create(viccEntryObject.getAsJsonObject("civic")));
+            kbSpecificObject = CivicObjectFactory.create(viccEntryObject.getAsJsonObject("civic"));
         } else {
             throw new IllegalStateException("Could not resolve kb specific object for " + viccEntryObject);
         }
+
+        viccEntryBuilder.kbSpecificObject(kbSpecificObject);
+        viccEntryBuilder.transcriptId(transcriptExtractor.extractTranscriptId(source, kbSpecificObject));
 
         return viccEntryBuilder.build();
     }
@@ -156,7 +175,7 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<Feature> createFeatures(@NotNull JsonArray featureArray) {
+    private List<Feature> createFeatures(@NotNull JsonArray featureArray) {
         List<Feature> featureList = Lists.newArrayList();
         JsonDatamodelChecker featureChecker = ViccDatamodelCheckerFactory.featureChecker();
 
@@ -164,8 +183,12 @@ public final class ViccJsonReader {
             JsonObject featureObject = featureElement.getAsJsonObject();
             featureChecker.check(featureObject);
 
+            String name = string(featureObject, "name");
+            String geneSymbol = optionalNullableString(featureObject, "geneSymbol");
+
             featureList.add(ImmutableFeature.builder()
-                    .name(string(featureObject, "name"))
+                    .name(name)
+                    .type(mutationTypeExtractor.extractType(geneSymbol, name))
                     .biomarkerType(optionalString(featureObject, "biomarker_type"))
                     .referenceName(optionalString(featureObject, "referenceName"))
                     .chromosome(optionalString(featureObject, "chromosome"))
@@ -175,7 +198,7 @@ public final class ViccJsonReader {
                     .alt(optionalNullableString(featureObject, "alt"))
                     .provenance(optionalStringList(featureObject, "provenance"))
                     .provenanceRule(optionalString(featureObject, "provenance_rule"))
-                    .geneSymbol(optionalNullableString(featureObject, "geneSymbol"))
+                    .geneSymbol(geneSymbol)
                     .synonyms(optionalStringList(featureObject, "synonyms"))
                     .entrezId(optionalString(featureObject, "entrez_id"))
                     .sequenceOntology(createSequenceOntology(optionalJsonObject(featureObject, "sequence_ontology")))

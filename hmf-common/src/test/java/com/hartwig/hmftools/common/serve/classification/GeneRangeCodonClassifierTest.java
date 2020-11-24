@@ -1,11 +1,10 @@
-package com.hartwig.hmftools.vicc.annotation;
+package com.hartwig.hmftools.common.serve.classification;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -14,11 +13,10 @@ public class GeneRangeCodonClassifierTest {
 
     @Test
     public void canAssessWhetherEventIsGeneRangeCodon() {
-        EventMatcher classifier = GeneRangeCodonClassifier.create(Lists.newArrayList(), new ProteinAnnotationExtractor());
+        EventMatcher classifier = GeneRangeCodonClassifier.create(Lists.newArrayList(), event -> event);
 
-        assertTrue(classifier.matches("GNAS", "GNAS (R201)"));
+        assertTrue(classifier.matches("GNAS", "R201"));
         assertTrue(classifier.matches("EGFR", "E709X"));
-        assertTrue(classifier.matches("EGFR", "EGFR E709X "));
 
         assertFalse(classifier.matches(Strings.EMPTY, Strings.EMPTY));
         assertFalse(classifier.matches("BRAF", "600"));

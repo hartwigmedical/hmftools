@@ -3,7 +3,6 @@ package com.hartwig.hmftools.vicc.datamodel;
 import java.util.List;
 
 import com.hartwig.hmftools.common.serve.classification.MutationType;
-import com.hartwig.hmftools.vicc.annotation.MutationTypeExtractor;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -14,13 +13,10 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Feature {
 
     @NotNull
-    @Value.Derived
-    public MutationType type() {
-        return MutationTypeExtractor.extractType(this);
-    }
+    public abstract String name();
 
     @NotNull
-    public abstract String name();
+    public abstract MutationType type();
 
     @Nullable
     public abstract String biomarkerType();

@@ -1,11 +1,10 @@
-package com.hartwig.hmftools.vicc.annotation;
+package com.hartwig.hmftools.common.serve.classification;
 
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 

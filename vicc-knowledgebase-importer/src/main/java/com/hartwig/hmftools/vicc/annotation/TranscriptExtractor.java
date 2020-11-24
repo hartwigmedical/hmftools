@@ -2,7 +2,8 @@ package com.hartwig.hmftools.vicc.annotation;
 
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
@@ -11,20 +12,20 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class TranscriptExtractor {
+public class TranscriptExtractor {
 
-    private TranscriptExtractor() {
+    public TranscriptExtractor() {
     }
 
     @Nullable
-    public static String extractTranscriptId(@NotNull ViccEntry viccEntry) {
-        switch (viccEntry.source()) {
+    public String extractTranscriptId(@NotNull ViccSource source, @NotNull KbSpecificObject kbSpecificObject) {
+        switch (source) {
             case ONCOKB: {
-                String transcriptId = ((OncoKb) viccEntry.kbSpecificObject()).transcriptID();
+                String transcriptId = ((OncoKb) kbSpecificObject).transcriptID();
                 return !transcriptId.isEmpty() ? transcriptId : null;
             }
             case CIVIC: {
-                String transcriptId = ((Civic) viccEntry.kbSpecificObject()).coordinates().representativeTranscript();
+                String transcriptId = ((Civic) kbSpecificObject).coordinates().representativeTranscript();
                 if (transcriptId == null || transcriptId.isEmpty()) {
                     return null;
                 }
@@ -34,7 +35,7 @@ public final class TranscriptExtractor {
                 return transcript.length() == 15 ? transcript : null;
             }
             case CGI: {
-                List<String> transcripts = ((Cgi) viccEntry.kbSpecificObject()).transcripts();
+                List<String> transcripts = ((Cgi) kbSpecificObject).transcripts();
                 // Even though a vicc entry could have multiple different transcripts, in practice every vicc entry with more than one
                 // transcript only has one distinct transcript.
                 String transcript = !transcripts.isEmpty() ? transcripts.get(0) : Strings.EMPTY;

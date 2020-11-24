@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.annotation;
+package com.hartwig.hmftools.common.serve.classification;
 
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_DELETION;
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_DUPLICATION;
@@ -9,10 +9,6 @@ import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_RANGE_
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_START_LOST;
 
 import java.util.List;
-
-import com.hartwig.hmftools.common.serve.classification.CompositeEventMatcher;
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
-import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

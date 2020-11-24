@@ -1,11 +1,8 @@
-package com.hartwig.hmftools.vicc.annotation;
+package com.hartwig.hmftools.common.serve.classification;
 
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.serve.classification.CompositeEventMatcher;
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
-import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.vicc.annotation;
+package com.hartwig.hmftools.common.serve.classification;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -13,10 +12,10 @@ public class HotspotClassifierTest {
 
     @Test
     public void canAssessWhetherEventIsHotspot() {
-        EventMatcher classifier = HotspotClassifier.create(Lists.newArrayList(), new ProteinAnnotationExtractor());
+        EventMatcher classifier = HotspotClassifier.create(Lists.newArrayList(), event -> event);
 
         assertTrue(classifier.matches("any", "V600E"));
-        assertTrue(classifier.matches("any", "BRAF V600E"));
+        assertTrue(classifier.matches("any", "V5del"));
 
         // Inframe event is too long -> still protein annotation.
         assertFalse(classifier.matches("any", "L4_T40del"));
