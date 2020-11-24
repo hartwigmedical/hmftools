@@ -27,7 +27,8 @@ public class HotspotClassifier implements EventMatcher {
     }
 
     public static boolean isProteinAnnotation(@NotNull String event) {
-        return isBoundedProteinAnnotation(event, null);
+        // Do note: No pre-processing is done on this event!
+        return isProteinAnnotationWithMaxLength(event, null);
     }
 
     @NotNull
@@ -41,31 +42,26 @@ public class HotspotClassifier implements EventMatcher {
     public boolean matches(@NotNull String gene, @NotNull String event) {
         String processedEvent = preprocessor.apply(event);
 
-        if (isBoundedProteinAnnotation(processedEvent, MAX_INFRAME_BASE_LENGTH)) {
+        if (isProteinAnnotationWithMaxLength(processedEvent, MAX_INFRAME_BASE_LENGTH)) {
             return !isHotspotOnFusionGene(event);
         }
 
         return false;
     }
 
-    private static boolean isBoundedProteinAnnotation(@NotNull String event, @Nullable Integer maxLength) {
-        int mutationLength;
+    private static boolean isProteinAnnotationWithMaxLength(@NotNull String event, @Nullable Integer maxLength) {
         if (isValidFrameshift(event)) {
-            mutationLength = 1;
+            return true;
         } else if (event.contains(HGVS_RANGE_INDICATOR)) {
-            mutationLength = extractRangeLength(event);
+            int mutationLength = extractRangeLength(event);
+            return mutationLength > 0 && (maxLength == null || mutationLength <= maxLength);
         } else if (event.contains(HGVS_DELETION + HGVS_INSERTION)) {
-            mutationLength = extractComplexDeletionInsertionLength(event);
+            int mutationLength = extractComplexDeletionInsertionLength(event);
+            return mutationLength > 0 && (maxLength == null || mutationLength <= maxLength);
         } else if (event.startsWith(HGVS_START_LOST)) {
-            mutationLength = 1;
+            return true;
         } else {
-            mutationLength = isValidSingleCodonMutation(event) ? 1 : -1;
-        }
-
-        if (maxLength != null) {
-            return mutationLength > 0 && mutationLength < maxLength;
-        } else {
-            return mutationLength > 0;
+            return isValidSingleCodonMutation(event);
         }
     }
 
