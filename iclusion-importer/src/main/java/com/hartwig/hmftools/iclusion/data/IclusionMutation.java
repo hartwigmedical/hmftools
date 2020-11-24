@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.iclusion.data;
 
 import com.hartwig.hmftools.common.serve.classification.MutationType;
-import com.hartwig.hmftools.iclusion.classification.MutationTypeClassifier;
+import com.hartwig.hmftools.iclusion.classification.MutationTypeExtractor;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +15,7 @@ public abstract class IclusionMutation {
     @NotNull
     @Value.Derived
     public MutationType type() {
-        return MutationTypeClassifier.classify(this);
+        return MutationTypeExtractor.classify(this);
     }
 
     @NotNull

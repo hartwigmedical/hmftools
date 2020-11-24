@@ -23,7 +23,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
-import com.hartwig.hmftools.vicc.annotation.MutationTypeExtractor;
 import com.hartwig.hmftools.vicc.annotation.TranscriptExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
@@ -68,18 +67,14 @@ public class ViccJsonReader {
 
     @NotNull
     private final TranscriptExtractor transcriptExtractor;
-    @NotNull
-    private final MutationTypeExtractor mutationTypeExtractor;
 
     @NotNull
     public static ViccJsonReader buildProductionReader() {
-        return new ViccJsonReader(new TranscriptExtractor(), MutationTypeExtractor.buildProductionExtractor());
+        return new ViccJsonReader(new TranscriptExtractor());
     }
 
-    private ViccJsonReader(@NotNull final TranscriptExtractor transcriptExtractor,
-            @NotNull final MutationTypeExtractor mutationTypeExtractor) {
+    public ViccJsonReader(@NotNull final TranscriptExtractor transcriptExtractor) {
         this.transcriptExtractor = transcriptExtractor;
-        this.mutationTypeExtractor = mutationTypeExtractor;
     }
 
     @NotNull
@@ -175,7 +170,7 @@ public class ViccJsonReader {
     }
 
     @NotNull
-    private List<Feature> createFeatures(@NotNull JsonArray featureArray) {
+    private static List<Feature> createFeatures(@NotNull JsonArray featureArray) {
         List<Feature> featureList = Lists.newArrayList();
         JsonDatamodelChecker featureChecker = ViccDatamodelCheckerFactory.featureChecker();
 
@@ -183,12 +178,8 @@ public class ViccJsonReader {
             JsonObject featureObject = featureElement.getAsJsonObject();
             featureChecker.check(featureObject);
 
-            String name = string(featureObject, "name");
-            String geneSymbol = optionalNullableString(featureObject, "geneSymbol");
-
             featureList.add(ImmutableFeature.builder()
-                    .name(name)
-                    .type(mutationTypeExtractor.extractType(geneSymbol, name))
+                    .name(string(featureObject, "name"))
                     .biomarkerType(optionalString(featureObject, "biomarker_type"))
                     .referenceName(optionalString(featureObject, "referenceName"))
                     .chromosome(optionalString(featureObject, "chromosome"))
@@ -198,7 +189,7 @@ public class ViccJsonReader {
                     .alt(optionalNullableString(featureObject, "alt"))
                     .provenance(optionalStringList(featureObject, "provenance"))
                     .provenanceRule(optionalString(featureObject, "provenance_rule"))
-                    .geneSymbol(geneSymbol)
+                    .geneSymbol(optionalNullableString(featureObject, "geneSymbol"))
                     .synonyms(optionalStringList(featureObject, "synonyms"))
                     .entrezId(optionalString(featureObject, "entrez_id"))
                     .sequenceOntology(createSequenceOntology(optionalJsonObject(featureObject, "sequence_ontology")))

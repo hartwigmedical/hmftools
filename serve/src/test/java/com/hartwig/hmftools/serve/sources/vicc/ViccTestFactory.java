@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.sources.vicc;
 
-import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
@@ -78,7 +77,7 @@ public final class ViccTestFactory {
 
     @NotNull
     public static Feature testFeatureWithGeneAndName(@Nullable String geneSymbol, @NotNull String name) {
-        return ImmutableFeature.builder().type(MutationType.UNKNOWN).geneSymbol(geneSymbol).name(name).build();
+        return ImmutableFeature.builder().geneSymbol(geneSymbol).name(name).build();
     }
 
     @NotNull

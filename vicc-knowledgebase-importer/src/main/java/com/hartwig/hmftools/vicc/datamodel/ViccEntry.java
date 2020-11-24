@@ -13,6 +13,7 @@ public abstract class ViccEntry {
     @NotNull
     public abstract ViccSource source();
 
+    // Transcript ID is not directly available in the data but is derived from kbSpecificObject
     @Nullable
     public abstract String transcriptId();
 
