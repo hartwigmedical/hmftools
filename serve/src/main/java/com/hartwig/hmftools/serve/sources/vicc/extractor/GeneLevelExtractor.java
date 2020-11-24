@@ -87,7 +87,7 @@ public class GeneLevelExtractor {
                     }
                 }
             }
-            LOGGER.warn("Gene {} is not present in driver catalog in gene level extractor", feature.geneSymbol());
+            CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
         } else {
             // LOGGER.warn("Unknown event {}", feature);
             return GeneLevelEvent.UNKNOWN;
