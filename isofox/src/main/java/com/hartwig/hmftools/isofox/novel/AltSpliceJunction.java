@@ -52,8 +52,10 @@ public class AltSpliceJunction
     private String mDonorAcceptorBases;
     private final int[] mNearestExonDistance;
 
+    private final String mInitialReadId;
+
     public AltSpliceJunction(
-            final String chromosome, final int[] spliceJunction, AltSpliceJunctionType type,
+            final String chromosome, final int[] spliceJunction, AltSpliceJunctionType type, final String initialReadId,
             final AltSpliceJunctionContext[] regionContexts, final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions)
     {
         Chromosome = chromosome;
@@ -65,6 +67,7 @@ public class AltSpliceJunction
 
         mCandidateTransIds = Lists.newArrayList();
         mGeneId = null;
+        mInitialReadId = initialReadId;
 
         mType = type;
 
@@ -85,6 +88,7 @@ public class AltSpliceJunction
 
     public AltSpliceJunctionType type() { return mType; }
     public void overrideType(AltSpliceJunctionType type) { mType = type; }
+    public String initialReadId() { return mInitialReadId; }
 
     public final List<RegionReadData> getSjStartRegions() { return mSjStartRegions; }
     public final List<RegionReadData> getSjEndRegions() { return mSjEndRegions; }
@@ -335,7 +339,7 @@ public class AltSpliceJunction
     {
         return "GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,DepthStart,DepthEnd"
                 + ",Type,ContextStart,ContextEnd,NearestStartExon,NearestEndExon"
-                + ",BasesStart,BasesEnd,TransStart,TransEnd,OverlappingGenes";
+                + ",BasesStart,BasesEnd,TransStart,TransEnd,OverlappingGenes,InitialReadId";
     }
 
     public String toCsv(final EnsemblGeneData geneData)
@@ -359,6 +363,7 @@ public class AltSpliceJunction
                 .add(getBaseContext()[SE_END])
                 .add(getTranscriptNames()[SE_START])
                 .add(getTranscriptNames()[SE_END])
+                .add(mInitialReadId)
                 .toString();
     }
 
@@ -374,8 +379,12 @@ public class AltSpliceJunction
                         AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("ContextEnd")]) };
 
         AltSpliceJunction altSJ = new AltSpliceJunction(
-                items[fieldIndexMap.get("Chromosome")], spliceJunction, AltSpliceJunctionType.valueOf(items[fieldIndexMap.get("Type")]),
-                contexts, Lists.newArrayList(), Lists.newArrayList());
+                items[fieldIndexMap.get("Chromosome")],
+                spliceJunction,
+                AltSpliceJunctionType.valueOf(items[fieldIndexMap.get("Type")]),
+                fieldIndexMap.containsKey("InitialReadId") ? items[fieldIndexMap.get("Type")] : "",
+                contexts,
+                Lists.newArrayList(), Lists.newArrayList());
 
         altSJ.setGeneId(items[fieldIndexMap.get("GeneId")]);
         altSJ.addFragmentCount(Integer.parseInt(items[fieldIndexMap.get("FragCount")]));

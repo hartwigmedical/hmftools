@@ -10,5 +10,6 @@ public enum AltSpliceJunctionType
     MIXED_TRANS,
     INTRONIC,
     EXON_INTRON,
-    UNKNOWN
+    CIRCULAR,
+    UNKNOWN;
 }
