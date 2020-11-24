@@ -79,6 +79,7 @@ public class GeneLevelExtractor {
         } else {
             event = feature.name();
         }
+
         if (GeneLevelMatcher.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
             return GeneLevelEvent.INACTIVATION;
         } else if (GeneLevelMatcher.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
@@ -94,7 +95,20 @@ public class GeneLevelExtractor {
                 }
             }
             CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
-        } else {
+        } else if (feature.provenanceRule() != null){
+            if (GENE_ONLY.contains(feature.provenanceRule())) {
+                for (DriverGene driverGene : driverGenes) {
+                    if (driverGene.gene().equals(feature.geneSymbol())) {
+                        if (driverGene.likelihoodType() == DriverCategory.ONCO) {
+                            return GeneLevelEvent.ACTIVATION;
+                        } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
+                            return GeneLevelEvent.INACTIVATION;
+                        }
+                    }
+                }
+                CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
+            }
+        }else {
             // LOGGER.warn("Unknown event {}", feature);
             return GeneLevelEvent.UNKNOWN;
         }
