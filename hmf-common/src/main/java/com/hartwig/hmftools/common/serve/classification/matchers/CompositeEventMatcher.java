@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.common.serve.classification;
+package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import java.util.List;
+
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 

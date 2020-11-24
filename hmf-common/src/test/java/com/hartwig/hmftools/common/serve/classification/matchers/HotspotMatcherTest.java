@@ -1,7 +1,9 @@
-package com.hartwig.hmftools.common.serve.classification;
+package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
