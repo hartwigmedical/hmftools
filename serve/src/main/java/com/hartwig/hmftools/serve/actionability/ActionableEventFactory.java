@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.serve.actionability;
 
-import com.hartwig.hmftools.common.serve.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 
 import org.jetbrains.annotations.NotNull;
 

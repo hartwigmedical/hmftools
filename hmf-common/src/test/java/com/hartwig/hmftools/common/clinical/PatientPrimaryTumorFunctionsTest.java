@@ -16,7 +16,6 @@ public class PatientPrimaryTumorFunctionsTest {
     @Test
     public void canFindPatientPrimaryTumors() {
         PatientPrimaryTumor cpct = createTestBuilder().patientIdentifier("CPCT02020202").location("loc1").type("type1").build();
-
         PatientPrimaryTumor colo = createTestBuilder().patientIdentifier("COLO829").location("loc2").type("type2").build();
 
         List<PatientPrimaryTumor> patientPrimaryTumors = Lists.newArrayList(cpct, colo);

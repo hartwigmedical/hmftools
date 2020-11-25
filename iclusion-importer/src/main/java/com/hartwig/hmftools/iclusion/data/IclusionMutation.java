@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.iclusion.data;
 
+import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.iclusion.classification.MutationTypeExtractor;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -8,6 +11,12 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class IclusionMutation {
+
+    @NotNull
+    @Value.Derived
+    public MutationType type() {
+        return MutationTypeExtractor.classify(this);
+    }
 
     @NotNull
     public abstract String gene();

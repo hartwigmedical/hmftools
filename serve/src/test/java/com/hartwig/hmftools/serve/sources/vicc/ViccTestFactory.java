@@ -2,12 +2,14 @@ package com.hartwig.hmftools.serve.sources.vicc;
 
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
+import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
+import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -24,6 +26,7 @@ import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ViccTestFactory {
 
@@ -32,19 +35,18 @@ public final class ViccTestFactory {
 
     @NotNull
     public static ViccEntry testViccEntryWithOncogenic(@NotNull String oncogenic) {
-        return testViccEntry(ViccSource.ONCOKB, oncogenic, testOncoKb());
+        return testViccEntry(ViccSource.ONCOKB, oncogenic, null);
     }
 
     @NotNull
-    public static ViccEntry testViccEntryWithSourceAndKbObject(@NotNull ViccSource source, @NotNull KbSpecificObject kbSpecificObject) {
-        return testViccEntry(source, Strings.EMPTY, kbSpecificObject);
+    public static ViccEntry testViccEntryWithSourceAndKbObject(@NotNull ViccSource source, @Nullable String transcriptId) {
+        return testViccEntry(source, Strings.EMPTY, transcriptId);
     }
 
     @NotNull
-    public static ViccEntry testViccEntry(@NotNull ViccSource source, @NotNull String oncogenic,
-            @NotNull KbSpecificObject kbSpecificObject) {
-        Evidence evidence =
-                ImmutableEvidence.builder().evidenceType(ImmutableEvidenceType.builder().sourceName(Strings.EMPTY).build()).build();
+    public static ViccEntry testViccEntry(@NotNull ViccSource source, @NotNull String oncogenic, @Nullable String transcriptId) {
+        EvidenceType evidenceType = ImmutableEvidenceType.builder().sourceName(Strings.EMPTY).build();
+        Evidence evidence = ImmutableEvidence.builder().evidenceType(evidenceType).build();
 
         Phenotype phenotype = ImmutablePhenotype.builder().description(Strings.EMPTY).family(Strings.EMPTY).build();
 
@@ -60,16 +62,26 @@ public final class ViccTestFactory {
                 .oncogenic(oncogenic)
                 .build();
 
-        return ImmutableViccEntry.builder().source(source).association(association).kbSpecificObject(kbSpecificObject).build();
+        return ImmutableViccEntry.builder()
+                .source(source)
+                .association(association)
+                .transcriptId(transcriptId)
+                .kbSpecificObject(testOncoKb())
+                .build();
     }
 
     @NotNull
-    public static OncoKb testOncoKb() {
-        return testOncoKbWithTranscript("any");
+    public static Feature testFeatureWithName(@NotNull String name) {
+        return testFeatureWithGeneAndName(null, name);
     }
 
     @NotNull
-    public static OncoKb testOncoKbWithTranscript(@NotNull String transcript) {
+    public static Feature testFeatureWithGeneAndName(@Nullable String geneSymbol, @NotNull String name) {
+        return ImmutableFeature.builder().geneSymbol(geneSymbol).name(name).build();
+    }
+
+    @NotNull
+    private static OncoKb testOncoKb() {
         OncoKbConsequence consequence = ImmutableOncoKbConsequence.builder()
                 .term(Strings.EMPTY)
                 .description(Strings.EMPTY)
@@ -100,7 +112,7 @@ public final class ViccTestFactory {
         OncoKbBiological biological = ImmutableOncoKbBiological.builder()
                 .gene(Strings.EMPTY)
                 .entrezGeneId(Strings.EMPTY)
-                .isoform(transcript)
+                .isoform(Strings.EMPTY)
                 .refSeq(Strings.EMPTY)
                 .oncokbVariant(variant)
                 .oncogenic(Strings.EMPTY)

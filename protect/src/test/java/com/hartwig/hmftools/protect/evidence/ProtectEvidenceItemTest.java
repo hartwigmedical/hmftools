@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidenceItem;
-import com.hartwig.hmftools.common.serve.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.EvidenceLevel;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
 

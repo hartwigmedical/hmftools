@@ -31,7 +31,7 @@ public final class ViccReader {
                 ImmutableViccQuerySelection.builder().sourcesToFilterOn(sourcesToFilterOn).maxEntriesToInclude(maxEntries).build();
 
         LOGGER.info("Reading VICC json from '{}' with sources '{}'", viccJson, querySelection.sourcesToFilterOn());
-        List<ViccEntry> viccEntries = ViccJsonReader.readSelection(viccJson, querySelection);
+        List<ViccEntry> viccEntries = ViccJsonReader.buildProductionReader().readSelection(viccJson, querySelection);
         LOGGER.info(" Read {} entries", viccEntries.size());
 
         return filter(curate(viccEntries));

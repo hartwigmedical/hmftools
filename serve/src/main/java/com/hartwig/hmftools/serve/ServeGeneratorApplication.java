@@ -80,7 +80,7 @@ public class ServeGeneratorApplication {
     @NotNull
     private static List<ViccEntry> readViccEntries(@NotNull String viccJson) throws IOException {
         LOGGER.info("Reading VICC entries from {}", viccJson);
-        List<ViccEntry> viccEntries = ViccJsonReader.readAll(viccJson);
+        List<ViccEntry> viccEntries = ViccJsonReader.buildProductionReader().readAll(viccJson);
         LOGGER.info(" Read {} VICC entries", viccEntries.size());
         return viccEntries;
     }

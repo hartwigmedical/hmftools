@@ -1,10 +1,13 @@
 
 # PURPLE
 
-PURPLE is a **pur**ity **pl**oidy **e**stimator. 
+PURPLE is a **pur**ity **pl**oidy **e**stimator for whole genome sequenced (WGS) data. 
+
 It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios from [COBALT](../count-bam-lines), somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.
 
 PURPLE supports both grch 37 and 38 reference assemblies. 
+
+Whole exome sequenced (WES) data is not supported.
 
 ## Contents
 
@@ -297,7 +300,7 @@ Tumor only mode impacts PURPLE in the following ways:
   - X and Y chromosomes are excluded from fitting
   - Gender is determined only from AMBER
   - COBALT allosome reference ratios are adjusted accoring to AMBER gender
-  - No chromosomal aberrations are detected 
+  - No germline chromosomal aberrations are detected 
 
 
 ## Algorithm

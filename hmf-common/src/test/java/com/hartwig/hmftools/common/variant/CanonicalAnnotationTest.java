@@ -6,8 +6,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
@@ -25,6 +28,7 @@ public class CanonicalAnnotationTest {
     private static final String CDKN2A_OTHER = "ENST00000000000";
 
     private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
+    private final Set<String> driverGenes = genePanel.driverGenes().stream().map(DriverGene::gene).collect(Collectors.toSet());
     private final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create37();
 
     @Test
@@ -41,7 +45,7 @@ public class CanonicalAnnotationTest {
 
         List<SnpEffAnnotation> all = Lists.newArrayList(other, p14, p16);
 
-        CanonicalAnnotation victim = new CanonicalAnnotation(genePanel.driverGenes(), transcripts);
+        CanonicalAnnotation victim = new CanonicalAnnotation(driverGenes, transcripts);
         assertEquals(p16, victim.canonicalSnpEffAnnotation(all).get());
         assertFalse(victim.canonicalSnpEffAnnotation(Lists.newArrayList(p14)).isPresent());
     }
@@ -53,7 +57,7 @@ public class CanonicalAnnotationTest {
         TranscriptAnnotation noDriverGene = createSnpEffAnnotation("AL136376.1", "ENST00000598661", VariantConsequence.MISSENSE_VARIANT);
         TranscriptAnnotation canonicalDriverGene = createSnpEffAnnotation("ATP1A1", "ENST00000537345", VariantConsequence.MISSENSE_VARIANT);
 
-        CanonicalAnnotation victim = new CanonicalAnnotation(genePanel.driverGenes(), transcripts);
+        CanonicalAnnotation victim = new CanonicalAnnotation(driverGenes, transcripts);
         assertEquals(Optional.empty(), victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene)));
 
         Optional<TranscriptAnnotation> annotationSecond =

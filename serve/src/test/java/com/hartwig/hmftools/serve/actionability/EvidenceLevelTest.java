@@ -3,7 +3,7 @@ package com.hartwig.hmftools.serve.actionability;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.hartwig.hmftools.common.serve.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.junit.Test;
 

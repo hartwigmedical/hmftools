@@ -42,6 +42,23 @@ class SomaticVariantDAO {
         this.context = context;
     }
 
+    @NotNull
+    public BufferedWriter<SomaticVariant> writer(String tumorSample) {
+        BufferedWriterConsumer<SomaticVariant> consumer = new BufferedWriterConsumer<SomaticVariant>() {
+            @Override
+            public void intialise() {
+                context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(tumorSample)).execute();
+            }
+
+            @Override
+            public void accept(final Timestamp timestamp, final List<SomaticVariant> entries) {
+                writeAll(timestamp, tumorSample, entries);
+            }
+        };
+
+        return new BufferedWriter<>(consumer);
+    }
+
     public DndsMutationalLoad readDndsLoad(@NotNull String sample) {
         Result<Record3<Byte, String, Integer>> result = context.select(SOMATICVARIANT.BIALLELIC, SOMATICVARIANT.TYPE, count())
                 .from(SOMATICVARIANT)

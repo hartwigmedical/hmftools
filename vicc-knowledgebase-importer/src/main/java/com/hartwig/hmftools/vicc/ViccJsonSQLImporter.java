@@ -45,7 +45,7 @@ public class ViccJsonSQLImporter {
 
         String viccJsonPath = cmd.getOptionValue(VICC_JSON);
         LOGGER.info("Loading up VICC json file into memory from {}", viccJsonPath);
-        List<ViccEntry> viccEntries = ViccJsonReader.readAll(viccJsonPath);
+        List<ViccEntry> viccEntries = ViccJsonReader.buildProductionReader().readAll(viccJsonPath);
         LOGGER.info(" Loaded {} VICC entries from file.", viccEntries.size());
 
         if (cmd.hasOption(SKIP_DATABASE_WRITING)) {

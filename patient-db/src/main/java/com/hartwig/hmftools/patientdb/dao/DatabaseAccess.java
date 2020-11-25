@@ -57,6 +57,8 @@ import org.jooq.conf.RenderMapping;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
+import htsjdk.variant.variantcontext.VariantContext;
+
 public class DatabaseAccess implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(DatabaseAccess.class);
@@ -112,6 +114,8 @@ public class DatabaseAccess implements AutoCloseable {
     private final ProtectDAO protectDAO;
     @NotNull
     private final DriverGenePanelDAO driverGenePanelDAO;
+    @NotNull
+    private final GermlineVariantDAO germlineVariantDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
@@ -142,6 +146,7 @@ public class DatabaseAccess implements AutoCloseable {
         chordDAO = new ChordDAO(context);
         clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
         driverGenePanelDAO = new DriverGenePanelDAO(context);
+        germlineVariantDAO = new GermlineVariantDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
@@ -197,6 +202,11 @@ public class DatabaseAccess implements AutoCloseable {
                 ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
                 .withOutput(catalog)))
                 : null;
+    }
+
+    @NotNull
+    public BufferedWriter<VariantContext> germlineVariantWriter(String tumorSample, String referenceSample, String rnaSample) {
+        return germlineVariantDAO.writer(tumorSample, referenceSample, rnaSample);
     }
 
     @NotNull
@@ -339,8 +349,9 @@ public class DatabaseAccess implements AutoCloseable {
         amberDAO.truncateMappings();
     }
 
-    public SomaticVariantStreamWriter somaticVariantWriter(@NotNull final String sampleId) {
-        return new SomaticVariantStreamWriter(somaticVariantDAO, sampleId);
+    @NotNull
+    public BufferedWriter<SomaticVariant> somaticVariantWriter(@NotNull final String sampleId) {
+        return somaticVariantDAO.writer(sampleId);
     }
 
     public void writeStructuralVariants(@NotNull String sampleId, @NotNull List<StructuralVariantData> variants) {
@@ -387,8 +398,9 @@ public class DatabaseAccess implements AutoCloseable {
         metricDAO.writeMetrics(sample, metrics);
     }
 
-    public void writePGX(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls) {
-        pgxDAO.writePgx(sample, pgxGenotype, pgxCalls);
+    public void writePGX(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls,
+            @NotNull List<SomaticVariant> pgxVariants) {
+        pgxDAO.writePgx(sample, pgxGenotype, pgxCalls, pgxVariants);
     }
 
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidenceItem> evidence) {

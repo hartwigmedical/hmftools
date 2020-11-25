@@ -10,13 +10,13 @@ import java.util.List;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.sources.ExtractionOutput;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
-import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
+import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
+import com.hartwig.hmftools.serve.sources.iclusion.IclusionUtil;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -57,19 +57,20 @@ public class IclusionExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        LOGGER.debug("Configured '{}' as the iclusion trial TSV path", iclusionTrialTsv);
+        String iclusionMutationTsv = outputDir + "/iclusionMutations.tsv";
+
+        LOGGER.debug("Configured '{}' as the iClusion trial TSV path", iclusionTrialTsv);
         LOGGER.debug("Configured '{}' as the driver gene TSV path", driverGeneTsvPath);
+        LOGGER.debug("Configured '{}' as the iClusion mutation TSV path", iclusionMutationTsv);
 
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsvPath);
         LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
 
-        List<IclusionTrial> trials = IclusionTrialFile.read(iclusionTrialTsv);
-        LOGGER.info(" Read {} trials from {}", trials.size(), iclusionTrialTsv);
+        List<IclusionTrial> trials = IclusionReader.readAndCurate(iclusionTrialTsv);
 
-        List<IclusionTrial> filteredTrials = IclusionFilter.run(trials);
-        LOGGER.info("  {} trials remaining after filtering", filteredTrials.size());
-
-        ExtractionOutput output = new IclusionExtractor().extractFromIclusionTrials(filteredTrials);
+        ExtractionOutput output = new IclusionExtractor().extractFromIclusionTrials(trials);
         LOGGER.info("Generated {}", output);
+
+        IclusionUtil.writeIclusionMutationTypes(iclusionMutationTsv, trials);
     }
 }

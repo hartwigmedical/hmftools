@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
@@ -38,7 +40,11 @@ public class AnnotatedHotspotVCFPrinter {
     public void run(@NotNull String annotatedInputVcf) throws IOException {
         DriverGenePanel genePanel = DriverGenePanelFactory.empty();
         List<CanonicalTranscript> canonicalTranscripts = CanonicalTranscriptFactory.create37();
-        CanonicalAnnotation factory = new CanonicalAnnotation(genePanel.driverGenes(), canonicalTranscripts);
+        CanonicalAnnotation factory = new CanonicalAnnotation(genePanel.driverGenes()
+                .stream()
+                .filter(DriverGene::reportSomatic)
+                .map(DriverGene::gene)
+                .collect(Collectors.toSet()), canonicalTranscripts);
 
         LOGGER.info("Simplifying variants from '{}'", annotatedInputVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedInputVcf, new VCFCodec(), false);

@@ -24,6 +24,8 @@ public class ViccFilter {
     @NotNull
     private final Set<String> filteredKeywords = Sets.newHashSet();
     @NotNull
+    private final Set<String> filteredFeatures = Sets.newHashSet();
+    @NotNull
     private final Set<FilterKey> filteredKeys = Sets.newHashSet();
 
     public ViccFilter() {
@@ -43,7 +45,7 @@ public class ViccFilter {
                         filteredFeatures.add(feature);
                     } else {
                         hasFilteredFeatures = true;
-                        LOGGER.debug("Filtering feature '{}' on '{}'", feature.name(), feature.geneSymbol());
+                      //  LOGGER.debug("Filtering feature '{}' on '{}'", feature.name(), feature.geneSymbol());
                     }
                 }
 
@@ -66,6 +68,14 @@ public class ViccFilter {
             }
         }
 
+        int unusedFeatureCount = 0;
+        for (String feature : FilterFactory.FEATURES_TO_FILTER) {
+            if (!filteredFeatures.contains(feature)) {
+                unusedFeatureCount++;
+                LOGGER.warn("Feature '{}' hasn't been used for VICC filtering", feature);
+            }
+        }
+
         int unusedKeyCount = 0;
         for (FilterKey key : FilterFactory.FEATURE_KEYS_TO_FILTER) {
             if (!filteredKeys.contains(key)) {
@@ -74,8 +84,9 @@ public class ViccFilter {
             }
         }
 
-        LOGGER.debug("Found {} unused VICC filter keywords and {} unused VICC filter keys",
+        LOGGER.debug("Found {} unused keywords, {} unused features and {} unused keys during VICC filtering",
                 unusedKeywordCount,
+                unusedFeatureCount,
                 unusedKeyCount);
     }
 
@@ -88,6 +99,14 @@ public class ViccFilter {
                 return false;
             }
         }
+
+        for (String featureToFilter : FilterFactory.FEATURES_TO_FILTER) {
+            if (featureName.equals(featureToFilter)) {
+                filteredFeatures.add(featureToFilter);
+                return false;
+            }
+        }
+
         String gene = feature.geneSymbol();
         if (gene != null) {
             FilterKey filterKey = new FilterKey(source, gene, featureName);

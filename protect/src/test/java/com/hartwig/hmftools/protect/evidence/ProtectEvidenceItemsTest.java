@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.common.serve.EvidenceDirection.RESPONSIVE;
-import static com.hartwig.hmftools.common.serve.EvidenceLevel.A;
-import static com.hartwig.hmftools.common.serve.EvidenceLevel.B;
-import static com.hartwig.hmftools.common.serve.EvidenceLevel.C;
+import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.RESPONSIVE;
+import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A;
+import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.B;
+import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.C;
 import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceItems.highestReportableLevel;
 
 import static org.junit.Assert.assertEquals;

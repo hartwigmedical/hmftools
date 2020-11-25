@@ -4,10 +4,11 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.vicc.annotation.FeatureType;
+import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -33,19 +34,17 @@ public class CopyNumberExtractor {
         for (Feature feature : viccEntry.features()) {
 
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-            if (feature.type() == FeatureType.AMPLIFICATION) {
+            if (feature.type() == MutationType.AMPLIFICATION) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping amplification extraction!",
-                            feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
                     ampsDelsPerFeature.put(feature,
                             ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.AMPLIFICATION).build());
                 }
 
-            } else if (feature.type() == FeatureType.DELETION) {
+            } else if (feature.type() == MutationType.DELETION) {
                 if (canonicalTranscript == null) {
-                    LOGGER.warn("Could not find gene {} in HMF gene panel. Skipping deletion extraction!",
-                            feature.geneSymbol());
+                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
                     ampsDelsPerFeature.put(feature,
                             ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(CopyNumberType.DELETION).build());

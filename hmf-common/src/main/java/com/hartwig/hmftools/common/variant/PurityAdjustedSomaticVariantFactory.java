@@ -32,22 +32,22 @@ public class PurityAdjustedSomaticVariantFactory {
     @NotNull
     private final GenomeRegionSelector<FittedRegion> fittedRegionSelector;
     @NotNull
-    private final String tumorSample;
+    private final String sample;
 
-    public PurityAdjustedSomaticVariantFactory(@NotNull String tumorSample, @NotNull PurityAdjuster purityAdjuster,
+    public PurityAdjustedSomaticVariantFactory(@NotNull String sample, @NotNull PurityAdjuster purityAdjuster,
             @NotNull final List<PurpleCopyNumber> copyNumbers) {
-        this(tumorSample, purityAdjuster, copyNumbers, Collections.emptyList());
+        this(sample, purityAdjuster, copyNumbers, Collections.emptyList());
     }
 
-    public PurityAdjustedSomaticVariantFactory(@NotNull String tumorSample, @NotNull PurityAdjuster purityAdjuster,
+    public PurityAdjustedSomaticVariantFactory(@NotNull String sample, @NotNull PurityAdjuster purityAdjuster,
             @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions) {
-        this(tumorSample, purityAdjuster, Multimaps.fromRegions(copyNumbers), Multimaps.fromRegions(fittedRegions));
+        this(sample, purityAdjuster, Multimaps.fromRegions(copyNumbers), Multimaps.fromRegions(fittedRegions));
     }
 
-    private PurityAdjustedSomaticVariantFactory(@NotNull String tumorSample, @NotNull PurityAdjuster purityAdjuster,
+    private PurityAdjustedSomaticVariantFactory(@NotNull String sample, @NotNull PurityAdjuster purityAdjuster,
             @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers,
             @NotNull final Multimap<Chromosome, FittedRegion> fittedRegions) {
-        this.tumorSample = tumorSample;
+        this.sample = sample;
         this.purityAdjuster = purityAdjuster;
         this.copyNumberSelector = GenomeRegionSelectorFactory.createImproved(copyNumbers);
         this.fittedRegionSelector = GenomeRegionSelectorFactory.createImproved(fittedRegions);
@@ -74,7 +74,7 @@ public class PurityAdjustedSomaticVariantFactory {
 
     @NotNull
     public VariantContext enrich(@NotNull final VariantContext variant) {
-        final Genotype genotype = variant.getGenotype(tumorSample);
+        final Genotype genotype = variant.getGenotype(sample);
         if (genotype != null && genotype.hasAD() && HumanChromosome.contains(variant.getContig())) {
             final GenomePosition position = GenomePositions.create(variant.getContig(), variant.getStart());
             final AllelicDepth depth = AllelicDepth.fromGenotype(genotype);

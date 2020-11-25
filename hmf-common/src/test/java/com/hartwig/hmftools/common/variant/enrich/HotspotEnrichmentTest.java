@@ -2,12 +2,11 @@ package com.hartwig.hmftools.common.variant.enrich;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantContextFromString;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -25,7 +24,8 @@ public class HotspotEnrichmentTest {
         final String hotspotRef = "GATTACA";
         final String variantRef = "T";
 
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
+        final VariantHotspot hotspot =
+                ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
         // Max should be 100 + 7 - 1 + 5
         // Min should be 100 - 1 + 1 - 5
 
@@ -48,7 +48,8 @@ public class HotspotEnrichmentTest {
     public void testExactMatch() {
         final String hotspotRef = "GATTACA";
 
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
+        final VariantHotspot hotspot =
+                ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
         assertOverlap(Hotspot.HOTSPOT, hotspot, 100, hotspotRef);
     }
 
@@ -60,14 +61,19 @@ public class HotspotEnrichmentTest {
     }
 
     private void assertOverlap(Hotspot expected, @NotNull VariantHotspot hotspot, int variantStart, @NotNull final String variantRef) {
-        final HotspotEnrichment victim = new HotspotEnrichment(Multimaps.fromPositions(Lists.newArrayList(hotspot)));
-        ImmutableSomaticVariantImpl.Builder builder = SomaticVariantTestBuilderFactory.create();
+        final List<VariantContext> result = Lists.newArrayList();
 
-        final SomaticVariant hg37Variant = victim.enrich(builder, createNonHotspotHG37(variantStart, variantRef)).build();
-        final SomaticVariant hg38Variant = victim.enrich(builder, createNonHotspotHG38(variantStart, variantRef)).build();
+        final VariantHotspotEnrichment enrichment =
+                new VariantHotspotEnrichment(Multimaps.fromPositions(Lists.newArrayList(hotspot)), result::add);
 
-        assertEquals(expected, hg37Variant.hotspot());
-        assertEquals(expected, hg38Variant.hotspot());
+        final VariantContext hg37Variant = createNonHotspotHG37(variantStart, variantRef);
+        final VariantContext hg38Variant = createNonHotspotHG38(variantStart, variantRef);
+
+        enrichment.accept(hg37Variant);
+        enrichment.accept(hg38Variant);
+
+        assertEquals(expected, HotspotEnrichment.fromVariant(result.get(0)));
+        assertEquals(expected, HotspotEnrichment.fromVariant(result.get(1)));
     }
 
     @NotNull

@@ -73,6 +73,7 @@ import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.config.SmoothingConfig;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
+import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 
@@ -223,6 +224,7 @@ public class PurityPloidyEstimateApplication {
             final SomaticStream somaticStream = new SomaticStream(configSupplier);
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
 
+
             final PurityContext purityContext = ImmutablePurityContext.builder()
                     .version(version.version())
                     .bestFit(bestFit.fit())
@@ -263,6 +265,8 @@ public class PurityPloidyEstimateApplication {
                 driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
                 DriverCatalogFile.write(DriverCatalogFile.generateFilename(outputDirectory, tumorSample), driverCatalog);
             }
+
+            new GermlineVariants(configSupplier).processAndWrite(purityAdjuster, copyNumbers);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
@@ -391,7 +395,7 @@ public class PurityPloidyEstimateApplication {
             final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
             final Consumer<VariantContext> convertThenSave = context -> factory.createVariant(sample, context).ifPresent(result::add);
             final VariantHotspotEnrichment enrich =
-                    new VariantHotspotEnrichment(configSupplier.driverCatalogConfig().hotspots(), convertThenSave);
+                    new VariantHotspotEnrichment(configSupplier.driverCatalogConfig().somaticHotspots(), convertThenSave);
 
             LOGGER.info("Loading somatic variants from {}", somaticConfig.file().get().toString());
             try (VCFFileReader vcfReader = new VCFFileReader(somaticConfig.file().get(), false)) {

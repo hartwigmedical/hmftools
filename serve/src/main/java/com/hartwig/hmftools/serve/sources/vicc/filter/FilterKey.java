@@ -7,7 +7,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FilterKey {
+class FilterKey {
 
     @NotNull
     private final ViccSource source;

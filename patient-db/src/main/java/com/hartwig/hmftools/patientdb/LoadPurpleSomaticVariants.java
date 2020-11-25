@@ -6,9 +6,10 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.patientdb.dao.BufferedWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.SomaticVariantStreamWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -41,7 +42,7 @@ public class LoadPurpleSomaticVariants {
         String somaticVcf = cmd.getOptionValue(SOMATIC_VCF);
 
         LOGGER.info("Removing old data of sample {}", tumorSample);
-        try (SomaticVariantStreamWriter somaticWriter = dbAccess.somaticVariantWriter(tumorSample)) {
+        try (BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(tumorSample)) {
             LOGGER.info("Streaming data from {} to db", somaticVcf);
             new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf, somaticWriter);
         }

@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidenceItem;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
-import com.hartwig.hmftools.common.serve.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.EvidenceLevel;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
 import org.jetbrains.annotations.NotNull;

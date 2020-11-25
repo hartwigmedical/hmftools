@@ -11,6 +11,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -40,7 +41,6 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
-import com.hartwig.hmftools.vicc.annotation.FeatureType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -115,7 +115,7 @@ public final class ViccExtractor {
         }
 
         ImmutableExtractionOutput.Builder outputBuilder = ImmutableExtractionOutput.builder()
-                .knownHotspots(convertToHotspots(resultsPerEntry))
+                .knownHotspots(convertToHotspots(resultsPerEntry, hotspotExtractor))
                 .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry))
                 .knownFusionPairs(convertToKnownFusions(resultsPerEntry));
 
@@ -125,7 +125,8 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+    private static List<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
+            @NotNull HotspotExtractor hotspotExtractor) {
         List<KnownHotspot> hotspots = Lists.newArrayList();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
             ViccEntry entry = entryResult.getKey();
@@ -137,7 +138,7 @@ public final class ViccExtractor {
                             .addSources(toKnowledgebase(entry.source()))
                             .gene(feature.geneSymbol())
                             .transcript(entry.transcriptId())
-                            .proteinAnnotation(feature.proteinAnnotation())
+                            .proteinAnnotation(hotspotExtractor.extractProteinAnnotation(feature))
                             .build());
                 }
             }
@@ -341,7 +342,7 @@ public final class ViccExtractor {
 
                 if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null && geneLevelEventForFeature == null
                         && geneRangesForFeature == null && signatureForFeature == null) {
-                    if (feature.type() != FeatureType.COMBINED && feature.type() != FeatureType.COMPLEX) {
+                    if (feature.type() != MutationType.COMBINED && feature.type() != MutationType.COMPLEX) {
                         // For both combined and complex events we expect no genomic events to be derived.
                         featuresWithoutGenomicEvents.add(feature);
                     }
@@ -380,9 +381,9 @@ public final class ViccExtractor {
 
         LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
         for (Feature feature : featuresWithoutGenomicEvents) {
-            FeatureType type = feature.type();
-            if (type != FeatureType.UNKNOWN && type != FeatureType.COMBINED && type != FeatureType.COMPLEX) {
-                LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+            MutationType type = feature.type();
+            if (type != MutationType.UNKNOWN && type != MutationType.COMBINED && type != MutationType.COMPLEX) {
+               // LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
             }
         }
 

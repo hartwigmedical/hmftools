@@ -6,10 +6,11 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
+import com.hartwig.hmftools.patientdb.dao.BufferedWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.SomaticVariantStreamWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -53,7 +54,7 @@ public class LoadSomaticVariants {
         }
 
         LOGGER.info("Removing old data of sample {}", sample);
-        try (SomaticVariantStreamWriter somaticWriter = dbAccess.somaticVariantWriter(sample)) {
+        try (BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(sample)) {
             LOGGER.info("Streaming data from {} to db", vcfFileLocation);
             new SomaticVariantFactory(filter).fromVCFFile(sample, referenceSample, rnaSample, vcfFileLocation, somaticWriter);
         }

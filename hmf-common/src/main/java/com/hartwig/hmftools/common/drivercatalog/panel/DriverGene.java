@@ -42,4 +42,8 @@ public interface DriverGene extends Comparable<DriverGene> {
     default boolean reportSomatic() {
         return reportMissenseAndInframe() || reportNonsenseAndFrameshift() || reportSplice() || reportSomaticHotspot();
     }
+
+    default boolean reportGermline() {
+        return reportGermlineVariant() || reportGermlineHotspot();
+    }
 }

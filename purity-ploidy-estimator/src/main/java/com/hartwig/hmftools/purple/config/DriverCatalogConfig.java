@@ -28,11 +28,13 @@ import org.jetbrains.annotations.Nullable;
 public interface DriverCatalogConfig {
 
     String DRIVER_ENABLED = "driver_catalog";
-    String HOTSPOT = "hotspots";
+    String SOMATIC_HOTSPOT = "somatic_hotspots";
+    String GERMLINE_HOTSPOT = "germline_hotspots";
 
     static void addOptions(@NotNull Options options) {
         options.addOption(DRIVER_ENABLED, false, "Persist data to DB.");
-        options.addOption(HOTSPOT, true, "Path to hotspot VCF");
+        options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
+        options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
         DriverGenePanelConfig.addGenePanelOption(false, options);
     }
 
@@ -42,14 +44,20 @@ public interface DriverCatalogConfig {
     DriverGenePanel genePanel();
 
     @NotNull
-    ListMultimap<Chromosome, VariantHotspot> hotspots();
+    ListMultimap<Chromosome, VariantHotspot> somaticHotspots();
 
     @NotNull
-    static DriverCatalogConfig createConfig(@NotNull final CommandLine cmd, @NotNull RefGenomeData refGenomeData)
+    ListMultimap<Chromosome, VariantHotspot> germlineHotspots();
+
+    @NotNull
+    static DriverCatalogConfig createConfig(@NotNull final CommandLine cmd, @NotNull RefGenomeData refGenomeData, @NotNull GermlineConfig germlineConfig)
             throws ParseException, IOException {
         boolean enabled = cmd.hasOption(DRIVER_ENABLED);
-        String hotspotVcf = cmd.getOptionValue(HOTSPOT, Strings.EMPTY);
+        String somaticHotspotVcf = cmd.getOptionValue(SOMATIC_HOTSPOT, Strings.EMPTY);
+        String germlineHotspotVcf = cmd.getOptionValue(GERMLINE_HOTSPOT, Strings.EMPTY);
         final DriverGenePanel genePanel;
+
+
 
         if (enabled) {
             if (!DriverGenePanelConfig.isConfigured(cmd)) {
@@ -57,26 +65,44 @@ public interface DriverCatalogConfig {
                         DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
             }
 
-            if (hotspotVcf.isEmpty()) {
-                throw new ParseException(HOTSPOT + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
+            if (somaticHotspotVcf.isEmpty()) {
+                throw new ParseException(SOMATIC_HOTSPOT + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
             }
 
-            if (!new File(hotspotVcf).exists()) {
-                throw new IOException("Unable to open " + HOTSPOT + " file " + hotspotVcf);
+            if (!new File(somaticHotspotVcf).exists()) {
+                throw new IOException("Unable to open " + SOMATIC_HOTSPOT + " file " + somaticHotspotVcf);
             }
 
             final List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes(cmd);
             final DriverGenePanelAssembly driverGenePanelAssembly =
                     refGenomeData.isHg38() ? DriverGenePanelAssembly.HG38 : DriverGenePanelAssembly.HG19;
             genePanel = DriverGenePanelFactory.create(driverGenePanelAssembly, driverGenes);
+
+            if (germlineConfig.file().isPresent()) {
+                if (germlineHotspotVcf.isEmpty()) {
+                    throw new ParseException(GERMLINE_HOTSPOT + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
+                }
+
+                if (!new File(germlineHotspotVcf).exists()) {
+                    throw new IOException("Unable to open " + GERMLINE_HOTSPOT + " file " + germlineHotspotVcf);
+                }
+            }
+
         } else {
             genePanel = DriverGenePanelFactory.empty();
         }
 
-        ListMultimap<Chromosome, VariantHotspot> hotspots =
-                hotspotVcf.equals(Strings.EMPTY) ? ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(hotspotVcf);
+        ListMultimap<Chromosome, VariantHotspot> somaticHotspots =
+                somaticHotspotVcf.equals(Strings.EMPTY) ? ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(somaticHotspotVcf);
 
+        ListMultimap<Chromosome, VariantHotspot> germlineHotspots =
+                germlineHotspotVcf.equals(Strings.EMPTY) ? ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(germlineHotspotVcf);
 
-        return ImmutableDriverCatalogConfig.builder().enabled(enabled).hotspots(hotspots).genePanel(genePanel).build();
+        return ImmutableDriverCatalogConfig.builder()
+                .enabled(enabled)
+                .somaticHotspots(somaticHotspots)
+                .germlineHotspots(germlineHotspots)
+                .genePanel(genePanel)
+                .build();
     }
 }

@@ -26,13 +26,13 @@ public class NamedBedFile {
     private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
     private static final String DELIMITER = "\t";
 
-    public static void toBedFile(@NotNull final String filename, @NotNull final List<NamedBed> regions) throws IOException {
+    public static void writeBedFile(@NotNull final String filename, @NotNull final List<NamedBed> regions) throws IOException {
         List<String> strings = regions.stream().map(NamedBedFile::asBed).collect(Collectors.toList());
         Files.write(new File(filename).toPath(), strings);
     }
 
     @NotNull
-    public static List<NamedBed> fromBedFile(@NotNull String bedFile) throws IOException {
+    public static List<NamedBed> readBedFile(@NotNull String bedFile) throws IOException {
         List<NamedBed> result = Lists.newArrayList();
         NamedBed prevRegion = null;
         try (final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(bedFile, new BEDCodec(), false)) {

@@ -2,8 +2,6 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.annotation.TranscriptExtractor;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +12,10 @@ public abstract class ViccEntry {
 
     @NotNull
     public abstract ViccSource source();
+
+    // Transcript ID is not directly available in the data but is derived from kbSpecificObject
+    @Nullable
+    public abstract String transcriptId();
 
     @NotNull
     public abstract List<String> genes();
@@ -38,11 +40,5 @@ public abstract class ViccEntry {
 
     @NotNull
     public abstract KbSpecificObject kbSpecificObject();
-
-    @Nullable
-    @Value.Derived
-    public String transcriptId() {
-        return TranscriptExtractor.extractTranscriptId(this);
-    }
 }
 

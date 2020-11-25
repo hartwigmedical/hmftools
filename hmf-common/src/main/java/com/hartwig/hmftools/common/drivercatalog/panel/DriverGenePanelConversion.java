@@ -49,7 +49,7 @@ public class DriverGenePanelConversion {
         final String somaticActionableFile = String.format("%s/ActionableCodingPanel.somatic.%s.bed", resourceDir, extension);
         final String germlineActionableFile = String.format("%s/ActionableCodingPanel.germline.%s.bed", resourceDir, extension);
         final String germlineHotspotFile = String.format("%s/KnownHotspots.germline.%s.vcf.gz", resourceDir, extension);
-        final String clinvarFile = String.format("%s/clinvar.vcf.%s.gz", resourceDir, extension);
+        final String clinvarFile = String.format("%s/clinvar.%s.vcf.gz", resourceDir, extension);
 
         Collections.sort(driverGenes);
 
@@ -70,16 +70,16 @@ public class DriverGenePanelConversion {
                 assembly.equals(DriverGenePanelAssembly.HG19) ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
         // Write out driver gene panel
-        createBedFiles(somaticActionableFile, somaticGenes, transcripts);
-        createBedFiles(germlineActionableFile, allGenes, transcripts);
+        createBedFiles(false, somaticActionableFile, somaticGenes, transcripts);
+        createBedFiles(true, germlineActionableFile, allGenes, transcripts);
 
         // Write out germline hotspot files
         new GermlineHotspotVCF(germlineGenes).process(clinvarFile, germlineHotspotFile);
     }
 
-    private static void createBedFiles(String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {
-        final List<NamedBed> somaticBed = HmfExonPanelBed.createRegions(genes, transcripts);
-        NamedBedFile.toBedFile(file, somaticBed);
+    private static void createBedFiles(boolean includeUTR, String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {
+        final List<NamedBed> somaticBed = HmfExonPanelBed.createRegions(includeUTR, genes, transcripts);
+        NamedBedFile.writeBedFile(file, somaticBed);
     }
 
     @NotNull
@@ -98,7 +98,7 @@ public class DriverGenePanelConversion {
     static Set<String> germlineGenes(@NotNull final List<DriverGene> genePanel) {
         final Set<String> actionableGenes = Sets.newHashSet();
         for (DriverGene driverGene : genePanel) {
-            if (driverGene.reportGermlineVariant() || driverGene.reportGermlineHotspot()) {
+            if (driverGene.reportGermline()) {
                 actionableGenes.add(driverGene.gene());
             }
 

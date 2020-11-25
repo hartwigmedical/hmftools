@@ -13,6 +13,7 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
+import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +33,7 @@ public final class ViccExtractorFactory {
             @NotNull List<DriverGene> driverGenes, @Nullable String featureInterpretationTsv) {
         Map<String, HmfTranscriptRegion> transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
 
-        return new ViccExtractor(new HotspotExtractor(proteinResolver),
+        return new ViccExtractor(new HotspotExtractor(proteinResolver, new ProteinAnnotationExtractor()),
                 new CopyNumberExtractor(transcriptPerGeneMap),
                 new FusionExtractor(transcriptPerGeneMap),
                 new GeneLevelExtractor(transcriptPerGeneMap, driverGenes),

@@ -6,7 +6,6 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class HotspotEnrichment implements SomaticEnrichment {
+public class HotspotEnrichment  {
 
     public static final int DISTANCE = 5;
     public static final String HOTSPOT_FLAG = "HOTSPOT";
@@ -22,24 +21,8 @@ public class HotspotEnrichment implements SomaticEnrichment {
 
     private final Multimap<Chromosome, VariantHotspot> hotspots;
 
-
     HotspotEnrichment(@NotNull final Multimap<Chromosome, VariantHotspot> hotspots) {
         this.hotspots = hotspots;
-    }
-
-    @NotNull
-    @Override
-    public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,
-            @NotNull final VariantContext context) {
-        if (isOnHotspot(context)) {
-            return builder.hotspot(Hotspot.HOTSPOT);
-        }
-
-        if (isNearHotspot(context)) {
-            return builder.hotspot(Hotspot.NEAR_HOTSPOT);
-        }
-
-        return builder.hotspot(Hotspot.NON_HOTSPOT);
     }
 
     @NotNull
