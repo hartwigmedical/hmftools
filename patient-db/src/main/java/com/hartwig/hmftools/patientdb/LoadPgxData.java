@@ -7,12 +7,12 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.germline.GermlineVariant;
+import com.hartwig.hmftools.common.germline.GermlineVariantFile;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCallsFile;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotypeFile;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -58,7 +58,8 @@ public class LoadPgxData {
             LOGGER.info(" Read {} pgx genotypes", pgxGenotype.size());
 
             LOGGER.info("Reading pgx vcf file {}", pgxVCFFileName);
-            List<SomaticVariant> pgxVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, pgxVCFFileName);
+            List<GermlineVariant> pgxVariants = GermlineVariantFile.read(pgxCallsFileName);
+
             LOGGER.info("Read {} PGX variants from {}", pgxVariants.size(), pgxVCFFileName);
 
             LOGGER.info("Writing pgx into database for {}", sample);

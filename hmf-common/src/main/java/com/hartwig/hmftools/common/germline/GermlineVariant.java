@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bachelor.types;
+package com.hartwig.hmftools.common.germline;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 

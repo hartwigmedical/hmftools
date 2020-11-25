@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.bachelor.types;
 
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
-import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_BENIGN;
-import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_CONFLICTING;
-import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_LIKELY_BENIGN;
-import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_LIKELY_PATHOGENIC;
-import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_PATHOGENIC;
-import static com.hartwig.hmftools.bachelor.types.PathogenicType.UNANNOTATED;
-import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
+import static com.hartwig.hmftools.common.germline.PathogenicType.CLINVAR_BENIGN;
+import static com.hartwig.hmftools.common.germline.PathogenicType.CLINVAR_CONFLICTING;
+import static com.hartwig.hmftools.common.germline.PathogenicType.CLINVAR_LIKELY_BENIGN;
+import static com.hartwig.hmftools.common.germline.PathogenicType.CLINVAR_LIKELY_PATHOGENIC;
+import static com.hartwig.hmftools.common.germline.PathogenicType.CLINVAR_PATHOGENIC;
+import static com.hartwig.hmftools.common.germline.PathogenicType.UNANNOTATED;
 
+import com.hartwig.hmftools.common.germline.PathogenicType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
 public class VariantFilter

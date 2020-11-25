@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 
 import java.util.List;
 
-import com.hartwig.hmftools.bachelor.types.GermlineVariant;
-import com.hartwig.hmftools.bachelor.types.GermlineVariantFile;
+import com.hartwig.hmftools.common.germline.GermlineVariant;
+import com.hartwig.hmftools.common.germline.GermlineVariantFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;

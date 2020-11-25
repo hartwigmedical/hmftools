@@ -11,11 +11,14 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Iterables;
+import com.hartwig.hmftools.common.germline.GermlineVariant;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Germlinevariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +37,7 @@ class PgxDAO {
     }
 
     void writePgx(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls,
-            @NotNull List<SomaticVariant> pgxVariants) {
+            @NotNull List<GermlineVariant> pgxVariants) {
         deletePgxForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -72,52 +75,37 @@ class PgxDAO {
             inserter.execute();
         }
 
-        for (List<SomaticVariant> variants : Iterables.partition(pgxVariants, DB_BATCH_INSERT_SIZE)) {
-            final InsertValuesStepN inserter = context.insertInto(PGXVARIANT,
-                    PGXVARIANT.SAMPLEID,
-                    PGXVARIANT.CHROMOSOME,
-                    PGXVARIANT.POSITION,
-                    PGXVARIANT.FILTER,
-                    PGXVARIANT.TYPE,
-                    PGXVARIANT.REF,
-                    PGXVARIANT.ALT,
-                    PGXVARIANT.GENE,
-                    PGXVARIANT.GENESEFFECTED,
-                    PGXVARIANT.REPORTED,
-                    PGXVARIANT.WORSTEFFECT,
-                    PGXVARIANT.WORSTCODINGEFFECT,
-                    PGXVARIANT.WORSTEFFECTTRANSCRIPT,
-                    PGXVARIANT.CANONICALEFFECT,
-                    PGXVARIANT.CANONICALCODINGEFFECT,
-                    PGXVARIANT.CANONICALHGVSCODINGIMPACT,
-                    PGXVARIANT.CANONICALHGVSPROTEINIMPACT,
-                    PGXVARIANT.ALLELEREADCOUNT,
-                    PGXVARIANT.TOTALREADCOUNT,
-                    PGXVARIANT.COPYNUMBER,
-                    PGXVARIANT.ADJUSTEDVAF,
-                    PGXVARIANT.VARIANTCOPYNUMBER,
-                    PGXVARIANT.TRINUCLEOTIDECONTEXT,
-                    PGXVARIANT.MICROHOMOLOGY,
-                    PGXVARIANT.REPEATSEQUENCE,
-                    PGXVARIANT.REPEATCOUNT,
-                    PGXVARIANT.SUBCLONALLIKELIHOOD,
-                    PGXVARIANT.BIALLELIC,
-                    PGXVARIANT.HOTSPOT,
-                    PGXVARIANT.MAPPABILITY,
-                    PGXVARIANT.GERMLINESTATUS,
-                    PGXVARIANT.MINORALLELECOPYNUMBER,
-                    PGXVARIANT.RECOVERED,
-                    PGXVARIANT.KATAEGIS,
-                    PGXVARIANT.TIER,
-                    PGXVARIANT.REFERENCEALLELEREADCOUNT,
-                    PGXVARIANT.REFERENCETOTALREADCOUNT,
-                    PGXVARIANT.RNAALLELEREADCOUNT,
-                    PGXVARIANT.RNATOTALREADCOUNT,
-                    PGXVARIANT.QUAL,
-                    PGXVARIANT.LOCALPHASESET,
-                    PGXVARIANT.LOCALREALIGNMENTSET,
-                    PGXVARIANT.PHASEDINFRAMEINDEL,
-                    PGXVARIANT.MODIFIED);
+        for (List<GermlineVariant> variants : Iterables.partition(pgxVariants, DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStepN inserter = context.insertInto(Tables.GERMLINEVARIANT,
+                    Tables.GERMLINEVARIANT.SAMPLEID,
+                    Tables.GERMLINEVARIANT.CHROMOSOME,
+                    Tables.GERMLINEVARIANT.POSITION,
+                    Tables.GERMLINEVARIANT.FILTER,
+                    Tables.GERMLINEVARIANT.REFSTATUS,
+                    Tables.GERMLINEVARIANT.REPORTED,
+                    Tables.GERMLINEVARIANT.PATHOGENIC,
+                    Tables.GERMLINEVARIANT.CLINVARINFO,
+                    Tables.GERMLINEVARIANT.TYPE,
+                    Tables.GERMLINEVARIANT.REF,
+                    Tables.GERMLINEVARIANT.ALT,
+                    Tables.GERMLINEVARIANT.GENE,
+                    Tables.GERMLINEVARIANT.TRANSCRIPT,
+                    Tables.GERMLINEVARIANT.EFFECT,
+                    Tables.GERMLINEVARIANT.CODINGEFFECT,
+                    Tables.GERMLINEVARIANT.HGVSCODING,
+                    Tables.GERMLINEVARIANT.HGVSPROTEIN,
+                    Tables.GERMLINEVARIANT.MICROHOMOLOGY,
+                    Tables.GERMLINEVARIANT.REPEATSEQUENCE,
+                    Tables.GERMLINEVARIANT.REPEATCOUNT,
+                    Tables.GERMLINEVARIANT.TRINUCLEOTIDECONTEXT,
+                    Tables.GERMLINEVARIANT.ALLELEREADCOUNT,
+                    Tables.GERMLINEVARIANT.TOTALREADCOUNT,
+                    Tables.GERMLINEVARIANT.ADJUSTEDCOPYNUMBER,
+                    Tables.GERMLINEVARIANT.MINORALLELECOPYNUMBER,
+                    Tables.GERMLINEVARIANT.ADJUSTEDVAF,
+                    Tables.GERMLINEVARIANT.BIALLELIC,
+                    Tables.GERMLINEVARIANT.MODIFIED);
+
             variants.forEach(x -> addVariants(timestamp, inserter, sample, x));
             inserter.execute();
         }
@@ -153,50 +141,34 @@ class PgxDAO {
     }
 
     private static void addVariants(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull SomaticVariant variant) {
+            @NotNull GermlineVariant variant) {
         inserter.values(sample,
                 variant.chromosome(),
                 variant.position(),
                 variant.filter(),
+                variant.refStatus(),
+                variant.reported(),
+                variant.pathogenic(),
+                variant.clinvarInfo(),
                 variant.type(),
                 variant.ref(),
-                variant.alt(),
+                variant.alts(),
                 variant.gene(),
-                variant.genesAffected(),
-                variant.reported(),
-                variant.worstEffect(),
-                variant.worstCodingEffect() != CodingEffect.UNDEFINED ? variant.worstCodingEffect() : Strings.EMPTY,
-                variant.worstEffectTranscript(),
-                variant.canonicalEffect(),
-                variant.canonicalCodingEffect() != CodingEffect.UNDEFINED ? variant.canonicalCodingEffect() : Strings.EMPTY,
-                variant.canonicalHgvsCodingImpact(),
-                variant.canonicalHgvsProteinImpact(),
-                variant.alleleReadCount(),
-                variant.totalReadCount(),
-                DatabaseUtil.decimal(variant.adjustedCopyNumber()),
-                DatabaseUtil.decimal(variant.adjustedVAF()),
-                DatabaseUtil.decimal(variant.variantCopyNumber()),
-                variant.trinucleotideContext(),
+                variant.transcriptId(),
+                variant.effects(),
+                variant.codingEffect(),
+                variant.hgvsCoding(),
+                variant.hgvsProtein(),
                 variant.microhomology(),
                 variant.repeatSequence(),
                 variant.repeatCount(),
-                variant.subclonalLikelihood(),
+                variant.trinucleotideContext(),
+                variant.alleleReadCount(),
+                variant.totalReadCount(),
+                DatabaseUtil.decimal(variant.adjustedCopyNumber()),
+                DatabaseUtil.decimal(variant.minorAlleleJcn()),
+                DatabaseUtil.decimal(variant.adjustedVaf()),
                 variant.biallelic(),
-                variant.hotspot(),
-                DatabaseUtil.decimal(variant.mappability()),
-                variant.germlineStatus(),
-                DatabaseUtil.decimal(variant.minorAlleleCopyNumber()),
-                variant.recovered(),
-                variant.kataegis(),
-                variant.tier().toString(),
-                Optional.ofNullable(variant.referenceDepth()).map(AllelicDepth::alleleReadCount).orElse(null),
-                Optional.ofNullable(variant.referenceDepth()).map(AllelicDepth::totalReadCount).orElse(null),
-                Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::alleleReadCount).orElse(null),
-                Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
-                variant.qual(),
-                variant.localPhaseSet(),
-                variant.localRealignmentSet(),
-                variant.phasedInframeIndelIdentifier(),
                 timestamp);
     }
 
