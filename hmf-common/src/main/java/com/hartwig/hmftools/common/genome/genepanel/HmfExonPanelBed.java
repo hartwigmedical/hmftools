@@ -82,12 +82,12 @@ public final class HmfExonPanelBed {
 
         final List<GenomeRegion> reduced = builder.build();
         if (sortedInput.size() != reduced.size()) {
-            return false;
+            return true;
         }
 
         for (int i = 0; i < sortedInput.size(); i++) {
-            GenomeRegion first = sortedInput.get(0);
-            GenomeRegion second = reduced.get(0);
+            GenomeRegion first = sortedInput.get(i);
+            GenomeRegion second = reduced.get(i);
             if (!first.equals(second)) {
                 return true;
             }
