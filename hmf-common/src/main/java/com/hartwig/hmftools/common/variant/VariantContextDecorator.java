@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.clinvar.ClinvarSummary;
 import com.hartwig.hmftools.common.clinvar.ClinvarSummaryFactory;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
@@ -120,6 +121,12 @@ public class VariantContextDecorator implements GenomePosition {
     public AllelicDepth allelicDepth(@NotNull final String sample) {
         final Genotype genotype = context.getGenotype(sample);
         return genotype != null ? AllelicDepth.fromGenotype(genotype) : NO_DEPTH;
+    }
+
+    @NotNull
+    public GenotypeStatus genotypeStatus(@NotNull final String sample) {
+        final Genotype genotype = context.getGenotype(sample);
+        return genotype != null ? GenotypeStatus.fromGenotype(genotype) : GenotypeStatus.UNKNOWN;
     }
 
     @NotNull

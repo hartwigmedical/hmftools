@@ -794,6 +794,7 @@ CREATE TABLE germlineVariant2
     ## SAGE
     qual double precision not null,
     tier varchar(20) NOT NULL,
+    germlineGenotype varchar(255) NOT NULL,
     germlineAlleleReadCount int,
     germlineTotalReadCount int,
     rnaAlleleReadCount int,
