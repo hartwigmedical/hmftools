@@ -59,6 +59,7 @@ public class GermlineVariants {
                             .build()) {
 
                 final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(commonConfig.version(),
+                        commonConfig.refSample(),
                         commonConfig.tumorSample(),
                         indexedFastaSequenceFile,
                         purityAdjuster,

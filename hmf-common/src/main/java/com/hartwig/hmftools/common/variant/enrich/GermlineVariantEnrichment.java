@@ -29,21 +29,22 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
     private final VariantContextEnrichment snpEffEnrichment;
     private final VariantContextEnrichment reportableEnrichment;
     private final VariantContextEnrichment hotspotEnrichment;
+    private final VariantContextEnrichment genotypeEnrichment;
 
-    public GermlineVariantEnrichment(@NotNull final String purpleVersion, @NotNull final String tumorSample,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final DriverGenePanel genePanel,
-            @NotNull final List<CanonicalTranscript> transcripts, @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots,
-            @NotNull final Consumer<VariantContext> consumer) {
+    public GermlineVariantEnrichment(@NotNull final String purpleVersion, @NotNull final String referenceSample,
+            @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
+            @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
+            @NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts,
+            @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots, @NotNull final Consumer<VariantContext> consumer) {
 
         this.reportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), consumer);
-
         this.clinvarEnrichment = new GermlineClinvarEnrichment(reportableEnrichment);
         this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, clinvarEnrichment);
         final Set<String> germlineGenes =
                 genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
         this.snpEffEnrichment = new SnpEffEnrichment(germlineGenes, transcripts, refGenomeEnrichment);
         this.hotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, snpEffEnrichment);
+        this.genotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, hotspotEnrichment);
         this.purityEnrichment =
                 new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, Collections.emptyList(), hotspotEnrichment);
     }
@@ -71,6 +72,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
         header = refGenomeEnrichment.enrichHeader(header);
         header = snpEffEnrichment.enrichHeader(header);
         header = reportableEnrichment.enrichHeader(header);
+        header = genotypeEnrichment.enrichHeader(header);
         return clinvarEnrichment.enrichHeader(header);
     }
 }
