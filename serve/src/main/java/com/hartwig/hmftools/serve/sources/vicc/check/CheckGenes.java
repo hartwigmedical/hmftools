@@ -16,7 +16,7 @@ public class CheckGenes {
 
     public static void checkGensInPanel(@NotNull String gene, @NotNull String event) {
         if (!GENES.contains(gene)) {
-            LOGGER.warn("Could not find gene {} for event {} in HMF gene panel. Skipping extraction!", gene, event);
+            LOGGER.warn("Could not find gene {} for event {} in HMF driver gene panel. Skipping extraction!", gene, event);
 
         }
 

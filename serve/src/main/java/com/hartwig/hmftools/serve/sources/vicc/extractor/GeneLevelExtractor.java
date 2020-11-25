@@ -74,7 +74,9 @@ public class GeneLevelExtractor {
     @VisibleForTesting
     static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String event = Strings.EMPTY;
-        if (feature.name().split(" ").length > 1) {
+        String geneSymbol = feature.geneSymbol();
+        String geneSymbolEvent = feature.name().split(" ")[0];
+        if (geneSymbolEvent.equals(geneSymbol)) {
             event = feature.name().split(" ", 2)[1].trim();
         } else {
             event = feature.name();
@@ -85,34 +87,30 @@ public class GeneLevelExtractor {
         } else if (GeneLevelMatcher.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
             return GeneLevelEvent.ACTIVATION;
         } else if (GeneLevelMatcher.GENERIC_GENE_LEVEL_KEYWORDS.contains(event)) {
-            for (DriverGene driverGene : driverGenes) {
-                if (driverGene.gene().equals(feature.geneSymbol())) {
-                    if (driverGene.likelihoodType() == DriverCategory.ONCO) {
-                        return GeneLevelEvent.ACTIVATION;
-                    } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
-                        return GeneLevelEvent.INACTIVATION;
-                    }
-                }
-            }
-            CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
+            return extractGeneLevelEventGene(feature, driverGenes);
         } else if (feature.provenanceRule() != null){
             if (GENE_ONLY.contains(feature.provenanceRule())) {
-                for (DriverGene driverGene : driverGenes) {
-                    if (driverGene.gene().equals(feature.geneSymbol())) {
-                        if (driverGene.likelihoodType() == DriverCategory.ONCO) {
-                            return GeneLevelEvent.ACTIVATION;
-                        } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
-                            return GeneLevelEvent.INACTIVATION;
-                        }
-                    }
-                }
-                CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
+                return extractGeneLevelEventGene(feature, driverGenes);
             }
         }else {
             // LOGGER.warn("Unknown event {}", feature);
             return GeneLevelEvent.UNKNOWN;
         }
         //  LOGGER.warn("Unknown event {}", feature);
+        return GeneLevelEvent.UNKNOWN;
+    }
+
+    private static GeneLevelEvent extractGeneLevelEventGene(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
+        for (DriverGene driverGene : driverGenes) {
+            if (driverGene.gene().equals(feature.geneSymbol())) {
+                if (driverGene.likelihoodType() == DriverCategory.ONCO) {
+                    return GeneLevelEvent.ACTIVATION;
+                } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
+                    return GeneLevelEvent.INACTIVATION;
+                }
+            }
+        }
+        CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
         return GeneLevelEvent.UNKNOWN;
     }
 }
