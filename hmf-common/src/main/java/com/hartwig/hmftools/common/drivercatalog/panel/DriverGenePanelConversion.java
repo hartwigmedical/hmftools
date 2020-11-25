@@ -13,11 +13,18 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class DriverGenePanelConversion {
 
+    private static final Logger LOGGER = LogManager.getLogger(DriverGenePanelConversion.class);
+
+
     public static void main(String[] args) throws IOException {
+        LOGGER.info("Starting driver gene panel generation");
+
         String templateFile = "/Users/jon/hmf/resources/DriverGenePanel.template.txt";
 
         DndsGeneNameMap geneNameMap = new DndsGeneNameMap();
@@ -70,7 +77,10 @@ public class DriverGenePanelConversion {
                 assembly.equals(DriverGenePanelAssembly.HG19) ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
         // Write out driver gene panel
+        LOGGER.info("Creating {} {} bed file", assembly, "somatic");
         createBedFiles(false, somaticActionableFile, somaticGenes, transcripts);
+
+        LOGGER.info("Creating {} {} bed file", assembly, "germline");
         createBedFiles(true, germlineActionableFile, allGenes, transcripts);
 
         // Write out germline hotspot files
