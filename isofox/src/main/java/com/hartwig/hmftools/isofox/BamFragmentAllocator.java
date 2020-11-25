@@ -275,7 +275,6 @@ public class BamFragmentAllocator
             }
             else if(reads.size() == 3)
             {
-                /*
                 for(ReadRecord read : reads)
                 {
                     if(read.hasSuppAlignment())
@@ -291,9 +290,6 @@ public class BamFragmentAllocator
                         }
                     }
                 }
-                */
-
-                continue;
             }
 
             if(read1 == null || read2 == null)

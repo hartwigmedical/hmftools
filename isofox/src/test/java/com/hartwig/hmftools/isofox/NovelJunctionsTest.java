@@ -3,8 +3,11 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
+import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
+import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.CIRCULAR;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.INTRONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.MIXED_TRANS;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_3_PRIME;
@@ -237,6 +240,22 @@ public class NovelJunctionsTest
         validTransIds = altSJ.candidateTransIds();
         assertTrue(validTransIds.contains(transId1));
         assertTrue(validTransIds.contains(transId2));
+
+        // circular exon looking like a DP
+        ReadRecord[] readPair = createSupplementaryReadPair(1, genes, genes, 400, 419, 481, 500,
+                createCigar(5, 20, 0), createCigar(0, 20, 5), true);
+        readPair[0].processOverlappingRegions(gene.findOverlappingRegions(readPair[0]));
+        readPair[1].processOverlappingRegions(gene.findOverlappingRegions(readPair[1]));
+
+        transIds = Lists.newArrayList(transId1);
+        AltSpliceJunction circularAltSJ = asjFinder.createFromReads(readPair[0], readPair[1], transIds);
+
+        assertTrue(circularAltSJ != null);
+        assertEquals(CIRCULAR, circularAltSJ.type());
+        assertEquals(400, circularAltSJ.SpliceJunction[SE_START]);
+        assertEquals(500, circularAltSJ.SpliceJunction[SE_END]);
+        assertEquals(SPLICE_JUNC, circularAltSJ.RegionContexts[SE_START]);
+        assertEquals(SPLICE_JUNC, circularAltSJ.RegionContexts[SE_END]);
     }
 
     @Test

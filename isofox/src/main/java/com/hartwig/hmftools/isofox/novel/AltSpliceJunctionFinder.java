@@ -210,8 +210,6 @@ public class AltSpliceJunctionFinder
         List<RegionReadData> sjEndRegions = Lists.newArrayList();
         List<RegionReadData> candidateRegions = Lists.newArrayList();
 
-        final AltSpliceJunctionContext[] regionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN };
-
         for(int i = 0; i <=1; ++i)
         {
             final ReadRecord read = (i == 0) ? read1 : read2;
@@ -235,10 +233,14 @@ public class AltSpliceJunctionFinder
         if(spliceJunction[SE_START] == 0 || spliceJunction[SE_END] == 0)
             return null;
 
+        // flip the SJ around since a DUP/circule=ar has opposite orientations to a standard alt-SJ DL
+        int[] flippedSpliceJunction = { spliceJunction[SE_END], spliceJunction[SE_START] };
+        final AltSpliceJunctionContext[] flippedRegionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN };
 
-        // classifyRegions(read, spliceJunction, sjStartRegions, sjEndRegions, regionContexts);
+        classifyRegions(read1, flippedSpliceJunction, sjEndRegions, sjStartRegions, flippedRegionContexts);
+        classifyRegions(read2, flippedSpliceJunction, sjEndRegions, sjStartRegions, flippedRegionContexts);
 
-        // AltSpliceJunctionType sjType = classifySpliceJunction(relatedTransIds, sjStartRegions, sjEndRegions, regionContexts);
+        final AltSpliceJunctionContext[] regionContexts = { flippedRegionContexts[SE_END], flippedRegionContexts[SE_START] };
 
         AltSpliceJunction altSplicJunction = new AltSpliceJunction(
                 mGenes.chromosome(), spliceJunction, CIRCULAR, read1.Id, regionContexts, sjStartRegions, sjEndRegions);
@@ -250,7 +252,7 @@ public class AltSpliceJunctionFinder
 
     private void classifyRegions(
             final ReadRecord read, final int[] spliceJunction,
-            final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions, AltSpliceJunctionContext[] regionContexts)
+            final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions, final AltSpliceJunctionContext[] regionContexts)
     {
         // collect up all exon regions matching the observed novel splice junction
         final List<Integer> sjMatchedTransIds = Lists.newArrayList();
