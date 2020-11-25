@@ -308,7 +308,7 @@ public class NovelJunctionsTest
 
         gene.setTranscripts(transcripts);
 
-        RetainedIntronFinder riFinder = new RetainedIntronFinder(null);
+        RetainedIntronFinder riFinder = new RetainedIntronFinder(config, null);
 
         GeneCollection genes = new GeneCollection(0, Lists.newArrayList(gene));
         riFinder.setGeneData(genes);

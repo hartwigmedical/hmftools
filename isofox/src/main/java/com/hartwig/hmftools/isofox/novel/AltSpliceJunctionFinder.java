@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.CIRCULAR;
@@ -43,6 +44,7 @@ import htsjdk.samtools.CigarOperator;
 
 public class AltSpliceJunctionFinder
 {
+    private final boolean mEnabled;
     private final IsofoxConfig mConfig;
 
     private final List<AltSpliceJunction> mAltSpliceJunctions;
@@ -52,12 +54,14 @@ public class AltSpliceJunctionFinder
 
     public AltSpliceJunctionFinder(final IsofoxConfig config, final BufferedWriter writer)
     {
+        mEnabled = config.runFunction(NOVEL_LOCATIONS);
         mConfig = config;
         mAltSpliceJunctions = Lists.newArrayList();
         mWriter = writer;
         mGenes = null;
     }
 
+    public boolean enabled() { return mEnabled; }
     public List<AltSpliceJunction> getAltSpliceJunctions() { return mAltSpliceJunctions; }
 
     public void setGeneData(final GeneCollection genes)
@@ -69,6 +73,9 @@ public class AltSpliceJunctionFinder
     public void evaluateFragmentReads(
             final List<GeneReadData> genes, final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
     {
+        if(!mEnabled)
+            return;
+
         if(read1.isDuplicate() || read2.isDuplicate() || genes.isEmpty() || read1.isMultiMapped() || read2.isMultiMapped())
             return;
 
@@ -459,6 +466,9 @@ public class AltSpliceJunctionFinder
             final List<GeneReadData> candidateGenes, final ReadRecord read1, final ReadRecord read2, final List<Integer> regionTranscripts)
     {
         AltSpliceJunction altSpliceJunc = createFromReads(read1, read2, regionTranscripts);
+
+        if(altSpliceJunc == null)
+            return null;
 
         AltSpliceJunction existingSpliceJunc = mAltSpliceJunctions.stream()
                 .filter(x -> x.matches(altSpliceJunc)).findFirst().orElse(null);

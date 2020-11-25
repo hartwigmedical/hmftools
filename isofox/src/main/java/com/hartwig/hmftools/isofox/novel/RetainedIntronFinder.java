@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,6 +27,7 @@ import com.hartwig.hmftools.isofox.common.TransMatchType;
 
 public class RetainedIntronFinder
 {
+    private final boolean mEnabled;
     private GeneCollection mGenes;
     private final List<RetainedIntron> mRetainedIntrons;
     private final BufferedWriter mWriter;
@@ -33,12 +35,15 @@ public class RetainedIntronFinder
     private static final int MIN_FRAG_COUNT = 3;
     private static final int MIN_SPLICED_FRAG_COUNT = 1;
 
-    public RetainedIntronFinder(final BufferedWriter writer)
+    public RetainedIntronFinder(final IsofoxConfig config, final BufferedWriter writer)
     {
+        mEnabled = config.runFunction(NOVEL_LOCATIONS);
         mRetainedIntrons = Lists.newArrayList();
         mWriter = writer;
         mGenes = null;
     }
+
+    public boolean enabled() { return mEnabled; }
 
     public void setGeneData(final GeneCollection genes)
     {
@@ -50,6 +55,9 @@ public class RetainedIntronFinder
 
     public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2)
     {
+        if(!mEnabled)
+            return;
+
         if(read1.isDuplicate() || read2.isDuplicate() || read1.isMultiMapped() || read2.isMultiMapped())
             return;
 

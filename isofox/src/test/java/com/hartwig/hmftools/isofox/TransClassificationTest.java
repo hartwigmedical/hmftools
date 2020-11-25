@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.BamFragmentAllocator.calcFragmentLength;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
@@ -222,6 +223,8 @@ public class TransClassificationTest
     {
         // one read outside the gene
         IsofoxConfig config = new IsofoxConfig();
+        config.Functions.clear();
+        config.Functions.add(TRANSCRIPT_COUNTS);
         BamFragmentAllocator bamReader = new BamFragmentAllocator(config, new ResultsWriter(config));
 
         String transName1 = "TRANS01";

@@ -48,7 +48,12 @@ public class TaskExecutor
         }
 
         if(!checkThreadCompletion(threadTaskList))
+        {
+            ISF_LOGGER.info("shutting down reamining tasks");
+            threadTaskList.forEach(x -> x.cancel(true));
+            executorService.shutdown();
             return false;
+        }
 
         executorService.shutdown();
         return true;

@@ -141,7 +141,7 @@ public class BamFragmentAllocator
         // duplicates aren't counted towards fusions so can be ignored if only running fusions
         // reads with supplementary alignment data are only used for fusions
         boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
-        boolean keepSupplementaries = mRunFusions;
+        boolean keepSupplementaries = mRunFusions || mConfig.runFunction(NOVEL_LOCATIONS);
         boolean keepSecondaries = mConfig.ApplyMapQualityAdjust;
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
@@ -157,16 +157,8 @@ public class BamFragmentAllocator
 
         mKnownPairGeneIds = Lists.newArrayList();
 
-        if(mConfig.runFunction(NOVEL_LOCATIONS))
-        {
-            mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter());
-            mRetainedIntronFinder = new RetainedIntronFinder(resultsWriter.getRetainedIntronWriter());
-        }
-        else
-        {
-            mAltSpliceJunctionFinder = null;
-            mRetainedIntronFinder = null;
-        }
+        mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter());
+        mRetainedIntronFinder = new RetainedIntronFinder(mConfig, resultsWriter.getRetainedIntronWriter());
     }
 
     public int totalReadCount() { return mTotalBamReadCount; }
@@ -187,11 +179,8 @@ public class BamFragmentAllocator
         if(mGeneGcRatioCounts != null)
             mGeneGcRatioCounts.clearCounts();
 
-        if(mAltSpliceJunctionFinder != null)
-            mAltSpliceJunctionFinder.setGeneData(null);
-
-        if(mRetainedIntronFinder != null)
-            mRetainedIntronFinder.setGeneData(null);
+        mAltSpliceJunctionFinder.setGeneData(null);
+        mRetainedIntronFinder.setGeneData(null);
 
         mDuplicateTracker.clear();
         mCurrentGenes = null;
@@ -216,14 +205,13 @@ public class BamFragmentAllocator
         baseDepthRange[SE_END] = min(geneRegion.end(), geneCollection.regionBounds()[SE_END] + NON_GENIC_BASE_DEPTH_WIDTH);
         mBaseDepth.initialise(baseDepthRange);
 
-        if(mRunFusions)
-            mChimericReads.initialise(mCurrentGenes);
+        mChimericReads.initialise(mCurrentGenes);
 
-        if(mConfig.runFunction(NOVEL_LOCATIONS))
-        {
+        if(mAltSpliceJunctionFinder.enabled())
             mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
+
+        if(mRetainedIntronFinder.enabled())
             mRetainedIntronFinder.setGeneData(mCurrentGenes);
-        }
 
         mValidReadStartRegion[SE_START] = geneRegion.start();
         mValidReadStartRegion[SE_END] = geneRegion.end();
@@ -245,7 +233,7 @@ public class BamFragmentAllocator
         if(mEnrichedGeneFragments > 0)
             processEnrichedGeneFragments();
 
-        if(mRunFusions)
+        if(mChimericReads.enabled())
         {
             mChimericReads.postProcessChimericReads(mBaseDepth, mFragmentReads);
             processChimericNovelJunctions();
@@ -258,7 +246,7 @@ public class BamFragmentAllocator
 
     private void processChimericNovelJunctions()
     {
-        if(mAltSpliceJunctionFinder == null || mChimericReads.getLocalChimericReads().isEmpty())
+        if(!mAltSpliceJunctionFinder.enabled() || mChimericReads.getLocalChimericReads().isEmpty())
             return;
 
         final List<Integer> invalidTrans = Lists.newArrayList();
@@ -420,7 +408,7 @@ public class BamFragmentAllocator
         boolean isMultiMapped = minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD;
         boolean isChimeric = read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection();
 
-        if(!isChimeric && !isDuplicate && !isMultiMapped && mRunFusions && (read1.containsSplit() || read2.containsSplit()))
+        if(!isChimeric && !isDuplicate && !isMultiMapped && mChimericReads.enabled() && (read1.containsSplit() || read2.containsSplit()))
         {
             isChimeric = setHasMultipleKnownSpliceGenes(Lists.newArrayList(read1, read2), mKnownPairGeneIds);
         }
@@ -548,7 +536,7 @@ public class BamFragmentAllocator
             {
                 fragmentType = ALT;
 
-                if(mAltSpliceJunctionFinder != null)
+                if(mAltSpliceJunctionFinder.enabled())
                 {
                     mAltSpliceJunctionFinder.evaluateFragmentReads(
                             overlapGenes, read1, read2, invalidTranscripts.stream().collect(Collectors.toList()));
@@ -587,7 +575,7 @@ public class BamFragmentAllocator
                 checkRetainedIntrons = true;
             }
 
-            if(checkRetainedIntrons && mRetainedIntronFinder != null)
+            if(checkRetainedIntrons && mRetainedIntronFinder.enabled())
                 mRetainedIntronFinder.evaluateFragmentReads(read1, read2);
 
             if(fragmentType == UNSPLICED)
@@ -902,7 +890,7 @@ public class BamFragmentAllocator
         {
             mCurrentGenes.addCount(ALT, 1);
 
-            if(mAltSpliceJunctionFinder != null)
+            if(mAltSpliceJunctionFinder.enabled())
                 mAltSpliceJunctionFinder.evaluateFragmentReads(genes, read1, read2, Lists.newArrayList());
 
             return;
@@ -986,15 +974,15 @@ public class BamFragmentAllocator
 
     private void processChimericReadPair(final ReadRecord read1, final ReadRecord read2)
     {
-        if(!mRunFusions)
+        if(mChimericReads.enabled())
+        {
+            mChimericReads.addChimericReadPair(read1, read2);
+        }
+        else
         {
             // avoid double-counting fragment reads
             mCurrentGenes.addCount(TOTAL, 1);
             mCurrentGenes.addCount(CHIMERIC, 1);
-        }
-        else
-        {
-            mChimericReads.addChimericReadPair(read1, read2);
         }
     }
 
@@ -1101,6 +1089,7 @@ public class BamFragmentAllocator
 
         mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
         mRetainedIntronFinder.setGeneData(mCurrentGenes);
+        mChimericReads.initialise(mCurrentGenes);
 
         if(readRecords.size() == 2)
         {

@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
@@ -34,6 +36,9 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 public class ChimericReadTracker
 {
     private final IsofoxConfig mConfig;
+    private final boolean mRunFusions;
+    private final boolean mEnabled; // required for alt splice junctions
+
     private final List<String[]> mKnownPairGeneIds;
 
     private GeneCollection mGeneCollection; // the current collection being processed
@@ -54,6 +59,9 @@ public class ChimericReadTracker
     public ChimericReadTracker(final IsofoxConfig config)
     {
         mConfig = config;
+        mRunFusions = mConfig.Functions.contains(FUSIONS);
+        mEnabled = mRunFusions || mConfig.Functions.contains(NOVEL_LOCATIONS);
+
         mKnownPairGeneIds = Lists.newArrayList();
         mChimericStats = new ChimericStats();
         mChimericReadMap = Maps.newHashMap();
@@ -65,6 +73,8 @@ public class ChimericReadTracker
         mPreviousPostGeneReadMap = Maps.newHashMap();
         mGeneCollection = null;
     }
+
+    public boolean enabled() { return mEnabled; }
 
     public final Map<String,ReadGroup> getReadMap() { return mChimericReadMap; }
     public final Set<Integer> getJunctionPositions() { return mJunctionPositions; }
@@ -200,7 +210,7 @@ public class ChimericReadTracker
                 continue;
             }
 
-            if(skipNonGenicReads(reads))
+            if(mRunFusions && skipNonGenicReads(reads))
             {
                 fragsToRemove.add(readId);
                 continue;
@@ -214,7 +224,8 @@ public class ChimericReadTracker
                 continue;
             }
 
-            collectCandidateJunctions(reads);
+            if(mRunFusions)
+                collectCandidateJunctions(reads);
         }
 
         if(!fragsToRemove.isEmpty())
@@ -226,14 +237,25 @@ public class ChimericReadTracker
         mGeneCollection.addCount(TOTAL, chimericCount);
         mGeneCollection.addCount(CHIMERIC, chimericCount);
 
-        addRealignCandidates();
-
-        // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
-        // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
-        for(final ReadGroup readGroup : mChimericReadMap.values())
+        if(mRunFusions)
         {
-            readGroup.Reads.forEach(x -> x.captureGeneInfo(true));
-            readGroup.Reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
+            addRealignCandidates();
+
+            // chimeric reads will be processed by the fusion-finding routine, so need to capture transcript and exon data
+            // and free up other gene & region read data (to avoid retaining large numbers of references/memory)
+            for(final ReadGroup readGroup : mChimericReadMap.values())
+            {
+                readGroup.Reads.forEach(x -> x.captureGeneInfo(true));
+                readGroup.Reads.forEach(x -> x.setReadJunctionDepth(baseDepth));
+            }
+        }
+        else
+        {
+            // clear other chimeric state except for local junction information
+            mChimericReadMap.clear();
+            mCandidateRealignedReadMap.clear();
+            mChimericStats.clear();
+            mDuplicateReadIds.clear();
         }
     }
 
