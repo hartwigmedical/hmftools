@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.MIXED;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.CIRCULAR;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
@@ -198,7 +199,9 @@ public class AltSpliceJunction
         // the donor/acceptor bases are the 2 bases leading up to the junction from the unspliced side
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            int startOffset = (se == SE_START) ? 1 : 10;
+            boolean startInExon = mType != CIRCULAR; // DUP-like SJs are reversed
+
+            int startOffset = ((se == SE_START) == startInExon) ? 1 : 10;
             int endOffset = startOffset == 1 ? 10: 1;
 
             mBaseContext[se] = refGenome.getBaseString(
@@ -339,7 +342,7 @@ public class AltSpliceJunction
     {
         return "GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,DepthStart,DepthEnd"
                 + ",Type,ContextStart,ContextEnd,NearestStartExon,NearestEndExon"
-                + ",BasesStart,BasesEnd,TransStart,TransEnd,OverlappingGenes,InitialReadId";
+                + ",BasesStart,BasesEnd,TransStart,TransEnd,InitialReadId";
     }
 
     public String toCsv(final EnsemblGeneData geneData)

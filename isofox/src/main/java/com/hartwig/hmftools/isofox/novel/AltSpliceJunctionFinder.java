@@ -217,18 +217,32 @@ public class AltSpliceJunctionFinder
         List<RegionReadData> sjEndRegions = Lists.newArrayList();
         List<RegionReadData> candidateRegions = Lists.newArrayList();
 
-        for(int i = 0; i <=1; ++i)
+        for(int i = 0; i <= 1; ++i)
         {
             final ReadRecord read = (i == 0) ? read1 : read2;
 
-            for(int se = SE_START; se <= SE_END; ++se)
+            // take the longer of the 2 soft-clippings
+            int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
+            int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
+
+            boolean useLeft = false;
+
+            if (scLeft > 0 && scRight > 0)
             {
-                if(read.isSoftClipped(se))
-                {
-                    spliceJunction[se] = read.getCoordsBoundary(se);
-                    break;
-                }
+                if (scLeft >= scRight)
+                    useLeft = true;
+                else
+                    useLeft = false;
             }
+            else
+            {
+                useLeft = scLeft > 0;
+            }
+
+            if(useLeft)
+                spliceJunction[SE_START] = read.getCoordsBoundary(SE_START);
+            else
+                spliceJunction[SE_END] = read.getCoordsBoundary(SE_END);
 
             for(RegionReadData region : read.getMappedRegions().keySet())
             {
@@ -240,17 +254,39 @@ public class AltSpliceJunctionFinder
         if(spliceJunction[SE_START] == 0 || spliceJunction[SE_END] == 0)
             return null;
 
-        // flip the SJ around since a DUP/circule=ar has opposite orientations to a standard alt-SJ DL
-        int[] flippedSpliceJunction = { spliceJunction[SE_END], spliceJunction[SE_START] };
-        final AltSpliceJunctionContext[] flippedRegionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN };
+        AltSpliceJunction altSplicJunction;
 
-        classifyRegions(read1, flippedSpliceJunction, sjEndRegions, sjStartRegions, flippedRegionContexts);
-        classifyRegions(read2, flippedSpliceJunction, sjEndRegions, sjStartRegions, flippedRegionContexts);
+        if(spliceJunction[SE_START] < spliceJunction[SE_END])
+        {
+            // flip the SJ around since a DUP/circular has opposite orientations to a standard alt-SJ DL
+            int[] flippedSpliceJunction = { spliceJunction[SE_END], spliceJunction[SE_START] };
+            final AltSpliceJunctionContext[] flippedRegionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN };
 
-        final AltSpliceJunctionContext[] regionContexts = { flippedRegionContexts[SE_END], flippedRegionContexts[SE_START] };
+            classifyRegions(read1, flippedSpliceJunction, sjEndRegions, sjStartRegions, flippedRegionContexts);
+            classifyRegions(read2, flippedSpliceJunction, sjEndRegions, sjStartRegions, flippedRegionContexts);
 
-        AltSpliceJunction altSplicJunction = new AltSpliceJunction(
-                mGenes.chromosome(), spliceJunction, CIRCULAR, read1.Id, regionContexts, sjStartRegions, sjEndRegions);
+            final AltSpliceJunctionContext[] regionContexts = { flippedRegionContexts[SE_END], flippedRegionContexts[SE_START] };
+
+            altSplicJunction = new AltSpliceJunction(
+                    mGenes.chromosome(), spliceJunction, CIRCULAR, read1.Id, regionContexts, sjStartRegions, sjEndRegions);
+        }
+        else
+        {
+            // pair of reads with a DEL-type split but using supplementary data - treat normally
+            int pos = spliceJunction[SE_END];
+            spliceJunction[SE_END] = spliceJunction[SE_START];
+            spliceJunction[SE_START] = pos;
+
+            final AltSpliceJunctionContext[] regionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN};
+
+            classifyRegions(read1, spliceJunction, sjEndRegions, sjStartRegions, regionContexts);
+            classifyRegions(read2, spliceJunction, sjEndRegions, sjStartRegions, regionContexts);
+
+            AltSpliceJunctionType sjType = classifySpliceJunction(relatedTransIds, sjStartRegions, sjEndRegions, regionContexts);
+
+            altSplicJunction = new AltSpliceJunction(
+                    mGenes.chromosome(), spliceJunction, sjType, read1.Id, regionContexts, sjStartRegions, sjEndRegions);
+        }
 
         altSplicJunction.setCandidateTranscripts(candidateRegions);
 
@@ -598,7 +634,6 @@ public class AltSpliceJunctionFinder
                         .filter(x -> x.GeneData.GeneId.equals(altSJ.getGeneId())).findFirst().orElse(null);
 
                 writer.write(altSJ.toCsv(gene.GeneData));
-                writer.write(String.format(",%d", geneCollection.genes().size()));
                 writer.newLine();
             }
 
