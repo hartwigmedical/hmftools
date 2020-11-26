@@ -5,15 +5,14 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class MatcherFactory {
+public final class EventMatcherFactory {
 
-    private MatcherFactory() {
+    private EventMatcherFactory() {
     }
 
     @NotNull
