@@ -73,10 +73,19 @@ public final class ViccClassificationConfig {
     @NotNull
     private static Set<String> exonKeywords() {
         Set<String> set = Sets.newHashSet();
+        set.add("DELETION");
         set.add("deletion");
+        set.add("deletions");
+        set.add("deletion/insertion");
+        set.add("INSERTION");
         set.add("insertion");
+        set.add("insertions");
+        set.add("insertions/deletions");
+        set.add("mutations");
         set.add("mutation");
-        set.add("frameshift");
+        set.add("MUTATION");
+        set.add("FRAMESHIFT");
+        set.add("proximal");
         return set;
     }
 
@@ -153,6 +162,7 @@ public final class ViccClassificationConfig {
     @NotNull
     private static Set<String> amplificationKeywords() {
         Set<String> set = Sets.newHashSet();
+        set.add("AMPLIFICATION");
         set.add("Amplification");
         set.add("amplification");
         set.add("amp");
