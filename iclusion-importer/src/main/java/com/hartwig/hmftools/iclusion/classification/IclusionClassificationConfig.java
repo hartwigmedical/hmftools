@@ -64,7 +64,6 @@ public final class IclusionClassificationConfig {
     @NotNull
     private static Set<String> exonIdentifiers() {
         Set<String> set = Sets.newHashSet();
-        set.add("exon");
         set.add("EXON");
         set.add("Exon");
         return set;
@@ -73,25 +72,20 @@ public final class IclusionClassificationConfig {
     @NotNull
     private static Set<String> exonKeywords() {
         Set<String> set = Sets.newHashSet();
-        set.add("deletion");
-        set.add("insertion");
-        set.add("mutation");
-        set.add("frameshift");
+        set.add("DELETION");
+        set.add("INSERTION");
         return set;
     }
 
     @NotNull
     private static Set<String> specificExonEvents() {
-        Set<String> set = Sets.newHashSet();
-        set.add("RARE EX 18-21 MUT");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Map<String, Set<String>> fusionPairAndExonsPerGene() {
         Map<String, Set<String>> map = Maps.newHashMap();
 
-        map.put("KIT", Sets.newHashSet("EXON 11 MUTATION", "Exon 11 mutations", "Exon 11 deletions"));
         map.put("MET", Sets.newHashSet("EXON 14 SKIPPING MUTATION"));
 
         return map;
@@ -99,52 +93,26 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> geneLevelBlacklistKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("exon");
-        set.add("EXON");
-        set.add("Exon");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> genericGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("MUTATION");
-        set.add("mutant");
-        set.add("mut");
-        set.add("TRUNCATING MUTATION");
-        set.add("Truncating Mutations");
-        set.add("feature_truncation");
-        set.add("FRAMESHIFT TRUNCATION");
-        set.add("FRAMESHIFT MUTATION");
-        set.add("ALTERATION");
         return set;
     }
 
     @NotNull
     private static Set<String> activatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("Gain-of-function Mutations");
-        set.add("Gain-of-Function");
-        set.add("act mut");
         set.add("ACTIVATING MUTATION");
-        set.add("Oncogenic Mutations");
-        set.add("pos");
-        set.add("positive");
-        set.add("oncogenic mutation");
         return set;
     }
 
     @NotNull
     private static Set<String> inactivatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("inact mut");
-        set.add("biallelic inactivation");
-        set.add("Loss Of Function Variant");
-        set.add("Loss Of Heterozygosity");
-        set.add("DELETERIOUS MUTATION");
-        set.add("negative");
-        set.add("BIALLELIC INACTIVATION");
         set.add("LOSS-OF-FUNCTION");
         set.add("INACTIVATING MUTATION");
         return set;
@@ -153,74 +121,45 @@ public final class IclusionClassificationConfig {
     @NotNull
     private static Set<String> amplificationKeywords() {
         Set<String> set = Sets.newHashSet();
-        set.add("Amplification");
-        set.add("amplification");
-        set.add("amp");
-        set.add("overexpression");
+        set.add("AMPLIFICATION");
         set.add("OVEREXPRESSION");
-        set.add("Overexpression");
+        set.add("COPY-GAIN");
         return set;
     }
 
     @NotNull
     private static Set<String> amplificationKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("over exp");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> deletionBlacklistKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("exon");
-        set.add("EXON");
-        set.add("Exon");
-        set.add("Ex19");
-        set.add("inframe");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> deletionKeywords() {
         Set<String> set = Sets.newHashSet();
-        set.add("Deletion");
-        set.add("deletion");
-        set.add("DELETION");
-        set.add("del");
-        set.add("undexpression");
-        set.add("UNDEREXPRESSION");
-        set.add("loss");
         set.add("LOSS");
         return set;
     }
 
     @NotNull
     private static Set<String> deletionKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("dec exp");
-        set.add("Copy Number Loss");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> exonicDelDupFusionEvents() {
-        Set<String> set = Sets.newHashSet();
-        set.add("EGFRvIII");
-        set.add("EGFRvV");
-        set.add("EGFRvII");
-        set.add("VIII");
-        set.add("EGFR-KDD");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> fusionPairEventsToSkip() {
         Set<String> set = Sets.newHashSet();
-        set.add("AR-V7");
-        set.add("Gain-of-Function");
+        set.add("CO-DELETION");
+        set.add("COPY-GAIN");
         set.add("LOSS-OF-FUNCTION");
-        set.add("LCS6-variant");
-        set.add("DI842-843VM");
         set.add("FLT3-ITD");
         return set;
     }
@@ -228,20 +167,17 @@ public final class IclusionClassificationConfig {
     @NotNull
     private static Set<String> promiscuousFusionKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("Fusion");
-        set.add("fusion");
         set.add("FUSION");
-        set.add("Fusions");
-        set.add("FUSIONS");
         set.add("REARRANGEMENT");
-        set.add("rearrange");
         return set;
     }
 
     @NotNull
     private static Set<String> signatureEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("Microsatellite Instability-High");
+        set.add("MSI HIGH");
+        set.add("HRD POSITIVE");
+        set.add("TumMutLoad HIGH");
         return set;
     }
 
@@ -249,8 +185,7 @@ public final class IclusionClassificationConfig {
     private static Map<String, Set<String>> combinedEventsPerGene() {
         Map<String, Set<String>> map = Maps.newHashMap();
 
-        map.put("EGFR", Sets.newHashSet("Ex19 del L858R"));
-        map.put("BRAF", Sets.newHashSet("p61BRAF-V600E", "V600E AMPLIFICATION"));
+        map.put("-", Sets.newHashSet("1p & 19q CO-DELETION"));
 
         return map;
     }
@@ -259,177 +194,14 @@ public final class IclusionClassificationConfig {
     private static Map<String, Set<String>> complexEventsPerGene() {
         Map<String, Set<String>> map = Maps.newHashMap();
 
-        Set<String> alkSet = Sets.newHashSet("ALK inframe insertion (1151T)");
-        map.put("ALK", alkSet);
-
-        Set<String> arSet = Sets.newHashSet("ARv567es", "SPLICE VARIANT 7", "AR-V7");
-        map.put("AR", arSet);
-
-        Set<String> brafSet = Sets.newHashSet("DEL 485-490", "L485_P490>Y", "BRAF p.L485_P490");
-        map.put("BRAF", brafSet);
-
-        Set<String> brca1Set = Sets.newHashSet("Alu insertion");
-        map.put("BRCA1", brca1Set);
-
-        Set<String> brca2Set =
-                Sets.newHashSet("V1790_A1996del", "T1815_Y1894del", "S1834_G1892del", "V1839_E1901del", "A1847_M1890del", "S1871_C1893del");
-        map.put("BRCA2", brca2Set);
-
-        Set<String> casp8Set = Sets.newHashSet("CASP8L");
-        map.put("CASP8", casp8Set);
-
-        Set<String> cebpaSet = Sets.newHashSet("N-TERMINAL FRAME SHIFT");
-        map.put("CEBPA", cebpaSet);
-
-        Set<String> ccnd1Set = Sets.newHashSet("256_286trunc");
-        map.put("CCND1", ccnd1Set);
-
-        Set<String> ccnd3Set = Sets.newHashSet("D286_L292trunc");
-        map.put("CCND3", ccnd3Set);
-
-        Set<String> chek2Set = Sets.newHashSet("1100DELC", "IVS2+1G>A");
-        map.put("CHEK2", chek2Set);
-
-        Set<String> dnmt3bSet = Sets.newHashSet("DNMT3B7");
-        map.put("DNMT3B", dnmt3bSet);
-
-        Set<String> dpydSet = Sets.newHashSet("DPYD splice donor variant", "DPYD*13 HOMOZYGOSITY", "DPYD*2A HOMOZYGOSITY");
-        map.put("DPYD", dpydSet);
-
-        Set<String> egfrSet = Sets.newHashSet("EGFR L698_S1037dup",
-                "EGFR inframe deletion (30-336)",
-                "EGFR inframe insertion (769-770)",
-                "EGFR inframe deletion (6-273)",
-                "T34_A289del",
-                "EGFR T34_A289del",
-                "G983_A1210del",
-                "EGFR CTD");
-        map.put("EGFR", egfrSet);
-
-        Set<String> eif1axSet = Sets.newHashSet("A113_splice");
-        map.put("EIF1AX", eif1axSet);
-
-        Set<String> epcamSet = Sets.newHashSet("3' EXON DELETION");
-        map.put("EPCAM", epcamSet);
-
-        Set<String> erbb2Set = Sets.newHashSet("P780INS", "DEL 755-759", "KINASE DOMAIN MUTATION");
+        Set<String> erbb2Set = Sets.newHashSet("DEL 755-759", "P780INS", "Exon 20 mutation (non-T790M)");
         map.put("ERBB2", erbb2Set);
 
-        Set<String> ezh2Set = Sets.newHashSet("INTRON 6 MUTATION");
-        map.put("EZH2", ezh2Set);
+        Set<String> egfrSet = Sets.newHashSet("Exon 20 mutation (non-T790M)");
+        map.put("EGFR", egfrSet);
 
-        Set<String> fli1Set = Sets.newHashSet("EWSR1-FLI1 Type 1");
-        map.put("FLI1", fli1Set);
-
-        Set<String> flt3Set = Sets.newHashSet("FLT3-ITD", "ITD", "FLT3 internal tandem duplications", "TKD MUTATION");
+        Set<String> flt3Set = Sets.newHashSet("FLT3-ITD");
         map.put("FLT3", flt3Set);
-
-        Set<String> hlaaSet = Sets.newHashSet("596_619splice");
-        map.put("HLA-A", hlaaSet);
-
-        Set<String> jak2Set = Sets.newHashSet("F547 SPLICE SITE MUTATION");
-        map.put("JAK2", jak2Set);
-
-        Set<String> kdm5cSet = Sets.newHashSet("M1_E165DEL");
-        map.put("KDM5C", kdm5cSet);
-
-        Set<String> kitSet = Sets.newHashSet("INTERNAL DUPLICATION",
-                "3' UTR MUTATION",
-                "E554_I571del",
-                "V555_L576del",
-                "K550_G592del",
-                "KIT V560_Y578del",
-                "KIT V560_L576del",
-                "KIT inframe deletion (577-579)",
-                "KIT inframe deletion (V560)");
-        map.put("KIT", kitSet);
-
-        Set<String> krasSet = Sets.newHashSet("LCS6-variant");
-        map.put("KRAS", krasSet);
-
-        Set<String> map2k1Set = Sets.newHashSet("MAP2K1 inframe deletion (56-60)");
-        map.put("MAP2K1", map2k1Set);
-
-        Set<String> metSet = Sets.newHashSet("MET kinase domain mutation",
-                "963_D1010splice",
-                "X963_splice",
-                "981_1028splice",
-                "X1006_splice",
-                "X1007_splice",
-                "X1008_splice",
-                "X1009_splice");
-        map.put("MET", metSet);
-
-        Set<String> mlh1Set = Sets.newHashSet("C.790+1G>A");
-        map.put("MLH1", mlh1Set);
-
-        Set<String> notch1Set = Sets.newHashSet("NOTCH1 activating mutation in Cterm-PEST domain",
-                "NOTCH2 activating mutation (missense in TAD or truncating in Cterm-PEST domain)",
-                "Truncating Mutations in the PEST Domain",
-                "Truncating Mutations Upstream of Transactivation Domain");
-        map.put("NOTCH1", notch1Set);
-
-        Set<String> notch2Set = Sets.newHashSet("2010_2471trunc",
-                "1_2009trunc",
-                "NOTCH2 activating mutation (missense in TAD or truncating in Cterm-PEST domain)");
-        map.put("NOTCH2", notch2Set);
-
-        Set<String> ntrk1Set = Sets.newHashSet("TRKAIII Splice Variant");
-        map.put("NTRK1", ntrk1Set);
-
-        Set<String> pdgfraSet = Sets.newHashSet("PDGFRA inframe deletion (I843)", "C456_R481del", "Y375_K455del");
-        map.put("PDGFRA", pdgfraSet);
-
-        Set<String> pik3r1Set = Sets.newHashSet("X582_splice", "X475_splice", "X434_splice");
-        map.put("PIK3R1", pik3r1Set);
-
-        Set<String> pmlSet = Sets.newHashSet("B2 DOMAIN MUTATION");
-        map.put("PML", pmlSet);
-
-        Set<String> poleSet = Sets.newHashSet("POLE (268-471)");
-        map.put("POLE", poleSet);
-
-        Set<String> ppm1dSet = Sets.newHashSet("422_605trunc");
-        map.put("PPM1D", ppm1dSet);
-
-        Set<String> ptch1Set = Sets.newHashSet("LOH");
-        map.put("PTCH1", ptch1Set);
-
-        Set<String> runx1Set = Sets.newHashSet("R135FSX177", "T148HFSX9");
-        map.put("RUNX1", runx1Set);
-
-        Set<String> tertSet = Sets.newHashSet("TERT promoters core", "Promoter Mutations", "PROMOTER MUTATION");
-        map.put("TERT", tertSet);
-
-        Set<String> tgfbr1Set = Sets.newHashSet("TGFBR1*6A");
-        map.put("TGFBR1", tgfbr1Set);
-
-        Set<String> tp53Set = Sets.newHashSet("DNA binding domain deletions",
-                "DNA binding domain insertions",
-                "DNA binding domain missense mutations",
-                "DNA BINDING DOMAIN MUTATION");
-        map.put("TP53", tp53Set);
-
-        Set<String> tpmtSet = Sets.newHashSet("TPMT splice acceptor variant");
-        map.put("TPMT", tpmtSet);
-
-        Set<String> tymsSet = Sets.newHashSet("5' TANDEM REPEAT");
-        map.put("TYMS", tymsSet);
-
-        Set<String> ugt1a1Set = Sets.newHashSet("UGT1A1*28", "UGT1A1*60");
-        map.put("UGT1A1", ugt1a1Set);
-
-        Set<String> vhlSet = Sets.newHashSet("R108ins (c.324InsCGC)",
-                "3'UTR alteration (c.639+10C>G)",
-                "3'UTR alteration (c.642+70C>A)",
-                "Splicing alteration (c.341-2A>C)",
-                "Splicing alteration (c.463+1G>C)",
-                "Splicing alteration (c.463+2C>T)",
-                "Splicing alteration (c.464-2A>G)",
-                "Splicing alteration (c.464-2A>T)",
-                "Splicing alteration (c.464-1G>A)",
-                "Splicing alteration (c.464-1G>C)");
-        map.put("VHL", vhlSet);
 
         return map;
     }
