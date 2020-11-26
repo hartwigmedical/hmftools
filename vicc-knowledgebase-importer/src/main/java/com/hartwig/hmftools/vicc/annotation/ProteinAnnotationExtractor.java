@@ -17,21 +17,21 @@ public class ProteinAnnotationExtractor implements EventPreprocessor {
     @NotNull
     @Override
     public String apply(@NotNull String event) {
-        String trimmedName = event.trim();
+        String trimmedEvent = event.trim();
         // Many KBs include the gene in the feature name in some form (eg "EGFR E709K" or "EGFR:E709K").
         // Other KBs put the coding info behind the protein annotation ("V130L (c.388G>C)" rather than the gene in front of it)
         String proteinAnnotation;
-        if (trimmedName.contains(" ")) {
-            String[] trimmedParts = trimmedName.split(" ");
+        if (trimmedEvent.contains(" ")) {
+            String[] trimmedParts = trimmedEvent.split(" ");
             if (trimmedParts[1].contains("(c.")) {
                 proteinAnnotation = trimmedParts[0];
             } else {
                 proteinAnnotation = trimmedParts[1];
             }
-        } else if (trimmedName.contains(":")) {
-            proteinAnnotation = trimmedName.split(":")[1];
+        } else if (trimmedEvent.contains(":")) {
+            proteinAnnotation = trimmedEvent.split(":")[1];
         } else {
-            proteinAnnotation = trimmedName;
+            proteinAnnotation = trimmedEvent;
         }
 
         // Some KBs include "p." in front of the protein annotation
