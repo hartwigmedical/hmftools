@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.serve.classification.matchers;
 
-import java.util.List;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
@@ -10,14 +8,8 @@ import org.jetbrains.annotations.NotNull;
 class GeneRangeCodonMatcher implements EventMatcher {
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers, @NotNull EventPreprocessor preprocessor) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new GeneRangeCodonMatcher(preprocessor));
-    }
-
-    @NotNull
     private final EventPreprocessor preprocessor;
 
-    @VisibleForTesting
     GeneRangeCodonMatcher(@NotNull final EventPreprocessor preprocessor) {
         this.preprocessor = preprocessor;
     }
@@ -26,10 +18,6 @@ class GeneRangeCodonMatcher implements EventMatcher {
     public boolean matches(@NotNull String gene, @NotNull String event) {
         String processedEvent = preprocessor.apply(event);
 
-        return isValidSingleCodonRange(processedEvent);
-    }
-
-    private static boolean isValidSingleCodonRange(@NotNull String event) {
         // Feature codon ranges occasionally come with parentheses
         String strippedEvent = event.replace("(", "").replace(")", "");
 

@@ -20,7 +20,7 @@ class FusionPairAndExonRangeMatcher implements EventMatcher {
         FUSION_PAIR_AND_EXON_RANGES_PER_GENE.put("MET", metSet);
     }
 
-    public FusionPairAndExonRangeMatcher() {
+    FusionPairAndExonRangeMatcher() {
     }
 
     @Override

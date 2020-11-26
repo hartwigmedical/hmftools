@@ -17,7 +17,18 @@ class CombinedMatcher implements EventMatcher {
         COMBINED_EVENTS_PER_GENE.put("BRAF", Sets.newHashSet("p61BRAF-V600E", "V600E AMPLIFICATION"));
     }
 
-    public CombinedMatcher() {
+    @NotNull
+    private final HotspotMatcher hotspotMatcher;
+    @NotNull
+    private final FusionPairMatcher fusionMatcher;
+    @NotNull
+    private final AmplificationMatcher amplificationMatcher;
+
+    CombinedMatcher(@NotNull final HotspotMatcher hotspotMatcher, @NotNull final FusionPairMatcher fusionMatcher,
+            @NotNull final AmplificationMatcher amplificationMatcher) {
+        this.hotspotMatcher = hotspotMatcher;
+        this.fusionMatcher = fusionMatcher;
+        this.amplificationMatcher = amplificationMatcher;
     }
 
     @Override
@@ -37,9 +48,9 @@ class CombinedMatcher implements EventMatcher {
             return false;
         } else if (event.trim().contains(" ")) {
             String[] parts = event.trim().replace("  ", " ").split(" ");
-            if (FusionPairMatcher.isFusionPair(parts[0])) {
+            if (fusionMatcher.matches(gene, parts[0])) {
                 // Hotspots or amplifications on fusion genes are considered combined.
-                return HotspotMatcher.isProteinAnnotation(parts[1]) || AmplificationMatcher.isAmplification(parts[1]);
+                return hotspotMatcher.matches(gene, parts[1]) || amplificationMatcher.matches(gene, parts[1]);
             }
         }
 

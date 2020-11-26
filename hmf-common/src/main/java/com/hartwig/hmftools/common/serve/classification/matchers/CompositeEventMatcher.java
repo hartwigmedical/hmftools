@@ -11,8 +11,7 @@ class CompositeEventMatcher implements EventMatcher {
     @NotNull
     private final EventMatcher finalEventMatcher;
 
-    public CompositeEventMatcher(@NotNull final List<EventMatcher> noMatchEventMatchers,
-            @NotNull final EventMatcher finalEventMatcher) {
+    CompositeEventMatcher(@NotNull final List<EventMatcher> noMatchEventMatchers, @NotNull final EventMatcher finalEventMatcher) {
         this.noMatchEventMatchers = noMatchEventMatchers;
         this.finalEventMatcher = finalEventMatcher;
     }

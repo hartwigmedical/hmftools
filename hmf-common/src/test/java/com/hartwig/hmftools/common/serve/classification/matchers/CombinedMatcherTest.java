@@ -3,13 +3,14 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CombinedMatcherTest {
 
     @Test
     public void canAssessWhetherEventIsCombinedEvent() {
-        EventMatcher matcher = new CombinedMatcher();
+        EventMatcher matcher = buildCombinedMatcher();
 
         assertTrue(matcher.matches("EGFR", "Ex19 del L858R"));
 
@@ -23,5 +24,13 @@ public class CombinedMatcherTest {
 
         assertFalse(matcher.matches("ERBB2", "Exon 20 insertions/deletions"));
         assertFalse(matcher.matches("VHL", "3'UTR alteration (c.642+70C>A)"));
+    }
+
+    @NotNull
+    private static EventMatcher buildCombinedMatcher() {
+        FusionPairMatcher fusionPairMatcher = new FusionPairMatcher();
+        HotspotMatcher hotspotMatcher = new HotspotMatcher(event -> event, fusionPairMatcher);
+
+        return new CombinedMatcher(hotspotMatcher, fusionPairMatcher, new AmplificationMatcher());
     }
 }

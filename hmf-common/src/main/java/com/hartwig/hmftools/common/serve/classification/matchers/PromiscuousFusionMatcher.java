@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.common.serve.classification.matchers;
 
-import java.util.List;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
@@ -14,18 +12,16 @@ class PromiscuousFusionMatcher implements EventMatcher {
             Sets.newHashSet("Fusion", "fusion", "FUSION", "Fusions", "FUSIONS", "REARRANGEMENT", "rearrange");
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new PromiscuousFusionMatcher());
-    }
+    private final FusionPairMatcher fusionPairMatcher;
 
-    @VisibleForTesting
-    PromiscuousFusionMatcher() {
+    PromiscuousFusionMatcher(@NotNull final FusionPairMatcher fusionPairMatcher) {
+        this.fusionPairMatcher = fusionPairMatcher;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
         for (String keyword : FUSION_KEYWORDS) {
-            if (event.contains(keyword) && !FusionPairMatcher.isFusionPair(event)) {
+            if (event.contains(keyword) && !fusionPairMatcher.matches(gene, event)) {
                 return true;
             }
         }

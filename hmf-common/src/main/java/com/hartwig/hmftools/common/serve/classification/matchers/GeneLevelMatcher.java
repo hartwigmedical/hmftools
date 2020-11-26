@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.common.serve.classification.matchers;
 
-import java.util.List;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,12 +39,6 @@ public class GeneLevelMatcher implements EventMatcher {
 
     private static final String EXON_KEYWORD = "exon";
 
-    @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new GeneLevelMatcher());
-    }
-
-    @VisibleForTesting
     GeneLevelMatcher() {
     }
 

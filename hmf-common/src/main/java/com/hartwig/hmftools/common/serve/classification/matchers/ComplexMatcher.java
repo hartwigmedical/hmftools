@@ -12,7 +12,7 @@ class ComplexMatcher implements EventMatcher {
 
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = createComplexEventMap();
 
-    public ComplexMatcher() {
+    ComplexMatcher() {
     }
 
     @Override

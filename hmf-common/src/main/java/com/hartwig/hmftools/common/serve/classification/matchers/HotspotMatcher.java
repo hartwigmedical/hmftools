@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_START_
 
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,21 +20,19 @@ public class HotspotMatcher implements EventMatcher {
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers, @NotNull EventPreprocessor preprocessor) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new HotspotMatcher(preprocessor));
-    }
-
-    public static boolean isProteinAnnotation(@NotNull String event) {
-        // Do note: No pre-processing is done on this event!
-        return isProteinAnnotationWithMaxLength(event, null);
+    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers, @NotNull EventPreprocessor preprocessor,
+            @NotNull FusionPairMatcher fusionPairMatcher) {
+        return new CompositeEventMatcher(noMatchEventMatchers, new HotspotMatcher(preprocessor, fusionPairMatcher));
     }
 
     @NotNull
     private final EventPreprocessor preprocessor;
+    @NotNull
+    private final FusionPairMatcher fusionPairMatcher;
 
-    @VisibleForTesting
-    HotspotMatcher(@NotNull final EventPreprocessor preprocessor) {
+    HotspotMatcher(@NotNull final EventPreprocessor preprocessor, @NotNull final FusionPairMatcher fusionPairMatcher) {
         this.preprocessor = preprocessor;
+        this.fusionPairMatcher = fusionPairMatcher;
     }
 
     @Override
@@ -43,7 +40,7 @@ public class HotspotMatcher implements EventMatcher {
         String processedEvent = preprocessor.apply(event);
 
         if (isProteinAnnotationWithMaxLength(processedEvent, MAX_INFRAME_BASE_LENGTH)) {
-            return !isHotspotOnFusionGene(event);
+            return !isHotspotOnFusionGene(gene, event);
         }
 
         return false;
@@ -159,11 +156,11 @@ public class HotspotMatcher implements EventMatcher {
                 HGVS_DUPLICATION));
     }
 
-    private static boolean isHotspotOnFusionGene(@NotNull String event) {
+    private boolean isHotspotOnFusionGene(@NotNull String gene, @NotNull String event) {
         String trimmedEvent = event.trim();
         if (trimmedEvent.contains(" ")) {
             String[] parts = trimmedEvent.split(" ");
-            return FusionPairMatcher.isFusionPair(parts[0]);
+            return fusionPairMatcher.matches(gene, parts[0]);
         }
         return false;
     }

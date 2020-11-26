@@ -9,7 +9,7 @@ public class PromiscuousFusionMatcherTest {
 
     @Test
     public void canAssessWhetherEventIsPromiscuousFusion() {
-        EventMatcher matcher = new PromiscuousFusionMatcher();
+        EventMatcher matcher = new PromiscuousFusionMatcher(new FusionPairMatcher());
 
         assertTrue(matcher.matches("BRAF", "BRAF fusion"));
         assertTrue(matcher.matches("ROS1", "ROS1 REARRANGEMENT"));

@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.common.serve.classification.matchers;
 
-import java.util.List;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,12 +15,6 @@ class DeletionMatcher implements EventMatcher {
 
     private static final Set<String> KEYWORDS_TO_SKIP_FOR_DELETION = Sets.newHashSet("exon", "EXON", "Exon", "Ex19", "inframe");
 
-    @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new DeletionMatcher());
-    }
-
-    @VisibleForTesting
     DeletionMatcher() {
     }
 
