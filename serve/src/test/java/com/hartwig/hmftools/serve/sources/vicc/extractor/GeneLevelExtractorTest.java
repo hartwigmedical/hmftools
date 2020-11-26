@@ -27,6 +27,17 @@ import org.junit.Test;
 
 public class GeneLevelExtractorTest {
 
+
+    @Test
+    public void canExtractGeneLevelEventGene(){
+
+    }
+
+    @Test
+    public void canExtractGeneLevelEvent(){
+
+    }
+
     @Test
     public void canExtractGeneLevelEventONCO() {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
@@ -119,6 +130,7 @@ public class GeneLevelExtractorTest {
 
     @NotNull
     private static List<DriverGene> createDriverGenes() {
+        //TODO: Determine real TSG and ONCO genes
         DriverGene driverGeneTsg = ImmutableDriverGene.builder()
                 .gene("SRSF2")
                 .reportMissenseAndInframe(true)
