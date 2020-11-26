@@ -34,7 +34,7 @@ public class TransvarTest {
     }
 
     @NotNull
-    private static TransvarRecord createTestRecord() {
+    public static TransvarRecord createTestRecord() {
         return ImmutableTransvarRecord.builder()
                 .chromosome("7")
                 .gdnaPosition(10)
@@ -46,7 +46,7 @@ public class TransvarTest {
     }
 
     @NotNull
-    private static Transvar returnsSingleTransvarRecord(@NotNull TransvarRecord record) {
+    public static Transvar returnsSingleTransvarRecord(@NotNull TransvarRecord record) {
         return TransvarTestFactory.testTransvar((gene, proteinAnnotation) -> Lists.newArrayList(record));
     }
 
