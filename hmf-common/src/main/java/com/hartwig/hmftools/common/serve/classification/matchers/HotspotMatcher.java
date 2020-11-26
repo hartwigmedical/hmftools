@@ -58,7 +58,7 @@ public class HotspotMatcher implements EventMatcher {
         if (event.endsWith(HGVS_FRAMESHIFT_SUFFIX) || event.endsWith(HGVS_FRAMESHIFT_SUFFIX_WITH_STOP_GAINED)) {
             int frameshiftPosition = event.indexOf(HGVS_FRAMESHIFT_SUFFIX);
             if (frameshiftPosition > 1) {
-                return isInteger(event.substring(frameshiftPosition - 1, frameshiftPosition));
+                return Character.isDigit(event.charAt(frameshiftPosition - 1));
             }
         }
 
@@ -102,7 +102,7 @@ public class HotspotMatcher implements EventMatcher {
         String[] parts = event.split(HGVS_DELETION + HGVS_INSERTION);
 
         // Format is expected to be something like D770delinsGY
-        if (isInteger(parts[0].substring(1))) {
+        if (Character.isDigit(parts[0].charAt(1))) {
             return 3 * parts[1].length();
         } else {
             return -1;
@@ -160,15 +160,6 @@ public class HotspotMatcher implements EventMatcher {
     private static boolean isLong(@NotNull String value) {
         try {
             Long.parseLong(value);
-            return true;
-        } catch (NumberFormatException exp) {
-            return false;
-        }
-    }
-
-    private static boolean isInteger(@NotNull String value) {
-        try {
-            Integer.parseInt(value);
             return true;
         } catch (NumberFormatException exp) {
             return false;
