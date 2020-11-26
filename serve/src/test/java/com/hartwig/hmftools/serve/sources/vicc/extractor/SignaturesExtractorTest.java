@@ -12,25 +12,26 @@ import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class SignaturesExtractorTest {
 
     @Test
-    @Ignore
+    public void canExtractSignatureName() {
+        assertEquals(SignatureName.MICROSATELLITE_UNSTABLE, SignaturesExtractor.extractSignatureName("Microsatellite Instability-High"));
+        assertNull(SignaturesExtractor.extractSignatureName("abc"));
+    }
+
+    @Test
     public void canExtractSignatureNameUnknown() {
         SignaturesExtractor signaturesExtractor = new SignaturesExtractor();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
                 "any",
-                "Other Biomarkers","description",
-                "Microsatellite Instability-High", "chromosome", "pos");
+                "Other Biomarkers",
+                "Microsatellite Instability-High", "description", "chromosome", "pos");
         Feature feature = viccEntry.features().get(0);
         SignatureName signatureName = SignaturesExtractor.extractSignatureName(feature
                 .name());
-
-        //extract signature name
-        assertEquals(SignatureName.MICROSATELLITE_UNSTABLE, signatureName);
 
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
         signaturesPerFeature.put(feature, signatureName);
@@ -45,12 +46,6 @@ public class SignaturesExtractorTest {
                 "any",
                 "Other Biomarkers","description",
                 "Tum", "chromosome", "pos");
-        Feature feature = viccEntry.features().get(0);
-        SignatureName signatureName = SignaturesExtractor.extractSignatureName(feature
-                .name());
-
-        //extract signature name
-        assertNull(signatureName);
 
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
 
