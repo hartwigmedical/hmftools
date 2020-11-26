@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.bachelor.types;
 
-import static com.hartwig.hmftools.common.germline.FilterType.PASS;
-import static com.hartwig.hmftools.common.germline.PathogenicType.CLINVAR_LIKELY_PATHOGENIC;
-import static com.hartwig.hmftools.common.germline.PathogenicType.CLINVAR_PATHOGENIC;
-import static com.hartwig.hmftools.common.germline.PathogenicType.UNANNOTATED;
-import static com.hartwig.hmftools.common.germline.PathogenicType.WHITE_LIST;
+import static com.hartwig.hmftools.bachelor.types.FilterType.PASS;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_LIKELY_PATHOGENIC;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.CLINVAR_PATHOGENIC;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.UNANNOTATED;
+import static com.hartwig.hmftools.bachelor.types.PathogenicType.WHITE_LIST;
 
-import com.hartwig.hmftools.common.germline.FilterType;
-import com.hartwig.hmftools.common.germline.PathogenicType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 

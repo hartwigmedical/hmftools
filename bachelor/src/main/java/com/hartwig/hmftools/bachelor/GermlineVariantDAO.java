@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
-import com.hartwig.hmftools.common.germline.GermlineVariant;
+import com.hartwig.hmftools.bachelor.types.GermlineVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 

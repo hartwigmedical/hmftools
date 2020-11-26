@@ -19,7 +19,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
-import com.hartwig.hmftools.common.germline.GermlineVariant;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
@@ -43,7 +42,6 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Germlinevariant;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -400,9 +398,8 @@ public class DatabaseAccess implements AutoCloseable {
         metricDAO.writeMetrics(sample, metrics);
     }
 
-    public void writePGX(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls,
-            @NotNull List<GermlineVariant> pgxVariants) {
-        pgxDAO.writePgx(sample, pgxGenotype, pgxCalls, pgxVariants);
+    public void writePGX(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls) {
+        pgxDAO.writePgx(sample, pgxGenotype, pgxCalls);
     }
 
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidenceItem> evidence) {
