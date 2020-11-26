@@ -8,18 +8,18 @@ import org.jetbrains.annotations.NotNull;
 class GeneRangeCodonMatcher implements EventMatcher {
 
     @NotNull
-    private final EventPreprocessor preprocessor;
+    private final EventPreprocessor proteinAnnotationExtractor;
 
-    GeneRangeCodonMatcher(@NotNull final EventPreprocessor preprocessor) {
-        this.preprocessor = preprocessor;
+    GeneRangeCodonMatcher(@NotNull final EventPreprocessor proteinAnnotationExtractor) {
+        this.proteinAnnotationExtractor = proteinAnnotationExtractor;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        String processedEvent = preprocessor.apply(event);
+        String processedEvent = proteinAnnotationExtractor.apply(event);
 
         // Feature codon ranges occasionally come with parentheses
-        String strippedEvent = event.replace("(", "").replace(")", "");
+        String strippedEvent = processedEvent.replace("(", "").replace(")", "");
 
         // Features are expected to look something like V600 (1 char - N digits)
         if (strippedEvent.length() < 2) {

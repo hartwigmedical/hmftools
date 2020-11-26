@@ -2,30 +2,32 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-
 import org.jetbrains.annotations.NotNull;
 
 class GeneRangeExonMatcher implements EventMatcher {
 
-    private static final String EXON_KEYWORD = "exon";
-    private static final Set<String> EXON_RANGE_EXACT_TERMS = Sets.newHashSet("RARE EX 18-21 MUT");
+    @NotNull
+    private final String exonKeyword;
+    @NotNull
+    private final Set<String> exonRangeEvents;
+    @NotNull
+    private final Set<String> exonRangeKeywords;
 
-    private static final Set<String> EXON_RANGE_KEYWORDS =
-            Sets.newHashSet("deletion", "insertion", "proximal", "mutation", "splice site insertion", "frameshift");
-
-
-    GeneRangeExonMatcher() {
+    GeneRangeExonMatcher(@NotNull final String exonKeyword, @NotNull final Set<String> exonRangeEvents,
+            @NotNull final Set<String> exonRangeKeywords) {
+        this.exonKeyword = exonKeyword;
+        this.exonRangeEvents = exonRangeEvents;
+        this.exonRangeKeywords = exonRangeKeywords;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        if (EXON_RANGE_EXACT_TERMS.contains(event)) {
+        if (exonRangeEvents.contains(event)) {
             return true;
         } else {
             String lowerCaseEvent = event.toLowerCase();
-            if (lowerCaseEvent.contains(EXON_KEYWORD)) {
-                for (String keyword : EXON_RANGE_KEYWORDS) {
+            if (lowerCaseEvent.contains(exonKeyword)) {
+                for (String keyword : exonRangeKeywords) {
                     if (lowerCaseEvent.contains(keyword)) {
                         return true;
                     }

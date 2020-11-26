@@ -18,13 +18,14 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class HotspotExtractorTest {
 
     @Test
+    @Ignore
     public void canExtractHotspot() {
-
         HotspotExtractor hotspotExtractor = new HotspotExtractor(ProteinResolverFactory.dummy(), new ProteinAnnotationExtractor());
 
         ViccEntry viccEntry =

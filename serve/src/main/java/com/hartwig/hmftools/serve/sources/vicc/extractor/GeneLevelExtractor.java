@@ -9,11 +9,11 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
-import com.hartwig.hmftools.common.serve.classification.matchers.GeneLevelMatcher;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
+import com.hartwig.hmftools.vicc.annotation.ClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -82,11 +82,11 @@ public class GeneLevelExtractor {
             event = feature.name();
         }
 
-        if (GeneLevelMatcher.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
+        if (ClassificationConfig.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (GeneLevelMatcher.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
+        } else if (ClassificationConfig.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
             return GeneLevelEvent.ACTIVATION;
-        } else if (GeneLevelMatcher.GENERIC_GENE_LEVEL_KEYWORDS.contains(event)) {
+        } else if (ClassificationConfig.GENERIC_GENE_LEVEL_KEYWORDS.contains(event)) {
             return extractGeneLevelEventGene(feature, driverGenes);
         } else if (feature.provenanceRule() != null){
             if (GENE_ONLY.contains(feature.provenanceRule())) {

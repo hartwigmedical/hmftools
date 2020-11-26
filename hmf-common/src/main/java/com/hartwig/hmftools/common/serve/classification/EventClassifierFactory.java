@@ -10,7 +10,7 @@ public final class EventClassifierFactory {
     }
 
     @NotNull
-    public static EventClassifier buildClassifier(@NotNull EventPreprocessor proteinAnnotationPreprocessor) {
-        return new EventClassifier(EventMatcherFactory.buildMatcherMap(proteinAnnotationPreprocessor));
+    public static EventClassifier buildClassifier(@NotNull EventClassifierConfig config) {
+        return new EventClassifier(EventMatcherFactory.buildMatcherMap(config));
     }
 }

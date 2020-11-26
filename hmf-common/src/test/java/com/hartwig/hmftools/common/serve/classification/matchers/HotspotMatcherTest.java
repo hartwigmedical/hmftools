@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.Sets;
+
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
@@ -10,7 +12,7 @@ public class HotspotMatcherTest {
 
     @Test
     public void canAssessWhetherEventIsHotspot() {
-        EventMatcher matcher = new HotspotMatcher(event -> event, new FusionPairMatcher());
+        EventMatcher matcher = new HotspotMatcher(event -> event, new FusionPairMatcher(Sets.newHashSet(), Sets.newHashSet()));
 
         assertTrue(matcher.matches("any", "K5N"));
         assertTrue(matcher.matches("any", "L2230V"));

@@ -2,32 +2,34 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-
 import org.jetbrains.annotations.NotNull;
 
 class DeletionMatcher implements EventMatcher {
 
-    private static final Set<String> DELETION_KEYWORDS =
-            Sets.newHashSet("Deletion", "deletion", "DELETION", "del", "undexpression", "UNDEREXPRESSION", "loss", "LOSS");
+    @NotNull
+    private final Set<String> deletionKeywords;
+    @NotNull
+    private final Set<String> deletionKeyPhrases;
+    @NotNull
+    private final Set<String> deletionKeywordsToSkip;
 
-    private static final Set<String> DELETION_KEY_PHRASES = Sets.newHashSet("dec exp", "Copy Number Loss");
-
-    private static final Set<String> KEYWORDS_TO_SKIP_FOR_DELETION = Sets.newHashSet("exon", "EXON", "Exon", "Ex19", "inframe");
-
-    DeletionMatcher() {
+    DeletionMatcher(@NotNull final Set<String> deletionKeywords, @NotNull final Set<String> deletionKeyPhrases,
+            @NotNull final Set<String> deletionKeywordsToSkip) {
+        this.deletionKeywords = deletionKeywords;
+        this.deletionKeyPhrases = deletionKeyPhrases;
+        this.deletionKeywordsToSkip = deletionKeywordsToSkip;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        for (String skipTerm : KEYWORDS_TO_SKIP_FOR_DELETION) {
+        for (String skipTerm : deletionKeywordsToSkip) {
             if (event.contains(skipTerm)) {
                 return false;
             }
         }
 
         String[] words = event.split(" ");
-        for (String keyword : DELETION_KEYWORDS) {
+        for (String keyword : deletionKeywords) {
             for (String word : words) {
                 if (word.equals(keyword)) {
                     return true;
@@ -35,7 +37,7 @@ class DeletionMatcher implements EventMatcher {
             }
         }
 
-        for (String keyPhrase : DELETION_KEY_PHRASES) {
+        for (String keyPhrase : deletionKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 return true;
             }

@@ -8,8 +8,6 @@ import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_INSERT
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_RANGE_INDICATOR;
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_START_LOST;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,24 +18,18 @@ public class HotspotMatcher implements EventMatcher {
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers, @NotNull EventPreprocessor preprocessor,
-            @NotNull FusionPairMatcher fusionPairMatcher) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new HotspotMatcher(preprocessor, fusionPairMatcher));
-    }
-
-    @NotNull
-    private final EventPreprocessor preprocessor;
+    private final EventPreprocessor proteinAnnotationExtractor;
     @NotNull
     private final FusionPairMatcher fusionPairMatcher;
 
-    HotspotMatcher(@NotNull final EventPreprocessor preprocessor, @NotNull final FusionPairMatcher fusionPairMatcher) {
-        this.preprocessor = preprocessor;
+    HotspotMatcher(@NotNull final EventPreprocessor proteinAnnotationExtractor, @NotNull final FusionPairMatcher fusionPairMatcher) {
+        this.proteinAnnotationExtractor = proteinAnnotationExtractor;
         this.fusionPairMatcher = fusionPairMatcher;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        String processedEvent = preprocessor.apply(event);
+        String processedEvent = proteinAnnotationExtractor.apply(event);
 
         if (isProteinAnnotationWithMaxLength(processedEvent, MAX_INFRAME_BASE_LENGTH)) {
             return !isHotspotOnFusionGene(gene, event);

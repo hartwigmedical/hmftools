@@ -13,7 +13,7 @@ public class MutationTypeExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(MutationTypeExtractor.class);
 
-    private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(new ProteinAnnotationExtractor());
+    private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(ClassificationConfig.build());
 
     @NotNull
     public static MutationType extractType(@NotNull Feature feature) {

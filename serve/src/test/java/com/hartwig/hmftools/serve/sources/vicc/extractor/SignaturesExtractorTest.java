@@ -12,11 +12,13 @@ import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SignaturesExtractorTest {
 
     @Test
+    @Ignore
     public void canExtractSignatureNameUnknown() {
         SignaturesExtractor signaturesExtractor = new SignaturesExtractor();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,

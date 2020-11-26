@@ -2,65 +2,46 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-
 import org.jetbrains.annotations.NotNull;
 
 public class GeneLevelMatcher implements EventMatcher {
 
-    public static final Set<String> GENERIC_GENE_LEVEL_KEYWORDS = Sets.newHashSet("MUTATION",
-            "mutant",
-            "mut",
-            "TRUNCATING MUTATION",
-            "Truncating Mutations",
-            "feature_truncation",
-            "FRAMESHIFT TRUNCATION",
-            "FRAMESHIFT MUTATION",
-            "ALTERATION");
+    @NotNull
+    private final String exonKeyword;
+    @NotNull
+    private final Set<String> genericGeneLevelKeywords;
+    @NotNull
+    private final Set<String> activatingGeneLevelKeywords;
+    @NotNull
+    private final Set<String> inactivatingGeneLevelKeywords;
 
-    public static final Set<String> INACTIVATING_GENE_LEVEL_KEYWORDS = Sets.newHashSet("inact mut",
-            "biallelic inactivation",
-            "Loss Of Function Variant",
-            "Loss Of Heterozygosity",
-            "DELETERIOUS MUTATION",
-            "negative",
-            "BIALLELIC INACTIVATION",
-            "LOSS-OF-FUNCTION",
-            "INACTIVATING MUTATION");
-
-    public static final Set<String> ACTIVATING_GENE_LEVEL_KEYWORDS = Sets.newHashSet("Gain-of-function Mutations",
-            "Gain-of-Function",
-            "act mut",
-            "ACTIVATING MUTATION",
-            "Oncogenic Mutations",
-            "pos",
-            "positive",
-            "oncogenic mutation");
-
-    private static final String EXON_KEYWORD = "exon";
-
-    GeneLevelMatcher() {
+    public GeneLevelMatcher(@NotNull final String exonKeyword, @NotNull final Set<String> genericGeneLevelKeywords,
+            @NotNull final Set<String> activatingGeneLevelKeywords, @NotNull final Set<String> inactivatingGeneLevelKeywords) {
+        this.exonKeyword = exonKeyword;
+        this.genericGeneLevelKeywords = genericGeneLevelKeywords;
+        this.activatingGeneLevelKeywords = activatingGeneLevelKeywords;
+        this.inactivatingGeneLevelKeywords = inactivatingGeneLevelKeywords;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        if (event.toLowerCase().contains(EXON_KEYWORD)) {
+        if (event.toLowerCase().contains(exonKeyword)) {
             return false;
         }
 
-        for (String keyword : GENERIC_GENE_LEVEL_KEYWORDS) {
+        for (String keyword : genericGeneLevelKeywords) {
             if (event.contains(keyword)) {
                 return true;
             }
         }
 
-        for (String keyword : INACTIVATING_GENE_LEVEL_KEYWORDS) {
+        for (String keyword : activatingGeneLevelKeywords) {
             if (event.contains(keyword)) {
                 return true;
             }
         }
 
-        for (String keyword : ACTIVATING_GENE_LEVEL_KEYWORDS) {
+        for (String keyword : inactivatingGeneLevelKeywords) {
             if (event.contains(keyword)) {
                 return true;
             }

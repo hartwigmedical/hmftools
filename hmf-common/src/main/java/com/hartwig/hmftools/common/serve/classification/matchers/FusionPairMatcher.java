@@ -2,29 +2,29 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-
 import org.jetbrains.annotations.NotNull;
 
 class FusionPairMatcher implements EventMatcher {
 
-    private static final Set<String> EXON_DEL_DUP_FUSION_PAIRS = Sets.newHashSet("EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD");
+    @NotNull
+    private final Set<String> exonicDelDupFusionEvents;
+    @NotNull
+    private final Set<String> fusionEventsToSkip;
 
-    private static final Set<String> EVENTS_TO_SKIP =
-            Sets.newHashSet("AR-V7", "Gain-of-Function", "LOSS-OF-FUNCTION", "LCS6-variant", "DI842-843VM", "FLT3-ITD");
-
-    FusionPairMatcher() {
+    FusionPairMatcher(@NotNull final Set<String> exonicDelDupFusionEvents, @NotNull final Set<String> fusionEventsToSkip) {
+        this.exonicDelDupFusionEvents = exonicDelDupFusionEvents;
+        this.fusionEventsToSkip = fusionEventsToSkip;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        if (EVENTS_TO_SKIP.contains(event)) {
+        if (fusionEventsToSkip.contains(event)) {
             return false;
         }
 
-        if (EXON_DEL_DUP_FUSION_PAIRS.contains(event)) {
+        if (exonicDelDupFusionEvents.contains(event)) {
             return true;
-        }  else {
+        } else {
             String trimmedEvent = event.trim();
             String potentialFusion;
             if (trimmedEvent.contains(" ")) {
