@@ -2,9 +2,9 @@ package com.hartwig.hmftools.common.serve.classification;
 
 public enum MutationType {
     HOTSPOT,
-    GENE_RANGE_CODON,
-    GENE_RANGE_EXON,
-    FUSION_PAIR_AND_GENE_RANGE_EXON,
+    CODON,
+    EXON,
+    FUSION_PAIR_AND_EXON,
     GENE_LEVEL,
     AMPLIFICATION,
     DELETION,

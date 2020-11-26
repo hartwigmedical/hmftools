@@ -7,11 +7,11 @@ import static org.junit.Assert.assertTrue;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class GeneRangeCodonMatcherTest {
+public class CodonMatcherTest {
 
     @Test
-    public void canAssessWhetherEventIsGeneRangeCodon() {
-        EventMatcher matcher = new GeneRangeCodonMatcher(event -> event);
+    public void canAssessWhetherEventIsCodon() {
+        EventMatcher matcher = new CodonMatcher(event -> event);
 
         assertTrue(matcher.matches("GNAS", "R201"));
         assertTrue(matcher.matches("EGFR", "E709X"));
@@ -26,11 +26,11 @@ public class GeneRangeCodonMatcherTest {
 
     @Test
     public void canCountDigitSequences() {
-        assertEquals(0, GeneRangeCodonMatcher.countDigitSequences(Strings.EMPTY));
-        assertEquals(0, GeneRangeCodonMatcher.countDigitSequences("hi"));
-        assertEquals(1, GeneRangeCodonMatcher.countDigitSequences("V600K"));
+        assertEquals(0, CodonMatcher.countDigitSequences(Strings.EMPTY));
+        assertEquals(0, CodonMatcher.countDigitSequences("hi"));
+        assertEquals(1, CodonMatcher.countDigitSequences("V600K"));
 
-        assertEquals(4, GeneRangeCodonMatcher.countDigitSequences("A1B2C3D4"));
-        assertEquals(2, GeneRangeCodonMatcher.countDigitSequences("100A200"));
+        assertEquals(4, CodonMatcher.countDigitSequences("A1B2C3D4"));
+        assertEquals(2, CodonMatcher.countDigitSequences("100A200"));
     }
 }

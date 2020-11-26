@@ -24,25 +24,25 @@ class FusionPairMatcher implements EventMatcher {
 
         if (exonicDelDupFusionEvents.contains(event)) {
             return true;
-        } else {
-            String trimmedEvent = event.trim();
-            String potentialFusion;
-            if (trimmedEvent.contains(" ")) {
-                String[] parts = trimmedEvent.split(" ");
-                if (!parts[1].equalsIgnoreCase("fusion")) {
-                    return false;
-                }
-                potentialFusion = parts[0];
-            } else {
-                potentialFusion = trimmedEvent;
-            }
-
-            if (potentialFusion.contains("-")) {
-                String[] parts = potentialFusion.split("-");
-                // Assume genes that are fused contain no spaces
-                return !parts[0].contains(" ") && !parts[1].contains(" ");
-            }
-            return false;
         }
+
+        String trimmedEvent = event.trim();
+        String potentialFusion;
+        if (trimmedEvent.contains(" ")) {
+            String[] parts = trimmedEvent.split(" ");
+            if (!parts[1].equalsIgnoreCase("fusion")) {
+                return false;
+            }
+            potentialFusion = parts[0];
+        } else {
+            potentialFusion = trimmedEvent;
+        }
+
+        if (potentialFusion.contains("-")) {
+            String[] parts = potentialFusion.split("-");
+            // Assume genes that are fused contain no spaces
+            return !parts[0].contains(" ") && !parts[1].contains(" ");
+        }
+        return false;
     }
 }

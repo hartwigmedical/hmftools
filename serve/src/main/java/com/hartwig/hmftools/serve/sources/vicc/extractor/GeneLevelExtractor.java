@@ -13,13 +13,12 @@ import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
-import com.hartwig.hmftools.vicc.annotation.ClassificationConfig;
+import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneLevelExtractor {
@@ -73,7 +72,7 @@ public class GeneLevelExtractor {
     @NotNull
     @VisibleForTesting
     static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
-        String event = Strings.EMPTY;
+        String event;
         String geneSymbol = feature.geneSymbol();
         String geneSymbolEvent = feature.name().split(" ")[0];
         if (geneSymbolEvent.equals(geneSymbol)) {
@@ -82,11 +81,11 @@ public class GeneLevelExtractor {
             event = feature.name();
         }
 
-        if (ClassificationConfig.INACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
+        if (ViccClassificationConfig.INACTIVATING_GENE_LEVEL_KEY_PHRASES.contains(event)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (ClassificationConfig.ACTIVATING_GENE_LEVEL_KEYWORDS.contains(event)) {
+        } else if (ViccClassificationConfig.ACTIVATING_GENE_LEVEL_KEY_PHRASES.contains(event)) {
             return GeneLevelEvent.ACTIVATION;
-        } else if (ClassificationConfig.GENERIC_GENE_LEVEL_KEYWORDS.contains(event)) {
+        } else if (ViccClassificationConfig.GENERIC_GENE_LEVEL_KEY_PHRASES.contains(event)) {
             return extractGeneLevelEventGene(feature, driverGenes);
         } else if (feature.provenanceRule() != null){
             if (GENE_ONLY.contains(feature.provenanceRule())) {

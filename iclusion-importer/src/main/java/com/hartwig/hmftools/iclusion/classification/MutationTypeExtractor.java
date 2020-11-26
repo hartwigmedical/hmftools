@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public final class MutationTypeExtractor {
 
     @NotNull
-    private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(ClassificationConfig.build());
+    private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(IclusionClassificationConfig.build());
 
     private MutationTypeExtractor() {
     }

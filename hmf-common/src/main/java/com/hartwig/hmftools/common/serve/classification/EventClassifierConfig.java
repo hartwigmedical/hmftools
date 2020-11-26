@@ -15,25 +15,28 @@ public abstract class EventClassifierConfig {
     public abstract EventPreprocessor proteinAnnotationExtractor();
 
     @NotNull
-    public abstract String exonKeyword();
+    public abstract Set<String> exonIdentifiers();
 
     @NotNull
-    public abstract Set<String> exonRangeEvents();
+    public abstract Set<String> exonKeywords();
 
     @NotNull
-    public abstract Set<String> exonRangeKeywords();
+    public abstract Set<String> specificExonEvents();
 
     @NotNull
-    public abstract Map<String, Set<String>> fusionPairAndExonRangesPerGene();
+    public abstract Map<String, Set<String>> fusionPairAndExonsPerGene();
 
     @NotNull
-    public abstract Set<String> genericGeneLevelKeywords();
+    public abstract Set<String> geneLevelBlacklistKeyPhrases();
 
     @NotNull
-    public abstract Set<String> activatingGeneLevelKeywords();
+    public abstract Set<String> genericGeneLevelKeyPhrases();
 
     @NotNull
-    public abstract Set<String> inactivatingGeneLevelKeywords();
+    public abstract Set<String> activatingGeneLevelKeyPhrases();
+
+    @NotNull
+    public abstract Set<String> inactivatingGeneLevelKeyPhrases();
 
     @NotNull
     public abstract Set<String> amplificationKeywords();
@@ -48,7 +51,7 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> deletionKeyPhrases();
 
     @NotNull
-    public abstract Set<String> deletionKeywordsToSkip();
+    public abstract Set<String> deletionKeyPhrasesToSkip();
 
     @NotNull
     public abstract Set<String> exonicDelDupFusionEvents();
@@ -57,7 +60,7 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> fusionPairEventsToSkip();
 
     @NotNull
-    public abstract Set<String> promiscuousFusionKeywords();
+    public abstract Set<String> promiscuousFusionKeyPhrases();
 
     @NotNull
     public abstract Set<String> signatureEvents();

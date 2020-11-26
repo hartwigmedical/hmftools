@@ -7,20 +7,20 @@ import org.jetbrains.annotations.NotNull;
 class PromiscuousFusionMatcher implements EventMatcher {
 
     @NotNull
-    private final Set<String> promiscuousFusionKeywords;
+    private final Set<String> promiscuousFusionKeyPhrases;
     @NotNull
     private final FusionPairMatcher fusionPairMatcher;
 
-    PromiscuousFusionMatcher(@NotNull final Set<String> promiscuousFusionKeywords,
+    PromiscuousFusionMatcher(@NotNull final Set<String> promiscuousFusionKeyPhrases,
             @NotNull final FusionPairMatcher fusionPairMatcher) {
-        this.promiscuousFusionKeywords = promiscuousFusionKeywords;
+        this.promiscuousFusionKeyPhrases = promiscuousFusionKeyPhrases;
         this.fusionPairMatcher = fusionPairMatcher;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        for (String keyword : promiscuousFusionKeywords) {
-            if (event.contains(keyword) && !fusionPairMatcher.matches(gene, event)) {
+        for (String keyPhrase : promiscuousFusionKeyPhrases) {
+            if (event.contains(keyPhrase) && !fusionPairMatcher.matches(gene, event)) {
                 return true;
             }
         }

@@ -71,7 +71,7 @@ public class FusionExtractor {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
 
-            } else if (feature.type() == MutationType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
+            } else if (feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
                 if (EXONIC_FUSIONS_MAP.containsKey(feature.description())) {
                     annotatedFusion = ImmutableKnownFusionPair.builder().from(EXONIC_FUSIONS_MAP.get(feature.description())).build();
                 }

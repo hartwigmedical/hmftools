@@ -47,7 +47,7 @@ public class GeneRangeExtractor {
 
             MutationType mutationType = feature.type();
 
-            if (mutationType == MutationType.FUSION_PAIR_AND_GENE_RANGE_EXON) {
+            if (mutationType == MutationType.FUSION_PAIR_AND_EXON) {
                 if (canonicalTranscript == null) {
                     CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
 
@@ -73,7 +73,7 @@ public class GeneRangeExtractor {
                     }
                 }
             }
-            if (mutationType == MutationType.GENE_RANGE_EXON) {
+            if (mutationType == MutationType.EXON) {
                 if (canonicalTranscript == null) {
                     CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
@@ -96,7 +96,7 @@ public class GeneRangeExtractor {
                                 feature);
                     }
                 }
-            } else if (mutationType == MutationType.GENE_RANGE_CODON) {
+            } else if (mutationType == MutationType.CODON) {
                 if (canonicalTranscript == null) {
                     CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.annotation;
+package com.hartwig.hmftools.iclusion.classification;
 
 import java.util.Map;
 import java.util.Set;
@@ -10,49 +10,51 @@ import com.hartwig.hmftools.common.serve.classification.ImmutableEventClassifier
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ClassificationConfig {
+public final class IclusionClassificationConfig {
 
-    private static final String EXON_KEYWORD = "exon";
-    private static final Set<String> EXON_RANGE_EVENTS = exonRangeEvents();
-    private static final Set<String> EXON_RANGE_KEYWORDS = exonRangeKeywords();
-    private static final Map<String, Set<String>> FUSION_PAIR_AND_EXON_RANGES_PER_GENE = fusionPairAndExonRangesPerGene();
-    public static final Set<String> GENERIC_GENE_LEVEL_KEYWORDS = genericGeneLevelKeywords();
-    public static final Set<String> ACTIVATING_GENE_LEVEL_KEYWORDS = activatingGeneLevelKeywords();
-    public static final Set<String> INACTIVATING_GENE_LEVEL_KEYWORDS = inactivatingGeneLevelKeywords();
+    private static final Set<String> EXON_IDENTIFIERS = exonIdentifiers();
+    private static final Set<String> EXON_KEYWORDS = exonKeywords();
+    private static final Set<String> SPECIFIC_EXON_EVENTS = specificExonEvents();
+    private static final Map<String, Set<String>> FUSION_PAIR_AND_EXONS_PER_GENE = fusionPairAndExonsPerGene();
+    private static final Set<String> GENE_LEVEL_BLACKLIST_KEY_PHRASES = geneLevelBlacklistKeyPhrases();
+    private static final Set<String> GENERIC_GENE_LEVEL_KEY_PHRASES = genericGeneLevelKeyPhrases();
+    private static final Set<String> ACTIVATING_GENE_LEVEL_KEY_PHRASES = activatingGeneLevelKeyPhrases();
+    private static final Set<String> INACTIVATING_GENE_LEVEL_KEY_PHRASES = inactivatingGeneLevelKeyPhrases();
     private static final Set<String> AMPLIFICATION_KEYWORDS = amplificationKeywords();
     private static final Set<String> AMPLIFICATION_KEY_PHRASES = amplificationKeyPhrases();
     private static final Set<String> DELETION_KEYWORDS = deletionKeywords();
     private static final Set<String> DELETION_KEY_PHRASES = deletionKeyPhrases();
-    private static final Set<String> DELETION_KEYWORDS_TO_SKIP = deletionKeywordsToSkip();
+    private static final Set<String> DELETION_KEY_PHRASES_TO_SKIP = deletionKeyPhrasesToSkip();
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
-    private static final Set<String> PROMISCUOUS_FUSION_KEYWORDS = promiscuousFusionKeywords();
+    private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
     private static final Set<String> SIGNATURE_EVENTS = signatureEvents();
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = complexEventsPerGene();
 
-    private ClassificationConfig() {
+    private IclusionClassificationConfig() {
     }
 
     @NotNull
     static EventClassifierConfig build() {
         return ImmutableEventClassifierConfig.builder()
                 .proteinAnnotationExtractor(new ProteinAnnotationExtractor())
-                .exonKeyword(EXON_KEYWORD)
-                .exonRangeEvents(EXON_RANGE_EVENTS)
-                .exonRangeKeywords(EXON_RANGE_KEYWORDS)
-                .fusionPairAndExonRangesPerGene(FUSION_PAIR_AND_EXON_RANGES_PER_GENE)
-                .genericGeneLevelKeywords(GENERIC_GENE_LEVEL_KEYWORDS)
-                .activatingGeneLevelKeywords(ACTIVATING_GENE_LEVEL_KEYWORDS)
-                .inactivatingGeneLevelKeywords(INACTIVATING_GENE_LEVEL_KEYWORDS)
+                .exonIdentifiers(EXON_IDENTIFIERS)
+                .exonKeywords(EXON_KEYWORDS)
+                .specificExonEvents(SPECIFIC_EXON_EVENTS)
+                .fusionPairAndExonsPerGene(FUSION_PAIR_AND_EXONS_PER_GENE)
+                .geneLevelBlacklistKeyPhrases(GENE_LEVEL_BLACKLIST_KEY_PHRASES)
+                .genericGeneLevelKeyPhrases(GENERIC_GENE_LEVEL_KEY_PHRASES)
+                .activatingGeneLevelKeyPhrases(ACTIVATING_GENE_LEVEL_KEY_PHRASES)
+                .inactivatingGeneLevelKeyPhrases(INACTIVATING_GENE_LEVEL_KEY_PHRASES)
                 .amplificationKeywords(AMPLIFICATION_KEYWORDS)
                 .amplificationKeyPhrases(AMPLIFICATION_KEY_PHRASES)
                 .deletionKeywords(DELETION_KEYWORDS)
                 .deletionKeyPhrases(DELETION_KEY_PHRASES)
-                .deletionKeywordsToSkip(DELETION_KEYWORDS_TO_SKIP)
+                .deletionKeyPhrasesToSkip(DELETION_KEY_PHRASES_TO_SKIP)
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
-                .promiscuousFusionKeywords(PROMISCUOUS_FUSION_KEYWORDS)
+                .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
                 .signatureEvents(SIGNATURE_EVENTS)
                 .combinedEventsPerGene(COMBINED_EVENTS_PER_GENE)
                 .complexEventsPerGene(COMPLEX_EVENTS_PER_GENE)
@@ -60,27 +62,33 @@ public final class ClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> exonRangeEvents() {
+    private static Set<String> exonIdentifiers() {
+        Set<String> set = Sets.newHashSet();
+        set.add("exon");
+        set.add("EXON");
+        set.add("Exon");
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> exonKeywords() {
+        Set<String> set = Sets.newHashSet();
+        set.add("deletion");
+        set.add("insertion");
+        set.add("mutation");
+        set.add("frameshift");
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> specificExonEvents() {
         Set<String> set = Sets.newHashSet();
         set.add("RARE EX 18-21 MUT");
         return set;
     }
 
     @NotNull
-    private static Set<String> exonRangeKeywords() {
-        // TODO Review if all relevant, and not key phrases?
-        Set<String> set = Sets.newHashSet();
-        set.add("deletion");
-        set.add("insertion");
-        set.add("proximal");
-        set.add("mutation");
-        set.add("splice site insertion");
-        set.add("frameshift");
-        return set;
-    }
-
-    @NotNull
-    private static Map<String, Set<String>> fusionPairAndExonRangesPerGene() {
+    private static Map<String, Set<String>> fusionPairAndExonsPerGene() {
         Map<String, Set<String>> map = Maps.newHashMap();
 
         map.put("KIT", Sets.newHashSet("EXON 11 MUTATION", "Exon 11 mutations", "Exon 11 deletions"));
@@ -90,8 +98,16 @@ public final class ClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> genericGeneLevelKeywords() {
-        // TODO Are not keywords but phrases!
+    private static Set<String> geneLevelBlacklistKeyPhrases() {
+        Set<String> set = Sets.newHashSet();
+        set.add("exon");
+        set.add("EXON");
+        set.add("Exon");
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> genericGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("MUTATION");
         set.add("mutant");
@@ -106,8 +122,7 @@ public final class ClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> activatingGeneLevelKeywords() {
-        // TODO Are not keywords but phrases!
+    private static Set<String> activatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("Gain-of-function Mutations");
         set.add("Gain-of-Function");
@@ -121,8 +136,7 @@ public final class ClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> inactivatingGeneLevelKeywords() {
-        // TODO Are not keywords but phrases!
+    private static Set<String> inactivatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("inact mut");
         set.add("biallelic inactivation");
@@ -178,7 +192,7 @@ public final class ClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> deletionKeywordsToSkip() {
+    private static Set<String> deletionKeyPhrasesToSkip() {
         Set<String> set = Sets.newHashSet();
         set.add("exon");
         set.add("EXON");
@@ -212,7 +226,7 @@ public final class ClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> promiscuousFusionKeywords() {
+    private static Set<String> promiscuousFusionKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("Fusion");
         set.add("fusion");

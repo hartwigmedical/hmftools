@@ -7,46 +7,49 @@ import org.jetbrains.annotations.NotNull;
 public class GeneLevelMatcher implements EventMatcher {
 
     @NotNull
-    private final String exonKeyword;
+    private final Set<String> blackListKeyPhrases;
     @NotNull
-    private final Set<String> genericGeneLevelKeywords;
+    private final Set<String> genericGeneLevelKeyPhrases;
     @NotNull
-    private final Set<String> activatingGeneLevelKeywords;
+    private final Set<String> activatingGeneLevelKeyPhrases;
     @NotNull
-    private final Set<String> inactivatingGeneLevelKeywords;
+    private final Set<String> inactivatingGeneLevelKeyPhrases;
 
-    public GeneLevelMatcher(@NotNull final String exonKeyword, @NotNull final Set<String> genericGeneLevelKeywords,
-            @NotNull final Set<String> activatingGeneLevelKeywords, @NotNull final Set<String> inactivatingGeneLevelKeywords) {
-        this.exonKeyword = exonKeyword;
-        this.genericGeneLevelKeywords = genericGeneLevelKeywords;
-        this.activatingGeneLevelKeywords = activatingGeneLevelKeywords;
-        this.inactivatingGeneLevelKeywords = inactivatingGeneLevelKeywords;
+    public GeneLevelMatcher(@NotNull final Set<String> blackListKeyPhrases, @NotNull final Set<String> genericGeneLevelKeyPhrases,
+            @NotNull final Set<String> activatingGeneLevelKeyPhrases, @NotNull final Set<String> inactivatingGeneLevelKeyPhrases) {
+        this.blackListKeyPhrases = blackListKeyPhrases;
+        this.genericGeneLevelKeyPhrases = genericGeneLevelKeyPhrases;
+        this.activatingGeneLevelKeyPhrases = activatingGeneLevelKeyPhrases;
+        this.inactivatingGeneLevelKeyPhrases = inactivatingGeneLevelKeyPhrases;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        if (event.toLowerCase().contains(exonKeyword)) {
-            return false;
+        for (String keyPhrase : blackListKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                return false;
+            }
         }
 
-        for (String keyword : genericGeneLevelKeywords) {
-            if (event.contains(keyword)) {
+        for (String keyPhrase : genericGeneLevelKeyPhrases) {
+            if (event.contains(keyPhrase)) {
                 return true;
             }
         }
 
-        for (String keyword : activatingGeneLevelKeywords) {
-            if (event.contains(keyword)) {
+        for (String keyPhrase : activatingGeneLevelKeyPhrases) {
+            if (event.contains(keyPhrase)) {
                 return true;
             }
         }
 
-        for (String keyword : inactivatingGeneLevelKeywords) {
-            if (event.contains(keyword)) {
+        for (String keyPhrase : inactivatingGeneLevelKeyPhrases) {
+            if (event.contains(keyPhrase)) {
                 return true;
             }
         }
 
+        // If the event matches the gene we assume its a gene level event
         return event.trim().equals(gene);
     }
 }

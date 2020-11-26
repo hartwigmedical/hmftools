@@ -5,12 +5,12 @@ import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.jetbrains.annotations.NotNull;
 
-class GeneRangeCodonMatcher implements EventMatcher {
+class CodonMatcher implements EventMatcher {
 
     @NotNull
     private final EventPreprocessor proteinAnnotationExtractor;
 
-    GeneRangeCodonMatcher(@NotNull final EventPreprocessor proteinAnnotationExtractor) {
+    CodonMatcher(@NotNull final EventPreprocessor proteinAnnotationExtractor) {
         this.proteinAnnotationExtractor = proteinAnnotationExtractor;
     }
 

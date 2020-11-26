@@ -11,18 +11,18 @@ class DeletionMatcher implements EventMatcher {
     @NotNull
     private final Set<String> deletionKeyPhrases;
     @NotNull
-    private final Set<String> deletionKeywordsToSkip;
+    private final Set<String> deletionKeyPhrasesToSkip;
 
     DeletionMatcher(@NotNull final Set<String> deletionKeywords, @NotNull final Set<String> deletionKeyPhrases,
-            @NotNull final Set<String> deletionKeywordsToSkip) {
+            @NotNull final Set<String> deletionKeyPhrasesToSkip) {
         this.deletionKeywords = deletionKeywords;
         this.deletionKeyPhrases = deletionKeyPhrases;
-        this.deletionKeywordsToSkip = deletionKeywordsToSkip;
+        this.deletionKeyPhrasesToSkip = deletionKeyPhrasesToSkip;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        for (String skipTerm : deletionKeywordsToSkip) {
+        for (String skipTerm : deletionKeyPhrasesToSkip) {
             if (event.contains(skipTerm)) {
                 return false;
             }
