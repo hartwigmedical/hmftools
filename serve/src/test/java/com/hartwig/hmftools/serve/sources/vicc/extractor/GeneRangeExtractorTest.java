@@ -44,6 +44,18 @@ public class GeneRangeExtractorTest {
         assertEquals(Lists.newArrayList(12), GeneRangeExtractor.extractExonNumbers("Exon 12 splice site insertion"));
     }
 
+    //TODO
+    @Test
+    public void canExtractMutationFilter() {
+
+    }
+
+    //TODO
+    @Test
+    public void canExtractSpecificMutationTypeFilter(){
+
+    }
+
     @Test
     public void canExtractRangesCodon() {
         GeneRangeExtractor geneRangeExtractor =
