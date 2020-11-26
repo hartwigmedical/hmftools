@@ -18,28 +18,29 @@ public final class EventMatcherFactory {
     @NotNull
     public static Map<MutationType, EventMatcher> buildMatcherMap(@NotNull EventClassifierConfig config) {
         FusionPairMatcher fusionPairMatcher = new FusionPairMatcher(config.exonicDelDupFusionEvents(), config.fusionPairEventsToSkip());
+        PromiscuousFusionMatcher promiscuousFusionMatcher =
+                new PromiscuousFusionMatcher(config.promiscuousFusionKeyPhrases(), fusionPairMatcher);
+
         HotspotMatcher hotspotMatcher = new HotspotMatcher(config.proteinAnnotationExtractor(), fusionPairMatcher);
-        AmplificationMatcher amplificationMatcher =
-                new AmplificationMatcher(config.amplificationKeywords(), config.amplificationKeyPhrases());
-
-        ComplexMatcher complexMatcher = new ComplexMatcher(config.complexEventsPerGene());
-        CombinedMatcher combinedMatcher =
-                new CombinedMatcher(config.combinedEventsPerGene(), hotspotMatcher, fusionPairMatcher, amplificationMatcher);
-        FusionPairAndExonMatcher fusionPairAndExonMatcher = new FusionPairAndExonMatcher(config.fusionPairAndExonsPerGene());
-
-        List<EventMatcher> firstTierEventMatchers = Lists.newArrayList(complexMatcher, combinedMatcher, fusionPairAndExonMatcher);
-
         CodonMatcher codonMatcher = new CodonMatcher(config.proteinAnnotationExtractor());
         ExonMatcher exonMatcher = new ExonMatcher(config.exonIdentifiers(), config.exonKeywords(), config.specificExonEvents());
         GeneLevelMatcher geneLevelMatcher = new GeneLevelMatcher(config.geneLevelBlacklistKeyPhrases(),
                 config.genericGeneLevelKeyPhrases(),
                 config.activatingGeneLevelKeyPhrases(),
                 config.inactivatingGeneLevelKeyPhrases());
+
+        FusionPairAndExonMatcher fusionPairAndExonMatcher = new FusionPairAndExonMatcher(config.fusionPairAndExonsPerGene());
+        AmplificationMatcher amplificationMatcher =
+                new AmplificationMatcher(config.amplificationKeywords(), config.amplificationKeyPhrases());
         DeletionMatcher deletionMatcher =
-                new DeletionMatcher(config.deletionKeywords(), config.deletionKeyPhrases(), config.deletionKeyPhrasesToSkip());
-        PromiscuousFusionMatcher promiscuousFusionMatcher =
-                new PromiscuousFusionMatcher(config.promiscuousFusionKeyPhrases(), fusionPairMatcher);
+                new DeletionMatcher(config.deletionBlacklistKeyPhrases(), config.deletionKeywords(), config.deletionKeyPhrases());
+
         SignatureMatcher signatureMatcher = new SignatureMatcher(config.signatureEvents());
+        ComplexMatcher complexMatcher = new ComplexMatcher(config.complexEventsPerGene());
+        CombinedMatcher combinedMatcher =
+                new CombinedMatcher(config.combinedEventsPerGene(), hotspotMatcher, fusionPairMatcher, amplificationMatcher);
+
+        List<EventMatcher> firstTierEventMatchers = Lists.newArrayList(complexMatcher, combinedMatcher, fusionPairAndExonMatcher);
 
         Map<MutationType, EventMatcher> map = Maps.newHashMap();
         map.put(MutationType.HOTSPOT, withFirstTierMatchers(firstTierEventMatchers, hotspotMatcher));

@@ -25,8 +25,8 @@ public class GeneLevelMatcher implements EventMatcher {
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        for (String keyPhrase : blackListKeyPhrases) {
-            if (event.contains(keyPhrase)) {
+        for (String blacklistPhrase : blackListKeyPhrases) {
+            if (event.contains(blacklistPhrase)) {
                 return false;
             }
         }

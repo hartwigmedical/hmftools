@@ -22,9 +22,9 @@ public final class IclusionClassificationConfig {
     private static final Set<String> INACTIVATING_GENE_LEVEL_KEY_PHRASES = inactivatingGeneLevelKeyPhrases();
     private static final Set<String> AMPLIFICATION_KEYWORDS = amplificationKeywords();
     private static final Set<String> AMPLIFICATION_KEY_PHRASES = amplificationKeyPhrases();
+    private static final Set<String> DELETION_BLACKLIST_KEY_PHRASES = deletionBlacklistKeyPhrases();
     private static final Set<String> DELETION_KEYWORDS = deletionKeywords();
     private static final Set<String> DELETION_KEY_PHRASES = deletionKeyPhrases();
-    private static final Set<String> DELETION_KEY_PHRASES_TO_SKIP = deletionKeyPhrasesToSkip();
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
     private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
@@ -49,9 +49,9 @@ public final class IclusionClassificationConfig {
                 .inactivatingGeneLevelKeyPhrases(INACTIVATING_GENE_LEVEL_KEY_PHRASES)
                 .amplificationKeywords(AMPLIFICATION_KEYWORDS)
                 .amplificationKeyPhrases(AMPLIFICATION_KEY_PHRASES)
+                .deletionBlacklistKeyPhrases(DELETION_BLACKLIST_KEY_PHRASES)
                 .deletionKeywords(DELETION_KEYWORDS)
                 .deletionKeyPhrases(DELETION_KEY_PHRASES)
-                .deletionKeyPhrasesToSkip(DELETION_KEY_PHRASES_TO_SKIP)
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
                 .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
@@ -170,6 +170,17 @@ public final class IclusionClassificationConfig {
     }
 
     @NotNull
+    private static Set<String> deletionBlacklistKeyPhrases() {
+        Set<String> set = Sets.newHashSet();
+        set.add("exon");
+        set.add("EXON");
+        set.add("Exon");
+        set.add("Ex19");
+        set.add("inframe");
+        return set;
+    }
+
+    @NotNull
     private static Set<String> deletionKeywords() {
         Set<String> set = Sets.newHashSet();
         set.add("Deletion");
@@ -188,17 +199,6 @@ public final class IclusionClassificationConfig {
         Set<String> set = Sets.newHashSet();
         set.add("dec exp");
         set.add("Copy Number Loss");
-        return set;
-    }
-
-    @NotNull
-    private static Set<String> deletionKeyPhrasesToSkip() {
-        Set<String> set = Sets.newHashSet();
-        set.add("exon");
-        set.add("EXON");
-        set.add("Exon");
-        set.add("Ex19");
-        set.add("inframe");
         return set;
     }
 

@@ -7,23 +7,23 @@ import org.jetbrains.annotations.NotNull;
 class DeletionMatcher implements EventMatcher {
 
     @NotNull
+    private final Set<String> blackListKeyPhrases;
+    @NotNull
     private final Set<String> deletionKeywords;
     @NotNull
     private final Set<String> deletionKeyPhrases;
-    @NotNull
-    private final Set<String> deletionKeyPhrasesToSkip;
 
-    DeletionMatcher(@NotNull final Set<String> deletionKeywords, @NotNull final Set<String> deletionKeyPhrases,
-            @NotNull final Set<String> deletionKeyPhrasesToSkip) {
+    public DeletionMatcher(@NotNull final Set<String> blackListKeyPhrases, @NotNull final Set<String> deletionKeywords,
+            @NotNull final Set<String> deletionKeyPhrases) {
+        this.blackListKeyPhrases = blackListKeyPhrases;
         this.deletionKeywords = deletionKeywords;
         this.deletionKeyPhrases = deletionKeyPhrases;
-        this.deletionKeyPhrasesToSkip = deletionKeyPhrasesToSkip;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        for (String skipTerm : deletionKeyPhrasesToSkip) {
-            if (event.contains(skipTerm)) {
+        for (String blacklistPhrase : blackListKeyPhrases) {
+            if (event.contains(blacklistPhrase)) {
                 return false;
             }
         }

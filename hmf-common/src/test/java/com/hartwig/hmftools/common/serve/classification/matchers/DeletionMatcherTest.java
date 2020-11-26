@@ -11,13 +11,13 @@ import org.junit.Test;
 
 public class DeletionMatcherTest {
 
+    private static final Set<String> BLACKLIST_KEY_PHRASES = Sets.newHashSet("Ex19");
     private static final Set<String> DELETION_KEYWORDS = Sets.newHashSet("del");
     private static final Set<String> DELETION_KEY_PHRASES = Sets.newHashSet("dec exp");
-    private static final Set<String> DELETION_KEY_PHRASES_TO_SKIP = Sets.newHashSet("Ex19");
 
     @Test
     public void canAssessWhetherEventIsDeletion() {
-        EventMatcher matcher = new DeletionMatcher(DELETION_KEYWORDS, DELETION_KEY_PHRASES, DELETION_KEY_PHRASES_TO_SKIP);
+        EventMatcher matcher = new DeletionMatcher(BLACKLIST_KEY_PHRASES, DELETION_KEYWORDS, DELETION_KEY_PHRASES);
 
         assertTrue(matcher.matches("CDKN2A", "CDKN2A del"));
         assertTrue(matcher.matches("CDKN2A", "CDKN2A dec exp"));

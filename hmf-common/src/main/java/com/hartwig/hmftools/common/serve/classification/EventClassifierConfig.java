@@ -45,13 +45,13 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> amplificationKeyPhrases();
 
     @NotNull
+    public abstract Set<String> deletionBlacklistKeyPhrases();
+
+    @NotNull
     public abstract Set<String> deletionKeywords();
 
     @NotNull
     public abstract Set<String> deletionKeyPhrases();
-
-    @NotNull
-    public abstract Set<String> deletionKeyPhrasesToSkip();
 
     @NotNull
     public abstract Set<String> exonicDelDupFusionEvents();
