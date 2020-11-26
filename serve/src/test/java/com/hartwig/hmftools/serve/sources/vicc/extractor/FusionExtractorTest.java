@@ -18,6 +18,20 @@ import org.junit.Test;
 public class FusionExtractorTest {
 
     @Test
+    public void canExtractFusionPairsGenesUnknown() {
+        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
+        Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+                "any",
+                "IG",
+                "IG-BCL2",
+                "description",
+                "chromosome",
+                "pos");
+        assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
+    }
+
+    @Test
     public void canExtractFusionPairsGenes() {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
@@ -33,7 +47,7 @@ public class FusionExtractorTest {
     }
 
     @Test
-    public void canExtractFusionPairsWithExons() {
+    public void canExtractFusionPairsWithExonsUpDown() {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,

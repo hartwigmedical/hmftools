@@ -67,7 +67,6 @@ public class CopyNumberExtractorTest {
         featureAmps.put(viccEntry.features().get(0), ImmutableKnownCopyNumber.builder().gene("PTEN").type(CopyNumberType.DELETION).build());
 
         assertEquals(featureAmps, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
-
     }
 
     @Test
@@ -84,7 +83,6 @@ public class CopyNumberExtractorTest {
         Map<Feature, KnownCopyNumber> featureAmps = Maps.newHashMap();
 
         assertEquals(featureAmps, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
-
     }
 
 }
