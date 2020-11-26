@@ -20,6 +20,11 @@ public class BufferedWriter<T> implements Consumer<T>, AutoCloseable {
         this.timestamp = new Timestamp(new Date().getTime());
     }
 
+    public void initialise() {
+        initialised = true;
+        consumer.intialise();
+    }
+
     @Override
     public void accept(final T entry) {
         if (!initialised) {

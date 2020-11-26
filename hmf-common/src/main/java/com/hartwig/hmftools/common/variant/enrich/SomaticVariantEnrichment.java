@@ -39,7 +39,7 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment {
             @NotNull final List<CanonicalTranscript> transcripts, @NotNull final Consumer<VariantContext> consumer) {
         subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityMaxPloidy, clonalityBinWidth, peakModel, consumer);
         purityEnrichment =
-                new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, subclonalLikelihoodEnrichment);
+                new SomaticPurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, subclonalLikelihoodEnrichment);
         kataegisEnrichment = new KataegisEnrichment(purityEnrichment);
         somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
         final Set<String> somaticGenes =

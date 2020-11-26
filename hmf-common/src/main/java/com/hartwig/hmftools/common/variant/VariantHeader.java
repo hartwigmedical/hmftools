@@ -7,7 +7,7 @@ import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class SomaticVariantHeader {
+public class VariantHeader {
 
     public static final String REPORTED_FLAG = "REPORTED";
     public static final String PURPLE_AF_INFO = "PURPLE_AF";
@@ -27,10 +27,23 @@ public class SomaticVariantHeader {
     private static final String PURPLE_AF_DESC = "Purity adjusted variant allelic frequency";
     private static final String PURPLE_PLOIDY_DESC = "Purity adjusted variant copy number";
     private static final String PURPLE_BIALLELIC_DESC = "Variant is biallelic";
-    private static final String REPORTED_DESC = "Variant is reported in the driver catalog";
+    public static final String REPORTED_DESC = "Variant is reported in the driver catalog";
 
     @NotNull
-    public static VCFHeader generateHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template) {
+    public static VCFHeader germlineHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template) {
+        template.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
+        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, 1, VCFHeaderLineType.Float, PURPLE_AF_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_CN_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_VARIANT_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_PLOIDY_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1,  VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
+
+        return template;
+    }
+
+    @NotNull
+    public static VCFHeader somaticHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template) {
         template.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF_INFO, 1, VCFHeaderLineType.Float, PURPLE_AF_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_CN_DESC));

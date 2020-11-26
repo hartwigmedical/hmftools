@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant.enrich;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_DESC;
+import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -21,6 +22,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class GermlineReportedEnrichment implements VariantContextEnrichment {
 
@@ -85,6 +88,7 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
     @NotNull
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
+        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
         return template;
     }
 }

@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
 
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 

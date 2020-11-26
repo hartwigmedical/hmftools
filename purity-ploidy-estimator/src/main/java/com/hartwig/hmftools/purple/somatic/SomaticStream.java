@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
 
 import java.io.File;
 import java.io.IOException;

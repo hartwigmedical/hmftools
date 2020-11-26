@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.variant.enrich;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -37,25 +36,30 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
             @NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts,
             @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots, @NotNull final Consumer<VariantContext> consumer) {
 
+        final Set<String> germlineGenes =
+                genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
+
         this.reportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), consumer);
         this.clinvarEnrichment = new GermlineClinvarEnrichment(reportableEnrichment);
         this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, clinvarEnrichment);
-        final Set<String> germlineGenes =
-                genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
+
         this.snpEffEnrichment = new SnpEffEnrichment(germlineGenes, transcripts, refGenomeEnrichment);
         this.hotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, snpEffEnrichment);
-        this.genotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, hotspotEnrichment);
-        this.purityEnrichment =
-                new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, Collections.emptyList(), hotspotEnrichment);
+        this.purityEnrichment = new GermlinePurityEnrichment(purpleVersion, tumorSample, referenceSample, purityAdjuster, copyNumbers,
+                hotspotEnrichment);
+
+        // Genotype must go first!
+        this.genotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, purityEnrichment);
     }
 
     @Override
     public void accept(@NotNull final VariantContext context) {
-        purityEnrichment.accept(context);
+        genotypeEnrichment.accept(context);
     }
 
     @Override
     public void flush() {
+        genotypeEnrichment.flush();
         purityEnrichment.flush();
         hotspotEnrichment.flush();
         snpEffEnrichment.flush();

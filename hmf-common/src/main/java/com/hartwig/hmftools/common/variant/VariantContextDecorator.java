@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;

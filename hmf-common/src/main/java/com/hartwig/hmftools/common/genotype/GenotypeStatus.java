@@ -16,6 +16,7 @@ public enum GenotypeStatus {
         this.simpleDisplay = simpleDisplay;
     }
 
+    @NotNull
     public String simplifiedDisplay() {
         return simpleDisplay;
     }
