@@ -22,7 +22,7 @@ public class CopyNumberExtractorTest {
     public void canExtractCopyNumbersAmps() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37());
 
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "AKT1", "AKT1  amp");
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "AKT1", "AKT1  amp", "chromosome", "pos");
         Map<Feature, KnownCopyNumber> feature = Maps.newConcurrentMap();
         feature.put(viccEntry.features().get(0),
                 ImmutableKnownCopyNumber.builder().gene("AKT1").type(CopyNumberType.AMPLIFICATION).build());
@@ -34,7 +34,7 @@ public class CopyNumberExtractorTest {
     public void canExtractCopyNumbersAmpsUnknownGene() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37());
 
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "TET", "AMPLIFICATION");
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "TET", "AMPLIFICATION", "chromosome", "pos");
         Map<Feature, KnownCopyNumber> feature = Maps.newConcurrentMap();
 
         assertEquals(feature, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
@@ -44,7 +44,7 @@ public class CopyNumberExtractorTest {
     public void canExtractCopyNumbersDels() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37());
 
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "PTEN", "DELETION");
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "PTEN", "DELETION", "chromosome", "pos");
         Map<Feature, KnownCopyNumber> featureAmps = Maps.newConcurrentMap();
         featureAmps.put(viccEntry.features().get(0),
                 ImmutableKnownCopyNumber.builder().gene("PTEN").type(CopyNumberType.DELETION).build());
@@ -57,7 +57,7 @@ public class CopyNumberExtractorTest {
     public void canExtractCopyNumbersDelsUnknownGene() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37());
 
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "AC", "DELETION");
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "AC", "DELETION", "chromosome", "pos");
         Map<Feature, KnownCopyNumber> featureAmps = Maps.newConcurrentMap();
 
         assertEquals(featureAmps, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));

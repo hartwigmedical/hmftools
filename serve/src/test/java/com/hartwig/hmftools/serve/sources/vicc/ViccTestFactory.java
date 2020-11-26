@@ -35,19 +35,20 @@ public final class ViccTestFactory {
     }
 
     @NotNull
-    public static ViccEntry testViccEntryWithOncogenic(@NotNull String oncogenic, @NotNull String gene, @NotNull String event) {
-        return testViccEntry(ViccSource.ONCOKB, oncogenic, null, gene, event);
+    public static ViccEntry testViccEntryWithOncogenic(@NotNull String oncogenic, @NotNull String gene, @NotNull String event,
+            @NotNull String chromosome, @NotNull String pos) {
+        return testViccEntry(ViccSource.ONCOKB, oncogenic, null, gene, event, chromosome, pos);
     }
 
     @NotNull
     public static ViccEntry testViccEntryWithSourceAndKbObject(@NotNull ViccSource source, @Nullable String transcriptId,
-            @NotNull String gene, @NotNull String event) {
-        return testViccEntry(source, Strings.EMPTY, transcriptId, gene, event);
+            @NotNull String gene, @NotNull String event, @NotNull String chromosome, @NotNull String pos) {
+        return testViccEntry(source, Strings.EMPTY, transcriptId, gene, event, chromosome, pos);
     }
 
     @NotNull
     public static ViccEntry testViccEntry(@NotNull ViccSource source, @NotNull String oncogenic, @Nullable String transcriptId,
-            @NotNull String gene, @NotNull String event) {
+            @NotNull String gene, @NotNull String event, @NotNull String chromosome, @NotNull String pos) {
         EvidenceType evidenceType = ImmutableEvidenceType.builder().sourceName(Strings.EMPTY).build();
         Evidence evidence = ImmutableEvidence.builder().evidenceType(evidenceType).build();
 
@@ -70,18 +71,19 @@ public final class ViccTestFactory {
                 .association(association)
                 .transcriptId(transcriptId)
                 .kbSpecificObject(testOncoKb())
-                .features(Lists.newArrayList(testFeatureWithGeneAndName(gene, event)))
+                .features(Lists.newArrayList(testFeatureWithGeneAndName(gene, event, chromosome, pos)))
                 .build();
     }
 
     @NotNull
-    public static Feature testFeatureWithName(@NotNull String name) {
-        return testFeatureWithGeneAndName(null, name);
+    public static Feature testFeatureWithName(@NotNull String name, @NotNull String chromosome, @NotNull String pos) {
+        return testFeatureWithGeneAndName(null, name, chromosome, pos);
     }
 
     @NotNull
-    public static Feature testFeatureWithGeneAndName(@Nullable String geneSymbol, @NotNull String name) {
-        return ImmutableFeature.builder().geneSymbol(geneSymbol).name(name).build();
+    public static Feature testFeatureWithGeneAndName(@Nullable String geneSymbol, @NotNull String name, @NotNull String chromosome,
+            @NotNull String pos) {
+        return ImmutableFeature.builder().geneSymbol(geneSymbol).name(name).chromosome(chromosome).start(pos).build();
     }
 
     @NotNull
