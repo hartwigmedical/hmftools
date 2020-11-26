@@ -138,6 +138,7 @@ public class GeneRangeExtractorTest {
 
     @NotNull
     private static List<DriverGene> createDriverGenes(@NotNull String gene1, @NotNull String gene2, @NotNull String gene3) {
+        //TODO: determine real TSG and ONCO genes
         DriverGene driverGeneTsg = ImmutableDriverGene.builder()
                 .gene(gene1)
                 .reportMissenseAndInframe(true)
