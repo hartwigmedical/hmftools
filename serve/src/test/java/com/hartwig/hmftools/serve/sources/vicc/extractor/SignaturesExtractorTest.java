@@ -21,7 +21,7 @@ public class SignaturesExtractorTest {
         SignaturesExtractor signaturesExtractor = new SignaturesExtractor();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
                 "any",
-                "Other Biomarkers",
+                "Other Biomarkers","description",
                 "Microsatellite Instability-High", "chromosome", "pos");
         Feature feature = viccEntry.features().get(0);
         SignatureName signatureName = SignaturesExtractor.extractSignatureName(feature
@@ -41,7 +41,7 @@ public class SignaturesExtractorTest {
         SignaturesExtractor signaturesExtractor = new SignaturesExtractor();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
                 "any",
-                "Other Biomarkers",
+                "Other Biomarkers","description",
                 "Tum", "chromosome", "pos");
         Feature feature = viccEntry.features().get(0);
         SignatureName signatureName = SignaturesExtractor.extractSignatureName(feature

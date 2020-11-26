@@ -29,7 +29,7 @@ public class HotspotExtractorTest {
         HotspotExtractor hotspotExtractor = new HotspotExtractor(ProteinResolverFactory.dummy(), new ProteinAnnotationExtractor());
 
         ViccEntry viccEntry =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "ENST00000261584", "PALB2", "L939W", "7", "10");
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "ENST00000261584", "PALB2", "L939W", "description", "7", "10");
         Feature feature = viccEntry.features().get(0);
         Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
         Transvar transvar = TransvarTest.returnsSingleTransvarRecord(TransvarTest.createTestRecordHotspot(feature.chromosome(),
