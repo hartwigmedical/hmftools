@@ -18,8 +18,8 @@ public class ViccFilterTest {
 
     @Test
     public void canFilterOncogenicEvents() {
-        ViccEntry oncogenic = ViccTestFactory.testViccEntryWithOncogenic("Oncogenic");
-        ViccEntry benign = ViccTestFactory.testViccEntryWithOncogenic("Inconclusive");
+        ViccEntry oncogenic = ViccTestFactory.testViccEntryWithOncogenic("Oncogenic", "gene", "event");
+        ViccEntry benign = ViccTestFactory.testViccEntryWithOncogenic("Inconclusive", "gene", "event");
 
         ViccFilter filter = new ViccFilter();
         List<ViccEntry> filteredEntries = filter.run(Lists.newArrayList(oncogenic, benign));
