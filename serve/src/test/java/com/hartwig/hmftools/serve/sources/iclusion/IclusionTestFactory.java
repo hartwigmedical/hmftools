@@ -2,10 +2,12 @@ package com.hartwig.hmftools.serve.sources.iclusion;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.iclusion.data.IclusionMutation;
 import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.data.IclusionMutationLogicType;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.data.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTrial;
@@ -18,7 +20,18 @@ public final class IclusionTestFactory {
     }
 
     @NotNull
+    public static IclusionTrial trialWithTumors(@NotNull String acronym, @NotNull List<IclusionTumorLocation> tumorLocations) {
+        return trial(acronym, Lists.newArrayList(), tumorLocations);
+    }
+
+    @NotNull
     public static IclusionTrial trial(@NotNull String acronym, @NotNull List<IclusionMutationCondition> mutationConditions) {
+        return trial(acronym, mutationConditions, Lists.newArrayList());
+    }
+
+    @NotNull
+    public static IclusionTrial trial(@NotNull String acronym, @NotNull List<IclusionMutationCondition> mutationConditions,
+            @NotNull List<IclusionTumorLocation> tumorLocations) {
         return ImmutableIclusionTrial.builder()
                 .id("id")
                 .acronym(acronym)
@@ -28,6 +41,7 @@ public final class IclusionTestFactory {
                 .ipn("ipn")
                 .ccmo("ccmo")
                 .mutationConditions(mutationConditions)
+                .tumorLocations(tumorLocations)
                 .build();
     }
 

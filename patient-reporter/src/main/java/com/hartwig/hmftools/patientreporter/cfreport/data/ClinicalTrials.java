@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 
 import org.apache.logging.log4j.util.Strings;
@@ -36,13 +37,11 @@ public final class ClinicalTrials {
 
     @NotNull
     public static String sourceUrl(@NotNull ClinicalTrial trial) {
-        String source = trial.source().sourceName();
-        String reference = trial.reference();
-        String ext = EXTId(reference);
-
-        if (source.equalsIgnoreCase("iclusion")) {
+        if (trial.source() == ActionabilitySource.ICLUSION) {
+            String ext = EXTId(trial.reference());
             return "https://iclusion.org/hmf/" + ext;
         }
+
         return Strings.EMPTY;
     }
 
