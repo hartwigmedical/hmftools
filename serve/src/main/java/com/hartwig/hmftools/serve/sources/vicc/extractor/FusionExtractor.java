@@ -32,7 +32,7 @@ public class FusionExtractor {
     public Map<Feature, KnownFusionPair> extractFusionPairs(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         KnownFusionPair annotatedFusion = ImmutableKnownFusionPair.builder().geneUp(Strings.EMPTY).geneDown(Strings.EMPTY).build();
-
+        boolean usingGenes;
         for (Feature feature : viccEntry.features()) {
             String fusion = feature.name();
 
@@ -62,11 +62,16 @@ public class FusionExtractor {
 
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
-
                 if (canonicalTranscriptStart == null) {
-                    CheckGenes.checkGensInPanel(annotatedFusion.geneUp(), feature.name());
+                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneUp(), feature.name());
+                    if (usingGenes) {
+                        fusionsPerFeature.put(feature, annotatedFusion);
+                    }
                 } else if (canonicalTranscriptEnd == null) {
-                    CheckGenes.checkGensInPanel(annotatedFusion.geneDown(), feature.name());
+                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneDown(), feature.name());
+                    if (usingGenes) {
+                        fusionsPerFeature.put(feature, annotatedFusion);
+                    }
                 } else {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
@@ -82,9 +87,15 @@ public class FusionExtractor {
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
 
                 if (canonicalTranscriptStart == null) {
-                    CheckGenes.checkGensInPanel(annotatedFusion.geneUp(), feature.name());
+                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneUp(), feature.name());
+                    if (usingGenes) {
+                        fusionsPerFeature.put(feature, annotatedFusion);
+                    }
                 } else if (canonicalTranscriptEnd == null) {
-                    CheckGenes.checkGensInPanel(annotatedFusion.geneDown(), feature.name());
+                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneDown(), feature.name());
+                    if (usingGenes) {
+                        fusionsPerFeature.put(feature, annotatedFusion);
+                    }
                 } else {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
