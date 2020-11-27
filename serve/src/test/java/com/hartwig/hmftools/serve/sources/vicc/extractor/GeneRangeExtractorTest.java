@@ -22,7 +22,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class GeneRangeExtractorTest {
@@ -214,7 +213,6 @@ public class GeneRangeExtractorTest {
     }
 
     @Test
-    @Ignore
     public void canExtractRangesExon() {
         GeneRangeExtractor geneRangeExtractor =
                 new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("GNAQ", "EGFR", "KIT"));
