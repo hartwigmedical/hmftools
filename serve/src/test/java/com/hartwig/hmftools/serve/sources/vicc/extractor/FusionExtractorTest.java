@@ -21,14 +21,8 @@ public class FusionExtractorTest {
     public void canExtractFusionPairsGenesUnknown() {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
-                "any",
-                "IG",
-                "IG-BCL2",
-                "description",
-                "chromosome",
-                "pos",
-                null);
+        ViccEntry viccEntry =
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "IG", "IG-BCL2", "chromosome", "pos", null);
         assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
     }
 
@@ -40,7 +34,6 @@ public class FusionExtractorTest {
                 "any",
                 "PDGFRA",
                 "BCR-PDGFRA Fusion",
-                "description",
                 "chromosome",
                 "pos",
                 null);
@@ -52,14 +45,8 @@ public class FusionExtractorTest {
     public void canExtractFusionPairsWithExonsUpDown() {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
-                "any",
-                "EGFR",
-                "EGFRvII",
-                "description",
-                "chromosome",
-                "pos",
-                null);
+        ViccEntry viccEntry =
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "EGFR", "EGFRvII", "chromosome", "pos", null);
         fusionsPerFeature.put(viccEntry.features().get(0),
                 ImmutableKnownFusionPair.builder()
                         .geneUp("EGFR")
@@ -80,7 +67,6 @@ public class FusionExtractorTest {
                 "ENST00000318493",
                 "MET",
                 "EXON 14 SKIPPING MUTATION",
-                "description",
                 "chromosome",
                 "pos",
                 null);

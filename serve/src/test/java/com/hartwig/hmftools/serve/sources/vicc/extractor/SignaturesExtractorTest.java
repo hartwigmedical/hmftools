@@ -29,7 +29,6 @@ public class SignaturesExtractorTest {
                 "any",
                 "Other Biomarkers",
                 "Microsatellite Instability-High",
-                "description",
                 "chromosome",
                 "pos",
                 null);
@@ -48,7 +47,6 @@ public class SignaturesExtractorTest {
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
                 "any",
                 "Other Biomarkers",
-                "description",
                 "Tum",
                 "chromosome",
                 "pos",

@@ -50,7 +50,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000316448",
                 "CALR",
                 "EXON 9 FRAMESHIFT",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -61,7 +60,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000381652",
                 "JAK2",
                 "Exon 12 splice site insertion",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -71,7 +69,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000318493",
                 "MET",
                 "EXON 14 SKIPPING MUTATION",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -81,7 +78,6 @@ public class GeneRangeExtractorTest {
                 null,
                 "EGFR",
                 "EGFR exon 19 deletions",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -92,7 +88,6 @@ public class GeneRangeExtractorTest {
                 null,
                 "VHL",
                 "Null (Partial deletion of Exons 2 & 3)",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -103,7 +98,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000269571",
                 "ERBB2",
                 "Exon 20 insertions",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -114,7 +108,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000269571",
                 "ERBB2",
                 "Exon 20 insertions/deletions",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -125,7 +118,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000275493",
                 "EGFR",
                 "Exon 19 deletion/insertion",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -136,7 +128,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000286548",
                 "GNAQ",
                 "abcd",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -151,7 +142,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000241453",
                 "ERBB2",
                 "D835",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -165,7 +155,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000241453",
                 "ERBB2",
                 "D835",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -177,7 +166,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000269305",
                 "TP53",
                 "R249",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -189,7 +177,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000269305",
                 "TP53",
                 "R249",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -208,7 +195,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000269305",
                 "TP53",
                 "R249",
-                "description",
                 "chromosome",
                 "pos",
                 null);
@@ -235,7 +221,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000275493",
                 "EGFR",
                 "EXON 19 DELETION",
-                "description",
                 "chromosome",
                 "pos",
                 null);
@@ -263,7 +248,6 @@ public class GeneRangeExtractorTest {
                 "ENST00000288135",
                 "KIT",
                 "EXON 11 MUTATION",
-                "description",
                 "chromosome",
                 "pos",
                 null);

@@ -34,27 +34,21 @@ public class GeneLevelExtractorTest {
                 "ENST00000318493",
                 "MET",
                 "MUTATION",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEventGene(featureOnco, driverGenes));
 
-        Feature featureTsg = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI,
-                null,
-                "STK11",
-                "STK11  mut",
-                "description",
-                "chromosome",
-                "pos",
-                null).features().get(0);
+        Feature featureTsg =
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI, null, "STK11", "STK11  mut", "chromosome", "pos", null)
+                        .features()
+                        .get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEventGene(featureTsg, driverGenes));
 
         Feature featureUnknown = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
                 null,
                 "MAP1K1",
                 "Truncating Mutations",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -70,7 +64,6 @@ public class GeneLevelExtractorTest {
                 "ENST00000318493",
                 "KRAS",
                 "KRAS oncogenic mutation",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -80,7 +73,6 @@ public class GeneLevelExtractorTest {
                 "ENST00000277541",
                 "NOTCH1",
                 "LOSS-OF-FUNCTION",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -90,7 +82,6 @@ public class GeneLevelExtractorTest {
                 "ENST00000338641",
                 "NF2",
                 "MUTATION",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -100,7 +91,6 @@ public class GeneLevelExtractorTest {
                 "ENST00000277541",
                 "NOTCH1",
                 "MUTATION",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -110,7 +100,6 @@ public class GeneLevelExtractorTest {
                 "ENST00000277541",
                 "NOTCH1",
                 "MUTATION",
-                "description",
                 "chromosome",
                 "pos",
                 "gene_only").features().get(0);
@@ -120,7 +109,6 @@ public class GeneLevelExtractorTest {
                 "ENST00000318493",
                 "KRAS",
                 "abcd",
-                "description",
                 "chromosome",
                 "pos",
                 null).features().get(0);
@@ -138,7 +126,6 @@ public class GeneLevelExtractorTest {
                 "any",
                 "KIT",
                 "KIT  positive",
-                "description",
                 "chromosome",
                 "pos",
                 null);
@@ -161,7 +148,6 @@ public class GeneLevelExtractorTest {
                 "any",
                 "TP53",
                 "TP53  negative",
-                "description",
                 "chromosome",
                 "pos",
                 null);
@@ -184,7 +170,6 @@ public class GeneLevelExtractorTest {
                 "any",
                 "STK11",
                 "Truncating Mutations",
-                "description",
                 "chromosome",
                 "pos",
                 null);
@@ -207,7 +192,6 @@ public class GeneLevelExtractorTest {
                 "any",
                 "NTRK3",
                 "NTRK3 fusion",
-                "description",
                 "chromosome",
                 "pos",
                 null);

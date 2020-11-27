@@ -18,10 +18,8 @@ public class ViccFilterTest {
 
     @Test
     public void canFilterOncogenicEvents() {
-        ViccEntry oncogenic =
-                ViccTestFactory.testViccEntryWithOncogenic("Oncogenic", "gene", "event", "description", "chromosome", "pos", null);
-        ViccEntry benign =
-                ViccTestFactory.testViccEntryWithOncogenic("Inconclusive", "gene", "event", "description", "chromosome", "pos", null);
+        ViccEntry oncogenic = ViccTestFactory.testViccEntryWithOncogenic("Oncogenic", "gene", "event", "chromosome", "pos", null);
+        ViccEntry benign = ViccTestFactory.testViccEntryWithOncogenic("Inconclusive", "gene", "event", "chromosome", "pos", null);
 
         ViccFilter filter = new ViccFilter();
         List<ViccEntry> filteredEntries = filter.run(Lists.newArrayList(oncogenic, benign));
@@ -36,29 +34,23 @@ public class ViccFilterTest {
         ViccFilter filter = new ViccFilter();
 
         String keywordToFilter = FilterFactory.FEATURE_KEYWORDS_TO_FILTER.iterator().next();
-        Feature featureWithExactKeyword = ViccTestFactory.testFeatureWithName(keywordToFilter, "description", "chromosome", "pos", null);
-        Feature featureWithFilterKeyword =
-                ViccTestFactory.testFeatureWithName(keywordToFilter + " filter me", "description", "chromosome", "pos", null);
+        Feature featureWithExactKeyword = ViccTestFactory.testFeatureWithName(keywordToFilter, "chromosome", "pos", null);
+        Feature featureWithFilterKeyword = ViccTestFactory.testFeatureWithName(keywordToFilter + " filter me", "chromosome", "pos", null);
         assertFalse(filter.include(ViccSource.CIVIC, featureWithExactKeyword));
         assertFalse(filter.include(ViccSource.CIVIC, featureWithFilterKeyword));
 
         String nameToFilter = FilterFactory.FEATURES_TO_FILTER.iterator().next();
-        Feature featureWithExactName = ViccTestFactory.testFeatureWithName(nameToFilter, "description", "chromosome", "pos", null);
-        Feature featureWithFilterName =
-                ViccTestFactory.testFeatureWithName(nameToFilter + " filter me", "description", "chromosome", "pos", null);
+        Feature featureWithExactName = ViccTestFactory.testFeatureWithName(nameToFilter, "chromosome", "pos", null);
+        Feature featureWithFilterName = ViccTestFactory.testFeatureWithName(nameToFilter + " filter me", "chromosome", "pos", null);
         assertFalse(filter.include(ViccSource.CIVIC, featureWithExactName));
         assertTrue(filter.include(ViccSource.CIVIC, featureWithFilterName));
 
         FilterKey keyToFilter = FilterFactory.FEATURE_KEYS_TO_FILTER.iterator().next();
-        Feature featureToFilter = ViccTestFactory.testFeatureWithGeneAndName(keyToFilter.gene(),
-                keyToFilter.name(),
-                "description",
-                "chromosome",
-                "pos",
-                null);
+        Feature featureToFilter =
+                ViccTestFactory.testFeatureWithGeneAndName(keyToFilter.gene(), keyToFilter.name(), "chromosome", "pos", null);
         assertFalse(filter.include(keyToFilter.source(), featureToFilter));
 
-        Feature featureWithoutFilterName = ViccTestFactory.testFeatureWithName("don't filter me", "description", "chromosome", "pos", null);
+        Feature featureWithoutFilterName = ViccTestFactory.testFeatureWithName("don't filter me", "chromosome", "pos", null);
         assertTrue(filter.include(ViccSource.CIVIC, featureWithoutFilterName));
 
         filter.reportUnusedFilterEntries();
