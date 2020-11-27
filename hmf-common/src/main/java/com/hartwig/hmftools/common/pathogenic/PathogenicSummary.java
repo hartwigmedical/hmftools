@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.clinvar;
+package com.hartwig.hmftools.common.pathogenic;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,11 +6,11 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface ClinvarSummary {
+public interface PathogenicSummary {
 
     @NotNull
-    String info();
+    String clinvarInfo();
 
     @NotNull
-    ClinvarPathogenicity pathogenicity();
+    Pathogenic pathogenicity();
 }

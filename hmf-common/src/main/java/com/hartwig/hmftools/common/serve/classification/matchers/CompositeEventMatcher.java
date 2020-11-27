@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
-
 import org.jetbrains.annotations.NotNull;
 
 class CompositeEventMatcher implements EventMatcher {
@@ -13,8 +11,7 @@ class CompositeEventMatcher implements EventMatcher {
     @NotNull
     private final EventMatcher finalEventMatcher;
 
-    public CompositeEventMatcher(@NotNull final List<EventMatcher> noMatchEventMatchers,
-            @NotNull final EventMatcher finalEventMatcher) {
+    CompositeEventMatcher(@NotNull final List<EventMatcher> noMatchEventMatchers, @NotNull final EventMatcher finalEventMatcher) {
         this.noMatchEventMatchers = noMatchEventMatchers;
         this.finalEventMatcher = finalEventMatcher;
     }

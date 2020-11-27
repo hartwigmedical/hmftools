@@ -19,9 +19,16 @@ public class ViccCuratorTest {
         CurationKey firstOncoKbKey = firstOncoKbMappingKey();
         String firstMappedFeature = CurationFactory.FEATURE_MAPPINGS.get(firstOncoKbKey).featureName();
 
-        ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, firstOncoKbKey.transcript());
+        ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+                firstOncoKbKey.transcript(),
+                "gene",
+                "event",
+                "chromosome",
+                "pos",
+                null);
 
-        Feature feature = ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(), firstOncoKbKey.featureName());
+        Feature feature =
+                ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(), firstOncoKbKey.featureName(), "chromosome", "pos", null);
 
         assertEquals(firstMappedFeature, new ViccCurator().curate(entry, feature).name());
     }
@@ -29,9 +36,16 @@ public class ViccCuratorTest {
     @Test
     public void canBlacklistFeatures() {
         CurationKey firstOncoKbKey = firstOncoKbBlacklistKey();
-        ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, firstOncoKbKey.transcript());
+        ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+                firstOncoKbKey.transcript(),
+                "gene",
+                "event",
+                "chromosome",
+                "pos",
+                null);
 
-        Feature feature = ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(), firstOncoKbKey.featureName());
+        Feature feature =
+                ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(), firstOncoKbKey.featureName(), "chromosome", "pos", null);
         assertNull(new ViccCurator().curate(entry, feature));
     }
 
@@ -39,15 +53,23 @@ public class ViccCuratorTest {
     public void canKeepTrackOfFeatures() {
         ViccCurator curator = new ViccCurator();
 
-        ViccEntry entry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any");
-        Feature feature = ViccTestFactory.testFeatureWithGeneAndName("any", "any");
+        ViccEntry entry =
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "gene", "event", "chromosome", "pos", null);
+        Feature feature = ViccTestFactory.testFeatureWithGeneAndName("any", "any", "chromosome", "pos", null);
 
         assertNotNull(curator.curate(entry, feature));
 
         CurationKey blacklistKey = firstOncoKbBlacklistKey();
-        ViccEntry blacklistEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, blacklistKey.transcript());
+        ViccEntry blacklistEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+                blacklistKey.transcript(),
+                "gene",
+                "event",
+                "chromosome",
+                "pos",
+                null);
 
-        Feature blacklistFeature = ViccTestFactory.testFeatureWithGeneAndName(blacklistKey.gene(), blacklistKey.featureName());
+        Feature blacklistFeature =
+                ViccTestFactory.testFeatureWithGeneAndName(blacklistKey.gene(), blacklistKey.featureName(), "chromosome", "pos", null);
 
         assertNull(curator.curate(blacklistEntry, blacklistFeature));
 

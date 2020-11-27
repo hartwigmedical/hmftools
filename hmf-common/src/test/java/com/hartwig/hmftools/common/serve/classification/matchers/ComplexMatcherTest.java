@@ -3,15 +3,25 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
+import java.util.Map;
+import java.util.Set;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.junit.Test;
 
 public class ComplexMatcherTest {
 
+    private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = Maps.newHashMap();
+
+    static {
+        COMPLEX_EVENTS_PER_GENE.put("VHL", Sets.newHashSet("Splicing alteration (c.464-2A>G)"));
+    }
+
     @Test
     public void canAssessWhetherEventIsComplexEvent() {
-        EventMatcher matcher = new ComplexMatcher();
+        EventMatcher matcher = new ComplexMatcher(COMPLEX_EVENTS_PER_GENE);
 
         assertTrue(matcher.matches("VHL", "Splicing alteration (c.464-2A>G)"));
         assertTrue(matcher.matches("KRAS", "KRAS ."));

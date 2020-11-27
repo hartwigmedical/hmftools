@@ -1,42 +1,35 @@
 package com.hartwig.hmftools.common.serve.classification.matchers;
 
-import java.util.List;
 import java.util.Set;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
 class DeletionMatcher implements EventMatcher {
 
-    private static final Set<String> DELETION_KEYWORDS =
-            Sets.newHashSet("Deletion", "deletion", "DELETION", "del", "undexpression", "UNDEREXPRESSION", "loss", "LOSS");
-
-    private static final Set<String> DELETION_KEY_PHRASES = Sets.newHashSet("dec exp", "Copy Number Loss");
-
-    private static final Set<String> KEYWORDS_TO_SKIP_FOR_DELETION = Sets.newHashSet("exon", "EXON", "Exon", "Ex19", "inframe");
-
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new DeletionMatcher());
-    }
+    private final Set<String> blackListKeyPhrases;
+    @NotNull
+    private final Set<String> deletionKeywords;
+    @NotNull
+    private final Set<String> deletionKeyPhrases;
 
-    @VisibleForTesting
-    DeletionMatcher() {
+    public DeletionMatcher(@NotNull final Set<String> blackListKeyPhrases, @NotNull final Set<String> deletionKeywords,
+            @NotNull final Set<String> deletionKeyPhrases) {
+        this.blackListKeyPhrases = blackListKeyPhrases;
+        this.deletionKeywords = deletionKeywords;
+        this.deletionKeyPhrases = deletionKeyPhrases;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        for (String skipTerm : KEYWORDS_TO_SKIP_FOR_DELETION) {
-            if (event.contains(skipTerm)) {
+        for (String blacklistPhrase : blackListKeyPhrases) {
+            if (event.contains(blacklistPhrase)) {
                 return false;
             }
         }
 
         String[] words = event.split(" ");
-        for (String keyword : DELETION_KEYWORDS) {
+        for (String keyword : deletionKeywords) {
             for (String word : words) {
                 if (word.equals(keyword)) {
                     return true;
@@ -44,7 +37,7 @@ class DeletionMatcher implements EventMatcher {
             }
         }
 
-        for (String keyPhrase : DELETION_KEY_PHRASES) {
+        for (String keyPhrase : deletionKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 return true;
             }

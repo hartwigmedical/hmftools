@@ -3,27 +3,30 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
-
 import org.jetbrains.annotations.NotNull;
 
 class CombinedMatcher implements EventMatcher {
 
-    private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = Maps.newHashMap();
+    @NotNull
+    private final Map<String, Set<String>> combinedEventsPerGene;
+    @NotNull
+    private final HotspotMatcher hotspotMatcher;
+    @NotNull
+    private final FusionPairMatcher fusionMatcher;
+    @NotNull
+    private final AmplificationMatcher amplificationMatcher;
 
-    static {
-        COMBINED_EVENTS_PER_GENE.put("EGFR", Sets.newHashSet("Ex19 del L858R"));
-        COMBINED_EVENTS_PER_GENE.put("BRAF", Sets.newHashSet("p61BRAF-V600E", "V600E AMPLIFICATION"));
-    }
-
-    public CombinedMatcher() {
+    CombinedMatcher(@NotNull final Map<String, Set<String>> combinedEventsPerGene, @NotNull final HotspotMatcher hotspotMatcher,
+            @NotNull final FusionPairMatcher fusionMatcher, @NotNull final AmplificationMatcher amplificationMatcher) {
+        this.combinedEventsPerGene = combinedEventsPerGene;
+        this.hotspotMatcher = hotspotMatcher;
+        this.fusionMatcher = fusionMatcher;
+        this.amplificationMatcher = amplificationMatcher;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        Set<String> entriesForGene = COMBINED_EVENTS_PER_GENE.get(gene);
+        Set<String> entriesForGene = combinedEventsPerGene.get(gene);
         if (entriesForGene != null) {
             if (entriesForGene.contains(event)) {
                 return true;
@@ -38,9 +41,9 @@ class CombinedMatcher implements EventMatcher {
             return false;
         } else if (event.trim().contains(" ")) {
             String[] parts = event.trim().replace("  ", " ").split(" ");
-            if (FusionPairMatcher.isFusionPair(parts[0])) {
+            if (fusionMatcher.matches(gene, parts[0])) {
                 // Hotspots or amplifications on fusion genes are considered combined.
-                return HotspotMatcher.isProteinAnnotation(parts[1]) || AmplificationMatcher.isAmplification(parts[1]);
+                return hotspotMatcher.matches(gene, parts[1]) || amplificationMatcher.matches(gene, parts[1]);
             }
         }
 

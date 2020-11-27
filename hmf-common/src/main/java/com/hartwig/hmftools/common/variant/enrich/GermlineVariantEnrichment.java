@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.variant.enrich;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -25,41 +24,47 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
 
     private final VariantContextEnrichment purityEnrichment;
     private final VariantContextEnrichment refGenomeEnrichment;
-    private final VariantContextEnrichment clinvarEnrichment;
+    private final VariantContextEnrichment pathogenicEnrichment;
     private final VariantContextEnrichment snpEffEnrichment;
     private final VariantContextEnrichment reportableEnrichment;
     private final VariantContextEnrichment hotspotEnrichment;
+    private final VariantContextEnrichment genotypeEnrichment;
 
-    public GermlineVariantEnrichment(@NotNull final String purpleVersion, @NotNull final String tumorSample,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final DriverGenePanel genePanel,
-            @NotNull final List<CanonicalTranscript> transcripts, @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots,
-            @NotNull final Consumer<VariantContext> consumer) {
+    public GermlineVariantEnrichment(@NotNull final String purpleVersion, @NotNull final String referenceSample,
+            @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
+            @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
+            @NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts,
+            @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots, @NotNull final Consumer<VariantContext> consumer) {
 
-        this.reportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), consumer);
-
-        this.clinvarEnrichment = new GermlineClinvarEnrichment(reportableEnrichment);
-        this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, clinvarEnrichment);
         final Set<String> germlineGenes =
                 genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
+
+        this.reportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), consumer);
+        this.pathogenicEnrichment = new GermlinePathogenicEnrichment(reportableEnrichment);
+        this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, pathogenicEnrichment);
+
         this.snpEffEnrichment = new SnpEffEnrichment(germlineGenes, transcripts, refGenomeEnrichment);
         this.hotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, snpEffEnrichment);
-        this.purityEnrichment =
-                new PurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, Collections.emptyList(), hotspotEnrichment);
+        this.purityEnrichment = new GermlinePurityEnrichment(purpleVersion, tumorSample, referenceSample, purityAdjuster, copyNumbers,
+                hotspotEnrichment);
+
+        // Genotype must go first!
+        this.genotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, purityEnrichment);
     }
 
     @Override
     public void accept(@NotNull final VariantContext context) {
-        purityEnrichment.accept(context);
+        genotypeEnrichment.accept(context);
     }
 
     @Override
     public void flush() {
+        genotypeEnrichment.flush();
         purityEnrichment.flush();
         hotspotEnrichment.flush();
         snpEffEnrichment.flush();
         refGenomeEnrichment.flush();
-        clinvarEnrichment.flush();
+        pathogenicEnrichment.flush();
         reportableEnrichment.flush();
     }
 
@@ -71,6 +76,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
         header = refGenomeEnrichment.enrichHeader(header);
         header = snpEffEnrichment.enrichHeader(header);
         header = reportableEnrichment.enrichHeader(header);
-        return clinvarEnrichment.enrichHeader(header);
+        header = genotypeEnrichment.enrichHeader(header);
+        return pathogenicEnrichment.enrichHeader(header);
     }
 }

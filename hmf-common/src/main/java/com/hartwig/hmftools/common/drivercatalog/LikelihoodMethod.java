@@ -8,5 +8,6 @@ public enum LikelihoodMethod
     DNDS,
     AMP,
     DEL,
+    GERMLINE,
     NONE
 }

@@ -96,12 +96,12 @@ public abstract class PurityAdjuster {
     public double purityAdjustedVAFWithHeterozygousNormal(@NotNull final String chromosome, final double copyNumber,
             final double observedFrequency) {
         double typicalCopyNumber = germlineCopyNumber(chromosome);
-        return purityAdjustedFrequency(typicalCopyNumber, 1, copyNumber, observedFrequency);
+        return purityAdjustedFrequency(typicalCopyNumber, typicalCopyNumber / 2d, copyNumber, observedFrequency);
     }
 
     public double purityAdjustedVAFWithHomozygousNormal(@NotNull final String chromosome, final double copyNumber,
             final double observedFrequency) {
         double typicalCopyNumber = germlineCopyNumber(chromosome);
-        return purityAdjustedFrequency(typicalCopyNumber, 2, copyNumber, observedFrequency);
+        return purityAdjustedFrequency(typicalCopyNumber, typicalCopyNumber, copyNumber, observedFrequency);
     }
 }

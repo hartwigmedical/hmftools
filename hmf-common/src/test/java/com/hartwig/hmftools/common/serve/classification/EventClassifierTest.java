@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.serve.classification.matchers.EventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

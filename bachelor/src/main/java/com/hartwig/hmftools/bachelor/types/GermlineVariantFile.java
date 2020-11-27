@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.germline;
+package com.hartwig.hmftools.bachelor.types;
 
 import static java.util.stream.Collectors.toList;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.serve.classification;
+package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import org.jetbrains.annotations.NotNull;
 

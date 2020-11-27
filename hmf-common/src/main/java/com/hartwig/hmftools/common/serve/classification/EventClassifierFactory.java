@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.serve.classification;
 
-import com.hartwig.hmftools.common.serve.classification.matchers.MatcherFactory;
+import com.hartwig.hmftools.common.serve.classification.matchers.EventMatcherFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -10,7 +10,7 @@ public final class EventClassifierFactory {
     }
 
     @NotNull
-    public static EventClassifier buildClassifier(@NotNull EventPreprocessor proteinAnnotationPreprocessor) {
-        return new EventClassifier(MatcherFactory.buildMatcherMap(proteinAnnotationPreprocessor));
+    public static EventClassifier buildClassifier(@NotNull EventClassifierConfig config) {
+        return new EventClassifier(EventMatcherFactory.buildMatcherMap(config));
     }
 }

@@ -1,40 +1,31 @@
 package com.hartwig.hmftools.common.serve.classification.matchers;
 
-import java.util.List;
 import java.util.Set;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.EventMatcher;
 
 import org.jetbrains.annotations.NotNull;
 
 class FusionPairMatcher implements EventMatcher {
 
-    private static final Set<String> EXON_DEL_DUP_FUSION_PAIRS = Sets.newHashSet("EGFRvIII", "EGFRvV", "EGFRvII", "VIII", "EGFR-KDD");
-
-    private static final Set<String> EVENTS_TO_SKIP =
-            Sets.newHashSet("AR-V7", "Gain-of-Function", "LOSS-OF-FUNCTION", "LCS6-variant", "DI842-843VM", "FLT3-ITD");
-
     @NotNull
-    public static EventMatcher create(@NotNull List<EventMatcher> noMatchEventMatchers) {
-        return new CompositeEventMatcher(noMatchEventMatchers, new FusionPairMatcher());
-    }
+    private final Set<String> exonicDelDupFusionEvents;
+    @NotNull
+    private final Set<String> fusionEventsToSkip;
 
-    @VisibleForTesting
-    FusionPairMatcher() {
+    FusionPairMatcher(@NotNull final Set<String> exonicDelDupFusionEvents, @NotNull final Set<String> fusionEventsToSkip) {
+        this.exonicDelDupFusionEvents = exonicDelDupFusionEvents;
+        this.fusionEventsToSkip = fusionEventsToSkip;
     }
 
     @Override
     public boolean matches(@NotNull String gene, @NotNull String event) {
-        if (EVENTS_TO_SKIP.contains(event)) {
+        if (fusionEventsToSkip.contains(event)) {
             return false;
         }
 
-        return EXON_DEL_DUP_FUSION_PAIRS.contains(event) || isFusionPair(event);
-    }
+        if (exonicDelDupFusionEvents.contains(event)) {
+            return true;
+        }
 
-    public static boolean isFusionPair(@NotNull String event) {
         String trimmedEvent = event.trim();
         String potentialFusion;
         if (trimmedEvent.contains(" ")) {

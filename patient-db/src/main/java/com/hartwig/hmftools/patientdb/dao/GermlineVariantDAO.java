@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLIN
 import java.sql.Timestamp;
 import java.util.List;
 
-import com.hartwig.hmftools.common.clinvar.ClinvarSummary;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -65,8 +65,9 @@ public class GermlineVariantDAO {
                 GERMLINEVARIANT2.ALT,
                 GERMLINEVARIANT2.QUAL,
                 GERMLINEVARIANT2.TIER,
-                GERMLINEVARIANT2.REFERENCEALLELEREADCOUNT,
-                GERMLINEVARIANT2.REFERENCETOTALREADCOUNT,
+                GERMLINEVARIANT2.GERMLINEGENOTYPE,
+                GERMLINEVARIANT2.GERMLINEALLELEREADCOUNT,
+                GERMLINEVARIANT2.GERMLINETOTALREADCOUNT,
                 GERMLINEVARIANT2.RNAALLELEREADCOUNT,
                 GERMLINEVARIANT2.RNATOTALREADCOUNT,
                 GERMLINEVARIANT2.TUMORALLELEREADCOUNT,
@@ -77,7 +78,7 @@ public class GermlineVariantDAO {
                 GERMLINEVARIANT2.BIALLELIC,
                 GERMLINEVARIANT2.MINORALLELECOPYNUMBER,
                 GERMLINEVARIANT2.CLINVARINFO,
-                GERMLINEVARIANT2.CLINVARPATH,
+                GERMLINEVARIANT2.PATHOGENIC,
                 GERMLINEVARIANT2.GENE,
                 GERMLINEVARIANT2.GENESEFFECTED,
                 GERMLINEVARIANT2.WORSTEFFECT,
@@ -104,7 +105,7 @@ public class GermlineVariantDAO {
         final AllelicDepth referenceDepth = decorator.allelicDepth(referenceSample);
         final AllelicDepth rnaDepth = decorator.allelicDepth(rnaSample);
         final SnpEffSummary snpEffSummary = decorator.snpEffSummary();
-        final ClinvarSummary clinvar = decorator.clinvar();
+        final PathogenicSummary pathogenicSummary = decorator.pathogenicSummary();
 
         inserter.values(timestamp,
                 tumorSample,
@@ -116,6 +117,7 @@ public class GermlineVariantDAO {
                 decorator.alt(),
                 decorator.qual(),
                 decorator.tier(),
+                decorator.genotypeStatus(referenceSample).simplifiedDisplay(),
                 referenceDepth.alleleReadCount(),
                 referenceDepth.totalReadCount(),
                 rnaDepth.alleleReadCount(),
@@ -127,8 +129,8 @@ public class GermlineVariantDAO {
                 decorator.adjustedCopyNumber(),
                 decorator.biallelic(),
                 decorator.minorAlleleCopyNumber(),
-                clinvar.info(),
-                clinvar.pathogenicity().toString(),
+                pathogenicSummary.clinvarInfo(),
+                pathogenicSummary.pathogenicity().toString(),
                 snpEffSummary.gene(),
                 snpEffSummary.genesAffected(),
                 snpEffSummary.worstEffect(),

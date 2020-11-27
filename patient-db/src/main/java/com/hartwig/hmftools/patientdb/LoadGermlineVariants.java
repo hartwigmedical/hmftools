@@ -48,6 +48,7 @@ public class LoadGermlineVariants {
         try (AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFileLocation, new VCFCodec(), false);
                 BufferedWriter<VariantContext> dbWriter = dbAccess.germlineVariantWriter(sample, referenceSample, rnaSample)) {
             LOGGER.info("Streaming data from {} to db", vcfFileLocation);
+            dbWriter.initialise();
 
             for (VariantContext context : reader.iterator()) {
                 dbWriter.accept(context);

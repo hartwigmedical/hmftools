@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 
 import org.jetbrains.annotations.NotNull;
 
-final class TransvarTestFactory {
+public final class TransvarTestFactory {
 
     private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/ref.fasta").getPath();
 

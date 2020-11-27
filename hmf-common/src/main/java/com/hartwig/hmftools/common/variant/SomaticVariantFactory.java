@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;

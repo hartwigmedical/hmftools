@@ -1,19 +1,20 @@
-package com.hartwig.hmftools.common.clinvar;
+package com.hartwig.hmftools.common.pathogenic;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum ClinvarPathogenicity {
+public enum Pathogenic {
 
     PATHOGENIC(true),
     LIKELY_PATHOGENIC(true),
     BENIGN(false),
     LIKELY_BENIGN(false),
+    BENIGN_BLACKLIST(false),
     CONFLICTING(false),
     UNKNOWN(false);
 
     private final boolean pathogenic;
 
-    ClinvarPathogenicity(final boolean pathogenic) {
+    Pathogenic(final boolean pathogenic) {
         this.pathogenic = pathogenic;
     }
 
@@ -22,7 +23,7 @@ public enum ClinvarPathogenicity {
     }
 
     @NotNull
-    public static ClinvarPathogenicity fromClinvarAnnotation(@NotNull final String clnSig, @NotNull final String clnSigConf) {
+    public static Pathogenic fromClinvarAnnotation(@NotNull final String clnSig, @NotNull final String clnSigConf) {
 
         /*
          * CLINVAR_PATHOGENIC - At least 1 interpretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’

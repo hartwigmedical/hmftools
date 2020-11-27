@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_CN_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
-import static com.hartwig.hmftools.common.variant.SomaticVariantHeader.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_AF_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_BIALLELIC_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_MINOR_ALLELE_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_MINOR_ALLELE_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_CN_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_PLOIDY_INFO;
+import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
@@ -17,9 +17,10 @@ import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrich
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.clinvar.ClinvarSummary;
-import com.hartwig.hmftools.common.clinvar.ClinvarSummaryFactory;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
@@ -92,6 +93,11 @@ public class VariantContextDecorator implements GenomePosition {
         return snpEffSummary;
     }
 
+    @NotNull
+    public String gene() {
+        return snpEffSummary.gene();
+    }
+
     public double qual() {
         return context.getPhredScaledQual();
     }
@@ -123,13 +129,19 @@ public class VariantContextDecorator implements GenomePosition {
     }
 
     @NotNull
+    public GenotypeStatus genotypeStatus(@NotNull final String sample) {
+        final Genotype genotype = context.getGenotype(sample);
+        return genotype != null ? GenotypeStatus.fromGenotype(genotype) : GenotypeStatus.UNKNOWN;
+    }
+
+    @NotNull
     public VariantTier tier() {
         return tier;
     }
 
     @NotNull
-    public ClinvarSummary clinvar() {
-        return ClinvarSummaryFactory.fromContext(context);
+    public PathogenicSummary pathogenicSummary() {
+        return PathogenicSummaryFactory.fromContext(context);
     }
 
     public int repeatCount() {
