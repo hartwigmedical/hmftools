@@ -29,12 +29,86 @@ public class GeneLevelExtractorTest {
 
     @Test
     public void canExtractGeneLevelEventGene(){
+        List<DriverGene> driverGenes = createDriverGenes("STK11", "MET", "KIT");
+
+        Feature featureOnco = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                "ENST00000318493",
+                "MET",
+                "MUTATION",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEventGene(featureOnco, driverGenes));
+
+        Feature featureTsg = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI, null,
+                "STK11",
+                "STK11  mut",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEventGene(featureTsg, driverGenes));
+
+        Feature featureUnknown= ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                null,
+                "MAP1K1",
+                "Truncating Mutations",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(GeneLevelEvent.UNKNOWN, GeneLevelExtractor.extractGeneLevelEventGene(featureUnknown, driverGenes));
+
 
     }
 
     @Test
     public void canExtractGeneLevelEvent(){
 
+    }
+
+    @NotNull
+    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco1, @NotNull String geneOnco2) {
+        DriverGene driverGeneTsg = ImmutableDriverGene.builder()
+                .gene(geneTsg)
+                .reportMissenseAndInframe(true)
+                .reportNonsenseAndFrameshift(true)
+                .reportSplice(true)
+                .reportDeletion(true)
+                .reportDisruption(true)
+                .reportAmplification(true)
+                .reportSomaticHotspot(true)
+                .reportGermlineVariant(false)
+                .reportGermlineHotspot(false)
+                .likelihoodType(TSG)
+                .build();
+
+        DriverGene driverGeneOnco1 = ImmutableDriverGene.builder()
+                .gene(geneOnco1)
+                .reportMissenseAndInframe(true)
+                .reportNonsenseAndFrameshift(true)
+                .reportSplice(true)
+                .reportDeletion(true)
+                .reportDisruption(true)
+                .reportAmplification(true)
+                .reportSomaticHotspot(true)
+                .reportGermlineVariant(false)
+                .reportGermlineHotspot(false)
+                .likelihoodType(ONCO)
+                .build();
+
+        DriverGene driverGeneOnco2 = ImmutableDriverGene.builder()
+                .gene(geneOnco2)
+                .reportMissenseAndInframe(true)
+                .reportNonsenseAndFrameshift(true)
+                .reportSplice(true)
+                .reportDeletion(true)
+                .reportDisruption(true)
+                .reportAmplification(true)
+                .reportSomaticHotspot(true)
+                .reportGermlineVariant(false)
+                .reportGermlineHotspot(false)
+                .likelihoodType(ONCO)
+                .build();
+        return Lists.newArrayList(driverGeneTsg, driverGeneOnco1, driverGeneOnco2);
     }
 
     @Test

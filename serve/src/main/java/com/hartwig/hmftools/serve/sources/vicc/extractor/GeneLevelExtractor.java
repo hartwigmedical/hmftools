@@ -99,7 +99,9 @@ public class GeneLevelExtractor {
         return GeneLevelEvent.UNKNOWN;
     }
 
-    private static GeneLevelEvent extractGeneLevelEventGene(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
+    @VisibleForTesting
+    @NotNull
+    public static GeneLevelEvent extractGeneLevelEventGene(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(feature.geneSymbol())) {
                 if (driverGene.likelihoodType() == DriverCategory.ONCO) {
