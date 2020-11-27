@@ -72,8 +72,10 @@ public class FusionExtractor {
                 }
 
             } else if (feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
-                if (EXONIC_FUSIONS_MAP.containsKey(feature.description())) {
-                    annotatedFusion = ImmutableKnownFusionPair.builder().from(EXONIC_FUSIONS_MAP.get(feature.description())).build();
+                String featureDescription = feature.geneSymbol() + " " + feature.name();
+
+                if (EXONIC_FUSIONS_MAP.containsKey(featureDescription)) {
+                    annotatedFusion = ImmutableKnownFusionPair.builder().from(EXONIC_FUSIONS_MAP.get(featureDescription)).build();
                 }
 
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());

@@ -77,10 +77,10 @@ public class FusionExtractorTest {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
-                "any",
+                "ENST00000318493",
                 "MET",
                 "EXON 14 SKIPPING MUTATION",
-                "MET EXON 14 SKIPPING MUTATION",
+                "description",
                 "chromosome",
                 "pos",
                 null);
@@ -93,7 +93,6 @@ public class FusionExtractorTest {
                         .maxExonDown(15)
                         .minExonDown(15)
                         .build());
-        fusionExtractor.extractFusionPairs(viccEntry);
         assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
     }
 
