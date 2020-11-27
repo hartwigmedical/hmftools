@@ -36,7 +36,8 @@ public class GeneLevelExtractorTest {
                 "MUTATION",
                 "description",
                 "chromosome",
-                "pos", null).features().get(0);
+                "pos",
+                null).features().get(0);
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEventGene(featureOnco, driverGenes));
 
         Feature featureTsg = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI,
@@ -45,7 +46,8 @@ public class GeneLevelExtractorTest {
                 "STK11  mut",
                 "description",
                 "chromosome",
-                "pos", null).features().get(0);
+                "pos",
+                null).features().get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEventGene(featureTsg, driverGenes));
 
         Feature featureUnknown = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
@@ -54,7 +56,8 @@ public class GeneLevelExtractorTest {
                 "Truncating Mutations",
                 "description",
                 "chromosome",
-                "pos", null).features().get(0);
+                "pos",
+                null).features().get(0);
         assertEquals(GeneLevelEvent.UNKNOWN, GeneLevelExtractor.extractGeneLevelEventGene(featureUnknown, driverGenes));
 
     }
@@ -69,7 +72,8 @@ public class GeneLevelExtractorTest {
                 "KRAS oncogenic mutation",
                 "description",
                 "chromosome",
-                "pos", null).features().get(0);
+                "pos",
+                null).features().get(0);
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureActivation, driverGenes));
 
         Feature featureInactivation = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
@@ -78,7 +82,8 @@ public class GeneLevelExtractorTest {
                 "LOSS-OF-FUNCTION",
                 "description",
                 "chromosome",
-                "pos", null).features().get(0);
+                "pos",
+                null).features().get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureInactivation, driverGenes));
 
         Feature featureGeneralActivation = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
@@ -87,7 +92,8 @@ public class GeneLevelExtractorTest {
                 "MUTATION",
                 "description",
                 "chromosome",
-                "pos", null).features().get(0);
+                "pos",
+                null).features().get(0);
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneralActivation, driverGenes));
 
         Feature featureGeneralInactivation = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
@@ -96,7 +102,8 @@ public class GeneLevelExtractorTest {
                 "MUTATION",
                 "description",
                 "chromosome",
-                "pos", null).features().get(0);
+                "pos",
+                null).features().get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneralInactivation, driverGenes));
 
         Feature featureGeneOnly = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI,
@@ -105,7 +112,8 @@ public class GeneLevelExtractorTest {
                 "MUTATION",
                 "description",
                 "chromosome",
-                "pos", "gene_only").features().get(0);
+                "pos",
+                "gene_only").features().get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneOnly, driverGenes));
 
         Feature featureUnkown = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI,
@@ -114,7 +122,8 @@ public class GeneLevelExtractorTest {
                 "abcd",
                 "description",
                 "chromosome",
-                "pos", null).features().get(0);
+                "pos",
+                null).features().get(0);
         assertEquals(GeneLevelEvent.UNKNOWN, GeneLevelExtractor.extractGeneLevelEvent(featureUnkown, driverGenes));
 
     }
@@ -131,7 +140,8 @@ public class GeneLevelExtractorTest {
                 "KIT  positive",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
 
         assertEquals(GeneLevelExtractor.extractGeneLevelEvent(viccEntry.features().get(0), createDriverGenes("STK11", "MET", "KIT")),
                 GeneLevelEvent.ACTIVATION);
@@ -153,7 +163,8 @@ public class GeneLevelExtractorTest {
                 "TP53  negative",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
 
         assertEquals(GeneLevelExtractor.extractGeneLevelEvent(viccEntry.features().get(0), createDriverGenes("STK11", "MET", "KIT")),
                 GeneLevelEvent.INACTIVATION);
@@ -175,7 +186,8 @@ public class GeneLevelExtractorTest {
                 "Truncating Mutations",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
 
         assertEquals(GeneLevelExtractor.extractGeneLevelEvent(viccEntry.features().get(0), createDriverGenes("STK11", "MET", "KIT")),
                 GeneLevelEvent.INACTIVATION);
@@ -197,7 +209,8 @@ public class GeneLevelExtractorTest {
                 "NTRK3 fusion",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
 
         geneLevelEventsPerFeature.put(viccEntry.features().get(0),
                 ImmutableGeneLevelAnnotation.builder().gene("NTRK3").event(GeneLevelEvent.FUSION).build());

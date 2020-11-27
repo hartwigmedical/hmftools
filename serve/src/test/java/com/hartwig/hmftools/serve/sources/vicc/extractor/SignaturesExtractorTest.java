@@ -28,10 +28,13 @@ public class SignaturesExtractorTest {
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
                 "any",
                 "Other Biomarkers",
-                "Microsatellite Instability-High", "description", "chromosome", "pos", null);
+                "Microsatellite Instability-High",
+                "description",
+                "chromosome",
+                "pos",
+                null);
         Feature feature = viccEntry.features().get(0);
-        SignatureName signatureName = SignaturesExtractor.extractSignatureName(feature
-                .name());
+        SignatureName signatureName = SignaturesExtractor.extractSignatureName(feature.name());
 
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
         signaturesPerFeature.put(feature, signatureName);
@@ -44,8 +47,12 @@ public class SignaturesExtractorTest {
         SignaturesExtractor signaturesExtractor = new SignaturesExtractor();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
                 "any",
-                "Other Biomarkers","description",
-                "Tum", "chromosome", "pos", null);
+                "Other Biomarkers",
+                "description",
+                "Tum",
+                "chromosome",
+                "pos",
+                null);
 
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
 

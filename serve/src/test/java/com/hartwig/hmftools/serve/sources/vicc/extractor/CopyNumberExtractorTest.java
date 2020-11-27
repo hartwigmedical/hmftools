@@ -28,7 +28,8 @@ public class CopyNumberExtractorTest {
                 "AKT1  amp",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
         Map<Feature, KnownCopyNumber> feature = Maps.newHashMap();
         feature.put(viccEntry.features().get(0),
                 ImmutableKnownCopyNumber.builder().gene("AKT1").type(CopyNumberType.AMPLIFICATION).build());
@@ -46,7 +47,8 @@ public class CopyNumberExtractorTest {
                 "AMPLIFICATION",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
         Map<Feature, KnownCopyNumber> feature = Maps.newHashMap();
 
         assertEquals(feature, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
@@ -62,7 +64,8 @@ public class CopyNumberExtractorTest {
                 "DELETION",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
         Map<Feature, KnownCopyNumber> featureAmps = Maps.newHashMap();
         featureAmps.put(viccEntry.features().get(0), ImmutableKnownCopyNumber.builder().gene("PTEN").type(CopyNumberType.DELETION).build());
 
@@ -79,7 +82,8 @@ public class CopyNumberExtractorTest {
                 "DELETION",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
         Map<Feature, KnownCopyNumber> featureAmps = Maps.newHashMap();
 
         assertEquals(featureAmps, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));

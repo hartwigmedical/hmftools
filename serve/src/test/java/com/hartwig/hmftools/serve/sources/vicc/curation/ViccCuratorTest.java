@@ -25,13 +25,15 @@ public class ViccCuratorTest {
                 "event",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
 
         Feature feature = ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(),
                 firstOncoKbKey.featureName(),
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
 
         assertEquals(firstMappedFeature, new ViccCurator().curate(entry, feature).name());
     }
@@ -45,13 +47,15 @@ public class ViccCuratorTest {
                 "event",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
 
         Feature feature = ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(),
                 firstOncoKbKey.featureName(),
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
         assertNull(new ViccCurator().curate(entry, feature));
     }
 
@@ -65,7 +69,8 @@ public class ViccCuratorTest {
                 "event",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
         Feature feature = ViccTestFactory.testFeatureWithGeneAndName("any", "description", "any", "chromosome", "pos", null);
 
         assertNotNull(curator.curate(entry, feature));
@@ -77,13 +82,15 @@ public class ViccCuratorTest {
                 "event",
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
 
         Feature blacklistFeature = ViccTestFactory.testFeatureWithGeneAndName(blacklistKey.gene(),
                 blacklistKey.featureName(),
                 "description",
                 "chromosome",
-                "pos", null);
+                "pos",
+                null);
 
         assertNull(curator.curate(blacklistEntry, blacklistFeature));
 
