@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.ALT_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
@@ -31,7 +31,9 @@ import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.RE
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,6 +51,8 @@ import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext;
@@ -63,21 +67,29 @@ public class SpliceVariantMatcher
     private final EnsemblDataCache mGeneTransCache;
 
     private Map<String,List<SpliceVariant>> mSampleSpliceVariants;
+    private Map<String,Map<String,List<Integer>>> mSampleSvBreakends; // sample to chromosome to list of breakend locations
 
     private BufferedWriter mWriter;
     private BufferedWriter mSomaticWriter;
+    private BufferedWriter mSvBreakandWriter;
     private final Map<String,Integer> mFieldsMap;
 
     private final Map<String,EnsemblGeneData> mGeneDataMap;
     private final AltSjFilter mAltSjFilter;
 
     private final Map<String,Integer> mCohortAltSJs;
-    private final boolean mWriteSomaticVariants;
+    private final boolean mWriteVariantCache;
 
     private static final String SOMATIC_VARIANT_FILE = "somatic_variant_file";
+    private static final String SV_BREAKEND_FILE = "sv_breakend_file";
     private static final String COHORT_ALT_SJ_FILE = "cohort_alt_sj_file";
     private static final String INCLUDE_ALL_TRANSCRIPTS = "include_all_transcripts";
-    private static final String WRITE_SOMATIC_VARIANTS = "write_somatic_variants";
+    private static final String WRITE_VARIANT_CACHE = "write_variant_cache";
+
+    private static final int MIN_ALT_SJ_LENGTH = 50;
+    private static final int SPLICE_REGION_NON_CODING_DISTANCE = 10;
+    private static final int SPLICE_REGION_CODING_DISTANCE = 2;
+    private static final int CLOSE_ALT_SJ_DISTANCE = 5;
 
     public SpliceVariantMatcher(final CohortConfig config, final CommandLine cmd)
     {
@@ -87,22 +99,36 @@ public class SpliceVariantMatcher
         mCohortAltSJs = Maps.newHashMap();
 
         boolean allTranscripts = cmd.hasOption(INCLUDE_ALL_TRANSCRIPTS);
-        mWriteSomaticVariants = cmd.hasOption(WRITE_SOMATIC_VARIANTS);
 
         mGeneTransCache = new EnsemblDataCache(mConfig.EnsemblDataCache, RefGenomeVersion.HG37);
         mGeneTransCache.setRequiredData(true, false, false, !allTranscripts);
         mGeneTransCache.load(false);
         mSampleSpliceVariants = Maps.newHashMap();
+        mSampleSvBreakends = Maps.newHashMap();
 
         mAltSjFilter = new AltSjFilter(mConfig.RestrictedGeneIds, mConfig.ExcludedGeneIds, 0);
         mWriter = null;
+        mSomaticWriter = null;
+        mSvBreakandWriter = null;
 
         initialiseWriter();
 
+        boolean hasCachedFiles = false;
         if(cmd.hasOption(SOMATIC_VARIANT_FILE))
         {
             loadSpliceVariants(cmd.getOptionValue(SOMATIC_VARIANT_FILE));
+            hasCachedFiles = Files.exists(Paths.get(cmd.getOptionValue(SOMATIC_VARIANT_FILE)));
         }
+
+        if(cmd.hasOption(SV_BREAKEND_FILE))
+        {
+            loadSvBreakends(cmd.getOptionValue(SV_BREAKEND_FILE));
+            hasCachedFiles |= Files.exists(Paths.get(cmd.getOptionValue(SV_BREAKEND_FILE)));
+        }
+
+        mWriteVariantCache = !hasCachedFiles && cmd.hasOption(WRITE_VARIANT_CACHE);
+
+        initialiseCacheWriters();
 
         if(cmd.hasOption(COHORT_ALT_SJ_FILE))
         {
@@ -123,8 +149,9 @@ public class SpliceVariantMatcher
     public static void addCmdLineOptions(final Options options)
     {
         options.addOption(SOMATIC_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
+        options.addOption(SV_BREAKEND_FILE, true, "File with cached SV positions");
         options.addOption(COHORT_ALT_SJ_FILE, true, "Cohort frequency for alt SJs");
-        options.addOption(WRITE_SOMATIC_VARIANTS, false, "Write out somatic variants for subsequent non-DB loading");
+        options.addOption(WRITE_VARIANT_CACHE, false, "Write out somatic variants for subsequent non-DB loading");
         options.addOption(INCLUDE_ALL_TRANSCRIPTS, false, "Consider all transcripts, not just canonical (default: false)");
     }
 
@@ -150,6 +177,7 @@ public class SpliceVariantMatcher
 
         closeBufferedWriter(mWriter);
         closeBufferedWriter(mSomaticWriter);
+        closeBufferedWriter(mSvBreakandWriter);
     }
 
     public void evaluateSpliceVariants(final String sampleId, final List<AltSpliceJunction> altSpliceJunctions)
@@ -162,19 +190,47 @@ public class SpliceVariantMatcher
         if(spliceVariants == null || spliceVariants.isEmpty())
             return;
 
-        ISF_LOGGER.debug("sampleId({}) evaluating {} splice variants",
-                sampleId, spliceVariants.size());
+        final Map<String,List<Integer>> svBreakends = getStructuralVariants(sampleId);
 
-        spliceVariants.forEach(x -> evaluateSpliceVariant(sampleId, altSpliceJunctions, x));
+        final List<AltSpliceJunction> candidateAltSJs = Lists.newArrayList();
 
-        if(mWriteSomaticVariants)
+        for(AltSpliceJunction altSJ : altSpliceJunctions)
+        {
+            if(altSJ.length() < MIN_ALT_SJ_LENGTH)
+                continue;
+
+            List<Integer> breakends = svBreakends.get(altSJ.Chromosome);
+
+            if(breakends != null)
+            {
+                if(breakends.stream().anyMatch(x -> positionWithin(x, altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END])))
+                    continue;
+            }
+
+            candidateAltSJs.add(altSJ);
+        }
+
+        ISF_LOGGER.debug("sampleId({}) evaluating {} splice variants vs altSJs({})",
+                sampleId, spliceVariants.size(), candidateAltSJs.size());
+
+        spliceVariants.forEach(x -> evaluateSpliceVariant(sampleId, candidateAltSJs, x));
+
+        if(mWriteVariantCache)
+        {
             spliceVariants.forEach(x -> writeSomaticVariant(sampleId, x));
+            writeSvBreakends(sampleId, svBreakends);
+        }
     }
 
     private final List<SpliceVariant> getSomaticVariants(final String sampleId)
     {
         if(!mSampleSpliceVariants.isEmpty())
-            return mSampleSpliceVariants.get(sampleId);
+        {
+            // get and purge
+            final List<SpliceVariant> spliceVariants = mSampleSpliceVariants.get(sampleId);
+            mSampleSpliceVariants.remove(sampleId);
+            return spliceVariants;
+        }
 
         final List<SpliceVariant> spliceVariants = Lists.newArrayList();
 
@@ -186,14 +242,52 @@ public class SpliceVariantMatcher
             if(!mGeneDataMap.isEmpty() && !mGeneDataMap.containsKey(variant.gene()))
                 continue;
 
-            if(variant.filter() != "PASS")
+            if(!variant.filter().equals(PASS_FILTER))
+                continue;
 
             spliceVariants.add(new SpliceVariant(
                     variant.gene(), variant.chromosome(), (int)variant.position(), variant.type(),variant.ref(), variant.alt(),
-                    variant.canonicalEffect(), variant.canonicalHgvsCodingImpact(), variant.trinucleotideContext()));
+                    variant.canonicalEffect(), variant.canonicalHgvsCodingImpact(), variant.trinucleotideContext(),
+                    variant.localPhaseSet() != null ? variant.localPhaseSet() : -1));
         }
 
         return spliceVariants;
+    }
+
+    private final Map<String,List<Integer>> getStructuralVariants(final String sampleId)
+    {
+        if(!mSampleSvBreakends.isEmpty())
+        {
+            final Map<String,List<Integer>> svBreakends = mSampleSvBreakends.get(sampleId);
+            mSampleSvBreakends.remove(sampleId);
+            return svBreakends;
+        }
+
+        final Map<String,List<Integer>> svBreakends = Maps.newHashMap();
+
+        final List<StructuralVariantData> structuralVariants = mConfig.DbAccess.readStructuralVariantData(sampleId);
+
+        for(StructuralVariantData sv : structuralVariants)
+        {
+            List<Integer> positions = svBreakends.get(sv.startChromosome());
+
+            if(positions == null)
+                svBreakends.put(sv.startChromosome(), Lists.newArrayList(sv.startPosition()));
+            else
+                positions.add(sv.startPosition());
+
+            if(sv.type() != StructuralVariantType.INF && sv.type() != StructuralVariantType.SGL)
+            {
+                positions = svBreakends.get(sv.endChromosome());
+
+                if(positions == null)
+                    svBreakends.put(sv.endChromosome(), Lists.newArrayList(sv.endPosition()));
+                else
+                    positions.add(sv.endPosition());
+            }
+        }
+
+        return svBreakends;
     }
 
     private void evaluateSpliceVariant(final String sampleId, final List<AltSpliceJunction> altSpliceJunctions, final SpliceVariant variant)
@@ -206,13 +300,9 @@ public class SpliceVariantMatcher
             return;
         }
 
-        final List<AltSpliceJunction> matchedAltSJs = findRelatedAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData);
-
-        findCloseAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData, matchedAltSJs);
+        final List<AltSpliceJunction> matchedAltSJs = findCloseAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData);
+        findRelatedAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData, matchedAltSJs);
     }
-
-    private static final int SPLICE_REGION_NON_CODING_DISTANCE = 10;
-    private static final int SPLICE_REGION_CODING_DISTANCE = 2;
 
     private static boolean withinRange(int pos1, int pos2, int distance) { return abs(pos1 - pos2) <= distance; }
 
@@ -237,9 +327,9 @@ public class SpliceVariantMatcher
         return false;
     }
 
-    private final List<AltSpliceJunction> findRelatedAltSpliceJunctions(
+    private void findRelatedAltSpliceJunctions(
             final String sampleId, final List<AltSpliceJunction> altSpliceJunctions,
-            final SpliceVariant variant, final EnsemblGeneData geneData)
+            final SpliceVariant variant, final EnsemblGeneData geneData, final List<AltSpliceJunction> matchedAltSJs)
     {
         /* Candidate alt SJs must be either
 
@@ -248,9 +338,6 @@ public class SpliceVariantMatcher
         It could also cause the exon to be skipped entirely. eg. the splice variant is 7 bases after exon 3.
         Then you should check for novel splice junctions that are wholly contained within the entire region from end of exon 2 to start of exon 4.
         */
-
-        final List<AltSpliceJunction> matchedAltSJs = Lists.newArrayList();
-
         final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
         boolean isWithinSpliceRegion = false;
@@ -315,18 +402,17 @@ public class SpliceVariantMatcher
                 final ExonData prevExon = i > 0 ? transData.exons().get(i - 1) : null;
                 final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
-                // look for any alt SJs
+                // look for any alt SJs which match with the somatic variant
 
                 for(final AltSpliceJunction altSJ : altSpliceJunctions)
                 {
+                    if(matchedAltSJs.contains(altSJ))
+                        continue;
+
                     if(!altSJ.getGeneId().equals(geneData.GeneId))
                         continue;
 
                     if(!validRelatedType(altSJ.type()))
-                        continue;
-
-                    // skip exact base matches
-                    if(isExactMatch(altSJ, variant))
                         continue;
 
                     // check for a position within the exon boundaries
@@ -356,25 +442,16 @@ public class SpliceVariantMatcher
                     sampleId, variant, geneData, null, SpliceVariantMatchType.NONE,
                     closestAcceptorDonorType, closestExonDistance, closestTransStr);
         }
-
-        return matchedAltSJs;
     }
 
-    private static final int CLOSE_ALT_SJ_DISTANCE = 5;
-
-    private void findCloseAltSpliceJunctions(
+    private List<AltSpliceJunction> findCloseAltSpliceJunctions(
             final String sampleId, final List<AltSpliceJunction> altSpliceJunctions, final SpliceVariant variant,
-            final EnsemblGeneData geneData, final List<AltSpliceJunction> matchedAltSJs)
+            final EnsemblGeneData geneData)
     {
         final List<AltSpliceJunction> closeAltSJs = altSpliceJunctions.stream()
-                .filter(x -> !matchedAltSJs.contains(x)) // only report ones not already related
-                .filter(x -> !isExactMatch(x, variant))
                 .filter(x -> withinRange(x.SpliceJunction[SE_START], variant.Position, CLOSE_ALT_SJ_DISTANCE)
                         || withinRange(x.SpliceJunction[SE_END], variant.Position, CLOSE_ALT_SJ_DISTANCE))
                 .collect(Collectors.toList());
-
-        if(closeAltSJs.isEmpty())
-            return;
 
         for(AltSpliceJunction altSJ : closeAltSJs)
         {
@@ -394,6 +471,8 @@ public class SpliceVariantMatcher
                     sampleId, variant, geneData, altSJ, PROXIMATE, NONE, -1,
                     appendStrList(allTransNames, ITEM_DELIM.charAt(0)));
         }
+
+        return closeAltSJs;
     }
 
     private void initialiseWriter()
@@ -404,19 +483,23 @@ public class SpliceVariantMatcher
             mWriter = createBufferedWriter(outputFileName, false);
 
             mWriter.write("SampleId,MatchType,GeneId,GeneName,Chromosome,Strand");
-            mWriter.write(",Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,AccDonType,ExonDistance");
+            mWriter.write(",Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,LocalPhaseSet,AccDonType,ExonDistance");
             mWriter.write(",AsjType,AsjContextStart,AsjContextEnd,AsjPosStart,AsjPosEnd,AsjFragmentCount,AsjDepthStart,AsjDepthEnd");
             mWriter.write(",AsjCohortCount,AsjTransData");
 
             mWriter.newLine();
 
-            if(mWriteSomaticVariants)
+            if(mWriteVariantCache)
             {
                 final String somVarFileName = mConfig.formCohortFilename("somatic_variants.csv");
                 mSomaticWriter = createBufferedWriter(somVarFileName, false);
-
-                mSomaticWriter.write("SampleId,GeneName,Chromosome,Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext");
+                mSomaticWriter.write("SampleId,GeneName,Chromosome,Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,LocalPhaseSet");
                 mSomaticWriter.newLine();
+
+                final String svBreakendFileName = mConfig.formCohortFilename("sv_breakends.csv");
+                mSvBreakandWriter = createBufferedWriter(svBreakendFileName, false);
+                mSvBreakandWriter.write("SampleId,Chromosome,Position");
+                mSvBreakandWriter.newLine();
             }
         }
         catch(IOException e)
@@ -434,9 +517,9 @@ public class SpliceVariantMatcher
             mWriter.write(String.format("%s,%s,%s,%s,%s,%d",
                     sampleId, matchType, geneData.GeneId, geneData.GeneName, geneData.Chromosome, geneData.Strand));
 
-            mWriter.write(String.format(",%d,%s,%s,%s,%s,%s,%s,%s,%d",
+            mWriter.write(String.format(",%d,%s,%s,%s,%s,%s,%s,%d,%s,%d",
                     variant.Position, variant.Type, variant.CodingEffect, variant.Ref, variant.Alt,
-                    variant.HgvsCodingImpact, variant.TriNucContext, accDonType, exonBaseDistance));
+                    variant.HgvsCodingImpact, variant.TriNucContext, variant.LocalPhaseSet, accDonType, exonBaseDistance));
 
             if(altSJ != null)
             {
@@ -460,6 +543,29 @@ public class SpliceVariantMatcher
         }
     }
 
+    private void initialiseCacheWriters()
+    {
+        if(!mWriteVariantCache)
+            return;
+
+        try
+        {
+            final String somVarFileName = mConfig.formCohortFilename("somatic_var_cache.csv");
+            mSomaticWriter = createBufferedWriter(somVarFileName, false);
+            mSomaticWriter.write("SampleId,GeneName,Chromosome,Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,LocalPhaseSet");
+            mSomaticWriter.newLine();
+
+            final String svBreakendFileName = mConfig.formCohortFilename("sv_breakend_cache.csv");
+            mSvBreakandWriter = createBufferedWriter(svBreakendFileName, false);
+            mSvBreakandWriter.write("SampleId,Chromosome,Position");
+            mSvBreakandWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write splice variant file: {}", e.toString());
+        }
+    }
+
     private void writeSomaticVariant(final String sampleId, final SpliceVariant variant)
     {
         if(mSomaticWriter == null)
@@ -467,15 +573,38 @@ public class SpliceVariantMatcher
 
         try
         {
-            mSomaticWriter.write(String.format("%s,%s,%s,%d,%s,%s,%s,%s,%s,%s",
+            mSomaticWriter.write(String.format("%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%d",
                     sampleId, variant.GeneName, variant.Chromosome, variant.Position, variant.Type,
-                    variant.CodingEffect, variant.Ref, variant.Alt, variant.HgvsCodingImpact, variant.TriNucContext));
+                    variant.CodingEffect, variant.Ref, variant.Alt, variant.HgvsCodingImpact,
+                    variant.TriNucContext, variant.LocalPhaseSet));
 
             mSomaticWriter.newLine();
         }
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to write splice variant data: {}", e.toString());
+        }
+    }
+
+    private void writeSvBreakends(final String sampleId, final Map<String,List<Integer>> svBreakends)
+    {
+        if(mSvBreakandWriter == null)
+            return;
+
+        try
+        {
+            for(Map.Entry<String,List<Integer>> chrEntry : svBreakends.entrySet())
+            {
+                for(Integer position : chrEntry.getValue())
+                {
+                    mSvBreakandWriter.write(String.format("%s,%s,%d", sampleId, chrEntry.getKey(), position));
+                    mSvBreakandWriter.newLine();
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write sv breakend data: {}", e.toString());
         }
     }
 
@@ -501,12 +630,14 @@ public class SpliceVariantMatcher
 
         try
         {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
+            String line = fileReader.readLine();
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            if (line == null)
+                return;
 
-            lines.remove(0);
+            final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, DELIMITER);
 
             // GeneId,CancerType,SampleCount,Chromosome,Type,SjStart,SjEnd
             int sampleCountIndex = fieldsMap.get("SampleCount");
@@ -515,9 +646,9 @@ public class SpliceVariantMatcher
             int sjStartPosIndex = fieldsMap.get("SjStart");
             int sjEndPosIndex = fieldsMap.get("SjEnd");
 
-            for(final String data : lines)
+            while ((line = fileReader.readLine()) != null)
             {
-                final String[] items = data.split(DELIMITER);
+                final String[] items = line.split(DELIMITER);
 
                 final String altSjKey = String.format("%s;%s;%s",
                         items[chromosomeIndex], items[sjStartPosIndex], items[sjEndPosIndex]);
@@ -546,21 +677,23 @@ public class SpliceVariantMatcher
 
         try
         {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
+            String line = fileReader.readLine();
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            if (line == null)
+                return;
 
-            lines.remove(0);
+                final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, DELIMITER);
 
-            int sampleIdIndex = mFieldsMap.get("SampleId");
+            int sampleIdIndex = fieldsMap.get("SampleId");
 
             List<SpliceVariant> spliceVariants = null;
             String currentSampleId = "";
 
-            for(final String data : lines)
+            while ((line = fileReader.readLine()) != null)
             {
-                final String[] items = data.split(DELIMITER);
+                final String[] items = line.split(DELIMITER);
                 final String sampleId = items[sampleIdIndex];
 
                 if(!sampleId.equals(currentSampleId))
@@ -580,4 +713,58 @@ public class SpliceVariantMatcher
         }
     }
 
+    private void loadSvBreakends(final String filename)
+    {
+        if(!Files.exists(Paths.get(filename)))
+        {
+            ISF_LOGGER.error("invalid SV breakend file({})", filename);
+            return;
+        }
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            if (line == null)
+                return;
+
+            final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, DELIMITER);
+
+            int sampleIdIndex = fieldsMap.get("SampleId");
+            int chromosomeIndex = fieldsMap.get("Chromosome");
+            int positionIndex = fieldsMap.get("Position");
+
+            String currentSampleId = "";
+            Map<String,List<Integer>> svBreakends = null;
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                final String[] items = line.split(DELIMITER);
+                String sampleId = items[sampleIdIndex];
+                String chromosome = items[chromosomeIndex];
+                int position = Integer.parseInt(items[positionIndex]);
+
+                if(!sampleId.equals(currentSampleId))
+                {
+                    currentSampleId = sampleId;
+                    svBreakends = Maps.newHashMap();
+                    mSampleSvBreakends.put(sampleId, svBreakends);
+                }
+
+                List<Integer> positions = svBreakends.get(chromosome);
+
+                if(positions == null)
+                    svBreakends.put(chromosome, Lists.newArrayList(position));
+                else
+                    positions.add(position);
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to load SV breakend data file({}): {}", filename, e.toString());
+            return;
+        }
+    }
 }

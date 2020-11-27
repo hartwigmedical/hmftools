@@ -43,7 +43,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
     public static final String MAPPABILITY_TAG = "MAPPABILITY";
     private static final String RECOVERED_FLAG = "RECOVERED";
 
-    static final String PASS_FILTER = "PASS";
+    public static final String PASS_FILTER = "PASS";
 
     @NotNull
     private final CompoundFilter filter;

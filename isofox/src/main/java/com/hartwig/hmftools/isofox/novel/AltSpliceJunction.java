@@ -91,6 +91,8 @@ public class AltSpliceJunction
     public void overrideType(AltSpliceJunctionType type) { mType = type; }
     public String initialReadId() { return mInitialReadId; }
 
+    public int length() { return SpliceJunction[SE_END] - SpliceJunction[SE_START]; }
+
     public final List<RegionReadData> getSjStartRegions() { return mSjStartRegions; }
     public final List<RegionReadData> getSjEndRegions() { return mSjEndRegions; }
 

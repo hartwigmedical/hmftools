@@ -16,10 +16,12 @@ public class SpliceVariant
     public final String CodingEffect;
     public final String HgvsCodingImpact;
     public final String TriNucContext;
+    public final int LocalPhaseSet;
 
     public SpliceVariant(
             final String geneName, final String chromosome, int position, final VariantType type,
-            final String ref, final String alt, final String codingEffect, final String hgvsCodingImpact, final String triNucContext)
+            final String ref, final String alt, final String codingEffect, final String hgvsCodingImpact,
+            final String triNucContext, int localPhaseSet)
     {
         GeneName = geneName;
         Chromosome = chromosome;
@@ -30,6 +32,7 @@ public class SpliceVariant
         HgvsCodingImpact = hgvsCodingImpact;
         TriNucContext = triNucContext;
         CodingEffect = codingEffect;
+        LocalPhaseSet = localPhaseSet;
     }
 
     public static SpliceVariant fromCsv(final String[] items, final Map<String,Integer> fieldIndexMap)
@@ -42,8 +45,9 @@ public class SpliceVariant
                 items[fieldIndexMap.get("Ref")],
                 items[fieldIndexMap.get("Alt")],
                 items[fieldIndexMap.get("CodingEffect")],
-                items[fieldIndexMap.get("HgvsCodingImpact")],
-                items[fieldIndexMap.get("TriNucContext")]);
+                items[fieldIndexMap.get("HgvsImpact")],
+                items[fieldIndexMap.get("TriNucContext")],
+                fieldIndexMap.containsKey("LocalPhaseSet") ? Integer.parseInt(items[fieldIndexMap.get("LocalPhaseSet")]) : 0);
 
     }
 

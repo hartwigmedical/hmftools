@@ -162,9 +162,9 @@ public class CohortConfig
     public String formCohortFilename(final String fileId)
     {
         if(OutputIdentifier != null)
-            return OutputDir + "isofox_" + OutputIdentifier + "." + fileId;
+            return OutputDir + "isofox." + OutputIdentifier + "." + fileId;
         else
-            return OutputDir + "isofox_" + fileId;
+            return OutputDir + "isofox." + fileId;
     }
 
     public static String formSampleFilename(final CohortConfig config, final String sampleId, final CohortAnalysisType dataType)

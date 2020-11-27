@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
@@ -274,7 +275,7 @@ public class FeatureDataLoader
 
         Result<Record> result = dbAccess.context().select()
                 .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.FILTER.eq("PASS"))
+                .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(specificSampleId != null ? SOMATICVARIANT.SAMPLEID.eq(specificSampleId) : SOMATICVARIANT.SAMPLEID.isNotNull())
                 .and(SOMATICVARIANT.GENE.in(INDEL_ALB, INDEL_SFTPB, INDEL_SLC34A2))
                 .and(SOMATICVARIANT.REPEATCOUNT.lessOrEqual(INDEL_MAX_REPEAT_COUNT))
