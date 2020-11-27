@@ -260,8 +260,9 @@ public class GeneRangeExtractor {
         return MutationTypeFilter.UNKNOWN;
     }
 
+    @VisibleForTesting
     @NotNull
-    private static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull Feature feature) {
+    public static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull Feature feature) {
         String featureEvent = feature.name().toLowerCase();
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
         if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {

@@ -48,6 +48,87 @@ public class GeneRangeExtractorTest {
     //TODO
     @Test
     public void canExtractMutationFilter() {
+        Feature featureNonsenseFrameshift = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                "ENST00000316448",
+                "CALR",
+                "EXON 9 FRAMESHIFT",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureNonsenseFrameshift));
+
+        Feature featureSplice1 = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                "ENST00000381652",
+                "JAK2",
+                "Exon 12 splice site insertion",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureSplice1));
+
+        Feature featureSplice2 = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                "ENST00000318493",
+                "MET",
+                "EXON 14 SKIPPING MUTATION",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureSplice2));
+
+
+//        Feature featureMissenseInframeAny = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+//                "ENST00000286548",
+//                "GNAQ",
+//                "Q209",
+//                "description",
+//                "chromosome",
+//                "pos").features().get(0);
+//        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeAny));
+//
+//        Feature featureMissenseInframeDeletion = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+//                "ENST00000286548",
+//                "GNAQ",
+//                "Q209",
+//                "description",
+//                "chromosome",
+//                "pos").features().get(0);
+//        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeDeletion));
+//
+//        Feature featureMissenseInframeInsertion = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+//                "ENST00000286548",
+//                "GNAQ",
+//                "Q209",
+//                "description",
+//                "chromosome",
+//                "pos").features().get(0);
+//        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeInsertion));
+//
+//        Feature featureMissenseAny = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+//                "ENST00000286548",
+//                "GNAQ",
+//                "Q209",
+//                "description",
+//                "chromosome",
+//                "pos").features().get(0);
+//        assertEquals(MutationTypeFilter.MISSENSE_ANY, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseAny));
+//
+//        Feature featureAny = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+//                "ENST00000286548",
+//                "GNAQ",
+//                "Q209",
+//                "description",
+//                "chromosome",
+//                "pos").features().get(0);
+//        assertEquals(MutationTypeFilter.ANY, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureAny));
+//
+        Feature featureUnkown = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+                "ENST00000286548",
+                "GNAQ",
+                "abcd",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(MutationTypeFilter.UNKNOWN, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureUnkown));
 
     }
 
