@@ -77,6 +77,10 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment {
     }
 
     private double vaf(final GenotypeStatus germlineGenotype, PurpleCopyNumber purpleCopyNumber, AllelicDepth tumorDepth) {
+        if (tumorDepth.totalReadCount() == 0) {
+            return 0;
+        }
+
         double rawAF = tumorDepth.alleleFrequency();
         double constrainedCopyNumber = Math.max(0.001, purpleCopyNumber.averageTumorCopyNumber());
 
