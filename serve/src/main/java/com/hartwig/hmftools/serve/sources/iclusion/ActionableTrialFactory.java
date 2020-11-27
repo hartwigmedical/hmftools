@@ -19,13 +19,12 @@ public final class ActionableTrialFactory {
 
     @NotNull
     public static List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial) {
-        // TODO URL should be something like "https://iclusion.org/hmf/" + ext"
         ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
                 .source(Knowledgebase.ICLUSION)
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .url(Strings.EMPTY);
+                .url("https://iclusion.org/hmf/" + trial.id());
 
         // TODO Make sure DOIDs are present. Currently not part of iClusion API
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
