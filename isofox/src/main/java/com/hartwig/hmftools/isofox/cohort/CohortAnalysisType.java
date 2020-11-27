@@ -10,19 +10,19 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.TRANSCRIPT_RESUL
 public enum CohortAnalysisType
 {
     SUMMARY,
-    GENE_DISTRIBUTION,
-    SAMPLE_GENE_PERCENTILES,
-    TRANSCRIPT_DISTRIBUTION,
-    ALT_SPLICE_JUNCTION,
-    SPLICE_VARIANT_MATCHING,
-    FUSION,
+    GENE_DISTRIBUTION, // creates gene expression percentiles by cancer type and pan-cancer
+    TRANSCRIPT_DISTRIBUTION, // as above but for transcripts
+    SAMPLE_GENE_PERCENTILES, // reports where on a percentile a specific sample's gene expression lies
+    ALT_SPLICE_JUNCTION, // combine and analyse alternate splice junctions for a cohort
+    SPLICE_VARIANT_MATCHING, // match alternate splice junctions with (candidate-splicing) somatic variants
+    FUSION, // process fusions for a cohort - filter passing fusions, form a cohort file, compare with external fusions
     PASSING_FUSION,
     RETAINED_INTRON,
     SAMPLE_ROUTINES,
-    EXTERNAL_EXPRESSION_COMPARE,
-    GENE_EXPRESSION_COMPARE,
-    GENE_EXPRESSION_MATRIX,
-    TRANSCRIPT_EXPRESSION_MATRIX;
+    EXTERNAL_EXPRESSION_COMPARE, // combine expression data from Isofox and another source
+    GENE_EXPRESSION_COMPARE, // compare gene expression across 2 cohorts of samples
+    GENE_EXPRESSION_MATRIX, // generates a single gene by sample matrix for expression data
+    TRANSCRIPT_EXPRESSION_MATRIX; // as above but for transcript expression
 
     public static String getFileId(CohortAnalysisType type)
     {

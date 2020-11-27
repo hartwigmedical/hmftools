@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
+import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.stats.FdrCalcs.calculateFDRs;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -12,7 +13,9 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +24,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.common.stats.PValueResult;
 import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
@@ -31,7 +35,9 @@ public class ExpressionCohortCompare
 {
     private final CohortConfig mConfig;
 
-    private final Map<String,Map<String,List<Double>>> mCohortGeneExpDataMap;
+    private SigMatrix mGeneExpressionMatrix;
+    private final Map<String,Integer> mSampleIndexMap;
+    private final List<String> mGeneIds;
     private final Map<String,String> mGeneIdNameMap;
 
     private BufferedWriter mWriter;
@@ -40,13 +46,57 @@ public class ExpressionCohortCompare
     {
         mConfig = config;
 
-        mCohortGeneExpDataMap = Maps.newHashMap();
+        mSampleIndexMap = Maps.newHashMap();
+        mGeneExpressionMatrix = null;
+
+        mGeneIds = Lists.newArrayList();
         mGeneIdNameMap = Maps.newHashMap();
 
+        loadGeneExpression();
+
         mWriter = null;
+        initialiseWriter();
     }
 
-    public void processSamples()
+    private void loadGeneExpression()
+    {
+        final List<String> ignoreFields = Lists.newArrayList("GeneId", "GeneName");
+        mGeneExpressionMatrix = loadMatrixDataFile(mConfig.Expression.GeneExpMatrixFile, mSampleIndexMap, ignoreFields);
+        mGeneExpressionMatrix.cacheTranspose();
+
+        // keep track of gene ids and names
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.Expression.GeneExpMatrixFile));
+
+            String header = fileReader.readLine();
+
+            final Map<String,Integer> fieldsMapIndex = createFieldsIndexMap(header, DELIMITER);
+
+            int geneIdIndex = fieldsMapIndex.get("GeneId");
+            int geneNameIndex = fieldsMapIndex.get("GeneName");
+
+            String line = fileReader.readLine();
+
+            while(line != null)
+            {
+                final String[] items = line.split(DELIMITER, -1);
+
+                mGeneIds.add(items[geneIdIndex]);
+                mGeneIdNameMap.put(items[geneIdIndex], items[geneNameIndex]);
+
+                line = fileReader.readLine();
+            }
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.debug("failed to load RNA expression ref data from {}: {}", mConfig.Expression.GeneExpMatrixFile, e.toString());
+        }
+
+        ISF_LOGGER.debug("loaded genes({}) and {} samples({}) expression matrix data", mGeneIds.size(), mGeneExpressionMatrix.Cols);
+    }
+
+    public void runAnalysis()
     {
         if(mConfig.SampleData.CohortNames.size() != 2)
         {
@@ -54,34 +104,68 @@ public class ExpressionCohortCompare
             return;
         }
 
-        for(String cohortName : mConfig.SampleData.CohortNames)
+        final String cohortA = mConfig.SampleData.CohortNames.get(0);
+        final String cohortB = mConfig.SampleData.CohortNames.get(1);
+        final List<Integer> cohortASampleIndices = Lists.newArrayList();
+        final List<Integer> cohortBSampleIndices = Lists.newArrayList();
+
+        for(final String sampleId : mConfig.SampleData.SampleIds)
         {
-            mCohortGeneExpDataMap.put(cohortName, Maps.newHashMap());
-        }
-
-        final List<Path> filenames = Lists.newArrayList();
-
-        if(!formSampleFilenames(mConfig, CohortAnalysisType.GENE_DISTRIBUTION, filenames))
-            return;
-
-        initialiseWriter();
-
-        // load each sample's gene expression records and consolidate into a single list
-        for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
-        {
-            final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final String cohortName = mConfig.SampleData.SampleCohort.get(sampleId);
+            Integer matrixIndex = mSampleIndexMap.get(sampleId);
 
-            final Path genesFile = filenames.get(i);
+            if(matrixIndex == null)
+            {
+                ISF_LOGGER.warn("missing sample({}) matrix data", sampleId);
+                continue;
+            }
 
-            loadFile(genesFile, cohortName);
-            ISF_LOGGER.debug("{}: sample({}) loaded genes", i, sampleId);
+            if(cohortName.equals(cohortA))
+                cohortASampleIndices.add(matrixIndex);
+            else
+                cohortBSampleIndices.add(matrixIndex);
         }
 
-        ISF_LOGGER.info("loaded {} samples gene files", mConfig.SampleData.SampleIds.size());
+        ISF_LOGGER.info("cohortA({} samples={}) cohortB({} samples={})",
+                cohortA, cohortASampleIndices.size(), cohortB, cohortBSampleIndices.size());
 
-        compareGeneDistributions();
+        double[] cohortAValues = new double[cohortASampleIndices.size()];
+        double[] cohortBValues = new double[cohortBSampleIndices.size()];
+
+        // for each gene, extract the expression for each cohort
+        final MannWhitneyUTest mww = new MannWhitneyUTest();
+        final List<PValueResult> pValueResults = Lists.newArrayList();
+
+        for(int geneIndex = 0; geneIndex < mGeneIds.size(); ++geneIndex)
+        {
+            final String geneId = mGeneIds.get(geneIndex);
+
+            populateCohortValues(cohortAValues, geneIndex, cohortASampleIndices);
+            populateCohortValues(cohortBValues, geneIndex, cohortBSampleIndices);
+
+            double pValue = mww.mannWhitneyUTest(cohortAValues, cohortBValues);
+            pValueResults.add(new PValueResult(geneId, pValue));
+        }
+
+        ISF_LOGGER.debug("calculating FDRs for {} results", pValueResults.size());
+        calculateFDRs(pValueResults);
+
+        for(final PValueResult pValue : pValueResults)
+        {
+            writeResults(pValue.Id, pValue);
+        }
+
         closeBufferedWriter(mWriter);
+    }
+
+    private void populateCohortValues(final double[] cohortValues, int geneIndex, final List<Integer> cohortSampleIndices)
+    {
+        final double[][] matrixData = mGeneExpressionMatrix.getData();
+        int index = 0;
+        for(Integer sampleIndex : cohortSampleIndices)
+        {
+            cohortValues[index++] = matrixData[geneIndex][sampleIndex];
+        }
     }
 
     private void initialiseWriter()
@@ -96,110 +180,7 @@ public class ExpressionCohortCompare
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to write gene expresion comparison file: {}", e.toString());
-        }
-    }
-
-    private void loadFile(final Path filename, final String cohortName)
-    {
-        final Map<String,List<Double>> geneExpMap = mCohortGeneExpDataMap.get(cohortName);
-
-        try
-        {
-            final List<String> lines = Files.readAllLines(filename);
-
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-            lines.remove(0);
-
-            int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
-            int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
-            int tpmIndex = fieldsMap.get(FLD_TPM);
-
-            for(final String data : lines)
-            {
-                final String[] items = data.split(DELIMITER);
-
-                final String geneId = items[geneIdIndex];
-
-                final String geneName = mGeneIdNameMap.get(geneId);
-                if(geneName == null)
-                    mGeneIdNameMap.put(geneId, items[geneNameIndex]);
-
-                if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(geneId))
-                    continue;
-
-                double tpm = Double.parseDouble(items[tpmIndex]);
-                addGeneTpmData(geneExpMap, geneId, tpm);
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to load gene data file({}): {}", filename.toString(), e.toString());
-            return;
-        }
-    }
-
-    private void addGeneTpmData(final Map<String,List<Double>> geneExpMap, final String geneId, double tpm)
-    {
-        if(tpm < mConfig.Expression.TpmThreshold)
-            return;
-
-        List<Double> tpmList = geneExpMap.get(geneId);
-        if(tpmList == null)
-        {
-            geneExpMap.put(geneId, Lists.newArrayList(tpm));
-            return;
-        }
-
-        int index = 0;
-        while(index < tpmList.size())
-        {
-            if(tpm > tpmList.get(index))
-                break;
-
-            ++index;
-        }
-
-        tpmList.add(index, tpm);
-    }
-
-    private static final int MIN_SAMPLES = 5;
-
-    private void compareGeneDistributions()
-    {
-        final String testCohort = mConfig.SampleData.CohortNames.get(1);
-        final String controlCohort = mConfig.SampleData.CohortNames.get(0);
-
-        final Map<String,List<Double>> testGeneExpData = mCohortGeneExpDataMap.get(testCohort);
-        final Map<String,List<Double>> controlGeneExpData = mCohortGeneExpDataMap.get(controlCohort);
-
-        MannWhitneyUTest mww = new MannWhitneyUTest();
-
-        final List<PValueResult> pValueResults = Lists.newArrayList();
-
-        for(Map.Entry<String,List<Double>> entry : testGeneExpData.entrySet())
-        {
-            final String geneId = entry.getKey();
-            final List<Double> testGeneExp = entry.getValue();
-            final List<Double> controlGeneExp = controlGeneExpData.get(geneId);
-
-            if(controlGeneExp == null || testGeneExp.size() < MIN_SAMPLES || controlGeneExp.size() < MIN_SAMPLES)
-                continue;
-
-            double[] testExpValues = convertList(testGeneExp);
-            double[] controlExpValues = convertList(controlGeneExp);
-
-            double pValue = mww.mannWhitneyUTest(testExpValues, controlExpValues);
-
-            pValueResults.add(new PValueResult(geneId, pValue));
-        }
-
-        ISF_LOGGER.debug("calculating FDRs for {} results", pValueResults.size());
-        calculateFDRs(pValueResults);
-
-        for(final PValueResult pValue : pValueResults)
-        {
-            writeResults(pValue.Id, pValue);
+            ISF_LOGGER.error("failed to write gene expression comparison file: {}", e.toString());
         }
     }
 
@@ -209,7 +190,8 @@ public class ExpressionCohortCompare
         {
             final String geneName = mGeneIdNameMap.get(geneId);
 
-            mWriter.write(String.format("%s,%s,%g,%g,%d", geneId, geneName, pValue.PValue, pValue.QValue, pValue.Rank));
+            mWriter.write(String.format("%s,%s,%g,%g,%d",
+                    geneId, geneName, pValue.PValue, pValue.QValue, pValue.Rank));
             mWriter.newLine();
         }
         catch (IOException e)

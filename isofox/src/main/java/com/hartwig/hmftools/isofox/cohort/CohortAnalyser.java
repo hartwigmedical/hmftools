@@ -120,7 +120,7 @@ public class CohortAnalyser
                 case GENE_EXPRESSION_COMPARE:
                 {
                     ExpressionCohortCompare expCompare = new ExpressionCohortCompare(mConfig);
-                    expCompare.processSamples();
+                    expCompare.runAnalysis();
                     break;
                 }
 

@@ -140,12 +140,12 @@ public class CohortConfig
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
     }
 
-    private static boolean requiresExpressionConfig(final List<CohortAnalysisType> loadTypes)
+    private static boolean requiresExpressionConfig(final List<CohortAnalysisType> analysisTypes)
     {
-        return loadTypes.contains(GENE_DISTRIBUTION) || loadTypes.contains(TRANSCRIPT_DISTRIBUTION)
-                || loadTypes.contains(SAMPLE_GENE_PERCENTILES) || loadTypes.contains(GENE_EXPRESSION_COMPARE)
-                || loadTypes.contains(EXTERNAL_EXPRESSION_COMPARE) || loadTypes.contains(GENE_EXPRESSION_MATRIX)
-                || loadTypes.contains(TRANSCRIPT_EXPRESSION_MATRIX);
+        return analysisTypes.contains(GENE_DISTRIBUTION) || analysisTypes.contains(TRANSCRIPT_DISTRIBUTION)
+                || analysisTypes.contains(SAMPLE_GENE_PERCENTILES) || analysisTypes.contains(GENE_EXPRESSION_COMPARE)
+                || analysisTypes.contains(EXTERNAL_EXPRESSION_COMPARE) || analysisTypes.contains(GENE_EXPRESSION_MATRIX)
+                || analysisTypes.contains(TRANSCRIPT_EXPRESSION_MATRIX);
     }
 
     public static boolean isValid(final CommandLine cmd)

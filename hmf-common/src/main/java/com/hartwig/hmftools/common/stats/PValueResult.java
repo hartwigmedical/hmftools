@@ -24,4 +24,6 @@ public class PValueResult implements Comparable<PValueResult>
 
         return PValue < other.PValue ? -1 : 1;
     }
+
+    public String toString() { return String.format("%s: p(%4.3e) q(%4.3e) rank(%d)", Id, PValue, QValue, Rank); }
 }

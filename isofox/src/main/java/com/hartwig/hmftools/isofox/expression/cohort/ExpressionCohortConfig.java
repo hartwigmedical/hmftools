@@ -9,6 +9,7 @@ public class ExpressionCohortConfig
     public final boolean WriteSampleGeneDistributionData;
     public final String CohortTransFile;
     public final String CancerTransFile;
+    public final String GeneExpMatrixFile;
 
     public final double TpmThreshold;
     public final boolean UseLogTpm;
@@ -29,6 +30,7 @@ public class ExpressionCohortConfig
     public static final String USE_LOG_TPM = "use_log_tpm";
     public static final String TPM_ROUNDING = "tpm_rounding";
 
+    public static final String GENE_EXP_MATRIX_FILE = "gene_exp_matrix_file";
     public static final String COHORT_TRANS_FILE = "cohort_trans_file";
     public static final String CANCER_TRANS_FILE = "cancer_trans_file";
     public static final String CANCER_GENE_FILES = "cancer_gene_files";
@@ -46,6 +48,7 @@ public class ExpressionCohortConfig
         TpmRounding = Double.parseDouble(cmd.getOptionValue(TPM_ROUNDING, "2"));
         UseLogTpm = cmd.hasOption(USE_LOG_TPM);
 
+        GeneExpMatrixFile = cmd.getOptionValue(GENE_EXP_MATRIX_FILE);
         CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
         CancerTransFile = cmd.getOptionValue(CANCER_TRANS_FILE);
         TranscriptScope = cmd.hasOption(EXTERNAL_COMPARE_TRANSCRIPTS);
@@ -60,6 +63,7 @@ public class ExpressionCohortConfig
     {
         options.addOption(EXTERNAL_SOURCE, true, "List of sources to compare fusions between");
         options.addOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA, false, "Write per-sample gene distribution data file");
+        options.addOption(GENE_EXP_MATRIX_FILE, true, "Cohort gene expression file");
         options.addOption(COHORT_TRANS_FILE, true, "Cohort transcript distribution file");
         options.addOption(CANCER_TRANS_FILE, true, "Cancer transcript distribution file");
         options.addOption(EXTERNAL_COMPARE_TRANSCRIPTS, false, "Compare at transcript level, other default is by gene");
