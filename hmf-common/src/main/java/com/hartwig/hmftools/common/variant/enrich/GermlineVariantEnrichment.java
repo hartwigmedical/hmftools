@@ -24,7 +24,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
 
     private final VariantContextEnrichment purityEnrichment;
     private final VariantContextEnrichment refGenomeEnrichment;
-    private final VariantContextEnrichment clinvarEnrichment;
+    private final VariantContextEnrichment pathogenicEnrichment;
     private final VariantContextEnrichment snpEffEnrichment;
     private final VariantContextEnrichment reportableEnrichment;
     private final VariantContextEnrichment hotspotEnrichment;
@@ -40,8 +40,8 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
                 genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
 
         this.reportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), consumer);
-        this.clinvarEnrichment = new GermlineClinvarEnrichment(reportableEnrichment);
-        this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, clinvarEnrichment);
+        this.pathogenicEnrichment = new GermlinePathogenicEnrichment(reportableEnrichment);
+        this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, pathogenicEnrichment);
 
         this.snpEffEnrichment = new SnpEffEnrichment(germlineGenes, transcripts, refGenomeEnrichment);
         this.hotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, snpEffEnrichment);
@@ -64,7 +64,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
         hotspotEnrichment.flush();
         snpEffEnrichment.flush();
         refGenomeEnrichment.flush();
-        clinvarEnrichment.flush();
+        pathogenicEnrichment.flush();
         reportableEnrichment.flush();
     }
 
@@ -77,6 +77,6 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
         header = snpEffEnrichment.enrichHeader(header);
         header = reportableEnrichment.enrichHeader(header);
         header = genotypeEnrichment.enrichHeader(header);
-        return clinvarEnrichment.enrichHeader(header);
+        return pathogenicEnrichment.enrichHeader(header);
     }
 }

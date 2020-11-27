@@ -9,10 +9,10 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.clinvar.ClinvarPathogenicity;
-import com.hartwig.hmftools.common.clinvar.ClinvarSummary;
-import com.hartwig.hmftools.common.clinvar.ClinvarSummaryFactory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.pathogenic.Pathogenic;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
@@ -67,12 +67,12 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
 
         final boolean inVariantGenes = reportableVariantGenes.contains(gene);
         if (inVariantGenes) {
-            final ClinvarSummary clinvarSummary = ClinvarSummaryFactory.fromContext(context);
-            if (clinvarSummary.pathogenicity().isPathogenic()) {
+            final PathogenicSummary pathogenicSummary = PathogenicSummaryFactory.fromContext(context);
+            if (pathogenicSummary.pathogenicity().isPathogenic()) {
                 return true;
             }
 
-            if (clinvarSummary.pathogenicity().equals(ClinvarPathogenicity.UNKNOWN)) {
+            if (pathogenicSummary.pathogenicity().equals(Pathogenic.UNKNOWN)) {
                 return REPORTABLE_EFFECT.contains(snpEffSummary.canonicalCodingEffect());
             }
         }

@@ -17,10 +17,10 @@ import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrich
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.clinvar.ClinvarSummary;
-import com.hartwig.hmftools.common.clinvar.ClinvarSummaryFactory;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
@@ -135,8 +135,8 @@ public class VariantContextDecorator implements GenomePosition {
     }
 
     @NotNull
-    public ClinvarSummary clinvar() {
-        return ClinvarSummaryFactory.fromContext(context);
+    public PathogenicSummary pathogenicSummary() {
+        return PathogenicSummaryFactory.fromContext(context);
     }
 
     public int repeatCount() {

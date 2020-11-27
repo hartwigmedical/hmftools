@@ -809,9 +809,9 @@ CREATE TABLE germlineVariant2
     biallelic BOOLEAN NOT NULL,
     minorAlleleCopyNumber DOUBLE PRECISION NOT NULL,
 
-    ### CLINVAR ENRICHMENT
+    ### PATHOGENIC
     clinvarInfo varchar(255) NOT NULL,
-    clinvarPath varchar(255) NOT NULL,
+    pathogenic varchar(255) NOT NULL,
 
     ## SNP EFF ENRICHMENT
     gene varchar(255) NOT NULL,
