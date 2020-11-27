@@ -145,7 +145,7 @@ public class GeneRangeExtractorTest {
                 "description",
                 "chromosome",
                 "pos").features().get(0);
-        List<DriverGene> driverGenes = createDriverGenes("GNAQ", "EGFR", "ERBB2");
+        List<DriverGene> driverGenes = createDriverGenes("TP53", "EGFR", "ERBB2");
         String gene = "ERBB2";
         MutationTypeFilter filterUnknownOnco = MutationTypeFilter.UNKNOWN;
         assertEquals(MutationTypeFilter.MISSENSE_ANY,
@@ -189,23 +189,23 @@ public class GeneRangeExtractorTest {
     @Test
     public void canExtractRangesCodon() {
         GeneRangeExtractor geneRangeExtractor =
-                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("GNAQ", "EGFR", "KIT"));
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"));
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
-                "ENST00000286548",
-                "GNAQ",
-                "Q209",
+                "ENST00000269305",
+                "TP53",
+                "R249",
                 "description",
                 "chromosome",
                 "pos");
 
         geneRangesPerFeature.put(viccEntry.features().get(0),
                 Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
-                        .gene("GNAQ")
-                        .chromosome("9")
-                        .start(80409487)
-                        .end(80409489)
-                        .rangeInfo(209)
+                        .gene("TP53")
+                        .chromosome("17")
+                        .start(7577534)
+                        .end(7577536)
+                        .rangeInfo(249)
                         .mutationType(MutationTypeFilter.ANY)
                         .build()));
 
@@ -215,7 +215,7 @@ public class GeneRangeExtractorTest {
     @Test
     public void canExtractRangesExon() {
         GeneRangeExtractor geneRangeExtractor =
-                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("GNAQ", "EGFR", "KIT"));
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"));
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
                 "ENST00000275493",
@@ -242,7 +242,7 @@ public class GeneRangeExtractorTest {
     @Test
     public void canExtractRangesExonAndFusion() {
         GeneRangeExtractor geneRangeExtractor =
-                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("GNAQ", "EGFR", "KIT"));
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"));
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
                 "ENST00000288135",
@@ -267,10 +267,9 @@ public class GeneRangeExtractorTest {
     }
 
     @NotNull
-    private static List<DriverGene> createDriverGenes(@NotNull String gene1, @NotNull String gene2, @NotNull String gene3) {
-        //TODO: determine real TSG and ONCO genes
+    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco1, @NotNull String geneOnco2) {
         DriverGene driverGeneTsg = ImmutableDriverGene.builder()
-                .gene(gene1)
+                .gene(geneTsg)
                 .reportMissenseAndInframe(true)
                 .reportNonsenseAndFrameshift(true)
                 .reportSplice(true)
@@ -284,7 +283,7 @@ public class GeneRangeExtractorTest {
                 .build();
 
         DriverGene driverGeneOnco1 = ImmutableDriverGene.builder()
-                .gene(gene2)
+                .gene(geneOnco1)
                 .reportMissenseAndInframe(true)
                 .reportNonsenseAndFrameshift(true)
                 .reportSplice(true)
@@ -298,7 +297,7 @@ public class GeneRangeExtractorTest {
                 .build();
 
         DriverGene driverGeneOnco2 = ImmutableDriverGene.builder()
-                .gene(gene3)
+                .gene(geneOnco2)
                 .reportMissenseAndInframe(true)
                 .reportNonsenseAndFrameshift(true)
                 .reportSplice(true)
