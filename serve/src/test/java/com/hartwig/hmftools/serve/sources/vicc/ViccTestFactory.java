@@ -36,19 +36,19 @@ public final class ViccTestFactory {
 
     @NotNull
     public static ViccEntry testViccEntryWithOncogenic(@NotNull String oncogenic, @NotNull String gene, @NotNull String event, @NotNull String description,
-            @NotNull String chromosome, @NotNull String pos) {
-        return testViccEntry(ViccSource.ONCOKB, oncogenic, null, gene, event, description, chromosome, pos);
+            @NotNull String chromosome, @NotNull String pos, @Nullable String provenanceRule) {
+        return testViccEntry(ViccSource.ONCOKB, oncogenic, null, gene, event, description, chromosome, pos, provenanceRule);
     }
 
     @NotNull
     public static ViccEntry testViccEntryWithSourceAndKbObject(@NotNull ViccSource source, @Nullable String transcriptId,
-            @NotNull String gene, @NotNull String event,@NotNull String description, @NotNull String chromosome, @NotNull String pos) {
-        return testViccEntry(source, Strings.EMPTY, transcriptId, gene, event, description, chromosome, pos);
+            @NotNull String gene, @NotNull String event,@NotNull String description, @NotNull String chromosome, @NotNull String pos, @Nullable String provenanceRule) {
+        return testViccEntry(source, Strings.EMPTY, transcriptId, gene, event, description, chromosome, pos, provenanceRule);
     }
 
     @NotNull
     public static ViccEntry testViccEntry(@NotNull ViccSource source, @NotNull String oncogenic, @Nullable String transcriptId,
-            @NotNull String gene, @NotNull String event, @NotNull String description, @NotNull String chromosome, @NotNull String pos) {
+            @NotNull String gene, @NotNull String event, @NotNull String description, @NotNull String chromosome, @NotNull String pos, @Nullable String provenanceRule) {
         EvidenceType evidenceType = ImmutableEvidenceType.builder().sourceName(Strings.EMPTY).build();
         Evidence evidence = ImmutableEvidence.builder().evidenceType(evidenceType).build();
 
@@ -71,19 +71,19 @@ public final class ViccTestFactory {
                 .association(association)
                 .transcriptId(transcriptId)
                 .kbSpecificObject(testOncoKb())
-                .features(Lists.newArrayList(testFeatureWithGeneAndName(gene, event, description, chromosome, pos)))
+                .features(Lists.newArrayList(testFeatureWithGeneAndName(gene, event, description, chromosome, pos, provenanceRule)))
                 .build();
     }
 
     @NotNull
-    public static Feature testFeatureWithName(@NotNull String name, @NotNull String description, @NotNull String chromosome, @NotNull String pos) {
-        return testFeatureWithGeneAndName(null, name, description, chromosome, pos);
+    public static Feature testFeatureWithName(@NotNull String name, @NotNull String description, @NotNull String chromosome, @NotNull String pos, @Nullable String provenanceRule) {
+        return testFeatureWithGeneAndName(null, name, description, chromosome, pos, provenanceRule);
     }
 
     @NotNull
     public static Feature testFeatureWithGeneAndName(@Nullable String geneSymbol, @NotNull String name, @NotNull String description, @NotNull String chromosome,
-            @NotNull String pos) {
-        return ImmutableFeature.builder().geneSymbol(geneSymbol).name(name).description(description).chromosome(chromosome).start(pos).build();
+            @NotNull String pos, @Nullable String provenanceRule) {
+        return ImmutableFeature.builder().geneSymbol(geneSymbol).name(name).description(description).chromosome(chromosome).start(pos).provenanceRule(provenanceRule).build();
     }
 
     @NotNull

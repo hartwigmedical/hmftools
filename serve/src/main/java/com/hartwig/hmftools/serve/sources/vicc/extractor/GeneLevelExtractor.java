@@ -71,7 +71,7 @@ public class GeneLevelExtractor {
 
     @NotNull
     @VisibleForTesting
-    static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
+    public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String event;
         String geneSymbol = feature.geneSymbol();
         String geneSymbolEvent = feature.name().split(" ")[0];

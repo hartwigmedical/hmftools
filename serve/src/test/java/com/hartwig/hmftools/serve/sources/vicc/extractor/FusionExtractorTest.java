@@ -27,7 +27,7 @@ public class FusionExtractorTest {
                 "IG-BCL2",
                 "description",
                 "chromosome",
-                "pos");
+                "pos", null);
         assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
     }
 
@@ -41,7 +41,7 @@ public class FusionExtractorTest {
                 "BCR-PDGFRA Fusion",
                 "description",
                 "chromosome",
-                "pos");
+                "pos", null);
         fusionsPerFeature.put(viccEntry.features().get(0), ImmutableKnownFusionPair.builder().geneUp("BCR").geneDown("PDGFRA").build());
         assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
     }
@@ -56,7 +56,7 @@ public class FusionExtractorTest {
                 "EGFRvII",
                 "description",
                 "chromosome",
-                "pos");
+                "pos", null);
         fusionsPerFeature.put(viccEntry.features().get(0),
                 ImmutableKnownFusionPair.builder()
                         .geneUp("EGFR")
@@ -79,7 +79,7 @@ public class FusionExtractorTest {
                 "EXON 14 SKIPPING MUTATION",
                 "MET EXON 14 SKIPPING MUTATION",
                 "chromosome",
-                "pos");
+                "pos", null);
         fusionsPerFeature.put(viccEntry.features().get(0),
                 ImmutableKnownFusionPair.builder()
                         .geneUp("MET")

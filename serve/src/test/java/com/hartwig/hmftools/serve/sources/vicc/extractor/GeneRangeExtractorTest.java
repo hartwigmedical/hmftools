@@ -52,7 +52,7 @@ public class GeneRangeExtractorTest {
                 "EXON 9 FRAMESHIFT",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
                 GeneRangeExtractor.extractSpecificMutationTypeFilter(featureNonsenseFrameshift));
 
@@ -62,7 +62,7 @@ public class GeneRangeExtractorTest {
                 "Exon 12 splice site insertion",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureSplice1));
 
         Feature featureSplice2 = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
@@ -71,7 +71,7 @@ public class GeneRangeExtractorTest {
                 "EXON 14 SKIPPING MUTATION",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureSplice2));
 
         Feature featureMissenseInframeDeletion1 = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
@@ -80,7 +80,7 @@ public class GeneRangeExtractorTest {
                 "EGFR exon 19 deletions",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION,
                 GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeDeletion1));
 
@@ -90,7 +90,7 @@ public class GeneRangeExtractorTest {
                 "Null (Partial deletion of Exons 2 & 3)",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION,
                 GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeDeletion2));
 
@@ -100,7 +100,7 @@ public class GeneRangeExtractorTest {
                 "Exon 20 insertions",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION,
                 GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeInsertion));
 
@@ -110,7 +110,7 @@ public class GeneRangeExtractorTest {
                 "Exon 20 insertions/deletions",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY,
                 GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeAny1));
 
@@ -120,7 +120,7 @@ public class GeneRangeExtractorTest {
                 "Exon 19 deletion/insertion",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY,
                 GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeAny2));
 
@@ -130,7 +130,7 @@ public class GeneRangeExtractorTest {
                 "abcd",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         assertEquals(MutationTypeFilter.UNKNOWN, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureUnkown));
 
     }
@@ -144,7 +144,7 @@ public class GeneRangeExtractorTest {
                 "D835",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         List<DriverGene> driverGenes = createDriverGenes("TP53", "EGFR", "ERBB2");
         String gene = "ERBB2";
         MutationTypeFilter filterUnknownOnco = MutationTypeFilter.UNKNOWN;
@@ -157,7 +157,7 @@ public class GeneRangeExtractorTest {
                 "D835",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         MutationTypeFilter filterKnownOnco = MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION,
                 GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownOnco, featureMutationKnownOnco));
@@ -168,7 +168,7 @@ public class GeneRangeExtractorTest {
                 "R249",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         MutationTypeFilter filterUnknownTsg = MutationTypeFilter.UNKNOWN;
         assertEquals(MutationTypeFilter.MISSENSE_ANY,
                 GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownTsg, featureMutationUnknownTsg));
@@ -179,7 +179,7 @@ public class GeneRangeExtractorTest {
                 "R249",
                 "description",
                 "chromosome",
-                "pos").features().get(0);
+                "pos", null).features().get(0);
         MutationTypeFilter filterKnownTsg = MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
         assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
                 GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownTsg, featureMutationKnownTsg));
@@ -197,7 +197,7 @@ public class GeneRangeExtractorTest {
                 "R249",
                 "description",
                 "chromosome",
-                "pos");
+                "pos", null);
 
         geneRangesPerFeature.put(viccEntry.features().get(0),
                 Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
@@ -223,7 +223,7 @@ public class GeneRangeExtractorTest {
                 "EXON 19 DELETION",
                 "description",
                 "chromosome",
-                "pos");
+                "pos", null);
 
         geneRangesPerFeature.put(viccEntry.features().get(0),
                 Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
@@ -250,7 +250,7 @@ public class GeneRangeExtractorTest {
                 "EXON 11 MUTATION",
                 "description",
                 "chromosome",
-                "pos");
+                "pos", null);
 
         geneRangesPerFeature.put(viccEntry.features().get(0),
                 Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
