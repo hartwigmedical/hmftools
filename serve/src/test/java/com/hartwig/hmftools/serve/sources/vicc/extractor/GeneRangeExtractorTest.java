@@ -45,7 +45,6 @@ public class GeneRangeExtractorTest {
         assertEquals(Lists.newArrayList(12), GeneRangeExtractor.extractExonNumbers("Exon 12 splice site insertion"));
     }
 
-    //TODO
     @Test
     public void canExtractMutationFilter() {
         Feature featureNonsenseFrameshift = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
@@ -55,7 +54,8 @@ public class GeneRangeExtractorTest {
                 "description",
                 "chromosome",
                 "pos").features().get(0);
-        assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureNonsenseFrameshift));
+        assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureNonsenseFrameshift));
 
         Feature featureSplice1 = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
                 "ENST00000381652",
@@ -75,52 +75,56 @@ public class GeneRangeExtractorTest {
                 "pos").features().get(0);
         assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureSplice2));
 
+        Feature featureMissenseInframeDeletion1 = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                null,
+                "EGFR",
+                "EGFR exon 19 deletions",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeDeletion1));
 
-//        Feature featureMissenseInframeAny = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
-//                "ENST00000286548",
-//                "GNAQ",
-//                "Q209",
-//                "description",
-//                "chromosome",
-//                "pos").features().get(0);
-//        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeAny));
-//
-//        Feature featureMissenseInframeDeletion = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
-//                "ENST00000286548",
-//                "GNAQ",
-//                "Q209",
-//                "description",
-//                "chromosome",
-//                "pos").features().get(0);
-//        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeDeletion));
-//
-//        Feature featureMissenseInframeInsertion = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
-//                "ENST00000286548",
-//                "GNAQ",
-//                "Q209",
-//                "description",
-//                "chromosome",
-//                "pos").features().get(0);
-//        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeInsertion));
-//
-//        Feature featureMissenseAny = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
-//                "ENST00000286548",
-//                "GNAQ",
-//                "Q209",
-//                "description",
-//                "chromosome",
-//                "pos").features().get(0);
-//        assertEquals(MutationTypeFilter.MISSENSE_ANY, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseAny));
-//
-//        Feature featureAny = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
-//                "ENST00000286548",
-//                "GNAQ",
-//                "Q209",
-//                "description",
-//                "chromosome",
-//                "pos").features().get(0);
-//        assertEquals(MutationTypeFilter.ANY, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureAny));
-//
+        Feature featureMissenseInframeDeletion2 = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                null,
+                "VHL",
+                "Null (Partial deletion of Exons 2 & 3)",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeDeletion2));
+
+        Feature featureMissenseInframeInsertion = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+                "ENST00000269571",
+                "ERBB2",
+                "Exon 20 insertions",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeInsertion));
+
+        Feature featureMissenseInframeAny1 = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+                "ENST00000269571",
+                "ERBB2",
+                "Exon 20 insertions/deletions",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeAny1));
+
+        Feature featureMissenseInframeAny2 = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
+                "ENST00000275493",
+                "EGFR",
+                "Exon 19 deletion/insertion",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeAny2));
+
         Feature featureUnkown = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB,
                 "ENST00000286548",
                 "GNAQ",
@@ -132,9 +136,54 @@ public class GeneRangeExtractorTest {
 
     }
 
-    //TODO
     @Test
-    public void canExtractSpecificMutationTypeFilter(){
+    public void canExtractSpecificMutationTypeFilter() {
+
+        Feature featureMutationUnknownOnco = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                "ENST00000241453",
+                "ERBB2",
+                "D835",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        List<DriverGene> driverGenes = createDriverGenes("GNAQ", "EGFR", "ERBB2");
+        String gene = "ERBB2";
+        MutationTypeFilter filterUnknownOnco = MutationTypeFilter.UNKNOWN;
+        assertEquals(MutationTypeFilter.MISSENSE_ANY,
+                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownOnco, featureMutationUnknownOnco));
+
+        Feature featureMutationKnownOnco = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                "ENST00000241453",
+                "ERBB2",
+                "D835",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        MutationTypeFilter filterKnownOnco = MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
+        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION,
+                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownOnco, featureMutationKnownOnco));
+
+        Feature featureMutationUnknownTsg = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                "ENST00000241453",
+                "ERBB2",
+                "D835",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        MutationTypeFilter filterUnknownTsg = MutationTypeFilter.UNKNOWN;
+        assertEquals(MutationTypeFilter.MISSENSE_ANY,
+                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownTsg, featureMutationUnknownTsg));
+
+        Feature featureMutationKnownTsg = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
+                "ENST00000241453",
+                "ERBB2",
+                "D835",
+                "description",
+                "chromosome",
+                "pos").features().get(0);
+        MutationTypeFilter filterKnownTsg = MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
+        assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
+                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownTsg, featureMutationKnownTsg));
 
     }
 

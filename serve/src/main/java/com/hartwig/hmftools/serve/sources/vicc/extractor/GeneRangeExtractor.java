@@ -231,8 +231,9 @@ public class GeneRangeExtractor {
         return geneRangesPerFeature;
     }
 
+    @VisibleForTesting
     @NotNull
-    private static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene,
+    public static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene,
             @NotNull MutationTypeFilter specificMutationType, @NotNull Feature feature) {
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
@@ -245,7 +246,7 @@ public class GeneRangeExtractor {
                 } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                     if (specificMutationType == MutationTypeFilter.UNKNOWN) {
                         //TODO which inactivation event for TSG?
-                        if (feature.biomarkerType() != null && feature.biomarkerType().contains("inactivation")) {
+                        if (feature.biomarkerType() != null && feature.biomarkerType().contains("")) {
                             return MutationTypeFilter.MISSENSE_ANY;
                         } else {
                             return MutationTypeFilter.ANY;
@@ -265,10 +266,11 @@ public class GeneRangeExtractor {
     public static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull Feature feature) {
         String featureEvent = feature.name().toLowerCase();
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
+        LOGGER.info(extractSpecificInfoOfEvent);
         if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
             return MutationTypeFilter.SPLICE;
         } else if (extractSpecificInfoOfEvent.equals("deletions") || extractSpecificInfoOfEvent.equals("deletion")
-                || extractSpecificInfoOfEvent.contains("Partial deletion of Exons")) {
+                || featureEvent.contains("partial deletion of exons")) {
             return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
         } else if (extractSpecificInfoOfEvent.equals("insertions") || extractSpecificInfoOfEvent.equals("insertion")) {
             return MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
