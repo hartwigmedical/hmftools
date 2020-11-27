@@ -163,9 +163,9 @@ public class GeneRangeExtractorTest {
                 GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownOnco, featureMutationKnownOnco));
 
         Feature featureMutationUnknownTsg = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
-                "ENST00000241453",
-                "ERBB2",
-                "D835",
+                "ENST00000269305",
+                "TP53",
+                "R249",
                 "description",
                 "chromosome",
                 "pos").features().get(0);
@@ -174,9 +174,9 @@ public class GeneRangeExtractorTest {
                 GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownTsg, featureMutationUnknownTsg));
 
         Feature featureMutationKnownTsg = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
-                "ENST00000241453",
-                "ERBB2",
-                "D835",
+                "ENST00000269305",
+                "TP53",
+                "R249",
                 "description",
                 "chromosome",
                 "pos").features().get(0);

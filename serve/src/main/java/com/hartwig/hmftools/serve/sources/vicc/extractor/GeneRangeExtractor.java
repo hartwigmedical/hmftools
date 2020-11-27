@@ -266,7 +266,6 @@ public class GeneRangeExtractor {
     public static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull Feature feature) {
         String featureEvent = feature.name().toLowerCase();
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
-        LOGGER.info(extractSpecificInfoOfEvent);
         if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
             return MutationTypeFilter.SPLICE;
         } else if (extractSpecificInfoOfEvent.equals("deletions") || extractSpecificInfoOfEvent.equals("deletion")
