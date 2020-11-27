@@ -93,6 +93,11 @@ public class VariantContextDecorator implements GenomePosition {
         return snpEffSummary;
     }
 
+    @NotNull
+    public String gene() {
+        return snpEffSummary.gene();
+    }
+
     public double qual() {
         return context.getPhredScaledQual();
     }

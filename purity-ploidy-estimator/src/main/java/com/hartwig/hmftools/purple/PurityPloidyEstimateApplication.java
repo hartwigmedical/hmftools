@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.GermlineDrivers;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -224,6 +225,11 @@ public class PurityPloidyEstimateApplication {
             final SomaticStream somaticStream = new SomaticStream(configSupplier);
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
 
+            GermlineVariants germlineVariants = new GermlineVariants(configSupplier);
+            if (configSupplier.germlineConfig().enabled()) {
+                LOGGER.info("Enriching germline variants");
+                germlineVariants.processAndWrite(purityAdjuster, copyNumbers);
+            }
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
                     .version(version.version())
@@ -243,6 +249,21 @@ public class PurityPloidyEstimateApplication {
                     .qc(qcChecks)
                     .build();
 
+            final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+            if (configSupplier.driverCatalogConfig().enabled()) {
+                LOGGER.info("Generating driver catalog");
+                driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
+
+                final GermlineDrivers germlineDrivers = new GermlineDrivers(configSupplier.driverCatalogConfig().genePanel().driverGenes());
+                driverCatalog.addAll(germlineDrivers.drivers(germlineVariants.reportableVariants(), geneCopyNumbers));
+
+                final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), configSupplier.driverCatalogConfig().genePanel());
+                driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
+                driverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
+
+                DriverCatalogFile.write(DriverCatalogFile.generateFilename(outputDirectory, tumorSample), driverCatalog);
+            }
+
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);
             version.write(outputDirectory);
             PurityContextFile.write(outputDirectory, tumorSample, purityContext);
@@ -255,18 +276,6 @@ public class PurityPloidyEstimateApplication {
             SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
             structuralVariants.write(purityAdjuster, copyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(outputDirectory, tumorSample), somaticPeaks);
-
-            final List<DriverCatalog> driverCatalog = Lists.newArrayList();
-            if (configSupplier.driverCatalogConfig().enabled()) {
-                LOGGER.info("Generating driver catalog");
-                final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), configSupplier.driverCatalogConfig().genePanel());
-                driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
-                driverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
-                driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
-                DriverCatalogFile.write(DriverCatalogFile.generateFilename(outputDirectory, tumorSample), driverCatalog);
-            }
-
-            new GermlineVariants(configSupplier).processAndWrite(purityAdjuster, copyNumbers);
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
