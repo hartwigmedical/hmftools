@@ -322,14 +322,9 @@ public class RefSomatics implements RefClassifier
                 mCancerSigContribs.put(cancerType, sigDataMap);
             }
 
-            for(Map.Entry<String,Double> sigAllocEntry : sigAllocations.entrySet())
+            for(String sigName : REPORTABLE_SIGS.keySet())
             {
-                final String sigName = sigAllocEntry.getKey();
-
-                if(!REPORTABLE_SIGS.containsKey(sigName))
-                    continue;
-
-                double sigContrib = sigAllocEntry.getValue();
+                double sigContrib = sigAllocations.containsKey(sigName) ? sigAllocations.get(sigName) : 0;
 
                 List<Double> sigContribs = sigDataMap.get(sigName);
 
