@@ -63,6 +63,7 @@ public class IsofoxConfig
     private static final String CANONICAL_ONLY = "canonical_only";
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_READ_DATA = "write_read_data";
+    private static final String WRITE_SPLICE_SITE_DATA = "write_splice_sites";
 
     public static final String REF_GENOME = "ref_genome";
     private static final String BAM_FILE = "bam_file";
@@ -122,6 +123,7 @@ public class IsofoxConfig
 
     public final boolean WriteExonData;
     public final boolean WriteReadData;
+    public final boolean WriteSpliceSiteData;
 
     public final String ExpCountsFile;
     public final String ExpGcRatiosFile;
@@ -261,6 +263,7 @@ public class IsofoxConfig
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
         WriteFragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
+        WriteSpliceSiteData = cmd.hasOption(WRITE_SPLICE_SITE_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         WriteGcData = cmd.hasOption(WRITE_GC_DATA);
 
@@ -507,6 +510,7 @@ public class IsofoxConfig
 
         WriteExonData = false;
         WriteReadData = false;
+        WriteSpliceSiteData = false;
         WriteFragmentLengths = false;
         WriteTransComboData = false;
         WriteGcData = false;
@@ -553,6 +557,7 @@ public class IsofoxConfig
         options.addOption(BAM_FILE, true, "RNA BAM file location");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
+        options.addOption(WRITE_SPLICE_SITE_DATA, false, "Write support info for each splice site");
         options.addOption(WRITE_TRANS_COMBO_DATA, false, "Write transcript group data for EM algo");
         options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
 

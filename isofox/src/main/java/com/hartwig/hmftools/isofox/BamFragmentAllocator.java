@@ -74,6 +74,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadTracker;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
+import com.hartwig.hmftools.isofox.novel.SpliceJunctionCounter;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import org.jetbrains.annotations.NotNull;
@@ -493,6 +494,10 @@ public class BamFragmentAllocator
                 }
             }
         }
+
+        // track splice site info
+        if(mConfig.WriteSpliceSiteData)
+            SpliceJunctionCounter.assignSpliceJunctionSupport(commonMappings, validRegions);
 
         for(Map.Entry<Integer,TransMatchType> entry : firstReadTransTypes.entrySet())
         {

@@ -7,8 +7,8 @@ public enum RegionMatchType
 {
     NONE,
     EXON_BOUNDARY,  // read matches one exon boundary
-    WITHIN_EXON,    // read fully contained within the exon
-    EXON_INTRON,      // reads spanning to unmapped regions where adjacent regions exist
+    WITHIN_EXON,    // read fully contained within the exon, ie not touching either boundary
+    EXON_INTRON,    // reads spanning to unmapped regions where adjacent regions exist
     INTRON;
 
     public static boolean validExonMatch(RegionMatchType type)

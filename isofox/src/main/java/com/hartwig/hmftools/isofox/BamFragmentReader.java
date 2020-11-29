@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.getChromosomeLength;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -41,6 +42,7 @@ import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.fusion.ReadGroup;
+import com.hartwig.hmftools.isofox.novel.SpliceJunctionCounter;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -358,7 +360,7 @@ public class BamFragmentReader implements Callable
         mPerfCounters[PERF_READS].stop();
 
         postBamReadTranscriptCounts(geneCollection);
-        postBamReadNovelLocations();
+        postBamReadNovelLocations(geneCollection);
         postBamReadFusions(geneCollection);
 
         mBamFragmentAllocator.clearCache(); // free up resources for this gene collection
@@ -464,13 +466,20 @@ public class BamFragmentReader implements Callable
             geneCollectionSummary.TransCategoryCounts.clear();
     }
 
-    private void postBamReadNovelLocations()
+    private void postBamReadNovelLocations(final GeneCollection geneCollection)
     {
         if(!mConfig.runFunction(NOVEL_LOCATIONS))
             return;
 
         mPerfCounters[PERF_NOVEL_LOCATIONS].start();
         mBamFragmentAllocator.annotateNovelLocations();
+
+        if(mConfig.WriteSpliceSiteData)
+        {
+            final BufferedWriter ssWriter = mResultsWriter.getSpliceSiteWriter();
+            geneCollection.getExonRegions().forEach(x -> SpliceJunctionCounter.writeSpliceSiteData(ssWriter, geneCollection, x));
+        }
+
         mPerfCounters[PERF_NOVEL_LOCATIONS].stop();
     }
 

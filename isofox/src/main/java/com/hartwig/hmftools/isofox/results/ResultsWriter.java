@@ -39,11 +39,13 @@ import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
+import com.hartwig.hmftools.isofox.novel.SpliceJunctionCounter;
 
 public class ResultsWriter
 {
     public static final String GENE_RESULTS_FILE = "gene_data.csv";
     public static final String TRANSCRIPT_RESULTS_FILE = "transcript_data.csv";
+    public static final String SPLICE_SITE_FILE = "splice_site_data.csv";
     public static final String SUMMARY_FILE = "summary.csv";
 
     private final IsofoxConfig mConfig;
@@ -61,6 +63,7 @@ public class ResultsWriter
     private BufferedWriter mGeneFragLengthWriter;
     private BufferedWriter mReadGcRatioWriter;
     private BufferedWriter mRetainedIntronWriter;
+    private BufferedWriter mSpliceSiteWriter;
 
     public static final String ISOFOX_ID = ".isf.";
     public static final String DELIMITER = ",";
@@ -89,6 +92,7 @@ public class ResultsWriter
         mGeneFragLengthWriter = null;
         mReadGcRatioWriter = null;
         mRetainedIntronWriter = null;
+        mSpliceSiteWriter = null;
 
         if(!mConfig.runFusionsOnly())
         {
@@ -110,6 +114,7 @@ public class ResultsWriter
         closeBufferedWriter(mGeneFragLengthWriter);
         closeBufferedWriter(mReadGcRatioWriter);
         closeBufferedWriter(mRetainedIntronWriter);
+        closeBufferedWriter(mSpliceSiteWriter);
     }
 
     private void initialiseExternalWriters()
@@ -133,6 +138,9 @@ public class ResultsWriter
             if(mConfig.WriteReadData)
                 mReadDataWriter = BamFragmentAllocator.createReadDataWriter(mConfig);
 
+            if(mConfig.WriteSpliceSiteData)
+                mSpliceSiteWriter = SpliceJunctionCounter.createWriter(mConfig);
+
             if(mConfig.runFunction(NOVEL_LOCATIONS))
             {
                 mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
@@ -152,6 +160,7 @@ public class ResultsWriter
     public BufferedWriter getAltSpliceJunctionWriter() { return mAltSpliceJunctionWriter;}
     public BufferedWriter getRetainedIntronWriter() { return mRetainedIntronWriter;}
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
+    public BufferedWriter getSpliceSiteWriter() { return mSpliceSiteWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mGeneFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
 

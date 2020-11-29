@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
 
+// matches an exon from or more transcripts in a gene
 public class RegionReadData implements Comparable< RegionReadData>
 {
     public final SvRegion Region;
@@ -32,6 +33,7 @@ public class RegionReadData implements Comparable< RegionReadData>
 
     private final Map<Integer,int[]> mTranscriptReadCounts; // count of reads which support this region and a specific transcript
     private final Map<Integer,int[][]> mTranscriptJunctionCounts; // count of reads which support each exon junction and a specific transcript
+    private final int[][] mSpliceJunctionSupport; // counts at each boundary of reads which support vs skip the splice junction
 
     private List<RegionReadData> mPreRegions; // references to adjacent regions with a lower position
     private List<RegionReadData> mPostRegions;
@@ -54,6 +56,10 @@ public class RegionReadData implements Comparable< RegionReadData>
 
         mTranscriptReadCounts = Maps.newHashMap();
         mTranscriptJunctionCounts = Maps.newHashMap();
+
+        mSpliceJunctionSupport = new int[SE_PAIR][];
+        mSpliceJunctionSupport[SE_START] = new int[SPLICE_JUNCTION_SUPPORT + 1];
+        mSpliceJunctionSupport[SE_END] = new int[SPLICE_JUNCTION_SUPPORT + 1];
     }
 
     public String chromosome() { return Region.Chromosome; }
@@ -250,6 +256,19 @@ public class RegionReadData implements Comparable< RegionReadData>
 
         return total;
     }
+
+    public static final int SPLICE_JUNCTION_TOTAL = 0;
+    public static final int SPLICE_JUNCTION_SUPPORT = 1;
+
+    public void addSpliceJunctionSupport(int seIndex, boolean isSupported)
+    {
+        ++mSpliceJunctionSupport[seIndex][SPLICE_JUNCTION_TOTAL];
+
+        if(isSupported)
+            ++mSpliceJunctionSupport[seIndex][SPLICE_JUNCTION_SUPPORT];
+    }
+
+    public final int[][] getSpliceJunctionSupport() { return mSpliceJunctionSupport; }
 
     public String toString()
     {
