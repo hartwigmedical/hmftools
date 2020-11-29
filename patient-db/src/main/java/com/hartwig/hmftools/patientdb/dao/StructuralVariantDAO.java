@@ -250,7 +250,7 @@ class StructuralVariantDAO {
                 isSingle ? null : variant.endIntervalOffsetEnd(),
                 variant.inexactHomologyOffsetStart(),
                 variant.inexactHomologyOffsetEnd(),
-                variant.id(),
+                variant.vcfId(),
                 limitSizeOfCSV(MAX_LINKED_BY, variant.startLinkedBy()),
                 limitSizeOfCSV(MAX_LINKED_BY, variant.endLinkedBy()),
                 variant.recovered(),
