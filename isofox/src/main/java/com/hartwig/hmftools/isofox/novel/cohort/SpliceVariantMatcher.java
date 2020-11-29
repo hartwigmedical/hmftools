@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
@@ -16,6 +15,8 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.ALT_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.MIXED_TRANS;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_3_PRIME;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_5_PRIME;
@@ -26,18 +27,13 @@ import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.ACCEPTO
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.DONOR;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.NONE;
 import static com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser.loadFile;
-import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.PROXIMATE;
-import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.RELATED;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.CRYPTIC;
+import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.DISRUPTION;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -255,13 +251,13 @@ public class SpliceVariantMatcher
             return;
         }
 
-        final List<AltSpliceJunction> matchedAltSJs = findCloseAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData);
+        final List<AltSpliceJunction> matchedAltSJs = findCrypticAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData);
         findRelatedAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData, matchedAltSJs);
     }
 
     private static boolean withinRange(int pos1, int pos2, int distance) { return abs(pos1 - pos2) <= distance; }
 
-    private static boolean validRelatedType(AltSpliceJunctionType type)
+    private static boolean validDisruptionType(AltSpliceJunctionType type)
     {
         return type == SKIPPED_EXONS || type == NOVEL_5_PRIME || type == NOVEL_3_PRIME || type == NOVEL_EXON || type == MIXED_TRANS;
     }
@@ -296,6 +292,7 @@ public class SpliceVariantMatcher
 
                 if(positionWithin(variant.Position, exon.ExonStart, exon.ExonEnd))
                 {
+                    // variant within an exon
                     if(withinRange(exon.ExonStart, variant.Position, SPLICE_REGION_CODING_DISTANCE))
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR;
@@ -351,24 +348,27 @@ public class SpliceVariantMatcher
                     if(!altSJ.getGeneId().equals(geneData.GeneId))
                         continue;
 
-                    if(!validRelatedType(altSJ.type()))
+                    if(!validDisruptionType(altSJ.type()))
                         continue;
 
-                    // check for a position within the exon boundaries
-                    int minAsjPos = min(altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]);
-                    int maxAsjPos = max(altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]);
+                    boolean matchPreviousExon = (acceptorDonorType == ACCEPTOR) == (geneData.Strand == POS_STRAND);
 
-                    if(prevExon != null && minAsjPos < prevExon.ExonEnd)
-                        continue;
-
-                    if(nextExon != null && maxAsjPos > nextExon.ExonEnd)
-                        continue;
+                    if(matchPreviousExon)
+                    {
+                        if(prevExon == null || altSJ.RegionContexts[SE_START] != SPLICE_JUNC || altSJ.SpliceJunction[SE_START] != prevExon.ExonEnd)
+                            continue;
+                    }
+                    else
+                    {
+                        if(nextExon == null || altSJ.RegionContexts[SE_END] != SPLICE_JUNC || altSJ.SpliceJunction[SE_END] != nextExon.ExonStart)
+                            continue;
+                    }
 
                     ISF_LOGGER.trace("sampleId({}) variant({}:{}) gene({}) transcript({}) matched altSJ({})",
                             sampleId, variant.Chromosome, variant.Position, geneData.GeneName, transData.TransName, altSJ.toString());
 
                     final String transDataStr = String.format("%s;%d", transData.TransName, exon.ExonRank);
-                    writeMatchData(sampleId, variant, geneData, altSJ, RELATED, acceptorDonorType, exonDistance, transDataStr);
+                    writeMatchData(sampleId, variant, geneData, altSJ, DISRUPTION, acceptorDonorType, exonDistance, transDataStr);
 
                     matchedAltSJs.add(altSJ);
                 }
@@ -378,22 +378,48 @@ public class SpliceVariantMatcher
         if(matchedAltSJs.isEmpty() && isWithinSpliceRegion)
         {
             writeMatchData(
-                    sampleId, variant, geneData, null, SpliceVariantMatchType.NONE,
+                    sampleId, variant, geneData, null, DISRUPTION,
                     closestAcceptorDonorType, closestExonDistance, closestTransStr);
         }
     }
 
-    private List<AltSpliceJunction> findCloseAltSpliceJunctions(
+    private static boolean validCrypticType(AltSpliceJunctionType type)
+    {
+        return type == NOVEL_5_PRIME || type == NOVEL_3_PRIME || type == NOVEL_EXON || type == EXON_INTRON;
+    }
+
+    private List<AltSpliceJunction> findCrypticAltSpliceJunctions(
             final String sampleId, final List<AltSpliceJunction> altSpliceJunctions, final SpliceVariant variant,
             final EnsemblGeneData geneData)
     {
         final List<AltSpliceJunction> closeAltSJs = altSpliceJunctions.stream()
+                .filter(x -> validCrypticType(x.type()))
                 .filter(x -> withinRange(x.SpliceJunction[SE_START], variant.Position, CLOSE_ALT_SJ_DISTANCE)
                         || withinRange(x.SpliceJunction[SE_END], variant.Position, CLOSE_ALT_SJ_DISTANCE))
                 .collect(Collectors.toList());
 
-        for(AltSpliceJunction altSJ : closeAltSJs)
+        for(AltSpliceJunction altSJ : altSpliceJunctions)
         {
+            if(!validCrypticType(altSJ.type()))
+                continue;
+
+            Integer closeIndex = null;
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                if(!withinRange(altSJ.SpliceJunction[se], variant.Position, CLOSE_ALT_SJ_DISTANCE))
+                    continue;
+
+                if(altSJ.RegionContexts[se] == SPLICE_JUNC)
+                    continue;
+
+                closeIndex = se;
+                break;
+            }
+
+            if(closeIndex == null)
+                continue;
+
             List<String> allTransNames = Lists.newArrayList();
 
             for(int se = SE_START; se <= SE_END; ++se)
@@ -406,8 +432,11 @@ public class SpliceVariantMatcher
                 }
             }
 
+            // acceptor donor based on gene strand and which end of the splice junction is matched
+            AcceptorDonorType acceptorDonorType = ((closeIndex == SE_START) == (geneData.Strand == POS_STRAND)) ? DONOR : ACCEPTOR;
+
             writeMatchData(
-                    sampleId, variant, geneData, altSJ, PROXIMATE, NONE, -1,
+                    sampleId, variant, geneData, altSJ, CRYPTIC, acceptorDonorType, -1,
                     appendStrList(allTransNames, ITEM_DELIM.charAt(0)));
         }
 
@@ -429,7 +458,7 @@ public class SpliceVariantMatcher
 
         return false;
     }
-    
+
     private void initialiseWriter()
     {
         try
