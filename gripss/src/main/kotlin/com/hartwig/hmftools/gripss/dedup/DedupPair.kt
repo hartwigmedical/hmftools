@@ -48,7 +48,7 @@ data class DedupPair(val duplicates: Set<String>, val rescue: Set<String>) {
                 return variantPass
             }
 
-            return original.qual > other.qual
+            return original.tumorQual > other.tumorQual
         }
     }
 }

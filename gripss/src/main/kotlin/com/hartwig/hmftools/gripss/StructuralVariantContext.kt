@@ -49,7 +49,8 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val mateId: String? = context.mate()
     val confidenceInterval = context.confidenceInterval()
     val start = context.start
-    val qual = tumorGenotype.qual(isSingle)
+    val tumorQual = tumorGenotype.qual(isSingle)
+    val normalQual = normalGenotype?.qual(isSingle) ?: 0
 
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
@@ -192,7 +193,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         normalGenotype?.let { x -> genotypesToWrite.add(x) }
 
         val builder = VariantContextBuilder(context).genotypes(genotypesToWrite).filters()
-        builder.log10PError(qual / -10.0)
+        builder.log10PError(tumorQual / -10.0)
                 .attribute(TAF, tumorAF)
                 .attribute(LOCAL_LINKED_BY, localLink)
                 .attribute(REMOTE_LINKED_BY, remoteLink)
@@ -294,7 +295,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
 
     fun qualFilter(minQualBreakEnd: Int, minQualBreakPoint: Int): Boolean {
         val minQual = if (isSingle) minQualBreakEnd else minQualBreakPoint
-        return qual < minQual.toDouble()
+        return tumorQual < minQual.toDouble()
     }
 
     fun polyGCInsertFilter(polyGRegion: Locatable): Boolean {
@@ -397,7 +398,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun tumorQualFilter(minTumorQual: Int): Boolean {
-        return qual < minTumorQual.toDouble()
+        return tumorQual < minTumorQual.toDouble()
     }
 
     fun normalSupportRelativeFilter(maxNormalRelativeSupport: Double, comparator: ContigComparator): Boolean {
@@ -412,7 +413,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     override fun toString(): String {
-        return "${context.id} ${context.contig}:${context.start} QUAL:${qual} Orientation:${variantType.startOrientation} ${context.alleles[0].displayString}  > ${context.alleles[1].displayString}"
+        return "${context.id} ${context.contig}:${context.start} QUAL:${tumorQual} Orientation:${variantType.startOrientation} ${context.alleles[0].displayString}  > ${context.alleles[1].displayString}"
     }
 
     private fun Cipos.invert(): Cipos {
