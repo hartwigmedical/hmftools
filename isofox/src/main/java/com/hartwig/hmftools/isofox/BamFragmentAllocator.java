@@ -155,7 +155,7 @@ public class BamFragmentAllocator
         mGeneGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
         mBaseDepth = new BaseDepth();
         mChimericReads = new ChimericReadTracker(mConfig);
-        mSpliceSiteCounter = new SpliceSiteCounter();
+        mSpliceSiteCounter = new SpliceSiteCounter(resultsWriter.getSpliceSiteWriter());
 
         mKnownPairGeneIds = Lists.newArrayList();
 

@@ -623,8 +623,7 @@ public class AltSpliceJunctionFinder
     }
 
     private synchronized static void writeAltSpliceJunctions(
-            final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions,
-            final GeneCollection geneCollection)
+            final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions, final GeneCollection geneCollection)
     {
         try
         {

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
@@ -92,9 +93,11 @@ public class ResultsWriter
         mRetainedIntronWriter = null;
         mSpliceSiteWriter = null;
 
+        if(mConfig.runFunction(TRANSCRIPT_COUNTS))
+            initialiseGeneCollectionWriter();
+
         if(!mConfig.runFusionsOnly())
         {
-            initialiseGeneCollectionWriter();
             initialiseExternalWriters();
         }
     }

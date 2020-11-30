@@ -234,7 +234,8 @@ public class Isofox
                 totalCounts, enrichedGeneFragCount,
                 medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
 
-        mResultsWriter.writeSummaryStats(summaryStats);
+        if(mConfig.runFunction(IsofoxFunction.TRANSCRIPT_COUNTS))
+            mResultsWriter.writeSummaryStats(summaryStats);
 
         if (mConfig.WriteGcData)
         {

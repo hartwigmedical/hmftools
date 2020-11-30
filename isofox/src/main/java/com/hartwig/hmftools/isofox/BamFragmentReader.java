@@ -476,8 +476,7 @@ public class BamFragmentReader implements Callable
 
         if(mConfig.WriteSpliceSiteData)
         {
-            final BufferedWriter ssWriter = mResultsWriter.getSpliceSiteWriter();
-            mBamFragmentAllocator.getSpliceSiteCounter().writeSpliceSiteData(ssWriter, geneCollection);
+            mBamFragmentAllocator.getSpliceSiteCounter().writeSpliceSiteData(geneCollection);
         }
 
         mPerfCounters[PERF_NOVEL_LOCATIONS].stop();

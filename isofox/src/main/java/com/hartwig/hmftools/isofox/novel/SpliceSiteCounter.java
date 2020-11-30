@@ -21,16 +21,19 @@ import com.hartwig.hmftools.isofox.common.RegionReadData;
 public class SpliceSiteCounter
 {
     private final Map<Integer,int[]> mSiteCounts;
+    private final BufferedWriter mWriter;
 
     public static final int SPLICE_SITE_TRAVERSED = 0;
     public static final int SPLICE_SITE_SUPPORT = 1;
     public static final int SPLICE_SITE_SKIPPED = 2;
 
-    public SpliceSiteCounter()
+    public SpliceSiteCounter(final BufferedWriter writer)
     {
+        mWriter = writer;
         mSiteCounts = Maps.newHashMap();
     }
 
+    public final Map<Integer,int[]> getSiteCounts() { return mSiteCounts; }
     public void clear() { mSiteCounts.clear(); }
 
     public void registerSpliceSiteSupport(final List<int[]> readMappedCoords, final List<RegionReadData> allRegions)
@@ -125,14 +128,23 @@ public class SpliceSiteCounter
         }
     }
 
-    public synchronized void writeSpliceSiteData(final BufferedWriter writer, final GeneCollection geneCollection)
+    public void writeSpliceSiteData(final GeneCollection geneCollection)
+    {
+        if(mWriter == null)
+            return;
+
+        writeSpliceSiteData(mWriter, geneCollection, mSiteCounts);
+    }
+
+    private synchronized static void writeSpliceSiteData(
+            final BufferedWriter writer, final GeneCollection geneCollection, final Map<Integer,int[]> siteCounts)
     {
         if(writer == null)
             return;
 
         try
         {
-            for(Map.Entry<Integer,int[]> entry : mSiteCounts.entrySet())
+            for(Map.Entry<Integer,int[]> entry : siteCounts.entrySet())
             {
                 int spliceSite = entry.getKey();
                 final int[] counts = entry.getValue();
