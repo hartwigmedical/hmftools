@@ -400,7 +400,7 @@ public final class ViccExtractor {
     private static void writeInterpretationToTsv(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
             @NotNull String viccFeatureInterpretationTsv) throws IOException {
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner("\t").add("gene").add("event").add("type").add("interpretation").toString();
+        String header = new StringJoiner("\t").add("source").add("gene").add("event").add("type").add("interpretation").toString();
         lines.add(header);
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
@@ -439,7 +439,7 @@ public final class ViccExtractor {
                     interpretation.add(signatureForFeature.toString());
                 }
 
-                lines.add(new StringJoiner("\t").add(feature.geneSymbol())
+                lines.add(new StringJoiner("\t").add(viccEntry.source().toString()).add(feature.geneSymbol())
                         .add(feature.name())
                         .add(feature.type().name())
                         .add(interpretation.toString())
