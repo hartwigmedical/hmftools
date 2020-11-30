@@ -12,16 +12,12 @@ import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberExtractor {
 
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
-
-    private static final Logger LOGGER = LogManager.getLogger(CopyNumberExtractor.class);
 
     public CopyNumberExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
