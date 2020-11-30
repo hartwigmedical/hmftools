@@ -15,7 +15,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class FusionExtractor {
@@ -31,9 +30,9 @@ public class FusionExtractor {
     @NotNull
     public Map<Feature, KnownFusionPair> extractFusionPairs(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        KnownFusionPair annotatedFusion = ImmutableKnownFusionPair.builder().geneUp(Strings.EMPTY).geneDown(Strings.EMPTY).build();
         boolean usingGenes;
         for (Feature feature : viccEntry.features()) {
+            KnownFusionPair annotatedFusion = null;
             String fusion = feature.name();
 
             if (feature.type() == MutationType.FUSION_PAIR) {
@@ -60,22 +59,23 @@ public class FusionExtractor {
                     }
                 }
 
-                HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
-                HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
-                if (canonicalTranscriptStart == null) {
-                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneUp(), feature.name());
-                    if (usingGenes) {
+                if (annotatedFusion != null) {
+                    HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
+                    HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
+                    if (canonicalTranscriptStart == null) {
+                        usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneUp(), feature.name());
+                        if (usingGenes) {
+                            fusionsPerFeature.put(feature, annotatedFusion);
+                        }
+                    } else if (canonicalTranscriptEnd == null) {
+                        usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneDown(), feature.name());
+                        if (usingGenes) {
+                            fusionsPerFeature.put(feature, annotatedFusion);
+                        }
+                    } else {
                         fusionsPerFeature.put(feature, annotatedFusion);
                     }
-                } else if (canonicalTranscriptEnd == null) {
-                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneDown(), feature.name());
-                    if (usingGenes) {
-                        fusionsPerFeature.put(feature, annotatedFusion);
-                    }
-                } else {
-                    fusionsPerFeature.put(feature, annotatedFusion);
                 }
-
             } else if (feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
                 String featureDescription = feature.geneSymbol() + " " + feature.name();
 
