@@ -115,7 +115,7 @@ public class IsofoxConfig
     public final String BamFile;
     public final File RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
-    public RefGenomeInterface RefGenome;
+    public final RefGenomeInterface RefGenome;
     public final int GeneReadLimit;
     public int MaxFragmentLength;
     public final boolean DropDuplicates;
@@ -189,25 +189,7 @@ public class IsofoxConfig
 
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
         RefGenomeFile = refGenomeFilename != null ? new File(refGenomeFilename) : null;
-        RefGenome = null;
-
-        if(RefGenomeFile != null)
-        {
-            try
-            {
-                ISF_LOGGER.debug("loading indexed fasta reference file");
-                IndexedFastaSequenceFile refFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFilename));
-                RefGenome = new RefGenomeSource(refFastaSeqFile);
-            }
-            catch (IOException e)
-            {
-                ISF_LOGGER.error("Reference file loading failed: {}", e.toString());
-            }
-        }
-        else
-        {
-            RefGenome = null;
-        }
+        RefGenome = loadRefGenome(refGenomeFilename);
 
         if(cmd.hasOption(REF_GENOME_VERSION))
         {
@@ -328,6 +310,24 @@ public class IsofoxConfig
             final String chromosomes = cmd.getOptionValue(SPECIFIC_CHR);
             ISF_LOGGER.info("filtering for specific chromosomes: {}", chromosomes);
             SpecificChromosomes.addAll(Arrays.stream(chromosomes.split(ITEM_DELIM)).collect(Collectors.toList()));
+        }
+    }
+
+    public static RefGenomeSource loadRefGenome(final String filename)
+    {
+        if(filename == null || filename.isEmpty())
+            return null;
+
+        try
+        {
+            ISF_LOGGER.debug("loading indexed fasta reference file");
+            IndexedFastaSequenceFile refFastaSeqFile = new IndexedFastaSequenceFile(new File(filename));
+            return new RefGenomeSource(refFastaSeqFile);
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("Reference file loading failed: {}", e.toString());
+            return null;
         }
     }
 

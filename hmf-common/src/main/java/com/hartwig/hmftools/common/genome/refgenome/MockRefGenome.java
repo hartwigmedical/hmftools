@@ -19,7 +19,7 @@ public class MockRefGenome implements RefGenomeInterface
     {
         String chrBases = RefGenomeMap.get(chromosome);
 
-        if(chrBases != null && chrBases.length() > posEnd)
+        if(chrBases != null && posStart >= 0 && chrBases.length() > posEnd)
             return chrBases.substring(posStart, posEnd + 1);
         else
             return "";

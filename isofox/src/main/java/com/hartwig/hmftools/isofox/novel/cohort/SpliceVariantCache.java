@@ -65,7 +65,8 @@ public class SpliceVariantCache
 
         mWriteVariantCache = !hasCachedFiles && cmd.hasOption(WRITE_VARIANT_CACHE);
 
-        initialiseCacheWriters();
+        if(mWriteVariantCache)
+            initialiseCacheWriters();
 
         if(cmd.hasOption(COHORT_ALT_SJ_FILE))
         {
@@ -250,6 +251,7 @@ public class SpliceVariantCache
 
             List<SpliceVariant> spliceVariants = null;
             String currentSampleId = "";
+            int variantCount = 0;
 
             while ((line = fileReader.readLine()) != null)
             {
@@ -264,7 +266,10 @@ public class SpliceVariantCache
                 }
 
                 spliceVariants.add(SpliceVariant.fromCsv(items, fieldsMap));
+                ++variantCount;
             }
+
+            ISF_LOGGER.info("loaded {} splice variants for {} samples", variantCount, mSampleSpliceVariants.size());
         }
         catch(IOException e)
         {
@@ -298,6 +303,7 @@ public class SpliceVariantCache
 
             String currentSampleId = "";
             Map<String,List<Integer>> svBreakends = null;
+            int breakendCount = 0;
 
             while ((line = fileReader.readLine()) != null)
             {
@@ -319,7 +325,11 @@ public class SpliceVariantCache
                     svBreakends.put(chromosome, Lists.newArrayList(position));
                 else
                     positions.add(position);
+
+                ++breakendCount;
             }
+
+            ISF_LOGGER.info("loaded {} SV breakeands for {} samples", breakendCount, mSampleSvBreakends.size());
         }
         catch(IOException e)
         {

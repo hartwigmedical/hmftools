@@ -4,5 +4,5 @@ public enum SpliceVariantMatchType
 {
     NONE,
     DISRUPTION,
-    CRYPTIC;
+    NOVEL;
 }
