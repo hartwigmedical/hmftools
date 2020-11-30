@@ -2,9 +2,7 @@ package com.hartwig.hmftools.isofox.results;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.FUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -39,7 +37,7 @@ import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
-import com.hartwig.hmftools.isofox.novel.SpliceJunctionCounter;
+import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 
 public class ResultsWriter
 {
@@ -139,7 +137,7 @@ public class ResultsWriter
                 mReadDataWriter = BamFragmentAllocator.createReadDataWriter(mConfig);
 
             if(mConfig.WriteSpliceSiteData)
-                mSpliceSiteWriter = SpliceJunctionCounter.createWriter(mConfig);
+                mSpliceSiteWriter = SpliceSiteCounter.createWriter(mConfig);
 
             if(mConfig.runFunction(NOVEL_LOCATIONS))
             {

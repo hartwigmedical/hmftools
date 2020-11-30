@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
@@ -74,7 +73,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadTracker;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
-import com.hartwig.hmftools.isofox.novel.SpliceJunctionCounter;
+import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import org.jetbrains.annotations.NotNull;
@@ -102,6 +101,7 @@ public class BamFragmentAllocator
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
     private final RetainedIntronFinder mRetainedIntronFinder;
     private final ChimericReadTracker mChimericReads;
+    private final SpliceSiteCounter mSpliceSiteCounter;
     private final int[] mValidReadStartRegion;
     private final BaseDepth mBaseDepth;
 
@@ -155,6 +155,7 @@ public class BamFragmentAllocator
         mGeneGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
         mBaseDepth = new BaseDepth();
         mChimericReads = new ChimericReadTracker(mConfig);
+        mSpliceSiteCounter = new SpliceSiteCounter();
 
         mKnownPairGeneIds = Lists.newArrayList();
 
@@ -168,6 +169,7 @@ public class BamFragmentAllocator
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
     public BaseDepth getBaseDepth() { return mBaseDepth; }
     public final ChimericReadTracker getChimericReadTracker() { return mChimericReads; }
+    public final SpliceSiteCounter getSpliceSiteCounter() { return mSpliceSiteCounter; }
 
     private static int GENE_LOG_COUNT = 100000;
 
@@ -182,6 +184,7 @@ public class BamFragmentAllocator
 
         mAltSpliceJunctionFinder.setGeneData(null);
         mRetainedIntronFinder.setGeneData(null);
+        mSpliceSiteCounter.clear();
 
         mDuplicateTracker.clear();
         mCurrentGenes = null;
@@ -497,7 +500,7 @@ public class BamFragmentAllocator
 
         // track splice site info
         if(mConfig.WriteSpliceSiteData)
-            SpliceJunctionCounter.assignSpliceJunctionSupport(commonMappings, validRegions);
+            mSpliceSiteCounter.registerSpliceSiteSupport(commonMappings, mCurrentGenes.getExonRegions());
 
         for(Map.Entry<Integer,TransMatchType> entry : firstReadTransTypes.entrySet())
         {

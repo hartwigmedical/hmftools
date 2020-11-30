@@ -42,7 +42,7 @@ import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.fusion.ReadGroup;
-import com.hartwig.hmftools.isofox.novel.SpliceJunctionCounter;
+import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -477,7 +477,7 @@ public class BamFragmentReader implements Callable
         if(mConfig.WriteSpliceSiteData)
         {
             final BufferedWriter ssWriter = mResultsWriter.getSpliceSiteWriter();
-            geneCollection.getExonRegions().forEach(x -> SpliceJunctionCounter.writeSpliceSiteData(ssWriter, geneCollection, x));
+            mBamFragmentAllocator.getSpliceSiteCounter().writeSpliceSiteData(ssWriter, geneCollection);
         }
 
         mPerfCounters[PERF_NOVEL_LOCATIONS].stop();

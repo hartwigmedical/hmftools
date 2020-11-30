@@ -296,12 +296,12 @@ public class SpliceVariantMatcher
                     if(withinRange(exon.ExonStart, variant.Position, SPLICE_REGION_CODING_DISTANCE))
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR;
-                        exonDistance = -abs(exon.ExonStart - variant.Position);
+                        exonDistance = -abs(exon.ExonStart - variant.Position) - 1; // first base inside exon is -1 by convention
                     }
                     else if(withinRange(exon.ExonEnd, variant.Position, SPLICE_REGION_CODING_DISTANCE))
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? DONOR : ACCEPTOR;
-                        exonDistance = -abs(exon.ExonEnd - variant.Position);
+                        exonDistance = -abs(exon.ExonEnd - variant.Position) - 1;
                     }
                     else
                     {
