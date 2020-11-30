@@ -28,11 +28,12 @@ public class HotspotExtractorTest {
 
     @Test
     public void canExtractHotspot() {
-        Feature hotspotFeature = ViccTestFactory.testFeatureWithName("V600E");
+        String protein = "V600E";
+        Feature hotspotFeature = ViccTestFactory.testFeatureWithName(protein);
         Feature ampFeature = ViccTestFactory.testFeatureWithName("Amplification");
         ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(hotspotFeature, ampFeature));
 
-        HotspotExtractor hotspotExtractor = new HotspotExtractor(new TestProteinResolver(), new ProteinAnnotationExtractor());
+        HotspotExtractor hotspotExtractor = new HotspotExtractor(new TestProteinResolver(protein), new ProteinAnnotationExtractor());
         Map<Feature, List<VariantHotspot>> hotspots = hotspotExtractor.extractHotspots(entry);
 
         assertEquals(1, hotspots.size());
@@ -44,10 +45,17 @@ public class HotspotExtractorTest {
     private static class TestProteinResolver implements ProteinResolver {
 
         @NotNull
+        private final String protein;
+
+        public TestProteinResolver(@NotNull final String protein) {
+            this.protein = protein;
+        }
+
+        @NotNull
         @Override
         public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull final String gene,
                 @Nullable final String specificTranscript, @NotNull final String proteinAnnotation) {
-            return Lists.newArrayList(TEST_HOTSPOT);
+            return proteinAnnotation.equals(protein) ? Lists.newArrayList(TEST_HOTSPOT) : Lists.newArrayList();
         }
 
         @NotNull
