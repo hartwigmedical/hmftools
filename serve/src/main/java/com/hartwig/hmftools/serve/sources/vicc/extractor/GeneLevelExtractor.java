@@ -41,6 +41,7 @@ public class GeneLevelExtractor {
     @NotNull
     public Map<Feature, GeneLevelAnnotation> extractGeneLevelEvents(@NotNull ViccEntry viccEntry) {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
+        boolean usingGenes;
 
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
@@ -57,7 +58,11 @@ public class GeneLevelExtractor {
                 }
             } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
                 if (canonicalTranscript == null) {
-                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
+                    usingGenes = CheckGenes.checkGensInPanelForCuration(feature.geneSymbol(), feature.name());
+                    if (usingGenes) {
+                        geneLevelEventsPerFeature.put(feature,
+                                ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
+                    }
                 } else {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
@@ -87,15 +92,15 @@ public class GeneLevelExtractor {
             return GeneLevelEvent.ACTIVATION;
         } else if (ViccClassificationConfig.GENERIC_GENE_LEVEL_KEY_PHRASES.contains(event)) {
             return extractGeneLevelEventGene(feature, driverGenes);
-        } else if (feature.provenanceRule() != null){
+        } else if (feature.provenanceRule() != null) {
             if (GENE_ONLY.contains(feature.provenanceRule())) {
                 return extractGeneLevelEventGene(feature, driverGenes);
             }
-        }else {
-            // LOGGER.warn("Unknown event {}", feature);
+        } else {
+            LOGGER.warn("Unknown event {}", feature);
             return GeneLevelEvent.UNKNOWN;
         }
-        //  LOGGER.warn("Unknown event {}", feature);
+        LOGGER.warn("Unknown event {}", feature);
         return GeneLevelEvent.UNKNOWN;
     }
 
