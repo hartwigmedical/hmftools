@@ -55,7 +55,7 @@ public class GeneLevelExtractorTest {
         Feature featureGeneralInactivation = ViccTestFactory.testEntryWithGeneAndEvent("NOTCH1", "MUTATION").features().get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneralInactivation, driverGenes));
 
-        Feature featureGeneOnly = ViccTestFactory.testEntryWithGeneAndEvent("NOTCH1", "NOTCH1").features().get(0);
+        Feature featureGeneOnly = ViccTestFactory.testEntryWithGeneAndEvent("NOTCH1", "NOTCH1 ").features().get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneOnly, driverGenes));
 
         Feature featureUnkown = ViccTestFactory.testEntryWithGeneAndEvent("KRAS", "abcd").features().get(0);
