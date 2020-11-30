@@ -11,7 +11,6 @@ import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.junit.Test;
 
@@ -20,16 +19,14 @@ public class SignaturesExtractorTest {
     @Test
     public void canExtractSignatureName() {
         assertEquals(SignatureName.MICROSATELLITE_UNSTABLE, SignaturesExtractor.extractSignatureName("Microsatellite Instability-High"));
+
         assertNull(SignaturesExtractor.extractSignatureName("abc"));
     }
 
     @Test
     public void canExtractSignatureNameUnknown() {
         SignaturesExtractor signaturesExtractor = new SignaturesExtractor();
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
-                "any",
-                "Other Biomarkers",
-                "Microsatellite Instability-High");
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("Other Biomarkers", "Microsatellite Instability-High");
         Feature feature = viccEntry.features().get(0);
         SignatureName signatureName = SignaturesExtractor.extractSignatureName(feature.name());
 
@@ -42,12 +39,9 @@ public class SignaturesExtractorTest {
     @Test
     public void canExtractSignatureUnknown() {
         SignaturesExtractor signaturesExtractor = new SignaturesExtractor();
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
-                "any",
-                "Other Biomarkers",
-                "Tum");
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("Other Biomarkers", "Tum");
 
-        Map<Feature, SignatureName> signaturesPerFeature =signaturesExtractor.extractSignatures(viccEntry);
+        Map<Feature, SignatureName> signaturesPerFeature = signaturesExtractor.extractSignatures(viccEntry);
 
         assertTrue(signaturesPerFeature.isEmpty());
     }

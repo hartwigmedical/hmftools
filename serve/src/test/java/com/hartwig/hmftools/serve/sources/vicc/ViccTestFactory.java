@@ -37,21 +37,23 @@ public final class ViccTestFactory {
     }
 
     @NotNull
-    public static ViccEntry testViccEntryWithFeatures(@NotNull List<Feature> features) {
+    public static ViccEntry testEntryWithGeneAndEvent(@Nullable String gene, @NotNull String event) {
+        return testEntryWithFeatures(Lists.newArrayList(testFeatureWithGeneAndName(gene, event)));
+    }
+
+    @NotNull
+    public static ViccEntry testEntryWithFeatures(@NotNull List<Feature> features) {
         return testViccEntry(ViccSource.ONCOKB, Strings.EMPTY, null, features);
     }
 
     @NotNull
-    public static ViccEntry testViccEntryWithOncogenic(@NotNull String oncogenic, @NotNull String gene, @NotNull String event) {
-        List<Feature> features = Lists.newArrayList(testFeatureWithGeneAndName(gene, event));
-        return testViccEntry(ViccSource.ONCOKB, oncogenic, null, features);
+    public static ViccEntry testEntryWithOncogenic(@NotNull String oncogenic) {
+        return testViccEntry(ViccSource.ONCOKB, oncogenic, null, Lists.newArrayList());
     }
 
     @NotNull
-    public static ViccEntry testViccEntryWithSourceAndKbObject(@NotNull ViccSource source, @Nullable String transcriptId,
-            @NotNull String gene, @NotNull String event) {
-        List<Feature> features = Lists.newArrayList(testFeatureWithGeneAndName(gene, event));
-        return testViccEntry(source, Strings.EMPTY, transcriptId, features);
+    public static ViccEntry testEntryWithSourceAndTranscript(@NotNull ViccSource source, @Nullable String transcriptId) {
+        return testViccEntry(source, Strings.EMPTY, transcriptId, Lists.newArrayList());
     }
 
     @NotNull
@@ -86,11 +88,6 @@ public final class ViccTestFactory {
     @NotNull
     public static Feature testFeatureWithName(@NotNull String name) {
         return testFeatureWithGeneAndName("any", name);
-    }
-
-    @NotNull
-    public static Feature testFeatureWithNameAndProvenance(@NotNull String name) {
-        return testFeatureWithGeneAndName(null, name);
     }
 
     @NotNull

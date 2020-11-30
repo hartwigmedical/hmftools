@@ -30,7 +30,7 @@ public class HotspotExtractorTest {
     public void canExtractHotspot() {
         Feature hotspotFeature = ViccTestFactory.testFeatureWithName("V600E");
         Feature ampFeature = ViccTestFactory.testFeatureWithName("Amplification");
-        ViccEntry entry = ViccTestFactory.testViccEntryWithFeatures(Lists.newArrayList(hotspotFeature, ampFeature));
+        ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(hotspotFeature, ampFeature));
 
         HotspotExtractor hotspotExtractor = new HotspotExtractor(new TestProteinResolver(), new ProteinAnnotationExtractor());
         Map<Feature, List<VariantHotspot>> hotspots = hotspotExtractor.extractHotspots(entry);
