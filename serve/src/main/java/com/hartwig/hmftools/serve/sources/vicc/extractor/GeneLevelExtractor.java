@@ -78,12 +78,10 @@ public class GeneLevelExtractor {
         String event;
         String geneSymbol = feature.geneSymbol();
         String geneSymbolEvent = feature.name().split(" ")[0];
+
         if (geneSymbolEvent.equals(geneSymbol)) {
-            if (feature.name().split(" ").length > 1) {
-                event = feature.name().split(" ", 2)[1].trim();
-            } else {
-                event = feature.name();
-            }
+            event = feature.name().split(" ", 2)[1].trim();
+
         } else {
             event = feature.name();
         }
@@ -94,7 +92,7 @@ public class GeneLevelExtractor {
             return GeneLevelEvent.ACTIVATION;
         } else if (ViccClassificationConfig.GENERIC_GENE_LEVEL_KEY_PHRASES.contains(event)) {
             return extractGeneLevelEventGene(feature, driverGenes);
-        } else if (feature.geneSymbol().equals(feature.name())) {
+        } else if (feature.geneSymbol().equals(feature.name().replaceAll("\\s+", ""))) {
             return extractGeneLevelEventGene(feature, driverGenes);
         } else {
             LOGGER.warn("Unknown event {}", feature);
