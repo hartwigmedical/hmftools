@@ -44,6 +44,19 @@ public class GeneRangeExtractorTest {
     }
 
     @Test
+    public void canExtractAnnotationForEntryWithTwoFeatures() {
+        GeneRangeExtractor extractor = new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), Lists.newArrayList());
+
+        Feature feature1 = ViccTestFactory.testFeatureWithGeneAndName("ERBB2", "Exon 20 insertions/deletions");
+        Feature feature2 = ViccTestFactory.testFeatureWithGeneAndName("ERBB2", "Exon 20 insertions");
+        ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(feature1, feature2));
+
+        assertEquals(2, extractor.extractGeneRanges(entry).size());
+        assertEquals(1, extractor.extractGeneRanges(entry).get(feature1).size());
+        assertEquals(1, extractor.extractGeneRanges(entry).get(feature2).size());
+    }
+
+    @Test
     public void canExtractMutationFilter() {
         Feature featureNonsenseFrameshift = ViccTestFactory.testEntryWithGeneAndEvent("CALR", "EXON 9 FRAMESHIFT").features().get(0);
         assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
@@ -86,7 +99,6 @@ public class GeneRangeExtractorTest {
 
     @Test
     public void canExtractSpecificMutationTypeFilter() {
-
         Feature featureMutationUnknownOnco = ViccTestFactory.testEntryWithGeneAndEvent("ERBB2", "D835").features().get(0);
         List<DriverGene> driverGenes = createDriverGenes("TP53", "EGFR", "ERBB2");
         String gene = "ERBB2";
