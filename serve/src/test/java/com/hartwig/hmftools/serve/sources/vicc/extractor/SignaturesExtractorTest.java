@@ -29,8 +29,6 @@ public class SignaturesExtractorTest {
                 "any",
                 "Other Biomarkers",
                 "Microsatellite Instability-High",
-                "chromosome",
-                "pos",
                 null);
         Feature feature = viccEntry.features().get(0);
         SignatureName signatureName = SignaturesExtractor.extractSignatureName(feature.name());
@@ -48,8 +46,6 @@ public class SignaturesExtractorTest {
                 "any",
                 "Other Biomarkers",
                 "Tum",
-                "chromosome",
-                "pos",
                 null);
 
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();

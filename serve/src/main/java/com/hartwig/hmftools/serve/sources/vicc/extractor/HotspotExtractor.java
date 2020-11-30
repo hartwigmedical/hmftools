@@ -11,7 +11,6 @@ import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class HotspotExtractor {
@@ -35,7 +34,7 @@ public class HotspotExtractor {
                 hotspotsPerFeature.put(feature,
                         proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                                 viccEntry.transcriptId(),
-                                extractProteinAnnotation(feature)));
+                                proteinAnnotationExtractor.apply(feature.name())));
             }
         }
 
@@ -43,7 +42,7 @@ public class HotspotExtractor {
     }
 
     @NotNull
-    public String extractProteinAnnotation(@NotNull Feature feature) {
-        return feature.type() == MutationType.HOTSPOT ? proteinAnnotationExtractor.apply(feature.name()) : Strings.EMPTY;
+    public ProteinAnnotationExtractor proteinAnnotationExtractor() {
+        return proteinAnnotationExtractor;
     }
 }

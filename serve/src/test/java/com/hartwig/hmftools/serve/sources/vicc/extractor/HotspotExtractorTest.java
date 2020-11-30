@@ -1,58 +1,59 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
+import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
-import com.hartwig.hmftools.serve.transvar.Transvar;
-import com.hartwig.hmftools.serve.transvar.TransvarTest;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
-import org.junit.Ignore;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class HotspotExtractorTest {
 
+    private static final VariantHotspot TEST_HOTSPOT =
+            ImmutableVariantHotspotImpl.builder().chromosome("1").position(10).ref("A").alt("T").build();
+
     @Test
-    @Ignore
     public void canExtractHotspot() {
-        HotspotExtractor hotspotExtractor = new HotspotExtractor(ProteinResolverFactory.dummy(), new ProteinAnnotationExtractor());
+        Feature hotspotFeature = ViccTestFactory.testFeatureWithName("V600E");
+        Feature ampFeature = ViccTestFactory.testFeatureWithName("Amplification");
+        ViccEntry entry = ViccTestFactory.testViccEntryWithFeatures(Lists.newArrayList(hotspotFeature, ampFeature));
 
-        ViccEntry viccEntry =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "ENST00000261584", "PALB2", "L939W", "7", "10", null);
-        Feature feature = viccEntry.features().get(0);
-        Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
-        Transvar transvar = TransvarTest.returnsSingleTransvarRecord(TransvarTest.createTestRecordHotspot(feature.chromosome(),
-                Integer.valueOf(feature.start()),
-                viccEntry.transcriptId()));
+        HotspotExtractor hotspotExtractor = new HotspotExtractor(new TestProteinResolver(), new ProteinAnnotationExtractor());
+        Map<Feature, List<VariantHotspot>> hotspots = hotspotExtractor.extractHotspots(entry);
 
-        hotspotsPerFeature.put(feature,
-                transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
-                        viccEntry.transcriptId(),
-                        hotspotExtractor.extractProteinAnnotation(feature)));
+        assertEquals(1, hotspots.size());
+        assertEquals(1, hotspots.get(hotspotFeature).size());
+        assertEquals(TEST_HOTSPOT, hotspots.get(hotspotFeature).get(0));
+        assertNull(hotspots.get(ampFeature));
+    }
 
-        Map<Feature, List<VariantHotspot>> hotspotsPerFeatureExpect = Maps.newHashMap();
-        hotspotsPerFeatureExpect.put(ImmutableFeature.builder()
-                .name("L939W")
-                .chromosome("7")
-                .start("10")
-                .provenance(Lists.newArrayList())
-                .geneSymbol("PALB2")
-                .synonyms(Lists.newArrayList())
-                .links(Lists.newArrayList())
-                .build(), Lists.newArrayList());
+    private static class TestProteinResolver implements ProteinResolver {
 
-        assertEquals(hotspotsPerFeatureExpect, hotspotsPerFeature);
+        @NotNull
+        @Override
+        public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull final String gene,
+                @Nullable final String specificTranscript, @NotNull final String proteinAnnotation) {
+            return Lists.newArrayList(TEST_HOTSPOT);
+        }
 
+        @NotNull
+        @Override
+        public Set<String> unresolvedProteinAnnotations() {
+            return Sets.newHashSet();
+        }
     }
 }
