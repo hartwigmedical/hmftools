@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
@@ -46,8 +47,8 @@ public class SignaturesExtractorTest {
                 "Other Biomarkers",
                 "Tum");
 
-        Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
+        Map<Feature, SignatureName> signaturesPerFeature =signaturesExtractor.extractSignatures(viccEntry);
 
-        assertEquals(signaturesPerFeature, signaturesExtractor.extractSignatures(viccEntry));
+        assertTrue(signaturesPerFeature.isEmpty());
     }
 }

@@ -79,7 +79,11 @@ public class GeneLevelExtractor {
         String geneSymbol = feature.geneSymbol();
         String geneSymbolEvent = feature.name().split(" ")[0];
         if (geneSymbolEvent.equals(geneSymbol)) {
-            event = feature.name().split(" ", 2)[1].trim();
+            if (feature.name().split(" ").length > 1) {
+                event = feature.name().split(" ", 2)[1].trim();
+            } else {
+                event = feature.name();
+            }
         } else {
             event = feature.name();
         }

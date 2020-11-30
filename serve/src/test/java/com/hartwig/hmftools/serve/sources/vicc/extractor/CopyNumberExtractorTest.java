@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
@@ -23,11 +24,11 @@ public class CopyNumberExtractorTest {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37());
 
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "AKT1", "AKT1  amp");
-        Map<Feature, KnownCopyNumber> feature = Maps.newHashMap();
-        feature.put(viccEntry.features().get(0),
+        Map<Feature, KnownCopyNumber> featureAmps = Maps.newHashMap();
+        featureAmps.put(viccEntry.features().get(0),
                 ImmutableKnownCopyNumber.builder().gene("AKT1").type(CopyNumberType.AMPLIFICATION).build());
 
-        assertEquals(feature, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
+        assertEquals(featureAmps, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
     }
 
     @Test
@@ -35,9 +36,9 @@ public class CopyNumberExtractorTest {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37());
 
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "TET", "AMPLIFICATION");
-        Map<Feature, KnownCopyNumber> feature = Maps.newHashMap();
+        Map<Feature, KnownCopyNumber> featureAmpsUnknown = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);
 
-        assertEquals(feature, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
+        assertTrue(featureAmpsUnknown.isEmpty());
     }
 
     @Test
@@ -45,10 +46,10 @@ public class CopyNumberExtractorTest {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37());
 
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "PTEN", "DELETION");
-        Map<Feature, KnownCopyNumber> featureAmps = Maps.newHashMap();
-        featureAmps.put(viccEntry.features().get(0), ImmutableKnownCopyNumber.builder().gene("PTEN").type(CopyNumberType.DELETION).build());
+        Map<Feature, KnownCopyNumber> featureDels = Maps.newHashMap();
+        featureDels.put(viccEntry.features().get(0), ImmutableKnownCopyNumber.builder().gene("PTEN").type(CopyNumberType.DELETION).build());
 
-        assertEquals(featureAmps, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
+        assertEquals(featureDels, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
     }
 
     @Test
@@ -56,9 +57,9 @@ public class CopyNumberExtractorTest {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37());
 
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "any", "AC", "DELETION");
-        Map<Feature, KnownCopyNumber> featureAmps = Maps.newHashMap();
+        Map<Feature, KnownCopyNumber> featureDelsUnknown = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);
 
-        assertEquals(featureAmps, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
+        assertTrue(featureDelsUnknown.isEmpty());
     }
 
 }

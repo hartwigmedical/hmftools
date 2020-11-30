@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
@@ -20,9 +21,9 @@ public class FusionExtractorTest {
     @Test
     public void canExtractFusionPairsGenesUnknown() {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
-        Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "IG", "IG-BCL2");
-        assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        assertTrue(fusionsPerFeature.isEmpty());
     }
 
     @Test
