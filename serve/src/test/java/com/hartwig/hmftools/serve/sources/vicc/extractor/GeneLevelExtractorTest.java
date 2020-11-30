@@ -31,17 +31,17 @@ public class GeneLevelExtractorTest {
         List<DriverGene> driverGenes = createDriverGenes("STK11", "MET", "KIT");
 
         Feature featureOnco =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "ENST00000318493", "MET", "MUTATION", null)
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "ENST00000318493", "MET", "MUTATION")
                         .features()
                         .get(0);
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEventGene(featureOnco, driverGenes));
 
         Feature featureTsg =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI, null, "STK11", "STK11  mut", null).features().get(0);
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI, null, "STK11", "STK11  mut").features().get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEventGene(featureTsg, driverGenes));
 
         Feature featureUnknown =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, null, "MAP1K1", "Truncating Mutations", null)
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, null, "MAP1K1", "Truncating Mutations")
                         .features()
                         .get(0);
         assertEquals(GeneLevelEvent.UNKNOWN, GeneLevelExtractor.extractGeneLevelEventGene(featureUnknown, driverGenes));
@@ -55,35 +55,34 @@ public class GeneLevelExtractorTest {
         Feature featureActivation = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI,
                 "ENST00000318493",
                 "KRAS",
-                "KRAS oncogenic mutation",
-                null).features().get(0);
+                "KRAS oncogenic mutation").features().get(0);
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureActivation, driverGenes));
 
         Feature featureInactivation =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "ENST00000277541", "NOTCH1", "LOSS-OF-FUNCTION", null)
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "ENST00000277541", "NOTCH1", "LOSS-OF-FUNCTION")
                         .features()
                         .get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureInactivation, driverGenes));
 
         Feature featureGeneralActivation =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "ENST00000338641", "NF2", "MUTATION", null)
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "ENST00000338641", "NF2", "MUTATION")
                         .features()
                         .get(0);
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneralActivation, driverGenes));
 
         Feature featureGeneralInactivation =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "ENST00000277541", "NOTCH1", "MUTATION", null)
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC, "ENST00000277541", "NOTCH1", "MUTATION")
                         .features()
                         .get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneralInactivation, driverGenes));
 
         Feature featureGeneOnly =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI, "ENST00000277541", "NOTCH1", "MUTATION", "gene_only")
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI, "ENST00000277541", "NOTCH1", "NOTCH1")
                         .features()
                         .get(0);
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneOnly, driverGenes));
 
-        Feature featureUnkown = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI, "ENST00000318493", "KRAS", "abcd", null)
+        Feature featureUnkown = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CGI, "ENST00000318493", "KRAS", "abcd")
                 .features()
                 .get(0);
         assertEquals(GeneLevelEvent.UNKNOWN, GeneLevelExtractor.extractGeneLevelEvent(featureUnkown, driverGenes));
@@ -96,7 +95,7 @@ public class GeneLevelExtractorTest {
 
         GeneLevelExtractor geneLevelExtractor =
                 new GeneLevelExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("STK11", "MET", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "KIT", "KIT  positive", null);
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "KIT", "KIT  positive");
 
         assertEquals(GeneLevelExtractor.extractGeneLevelEvent(viccEntry.features().get(0), createDriverGenes("STK11", "MET", "KIT")),
                 GeneLevelEvent.ACTIVATION);
@@ -112,7 +111,7 @@ public class GeneLevelExtractorTest {
 
         GeneLevelExtractor geneLevelExtractor =
                 new GeneLevelExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("STK11", "MET", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "TP53", "TP53  negative", null);
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "TP53", "TP53  negative");
 
         assertEquals(GeneLevelExtractor.extractGeneLevelEvent(viccEntry.features().get(0), createDriverGenes("STK11", "MET", "KIT")),
                 GeneLevelEvent.INACTIVATION);
@@ -129,7 +128,7 @@ public class GeneLevelExtractorTest {
         GeneLevelExtractor geneLevelExtractor =
                 new GeneLevelExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("STK11", "MET", "KIT"));
         ViccEntry viccEntry =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "STK11", "Truncating Mutations", null);
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "STK11", "Truncating Mutations");
 
         assertEquals(GeneLevelExtractor.extractGeneLevelEvent(viccEntry.features().get(0), createDriverGenes("STK11", "MET", "KIT")),
                 GeneLevelEvent.INACTIVATION);
@@ -145,7 +144,7 @@ public class GeneLevelExtractorTest {
 
         GeneLevelExtractor geneLevelExtractor =
                 new GeneLevelExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("STK11", "MET", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "NTRK3", "NTRK3 fusion", null);
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "NTRK3", "NTRK3 fusion");
 
         geneLevelEventsPerFeature.put(viccEntry.features().get(0),
                 ImmutableGeneLevelAnnotation.builder().gene("NTRK3").event(GeneLevelEvent.FUSION).build());

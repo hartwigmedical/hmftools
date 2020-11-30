@@ -42,16 +42,15 @@ public final class ViccTestFactory {
     }
 
     @NotNull
-    public static ViccEntry testViccEntryWithOncogenic(@NotNull String oncogenic, @NotNull String gene, @NotNull String event,
-            @Nullable String provenanceRule) {
-        List<Feature> features = Lists.newArrayList(testFeatureWithGeneAndName(gene, event, provenanceRule));
+    public static ViccEntry testViccEntryWithOncogenic(@NotNull String oncogenic, @NotNull String gene, @NotNull String event) {
+        List<Feature> features = Lists.newArrayList(testFeatureWithGeneAndName(gene, event));
         return testViccEntry(ViccSource.ONCOKB, oncogenic, null, features);
     }
 
     @NotNull
     public static ViccEntry testViccEntryWithSourceAndKbObject(@NotNull ViccSource source, @Nullable String transcriptId,
-            @NotNull String gene, @NotNull String event, @Nullable String provenanceRule) {
-        List<Feature> features = Lists.newArrayList(testFeatureWithGeneAndName(gene, event, provenanceRule));
+            @NotNull String gene, @NotNull String event) {
+        List<Feature> features = Lists.newArrayList(testFeatureWithGeneAndName(gene, event));
         return testViccEntry(source, Strings.EMPTY, transcriptId, features);
     }
 
@@ -86,17 +85,17 @@ public final class ViccTestFactory {
 
     @NotNull
     public static Feature testFeatureWithName(@NotNull String name) {
-        return testFeatureWithGeneAndName("any", name, null);
+        return testFeatureWithGeneAndName("any", name);
     }
 
     @NotNull
-    public static Feature testFeatureWithNameAndProvenance(@NotNull String name, @Nullable String provenanceRule) {
-        return testFeatureWithGeneAndName(null, name, provenanceRule);
+    public static Feature testFeatureWithNameAndProvenance(@NotNull String name) {
+        return testFeatureWithGeneAndName(null, name);
     }
 
     @NotNull
-    public static Feature testFeatureWithGeneAndName(@Nullable String geneSymbol, @NotNull String name, @Nullable String provenanceRule) {
-        return ImmutableFeature.builder().geneSymbol(geneSymbol).name(name).provenanceRule(provenanceRule).build();
+    public static Feature testFeatureWithGeneAndName(@Nullable String geneSymbol, @NotNull String name) {
+        return ImmutableFeature.builder().geneSymbol(geneSymbol).name(name).build();
     }
 
     @NotNull

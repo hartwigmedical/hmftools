@@ -21,7 +21,7 @@ public class FusionExtractorTest {
     public void canExtractFusionPairsGenesUnknown() {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "IG", "IG-BCL2", null);
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "IG", "IG-BCL2");
         assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
     }
 
@@ -30,7 +30,7 @@ public class FusionExtractorTest {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         ViccEntry viccEntry =
-                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "PDGFRA", "BCR-PDGFRA Fusion", null);
+                ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "PDGFRA", "BCR-PDGFRA Fusion");
         fusionsPerFeature.put(viccEntry.features().get(0), ImmutableKnownFusionPair.builder().geneUp("BCR").geneDown("PDGFRA").build());
         assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
     }
@@ -39,7 +39,7 @@ public class FusionExtractorTest {
     public void canExtractFusionPairsWithExonsUpDown() {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "EGFR", "EGFRvII", null);
+        ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.ONCOKB, "any", "EGFR", "EGFRvII");
         fusionsPerFeature.put(viccEntry.features().get(0),
                 ImmutableKnownFusionPair.builder()
                         .geneUp("EGFR")
@@ -59,8 +59,7 @@ public class FusionExtractorTest {
         ViccEntry viccEntry = ViccTestFactory.testViccEntryWithSourceAndKbObject(ViccSource.CIVIC,
                 "ENST00000318493",
                 "MET",
-                "EXON 14 SKIPPING MUTATION",
-                null);
+                "EXON 14 SKIPPING MUTATION");
         fusionsPerFeature.put(viccEntry.features().get(0),
                 ImmutableKnownFusionPair.builder()
                         .geneUp("MET")

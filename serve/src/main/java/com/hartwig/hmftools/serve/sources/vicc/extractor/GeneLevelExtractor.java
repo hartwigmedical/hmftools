@@ -25,8 +25,6 @@ public class GeneLevelExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelExtractor.class);
 
-    private static final String GENE_ONLY = "gene_only";
-
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
     @NotNull
@@ -92,16 +90,12 @@ public class GeneLevelExtractor {
             return GeneLevelEvent.ACTIVATION;
         } else if (ViccClassificationConfig.GENERIC_GENE_LEVEL_KEY_PHRASES.contains(event)) {
             return extractGeneLevelEventGene(feature, driverGenes);
-        } else if (feature.provenanceRule() != null) {
-            if (GENE_ONLY.contains(feature.provenanceRule())) {
-                return extractGeneLevelEventGene(feature, driverGenes);
-            }
+        } else if (feature.geneSymbol().equals(feature.name())) {
+            return extractGeneLevelEventGene(feature, driverGenes);
         } else {
             LOGGER.warn("Unknown event {}", feature);
             return GeneLevelEvent.UNKNOWN;
         }
-        LOGGER.warn("Unknown event {}", feature);
-        return GeneLevelEvent.UNKNOWN;
     }
 
     @VisibleForTesting
