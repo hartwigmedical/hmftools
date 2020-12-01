@@ -35,11 +35,11 @@ public final class ViccExtractorFactory {
         Map<String, HmfTranscriptRegion> transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
 
         GeneChecker geneChecker = new GeneChecker();
-        return new ViccExtractor(new HotspotExtractor(proteinResolver, new ProteinAnnotationExtractor()),
-                new CopyNumberExtractor(geneChecker),
-                new FusionExtractor(transcriptPerGeneMap),
-                new GeneLevelExtractor(transcriptPerGeneMap, driverGenes),
-                new GeneRangeExtractor(transcriptPerGeneMap, driverGenes),
+        return new ViccExtractor(new HotspotExtractor(proteinResolver, new ProteinAnnotationExtractor(), geneChecker, transcriptPerGeneMap),
+                new CopyNumberExtractor(transcriptPerGeneMap, geneChecker),
+                new FusionExtractor(transcriptPerGeneMap, geneChecker),
+                new GeneLevelExtractor(transcriptPerGeneMap, driverGenes, geneChecker),
+                new GeneRangeExtractor(transcriptPerGeneMap, driverGenes, geneChecker),
                 new SignaturesExtractor(),
                 featureInterpretationTsv);
     }

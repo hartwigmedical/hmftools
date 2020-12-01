@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -19,7 +20,7 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsGenesUnknown() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
+        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37(), new GeneChecker());
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("IG", "IG-BCL2");
         Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
         assertTrue(fusionsPerFeature.isEmpty());
@@ -27,7 +28,7 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsGenes() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
+        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37(), new GeneChecker());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("PDGFRA", "BCR-PDGFRA Fusion");
         fusionsPerFeature.put(viccEntry.features().get(0), ImmutableKnownFusionPair.builder().geneUp("BCR").geneDown("PDGFRA").build());
@@ -36,7 +37,7 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsWithExonsUpDown() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
+        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37(), new GeneChecker());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "EGFRvII");
         fusionsPerFeature.put(viccEntry.features().get(0),
@@ -53,7 +54,7 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsWithRangeExons() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
+        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37(), new GeneChecker());
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("MET", "EXON 14 SKIPPING MUTATION");
         fusionsPerFeature.put(viccEntry.features().get(0),

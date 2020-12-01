@@ -9,10 +9,12 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -29,11 +31,15 @@ public class HotspotExtractorTest {
     @Test
     public void canExtractHotspot() {
         String protein = "V600E";
-        Feature hotspotFeature = ViccTestFactory.testFeatureWithName(protein);
+        String gene = "BRAF";
+        Feature hotspotFeature = ViccTestFactory.testFeatureWithGeneAndName(gene, protein);
         Feature ampFeature = ViccTestFactory.testFeatureWithName("Amplification");
         ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(hotspotFeature, ampFeature));
 
-        HotspotExtractor hotspotExtractor = new HotspotExtractor(new TestProteinResolver(protein), new ProteinAnnotationExtractor());
+        HotspotExtractor hotspotExtractor = new HotspotExtractor(new TestProteinResolver(protein),
+                new ProteinAnnotationExtractor(),
+                new GeneChecker(),
+                HmfGenePanelSupplier.allGenesMap37());
         Map<Feature, List<VariantHotspot>> hotspots = hotspotExtractor.extractHotspots(entry);
 
         assertEquals(1, hotspots.size());

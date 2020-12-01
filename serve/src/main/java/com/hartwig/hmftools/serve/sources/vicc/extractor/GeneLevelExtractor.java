@@ -13,6 +13,7 @@ import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -29,25 +30,24 @@ public class GeneLevelExtractor {
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
     @NotNull
     private final List<DriverGene> driverGenes;
+    @NotNull
+    private final GeneChecker geneChecker;
 
     public GeneLevelExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
-            @NotNull final List<DriverGene> driverGenes) {
+            @NotNull final List<DriverGene> driverGenes, @NotNull final GeneChecker geneChecker) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
         this.driverGenes = driverGenes;
+        this.geneChecker = geneChecker;
     }
 
     @NotNull
     public Map<Feature, GeneLevelAnnotation> extractGeneLevelEvents(@NotNull ViccEntry viccEntry) {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
-        boolean usingGenes;
 
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
             if (feature.type() == MutationType.GENE_LEVEL) {
-                if (canonicalTranscript == null) {
-                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
-
-                } else {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder()
                                     .gene(feature.geneSymbol())
@@ -55,20 +55,13 @@ public class GeneLevelExtractor {
                                     .build());
                 }
             } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
-                if (canonicalTranscript == null) {
-                    usingGenes = CheckGenes.checkGensInPanelForCuration(feature.geneSymbol(), feature.name());
-                    if (usingGenes) {
-                        geneLevelEventsPerFeature.put(feature,
-                                ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
-                    }
-                } else {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
+
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
                 }
             }
-
         }
-
         return geneLevelEventsPerFeature;
     }
 
