@@ -220,7 +220,6 @@ public final class ViccExtractor {
         List<ActionableRange> actionableRanges = Lists.newArrayList();
         for (List<GeneRangeAnnotation> rangeList : geneRangeAnnotationLists) {
             for (GeneRangeAnnotation range : rangeList) {
-                //TODO: rangeInfo and feature can be removed when range positions are verified
                 actionableRanges.add(ImmutableActionableRange.builder()
                         .from(actionableEvent)
                         .gene(range.gene())
@@ -229,7 +228,6 @@ public final class ViccExtractor {
                         .end(range.end())
                         .mutationType(range.mutationType())
                         .rangeInfo(range.rangeNumber())
-                        .feature(features)
                         .build());
             }
         }

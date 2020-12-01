@@ -43,7 +43,6 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static String header() {
-        //TODO: rangeInfo and feature can be removed when range positions are verified
         return new StringJoiner(DELIMITER).add("gene")
                 .add("chromosome")
                 .add("start")
@@ -57,7 +56,6 @@ public final class ActionableRangeFile {
                 .add("level")
                 .add("direction")
                 .add("url")
-                .add("feature")
                 .toString();
     }
 
@@ -74,23 +72,21 @@ public final class ActionableRangeFile {
     @NotNull
     private static ActionableRange fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
-        String url = values.length > 11 ? values[11] : Strings.EMPTY;
 
         return ImmutableActionableRange.builder()
                 .gene(values[0])
                 .chromosome(values[1])
                 .start(Long.parseLong(values[2]))
                 .end(Long.parseLong(values[3]))
-                .rangeInfo(0) //TODO: @Lieke, (changes to values[4] currently your to and from lines are inconsistent and files on datastore do not contain rangeInfo
-                .mutationType(MutationTypeFilter.valueOf(values[4]))
-                .source(ActionableEventFactory.sourceFromFileValue(values[5]))
-                .treatment(values[6])
-                .cancerType(values[7])
-                .doid(values[8])
-                .level(EvidenceLevel.valueOf(values[9]))
-                .direction(ActionableEventFactory.directionFromFileValue(values[10]))
-                .url(url)
-                .feature(Lists.newArrayList()) //TODO: take feature list from file
+                .rangeInfo(Integer.valueOf(values[4]))
+                .mutationType(MutationTypeFilter.valueOf(values[5]))
+                .source(ActionableEventFactory.sourceFromFileValue(values[6]))
+                .treatment(values[7])
+                .cancerType(values[8])
+                .doid(values[9])
+                .level(EvidenceLevel.valueOf(values[10]))
+                .direction(ActionableEventFactory.directionFromFileValue(values[11]))
+                .url(values.length > 12 ? values[12] : Strings.EMPTY)
                 .build();
     }
 
@@ -106,7 +102,6 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableRange range) {
-        //TODO: rangeInfo and feature can be removed when range positions are verified
         return new StringJoiner(DELIMITER).add(range.gene())
                 .add(range.chromosome())
                 .add(Long.toString(range.start()))
@@ -120,7 +115,6 @@ public final class ActionableRangeFile {
                 .add(range.level().toString())
                 .add(range.direction().display())
                 .add(range.url())
-                .add(range.feature().toString())
                 .toString();
     }
 }
