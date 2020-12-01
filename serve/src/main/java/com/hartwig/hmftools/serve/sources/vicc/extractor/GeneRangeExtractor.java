@@ -205,9 +205,9 @@ public class GeneRangeExtractor {
     }
 
     @Nullable
-    private static GeneRangeAnnotation determineCodonAnnotation(@NotNull Feature feature,
-            @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
-            @NotNull MutationTypeFilter specificMutationType, int codonNumber, @NotNull String geneSymbol) {
+    private static GeneRangeAnnotation determineCodonAnnotation(@NotNull Feature feature, @NotNull HmfTranscriptRegion canonicalTranscript,
+            @NotNull List<DriverGene> driverGenes, @NotNull MutationTypeFilter specificMutationType, int codonNumber,
+            @NotNull String geneSymbol) {
         List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
         // TODO Support codons spanning multiple exons
         if (genomeRegions != null && genomeRegions.size() == 1) {
@@ -243,12 +243,8 @@ public class GeneRangeExtractor {
                     }
                 } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                     if (specificMutationType == MutationTypeFilter.UNKNOWN) {
-                        //TODO which inactivation event for TSG?
-                        if (feature.biomarkerType() != null && feature.biomarkerType().contains("")) {
-                            return MutationTypeFilter.MISSENSE_ANY;
-                        } else {
-                            return MutationTypeFilter.ANY;
-                        }
+                        return MutationTypeFilter.ANY;
+
                     } else {
                         return specificMutationType;
                     }
