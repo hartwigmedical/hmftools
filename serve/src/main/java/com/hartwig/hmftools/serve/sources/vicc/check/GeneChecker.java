@@ -21,7 +21,7 @@ public class GeneChecker {
 
         if (canonicalTranscript != null) { //  Is gene part of canonical transcripts?
             return true;
-        } else if (GENES.contains(gene)) { //  Is gene IG-gene?
+        } else if (GENES.contains(gene)) { //  Is gene part of Driver Ctatlog/fusion db
             return true;
         } else {
             LOGGER.warn("Could not find gene {} for event {} in HMF driver gene panel. Skipping extraction!", gene, event);
