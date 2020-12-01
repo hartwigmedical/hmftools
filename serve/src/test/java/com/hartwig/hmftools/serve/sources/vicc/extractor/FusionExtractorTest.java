@@ -53,6 +53,17 @@ public class FusionExtractorTest {
     }
 
     @Test
+    public void canExtractFusionPairsWithOddNames() {
+        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37(), new GeneChecker());
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NKX2-1", "IGH-NKX2-1 Fusion");
+
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        assertEquals(1, fusionsPerFeature.size());
+        assertEquals("IGH", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
+        assertEquals("NKX2-1", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
+    }
+
+    @Test
     public void canExtractFusionPairsWithRangeExons() {
         FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37(), new GeneChecker());
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("MET", "EXON 14 SKIPPING MUTATION");

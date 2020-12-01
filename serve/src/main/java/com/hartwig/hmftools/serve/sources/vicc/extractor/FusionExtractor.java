@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static com.hartwig.hmftools.serve.sources.vicc.annotation.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
+import static com.hartwig.hmftools.serve.sources.vicc.annotation.FusionAnnotationConfig.ODDLY_NAMED_GENES_MAP;
 
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FusionExtractor {
+
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
     @NotNull
@@ -41,36 +43,21 @@ public class FusionExtractor {
             String fusion = feature.name();
 
             if (feature.type() == MutationType.FUSION_PAIR) {
-                String[] fusionArray = fusion.split("-");
-                KnownFusionPair annotatedFusion = null;
-
-                if (fusionArray.length == 2) {
-                    if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
-                        annotatedFusion = fusionBuilder.from(EXONIC_FUSIONS_MAP.get(fusion)).build();
-                    } else {
-                        annotatedFusion = fusionBuilder.geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
-                    }
-                } else if (fusionArray.length == 1) {
-                    if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
-                        annotatedFusion = fusionBuilder.from(EXONIC_FUSIONS_MAP.get(fusion)).build();
-                    } else {
-                        LOGGER.warn("Fusion '{}' can not be interpreted!", fusion);
-                    }
+                KnownFusionPair annotatedFusion;
+                if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
+                    annotatedFusion = fusionBuilder.from(EXONIC_FUSIONS_MAP.get(fusion)).build();
+                } else if (ODDLY_NAMED_GENES_MAP.containsKey(fusion)) {
+                    annotatedFusion = fusionBuilder.from(ODDLY_NAMED_GENES_MAP.get(fusion)).build();
                 } else {
-                    if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
-                        annotatedFusion = fusionBuilder.from(EXONIC_FUSIONS_MAP.get(fusion)).build();
-                    } else {
-                        LOGGER.warn("Too many parts in fusion name: {}!", fusion);
-                    }
+                    String[] fusionArray = fusion.split("-");
+                    annotatedFusion = fusionBuilder.geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
                 }
 
-                if (annotatedFusion != null) {
-                    HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
-                    HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
-                    if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name(), "fusion") && geneChecker
-                            .isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name(), "fusion")) {
-                        fusionsPerFeature.put(feature, annotatedFusion);
-                    }
+                HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
+                HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
+                if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name(), "fusion")
+                        && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name(), "fusion")) {
+                    fusionsPerFeature.put(feature, annotatedFusion);
                 }
             } else if (feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
                 if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
