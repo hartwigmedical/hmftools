@@ -27,7 +27,7 @@ import org.junit.Test;
 public class GeneRangeExtractorTest {
 
     @Test
-    public void canExtractCodon() {
+    public void canExtractCodons() {
         assertEquals(Integer.valueOf("600"), GeneRangeExtractor.extractCodonNumber("BRAF (V600)"));
         assertEquals(Integer.valueOf("742"), GeneRangeExtractor.extractCodonNumber("W742"));
         assertEquals(Integer.valueOf("179"), GeneRangeExtractor.extractCodonNumber("Q179X"));
@@ -35,7 +35,7 @@ public class GeneRangeExtractorTest {
     }
 
     @Test
-    public void canExtractExon() {
+    public void canExtractExons() {
         assertEquals(Lists.newArrayList(19), GeneRangeExtractor.extractExonNumbers("EGFR exon 19 insertions"));
         assertEquals(Lists.newArrayList(20), GeneRangeExtractor.extractExonNumbers("ERBB2 proximal exon 20"));
         assertEquals(Lists.newArrayList(9, 11, 13, 14, 17), GeneRangeExtractor.extractExonNumbers("KIT mutation in exon 9,11,13,14 or 17"));
@@ -73,43 +73,29 @@ public class GeneRangeExtractorTest {
 
     @Test
     public void canExtractMutationFilter() {
-        Feature featureNonsenseFrameshift = ViccTestFactory.testEntryWithGeneAndEvent("CALR", "EXON 9 FRAMESHIFT").features().get(0);
         assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
-                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureNonsenseFrameshift));
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("EXON 9 FRAMESHIFT"));
 
-        Feature featureSplice1 = ViccTestFactory.testEntryWithGeneAndEvent("JAK2", "Exon 12 splice site insertion").features().get(0);
-        assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureSplice1));
+        assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter("Exon 12 splice site insertion"));
 
-        Feature featureSplice2 = ViccTestFactory.testEntryWithGeneAndEvent("MET", "EXON 14 SKIPPING MUTATION").features().get(0);
-        assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureSplice2));
+        assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter("EXON 14 SKIPPING MUTATION"));
 
-        Feature featureMissenseInframeDeletion1 =
-                ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "EGFR exon 19 deletions").features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION,
-                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeDeletion1));
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("EGFR exon 19 deletions"));
 
-        Feature featureMissenseInframeDeletion2 =
-                ViccTestFactory.testEntryWithGeneAndEvent("VHL", "Null (Partial deletion of Exons 2 & 3)").features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION,
-                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeDeletion2));
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("Null (Partial deletion of Exons 2 & 3)"));
 
-        Feature featureMissenseInframeInsertion =
-                ViccTestFactory.testEntryWithGeneAndEvent("ERBB2", "Exon 20 insertions").features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION,
-                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeInsertion));
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("Exon 20 insertions"));
 
-        Feature featureMissenseInframeAny1 =
-                ViccTestFactory.testEntryWithGeneAndEvent("ERBB2", "Exon 20 insertions/deletions").features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY,
-                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeAny1));
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("Exon 20 insertions/deletions"));
 
-        Feature featureMissenseInframeAny2 =
-                ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "Exon 19 deletion/insertion").features().get(0);
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY,
-                GeneRangeExtractor.extractSpecificMutationTypeFilter(featureMissenseInframeAny2));
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("Exon 19 deletion/insertion"));
 
-        Feature featureUnknown = ViccTestFactory.testEntryWithGeneAndEvent("GNAQ", "abcd").features().get(0);
-        assertEquals(MutationTypeFilter.UNKNOWN, GeneRangeExtractor.extractSpecificMutationTypeFilter(featureUnknown));
+        assertEquals(MutationTypeFilter.UNKNOWN, GeneRangeExtractor.extractSpecificMutationTypeFilter("abcd"));
     }
 
     @Test
@@ -185,6 +171,7 @@ public class GeneRangeExtractorTest {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KIT", "EXON 11 MUTATION");
 
+        // TODO Resolve correct mutationType
         geneRangesPerFeature.put(viccEntry.features().get(0),
                 Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
                         .gene("KIT")
@@ -193,7 +180,7 @@ public class GeneRangeExtractorTest {
                         .end(55593713)
                         .rangeInfo(11)
                         .exonId("ENSE00001074417")
-                        .mutationType(MutationTypeFilter.MISSENSE_ANY)
+                        .mutationType(MutationTypeFilter.UNKNOWN)
                         .build()));
 
         assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));

@@ -23,6 +23,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GeneRangeExtractor {
 
@@ -55,15 +56,17 @@ public class GeneRangeExtractor {
                         List<Integer> exonNumbers = extractExonNumbers(feature.name());
                         List<GeneRangeAnnotation> annotations = Lists.newArrayList();
                         for (int exonNumber : exonNumbers) {
-                            annotations.add(extractGeneRangeAnnotationForFeature(exonNumber,
-                                    feature,
+                            GeneRangeAnnotation annotation = determineExonAnnotation(feature.geneSymbol(),
                                     canonicalTranscript,
-                                    driverGenes,
-                                    extractSpecificMutationTypeFilter(feature)));
+                                    exonNumber,
+                                    extractSpecificMutationTypeFilter(feature.name()));
+                            if (annotation != null) {
+                                annotations.add(annotation);
+                            }
                         }
                         geneRangesPerFeature.put(feature, annotations);
                     } else {
-                        LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                        LOGGER.warn("Transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
                                 transcriptIdVicc,
                                 canonicalTranscript.transcriptID(),
                                 feature);
@@ -81,14 +84,14 @@ public class GeneRangeExtractor {
                             annotations.add(determineRanges(feature,
                                     canonicalTranscript,
                                     driverGenes,
-                                    extractSpecificMutationTypeFilter(feature),
+                                    extractSpecificMutationTypeFilter(feature.name()),
                                     codonNumber,
                                     geneSymbol));
                             geneRangesPerFeature.put(feature, annotations);
                         }
 
                     } else {
-                        LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                        LOGGER.warn("Transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
                                 transcriptIdVicc,
                                 canonicalTranscript.transcriptID(),
                                 feature);
@@ -102,51 +105,60 @@ public class GeneRangeExtractor {
 
     @VisibleForTesting
     static List<Integer> extractExonNumbers(@NotNull String featureName) {
-        List<Integer> codons = Lists.newArrayList();
-        if (featureName.contains("or") && featureName.contains(",")) {
-            String formattedFeatureName = featureName.replace(" or ", ",");
-            String[] splitEvents = formattedFeatureName.split(" ")[4].split(",");
-            for (String events : splitEvents) {
-                codons.add(Integer.valueOf(events));
-            }
-        } else if (featureName.contains("or")) {
-            String formattedFeatureName = featureName.replace(" or ", ",");
-            String[] splitEvents = formattedFeatureName.split(" ")[4].split(",");
-            for (String events : splitEvents) {
-                codons.add(Integer.valueOf(events));
-            }
+        List<Integer> exons = Lists.newArrayList();
+        if (featureName.contains(" or ") || featureName.contains(" & ")) {
+            exons = extractMultipleExonNumbers(featureName);
         } else if (featureName.contains("-")) {
-            String[] splitEvents = featureName.split("-");
-            String[] eventStartExtract = splitEvents[0].split(" ");
-            int eventStart = Integer.parseInt(eventStartExtract[eventStartExtract.length - 1]);
-            String[] eventEndExtract = splitEvents[1].split(" ");
-            int eventEnd = Integer.parseInt(eventEndExtract[0]);
-            for (int i = eventStart; i <= eventEnd; i++) {
-                codons.add(i);
-            }
-        } else if (featureName.contains("&")) {
-            String formattedFeatureName = featureName.replace(" & ", ",").replace(")", "");
-            String[] splitEvents = formattedFeatureName.split(" ")[5].split(",");
-            for (String events : splitEvents) {
-                codons.add(Integer.valueOf(events));
-            }
+            exons = extractListOfExonNumbers(featureName);
         } else {
-            String[] extraction = featureName.split(" ");
-            for (String event : extraction) {
-                if (event.matches("[0-9]+")) {
-                    codons.add(Integer.valueOf(event));
+            String[] words = featureName.split(" ");
+            for (String word : words) {
+                if (isInteger(word)) {
+                    exons.add(Integer.valueOf(word));
                 }
             }
         }
 
-        if (codons.size() == 0) {
-            LOGGER.warn("No exon number is extracted from event {}", featureName);
+        if (exons.isEmpty()) {
+            LOGGER.warn("No exon number is extracted from event '{}'", featureName);
         }
-        return codons;
+        return exons;
+    }
+
+    @NotNull
+    private static List<Integer> extractMultipleExonNumbers(@NotNull String featureName) {
+        List<Integer> exonNumbers = Lists.newArrayList();
+        String[] words = featureName.replace(" or ", ",").replace(" & ", ",").replace(")", "").split(" ");
+        for (String word : words) {
+            if (word.contains(",")) {
+                String[] exons = word.split(",");
+                for (String exon : exons) {
+                    exonNumbers.add(Integer.valueOf(exon));
+                }
+            }
+        }
+        return exonNumbers;
+    }
+
+    @NotNull
+    private static List<Integer> extractListOfExonNumbers(@NotNull String featureName) {
+        List<Integer> exonNumbers = Lists.newArrayList();
+        String[] words = featureName.split(" ");
+        for (String word : words) {
+            if (word.contains("-")) {
+                String[] splitEvents = word.split("-");
+                int eventStart = Integer.parseInt(splitEvents[0]);
+                int eventEnd = Integer.parseInt(splitEvents[1]);
+                for (int i = eventStart; i <= eventEnd; i++) {
+                    exonNumbers.add(i);
+                }
+            }
+        }
+        return exonNumbers;
     }
 
     @VisibleForTesting
-    public static Integer extractCodonNumber(@NotNull String featureName) {
+    static Integer extractCodonNumber(@NotNull String featureName) {
         if (featureName.split(" ").length == 1) {
             if (!isInteger(featureName.replaceAll("\\D+", ""))) {
                 LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
@@ -230,8 +242,8 @@ public class GeneRangeExtractor {
 
     @VisibleForTesting
     @NotNull
-    public static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull Feature feature) {
-        String featureEvent = feature.name().toLowerCase();
+    static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull String featureName) {
+        String featureEvent = featureName.toLowerCase();
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
         if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
             return MutationTypeFilter.SPLICE;
@@ -249,32 +261,27 @@ public class GeneRangeExtractor {
         return MutationTypeFilter.UNKNOWN;
     }
 
-    @NotNull
-    private static GeneRangeAnnotation extractGeneRangeAnnotationForFeature(int exonNumber, @NotNull Feature feature,
-            @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
-            @NotNull MutationTypeFilter specificMutationType) {
-        int exonNumberList = exonNumber - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-        return extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList, driverGenes, exonNumber, specificMutationType);
-    }
+    @Nullable
+    private static GeneRangeAnnotation determineExonAnnotation(@NotNull String gene, @NotNull HmfTranscriptRegion transcript,
+            int exonNumber, @NotNull MutationTypeFilter specificMutationType) {
+        HmfExonRegion hmfExonRegion = transcript.exonByIndex(exonNumber);
 
-    @NotNull
-    private static GeneRangeAnnotation extractExonGenomicPositions(@NotNull Feature feature,
-            @NotNull HmfTranscriptRegion canonicalTranscript, int exonNumberList, @NotNull List<DriverGene> driverGenes, int exonNumber,
-            @NotNull MutationTypeFilter specificMutationType) {
-        List<HmfExonRegion> exonRegions = canonicalTranscript.exome();
-        HmfExonRegion hmfExonRegion = exonRegions.get(exonNumberList);
+        if (hmfExonRegion == null) {
+            LOGGER.warn("Could not resolve exon {} from transcript {}", exonNumber, transcript.transcriptID());
+        }
+
+        // Extend exonic range by 5 to include SPLICE variants.
         long start = hmfExonRegion.start() - 5;
         long end = hmfExonRegion.end() + 5;
-        String chromosome = hmfExonRegion.chromosome();
 
         return ImmutableGeneRangeAnnotation.builder()
-                .gene(feature.geneSymbol())
+                .gene(gene)
+                .chromosome(hmfExonRegion.chromosome())
                 .start(start)
                 .end(end)
-                .chromosome(chromosome)
                 .rangeInfo(exonNumber)
                 .exonId(hmfExonRegion.exonID())
-                .mutationType(extractMutationFilter(driverGenes, feature.geneSymbol(), specificMutationType, feature))
+                .mutationType(specificMutationType)
                 .build();
     }
 }
