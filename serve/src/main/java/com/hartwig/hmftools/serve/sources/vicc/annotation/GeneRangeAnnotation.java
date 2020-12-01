@@ -21,14 +21,15 @@ public abstract class GeneRangeAnnotation {
 
     public abstract long end();
 
-    //TODO: can be removed when range positions are verified
-    public abstract int rangeInfo();
-
-    //TODO: can be removed when range positions are verified
-    @Nullable
-    public abstract String exonId();
-
     @NotNull
     public abstract MutationTypeFilter mutationType();
+
+    public abstract GeneRangeType rangeType();
+
+    public abstract int rangeNumber();
+
+    // Only present in case rangeType() == EXON
+    @Nullable
+    public abstract String exonId();
 
 }

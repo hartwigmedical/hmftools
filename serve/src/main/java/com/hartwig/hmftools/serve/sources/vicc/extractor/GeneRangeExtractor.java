@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
+import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeType;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -178,9 +179,10 @@ public class GeneRangeExtractor {
                 .chromosome(hmfExonRegion.chromosome())
                 .start(start)
                 .end(end)
-                .rangeInfo(exonNumber)
-                .exonId(hmfExonRegion.exonID())
                 .mutationType(specificMutationType)
+                .rangeType(GeneRangeType.EXON)
+                .exonId(hmfExonRegion.exonID())
+                .rangeNumber(exonNumber)
                 .build();
     }
 
@@ -203,10 +205,11 @@ public class GeneRangeExtractor {
     }
 
     @Nullable
-    private static ImmutableGeneRangeAnnotation determineCodonAnnotation(@NotNull Feature feature,
+    private static GeneRangeAnnotation determineCodonAnnotation(@NotNull Feature feature,
             @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
             @NotNull MutationTypeFilter specificMutationType, int codonNumber, @NotNull String geneSymbol) {
         List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
+        // TODO Support codons spanning multiple exons
         if (genomeRegions != null && genomeRegions.size() == 1) {
             String chromosome = genomeRegions.get(0).chromosome();
             long start = genomeRegions.get(0).start();
@@ -217,8 +220,9 @@ public class GeneRangeExtractor {
                     .chromosome(chromosome)
                     .start(start)
                     .end(end)
-                    .rangeInfo(codonNumber)
                     .mutationType(extractMutationFilter(driverGenes, geneSymbol, specificMutationType, feature))
+                    .rangeType(GeneRangeType.CODON)
+                    .rangeNumber(codonNumber)
                     .build();
         }
 

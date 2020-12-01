@@ -131,5 +131,4 @@ public class GeneLevelExtractorTest {
 
         return Lists.newArrayList(driverGeneTsg, driverGeneOnco1, driverGeneOnco2);
     }
-
 }
