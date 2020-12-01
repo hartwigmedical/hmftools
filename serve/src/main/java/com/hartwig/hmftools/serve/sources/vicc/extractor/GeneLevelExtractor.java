@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -47,7 +46,7 @@ public class GeneLevelExtractor {
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
             if (feature.type() == MutationType.GENE_LEVEL) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder()
                                     .gene(feature.geneSymbol())
@@ -55,7 +54,7 @@ public class GeneLevelExtractor {
                                     .build());
                 }
             } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), "fusion")) {
 
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
@@ -105,7 +104,6 @@ public class GeneLevelExtractor {
                 }
             }
         }
-        CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
         return GeneLevelEvent.UNKNOWN;
     }
 }

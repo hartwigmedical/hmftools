@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -66,8 +65,8 @@ public class FusionExtractor {
                 if (annotatedFusion != null) {
                     HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
                     HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
-                    if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name())
-                            && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name())) {
+                    if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name(), "fusion")
+                            && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name(), "fusion")) {
                         fusionsPerFeature.put(feature, annotatedFusion);
                     }
                 }
@@ -81,8 +80,8 @@ public class FusionExtractor {
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
 
-                if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name())
-                        && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name())) {
+                if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name(), "fusion")
+                        && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name(), "fusion")) {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
             }
