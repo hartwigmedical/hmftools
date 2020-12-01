@@ -59,7 +59,7 @@ public class GeneRangeExtractor {
                             GeneRangeAnnotation annotation = determineExonAnnotation(feature.geneSymbol(),
                                     canonicalTranscript,
                                     exonNumber,
-                                    extractSpecificMutationTypeFilter(feature.name()));
+                                    extractSpecificMutationTypeFilter(feature.name(), driverGenes, feature.geneSymbol()));
                             if (annotation != null) {
                                 annotations.add(annotation);
                             }
@@ -81,10 +81,9 @@ public class GeneRangeExtractor {
                         if (codonNumber != null) {
                             List<GeneRangeAnnotation> annotations = Lists.newArrayList();
                             String geneSymbol = feature.geneSymbol();
-                            GeneRangeAnnotation annotation = determineCodonAnnotation(feature,
+                            GeneRangeAnnotation annotation = determineCodonAnnotation(
                                     canonicalTranscript,
-                                    driverGenes,
-                                    extractSpecificMutationTypeFilter(feature.name()),
+                                    extractSpecificMutationTypeFilter(feature.name(), driverGenes, feature.geneSymbol()),
                                     codonNumber,
                                     geneSymbol);
                             if (annotation != null) {
@@ -205,8 +204,8 @@ public class GeneRangeExtractor {
     }
 
     @Nullable
-    private static GeneRangeAnnotation determineCodonAnnotation(@NotNull Feature feature, @NotNull HmfTranscriptRegion canonicalTranscript,
-            @NotNull List<DriverGene> driverGenes, @NotNull MutationTypeFilter specificMutationType, int codonNumber,
+    private static GeneRangeAnnotation determineCodonAnnotation(@NotNull HmfTranscriptRegion canonicalTranscript,
+            @NotNull MutationTypeFilter specificMutationType, int codonNumber,
             @NotNull String geneSymbol) {
         List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
         // TODO Support codons spanning multiple exons
@@ -220,7 +219,7 @@ public class GeneRangeExtractor {
                     .chromosome(chromosome)
                     .start(start)
                     .end(end)
-                    .mutationType(extractMutationFilter(driverGenes, geneSymbol, specificMutationType))
+                    .mutationType(specificMutationType)
                     .rangeType(GeneRangeType.CODON)
                     .rangeNumber(codonNumber)
                     .build();
@@ -231,48 +230,46 @@ public class GeneRangeExtractor {
 
     @VisibleForTesting
     @NotNull
-    static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene,
-            @NotNull MutationTypeFilter specificMutationType) {
+    static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull String featureName, @NotNull List<DriverGene> driverGenes,
+            @NotNull String gene) {
+        String featureEvent = featureName.toLowerCase();
+        String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
+        MutationTypeFilter filter;
+        if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
+            filter = MutationTypeFilter.SPLICE;
+        } else if (extractSpecificInfoOfEvent.equals("deletions") || extractSpecificInfoOfEvent.equals("deletion") || featureEvent.contains(
+                "partial deletion of exons")) {
+            filter = MutationTypeFilter.MISSENSE_INFRAME_DELETION;
+        } else if (extractSpecificInfoOfEvent.equals("insertions") || extractSpecificInfoOfEvent.equals("insertion")) {
+            filter = MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
+        } else if (extractSpecificInfoOfEvent.equals("deletion/insertion") || extractSpecificInfoOfEvent.equals("insertions/deletions")) {
+            filter = MutationTypeFilter.MISSENSE_INFRAME_ANY;
+        } else if (extractSpecificInfoOfEvent.equals("frameshift")) {
+            filter = MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
+        } else {
+            filter = MutationTypeFilter.UNKNOWN;
+        }
+
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
                 if (driverGene.likelihoodType() == DriverCategory.ONCO) {
-                    if (specificMutationType == MutationTypeFilter.UNKNOWN) {
+                    if (filter == MutationTypeFilter.UNKNOWN) {
                         return MutationTypeFilter.MISSENSE_ANY;
                     } else {
-                        return specificMutationType;
+                        return filter;
                     }
                 } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
-                    if (specificMutationType == MutationTypeFilter.UNKNOWN) {
+                    if (filter == MutationTypeFilter.UNKNOWN) {
                         return MutationTypeFilter.ANY;
 
                     } else {
-                        return specificMutationType;
+                        return filter;
                     }
                 }
             }
         }
-        return MutationTypeFilter.UNKNOWN;
-    }
 
-    @VisibleForTesting
-    @NotNull
-    static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull String featureName) {
-        String featureEvent = featureName.toLowerCase();
-        String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
-        if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
-            return MutationTypeFilter.SPLICE;
-        } else if (extractSpecificInfoOfEvent.equals("deletions") || extractSpecificInfoOfEvent.equals("deletion") || featureEvent.contains(
-                "partial deletion of exons")) {
-            return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
-        } else if (extractSpecificInfoOfEvent.equals("insertions") || extractSpecificInfoOfEvent.equals("insertion")) {
-            return MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
-        } else if (extractSpecificInfoOfEvent.equals("deletion/insertion") || extractSpecificInfoOfEvent.equals("insertions/deletions")) {
-            return MutationTypeFilter.MISSENSE_INFRAME_ANY;
-        } else if (extractSpecificInfoOfEvent.equals("frameshift")) {
-            return MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
-        }
-
-        return MutationTypeFilter.UNKNOWN;
+        return filter;
     }
 
     private static boolean isInteger(@NotNull String string) {
