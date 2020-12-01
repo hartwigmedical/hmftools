@@ -45,26 +45,22 @@ public class GeneRangeExtractor {
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-            MutationType mutationType = feature.type();
-
-            if (mutationType == MutationType.FUSION_PAIR_AND_EXON) {
+            if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
                 if (canonicalTranscript == null) {
                     CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
-
                 } else {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-
                         List<Integer> exonNumbers = extractExonNumbers(feature.name());
+                        List<GeneRangeAnnotation> annotations = Lists.newArrayList();
                         for (int exonNumber : exonNumbers) {
-                            extractGeneRangesPerFeature(exonNumber,
+                            annotations.add(extractGeneRangeAnnotationForFeature(exonNumber,
                                     feature,
                                     canonicalTranscript,
                                     driverGenes,
-                                    geneRangeAnnotation,
-                                    geneRangesPerFeature,
-                                    extractSpecificMutationTypeFilter(feature));
+                                    extractSpecificMutationTypeFilter(feature)));
                         }
+                        geneRangesPerFeature.put(feature, annotations);
                     } else {
                         LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
                                 transcriptIdVicc,
@@ -72,31 +68,7 @@ public class GeneRangeExtractor {
                                 feature);
                     }
                 }
-            }
-            if (mutationType == MutationType.EXON) {
-                if (canonicalTranscript == null) {
-                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
-                } else {
-                    String transcriptIdVicc = viccEntry.transcriptId();
-                    if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-                        List<Integer> exonNumbers = extractExonNumbers(feature.name());
-                        for (int exonNumber : exonNumbers) {
-                            extractGeneRangesPerFeature(exonNumber,
-                                    feature,
-                                    canonicalTranscript,
-                                    driverGenes,
-                                    geneRangeAnnotation,
-                                    geneRangesPerFeature,
-                                    extractSpecificMutationTypeFilter(feature));
-                        }
-                    } else {
-                        LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-                                transcriptIdVicc,
-                                canonicalTranscript.transcriptID(),
-                                feature);
-                    }
-                }
-            } else if (mutationType == MutationType.CODON) {
+            } else if (feature.type() == MutationType.CODON) {
                 if (canonicalTranscript == null) {
                     CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
@@ -112,7 +84,6 @@ public class GeneRangeExtractor {
                                 extractSpecificMutationTypeFilter(feature),
                                 codonNumber,
                                 geneSymbol);
-                        geneRangesPerFeature.put(feature, geneRangeAnnotation);
                     }
                 }
             }
@@ -268,8 +239,8 @@ public class GeneRangeExtractor {
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
         if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
             return MutationTypeFilter.SPLICE;
-        } else if (extractSpecificInfoOfEvent.equals("deletions") || extractSpecificInfoOfEvent.equals("deletion")
-                || featureEvent.contains("partial deletion of exons")) {
+        } else if (extractSpecificInfoOfEvent.equals("deletions") || extractSpecificInfoOfEvent.equals("deletion") || featureEvent.contains(
+                "partial deletion of exons")) {
             return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
         } else if (extractSpecificInfoOfEvent.equals("insertions") || extractSpecificInfoOfEvent.equals("insertion")) {
             return MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
@@ -282,19 +253,17 @@ public class GeneRangeExtractor {
         return MutationTypeFilter.UNKNOWN;
     }
 
-    private static void extractGeneRangesPerFeature(int exonNumber, @NotNull Feature feature,
+    @NotNull
+    private static GeneRangeAnnotation extractGeneRangeAnnotationForFeature(int exonNumber, @NotNull Feature feature,
             @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
-            @NotNull List<GeneRangeAnnotation> geneRangeAnnotation, @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature,
             @NotNull MutationTypeFilter specificMutationType) {
         int exonNumberList = exonNumber - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-
-        geneRangeAnnotation.add(extractExonGenomicPositions(feature,
+        return extractExonGenomicPositions(feature,
                 canonicalTranscript,
                 exonNumberList,
                 driverGenes,
                 exonNumber,
-                specificMutationType));
-        geneRangesPerFeature.put(feature, geneRangeAnnotation);
+                specificMutationType);
     }
 
     @NotNull
