@@ -220,7 +220,7 @@ public class GeneRangeExtractor {
                     .chromosome(chromosome)
                     .start(start)
                     .end(end)
-                    .mutationType(extractMutationFilter(driverGenes, geneSymbol, specificMutationType, feature))
+                    .mutationType(extractMutationFilter(driverGenes, geneSymbol, specificMutationType))
                     .rangeType(GeneRangeType.CODON)
                     .rangeNumber(codonNumber)
                     .build();
@@ -232,7 +232,7 @@ public class GeneRangeExtractor {
     @VisibleForTesting
     @NotNull
     static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene,
-            @NotNull MutationTypeFilter specificMutationType, @NotNull Feature feature) {
+            @NotNull MutationTypeFilter specificMutationType) {
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
                 if (driverGene.likelihoodType() == DriverCategory.ONCO) {
