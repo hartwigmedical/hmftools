@@ -80,7 +80,7 @@ public class GeneRangeExtractor {
                         List<GeneRangeAnnotation> annotations = Lists.newArrayList();
                         if (codonNumber != null) {
                             String geneSymbol = feature.geneSymbol();
-                            annotations.add(determineRanges(feature,
+                            annotations.add(determineCodonAnnotation(feature,
                                     canonicalTranscript,
                                     driverGenes,
                                     extractSpecificMutationTypeFilter(feature.name()),
@@ -187,10 +187,34 @@ public class GeneRangeExtractor {
         }
     }
 
+    @Nullable
+    private static GeneRangeAnnotation determineExonAnnotation(@NotNull String gene, @NotNull HmfTranscriptRegion transcript,
+            int exonNumber, @NotNull MutationTypeFilter specificMutationType) {
+        HmfExonRegion hmfExonRegion = transcript.exonByIndex(exonNumber);
+
+        if (hmfExonRegion == null) {
+            LOGGER.warn("Could not resolve exon {} from transcript {}", exonNumber, transcript.transcriptID());
+        }
+
+        // Extend exonic range by 5 to include SPLICE variants.
+        long start = hmfExonRegion.start() - 5;
+        long end = hmfExonRegion.end() + 5;
+
+        return ImmutableGeneRangeAnnotation.builder()
+                .gene(gene)
+                .chromosome(hmfExonRegion.chromosome())
+                .start(start)
+                .end(end)
+                .rangeInfo(exonNumber)
+                .exonId(hmfExonRegion.exonID())
+                .mutationType(specificMutationType)
+                .build();
+    }
+
     @NotNull
-    private static ImmutableGeneRangeAnnotation determineRanges(@NotNull Feature feature, @NotNull HmfTranscriptRegion canonicalTranscript,
-            @NotNull List<DriverGene> driverGenes, @NotNull MutationTypeFilter specificMutationType, int codonNumber,
-            @NotNull String geneSymbol) {
+    private static ImmutableGeneRangeAnnotation determineCodonAnnotation(@NotNull Feature feature,
+            @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
+            @NotNull MutationTypeFilter specificMutationType, int codonNumber, @NotNull String geneSymbol) {
         ImmutableGeneRangeAnnotation.Builder geneRangeAnnotation = ImmutableGeneRangeAnnotation.builder();
 
         List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
@@ -211,7 +235,7 @@ public class GeneRangeExtractor {
 
     @VisibleForTesting
     @NotNull
-    public static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene,
+    static MutationTypeFilter extractMutationFilter(@NotNull List<DriverGene> driverGenes, @NotNull String gene,
             @NotNull MutationTypeFilter specificMutationType, @NotNull Feature feature) {
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
@@ -257,29 +281,5 @@ public class GeneRangeExtractor {
         }
 
         return MutationTypeFilter.UNKNOWN;
-    }
-
-    @Nullable
-    private static GeneRangeAnnotation determineExonAnnotation(@NotNull String gene, @NotNull HmfTranscriptRegion transcript,
-            int exonNumber, @NotNull MutationTypeFilter specificMutationType) {
-        HmfExonRegion hmfExonRegion = transcript.exonByIndex(exonNumber);
-
-        if (hmfExonRegion == null) {
-            LOGGER.warn("Could not resolve exon {} from transcript {}", exonNumber, transcript.transcriptID());
-        }
-
-        // Extend exonic range by 5 to include SPLICE variants.
-        long start = hmfExonRegion.start() - 5;
-        long end = hmfExonRegion.end() + 5;
-
-        return ImmutableGeneRangeAnnotation.builder()
-                .gene(gene)
-                .chromosome(hmfExonRegion.chromosome())
-                .start(start)
-                .end(end)
-                .rangeInfo(exonNumber)
-                .exonId(hmfExonRegion.exonID())
-                .mutationType(specificMutationType)
-                .build();
     }
 }
