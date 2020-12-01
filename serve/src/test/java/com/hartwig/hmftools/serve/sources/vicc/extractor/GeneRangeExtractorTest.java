@@ -147,16 +147,18 @@ public class GeneRangeExtractorTest {
     }
 
     @Test
-    //TODO: fix test
     public void canExtractMutationFilter() {
         List<DriverGene> driverGenes = createDriverGenes("TP53", "EGFR", "ERBB2");
         String gene = "ERBB2";
 
-        assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT, GeneRangeExtractor.extractSpecificMutationTypeFilter("EXON 9 FRAMESHIFT", driverGenes, gene));
+        assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("EXON 9 FRAMESHIFT", driverGenes, gene));
 
-        assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter("Exon 12 splice site insertion", driverGenes, gene));
+        assertEquals(MutationTypeFilter.SPLICE,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("Exon 12 splice site insertion", driverGenes, gene));
 
-        assertEquals(MutationTypeFilter.SPLICE, GeneRangeExtractor.extractSpecificMutationTypeFilter("EXON 14 SKIPPING MUTATION", driverGenes, gene));
+        assertEquals(MutationTypeFilter.SPLICE,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("EXON 14 SKIPPING MUTATION", driverGenes, gene));
 
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION,
                 GeneRangeExtractor.extractSpecificMutationTypeFilter("EGFR exon 19 deletions", driverGenes, gene));
@@ -173,24 +175,17 @@ public class GeneRangeExtractorTest {
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY,
                 GeneRangeExtractor.extractSpecificMutationTypeFilter("Exon 19 deletion/insertion", driverGenes, gene));
 
-//        assertEquals(MutationTypeFilter.UNKNOWN, GeneRangeExtractor.extractSpecificMutationTypeFilter("abcd", driverGenes, gene));
-        //        List<DriverGene> driverGenes = createDriverGenes("TP53", "EGFR", "ERBB2");
-        //        String gene = "ERBB2";
-        //        MutationTypeFilter filterUnknownOnco = MutationTypeFilter.UNKNOWN;
-        //        assertEquals(MutationTypeFilter.MISSENSE_ANY,
-        //                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownOnco));
-        //
-        //        MutationTypeFilter filterKnownOnco = MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
-        //        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION,
-        //                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownOnco));
-        //
-        //        MutationTypeFilter filterUnknownTsg = MutationTypeFilter.UNKNOWN;
-        //        assertEquals(MutationTypeFilter.MISSENSE_ANY,
-        //                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownTsg));
-        //
-        //        MutationTypeFilter filterKnownTsg = MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
-        //        assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
-        //                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownTsg));
+        assertEquals(MutationTypeFilter.UNKNOWN, GeneRangeExtractor.extractSpecificMutationTypeFilter("abcd", driverGenes, "efgh"));
+
+        assertEquals(MutationTypeFilter.MISSENSE_ANY, GeneRangeExtractor.extractSpecificMutationTypeFilter("mut", driverGenes, gene));
+
+        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("insertion", driverGenes, gene));
+
+        assertEquals(MutationTypeFilter.ANY, GeneRangeExtractor.extractSpecificMutationTypeFilter("mut", driverGenes, "TP53"));
+
+        assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
+                GeneRangeExtractor.extractSpecificMutationTypeFilter("frameshift", driverGenes, "TP53"));
     }
 
     @NotNull
