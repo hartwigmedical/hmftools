@@ -206,29 +206,6 @@ public class TransExpressionDistribution
         }
     }
 
-    public static double roundTPM(double tpm, double roundingFactor)
-    {
-        double scale = round(log10(tpm));
-        double tick = pow(10, scale - roundingFactor);
-        return round(tpm/tick) * tick;
-    }
-
-    public static List<Double> convertDistribution(final List<double[]> tpmValueCounts, int sampleCount)
-    {
-        final List<Double> tpmValues = Lists.newArrayListWithExpectedSize(sampleCount);
-
-        for(int i = 0; i < tpmValueCounts.size(); ++i)
-        {
-            final double tpmData[] = tpmValueCounts.get(i);
-            for(int j = 0; j < tpmData[RATE_COUNT]; ++j)
-            {
-                tpmValues.add(tpmData[RATE_VALUE]);
-            }
-        }
-
-        return tpmValues;
-    }
-
     public static void loadCohortDistribution(
             final String inputFile, final Map<String,double[]> percentilesMap,
             final String fileType, int expectedColCount, final List<String> restrictions)
@@ -287,6 +264,29 @@ public class TransExpressionDistribution
         {
             ISF_LOGGER.warn("failed to load {} distribution file({}): {}", fileType, inputFile, e.toString());
         }
+    }
+
+    public static double roundTPM(double tpm, double roundingFactor)
+    {
+        double scale = round(log10(tpm));
+        double tick = pow(10, scale - roundingFactor);
+        return round(tpm/tick) * tick;
+    }
+
+    public static List<Double> convertDistribution(final List<double[]> tpmValueCounts, int sampleCount)
+    {
+        final List<Double> tpmValues = Lists.newArrayListWithExpectedSize(sampleCount);
+
+        for(int i = 0; i < tpmValueCounts.size(); ++i)
+        {
+            final double tpmData[] = tpmValueCounts.get(i);
+            for(int j = 0; j < tpmData[RATE_COUNT]; ++j)
+            {
+                tpmValues.add(tpmData[RATE_VALUE]);
+            }
+        }
+
+        return tpmValues;
     }
 
     public static double getTpmMedian(final Map<String,double[]> transPercentilesMap, final String transName)
