@@ -510,6 +510,9 @@ public class SpliceVariantMatcher
 
     private String getBaseContext(final SpliceVariant variant, int splicePosition, final AcceptorDonorType acceptorDonorType)
     {
+        if(mConfig.RefGenome == null)
+            return "";
+
         return SpliceVariant.getBaseContext(
                 variant.Chromosome, variant.Position, variant.Ref, variant.Alt, splicePosition, acceptorDonorType, mConfig.RefGenome);
     }
@@ -539,8 +542,8 @@ public class SpliceVariantMatcher
 
             mWriter.write("SampleId,MatchType,GeneId,GeneName,Chromosome,Strand");
             mWriter.write(",Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,LocalPhaseSet,AccDonType,ExonDistance");
-            mWriter.write(",AsjType,AsjContextStart,AsjContextEnd,AsjPosStart,AsjPosEnd,AsjFragmentCount,AsjDepthStart,AsjDepthEnd");
-            mWriter.write(",AsjCohortCount,AsjTransData");
+            mWriter.write(",AsjType,AsjContextStart,AsjContextEnd,AsjPosStart,AsjPosEnd,FragmentCount,DepthStart,DepthEnd");
+            mWriter.write(",BasesStart,BasesEnd,AsjCohortCount,AsjTransData");
 
             mWriter.newLine();
         }
@@ -565,16 +568,21 @@ public class SpliceVariantMatcher
 
             if(altSJ != null)
             {
-                mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%d,%s",
+                mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%d",
                         altSJ.type(), altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
                         altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END],
-                        altSJ.getFragmentCount(), altSJ.getPositionCount(SE_START), altSJ.getPositionCount(SE_END),
+                        altSJ.getFragmentCount(), altSJ.getPositionCount(SE_START), altSJ.getPositionCount(SE_END)));
+
+                mWriter.write(String.format(",%s,%s,%d,%s",
+                        getBaseContext(variant, altSJ.SpliceJunction[SE_START], geneData.Strand == POS_STRAND ? DONOR : ACCEPTOR),
+                        getBaseContext(variant, altSJ.SpliceJunction[SE_END], geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR),
                         mDataCache.getCohortAltSjFrequency(altSJ), transDataStr));
             }
             else
             {
-                mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%s",
-                        UNKNOWN, AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN, -1, -1, 0, 0, 0, 0, ""));
+                mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s",
+                        UNKNOWN, AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN,
+                        -1, -1, 0, 0, 0, "", "", 0, ""));
             }
 
             mWriter.newLine();

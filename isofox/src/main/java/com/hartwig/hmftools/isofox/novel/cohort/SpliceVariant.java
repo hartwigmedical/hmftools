@@ -2,7 +2,9 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.ACCEPTOR;
 
 import java.util.Map;
@@ -68,52 +70,99 @@ public class SpliceVariant
     {
         // first establish the bases around the splice junction, taking into account the ref to alt change
 
-        int startOffset = acceptorDonorType == ACCEPTOR ? 10 : 1;
-        int endOffset = acceptorDonorType == ACCEPTOR ? 1: 10;
+        int startBasesReq = acceptorDonorType == ACCEPTOR ? 10 : 1;
+        int endBasesReq = acceptorDonorType == ACCEPTOR ? 1: 10;
 
         int varDiff = variantAlt.length() - variantRef.length();
 
-        int preSpliceBaseDiff = 0;
-        int postSpliceBaseDiff = 0;
-
         boolean varWithinContext = variantPos < splicePosition ?
-                (splicePosition - variantPos <= startOffset) : ((variantPos - splicePosition <= endOffset));
+                (splicePosition - variantPos <= startBasesReq) : ((variantPos - splicePosition <= endBasesReq));
+
+        int preSpliceBaseDiff = 0;
+        int postSpliceBasesRequired = endBasesReq;
 
         if(varWithinContext && varDiff != 0)
         {
-            // bases added from an insert
             if(variantPos < splicePosition)
+            {
                 preSpliceBaseDiff = -varDiff;
+            }
             else
-                postSpliceBaseDiff = -varDiff;
+            {
+                if(varDiff < 0)
+                {
+                    postSpliceBasesRequired += abs(varDiff); // need extra bases to cover the DEL
+                }
+                else
+                {
+                    // for the INS case, depends on where the var is relative to the splice site
+                    // endBasesReq = 1, means 2 bases would normally be retrieved starting at the splice site
+                    // if var = splice site, and var is an insert such that alt length >= end offset then no bases are required
+                    postSpliceBasesRequired = variantPos - splicePosition;
+
+                    if(postSpliceBasesRequired < endBasesReq)
+                        postSpliceBasesRequired += max(endBasesReq - postSpliceBasesRequired - varDiff, 0);
+                }
+            }
         }
 
-        final String preSpliceBases = startOffset + preSpliceBaseDiff >= 1 ?
-                refGenome.getBaseString(chromosome, splicePosition - startOffset - preSpliceBaseDiff, splicePosition - 1) : "";
+        final String preSpliceBases = startBasesReq + preSpliceBaseDiff >= 1 ?
+                refGenome.getBaseString(chromosome, splicePosition - startBasesReq - preSpliceBaseDiff, splicePosition - 1) : "";
 
-        final String postSpliceBases = endOffset + postSpliceBaseDiff > 0 ?
-                refGenome.getBaseString(chromosome, splicePosition, splicePosition + endOffset + postSpliceBaseDiff) : "";
-
-        String baseContext = "";
+        final String postSpliceBases = postSpliceBasesRequired >= 0 ?
+                refGenome.getBaseString(chromosome, splicePosition, splicePosition + postSpliceBasesRequired) : "";
 
         if(!varWithinContext)
             return preSpliceBases + postSpliceBases;
 
-        if(variantPos < splicePosition)
+        String baseContext = "";
+        int varRelativePos = 0;
+
+        try
         {
-            int varRelativePos = preSpliceBases.length() - (splicePosition - variantPos);
-            baseContext = preSpliceBases.substring(0, varRelativePos);
-            baseContext += variantAlt;
-            baseContext += preSpliceBases.substring(varRelativePos + variantRef.length(), preSpliceBases.length());
-            baseContext += postSpliceBases;
+            if(variantPos < splicePosition)
+            {
+                varRelativePos = preSpliceBases.length() - (splicePosition - variantPos);
+                baseContext = preSpliceBases.substring(0, varRelativePos);
+                baseContext += variantAlt;
+                baseContext += preSpliceBases.substring(varRelativePos + variantRef.length(), preSpliceBases.length());
+                baseContext += postSpliceBases;
+            }
+            else
+            {
+                baseContext = preSpliceBases;
+                varRelativePos = variantPos - splicePosition;
+                ++endBasesReq; // to account for the splice base
+
+                if(postSpliceBases.isEmpty())
+                {
+                    baseContext += variantAlt.length() > endBasesReq ? variantAlt.substring(0, endBasesReq) : variantAlt;
+                }
+                else
+                {
+                    baseContext += postSpliceBases.substring(0, varRelativePos);
+
+                    if(varRelativePos + variantAlt.length() > endBasesReq)
+                    {
+                        baseContext += variantAlt.substring(0, endBasesReq - varRelativePos);
+                    }
+                    else
+                    {
+                        baseContext += variantAlt;
+                        baseContext += postSpliceBases.substring(varRelativePos + variantRef.length(), postSpliceBases.length());
+                    }
+                }
+            }
         }
-        else
+        catch (Exception e)
         {
-            baseContext = preSpliceBases;
-            int varRelativePos = variantPos - splicePosition;
-            baseContext += postSpliceBases.substring(0, varRelativePos);
-            baseContext += variantAlt;
-            baseContext += postSpliceBases.substring(varRelativePos + variantRef.length(), postSpliceBases.length());
+            ISF_LOGGER.error("base context error: {}", e.toString());
+
+            ISF_LOGGER.error("var(chr={} pos={} ref={} alt={}) splice(pos={} ad={})",
+                    chromosome, variantPos, variantRef, variantAlt, splicePosition, acceptorDonorType);
+
+            ISF_LOGGER.error("baseContext({}) varRelPos({}) preSpliceBases({}) postSpliceBases({})",
+                    baseContext, varRelativePos, preSpliceBases, postSpliceBases);
         }
 
         return baseContext;

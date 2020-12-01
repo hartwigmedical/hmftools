@@ -71,6 +71,18 @@ public class SpliceVariantMatchingTest
 
         assertTrue(baseContext.equals("GCTAGCTTTTTA"));
 
+        // INS at same base longer than required
+        baseContext = SpliceVariant.getBaseContext(
+                chromosome, 20, "C", "CCCCC", 20, ACCEPTOR, refGenome);
+
+        assertTrue(baseContext.equals("AGCTAGCTAGCC"));
+
+        // INS at a later base longer than required
+        baseContext = SpliceVariant.getBaseContext(
+                chromosome, 21, "T", "TTT", 20, ACCEPTOR, refGenome);
+
+        assertTrue(baseContext.equals("AGCTAGCTAGCT"));
+
         // INS at an earlier base
         baseContext = SpliceVariant.getBaseContext(
                 chromosome, 18, "A", "AAAAA", 20, ACCEPTOR, refGenome);
