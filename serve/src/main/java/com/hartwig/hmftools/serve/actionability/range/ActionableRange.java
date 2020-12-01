@@ -27,10 +27,6 @@ public abstract class ActionableRange implements ActionableEvent {
     @NotNull
     public abstract MutationTypeFilter mutationType();
 
-    //TODO: can be removed when range positions are verified
     public abstract int rangeInfo();
 
-    //TODO: can be removed when range positions are verified
-    @NotNull
-    public abstract Set<Feature> feature();
 }
