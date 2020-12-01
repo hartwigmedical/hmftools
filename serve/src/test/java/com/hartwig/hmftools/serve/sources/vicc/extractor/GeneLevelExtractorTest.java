@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 import java.util.Map;
@@ -95,8 +96,11 @@ public class GeneLevelExtractorTest {
         Feature featureGeneOnly = ViccTestFactory.testFeatureWithGeneAndName("NOTCH1", "NOTCH1 ");
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneOnly, driverGenes));
 
-        Feature featureUnknown = ViccTestFactory.testFeatureWithGeneAndName("KRAS", "abcd");
-        assertEquals(GeneLevelEvent.UNKNOWN, GeneLevelExtractor.extractGeneLevelEvent(featureUnknown, driverGenes));
+        Feature featureNoDriverGene = ViccTestFactory.testFeatureWithGeneAndName("BRCA1", "BRCA1");
+        assertEquals(GeneLevelEvent.ANY_MUTATION, GeneLevelExtractor.extractGeneLevelEvent(featureNoDriverGene, driverGenes));
+
+        Feature featureUnknown = ViccTestFactory.testFeatureWithGeneAndName("KRAS", "not a gene level event");
+        assertNull(GeneLevelExtractor.extractGeneLevelEvent(featureUnknown, driverGenes));
     }
 
     @Test
@@ -105,7 +109,7 @@ public class GeneLevelExtractorTest {
 
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.determineGeneLevelEventFromDriverGenes("MET", driverGenes));
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.determineGeneLevelEventFromDriverGenes("STK11", driverGenes));
-        assertEquals(GeneLevelEvent.UNKNOWN, GeneLevelExtractor.determineGeneLevelEventFromDriverGenes("MAP1K1", driverGenes));
+        assertEquals(GeneLevelEvent.ANY_MUTATION, GeneLevelExtractor.determineGeneLevelEventFromDriverGenes("MAP1K1", driverGenes));
     }
 
     @NotNull

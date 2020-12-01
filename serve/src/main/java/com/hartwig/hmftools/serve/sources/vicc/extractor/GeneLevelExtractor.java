@@ -20,6 +20,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GeneLevelExtractor {
 
@@ -47,11 +48,14 @@ public class GeneLevelExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
             if (feature.type() == MutationType.GENE_LEVEL) {
                 if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
-                    geneLevelEventsPerFeature.put(feature,
-                            ImmutableGeneLevelAnnotation.builder()
-                                    .gene(feature.geneSymbol())
-                                    .event(extractGeneLevelEvent(feature, driverGenes))
-                                    .build());
+                    GeneLevelEvent event = extractGeneLevelEvent(feature, driverGenes);
+                    if (event != null) {
+                        geneLevelEventsPerFeature.put(feature,
+                                ImmutableGeneLevelAnnotation.builder()
+                                        .gene(feature.geneSymbol())
+                                        .event(event)
+                                        .build());
+                    }
                 }
             } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
                 if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), "fusion")) {
@@ -63,7 +67,7 @@ public class GeneLevelExtractor {
         return geneLevelEventsPerFeature;
     }
 
-    @NotNull
+    @Nullable
     @VisibleForTesting
     static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String event = feature.name().trim();
@@ -85,7 +89,7 @@ public class GeneLevelExtractor {
         }
 
         LOGGER.warn("Could not determine gene level event for '{}' on '{}'", feature.name(), gene);
-        return GeneLevelEvent.UNKNOWN;
+        return null;
     }
 
     @VisibleForTesting
@@ -100,6 +104,6 @@ public class GeneLevelExtractor {
                 }
             }
         }
-        return GeneLevelEvent.UNKNOWN;
+        return GeneLevelEvent.ANY_MUTATION;
     }
 }
