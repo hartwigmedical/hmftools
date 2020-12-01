@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFil
 import com.hartwig.hmftools.serve.sources.ExtractionOutput;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +33,22 @@ public final class ViccUtil {
     private static final String FIELD_DELIMITER = "\t";
 
     private ViccUtil() {
+    }
+
+    @NotNull
+    public static Knowledgebase toKnowledgebase(@NotNull ViccSource source) {
+        switch (source) {
+            case ONCOKB:
+                return Knowledgebase.ONCOKB;
+            case CIVIC:
+                return Knowledgebase.CIVIC;
+            case JAX:
+                return Knowledgebase.JAX;
+            case CGI:
+                return Knowledgebase.CGI;
+            default:
+                throw new IllegalStateException("Source not mapped to knowledgebase yet: " + source.display());
+        }
     }
 
     public static void writeActionability(@NotNull String outputDir, @NotNull ExtractionOutput extractionOutput)

@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.sources.vicc.ViccUtil;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -38,7 +39,12 @@ public class CopyNumberExtractor {
                 if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
                     CopyNumberType type =
                             feature.type() == MutationType.AMPLIFICATION ? CopyNumberType.AMPLIFICATION : CopyNumberType.DELETION;
-                    ampsDelsPerFeature.put(feature, ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(type).build());
+                    ampsDelsPerFeature.put(feature,
+                            ImmutableKnownCopyNumber.builder()
+                                    .gene(feature.geneSymbol())
+                                    .type(type)
+                                    .addSources(ViccUtil.toKnowledgebase(viccEntry.source()))
+                                    .build());
                 }
             }
         }

@@ -65,9 +65,9 @@ public final class FusionAnnotationConfig {
                 .minExonDown(11)
                 .maxExonDown(11)
                 .build();
-        fusionExonMap.put("KIT EXON 11 MUTATION", fusionKITExon11);
-        fusionExonMap.put("KIT Exon 11 mutations", fusionKITExon11);
-        fusionExonMap.put("KIT Exon 11 deletions", fusionKITExon11);
+        fusionExonMap.put("EXON 11 MUTATION", fusionKITExon11);
+        fusionExonMap.put("Exon 11 mutations", fusionKITExon11);
+        fusionExonMap.put("Exon 11 deletions", fusionKITExon11);
 
         KnownFusionPair fusionMETExon14 = ImmutableKnownFusionPair.builder()
                 .geneUp("MET")
@@ -77,7 +77,7 @@ public final class FusionAnnotationConfig {
                 .minExonDown(15)
                 .maxExonDown(15)
                 .build();
-        fusionExonMap.put("MET EXON 14 SKIPPING MUTATION", fusionMETExon14);
+        fusionExonMap.put("EXON 14 SKIPPING MUTATION", fusionMETExon14);
 
         return fusionExonMap;
     }

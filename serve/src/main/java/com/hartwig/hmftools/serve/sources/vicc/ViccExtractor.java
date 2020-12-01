@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc;
 
+import static com.hartwig.hmftools.serve.sources.vicc.ViccUtil.toKnowledgebase;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,7 +12,6 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
@@ -44,7 +45,6 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.SignatureExtractor;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -146,22 +146,6 @@ public final class ViccExtractor {
         }
 
         return HotspotFunctions.consolidateHotspots(hotspots);
-    }
-
-    @NotNull
-    private static Knowledgebase toKnowledgebase(@NotNull ViccSource source) {
-        switch (source) {
-            case ONCOKB:
-                return Knowledgebase.ONCOKB;
-            case CIVIC:
-                return Knowledgebase.CIVIC;
-            case JAX:
-                return Knowledgebase.JAX;
-            case CGI:
-                return Knowledgebase.CGI;
-            default:
-                throw new IllegalStateException("Source not mapped to knowledgebase yet: " + source.display());
-        }
     }
 
     @NotNull
