@@ -66,36 +66,33 @@ public class GeneLevelExtractor {
     @NotNull
     @VisibleForTesting
     static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
-        String event;
-        String geneSymbol = feature.geneSymbol();
-        String geneSymbolEvent = feature.name().split(" ")[0];
+        String event = feature.name().trim();
+        String gene = feature.geneSymbol();
 
-        if (geneSymbolEvent.equals(geneSymbol)) {
-            event = feature.name().split(" ", 2)[1].trim();
-
-        } else {
-            event = feature.name();
+        if (event.contains(" ")) {
+            String firstWord = event.split(" ")[0];
+            if (firstWord.equals(gene)) {
+                event = event.split(" ", 2)[1].trim();
+            }
         }
 
         if (ViccClassificationConfig.INACTIVATING_GENE_LEVEL_KEY_PHRASES.contains(event)) {
             return GeneLevelEvent.INACTIVATION;
         } else if (ViccClassificationConfig.ACTIVATING_GENE_LEVEL_KEY_PHRASES.contains(event)) {
             return GeneLevelEvent.ACTIVATION;
-        } else if (ViccClassificationConfig.GENERIC_GENE_LEVEL_KEY_PHRASES.contains(event)) {
-            return extractGeneLevelEventGene(feature, driverGenes);
-        } else if (feature.geneSymbol().equals(feature.name().replaceAll("\\s+", ""))) {
-            return extractGeneLevelEventGene(feature, driverGenes);
-        } else {
-            LOGGER.warn("Unknown event {}", feature);
-            return GeneLevelEvent.UNKNOWN;
+        } else if (ViccClassificationConfig.GENERIC_GENE_LEVEL_KEY_PHRASES.contains(event) || gene.equals(event.replaceAll("\\s+", ""))) {
+            return determineGeneLevelEventFromDriverGenes(gene, driverGenes);
         }
+
+        LOGGER.warn("Could not determine gene level event for '{}' on '{}'", feature.name(), gene);
+        return GeneLevelEvent.UNKNOWN;
     }
 
     @VisibleForTesting
     @NotNull
-    static GeneLevelEvent extractGeneLevelEventGene(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
+    static GeneLevelEvent determineGeneLevelEventFromDriverGenes(@NotNull String gene, @NotNull List<DriverGene> driverGenes) {
         for (DriverGene driverGene : driverGenes) {
-            if (driverGene.gene().equals(feature.geneSymbol())) {
+            if (driverGene.gene().equals(gene)) {
                 if (driverGene.likelihoodType() == DriverCategory.ONCO) {
                     return GeneLevelEvent.ACTIVATION;
                 } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
