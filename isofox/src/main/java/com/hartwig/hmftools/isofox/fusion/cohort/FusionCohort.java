@@ -5,8 +5,8 @@ import static java.lang.Math.ceil;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.PASSING_FUSION;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.PASSING_FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 
 import java.io.BufferedWriter;
@@ -14,14 +14,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
+import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.common.TaskExecutor;
 
@@ -70,7 +68,7 @@ public class FusionCohort
 
         final List<Path> filenames = Lists.newArrayList();
 
-        final CohortAnalysisType fileType = mConfig.Fusions.ComparisonSource != null ? PASSING_FUSION : FUSION;
+        final AnalysisType fileType = mConfig.Fusions.ComparisonSource != null ? PASSING_FUSION : FUSION;
 
         if(!formSampleFilenames(mConfig, fileType, filenames))
             return;

@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.SUMMARY;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SUMMARY;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.isValid;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
@@ -25,6 +25,7 @@ import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
 import com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
+import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
@@ -53,7 +54,7 @@ public class CohortAnalyser
         if(!mConfig.SampleData.isValid())
             return false;
 
-        for(CohortAnalysisType type : mConfig.AnalysisTypes)
+        for(AnalysisType type : mConfig.AnalysisTypes)
         {
             switch(type)
             {
@@ -103,10 +104,10 @@ public class CohortAnalyser
                     break;
                 }
 
-                case SAMPLE_ROUTINES:
+                case SPLICE_SITE_PERCENTILES:
                 {
-                    SampleRoutines sampleRoutines = new SampleRoutines(mConfig);
-                    sampleRoutines.convertMutationCohortFile(mConfig.SampleMutationsFile);
+                    SpliceSiteCache spliceSiteCache = new SpliceSiteCache(mConfig, mCmdLineArgs);
+                    spliceSiteCache.createPercentiles();
                     break;
                 }
 

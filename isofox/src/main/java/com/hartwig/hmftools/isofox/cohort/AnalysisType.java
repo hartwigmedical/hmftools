@@ -4,10 +4,11 @@ import static com.hartwig.hmftools.isofox.fusion.FusionWriter.FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.GENE_RESULTS_FILE;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.SPLICE_SITE_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.TRANSCRIPT_RESULTS_FILE;
 
-public enum CohortAnalysisType
+public enum AnalysisType
 {
     SUMMARY,
     GENE_DISTRIBUTION, // creates gene expression percentiles by cancer type and pan-cancer
@@ -18,13 +19,13 @@ public enum CohortAnalysisType
     FUSION, // process fusions for a cohort - filter passing fusions, form a cohort file, compare with external fusions
     PASSING_FUSION,
     RETAINED_INTRON,
-    SAMPLE_ROUTINES,
+    SPLICE_SITE_PERCENTILES,
     EXTERNAL_EXPRESSION_COMPARE, // combine expression data from Isofox and another source
     GENE_EXPRESSION_COMPARE, // compare gene expression across 2 cohorts of samples
     GENE_EXPRESSION_MATRIX, // generates a single gene by sample matrix for expression data
     TRANSCRIPT_EXPRESSION_MATRIX; // as above but for transcript expression
 
-    public static String getFileId(CohortAnalysisType type)
+    public static String getFileId(AnalysisType type)
     {
         switch(type)
         {
@@ -42,6 +43,9 @@ public enum CohortAnalysisType
             case ALT_SPLICE_JUNCTION:
             case SPLICE_VARIANT_MATCHING:
                 return ALT_SJ_FILE_ID;
+
+            case SPLICE_SITE_PERCENTILES:
+                return SPLICE_SITE_FILE;
 
             case FUSION:
                 return FUSION_FILE_ID;

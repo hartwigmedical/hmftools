@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilename;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.fusionId;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;

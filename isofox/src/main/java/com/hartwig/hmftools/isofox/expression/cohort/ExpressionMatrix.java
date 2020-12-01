@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.GENE_EXPRESSION_MATRIX;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
@@ -25,12 +25,12 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
-import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
+import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 public class ExpressionMatrix
 {
-    private final CohortAnalysisType mType;
+    private final AnalysisType mType;
     private final CohortConfig mConfig;
     
     private SigMatrix mExpressionMatrix;
@@ -38,7 +38,7 @@ public class ExpressionMatrix
     private final List<String> mGeneNames;
     private final List<String> mTranscriptNames;
 
-    public ExpressionMatrix(final CohortConfig config, final CohortAnalysisType type)
+    public ExpressionMatrix(final CohortConfig config, final AnalysisType type)
     {
         mType = type;
         mConfig = config;

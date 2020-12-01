@@ -10,15 +10,15 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.REF_GENOME;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadRefGenome;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.EXTERNAL_EXPRESSION_COMPARE;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.FUSION;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.GENE_DISTRIBUTION;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.GENE_EXPRESSION_COMPARE;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.GENE_EXPRESSION_MATRIX;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.SAMPLE_GENE_PERCENTILES;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_DISTRIBUTION;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
-import static com.hartwig.hmftools.isofox.cohort.CohortAnalysisType.getFileId;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXTERNAL_EXPRESSION_COMPARE;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_DISTRIBUTION;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_COMPARE;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SAMPLE_GENE_PERCENTILES;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_DISTRIBUTION;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.getFileId;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -37,6 +37,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
+import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -66,7 +67,7 @@ public class CohortConfig
     public final boolean FailOnMissingSample;
     public final boolean ConvertUnmatchedCancerToOther;
 
-    public final List<CohortAnalysisType> AnalysisTypes;
+    public final List<AnalysisType> AnalysisTypes;
 
     public final DatabaseAccess DbAccess;
 
@@ -110,7 +111,7 @@ public class CohortConfig
         }
 
         AnalysisTypes = Arrays.stream(cmd.getOptionValue(ANALYSIS_TYPES).split(ITEM_DELIM))
-                .map(x -> CohortAnalysisType.valueOf(x)).collect(Collectors.toList());
+                .map(x -> AnalysisType.valueOf(x)).collect(Collectors.toList());
 
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
@@ -146,7 +147,7 @@ public class CohortConfig
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
     }
 
-    private static boolean requiresExpressionConfig(final List<CohortAnalysisType> analysisTypes)
+    private static boolean requiresExpressionConfig(final List<AnalysisType> analysisTypes)
     {
         return analysisTypes.contains(GENE_DISTRIBUTION) || analysisTypes.contains(TRANSCRIPT_DISTRIBUTION)
                 || analysisTypes.contains(SAMPLE_GENE_PERCENTILES) || analysisTypes.contains(GENE_EXPRESSION_COMPARE)
@@ -173,7 +174,7 @@ public class CohortConfig
             return OutputDir + "isofox." + fileId;
     }
 
-    public static String formSampleFilename(final CohortConfig config, final String sampleId, final CohortAnalysisType dataType)
+    public static String formSampleFilename(final CohortConfig config, final String sampleId, final AnalysisType dataType)
     {
         String filename = config.RootDataDir;
 
@@ -185,7 +186,7 @@ public class CohortConfig
         return filename;
     }
 
-    public static boolean formSampleFilenames(final CohortConfig config, final CohortAnalysisType dataType, final List<Path> filenames)
+    public static boolean formSampleFilenames(final CohortConfig config, final AnalysisType dataType, final List<Path> filenames)
     {
         List<String> missingSampleIds = Lists.newArrayList();
 
@@ -241,6 +242,7 @@ public class CohortConfig
         SpliceVariantMatcher.addCmdLineOptions(options);
         FusionCohortConfig.addCmdLineOptions(options);
         ExpressionCohortConfig.addCmdLineOptions(options);
+        SpliceSiteCache.addCmdLineOptions(options);
 
         addDatabaseCmdLineArgs(options);
 

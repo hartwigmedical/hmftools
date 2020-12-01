@@ -25,7 +25,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.isofox.cohort.CohortAnalysisType;
+import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 public class GeneExpressionDistribution
@@ -54,7 +54,7 @@ public class GeneExpressionDistribution
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, CohortAnalysisType.GENE_DISTRIBUTION, filenames))
+        if(!formSampleFilenames(mConfig, AnalysisType.GENE_DISTRIBUTION, filenames))
             return;
 
         initialiseWriter();
