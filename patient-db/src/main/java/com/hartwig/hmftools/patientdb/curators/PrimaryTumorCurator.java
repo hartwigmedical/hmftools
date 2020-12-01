@@ -41,7 +41,7 @@ public class PrimaryTumorCurator implements CleanableCurator {
             String subType = parts[4];
             String extraDetails = parts[5];
             List<String> doids = Lists.newArrayList(parts[6].split(STRING_DELIMITER));
-            List<String> snomedIds = Lists.newArrayList(parts[7].split(STRING_DELIMITER));
+            List<String> snomedConceptIds = Lists.newArrayList(parts[7].split(STRING_DELIMITER));
 
             primaryTumorMap.put(searchTerm,
                     ImmutableCuratedPrimaryTumor.builder()
@@ -52,7 +52,7 @@ public class PrimaryTumorCurator implements CleanableCurator {
                             .subType(subType)
                             .extraDetails(extraDetails)
                             .doidNodes(resolveDoidNodes(doidNodes, doids))
-                            .snomedIds(snomedIds)
+                            .snomedConceptIds(snomedConceptIds)
                             .build());
         }
 

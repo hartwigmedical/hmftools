@@ -170,10 +170,10 @@ class ClinicalDAO {
             }
         }
 
-        List<String> snomedIds = patient.curatedPrimaryTumor().snomedIds();
-        if (snomedIds != null) {
-            for (String snomedId : snomedIds) {
-                writeSnomedId(patientId, snomedId);
+        List<String> snomedConceptIds = patient.curatedPrimaryTumor().snomedConceptIds();
+        if (snomedConceptIds != null) {
+            for (String snomedConceptId : snomedConceptIds) {
+                writeSnomedConceptId(patientId, snomedConceptId);
             }
         }
 
@@ -195,13 +195,13 @@ class ClinicalDAO {
     }
 
     private void writeDoidNode(int patientId, @NotNull DoidNode doidNode) {
-        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM, DOIDNODE.SNOMEDID)
-                .values(patientId, doidNode.doid(), doidNode.doidTerm(), doidNode.snomedId())
+        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM, DOIDNODE.SNOMEDCONCEPTID)
+                .values(patientId, doidNode.doid(), doidNode.doidTerm(), doidNode.snomedConceptId())
                 .execute();
     }
 
-    private void writeSnomedId(int patientId, @NotNull String snomedId) {
-        context.insertInto(SNOMED, SNOMED.PATIENTID, SNOMED.SNOMEDID).values(patientId, snomedId).execute();
+    private void writeSnomedConceptId(int patientId, @NotNull String snomedConceptId) {
+        context.insertInto(SNOMED, SNOMED.PATIENTID, SNOMED.SNOMEDCONCEPTID).values(patientId, snomedConceptId).execute();
     }
 
     private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {

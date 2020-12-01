@@ -42,7 +42,7 @@ final class DumpPrimaryTumorData {
                         .subType(Strings.nullToEmpty(patient.baselineData().curatedPrimaryTumor().subType()))
                         .extraDetails(Strings.nullToEmpty(patient.baselineData().curatedPrimaryTumor().extraDetails()))
                         .doids(extractDoids(patient.baselineData().curatedPrimaryTumor().doidNodes()))
-                        .snomedIds(nullToEmpty(patient.baselineData().curatedPrimaryTumor().snomedIds()))
+                        .snomedConceptIds(nullToEmpty(patient.baselineData().curatedPrimaryTumor().snomedConceptIds()))
                         .isOverridden(false)
                         .build())
                 .collect(Collectors.toList());

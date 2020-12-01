@@ -26,7 +26,7 @@ public abstract class DoidNode {
 
     @Nullable
     @Value.Derived
-    public String snomedId() {
-        return doidMetadata() != null ? doidMetadata().snomedId() : null;
+    public String snomedConceptId() {
+        return doidMetadata() != null ? doidMetadata().snomedConceptId() : null;
     }
 }

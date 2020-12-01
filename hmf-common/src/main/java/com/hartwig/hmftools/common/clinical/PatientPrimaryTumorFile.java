@@ -39,7 +39,7 @@ public class PatientPrimaryTumorFile {
                     .subType(parts[4])
                     .extraDetails(parts[5])
                     .doids(toStringList(parts[6]))
-                    .snomedIds(toStringList(parts[7]))
+                    .snomedConceptIds(toStringList(parts[7]))
                     .isOverridden(Boolean.parseBoolean(parts[8]))
                     .build());
         }
@@ -71,7 +71,7 @@ public class PatientPrimaryTumorFile {
                 .add("subType")
                 .add("extraDetails")
                 .add("doids")
-                .add("snomedIds")
+                .add("snomedConceptIds")
                 .add("overridden")
                 .toString();
     }
@@ -85,7 +85,7 @@ public class PatientPrimaryTumorFile {
                 .add(patientPrimaryTumor.subType())
                 .add(patientPrimaryTumor.extraDetails())
                 .add(fromStringList(patientPrimaryTumor.doids()))
-                .add(fromStringList(patientPrimaryTumor.snomedIds()))
+                .add(fromStringList(patientPrimaryTumor.snomedConceptIds()))
                 .add(String.valueOf(patientPrimaryTumor.isOverridden()))
                 .toString();
     }
