@@ -39,6 +39,6 @@ public class DocmExtractor {
         }
 
         // Hotspots appear multiple times in DoCM on different transcripts. We need to consolidate even though there is only one source.
-        return HotspotFunctions.consolidateHotspots(knownHotspots);
+        return HotspotFunctions.consolidate(knownHotspots);
     }
 }

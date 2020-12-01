@@ -19,7 +19,7 @@ public class HotspotFunctionsTest {
     @Test
     public void canConsolidateEmptyHotspots() {
         List<KnownHotspot> knownHotspots = Lists.newArrayList();
-        assertTrue(HotspotFunctions.consolidateHotspots(knownHotspots).isEmpty());
+        assertTrue(HotspotFunctions.consolidate(knownHotspots).isEmpty());
     }
 
     @Test
@@ -50,7 +50,7 @@ public class HotspotFunctionsTest {
                 .proteinAnnotation("prot3")
                 .build());
 
-        List<KnownHotspot> consolidateHotspots = HotspotFunctions.consolidateHotspots(knownHotspots);
+        List<KnownHotspot> consolidateHotspots = HotspotFunctions.consolidate(knownHotspots);
         assertEquals(2, consolidateHotspots.size());
 
         assertEquals(Sets.newHashSet(source), consolidateHotspots.get(0).sources());
@@ -85,7 +85,7 @@ public class HotspotFunctionsTest {
                 .proteinAnnotation("prot2")
                 .build());
 
-        List<KnownHotspot> consolidateHotspots = HotspotFunctions.consolidateHotspots(knownHotspots);
+        List<KnownHotspot> consolidateHotspots = HotspotFunctions.consolidate(knownHotspots);
         assertEquals(1, consolidateHotspots.size());
 
         assertEquals(Sets.newHashSet(source1, source2), consolidateHotspots.get(0).sources());

@@ -27,7 +27,9 @@ import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
+import com.hartwig.hmftools.serve.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.fusion.FusionFunctions;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
@@ -145,7 +147,7 @@ public final class ViccExtractor {
             }
         }
 
-        return HotspotFunctions.consolidateHotspots(hotspots);
+        return HotspotFunctions.consolidate(hotspots);
     }
 
     @NotNull
@@ -154,7 +156,8 @@ public final class ViccExtractor {
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             copyNumbers.addAll(entry.getValue().ampsDelsPerFeature().values());
         }
-        return copyNumbers;
+
+        return CopyNumberFunctions.consolidate(copyNumbers);
     }
 
     @NotNull
@@ -163,7 +166,8 @@ public final class ViccExtractor {
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             fusions.addAll(entry.getValue().fusionsPerFeature().values());
         }
-        return fusions;
+
+        return FusionFunctions.consolidate(fusions);
     }
 
     private static void addActionability(@NotNull ImmutableExtractionOutput.Builder outputBuilder,

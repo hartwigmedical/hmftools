@@ -69,7 +69,7 @@ public class HartwigExtractor {
         }
 
         // Even for Hartwig sources the extractor may generate duplicate hotspots, so we need to consolidate them.
-        return HotspotFunctions.consolidateHotspots(knownHotspots);
+        return HotspotFunctions.consolidate(knownHotspots);
     }
 
     @NotNull

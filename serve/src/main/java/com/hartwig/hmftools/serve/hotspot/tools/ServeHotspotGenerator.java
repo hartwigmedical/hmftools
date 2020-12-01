@@ -121,7 +121,7 @@ public class ServeHotspotGenerator {
         allHotspots.addAll(hartwigCohortHotspots);
         allHotspots.addAll(hartwigCuratedHotspots);
 
-        List<KnownHotspot> mergedConsolidatedHotspots = HotspotFunctions.consolidateHotspots(allHotspots);
+        List<KnownHotspot> mergedConsolidatedHotspots = HotspotFunctions.consolidate(allHotspots);
 
         if (generateHotspots && hotspotVcf != null) {
             writeHotspots(hotspotVcf, mergedConsolidatedHotspots);
