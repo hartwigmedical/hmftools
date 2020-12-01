@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,8 @@ public class GeneRangeExtractorTest {
         assertEquals(Integer.valueOf("742"), GeneRangeExtractor.extractCodonNumber("W742"));
         assertEquals(Integer.valueOf("179"), GeneRangeExtractor.extractCodonNumber("Q179X"));
         assertEquals(Integer.valueOf("61"), GeneRangeExtractor.extractCodonNumber("KRAS Q61X"));
+
+        assertNull(GeneRangeExtractor.extractCodonNumber("Not a codon number"));
     }
 
     @Test
@@ -42,6 +46,8 @@ public class GeneRangeExtractorTest {
         assertEquals(Lists.newArrayList(16, 17, 18, 19), GeneRangeExtractor.extractExonNumbers("MET mutation in exon 16-19"));
         assertEquals(Lists.newArrayList(2, 3), GeneRangeExtractor.extractExonNumbers("Null (Partial deletion of Exons 2 & 3)"));
         assertEquals(Lists.newArrayList(12), GeneRangeExtractor.extractExonNumbers("Exon 12 splice site insertion"));
+
+        assertTrue(GeneRangeExtractor.extractExonNumbers("Not an exon number").isEmpty());
     }
 
     @Test

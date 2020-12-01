@@ -105,6 +105,7 @@ public class GeneRangeExtractor {
         return geneRangesPerFeature;
     }
 
+    @NotNull
     @VisibleForTesting
     static List<Integer> extractExonNumbers(@NotNull String featureName) {
         List<Integer> exons = Lists.newArrayList();
@@ -122,7 +123,7 @@ public class GeneRangeExtractor {
         }
 
         if (exons.isEmpty()) {
-            LOGGER.warn("No exon number is extracted from event '{}'", featureName);
+            LOGGER.warn("Could not extract exon numbers from '{}'", featureName);
         }
         return exons;
     }
@@ -159,23 +160,6 @@ public class GeneRangeExtractor {
         return exonNumbers;
     }
 
-    @VisibleForTesting
-    static Integer extractCodonNumber(@NotNull String featureName) {
-        String codonPart;
-        if (featureName.contains(" ")) {
-            codonPart = featureName.split(" ")[1];
-        } else {
-            codonPart = featureName;
-        }
-        codonPart = codonPart.replaceAll("\\D+", "");
-        if (isInteger(codonPart)) {
-            return Integer.parseInt(codonPart);
-        } else {
-            LOGGER.warn("Could not extract codon number from '{}'", featureName);
-            return null;
-        }
-    }
-
     @Nullable
     private static GeneRangeAnnotation determineExonAnnotation(@NotNull String gene, @NotNull HmfTranscriptRegion transcript,
             int exonNumber, @NotNull MutationTypeFilter specificMutationType) {
@@ -198,6 +182,24 @@ public class GeneRangeExtractor {
                 .exonId(hmfExonRegion.exonID())
                 .mutationType(specificMutationType)
                 .build();
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static Integer extractCodonNumber(@NotNull String featureName) {
+        String codonPart;
+        if (featureName.contains(" ")) {
+            codonPart = featureName.split(" ")[1];
+        } else {
+            codonPart = featureName;
+        }
+        codonPart = codonPart.replaceAll("\\D+", "");
+        if (isInteger(codonPart)) {
+            return Integer.parseInt(codonPart);
+        } else {
+            LOGGER.warn("Could not extract codon number from '{}'", featureName);
+            return null;
+        }
     }
 
     @Nullable
