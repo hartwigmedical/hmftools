@@ -161,32 +161,18 @@ public class GeneRangeExtractor {
 
     @VisibleForTesting
     static Integer extractCodonNumber(@NotNull String featureName) {
-        if (featureName.split(" ").length == 1) {
-            if (!isInteger(featureName.replaceAll("\\D+", ""))) {
-                LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
-                return null;
-            } else {
-                return Integer.parseInt(featureName.replaceAll("\\D+", ""));
-            }
-        } else if (featureName.split(" ").length == 2) {
-            String featureNamePart = featureName.split(" ")[1];
-            if (!isInteger(featureNamePart.replaceAll("\\D+", ""))) {
-                LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
-                return null;
-            } else {
-                return Integer.parseInt(featureNamePart.replaceAll("\\D+", ""));
-            }
+        String codonPart;
+        if (featureName.contains(" ")) {
+            codonPart = featureName.split(" ")[1];
+        } else {
+            codonPart = featureName;
         }
-        LOGGER.warn("Could not convert gene range codon {} to codon number", featureName);
-        return null;
-    }
-
-    private static boolean isInteger(@NotNull String string) {
-        try {
-            Integer.parseInt(string);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
+        codonPart = codonPart.replaceAll("\\D+", "");
+        if (isInteger(codonPart)) {
+            return Integer.parseInt(codonPart);
+        } else {
+            LOGGER.warn("Could not extract codon number from '{}'", featureName);
+            return null;
         }
     }
 
@@ -224,7 +210,8 @@ public class GeneRangeExtractor {
             long start = genomeRegions.get(0).start();
             long end = genomeRegions.get(0).end();
 
-            return ImmutableGeneRangeAnnotation.builder().gene(geneSymbol)
+            return ImmutableGeneRangeAnnotation.builder()
+                    .gene(geneSymbol)
                     .chromosome(chromosome)
                     .start(start)
                     .end(end)
@@ -284,5 +271,14 @@ public class GeneRangeExtractor {
         }
 
         return MutationTypeFilter.UNKNOWN;
+    }
+
+    private static boolean isInteger(@NotNull String string) {
+        try {
+            Integer.parseInt(string);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }
