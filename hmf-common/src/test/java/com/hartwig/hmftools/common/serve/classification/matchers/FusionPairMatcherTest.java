@@ -23,6 +23,7 @@ public class FusionPairMatcherTest {
         assertTrue(matcher.matches("EGFR", "VIII"));
         assertTrue(matcher.matches("NKX2-1", "TRB-NKX2-1 Fusion"));
 
+        assertFalse(matcher.matches("BRAF", "BRAF-"));
         assertFalse(matcher.matches("BRAF", "BRAF amp"));
         assertFalse(matcher.matches("AR", "AR-V7"));
         assertFalse(matcher.matches("BRAF", "V600E"));
