@@ -174,27 +174,23 @@ public class GeneRangeExtractorTest {
 
     @Test
     public void canExtractSpecificMutationTypeFilter() {
-        Feature featureMutationUnknownOnco = ViccTestFactory.testEntryWithGeneAndEvent("ERBB2", "D835").features().get(0);
         List<DriverGene> driverGenes = createDriverGenes("TP53", "EGFR", "ERBB2");
         String gene = "ERBB2";
         MutationTypeFilter filterUnknownOnco = MutationTypeFilter.UNKNOWN;
         assertEquals(MutationTypeFilter.MISSENSE_ANY,
-                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownOnco, featureMutationUnknownOnco));
+                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownOnco));
 
-        Feature featureMutationKnownOnco = ViccTestFactory.testEntryWithGeneAndEvent("ERBB2", "D835").features().get(0);
         MutationTypeFilter filterKnownOnco = MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
         assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION,
-                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownOnco, featureMutationKnownOnco));
+                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownOnco));
 
-        Feature featureMutationUnknownTsg = ViccTestFactory.testEntryWithGeneAndEvent("TP53", "R249").features().get(0);
         MutationTypeFilter filterUnknownTsg = MutationTypeFilter.UNKNOWN;
         assertEquals(MutationTypeFilter.MISSENSE_ANY,
-                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownTsg, featureMutationUnknownTsg));
+                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterUnknownTsg));
 
-        Feature featureMutationKnownTsg = ViccTestFactory.testEntryWithGeneAndEvent("TP53", "R249").features().get(0);
         MutationTypeFilter filterKnownTsg = MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
         assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT,
-                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownTsg, featureMutationKnownTsg));
+                GeneRangeExtractor.extractMutationFilter(driverGenes, gene, filterKnownTsg));
     }
 
     @NotNull
