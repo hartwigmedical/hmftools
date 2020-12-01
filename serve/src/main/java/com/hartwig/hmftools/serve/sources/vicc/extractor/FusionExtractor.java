@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;

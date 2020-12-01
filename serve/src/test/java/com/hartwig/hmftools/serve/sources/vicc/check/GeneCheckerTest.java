@@ -3,20 +3,24 @@ package com.hartwig.hmftools.serve.sources.vicc.check;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class GeneCheckerTest {
 
     @Test
-    //TODO improve test
-    @Ignore
     public void canCorrectlyCheckGenes() {
         GeneChecker geneChecker = new GeneChecker();
-        assertTrue(geneChecker.isValidGene("BRAF", null, "Amplification", null));
-        assertTrue(geneChecker.isValidGene("IGH", null, "Deletion", null));
+        HmfTranscriptRegion canonicalTranscript = HmfGenePanelSupplier.allGenesMap37().get("BRAF");
+        assertTrue(geneChecker.isValidGene("BRAF", canonicalTranscript, "Amplification", null));
+
+        assertFalse(geneChecker.isValidGene("IGH", null, "Deletion", null));
+        assertTrue(geneChecker.isValidGene("IGH", null, "IGH-MYC", "fusion"));
 
         assertFalse(geneChecker.isValidGene("I am not a gene", null, "event", null));
-        assertFalse(geneChecker.isValidGene("gene", null, "event", null));
+
     }
 }

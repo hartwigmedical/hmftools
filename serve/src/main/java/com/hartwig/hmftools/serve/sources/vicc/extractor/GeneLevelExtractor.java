@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -105,7 +104,6 @@ public class GeneLevelExtractor {
                 }
             }
         }
-        CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
         return GeneLevelEvent.UNKNOWN;
     }
 }

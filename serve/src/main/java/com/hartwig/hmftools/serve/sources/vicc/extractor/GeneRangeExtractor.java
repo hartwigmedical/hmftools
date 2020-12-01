@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneRangeAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -224,7 +223,6 @@ public class GeneRangeExtractor {
                 }
             }
         }
-        CheckGenes.checkGensInPanel(gene, feature.name());
         return MutationTypeFilter.UNKNOWN;
     }
 
