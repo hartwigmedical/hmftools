@@ -59,7 +59,7 @@ public class GeneRangeExtractor {
                             GeneRangeAnnotation annotation = determineExonAnnotation(feature.geneSymbol(),
                                     canonicalTranscript,
                                     exonNumber,
-                                    extractSpecificMutationTypeFilter(feature.name(), driverGenes, feature.geneSymbol()));
+                                    extractMutationTypeFilter(feature.name(), driverGenes, feature.geneSymbol()));
                             if (annotation != null) {
                                 annotations.add(annotation);
                             }
@@ -83,7 +83,7 @@ public class GeneRangeExtractor {
                             String geneSymbol = feature.geneSymbol();
                             GeneRangeAnnotation annotation = determineCodonAnnotation(
                                     canonicalTranscript,
-                                    extractSpecificMutationTypeFilter(feature.name(), driverGenes, feature.geneSymbol()),
+                                    extractMutationTypeFilter(feature.name(), driverGenes, feature.geneSymbol()),
                                     codonNumber,
                                     geneSymbol);
                             if (annotation != null) {
@@ -230,7 +230,7 @@ public class GeneRangeExtractor {
 
     @VisibleForTesting
     @NotNull
-    static MutationTypeFilter extractSpecificMutationTypeFilter(@NotNull String featureName, @NotNull List<DriverGene> driverGenes,
+    static MutationTypeFilter extractMutationTypeFilter(@NotNull String featureName, @NotNull List<DriverGene> driverGenes,
             @NotNull String gene) {
         String featureEvent = featureName.toLowerCase();
         String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
