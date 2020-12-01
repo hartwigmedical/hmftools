@@ -41,7 +41,6 @@ public class GeneRangeExtractor {
     @NotNull
     public Map<Feature, List<GeneRangeAnnotation>> extractGeneRanges(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
-        List<GeneRangeAnnotation> geneRangeAnnotation = Lists.newArrayList();
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
@@ -72,18 +71,27 @@ public class GeneRangeExtractor {
                 if (canonicalTranscript == null) {
                     CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
                 } else {
-                    Integer codonNumber = extractCodonNumber(feature.name());
-                    if (codonNumber != null) {
-                        String geneSymbol = feature.geneSymbol();
-                        geneRangesPerFeature = determineRanges(viccEntry,
-                                feature,
-                                geneRangeAnnotation,
-                                geneRangesPerFeature,
-                                canonicalTranscript,
-                                driverGenes,
-                                extractSpecificMutationTypeFilter(feature),
-                                codonNumber,
-                                geneSymbol);
+                    String transcriptIdVicc = viccEntry.transcriptId();
+
+                    if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+                        Integer codonNumber = extractCodonNumber(feature.name());
+                        List<GeneRangeAnnotation> annotations = Lists.newArrayList();
+                        if (codonNumber != null) {
+                            String geneSymbol = feature.geneSymbol();
+                            annotations.add(determineRanges(feature,
+                                    canonicalTranscript,
+                                    driverGenes,
+                                    extractSpecificMutationTypeFilter(feature),
+                                    codonNumber,
+                                    geneSymbol));
+                            geneRangesPerFeature.put(feature, annotations);
+                        }
+
+                    } else {
+                        LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
+                                transcriptIdVicc,
+                                canonicalTranscript.transcriptID(),
+                                feature);
                     }
                 }
             }
@@ -169,37 +177,26 @@ public class GeneRangeExtractor {
     }
 
     @NotNull
-    private static Map<Feature, List<GeneRangeAnnotation>> determineRanges(@NotNull ViccEntry viccEntry, @NotNull Feature feature,
-            @NotNull List<GeneRangeAnnotation> geneRangeAnnotations, @NotNull Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature,
-            @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
-            @NotNull MutationTypeFilter specificMutationType, int codonNumber, @NotNull String geneSymbol) {
-        String transcriptIdVicc = viccEntry.transcriptId();
+    private static ImmutableGeneRangeAnnotation determineRanges(@NotNull Feature feature, @NotNull HmfTranscriptRegion canonicalTranscript,
+            @NotNull List<DriverGene> driverGenes, @NotNull MutationTypeFilter specificMutationType, int codonNumber,
+            @NotNull String geneSymbol) {
+        ImmutableGeneRangeAnnotation.Builder geneRangeAnnotation = ImmutableGeneRangeAnnotation.builder();
 
-        if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
+        List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
+        if (genomeRegions != null && genomeRegions.size() == 1) {
+            long start = genomeRegions.get(0).start();
+            long end = genomeRegions.get(0).end();
+            String chromosome = genomeRegions.get(0).chromosome();
 
-            List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
-            if (genomeRegions != null && genomeRegions.size() == 1) {
-                long start = genomeRegions.get(0).start();
-                long end = genomeRegions.get(0).end();
-                String chromosome = genomeRegions.get(0).chromosome();
-
-                geneRangeAnnotations.add(ImmutableGeneRangeAnnotation.builder()
-                        .gene(geneSymbol)
-                        .start(start)
-                        .end(end)
-                        .chromosome(chromosome)
-                        .rangeInfo(codonNumber)
-                        .mutationType(extractMutationFilter(driverGenes, geneSymbol, specificMutationType, feature))
-                        .build());
-                geneRangesPerFeature.put(feature, geneRangeAnnotations);
-            }
-        } else {
-            LOGGER.warn("transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-                    transcriptIdVicc,
-                    canonicalTranscript.transcriptID(),
-                    feature);
+            geneRangeAnnotation
+                    .gene(geneSymbol)
+                    .start(start)
+                    .end(end)
+                    .chromosome(chromosome)
+                    .rangeInfo(codonNumber)
+                    .mutationType(extractMutationFilter(driverGenes, geneSymbol, specificMutationType, feature));
         }
-        return geneRangesPerFeature;
+        return geneRangeAnnotation.build();
     }
 
     @VisibleForTesting
@@ -258,12 +255,7 @@ public class GeneRangeExtractor {
             @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
             @NotNull MutationTypeFilter specificMutationType) {
         int exonNumberList = exonNumber - 1; // HmfExonRegion start with count 0 so exonNumber is one below
-        return extractExonGenomicPositions(feature,
-                canonicalTranscript,
-                exonNumberList,
-                driverGenes,
-                exonNumber,
-                specificMutationType);
+        return extractExonGenomicPositions(feature, canonicalTranscript, exonNumberList, driverGenes, exonNumber, specificMutationType);
     }
 
     @NotNull

@@ -44,11 +44,25 @@ public class GeneRangeExtractorTest {
     }
 
     @Test
-    public void canExtractAnnotationForEntryWithTwoFeatures() {
+    public void canExtractAnnotationForEntryWithTwoFeaturesExon() {
         GeneRangeExtractor extractor = new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), Lists.newArrayList());
 
         Feature feature1 = ViccTestFactory.testFeatureWithGeneAndName("ERBB2", "Exon 20 insertions/deletions");
         Feature feature2 = ViccTestFactory.testFeatureWithGeneAndName("ERBB2", "Exon 20 insertions");
+        ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(feature1, feature2));
+
+        assertEquals(2, extractor.extractGeneRanges(entry).size());
+        assertEquals(1, extractor.extractGeneRanges(entry).get(feature1).size());
+        assertEquals(1, extractor.extractGeneRanges(entry).get(feature2).size());
+    }
+
+    @Test
+    public void canExtractAnnotationForEntryWithTwoFeaturesCodon() {
+        GeneRangeExtractor extractor =
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "PIK3CA", "KRAS"));
+
+        Feature feature1 = ViccTestFactory.testFeatureWithGeneAndName("PIK3CA", "E545X");
+        Feature feature2 = ViccTestFactory.testFeatureWithGeneAndName("KRAS", "G12X");
         ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(feature1, feature2));
 
         assertEquals(2, extractor.extractGeneRanges(entry).size());
