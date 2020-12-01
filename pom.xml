@@ -35,6 +35,7 @@
         <module>knowledgebase-importer</module>
         <module>vicc-knowledgebase-importer</module>
         <module>iclusion-importer</module>
+        <module>ckb-importer</module>
         <module>serve</module>
         <module>protect</module>
         <module>patient-reporter</module>
@@ -76,6 +77,7 @@
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>
         <iclusion-importer.version>1.2</iclusion-importer.version>
+        <ckb-importer.version>0.1</ckb-importer.version>
         <serve.version>0.1</serve.version>
         <protect.version>0.1</protect.version>
 
