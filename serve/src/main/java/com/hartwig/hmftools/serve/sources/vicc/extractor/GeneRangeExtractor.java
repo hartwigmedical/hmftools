@@ -16,6 +16,7 @@ import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -31,11 +32,14 @@ public class GeneRangeExtractor {
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
     @NotNull
     private final List<DriverGene> driverGenes;
+    @NotNull
+    private final GeneChecker geneChecker;
 
     public GeneRangeExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
-            @NotNull final List<DriverGene> driverGenes) {
+            @NotNull final List<DriverGene> driverGenes, @NotNull final GeneChecker geneChecker) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
         this.driverGenes = driverGenes;
+        this.geneChecker = geneChecker;
     }
 
     @NotNull

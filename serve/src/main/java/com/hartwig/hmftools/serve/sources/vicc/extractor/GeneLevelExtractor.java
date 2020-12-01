@@ -13,6 +13,7 @@ import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -29,11 +30,14 @@ public class GeneLevelExtractor {
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
     @NotNull
     private final List<DriverGene> driverGenes;
+    @NotNull
+    private final GeneChecker geneChecker;
 
     public GeneLevelExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
-            @NotNull final List<DriverGene> driverGenes) {
+            @NotNull final List<DriverGene> driverGenes, @NotNull final GeneChecker geneChecker) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
         this.driverGenes = driverGenes;
+        this.geneChecker = geneChecker;
     }
 
     @NotNull

@@ -17,6 +17,7 @@ import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneRangeAnnotation;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -45,7 +46,7 @@ public class GeneRangeExtractorTest {
 
     @Test
     public void canExtractAnnotationForEntryWithTwoFeaturesExon() {
-        GeneRangeExtractor extractor = new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), Lists.newArrayList());
+        GeneRangeExtractor extractor = new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), Lists.newArrayList(), new GeneChecker());
 
         Feature feature1 = ViccTestFactory.testFeatureWithGeneAndName("ERBB2", "Exon 20 insertions/deletions");
         Feature feature2 = ViccTestFactory.testFeatureWithGeneAndName("ERBB2", "Exon 20 insertions");
@@ -59,7 +60,7 @@ public class GeneRangeExtractorTest {
     @Test
     public void canExtractAnnotationForEntryWithTwoFeaturesCodon() {
         GeneRangeExtractor extractor =
-                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "PIK3CA", "KRAS"));
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "PIK3CA", "KRAS"), new GeneChecker());
 
         Feature feature1 = ViccTestFactory.testFeatureWithGeneAndName("PIK3CA", "E545X");
         Feature feature2 = ViccTestFactory.testFeatureWithGeneAndName("KRAS", "G12X");
@@ -139,7 +140,7 @@ public class GeneRangeExtractorTest {
     @Test
     public void canExtractRangesCodon() {
         GeneRangeExtractor geneRangeExtractor =
-                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"));
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"), new GeneChecker());
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("TP53", "R249");
 
@@ -159,7 +160,7 @@ public class GeneRangeExtractorTest {
     @Test
     public void canExtractRangesExon() {
         GeneRangeExtractor geneRangeExtractor =
-                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"));
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"), new GeneChecker());
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "EXON 19 DELETION");
 
@@ -180,7 +181,7 @@ public class GeneRangeExtractorTest {
     @Test
     public void canExtractRangesExonAndFusion() {
         GeneRangeExtractor geneRangeExtractor =
-                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"));
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"), new GeneChecker());
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KIT", "EXON 11 MUTATION");
 

@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -22,9 +23,12 @@ public class FusionExtractor {
 
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    @NotNull
+    private final GeneChecker geneChecker;
 
-    public FusionExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
+    public FusionExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap, @NotNull final GeneChecker geneChecker) {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
+        this.geneChecker = geneChecker;
     }
 
     @NotNull

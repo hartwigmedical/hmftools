@@ -9,13 +9,13 @@ import org.junit.Test;
 public class GeneCheckerTest {
 
     @Test
-    @Ignore
+    //TODO improve test
     public void canCorrectlyCheckGenes() {
         GeneChecker geneChecker = new GeneChecker();
-        assertTrue(geneChecker.isValidGene("BRAF"));
-        assertTrue(geneChecker.isValidGene("IGH"));
+        assertTrue(geneChecker.isValidGene("IGL", null, "Amplification"));
+        assertTrue(geneChecker.isValidGene("IGH", null, "Deletion"));
 
-        assertFalse(geneChecker.isValidGene("I am not a gene"));
-        assertFalse(geneChecker.isValidGene(null));
+        assertFalse(geneChecker.isValidGene("I am not a gene", null, "event"));
+        assertFalse(geneChecker.isValidGene("gene", null, "event"));
     }
 }
