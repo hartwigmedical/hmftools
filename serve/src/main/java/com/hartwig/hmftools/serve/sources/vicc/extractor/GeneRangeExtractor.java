@@ -49,9 +49,7 @@ public class GeneRangeExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
             if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
-                if (canonicalTranscript == null) {
-                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
-                } else {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
                         List<Integer> exonNumbers = extractExonNumbers(feature.name());
@@ -72,9 +70,7 @@ public class GeneRangeExtractor {
                     }
                 }
             } else if (feature.type() == MutationType.CODON) {
-                if (canonicalTranscript == null) {
-                    CheckGenes.checkGensInPanel(feature.geneSymbol(), feature.name());
-                } else {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
                     String transcriptIdVicc = viccEntry.transcriptId();
 
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -192,8 +188,7 @@ public class GeneRangeExtractor {
             long end = genomeRegions.get(0).end();
             String chromosome = genomeRegions.get(0).chromosome();
 
-            geneRangeAnnotation
-                    .gene(geneSymbol)
+            geneRangeAnnotation.gene(geneSymbol)
                     .start(start)
                     .end(end)
                     .chromosome(chromosome)

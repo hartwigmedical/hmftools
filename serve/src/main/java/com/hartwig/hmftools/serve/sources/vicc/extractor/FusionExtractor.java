@@ -66,17 +66,8 @@ public class FusionExtractor {
                 if (annotatedFusion != null) {
                     HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
                     HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
-                    if (canonicalTranscriptStart == null) {
-                        usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneUp(), feature.name());
-                        if (usingGenes) {
-                            fusionsPerFeature.put(feature, annotatedFusion);
-                        }
-                    } else if (canonicalTranscriptEnd == null) {
-                        usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneDown(), feature.name());
-                        if (usingGenes) {
-                            fusionsPerFeature.put(feature, annotatedFusion);
-                        }
-                    } else {
+                    if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name())
+                            && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name())) {
                         fusionsPerFeature.put(feature, annotatedFusion);
                     }
                 }
@@ -90,20 +81,12 @@ public class FusionExtractor {
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
 
-                if (canonicalTranscriptStart == null) {
-                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneUp(), feature.name());
-                    if (usingGenes) {
-                        fusionsPerFeature.put(feature, annotatedFusion);
-                    }
-                } else if (canonicalTranscriptEnd == null) {
-                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneDown(), feature.name());
-                    if (usingGenes) {
-                        fusionsPerFeature.put(feature, annotatedFusion);
-                    }
-                } else {
+                if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name())
+                        && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name())) {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
             }
-        } return fusionsPerFeature;
+        }
+        return fusionsPerFeature;
     }
 }
