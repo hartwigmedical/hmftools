@@ -49,7 +49,7 @@ public class GeneRangeExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
             if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
                         List<Integer> exonNumbers = extractExonNumbers(feature.name());
@@ -70,7 +70,7 @@ public class GeneRangeExtractor {
                     }
                 }
             } else if (feature.type() == MutationType.CODON) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
                     String transcriptIdVicc = viccEntry.transcriptId();
 
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {

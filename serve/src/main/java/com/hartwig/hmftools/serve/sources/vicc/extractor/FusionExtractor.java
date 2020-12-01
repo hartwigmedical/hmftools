@@ -66,8 +66,8 @@ public class FusionExtractor {
                 if (annotatedFusion != null) {
                     HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
                     HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
-                    if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name())
-                            && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name())) {
+                    if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name(), "fusion")
+                            && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name(), "fusion")) {
                         fusionsPerFeature.put(feature, annotatedFusion);
                     }
                 }
@@ -81,8 +81,8 @@ public class FusionExtractor {
                 HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
                 HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
 
-                if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name())
-                        && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name())) {
+                if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name(), "fusion")
+                        && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name(), "fusion")) {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
             }

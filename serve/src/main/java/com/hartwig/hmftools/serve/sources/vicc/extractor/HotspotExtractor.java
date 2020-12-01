@@ -41,7 +41,7 @@ public class HotspotExtractor {
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == MutationType.HOTSPOT) {
                 HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
                     hotspotsPerFeature.put(feature,
                             proteinResolver.extractHotspotsFromProteinAnnotation(feature.geneSymbol(),
                                     viccEntry.transcriptId(),

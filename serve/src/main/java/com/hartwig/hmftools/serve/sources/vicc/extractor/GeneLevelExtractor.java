@@ -47,7 +47,7 @@ public class GeneLevelExtractor {
         for (Feature feature : viccEntry.features()) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
             if (feature.type() == MutationType.GENE_LEVEL) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder()
                                     .gene(feature.geneSymbol())
@@ -55,7 +55,7 @@ public class GeneLevelExtractor {
                                     .build());
                 }
             } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), "fusion")) {
 
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());

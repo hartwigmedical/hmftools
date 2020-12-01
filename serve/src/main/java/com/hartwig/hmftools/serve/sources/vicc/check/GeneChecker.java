@@ -16,15 +16,20 @@ public class GeneChecker {
 
     private static final Set<String> GENES = Sets.newHashSet("IGH", "IGK", "IGL");
 
-
-    public boolean isValidGene(@Nullable String gene, @Nullable HmfTranscriptRegion canonicalTranscript, @NotNull String event) {
+    public boolean isValidGene(@Nullable String gene, @Nullable HmfTranscriptRegion canonicalTranscript, @NotNull String event,
+            @Nullable String eventExtractor) {
 
         if (canonicalTranscript != null) { //  Is gene part of canonical transcripts?
             return true;
-        } else if (GENES.contains(gene)) { //  Is gene part of Driver Ctatlog/fusion db
-            return true;
+        } else if (GENES.contains(gene)) { //  Is gene part of IG gene for fusions
+            if (eventExtractor != null && eventExtractor.equals("fusion")) {
+                return true;
+            } else {
+                LOGGER.warn("Could not find gene {} for event {} for fusion. Skipping extraction!", gene, event);
+                return false;
+            }
         } else {
-            LOGGER.warn("Could not find gene {} for event {} in HMF driver gene panel. Skipping extraction!", gene, event);
+            LOGGER.warn("Could not find gene {} for event {} as gene. Skipping extraction!", gene, event);
             return false;
         }
     }

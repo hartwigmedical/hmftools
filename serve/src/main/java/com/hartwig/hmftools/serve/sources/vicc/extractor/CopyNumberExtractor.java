@@ -35,7 +35,7 @@ public class CopyNumberExtractor {
             if (feature.type() == MutationType.AMPLIFICATION || feature.type() == MutationType.DELETION) {
                 HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name())) {
+                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
                     CopyNumberType type =
                             feature.type() == MutationType.AMPLIFICATION ? CopyNumberType.AMPLIFICATION : CopyNumberType.DELETION;
                     ampsDelsPerFeature.put(feature, ImmutableKnownCopyNumber.builder().gene(feature.geneSymbol()).type(type).build());
