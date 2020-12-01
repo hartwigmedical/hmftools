@@ -1,6 +1,6 @@
-searchTerm	primaryTumorLocation	primaryTumorSubLocation	primaryTumorType	primaryTumorSubType	primaryTumorExtraDetails	doids
-Carcinoma of Ampulla of Vater or distal choledochus	Bile duct	Extrahepatic	Carcinoma	Adenocarcinoma		4947
-Morbus Kahler	Bone marrow		Multiple myeloma		Morbus Kahler	9538
-desmoïd tumor	Bone/Soft tissue		Desmoid type fibromatosis			0080366;162
-Unknown	Unknown
-Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis "lung carcinoma"	Lung		Carcinoma	Non-small cell carcinoma		3908
+Input Primary Tumor Location	Primary tumor location	Primary tumor sublocation	Primary tumor type	Primary tumor subtype	Primary tumor extra details	DOID	SNOMED Concept ID
+Fechromocytoom	Adrenal gland	Adrenal medulla	Pheochromocytoma			5719	363355002
+maligne feochromocytoom	Adrenal gland	Adrenal medulla	Pheochromocytoma	Malignant pheochromocytoma		0080347	29370006
+adrenocortical carcinoma	Adrenal gland	Adrenal cortex	Carcinoma			3948	2227007
+desmoïd tumor	Bone/Soft tissue		Desmoid type fibromatosis			0080366	47284001
+Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis "lung carcinoma"	Lung		Carcinoma	Non-small cell carcinoma		3908	254637007

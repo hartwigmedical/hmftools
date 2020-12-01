@@ -17,16 +17,16 @@ public class PatientPrimaryTumorFileTest {
     private static final String TEST_TSV = BASE_RESOURCE_DIR + File.separator + "patient_primary_tumor.tsv";
 
     @Test
-    public void canConvertDOIDs() {
-        String doid1 = "doid1";
-        String doid2 = "doid2";
+    public void canConvertStringLists() {
+        String string1 = "str1";
+        String string2 = "str2";
 
-        String doidString = PatientPrimaryTumorFile.fromDOIDs(Lists.newArrayList(doid1, doid2));
-        List<String> convertedDoids = PatientPrimaryTumorFile.toDOIDs(doidString);
+        String fullString = PatientPrimaryTumorFile.fromStringList(Lists.newArrayList(string1, string2));
+        List<String> convertedStringList = PatientPrimaryTumorFile.toStringList(fullString);
 
-        assertEquals(2, convertedDoids.size());
-        assertEquals(doid1, convertedDoids.get(0));
-        assertEquals(doid2, convertedDoids.get(1));
+        assertEquals(2, convertedStringList.size());
+        assertEquals(string1, convertedStringList.get(0));
+        assertEquals(string2, convertedStringList.get(1));
     }
 
     @Test

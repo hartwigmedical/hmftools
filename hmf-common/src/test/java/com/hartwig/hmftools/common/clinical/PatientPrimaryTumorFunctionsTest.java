@@ -40,7 +40,6 @@ public class PatientPrimaryTumorFunctionsTest {
                 .subLocation("subLoc")
                 .subType("subType")
                 .extraDetails("details")
-                .doids(Lists.newArrayList("doid"))
                 .isOverridden(false);
     }
 }

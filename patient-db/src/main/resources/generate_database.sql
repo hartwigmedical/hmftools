@@ -1,9 +1,5 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Can be removed per 15th of nov.
-DROP TABLE IF EXISTS doidEntry;
--- TODO Can be removed per 1st of dec.
-DROP TABLE IF EXISTS anonymizedSampleMapping;
 -- TODO Can be removed per 1st of jan.
 DROP TABLE IF EXISTS pgxVariant;
 
@@ -63,6 +59,15 @@ CREATE TABLE doidNode
     doid varchar(255) NOT NULL,
     doidTerm varchar(255) NOT NULL,
     snomedId varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
+);
+
+DROP TABLE IF EXISTS snomed;
+CREATE TABLE snomed
+(   id int NOT NULL AUTO_INCREMENT,
+    patientId int NOT NULL,
+    snomedId varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
