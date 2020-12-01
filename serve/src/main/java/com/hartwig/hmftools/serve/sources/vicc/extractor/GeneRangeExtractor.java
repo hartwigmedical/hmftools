@@ -77,15 +77,18 @@ public class GeneRangeExtractor {
 
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
                         Integer codonNumber = extractCodonNumber(feature.name());
-                        List<GeneRangeAnnotation> annotations = Lists.newArrayList();
                         if (codonNumber != null) {
+                            List<GeneRangeAnnotation> annotations = Lists.newArrayList();
                             String geneSymbol = feature.geneSymbol();
-                            annotations.add(determineCodonAnnotation(feature,
+                            GeneRangeAnnotation annotation = determineCodonAnnotation(feature,
                                     canonicalTranscript,
                                     driverGenes,
                                     extractSpecificMutationTypeFilter(feature.name()),
                                     codonNumber,
-                                    geneSymbol));
+                                    geneSymbol);
+                            if (annotation != null) {
+                                annotations.add(annotation);
+                            }
                             geneRangesPerFeature.put(feature, annotations);
                         }
 
@@ -211,26 +214,26 @@ public class GeneRangeExtractor {
                 .build();
     }
 
-    @NotNull
+    @Nullable
     private static ImmutableGeneRangeAnnotation determineCodonAnnotation(@NotNull Feature feature,
             @NotNull HmfTranscriptRegion canonicalTranscript, @NotNull List<DriverGene> driverGenes,
             @NotNull MutationTypeFilter specificMutationType, int codonNumber, @NotNull String geneSymbol) {
-        ImmutableGeneRangeAnnotation.Builder geneRangeAnnotation = ImmutableGeneRangeAnnotation.builder();
-
         List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
         if (genomeRegions != null && genomeRegions.size() == 1) {
+            String chromosome = genomeRegions.get(0).chromosome();
             long start = genomeRegions.get(0).start();
             long end = genomeRegions.get(0).end();
-            String chromosome = genomeRegions.get(0).chromosome();
 
-            geneRangeAnnotation.gene(geneSymbol)
+            return ImmutableGeneRangeAnnotation.builder().gene(geneSymbol)
+                    .chromosome(chromosome)
                     .start(start)
                     .end(end)
-                    .chromosome(chromosome)
                     .rangeInfo(codonNumber)
-                    .mutationType(extractMutationFilter(driverGenes, geneSymbol, specificMutationType, feature));
+                    .mutationType(extractMutationFilter(driverGenes, geneSymbol, specificMutationType, feature))
+                    .build();
         }
-        return geneRangeAnnotation.build();
+
+        return null;
     }
 
     @VisibleForTesting
