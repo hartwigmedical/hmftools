@@ -55,7 +55,6 @@ public class GeneLevelExtractor {
                 }
             } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
                 if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), "fusion")) {
-
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
                 }
@@ -66,7 +65,7 @@ public class GeneLevelExtractor {
 
     @NotNull
     @VisibleForTesting
-    public static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
+    static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         String event;
         String geneSymbol = feature.geneSymbol();
         String geneSymbolEvent = feature.name().split(" ")[0];
@@ -94,7 +93,7 @@ public class GeneLevelExtractor {
 
     @VisibleForTesting
     @NotNull
-    public static GeneLevelEvent extractGeneLevelEventGene(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
+    static GeneLevelEvent extractGeneLevelEventGene(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(feature.geneSymbol())) {
                 if (driverGene.likelihoodType() == DriverCategory.ONCO) {

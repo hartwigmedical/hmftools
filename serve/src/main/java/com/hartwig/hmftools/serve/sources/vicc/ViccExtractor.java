@@ -40,7 +40,7 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.FusionExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
-import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
+import com.hartwig.hmftools.serve.sources.vicc.extractor.SignatureExtractor;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -66,20 +66,20 @@ public final class ViccExtractor {
     @NotNull
     private final GeneRangeExtractor geneRangeExtractor;
     @NotNull
-    private final SignaturesExtractor signaturesExtractor;
+    private final SignatureExtractor signatureExtractor;
     @Nullable
     private final String featureInterpretationTsv;
 
     public ViccExtractor(@NotNull final HotspotExtractor hotspotExtractor, @NotNull final CopyNumberExtractor copyNumberExtractor,
             @NotNull final FusionExtractor fusionExtractor, @NotNull final GeneLevelExtractor geneLevelExtractor,
-            @NotNull final GeneRangeExtractor geneRangeExtractor, @NotNull final SignaturesExtractor signaturesExtractor,
+            @NotNull final GeneRangeExtractor geneRangeExtractor, @NotNull final SignatureExtractor signatureExtractor,
             @Nullable final String featureInterpretationTsv) {
         this.hotspotExtractor = hotspotExtractor;
         this.copyNumberExtractor = copyNumberExtractor;
         this.fusionExtractor = fusionExtractor;
         this.geneLevelExtractor = geneLevelExtractor;
         this.geneRangeExtractor = geneRangeExtractor;
-        this.signaturesExtractor = signaturesExtractor;
+        this.signatureExtractor = signatureExtractor;
         this.featureInterpretationTsv = featureInterpretationTsv;
     }
 
@@ -93,7 +93,7 @@ public final class ViccExtractor {
             Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(entry);
             Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extractGeneLevelEvents(entry);
             Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry);
-            Map<Feature, SignatureName> signaturesPerFeature = signaturesExtractor.extractSignatures(entry);
+            Map<Feature, SignatureName> signaturesPerFeature = signatureExtractor.extractSignatures(entry);
 
             ActionableEvent actionableEvidence = ActionableEvidenceFactory.toActionableEvent(entry);
 

@@ -13,7 +13,7 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.FusionExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
-import com.hartwig.hmftools.serve.sources.vicc.extractor.SignaturesExtractor;
+import com.hartwig.hmftools.serve.sources.vicc.extractor.SignatureExtractor;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +40,7 @@ public final class ViccExtractorFactory {
                 new FusionExtractor(transcriptPerGeneMap, geneChecker),
                 new GeneLevelExtractor(transcriptPerGeneMap, driverGenes, geneChecker),
                 new GeneRangeExtractor(transcriptPerGeneMap, driverGenes, geneChecker),
-                new SignaturesExtractor(),
+                new SignatureExtractor(),
                 featureInterpretationTsv);
     }
 }

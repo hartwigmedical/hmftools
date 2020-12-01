@@ -30,8 +30,8 @@ public class HotspotExtractorTest {
 
     @Test
     public void canExtractHotspot() {
-        String protein = "V600E";
         String gene = "BRAF";
+        String protein = "V600E";
         Feature hotspotFeature = ViccTestFactory.testFeatureWithGeneAndName(gene, protein);
         Feature ampFeature = ViccTestFactory.testFeatureWithName("Amplification");
         ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(hotspotFeature, ampFeature));

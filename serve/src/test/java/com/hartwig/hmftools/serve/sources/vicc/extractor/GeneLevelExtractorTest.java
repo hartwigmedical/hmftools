@@ -61,7 +61,6 @@ public class GeneLevelExtractorTest {
 
         Feature featureUnkown = ViccTestFactory.testEntryWithGeneAndEvent("KRAS", "abcd").features().get(0);
         assertEquals(GeneLevelEvent.UNKNOWN, GeneLevelExtractor.extractGeneLevelEvent(featureUnkown, driverGenes));
-
     }
 
     @Test

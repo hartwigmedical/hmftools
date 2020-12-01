@@ -14,11 +14,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SignaturesExtractor {
+public class SignatureExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(SignaturesExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(SignatureExtractor.class);
 
-    public SignaturesExtractor() {
+    public SignatureExtractor() {
     }
 
     @NotNull
