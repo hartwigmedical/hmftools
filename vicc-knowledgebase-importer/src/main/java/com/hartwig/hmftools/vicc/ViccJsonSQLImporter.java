@@ -37,7 +37,7 @@ public class ViccJsonSQLImporter {
         LOGGER.info("Running VICC Knowledgebase Importer v{}", VERSION);
 
         Options options = createOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         if (!validInput(cmd)) {
             printUsageAndExit(options);
@@ -98,11 +98,6 @@ public class ViccJsonSQLImporter {
         options.addOption(SKIP_DATABASE_WRITING, false, "If this flag is set to true, we skip the writing to the database");
 
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 
     private static void printUsageAndExit(@NotNull Options options) {
