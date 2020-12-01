@@ -36,7 +36,6 @@ public class GeneRangeExtractorTest {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KIT", "EXON 11 MUTATION");
 
-        // TODO Resolve correct mutationType
         geneRangesPerFeature.put(viccEntry.features().get(0),
                 Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
                         .gene("KIT")
