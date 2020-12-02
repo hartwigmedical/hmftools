@@ -5,9 +5,11 @@ import static com.hartwig.hmftools.serve.util.AminoAcidFunctions.reverseAndFlip;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -31,7 +33,7 @@ class TransvarInterpreter {
 
     private static final Logger LOGGER = LogManager.getLogger(TransvarInterpreter.class);
 
-    private static final List<String> BASES = Lists.newArrayList("G", "A", "T", "C");
+    private static final Set<String> BASES = Sets.newHashSet("G", "A", "T", "C");
 
     @NotNull
     private final IndexedFastaSequenceFile refGenome;
