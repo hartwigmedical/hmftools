@@ -18,7 +18,7 @@ public final class ExtractionResultWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(ExtractionResultWriter.class);
 
-    private static final String KNOWN_HOTSPOT_VCF = "KnownHotspots.SERVE.vcf";
+    private static final String KNOWN_HOTSPOT_VCF = "KnownHotspots.SERVE.vcf.gz";
     private static final String KNOWN_COPY_NUMBER_TSV = "KnownCopyNumbers.SERVE.tsv";
     private static final String KNOWN_FUSION_PAIR_TSV = "KnownFusionPairs.SERVE.tsv";
 

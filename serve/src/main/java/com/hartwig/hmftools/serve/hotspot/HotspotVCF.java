@@ -39,7 +39,7 @@ public final class HotspotVCF {
 
     public static void write(@NotNull String hotspotVcf, @NotNull List<KnownHotspot> hotspots) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(hotspotVcf)
-                .setOutputFileType(VariantContextWriterBuilder.OutputType.VCF)
+                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)
                 .build();
 
