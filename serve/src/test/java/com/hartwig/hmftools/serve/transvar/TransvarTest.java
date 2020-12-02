@@ -46,18 +46,6 @@ public class TransvarTest {
     }
 
     @NotNull
-    public static TransvarRecord createTestRecordHotspot(@NotNull String chromosome, int pos, @NotNull String transcript) {
-        return ImmutableTransvarRecord.builder()
-                .chromosome(chromosome)
-                .gdnaPosition(pos)
-                .transcript(transcript)
-                .variantSpanMultipleExons(false)
-                .annotation(new TransvarAnnotation() {
-                })
-                .build();
-    }
-
-    @NotNull
     public static Transvar returnsSingleTransvarRecord(@NotNull TransvarRecord record) {
         return TransvarTestFactory.testTransvar((gene, proteinAnnotation) -> Lists.newArrayList(record));
     }
