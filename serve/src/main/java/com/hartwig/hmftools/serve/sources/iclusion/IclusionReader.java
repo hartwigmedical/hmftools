@@ -52,6 +52,7 @@ public final class IclusionReader {
         LOGGER.info("  Finished iClusion filtering. {} trials remaining, {} entries have been removed",
                 filteredTrials.size(),
                 trials.size() - filteredTrials.size());
+
         filter.reportUnusedFilterEntries();
 
         return filteredTrials;

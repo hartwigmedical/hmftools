@@ -28,11 +28,13 @@ public final class DocmReader {
     @NotNull
     private static List<DocmEntry> curate(@NotNull List<DocmEntry> entries) {
         DocmCurator curator = new DocmCurator();
+
         LOGGER.info("Curating {} DoCM entries", entries.size());
         List<DocmEntry> curatedEntries = curator.curate(entries);
         LOGGER.info(" Finished DoCM curation. {} entries remaining, {} entries have been removed",
                 curatedEntries.size(),
                 entries.size() - curatedEntries.size());
+
         curator.reportUnusedBlacklistEntries();
 
         return curatedEntries;
