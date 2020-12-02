@@ -36,8 +36,7 @@ public class HotspotExtractorTest {
         Feature ampFeature = ViccTestFactory.testFeatureWithName("Amplification");
         ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(hotspotFeature, ampFeature));
 
-        HotspotExtractor hotspotExtractor =
-                new HotspotExtractor(new TestProteinResolver(protein), new ProteinAnnotationExtractor(), GeneChecker.buildForHG19());
+        HotspotExtractor hotspotExtractor = createWithProtein(protein);
         Map<Feature, List<VariantHotspot>> hotspots = hotspotExtractor.extractHotspots(entry);
 
         assertEquals(1, hotspots.size());
@@ -51,10 +50,14 @@ public class HotspotExtractorTest {
         String protein = "V600E";
         ViccEntry entry = ViccTestFactory.testEntryWithGeneAndEvent("NOT-A-GENE", protein);
 
-        HotspotExtractor hotspotExtractor =
-                new HotspotExtractor(new TestProteinResolver(protein), new ProteinAnnotationExtractor(), GeneChecker.buildForHG19());
+        HotspotExtractor hotspotExtractor = createWithProtein(protein);
 
         assertTrue(hotspotExtractor.extractHotspots(entry).isEmpty());
+    }
+
+    @NotNull
+    private static HotspotExtractor createWithProtein(@NotNull String protein) {
+        return new HotspotExtractor(GeneChecker.buildForHG19(), new TestProteinResolver(protein), new ProteinAnnotationExtractor());
     }
 
     private static class TestProteinResolver implements ProteinResolver {

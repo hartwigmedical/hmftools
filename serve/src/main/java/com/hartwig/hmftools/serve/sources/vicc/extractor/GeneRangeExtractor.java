@@ -51,6 +51,7 @@ public class GeneRangeExtractor {
         for (Feature feature : viccEntry.features()) {
             if (geneChecker.isValidGene(feature.geneSymbol())) {
                 HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+                assert canonicalTranscript != null;
 
                 if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
                     String transcriptIdVicc = viccEntry.transcriptId();

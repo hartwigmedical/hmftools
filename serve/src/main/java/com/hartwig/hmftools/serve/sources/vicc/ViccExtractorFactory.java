@@ -45,7 +45,7 @@ public final class ViccExtractorFactory {
         fusionGeneSet.addAll(VALID_FUSION_GENES);
         GeneChecker fusionGeneChecker = new GeneChecker(fusionGeneSet);
 
-        return new ViccExtractor(new HotspotExtractor(proteinResolver, new ProteinAnnotationExtractor(), exomeGeneChecker),
+        return new ViccExtractor(new HotspotExtractor(exomeGeneChecker, proteinResolver, new ProteinAnnotationExtractor()),
                 new CopyNumberExtractor(exomeGeneChecker),
                 new FusionExtractor(fusionGeneChecker),
                 new GeneLevelExtractor(exomeGeneChecker, fusionGeneChecker, driverGenes),
