@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
-import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SPLICE_SITE_PERCENTILES;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.EXON_INTRON;
@@ -27,6 +26,7 @@ import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.ACCEPTO
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.DONOR;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.NONE;
 import static com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser.loadFile;
+import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.PSI_NO_RATE;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.NOVEL;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.DISRUPTION;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
@@ -270,19 +270,14 @@ public class SpliceVariantMatcher
             final String sampleId, final List<AltSpliceJunction> altSpliceJunctions,
             final SpliceVariant variant, final EnsemblGeneData geneData, final List<AltSpliceJunction> matchedAltSJs)
     {
-        /* Candidate alt SJs must be either
-
-        The splice region variant will be within 10 base of an exon.
-        It may cause a novel splice junction anywhere in that exon or the intron.
-        It could also cause the exon to be skipped entirely. eg. the splice variant is 7 bases after exon 3.
-        Then you should check for novel splice junctions that are wholly contained within the entire region from end of exon 2 to start of exon 4.
-        */
         final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
         boolean isWithinSpliceRegion = false;
 
         AcceptorDonorType closestAcceptorDonorType = AcceptorDonorType.NONE;
         int closestExonDistance = 0;
+        int closestExonPosition = 0;
+        int exonPosition = 0;
         String closestTransStr = "";
 
         for(final TranscriptData transData : transDataList)
@@ -301,11 +296,13 @@ public class SpliceVariantMatcher
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR;
                         exonDistance = -abs(exon.ExonStart - variant.Position) - 1; // first base inside exon is -1 by convention
+                        exonPosition = exon.ExonStart;
                     }
                     else if(withinRange(exon.ExonEnd, variant.Position, SPLICE_REGION_CODING_DISTANCE))
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? DONOR : ACCEPTOR;
                         exonDistance = -abs(exon.ExonEnd - variant.Position) - 1;
+                        exonPosition = exon.ExonEnd;
                     }
                     else
                     {
@@ -318,11 +315,13 @@ public class SpliceVariantMatcher
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR;
                         exonDistance = abs(exon.ExonStart - variant.Position);
+                        exonPosition = exon.ExonStart;
                     }
                     else if(withinRange(exon.ExonEnd, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE))
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? DONOR : ACCEPTOR;
                         exonDistance = abs(exon.ExonEnd - variant.Position);
+                        exonPosition = exon.ExonEnd;
                     }
                     else
                     {
@@ -336,6 +335,7 @@ public class SpliceVariantMatcher
                 {
                     closestAcceptorDonorType = acceptorDonorType;
                     closestExonDistance = exonDistance;
+                    closestExonPosition = exonPosition;
                     closestTransStr = String.format("%s;%d", transData.TransName, exon.ExonRank);
                 }
 
@@ -376,7 +376,7 @@ public class SpliceVariantMatcher
                             sampleId, variant.Chromosome, variant.Position, geneData.GeneName, transData.TransName, altSJ.toString());
 
                     final String transDataStr = String.format("%s;%d", transData.TransName, exon.ExonRank);
-                    writeMatchData(sampleId, variant, geneData, altSJ, DISRUPTION, acceptorDonorType, exonDistance, transDataStr);
+                    writeMatchData(sampleId, variant, geneData, altSJ, DISRUPTION, acceptorDonorType, exonDistance, exonPosition, transDataStr);
 
                     matchedAltSJs.add(altSJ);
                 }
@@ -387,7 +387,7 @@ public class SpliceVariantMatcher
         {
             writeMatchData(
                     sampleId, variant, geneData, null, DISRUPTION,
-                    closestAcceptorDonorType, closestExonDistance, closestTransStr);
+                    closestAcceptorDonorType, closestExonDistance, closestExonPosition, closestTransStr);
         }
     }
 
@@ -440,7 +440,7 @@ public class SpliceVariantMatcher
             AcceptorDonorType acceptorDonorType = ((closeIndex == SE_START) == (geneData.Strand == POS_STRAND)) ? DONOR : ACCEPTOR;
 
             writeMatchData(
-                    sampleId, variant, geneData, altSJ, NOVEL, acceptorDonorType, -1,
+                    sampleId, variant, geneData, altSJ, NOVEL, acceptorDonorType, -1, null,
                     appendStrList(allTransNames, ITEM_DELIM.charAt(0)));
 
             closeAltSJs.add(altSJ);
@@ -466,9 +466,9 @@ public class SpliceVariantMatcher
             mWriter = createBufferedWriter(outputFileName, false);
 
             mWriter.write("SampleId,MatchType,GeneId,GeneName,Chromosome,Strand");
-            mWriter.write(",Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,LocalPhaseSet,AccDonType,ExonDistance");
+            mWriter.write(",Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,LocalPhaseSet,AccDonType,ExonDistance,ExonPosition");
             mWriter.write(",AsjType,AsjContextStart,AsjContextEnd,AsjPosStart,AsjPosEnd,FragmentCount,DepthStart,DepthEnd");
-            mWriter.write(",BasesStart,BasesEnd,AsjCohortCount,AsjTransData,PsiStart,PsiStart,CohortPsiStart,CohortPsiStart");
+            mWriter.write(",BasesStart,BasesEnd,AsjCohortCount,AsjTransData,PsiSample,PsiCohortPerc");
 
             mWriter.newLine();
         }
@@ -480,16 +480,18 @@ public class SpliceVariantMatcher
 
     private void writeMatchData(
             final String sampleId, final SpliceVariant variant, final EnsemblGeneData geneData, final AltSpliceJunction altSJ,
-            final SpliceVariantMatchType matchType, final AcceptorDonorType accDonType, int exonBaseDistance, final String transDataStr)
+            final SpliceVariantMatchType matchType, final AcceptorDonorType accDonType,
+            int exonBaseDistance, Integer exonPosition, final String transDataStr)
     {
         try
         {
             mWriter.write(String.format("%s,%s,%s,%s,%s,%d",
                     sampleId, matchType, geneData.GeneId, geneData.GeneName, geneData.Chromosome, geneData.Strand));
 
-            mWriter.write(String.format(",%d,%s,%s,%s,%s,%s,%s,%d,%s,%d",
+            mWriter.write(String.format(",%d,%s,%s,%s,%s,%s,%s,%d,%s,%d,%d",
                     variant.Position, variant.Type, variant.CodingEffect, variant.Ref, variant.Alt,
-                    variant.HgvsCodingImpact, variant.TriNucContext, variant.LocalPhaseSet, accDonType, exonBaseDistance));
+                    variant.HgvsCodingImpact, variant.TriNucContext, variant.LocalPhaseSet, accDonType,
+                    exonBaseDistance, exonPosition != null ? exonPosition : -1));
 
             if(altSJ != null)
             {
@@ -503,19 +505,21 @@ public class SpliceVariantMatcher
                         getBaseContext(variant, altSJ.SpliceJunction[SE_END], geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR),
                         mDataCache.getCohortAltSjFrequency(altSJ), transDataStr));
 
-                double psiStart = mSpliceSiteCache.getSampleSpliceSitePsi(altSJ.Chromosome, altSJ.SpliceJunction[SE_START]);
-                double psiEnd = mSpliceSiteCache.getSampleSpliceSitePsi(altSJ.Chromosome, altSJ.SpliceJunction[SE_END]);
-                double cohortPsiStart = mSpliceSiteCache.getCohortSpliceSitePsi(altSJ.Chromosome, altSJ.SpliceJunction[SE_START], psiStart);
-                double cohortPsiEnd = mSpliceSiteCache.getCohortSpliceSitePsi(altSJ.Chromosome, altSJ.SpliceJunction[SE_END], psiEnd);
+                double samplePsi = PSI_NO_RATE;
+                double cohortPsi = PSI_NO_RATE;
 
-                mWriter.write(String.format(",%.4f,%.4f,%.4f,%.4f",
-                        psiStart, psiEnd, cohortPsiStart, cohortPsiEnd));
+                if(exonPosition != null)
+                {
+                    samplePsi = mSpliceSiteCache.getSampleSpliceSitePsi(altSJ.Chromosome, exonPosition);
+                    cohortPsi = mSpliceSiteCache.getCohortSpliceSitePsi(altSJ.Chromosome, exonPosition, samplePsi);;
+                }
+
+                mWriter.write(String.format(",%.4f,%.4f", samplePsi, cohortPsi));
             }
             else
             {
-                mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%d,%s,%s,%d,%s",
-                        UNKNOWN, AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN,
-                        -1, -1, 0, 0, 0, "", "", 0, ""));
+                mWriter.write(String.format(",%s,%s,%s,-1,-1,0,0,0,,,0,,0,0",
+                        UNKNOWN, AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN));
             }
 
             mWriter.newLine();
