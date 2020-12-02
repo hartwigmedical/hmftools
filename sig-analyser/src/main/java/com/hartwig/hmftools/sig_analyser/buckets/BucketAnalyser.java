@@ -12,8 +12,8 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcRangeValue;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
-import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
-import static com.hartwig.hmftools.common.sigs.SigUtils.writeMatrixData;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromListData;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.addVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
@@ -55,7 +55,7 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getDiffList;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getMatchingList;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.sigs.SigMatrix.redimension;
+import static com.hartwig.hmftools.common.utils.Matrix.redimension;
 import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_REF_SIG_FILE;
 
 import java.io.BufferedWriter;
@@ -69,7 +69,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 import com.hartwig.hmftools.sig_analyser.sim.SimConfig;
 
@@ -91,7 +91,7 @@ public class BucketAnalyser
     private final BaReporter mReporter;
     private final BaConfig mConfig;
 
-    private final SigMatrix mSampleCounts;
+    private final Matrix mSampleCounts;
 
     // for convenience
     private final double[] mSampleTotals;
@@ -100,16 +100,16 @@ public class BucketAnalyser
     private final int mSampleCount;
     private int mActiveSampleCount; // minus the excluded samples
 
-    private SigMatrix mBucketProbs;
-    private SigMatrix mElevatedCounts; // actual - expected, capped at zero
+    private Matrix mBucketProbs;
+    private Matrix mElevatedCounts; // actual - expected, capped at zero
     private double mElevatedCount;
     private double mBackgroundCount;
-    private SigMatrix mPermittedElevRange;
-    private SigMatrix mPermittedBgRange;
+    private Matrix mPermittedElevRange;
+    private Matrix mPermittedBgRange;
 
-    private SigMatrix mProposedSigs;
+    private Matrix mProposedSigs;
     private List<Integer> mSigToBgMapping; // for each proposed sig, a mapping can be made back to the bucket group that it came from
-    private SigMatrix mPredefinedSigs;
+    private Matrix mPredefinedSigs;
     private boolean mFinalFitOnly; // using predefined sigs
     private boolean mUsingRefSigs; // using reference sigs as predefined sigs
 
@@ -627,8 +627,8 @@ public class BucketAnalyser
         SIG_LOGGER.debug("splitting sample counts");
 
         // work out bucket median values (literally 50th percentile values)
-        mBucketProbs = new SigMatrix(mBucketCount, mSampleCount);
-        mElevatedCounts = new SigMatrix(mBucketCount, mSampleCount);
+        mBucketProbs = new Matrix(mBucketCount, mSampleCount);
+        mElevatedCounts = new Matrix(mBucketCount, mSampleCount);
 
         double[][] probData = mBucketProbs.getData();
         double[][] bgData = mBackgroundSigDiscovery.getBackgroundCounts().getData();
@@ -713,8 +713,8 @@ public class BucketAnalyser
 
     private void calcCountsNoise()
     {
-        mPermittedElevRange = new SigMatrix(mBucketCount, mSampleCount);
-        mPermittedBgRange = new SigMatrix(mBucketCount, mSampleCount);
+        mPermittedElevRange = new Matrix(mBucketCount, mSampleCount);
+        mPermittedBgRange = new Matrix(mBucketCount, mSampleCount);
 
         if(!mConfig.ApplyNoise)
             return;
@@ -2894,7 +2894,7 @@ public class BucketAnalyser
 
         SIG_LOGGER.debug("creating {} signatures", proposedSigCount);
 
-        mProposedSigs = new SigMatrix(mBucketCount, proposedSigCount);
+        mProposedSigs = new Matrix(mBucketCount, proposedSigCount);
 
         int sigId = 0;
 
@@ -3301,7 +3301,7 @@ public class BucketAnalyser
         }
     }
 
-    private void writeSignatures(final SigMatrix signatures, final String fileId, final List<String> sigIds)
+    private void writeSignatures(final Matrix signatures, final String fileId, final List<String> sigIds)
     {
         try
         {
@@ -3344,7 +3344,7 @@ public class BucketAnalyser
     {
         int sigCount = mFinalBucketGroups.size();
 
-        SigMatrix contribMatrix = new SigMatrix(sigCount, mSampleCount);
+        Matrix contribMatrix = new Matrix(sigCount, mSampleCount);
         double[][] contribData = contribMatrix.getData();
 
         for(int bgIndex = 0; bgIndex < mFinalBucketGroups.size(); ++bgIndex)

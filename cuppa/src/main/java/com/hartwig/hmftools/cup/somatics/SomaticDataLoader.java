@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
-import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateRefPercentileData;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -20,12 +17,11 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -37,23 +33,23 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class SomaticDataLoader
 {
-    public static SigMatrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
+    public static Matrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
         if(filename.isEmpty())
             return null;
 
-        SigMatrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, Lists.newArrayList("BucketName"));
+        Matrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, Lists.newArrayList("BucketName"));
         sampleCounts.cacheTranspose();
 
         return sampleCounts;
     }
 
-    public static SigMatrix loadSamplePosFreqFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
+    public static Matrix loadSamplePosFreqFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
         if(filename.isEmpty())
             return null;
 
-        SigMatrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, null);
+        Matrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, null);
         sampleCounts.cacheTranspose();
 
         return sampleCounts;
@@ -132,12 +128,12 @@ public class SomaticDataLoader
         return populateRefPercentileData(filename, refCancerSigContribs, refCancerSnvCounts);
     }
 
-    public static SigMatrix loadRefSampleCounts(final String filename, final List<String> refSampleNames)
+    public static Matrix loadRefSampleCounts(final String filename, final List<String> refSampleNames)
     {
         if(filename.isEmpty())
             return null;
 
-        SigMatrix refSampleCounts = loadMatrixDataFile(filename, refSampleNames);
+        Matrix refSampleCounts = loadMatrixDataFile(filename, refSampleNames);
         refSampleCounts.cacheTranspose();
         return refSampleCounts;
     }

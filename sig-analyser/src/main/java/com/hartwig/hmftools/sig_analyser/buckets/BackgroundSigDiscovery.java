@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 public class BackgroundSigDiscovery
 {
@@ -40,7 +40,7 @@ public class BackgroundSigDiscovery
     private Map<String,BucketGroup> mCancerBucketGroups;
     private Map<String,Double> mCancerMutLoadThresholds;
     private Map<Integer, Integer> mNoiseRangeMap;
-    private SigMatrix mBackgroundCounts;
+    private Matrix mBackgroundCounts;
 
     private final int mBucketCount;
     private final List<Integer> mAllBuckets;
@@ -62,7 +62,7 @@ public class BackgroundSigDiscovery
         mNextBucketId = 0;
 
         mBucketCount = sampleData.get(0).getBucketCounts().length;
-        mBackgroundCounts = new SigMatrix(mBucketCount, sampleData.size());
+        mBackgroundCounts = new Matrix(mBucketCount, sampleData.size());
 
         mAllBuckets = Lists.newArrayList();
 
@@ -72,7 +72,7 @@ public class BackgroundSigDiscovery
         }
     }
 
-    public SigMatrix getBackgroundCounts() { return mBackgroundCounts; }
+    public Matrix getBackgroundCounts() { return mBackgroundCounts; }
     public Map<String,BucketGroup> getCancerBucketGroups() { return mCancerBucketGroups; }
     public List<BucketGroup> getBucketGroups() { return mCancerBucketGroups.values().stream().collect(Collectors.toList()); }
 
@@ -491,7 +491,7 @@ public class BackgroundSigDiscovery
         if(bucketGroups.size() <= 1)
             return;
 
-        SigMatrix sigMatrix = new SigMatrix(mBucketCount, bucketGroups.size());
+        Matrix sigMatrix = new Matrix(mBucketCount, bucketGroups.size());
 
         for(int i = 0; i < bucketGroups.size(); ++i)
         {

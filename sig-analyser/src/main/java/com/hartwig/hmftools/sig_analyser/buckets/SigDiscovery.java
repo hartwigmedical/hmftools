@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +28,7 @@ public class SigDiscovery
     private final BucketAnalyser mAnalyser;
     private BaConfig mConfig;
     private List<SampleData> mSampleData;
-    private SigMatrix mSampleCounts;
+    private Matrix mSampleCounts;
     private int mBucketCount;
     private int mSampleCount;
     private double mTotalCount;
@@ -40,7 +40,7 @@ public class SigDiscovery
         mAnalyser = analyser;
     }
 
-    public void setInitialState(BaConfig config, List<SampleData> sampleData, SigMatrix sampleCounts)
+    public void setInitialState(BaConfig config, List<SampleData> sampleData, Matrix sampleCounts)
     {
         mConfig = config;
         mSampleCounts = sampleCounts;

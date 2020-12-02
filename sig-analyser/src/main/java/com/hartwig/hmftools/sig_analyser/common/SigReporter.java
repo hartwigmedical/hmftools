@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.getTopCssPair
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -29,12 +29,12 @@ public class SigReporter {
     final private int mSigCount;
 
     // primary input - bucket counts per sample
-    final SigMatrix mSampleCounts;
-    final SigMatrix mContributions;
-    final SigMatrix mSignatures;
-    final SigMatrix mStartSignatures; // from beginning of NMF run
-    final SigMatrix mRefSignatures; // external sigs to compare with
-    final SigMatrix mFittedCounts;
+    final Matrix mSampleCounts;
+    final Matrix mContributions;
+    final Matrix mSignatures;
+    final Matrix mStartSignatures; // from beginning of NMF run
+    final Matrix mRefSignatures; // external sigs to compare with
+    final Matrix mFittedCounts;
     final NmfConfig mConfig;
     final private double mTotalCount;
     final private double[] mBucketTotals;
@@ -50,8 +50,8 @@ public class SigReporter {
 
     private static final Logger LOGGER = LogManager.getLogger(SigReporter.class);
 
-    public SigReporter(final SigMatrix sampleCounts, final SigMatrix signatures, final SigMatrix contributions,
-            final SigMatrix startSigs, final SigMatrix refSigs, final NmfConfig config)
+    public SigReporter(final Matrix sampleCounts, final Matrix signatures, final Matrix contributions,
+            final Matrix startSigs, final Matrix refSigs, final NmfConfig config)
     {
         mSampleCounts = sampleCounts;
         mSignatures = signatures;

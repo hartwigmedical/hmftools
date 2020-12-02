@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +50,7 @@ public class CountsSigContribOptimiser
     private double[] mContribs;
     private double mContribTotal;
 
-    private SigMatrix mSigs;
+    private Matrix mSigs;
 
     private final int mBucketCount;
     private int mSigCount;
@@ -177,7 +177,7 @@ public class CountsSigContribOptimiser
         calcMinContribChange();
 
         // extract sigs their cost basis (just the inverse)
-        mSigs = new SigMatrix(mBucketCount, mSigCount);
+        mSigs = new Matrix(mBucketCount, mSigCount);
 
         if (mContribs.length != ratiosCollection.size())
         {

@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -36,7 +36,7 @@ import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sig_analyser.common.CommonUtils;
 import com.hartwig.hmftools.sig_analyser.loaders.PositionFreqBuilder;
@@ -61,9 +61,9 @@ public class SampleFitter
     private final String mOutputDir;
     private final String mOutputId;
 
-    private SigMatrix mSampleCountsMatrix;
+    private Matrix mSampleCountsMatrix;
     private final List<String> mSignatureNames;
-    private SigMatrix mSignatures;
+    private Matrix mSignatures;
 
     private final int mPositionBucketSize;
     private final int mMaxSampleCount;
@@ -177,7 +177,7 @@ public class SampleFitter
         int sampleCount = mSampleIdList.size();
         int sigCount = mSignatures.Cols;
 
-        final SigMatrix sampleContribs = new SigMatrix(sigCount, sampleCount);
+        final Matrix sampleContribs = new Matrix(sigCount, sampleCount);
 
         SIG_LOGGER.info("fitting sample({}) with {} signatures", sampleCount, sigCount);
 

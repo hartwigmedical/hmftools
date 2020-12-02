@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.expression;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 public class ExpectedRatesData
 {
@@ -15,7 +15,7 @@ public class ExpectedRatesData
     // akin to signature names - all transcriptIds and a GeneId for each gene's unspliced region
     public final List<String> TranscriptIds;
 
-    private SigMatrix mTranscriptDefinitions;
+    private Matrix mTranscriptDefinitions;
 
     public ExpectedRatesData(final String id)
     {
@@ -25,7 +25,7 @@ public class ExpectedRatesData
         mTranscriptDefinitions = null;
     }
 
-    public SigMatrix getTranscriptDefinitions() { return mTranscriptDefinitions; }
+    public Matrix getTranscriptDefinitions() { return mTranscriptDefinitions; }
 
     public boolean validData()
     {
@@ -46,7 +46,7 @@ public class ExpectedRatesData
         if(Categories.isEmpty() || TranscriptIds.isEmpty())
             return;
 
-        mTranscriptDefinitions = new SigMatrix(Categories.size(), TranscriptIds.size());
+        mTranscriptDefinitions = new Matrix(Categories.size(), TranscriptIds.size());
     }
 
     public int getTranscriptIndex(final String trans)

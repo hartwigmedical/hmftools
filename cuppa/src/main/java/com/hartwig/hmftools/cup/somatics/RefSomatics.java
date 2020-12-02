@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleData;
@@ -51,10 +51,10 @@ public class RefSomatics implements RefClassifier
     private final Map<String,Map<String,List<Double>>> mCancerSigContribs;
     private final Map<String,List<Double>> mCancerSnvCounts;
 
-    private SigMatrix mTriNucCounts; // counts per tri-nucleotide bucket
+    private Matrix mTriNucCounts; // counts per tri-nucleotide bucket
     private final Map<String,Integer> mTriNucCountsIndex;
 
-    private SigMatrix mPosFreqCounts; // counts per genomic position
+    private Matrix mPosFreqCounts; // counts per genomic position
     private final Map<String,Integer> mPosFreqCountsIndex;
 
     private final PositionFrequencies mPositionFrequencies;
@@ -109,7 +109,7 @@ public class RefSomatics implements RefClassifier
         closeBufferedWriter(mRefDataWriter);
     }
 
-    private SigMatrix loadReferenceSnvCounts(final String refFilename, final Map<String,Integer> sampleCountsIndex, final String type)
+    private Matrix loadReferenceSnvCounts(final String refFilename, final Map<String,Integer> sampleCountsIndex, final String type)
     {
         if(refFilename.isEmpty())
             return null;
@@ -117,10 +117,10 @@ public class RefSomatics implements RefClassifier
         CUP_LOGGER.debug("loading SNV {} reference data", type);
 
         // check if complete file has already been provided (eg if only other reference data is being built)
-        SigMatrix refMatrix = null;
+        Matrix refMatrix = null;
 
         final List<String> existingRefSampleIds = Lists.newArrayList();
-        final SigMatrix existingRefSampleCounts = loadRefSampleCounts(refFilename, existingRefSampleIds);
+        final Matrix existingRefSampleCounts = loadRefSampleCounts(refFilename, existingRefSampleIds);
 
         final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
         boolean hasMissingSamples = refSampleIds.stream().anyMatch(x -> !existingRefSampleIds.contains(x));
@@ -142,7 +142,7 @@ public class RefSomatics implements RefClassifier
         {
             existingRefSampleCounts.cacheTranspose();
 
-            refMatrix = new SigMatrix(existingRefSampleCounts.Rows, refSampleIds.size());
+            refMatrix = new Matrix(existingRefSampleCounts.Rows, refSampleIds.size());
 
             int refSampleIndex = 0;
 
@@ -177,12 +177,12 @@ public class RefSomatics implements RefClassifier
 
         if(mTriNucCounts == null)
         {
-            mTriNucCounts = new SigMatrix(SNV_TRINUCLEOTIDE_BUCKET_COUNT, refSampleCount);
+            mTriNucCounts = new Matrix(SNV_TRINUCLEOTIDE_BUCKET_COUNT, refSampleCount);
         }
 
         if(mPosFreqCounts == null)
         {
-            mPosFreqCounts = new SigMatrix(mPositionFrequencies.getBucketCount(), refSampleCount);
+            mPosFreqCounts = new Matrix(mPositionFrequencies.getBucketCount(), refSampleCount);
         }
 
         final Map<String,Integer> triNucBucketNameMap = Maps.newHashMap();
@@ -237,7 +237,7 @@ public class RefSomatics implements RefClassifier
         writeSampleCounts(mPosFreqCounts, mPosFreqCountsIndex, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
     }
 
-    private void writeSampleCounts(final SigMatrix matrix, final Map<String,Integer> sampleCountsIndex, final String filename)
+    private void writeSampleCounts(final Matrix matrix, final Map<String,Integer> sampleCountsIndex, final String filename)
     {
         try
         {

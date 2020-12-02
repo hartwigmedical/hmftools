@@ -11,7 +11,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.sig_analyser.buckets.SampleData;
 import com.hartwig.hmftools.sig_analyser.buckets.SampleSigContribOptimiser;
 import com.hartwig.hmftools.sig_analyser.fitter.ConstrainedFitter;
@@ -59,7 +59,7 @@ public class SigContribOptimiserTest
         }
 
         {
-            SigMatrix sigs = new SigMatrix(bucketCount, sigCount);
+            Matrix sigs = new Matrix(bucketCount, sigCount);
             sigs.setCol(0, sig1);
             sigs.setCol(1, sig2);
             sigs.setCol(2, sig3);
@@ -204,7 +204,7 @@ public class SigContribOptimiserTest
         }
 
         {
-            SigMatrix sigs = new SigMatrix(bucketCount, sigCount);
+            Matrix sigs = new Matrix(bucketCount, sigCount);
             sigs.setCol(0, sig1);
             sigs.setCol(1, sig2);
             sigs.setCol(2, sig3);

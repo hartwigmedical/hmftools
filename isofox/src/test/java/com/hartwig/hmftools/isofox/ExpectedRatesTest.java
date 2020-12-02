@@ -29,7 +29,7 @@ import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -497,7 +497,7 @@ public class ExpectedRatesTest
 
         ExpectedRatesData erData = expRatesCalc.getExpectedRatesData();
 
-        SigMatrix rates = erData.getTranscriptDefinitions();
+        Matrix rates = erData.getTranscriptDefinitions();
         assertEquals(2, rates.Cols);
         assertEquals(2, rates.Rows);
 
@@ -673,7 +673,7 @@ public class ExpectedRatesTest
         int categoryCount = 3;
         int transCount = 2;
 
-        SigMatrix sigs = new SigMatrix(categoryCount, transCount);
+        Matrix sigs = new Matrix(categoryCount, transCount);
         double[] transSig1 = {0.2, 0.8, 0};
         double[] transSig2 = {0.4, 0, 0.6};
 

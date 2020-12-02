@@ -14,7 +14,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +24,7 @@ public class SigMnvLoader
     private final DataLoaderConfig mConfig;
 
     private final Map<String,Integer> mBucketStringToIndex;
-    private SigMatrix mSampleBucketCounts;
+    private Matrix mSampleBucketCounts;
 
     private static final String MNV_3_BASES = "3Bases";
     private static final String MNV_4P_BASES = "4+Bases";
@@ -83,7 +83,7 @@ public class SigMnvLoader
 
     public void loadData(DatabaseAccess dbAccess)
     {
-        mSampleBucketCounts = new SigMatrix(mBucketStringToIndex.size(), mConfig.SampleIds.size());
+        mSampleBucketCounts = new Matrix(mBucketStringToIndex.size(), mConfig.SampleIds.size());
 
         LOGGER.info("retrieving MNV data for {} samples", mConfig.SampleIds.size());
 

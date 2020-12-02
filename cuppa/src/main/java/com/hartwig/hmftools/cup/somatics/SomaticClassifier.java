@@ -40,7 +40,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.cup.CuppaConfig;
@@ -56,23 +56,23 @@ public class SomaticClassifier implements CuppaClassifier
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
-    private SigMatrix mRefSampleCounts;
+    private Matrix mRefSampleCounts;
     private final List<String> mRefSampleNames;
     private final Map<String,Map<String,double[]>> mRefCancerSigContribPercentiles;
     private final Map<String,double[]> mRefCancerSnvCountPercentiles;
 
-    private SigMatrix mRefCancerSnvPosFrequencies;
+    private Matrix mRefCancerSnvPosFrequencies;
     private final List<String> mRefSnvPosFreqCancerTypes;
 
-    private SigMatrix mRefSampleSnvPosFrequencies;
+    private Matrix mRefSampleSnvPosFrequencies;
     private final Map<String,Integer> mRefSamplePosFreqIndex;
 
-    private SigMatrix mSampleCounts;
+    private Matrix mSampleCounts;
     private final Map<String,Integer> mSampleCountsIndex;
 
     private final Map<String,Map<String,Double>> mSampleSigContributions;
 
-    private SigMatrix mSamplePosFrequencies;
+    private Matrix mSamplePosFrequencies;
     private final Map<String,Integer> mSamplePosFreqIndex;
 
     private boolean mIsValid;

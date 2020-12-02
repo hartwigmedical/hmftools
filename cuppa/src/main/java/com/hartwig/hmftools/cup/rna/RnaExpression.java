@@ -6,7 +6,8 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
-import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
@@ -29,7 +30,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -46,7 +47,7 @@ public class RnaExpression implements CuppaClassifier
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
-    private SigMatrix mRefCancerTypeGeneExpression;
+    private Matrix mRefCancerTypeGeneExpression;
     private final List<String> mRefCancerTypes;
     private final Map<String,Integer> mRefCancerSampleCounts; // needs to be build from the RNAs if less than the DNA samples available
 
@@ -54,10 +55,10 @@ public class RnaExpression implements CuppaClassifier
     private final Map<String,String> mGeneIdNameMap;
     private final List<String> mGeneIdList;
 
-    private SigMatrix mRefSampleGeneExpression;
+    private Matrix mRefSampleGeneExpression;
     private final Map<String,Integer> mRefSampleGeneExpIndexMap;
 
-    private SigMatrix mSampleRnaExpression;
+    private Matrix mSampleRnaExpression;
     private final Map<String,Integer> mSampleIndexMap;
 
     private final boolean mRunPairwiseCss;

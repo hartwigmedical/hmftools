@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,7 +39,7 @@ public class SigSnvLoader
     private final List<String> mSampleIds;
 
     private final Map<String,Integer> mBucketStringToIndex;
-    private SigMatrix mSampleBucketCounts;
+    private Matrix mSampleBucketCounts;
 
     private final List<PositionFrequencies> mPositionFrequencies;
 
@@ -79,11 +79,11 @@ public class SigSnvLoader
 
     public final List<PositionFrequencies> getPositionFrequencies() { return mPositionFrequencies; }
 
-    public SigMatrix getSampleBucketCounts() { return mSampleBucketCounts; }
+    public Matrix getSampleBucketCounts() { return mSampleBucketCounts; }
 
     public void loadData(final DatabaseAccess dbAccess, final String vcfFile, boolean writePosFreqData)
     {
-        mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, mSampleIds.size());
+        mSampleBucketCounts = new Matrix(SNV_BUCKET_COUNT, mSampleIds.size());
 
         LOGGER.debug("retrieving SNV data for {} samples", mSampleIds.size());
 

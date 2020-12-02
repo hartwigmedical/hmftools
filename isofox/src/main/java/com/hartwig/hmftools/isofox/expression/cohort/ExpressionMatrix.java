@@ -24,7 +24,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
@@ -33,7 +33,7 @@ public class ExpressionMatrix
     private final AnalysisType mType;
     private final CohortConfig mConfig;
     
-    private SigMatrix mExpressionMatrix;
+    private Matrix mExpressionMatrix;
     private final List<String> mGeneIds;
     private final List<String> mGeneNames;
     private final List<String> mTranscriptNames;
@@ -119,7 +119,7 @@ public class ExpressionMatrix
 
                 ISF_LOGGER.debug("building gene expression matrix: genes({}) samples({})", expressionItemCount, samplesCount);
 
-                mExpressionMatrix = new SigMatrix(expressionItemCount, samplesCount);
+                mExpressionMatrix = new Matrix(expressionItemCount, samplesCount);
             }
 
             sampleMatrixData = mExpressionMatrix.getData();

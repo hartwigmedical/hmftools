@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
+import com.hartwig.hmftools.common.utils.Matrix;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,13 +16,13 @@ public final class ExpectationMaxFit
 
     private static final Logger LOGGER = LogManager.getLogger(ExpectationMaxFit.class);
 
-    public static double[] performFit(final double[] transCounts, final SigMatrix transDefinitions)
+    public static double[] performFit(final double[] transCounts, final Matrix transDefinitions)
     {
         return performFit(transCounts, transDefinitions, RESIDUALS_EXIT_PERC, MAX_ITERATIONS);
     }
 
     public static double[] performFit(
-            final double[] transCounts, final SigMatrix transDefinitions, double minResidualsPerc, int maxIterations)
+            final double[] transCounts, final Matrix transDefinitions, double minResidualsPerc, int maxIterations)
     {
         int definitionCount = transDefinitions.Cols;
         int categoryCount = transDefinitions.Rows;

@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
-import static com.hartwig.hmftools.common.sigs.SigUtils.writeMatrixData;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
 import com.hartwig.hmftools.sig_analyser.common.CommonUtils;
@@ -61,9 +61,9 @@ public class FitAnalyser
     private final String mOutputId;
     private final CommandLine mCmdLineArgs;
 
-    private final SigMatrix mSampleCounts;
+    private final Matrix mSampleCounts;
     private final List<String> mSampleIds;
-    private final SigMatrix mSignatures;
+    private final Matrix mSignatures;
     private final List<String> mSigNames;
 
     private final Map<Integer,Integer> mNoiseRangeMap;
@@ -93,9 +93,9 @@ public class FitAnalyser
             mSampleIds.addAll(Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";", -1)).collect(Collectors.toList()));
 
             final List<String> sampleIds = Lists.newArrayList();
-            SigMatrix allCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), sampleIds);
+            Matrix allCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), sampleIds);
 
-            mSampleCounts = new SigMatrix(allCounts.Rows, mSampleIds.size());
+            mSampleCounts = new Matrix(allCounts.Rows, mSampleIds.size());
 
             for(int i = 0; i < mSampleIds.size(); ++i)
             {
@@ -134,7 +134,7 @@ public class FitAnalyser
         {
             SIG_LOGGER.info("method({}) fitting {} samples with {} signatures", fitMethod, mSampleCounts.Cols, mSignatures.Cols);
 
-            SigMatrix sampleContribs = null;
+            Matrix sampleContribs = null;
 
             switch(fitMethod)
             {
@@ -166,9 +166,9 @@ public class FitAnalyser
         closeBufferedWriter(mResidualsWriter);
     }
 
-    private SigMatrix fitWithLeastSquares()
+    private Matrix fitWithLeastSquares()
     {
-        final SigMatrix sampleContribs = new SigMatrix(mSignatures.Cols, mSampleCounts.Cols);
+        final Matrix sampleContribs = new Matrix(mSignatures.Cols, mSampleCounts.Cols);
 
         LeastSquaresFit lsqFit = new LeastSquaresFit(mSignatures.Rows, mSignatures.Cols);
 
@@ -185,9 +185,9 @@ public class FitAnalyser
         return sampleContribs;
     }
 
-    private SigMatrix fitWithExpectationsMax()
+    private Matrix fitWithExpectationsMax()
     {
-        final SigMatrix sampleContribs = new SigMatrix(mSignatures.Cols, mSampleCounts.Cols);
+        final Matrix sampleContribs = new Matrix(mSignatures.Cols, mSampleCounts.Cols);
 
         for(int i = 0; i < mSampleCounts.Cols; ++i)
         {
@@ -199,9 +199,9 @@ public class FitAnalyser
         return sampleContribs;
     }
 
-    private SigMatrix fitWithSigOptimiser()
+    private Matrix fitWithSigOptimiser()
     {
-        final SigMatrix sampleContribs = new SigMatrix(mSignatures.Cols, mSampleCounts.Cols);
+        final Matrix sampleContribs = new Matrix(mSignatures.Cols, mSampleCounts.Cols);
 
         BaSampleFitter sampleFitter = new BaSampleFitter(mSampleCounts, mSampleIds, mSignatures, mCmdLineArgs);
         sampleFitter.fitAllSamples();
@@ -210,9 +210,9 @@ public class FitAnalyser
         return sampleContribs;
     }
 
-    private SigMatrix fitWwithNMF()
+    private Matrix fitWwithNMF()
     {
-        final SigMatrix sampleContribs = new SigMatrix(mSignatures.Cols, mSampleCounts.Cols);
+        final Matrix sampleContribs = new Matrix(mSignatures.Cols, mSampleCounts.Cols);
 
         NmfConfig nmfConfig = new NmfConfig(1, 100);
 
@@ -224,7 +224,7 @@ public class FitAnalyser
         return sampleContribs;
     }
 
-    private void writeSigContributions(final FitMethod fitMethod, final SigMatrix sampleContribs)
+    private void writeSigContributions(final FitMethod fitMethod, final Matrix sampleContribs)
     {
         try
         {
@@ -237,7 +237,7 @@ public class FitAnalyser
         }
     }
 
-    private void processFitResults(final FitMethod fitMethod, final SigMatrix sampleContribs)
+    private void processFitResults(final FitMethod fitMethod, final Matrix sampleContribs)
     {
         double totalCounts = 0;
         double totalAlloc = 0;

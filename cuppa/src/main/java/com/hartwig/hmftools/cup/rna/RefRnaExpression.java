@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.rna;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
-import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -19,7 +19,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -34,8 +34,8 @@ public class RefRnaExpression implements RefClassifier
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
-    private SigMatrix mGeneCancerExpressionData;
-    private SigMatrix mGeneSampleExpressionData;
+    private Matrix mGeneCancerExpressionData;
+    private Matrix mGeneSampleExpressionData;
     private final Map<String,Integer> mSampleTpmIndex;
     private final List<String> mGeneIds;
     private final List<String> mGeneNames;
@@ -82,7 +82,7 @@ public class RefRnaExpression implements RefClassifier
             return;
         }
 
-        mGeneCancerExpressionData = new SigMatrix(mGeneSampleExpressionData.Rows, mSampleDataCache.RefCancerSampleData.size());
+        mGeneCancerExpressionData = new Matrix(mGeneSampleExpressionData.Rows, mSampleDataCache.RefCancerSampleData.size());
         final double[][] cancerMatrixData = mGeneCancerExpressionData.getData();
 
         for(Map.Entry<String,List<SampleData>> entry : mSampleDataCache.RefCancerSampleData.entrySet())
@@ -157,7 +157,7 @@ public class RefRnaExpression implements RefClassifier
         }
     }
 
-    private void writeMatrixData(final SigMatrix tpmMatrix, final List<String> headers, final String fileId)
+    private void writeMatrixData(final Matrix tpmMatrix, final List<String> headers, final String fileId)
     {
         try
         {

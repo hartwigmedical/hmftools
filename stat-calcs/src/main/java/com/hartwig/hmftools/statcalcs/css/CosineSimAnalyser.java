@@ -5,7 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
-import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -26,7 +26,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.statcalcs.common.StatsCommon;
 
 import org.apache.commons.cli.CommandLine;
@@ -44,7 +44,7 @@ public class CosineSimAnalyser
     private final String mOutputDir;
     private final String mOutputId;
 
-    private final SigMatrix mSampleCounts;
+    private final Matrix mSampleCounts;
     private final List<String> mSampleIds;
     private final Map<String,String> mSampleCancerTypes;
     private final Map<String,Integer> mSampleCountsIndex;
@@ -52,7 +52,7 @@ public class CosineSimAnalyser
     private final boolean mUseElevated;
     private final Map<Integer,Integer> mRangeMap;
 
-    private final SigMatrix mReferenceSampleCounts;
+    private final Matrix mReferenceSampleCounts;
     private final List<String> mRefNames;
 
     private BufferedWriter mWriter;

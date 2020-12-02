@@ -15,7 +15,7 @@ import java.util.Random;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.sig_analyser.common.SigReporter;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,10 +26,10 @@ public class NmfRun {
 
     // record data for the best run
     private double mLowestResidualCount;
-    private SigMatrix mBestSignatures;
-    private SigMatrix mBestContributions;
-    private List<SigMatrix> mUniqueSignatures;
-    private SigMatrix mReferenceSigs; // for post-run sig comparison reporting
+    private Matrix mBestSignatures;
+    private Matrix mBestContributions;
+    private List<Matrix> mUniqueSignatures;
+    private Matrix mReferenceSigs; // for post-run sig comparison reporting
     private NmfCalculator mCalculator;
 
     private NmfConfig mConfig;
@@ -38,13 +38,13 @@ public class NmfRun {
     private int mBucketCount;
 
     private boolean mValid;
-    private SigMatrix mRandomStartSignatures;
+    private Matrix mRandomStartSignatures;
 
     PerformanceCounter mPerfCounter;
 
     private static final Logger LOGGER = LogManager.getLogger(NmfRun.class);
 
-    public NmfRun(final NmfConfig config, int sigCount, NmfCalculator nmfCalculator, final SigMatrix referenceSigs)
+    public NmfRun(final NmfConfig config, int sigCount, NmfCalculator nmfCalculator, final Matrix referenceSigs)
     {
         mConfig = config;
         mSigCount = sigCount;
@@ -73,9 +73,9 @@ public class NmfRun {
 
     public double getLowestRunScore() { return mLowestResidualCount; }
 
-    public final SigMatrix getBestSignatures() { return mBestSignatures; }
+    public final Matrix getBestSignatures() { return mBestSignatures; }
 
-    public final SigMatrix getBestContributions() { return mBestContributions; }
+    public final Matrix getBestContributions() { return mBestContributions; }
 
     public boolean run()
     {
@@ -104,15 +104,15 @@ public class NmfRun {
             }
 
             double newRunScore = mCalculator.getTotalResiduals();
-            final SigMatrix newSigs = mCalculator.getSignatures();
+            final Matrix newSigs = mCalculator.getSignatures();
 
             if (i == 0 || !hasValidRun)
             {
                 hasValidRun = true;
 
                 mLowestResidualCount = newRunScore;
-                mBestSignatures = new SigMatrix(newSigs);
-                mBestContributions = new SigMatrix(mCalculator.getContributions());
+                mBestSignatures = new Matrix(newSigs);
+                mBestContributions = new Matrix(mCalculator.getContributions());
 
                 // mUniqueSignatures.add(new SigMatrix(newSigs));
             }
@@ -158,12 +158,12 @@ public class NmfRun {
         return mValid;
     }
 
-    private void cacheUniqueSignatures(final SigMatrix newSigs) {
+    private void cacheUniqueSignatures(final Matrix newSigs) {
         if (mUniqueSignatures.size() >= 10)
             return;
 
         boolean matchFound = false;
-        for (final SigMatrix sig : mUniqueSignatures) {
+        for (final Matrix sig : mUniqueSignatures) {
             if (sig.equals(newSigs))
                 continue;
 
@@ -175,11 +175,11 @@ public class NmfRun {
 
         if (!matchFound) {
             LOGGER.debug(String.format("storing new unique signature"));
-            mUniqueSignatures.add(new SigMatrix(newSigs));
+            mUniqueSignatures.add(new Matrix(newSigs));
         }
     }
 
-    public static boolean signaturesEqual(final SigMatrix sigs1, final SigMatrix sigs2) {
+    public static boolean signaturesEqual(final Matrix sigs1, final Matrix sigs2) {
         // use CSS to compare each pair of sigs from the 2 sets
         // return true if the set of sigs are a close match
         double cssMatchCutoff = 0.98;
@@ -201,7 +201,7 @@ public class NmfRun {
         Random random = new Random(123456);
 
         int randomSigCount = 100; // could use combination of run count and sig count
-        mRandomStartSignatures = new SigMatrix(mBucketCount, randomSigCount);
+        mRandomStartSignatures = new Matrix(mBucketCount, randomSigCount);
 
         // create a poisson distribution around the bucket ratio for the cohort
         final double[] bucketTotals = mCalculator.getBucketTotals();

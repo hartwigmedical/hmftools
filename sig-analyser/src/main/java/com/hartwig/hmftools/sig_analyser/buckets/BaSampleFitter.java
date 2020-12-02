@@ -10,7 +10,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -19,9 +19,9 @@ import org.apache.logging.log4j.Logger;
 
 public class BaSampleFitter
 {
-    private final SigMatrix mSignatures;
-    private final SigMatrix mContrbutions;
-    private final SigMatrix mSampleCounts;
+    private final Matrix mSignatures;
+    private final Matrix mContrbutions;
+    private final Matrix mSampleCounts;
     private final List<String> mSampleIds;
 
     private final double mMinSigPercent;
@@ -39,7 +39,7 @@ public class BaSampleFitter
 
     private static final Logger LOGGER = LogManager.getLogger(BaSampleFitter.class);
 
-    public BaSampleFitter(final SigMatrix sampleCounts, final List<String> sampleIds, final SigMatrix signatures, final CommandLine cmd)
+    public BaSampleFitter(final Matrix sampleCounts, final List<String> sampleIds, final Matrix signatures, final CommandLine cmd)
     {
         mSignatures = signatures;
         mSignatures.cacheTranspose();
@@ -48,7 +48,7 @@ public class BaSampleFitter
         mSampleCounts.cacheTranspose();
         mSampleIds = sampleIds;
 
-        mContrbutions = new SigMatrix(signatures.Cols, sampleCounts.Cols);
+        mContrbutions = new Matrix(signatures.Cols, sampleCounts.Cols);
 
         mMinSigPercent = Double.parseDouble(cmd.getOptionValue(MIN_SIG_PERCENT, String.valueOf(DEFAULT_MIN_SIG_PERCENT)));
         mNoiseProbability = Double.parseDouble(cmd.getOptionValue(NOISE_PROB, String.valueOf(DEFAULT_NOISE_PROB)));
@@ -59,7 +59,7 @@ public class BaSampleFitter
         mSigContribOptimiser = new SampleSigContribOptimiser(signatures.Rows, false, 1.0);
     }
 
-    public final SigMatrix getContributions() { return mContrbutions; }
+    public final Matrix getContributions() { return mContrbutions; }
 
     public static void addCmdLineArgs(final Options options)
     {

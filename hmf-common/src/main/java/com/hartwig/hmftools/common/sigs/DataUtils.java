@@ -9,6 +9,8 @@ import static java.lang.Math.pow;
 import java.util.List;
 import java.util.Random;
 
+import com.hartwig.hmftools.common.utils.Matrix;
+
 public final class DataUtils {
 
     public static double[] convertList(final List<Double> dataSet)
@@ -115,7 +117,7 @@ public final class DataUtils {
         return k - 1;
     }
 
-    public static void initRandom(SigMatrix matrix, double min, double max, final Random rnGenerator)
+    public static void initRandom(Matrix matrix, double min, double max, final Random rnGenerator)
     {
         // uniform random in range
         double[][] data = matrix.getData();

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sig_analyser;
 
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.junit.Test;
 
@@ -11,8 +11,8 @@ public class SigMatrixTest
     @Test
     public void testSigCompare()
     {
-        SigMatrix sigs1 = new SigMatrix(5, 5);
-        SigMatrix sigs2 = new SigMatrix(5, 5);
+        Matrix sigs1 = new Matrix(5, 5);
+        Matrix sigs2 = new Matrix(5, 5);
 
         double[][] s1Data = sigs1.getData();
         double[][] s2Data = sigs2.getData();

@@ -35,7 +35,7 @@ import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 public class ExpectedRatesGenerator
 {
@@ -813,7 +813,7 @@ public class ExpectedRatesGenerator
 
         try
         {
-            final SigMatrix transcriptDefinitions = expExpData.getTranscriptDefinitions();
+            final Matrix transcriptDefinitions = expExpData.getTranscriptDefinitions();
             final List<String> categories = expExpData.Categories;
             final List<String> transcriptIds = expExpData.TranscriptIds;
 

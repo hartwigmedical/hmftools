@@ -15,7 +15,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +25,7 @@ public class SigIndelLoader
     private final DataLoaderConfig mConfig;
 
     private final Map<String,Integer> mBucketStringToIndex;
-    private SigMatrix mSampleBucketCounts;
+    private Matrix mSampleBucketCounts;
 
     private static final int MAX_GROUP_COUNT = 4;
 
@@ -59,7 +59,7 @@ public class SigIndelLoader
 
     public void loadData(DatabaseAccess dbAccess)
     {
-        mSampleBucketCounts = new SigMatrix(mBucketStringToIndex.size(), mConfig.SampleIds.size());
+        mSampleBucketCounts = new Matrix(mBucketStringToIndex.size(), mConfig.SampleIds.size());
 
         LOGGER.info("retrieving INDEL data for {} samples", mConfig.SampleIds.size());
 

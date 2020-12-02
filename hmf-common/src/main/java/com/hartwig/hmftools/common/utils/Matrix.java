@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sigs;
+package com.hartwig.hmftools.common.utils;
 
 import static java.lang.Math.min;
 
@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SigMatrix
+public class Matrix
 {
     final public int Rows;
     final public int Cols;
@@ -16,9 +16,9 @@ public class SigMatrix
     private double[][] mData;
     private double[][] mDataTrans;
 
-    private static final Logger LOGGER = LogManager.getLogger(SigMatrix.class);
+    private static final Logger LOGGER = LogManager.getLogger(Matrix.class);
 
-    public SigMatrix(int r, int c)
+    public Matrix(int r, int c)
     {
         Rows = r;
         Cols = c;
@@ -27,7 +27,7 @@ public class SigMatrix
         mDataTrans = null;
     }
 
-    public SigMatrix(final SigMatrix other)
+    public Matrix(final Matrix other)
     {
         Rows = other.Rows;
         Cols = other.Cols;
@@ -56,11 +56,22 @@ public class SigMatrix
 
     public void setData(final double[][] otherData)
     {
-        for(int i = 0; i < Rows; ++i) {
+        copyMatrix(otherData, mData);
+    }
 
-            for (int j = 0; j < Cols; ++j)
+    public static void copyMatrix(final double[][] source, final double[][] dest)
+    {
+        if(source.length != dest.length)
+            return;
+
+        int rows = source.length;
+        int cols = source[0].length;
+
+        for(int i = 0; i < rows; ++i)
+        {
+            for (int j = 0; j < cols; ++j)
             {
-                mData[i][j] = otherData[i][j];
+                dest[i][j] = source[i][j];
             }
         }
     }
@@ -150,9 +161,9 @@ public class SigMatrix
         return true;
     }
 
-    public SigMatrix transpose()
+    public Matrix transpose()
     {
-        SigMatrix newMatrix = new SigMatrix(Cols, Rows);
+        Matrix newMatrix = new Matrix(Cols, Rows);
 
         final double[][] otherData = newMatrix.getData();
 
@@ -167,14 +178,14 @@ public class SigMatrix
         return newMatrix;
     }
 
-    public SigMatrix multiply(final SigMatrix other)
+    public Matrix multiply(final Matrix other)
     {
-        SigMatrix newMatrix = new SigMatrix(Rows, other.Cols);
+        Matrix newMatrix = new Matrix(Rows, other.Cols);
         multiply(other, newMatrix, false);
         return newMatrix;
     }
 
-    public void multiply(final SigMatrix other, SigMatrix dest, boolean initialiseDest)
+    public void multiply(final Matrix other, Matrix dest, boolean initialiseDest)
     {
         // matrix multiply: c[i][j] = sum_k a[i][k] * b[k][j]
         if(Cols != other.Rows)
@@ -204,7 +215,7 @@ public class SigMatrix
         }
     }
 
-    public void scalarMultiply(SigMatrix other)
+    public void scalarMultiply(Matrix other)
     {
         // scalar product; this *= b
         final double[][] otherData = other.getData();
@@ -218,7 +229,7 @@ public class SigMatrix
         }
     }
 
-    public void scalarMultiplyRateAdjusted(SigMatrix other, double rateAdjust, int adjustColLimit)
+    public void scalarMultiplyRateAdjusted(Matrix other, double rateAdjust, int adjustColLimit)
     {
         // apply the scalar multiplication, but dampen the first X columns for the ref signatures
         final double[][] otherData = other.getData();
@@ -242,12 +253,12 @@ public class SigMatrix
         }
     }
 
-    public void scalarDivide(SigMatrix other)
+    public void scalarDivide(Matrix other)
     {
         scalarDivide(other, false);
     }
 
-    public void scalarDivide(SigMatrix other, boolean allowZeros)
+    public void scalarDivide(Matrix other, boolean allowZeros)
     {
         // scalar product; this *= b
         final double[][] otherData = other.getData();
@@ -314,7 +325,7 @@ public class SigMatrix
         return col;
     }
 
-    public double sumDiffSq(final SigMatrix other)
+    public double sumDiffSq(final Matrix other)
     {
         // distance squared
         final double[][] otherData = other.getData();
@@ -332,13 +343,13 @@ public class SigMatrix
         return d;
     }
 
-    public static SigMatrix redimension(final SigMatrix other, int rows, int cols)
+    public static Matrix redimension(final Matrix other, int rows, int cols)
     {
         if(other.Rows == rows && other.Cols== cols)
             return other;
 
         // returns a resized matrix, copying any data that can be
-        SigMatrix matrix = new SigMatrix(rows, cols);
+        Matrix matrix = new Matrix(rows, cols);
 
         int minRows = min(other.Rows, matrix.Rows);
         int minCols = min(other.Cols, matrix.Cols);
@@ -357,13 +368,13 @@ public class SigMatrix
         return matrix;
     }
 
-    public double euclideanDist(SigMatrix b)
+    public double euclideanDist(Matrix b)
     {
         // euclidean distance
         return Math.sqrt(sumDiffSq(b));
     }
 
-    public boolean equals(final SigMatrix other)
+    public boolean equals(final Matrix other)
     {
         final double[][] otherData = other.getData();
 
@@ -379,10 +390,10 @@ public class SigMatrix
         return true;
     }
 
-    public static SigMatrix getDiff(final SigMatrix first, final SigMatrix second, boolean relative)
+    public static Matrix getDiff(final Matrix first, final Matrix second, boolean relative)
     {
         // return a matrix with the diffs between all entries
-        SigMatrix results = new SigMatrix(first.Rows, first.Cols);
+        Matrix results = new Matrix(first.Rows, first.Cols);
 
         if(first.Rows != second.Rows || first.Cols != second.Cols)
             return results;
@@ -414,7 +425,7 @@ public class SigMatrix
         return results;
     }
 
-    public static SigMatrix extractNonZeros(final SigMatrix matrix) {
+    public static Matrix extractNonZeros(final Matrix matrix) {
 
         // check for columns with all zeros and remove them from the matrix
         int nonZeroColCount = 0;
@@ -430,7 +441,7 @@ public class SigMatrix
         if (nonZeroColCount == matrix.Cols)
             return matrix;
 
-        SigMatrix newMatrix = new SigMatrix(matrix.Rows, nonZeroColCount);
+        Matrix newMatrix = new Matrix(matrix.Rows, nonZeroColCount);
 
         final double[][] mData = matrix.getData();
         double[][] nData = newMatrix.getData();

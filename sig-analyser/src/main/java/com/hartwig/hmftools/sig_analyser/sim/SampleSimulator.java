@@ -6,9 +6,9 @@ import static java.lang.Math.log;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
-import static com.hartwig.hmftools.common.sigs.SigUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromListData;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandom;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getPoissonRandomLarge;
-import static com.hartwig.hmftools.common.sigs.SigMatrix.extractNonZeros;
+import static com.hartwig.hmftools.common.utils.Matrix.extractNonZeros;
 import static com.hartwig.hmftools.sig_analyser.sim.SimSigFactors.SIG_FACTOR_CSV_ITEM_COUNT;
 
 import java.io.BufferedReader;
@@ -31,8 +31,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.sigs.DataUtils;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -56,13 +55,13 @@ public class SampleSimulator
     private final List<SimSigFactors> mSigFactors;
 
     // reference signatures used to generate bucket counts
-    private SigMatrix mInputSignatures;
+    private Matrix mInputSignatures;
 
     // bucket counts per simulated sample
-    private SigMatrix mOutputMatrix;
+    private Matrix mOutputMatrix;
 
     // cache the allocation of sigs to each simulated sample
-    private SigMatrix mOutputContributions;
+    private Matrix mOutputContributions;
 
     // random number caches
     private final double[] mPoissonDecimals;
@@ -203,9 +202,9 @@ public class SampleSimulator
         int buckets = mInputSignatures.Rows;
         int sampleCount = mConfig.SampleCount;
 
-        mOutputMatrix = new SigMatrix(buckets, sampleCount);
+        mOutputMatrix = new Matrix(buckets, sampleCount);
 
-        mOutputContributions = new SigMatrix(mSigFactors.size(), sampleCount);
+        mOutputContributions = new Matrix(mSigFactors.size(), sampleCount);
         double[][] cData = mOutputContributions.getData();
 
         int sigIndex = 0;
@@ -268,7 +267,7 @@ public class SampleSimulator
         return (int) round(variantCount);
     }
 
-    private void setBucketCounts(int variantCount, int sampleIndex, int sigIndex, SigMatrix sampleCounts)
+    private void setBucketCounts(int variantCount, int sampleIndex, int sigIndex, Matrix sampleCounts)
     {
         int sigLookupIndex = sigIndex-1; // since the signatures definition matrix is now zero-based
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
-import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.stats.FdrCalcs.calculateFDRs;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -17,7 +17,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.stats.PValueResult;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
@@ -27,7 +27,7 @@ public class ExpressionCohortCompare
 {
     private final CohortConfig mConfig;
 
-    private SigMatrix mGeneExpressionMatrix;
+    private Matrix mGeneExpressionMatrix;
     private final Map<String,Integer> mSampleIndexMap;
     private final List<String> mGeneIds;
     private final Map<String,String> mGeneIdNameMap;

@@ -21,7 +21,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +42,7 @@ public class SigOptimiser
     private int mBucketCount;
     private int mAllSampleCount;
     private List<Integer> mInitialBuckets; // from the non-zero ratios passed in
-    private SigMatrix mSampleCounts; // take from the larger of unallocated + noise and the predefined allocated counts
+    private Matrix mSampleCounts; // take from the larger of unallocated + noise and the predefined allocated counts
     private double[] mSampleTotals; // generally each sample's unallocated counts plus noise
     private double[] mProposedTotals; // generally each sample's unallocated counts plus noise
     private double mProposedTotal;
@@ -59,12 +59,12 @@ public class SigOptimiser
     private double[] mRangesHigh;
     private double[] mCalcRanges;
     private double[] mUnallocBucketTotals; // from pure samples' unallocated counts
-    private SigMatrix mSampleNoiseRatio; // noise relative to overall sample bucket counts
-    private SigMatrix mBucketRatioWeights; // weighted frequencies of bucket ratios
-    private SigMatrix mBucketRatioFrequencies; // sample frequencies of bucket ratios
+    private Matrix mSampleNoiseRatio; // noise relative to overall sample bucket counts
+    private Matrix mBucketRatioWeights; // weighted frequencies of bucket ratios
+    private Matrix mBucketRatioFrequencies; // sample frequencies of bucket ratios
 
-    private SigMatrix mSampleSigContrib; // sample sig contributions
-    private SigMatrix mSampleRatios; // sample contributions turned into ratios
+    private Matrix mSampleSigContrib; // sample sig contributions
+    private Matrix mSampleRatios; // sample contributions turned into ratios
 
     private double mUnallocTotal;
     private double mAllocTotal;
@@ -154,8 +154,8 @@ public class SigOptimiser
         mCacheBucketInfo = false;
 
         // make a matrix from the sample counts
-        mSampleCounts = new SigMatrix(mBucketCount, mAllSampleCount);
-        mSampleNoiseRatio = new SigMatrix(mBucketCount, mAllSampleCount);
+        mSampleCounts = new Matrix(mBucketCount, mAllSampleCount);
+        mSampleNoiseRatio = new Matrix(mBucketCount, mAllSampleCount);
 
         mProposedAllocs = Lists.newArrayList();
 
@@ -337,8 +337,8 @@ public class SigOptimiser
         mCacheBucketInfo = true;
 
         // make a matrix from the sample counts
-        mSampleCounts = new SigMatrix(mBucketCount, mAllSampleCount);
-        mSampleNoiseRatio = new SigMatrix(mBucketCount, mAllSampleCount);
+        mSampleCounts = new Matrix(mBucketCount, mAllSampleCount);
+        mSampleNoiseRatio = new Matrix(mBucketCount, mAllSampleCount);
 
         mProposedAllocs = Lists.newArrayList();
         mProposedTotals = new double[mAllSampleCount];
@@ -510,10 +510,10 @@ public class SigOptimiser
         bucketIds.addAll(mActiveBuckets);
         bucketIds.addAll(mCandidateNewBuckets);
 
-        mSampleSigContrib = new SigMatrix(mBucketCount, mSamples.size());
+        mSampleSigContrib = new Matrix(mBucketCount, mSamples.size());
         double[][] sscData = mSampleSigContrib.getData();
 
-        mSampleRatios = new SigMatrix(mBucketCount, mSamples.size());
+        mSampleRatios = new Matrix(mBucketCount, mSamples.size());
         double[][] srData = mSampleRatios.getData();
 
         // for each sample, take the unalloc counts and convert them into ratios
@@ -637,10 +637,10 @@ public class SigOptimiser
     public void calcBucketDistributions()
     {
         int segmentCount = BUCKET_RATIO_SEGMENT_COUNT+2;
-        mBucketRatioWeights = new SigMatrix(mBucketCount, segmentCount);
-        mBucketRatioFrequencies = new SigMatrix(mBucketCount, segmentCount);
-        SigMatrix sampleBucketRatios = new SigMatrix(mBucketCount, mSampleCount);
-        SigMatrix sampleBucketWeights = new SigMatrix(mBucketCount, mSampleCount);
+        mBucketRatioWeights = new Matrix(mBucketCount, segmentCount);
+        mBucketRatioFrequencies = new Matrix(mBucketCount, segmentCount);
+        Matrix sampleBucketRatios = new Matrix(mBucketCount, mSampleCount);
+        Matrix sampleBucketWeights = new Matrix(mBucketCount, mSampleCount);
 
         List<Integer> bucketIds = Lists.newArrayList();
         bucketIds.addAll(mActiveBuckets);
@@ -692,7 +692,7 @@ public class SigOptimiser
         }
     }
 
-    private void extractSampleRatioData(final List<Integer> bucketIds, SigMatrix sampleBucketRatios, SigMatrix sampleBucketWeights)
+    private void extractSampleRatioData(final List<Integer> bucketIds, Matrix sampleBucketRatios, Matrix sampleBucketWeights)
     {
         double[][] ratioData = sampleBucketRatios.getData();
         double[][] weightData = sampleBucketWeights.getData();

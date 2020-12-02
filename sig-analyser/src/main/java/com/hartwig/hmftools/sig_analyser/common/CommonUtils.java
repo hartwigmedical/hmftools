@@ -6,12 +6,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcAbsDiffs;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcLinearLeastSquares;
-import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
-import static com.hartwig.hmftools.common.sigs.SigUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_DECIMAL;
-import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
-import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 
@@ -22,10 +17,8 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.DataUtils;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
-import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.utils.GenericDataLoader;
+import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.MatrixUtils;
 
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
@@ -68,9 +61,9 @@ public class CommonUtils
         return createBufferedWriter(outputDir + fileName, false);
     }
 
-    public static SigMatrix loadSampleMatrixCounts(final String filename, final List<String> sampleIds)
+    public static Matrix loadSampleMatrixCounts(final String filename, final List<String> sampleIds)
     {
-        return loadMatrixDataFile(filename, sampleIds, Lists.newArrayList("BucketName"));
+        return MatrixUtils.loadMatrixDataFile(filename, sampleIds, Lists.newArrayList("BucketName"));
     }
 
     public static List<Integer> getCombinedList(final List<Integer> list1, final List<Integer> list2)

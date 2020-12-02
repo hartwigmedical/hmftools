@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -58,14 +58,14 @@ public class CssRoutines
     }
 
     public static List<double[]> getTopCssPairs(
-            final SigMatrix matrix1, final SigMatrix matrix2, double cssMatchCutoff,
+            final Matrix matrix1, final Matrix matrix2, double cssMatchCutoff,
             boolean applyExclusivity, boolean skipRepeats)
     {
         return getTopCssPairs(matrix1, matrix2, cssMatchCutoff, applyExclusivity, skipRepeats, false, false);
     }
 
     public static List<double[]> getTopCssPairs(
-            final SigMatrix matrix1, final SigMatrix matrix2, double cssMatchCutoff,
+            final Matrix matrix1, final Matrix matrix2, double cssMatchCutoff,
             boolean applyExclusivity, boolean skipRepeats, boolean skipAllZeros, boolean skipZeroEntries)
     {
         // use CSS to compare each pair of columns from the 2 sets
@@ -165,7 +165,7 @@ public class CssRoutines
         return cssResults;
     }
 
-    public static void logSimilarites(final SigMatrix matrix, double cssMatchCutoff, final String item)
+    public static void logSimilarites(final Matrix matrix, double cssMatchCutoff, final String item)
     {
         // use CSS to compare each pair of values and log similar ones
         for (int i = 0; i < matrix.Cols; ++i) {
@@ -243,7 +243,7 @@ public class CssRoutines
         return probability;
     }
 
-    public static List<double[]> getTopLogLikelihoodPairs(final SigMatrix matrix1, final SigMatrix matrix2, double probCutoff)
+    public static List<double[]> getTopLogLikelihoodPairs(final Matrix matrix1, final Matrix matrix2, double probCutoff)
     {
         // use CSS to compare each pair of columns from the 2 sets
         // returns a list of results where the CSS value is above the cutoff, ordered by CSS descending (ie closest first)

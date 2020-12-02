@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
-import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromListData;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,22 +46,22 @@ public class BaReporter
 
     // shared state with Bucket Analyser
     private GenericDataCollection mDataCollection;
-    private SigMatrix mSampleCounts;
+    private Matrix mSampleCounts;
     private double[] mSampleTotals;
     private double mTotalCount;
     private int mBucketCount;
     private int mSampleCount;
     private int mActiveSampleCount;
-    private SigMatrix mBackgroundCounts;
-    private SigMatrix mElevatedCounts; // actual - expected, capped at zero
+    private Matrix mBackgroundCounts;
+    private Matrix mElevatedCounts; // actual - expected, capped at zero
     private double mElevatedCount;
 
     private double mTotalAllocatedCount;
-    private SigMatrix mSampleBucketRatios;
+    private Matrix mSampleBucketRatios;
 
-    private SigMatrix mProposedSigs;
+    private Matrix mProposedSigs;
     private List<Integer> mSigToBgMapping;
-    private SigMatrix mReferenceSigs;
+    private Matrix mReferenceSigs;
     private boolean mUsingRefSigs;
 
     private List<SampleData> mSampleData;
@@ -93,7 +93,7 @@ public class BaReporter
 
     public void setInitialState(
             GenericDataCollection dataCollection, final String outputDir, final String outputFileId,
-            final SigMatrix sampleCounts, final List<SampleData> sampleData,
+            final Matrix sampleCounts, final List<SampleData> sampleData,
             final GenericDataCollection extSampleData, final HashMap<String,Integer> extCategoriesMap,
             final HashMap<String, List<Integer>> cancerSamplesMap,
             final List<BucketGroup> finalBucketGroups, final List<BucketGroup> backgroundGroups)
@@ -119,7 +119,7 @@ public class BaReporter
         mBackgroundGroups = backgroundGroups;
     }
 
-    public void setPreRunState(double[] sampleTotals, final SigMatrix backgroundCounts, final SigMatrix elevatedCounts, double totalCount, double elevatedCount, int activeSampleCount)
+    public void setPreRunState(double[] sampleTotals, final Matrix backgroundCounts, final Matrix elevatedCounts, double totalCount, double elevatedCount, int activeSampleCount)
     {
         mSampleTotals = sampleTotals;
         mBackgroundCounts = backgroundCounts;
@@ -129,7 +129,7 @@ public class BaReporter
         mActiveSampleCount = activeSampleCount;
     }
 
-    public void setFinalState(final SigMatrix proposedSigs, final List<Integer> sigToBgMapping)
+    public void setFinalState(final Matrix proposedSigs, final List<Integer> sigToBgMapping)
     {
         mProposedSigs = proposedSigs;
         mSigToBgMapping = sigToBgMapping;
@@ -147,7 +147,7 @@ public class BaReporter
 
     public double getTotalAllocatedCount() { return mTotalAllocatedCount; }
 
-    public final SigMatrix getReferenceSigs() { return mReferenceSigs; }
+    public final Matrix getReferenceSigs() { return mReferenceSigs; }
 
     public void loadReferenceSigs(final String filename, boolean usingRefSigs)
     {
@@ -522,7 +522,7 @@ public class BaReporter
         // only look at contributions above X%
         int sigCount = mFinalBucketGroups.size();
 
-        SigMatrix contribMatrix = new SigMatrix(sigCount, mSampleCount);
+        Matrix contribMatrix = new Matrix(sigCount, mSampleCount);
         double[][] contribData = contribMatrix.getData();
 
         double minSigContribPerc = MIN_GROUP_ALLOC_PERCENT_LOWER;

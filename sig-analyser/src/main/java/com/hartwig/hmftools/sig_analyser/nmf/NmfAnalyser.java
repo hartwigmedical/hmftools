@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sig_analyser.nmf;
 
 import static java.lang.Integer.max;
 
-import static com.hartwig.hmftools.common.sigs.SigUtils.createMatrixFromListData;
-import static com.hartwig.hmftools.common.sigs.SigUtils.writeMatrixData;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromListData;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SAMPLE_COUNTS_FILE;
@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.CommonUtils.getNewFile;
-import static com.hartwig.hmftools.common.sigs.SigMatrix.extractNonZeros;
+import static com.hartwig.hmftools.common.utils.Matrix.extractNonZeros;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -21,8 +21,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.common.sigs.DataUtils;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -44,9 +43,9 @@ public class NmfAnalyser
 
     private GenericDataCollection mDataCollection;
 
-    private SigMatrix mSampleCountsMatrix;
-    private SigMatrix mReferenceSigs;
-    private SigMatrix mReferenceContribs;
+    private Matrix mSampleCountsMatrix;
+    private Matrix mReferenceSigs;
+    private Matrix mReferenceContribs;
 
     private NmfCalculator mNmfCalculator;
 
@@ -192,7 +191,7 @@ public class NmfAnalyser
         if(!sampleFitter.isValid())
             return;
 
-        SigMatrix contributions = sampleFitter.getContributions();
+        Matrix contributions = sampleFitter.getContributions();
         contributions.cacheTranspose();
 
         writeSignatures(mReferenceSigs);
@@ -201,7 +200,7 @@ public class NmfAnalyser
         mPerfCounter.logStats();
     }
 
-    public void writeSignatures(final SigMatrix signatures)
+    public void writeSignatures(final Matrix signatures)
     {
         try
         {
@@ -226,7 +225,7 @@ public class NmfAnalyser
         }
     }
 
-    public void writeContributions(final SigMatrix contributions)
+    public void writeContributions(final Matrix contributions)
     {
         try
         {

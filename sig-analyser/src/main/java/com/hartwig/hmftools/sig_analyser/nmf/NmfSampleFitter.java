@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
-import com.hartwig.hmftools.common.sigs.SigMatrix;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.sig_analyser.common.SigReporter;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,10 +17,10 @@ import org.apache.logging.log4j.Logger;
 public class NmfSampleFitter
 {
     private NmfConfig mConfig;
-    private SigMatrix mRefSignatures;
-    private SigMatrix mReferenceContribs;
-    private SigMatrix mSampleCounts;
-    private SigMatrix mAllContributions;
+    private Matrix mRefSignatures;
+    private Matrix mReferenceContribs;
+    private Matrix mSampleCounts;
+    private Matrix mAllContributions;
 
     private int[] mSigCountFrequency;
 
@@ -33,19 +33,19 @@ public class NmfSampleFitter
 
     private static final Logger LOGGER = LogManager.getLogger(NmfSampleFitter.class);
 
-    public NmfSampleFitter(final NmfConfig config, final SigMatrix sampleCounts, final SigMatrix refSigs)
+    public NmfSampleFitter(final NmfConfig config, final Matrix sampleCounts, final Matrix refSigs)
     {
         mConfig = config;
         mSampleCounts = sampleCounts;
-        mAllContributions = new SigMatrix(refSigs.Cols, sampleCounts.Cols);
+        mAllContributions = new Matrix(refSigs.Cols, sampleCounts.Cols);
         mSigCountFrequency = new int[refSigs.Cols];
         mRefSignatures = refSigs;
         mReferenceContribs = null;
         mIsValid = true;
     }
 
-    public void setRefContributions(final SigMatrix refContribs) { mReferenceContribs = refContribs; }
-    public final SigMatrix getContributions() { return mAllContributions; }
+    public void setRefContributions(final Matrix refContribs) { mReferenceContribs = refContribs; }
+    public final Matrix getContributions() { return mAllContributions; }
     public boolean isValid() { return mIsValid; }
 
     public void fitSamples()
@@ -87,7 +87,7 @@ public class NmfSampleFitter
         int bucketCount = mSampleCounts.Rows;
 
         // prepare a matrix with only this sample's counts
-        SigMatrix sampleMatrix = new SigMatrix(bucketCount, 1);
+        Matrix sampleMatrix = new Matrix(bucketCount, 1);
 
         final double[] sampleCounts = mSampleCounts.getCol(sampleId);
         // final double[] sampleNoise = new double[bucketCount];
@@ -106,7 +106,7 @@ public class NmfSampleFitter
         boolean[] sigsInUse = new boolean[refSigCount];
 
         // inactive sigs will be zeroed out in the sigs matrix given to the NMF calculator
-        SigMatrix reducedSigs = new SigMatrix(mRefSignatures);
+        Matrix reducedSigs = new Matrix(mRefSignatures);
         int currentSigCount = 0;
 
         // start with all in use unless below required ML threshold
@@ -333,7 +333,7 @@ public class NmfSampleFitter
         return true;
     }
 
-    private void reduceSigData(boolean[] sigsInUse, SigMatrix sigs, int sigIndex)
+    private void reduceSigData(boolean[] sigsInUse, Matrix sigs, int sigIndex)
     {
         // disable a signature and set all contributions for it to zero
         sigsInUse[sigIndex] = false;
@@ -344,7 +344,7 @@ public class NmfSampleFitter
         }
     }
 
-    private void enableRefSig(SigMatrix sigs, int sigIndex)
+    private void enableRefSig(Matrix sigs, int sigIndex)
     {
         final double[][] refData = mRefSignatures.getData();
 
@@ -401,7 +401,7 @@ public class NmfSampleFitter
 
     }
 
-    private int addRequiredSigs(boolean[] sigsInUse, SigMatrix sigs)
+    private int addRequiredSigs(boolean[] sigsInUse, Matrix sigs)
     {
         if(!mConfig.ApplyPcawgRules)
             return 0;
@@ -460,7 +460,7 @@ public class NmfSampleFitter
         return sigsAdded;
     }
 
-    private boolean enforceSigPairInUse(int sig1, int sig2, boolean[] sigsInUse, SigMatrix sigs)
+    private boolean enforceSigPairInUse(int sig1, int sig2, boolean[] sigsInUse, Matrix sigs)
     {
         if(sigsInUse[sig1] == sigsInUse[sig2])
             return false;
