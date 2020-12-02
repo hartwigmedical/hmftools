@@ -28,7 +28,7 @@ final class FilterFactory {
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("NPM1", "EXON 12 MUTATION"));
 
         // Not a valid mutation string
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB2 (HER2)", "P780INS"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB2", "P780INS"));
     }
 
     private FilterFactory() {

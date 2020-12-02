@@ -366,18 +366,17 @@ public final class ViccExtractor {
             }
         }
 
-        LOGGER.info("No genomic events derived for {} features.", featuresWithoutGenomicEvents.size());
-        for (Feature feature : featuresWithoutGenomicEvents) {
-            MutationType type = feature.type();
-            if (type != MutationType.UNKNOWN && type != MutationType.COMBINED && type != MutationType.COMPLEX) {
+        if (!featuresWithoutGenomicEvents.isEmpty()) {
+            LOGGER.warn("No genomic events derived for {} features!", featuresWithoutGenomicEvents.size());
+            for (Feature feature : featuresWithoutGenomicEvents) {
                 LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
             }
         }
 
-        LOGGER.info("Extraction performed on {} features from {} entries", totalFeatureCount, resultsPerEntry.size());
+        LOGGER.info("Extraction performed on {} features in {} VICC entries", totalFeatureCount, resultsPerEntry.size());
         LOGGER.info(" Extracted {} hotspots for {} features", totalHotspotsCount, featuresWithHotspotsCount);
         LOGGER.info(" Extracted {} known amps and dels", featuresWithCopyNumberCount);
-        LOGGER.info(" Extracted {} fusions", featuresWithFusionCount);
+        LOGGER.info(" Extracted {} known fusions pairs", featuresWithFusionCount);
         LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
         LOGGER.info(" Extracted {} gene ranges for {} features", totalRangeCount, featuresWithGeneRangeCount);
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
@@ -425,7 +424,8 @@ public final class ViccExtractor {
                     interpretation.add(signatureForFeature.toString());
                 }
 
-                lines.add(new StringJoiner("\t").add(viccEntry.source().toString()).add(feature.geneSymbol())
+                lines.add(new StringJoiner("\t").add(viccEntry.source().toString())
+                        .add(feature.geneSymbol())
                         .add(feature.name())
                         .add(feature.type().name())
                         .add(interpretation.toString())

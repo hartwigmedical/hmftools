@@ -30,7 +30,7 @@ public final class DocmReader {
         DocmCurator curator = new DocmCurator();
         LOGGER.info("Curating {} DoCM entries", entries.size());
         List<DocmEntry> curatedEntries = curator.curate(entries);
-        LOGGER.info(" Finished DoCM curation. {} entries remaining after curation. {} entries have been removed",
+        LOGGER.info(" Finished DoCM curation. {} entries remaining, {} entries have been removed",
                 curatedEntries.size(),
                 entries.size() - curatedEntries.size());
         curator.reportUnusedBlacklistEntries();

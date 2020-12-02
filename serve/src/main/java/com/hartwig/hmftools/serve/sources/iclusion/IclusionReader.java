@@ -34,7 +34,7 @@ public final class IclusionReader {
 
         LOGGER.info("Curating {} iClusion trials", trials.size());
         List<IclusionTrial> curatedTrials = curator.run(trials);
-        LOGGER.info(" Finished iClusion curation. {} curated trials remaining. {} trials have been removed",
+        LOGGER.info(" Finished iClusion curation. {} trials remaining, {} trials have been removed",
                 curatedTrials.size(),
                 trials.size() - curatedTrials.size());
 
@@ -49,7 +49,7 @@ public final class IclusionReader {
 
         LOGGER.info("Filtering {} iClusion entries", trials.size());
         List<IclusionTrial> filteredTrials = filter.run(trials);
-        LOGGER.info("  Finished iClusion filtering. {} trials remaining. {} entries have been removed",
+        LOGGER.info("  Finished iClusion filtering. {} trials remaining, {} entries have been removed",
                 filteredTrials.size(),
                 trials.size() - filteredTrials.size());
         filter.reportUnusedFilterEntries();
