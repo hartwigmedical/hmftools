@@ -34,7 +34,7 @@ public class ViccJsonSQLImporter {
     private static final String VERSION = ViccJsonSQLImporter.class.getPackage().getImplementationVersion();
 
     public static void main(final String... args) throws ParseException, IOException, SQLException {
-        LOGGER.info("Running VICC Knowledgebase Importer v{}", VERSION);
+        LOGGER.info("Running VICC Importer v{}", VERSION);
 
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
@@ -101,7 +101,7 @@ public class ViccJsonSQLImporter {
     }
 
     private static void printUsageAndExit(@NotNull Options options) {
-        new HelpFormatter().printHelp("vicc-knowledgebase-importer", options);
+        new HelpFormatter().printHelp("vicc-importer", options);
         System.exit(1);
     }
 }

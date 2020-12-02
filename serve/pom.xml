@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>vicc-knowledgebase-importer</artifactId>
+            <artifactId>vicc-importer</artifactId>
         </dependency>
         <dependency>
             <groupId>org.immutables</groupId>

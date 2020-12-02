@@ -8,10 +8,10 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>vicc-knowledgebase-importer</artifactId>
+    <artifactId>vicc-importer</artifactId>
     <packaging>jar</packaging>
-    <version>${vicc-knowledgebase-importer.version}</version>
-    <name>HMF Tools - VICC Knowledgebase Importer</name>
+    <version>${vicc-importer.version}</version>
+    <name>HMF Tools - VICC Importer</name>
 
     <dependencies>
         <dependency>
