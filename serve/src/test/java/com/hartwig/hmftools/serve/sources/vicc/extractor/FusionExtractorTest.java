@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
@@ -53,7 +54,7 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsWithOddNames() {
-        FusionExtractor fusionExtractor = new FusionExtractor(GeneChecker.buildForHG19());
+        FusionExtractor fusionExtractor = new FusionExtractor(new GeneChecker(Sets.newHashSet("IGH", "NKX2-1")));
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NKX2-1", "IGH-NKX2-1 Fusion");
 
         Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
