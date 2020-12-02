@@ -71,7 +71,7 @@ public class ServeApplication {
         extractions.add(extractHartwigCohortKnowledge(config.hartwigCohortTsv(), proteinResolver, !config.skipHotspotResolving()));
         extractions.add(extractHartwigCuratedKnowledge(config.hartwigCuratedTsv(), proteinResolver, !config.skipHotspotResolving()));
 
-        LOGGER.info("Done with {}", extractions);
+        LOGGER.info("Done with {} extractions!", extractions.size());
     }
 
     @NotNull

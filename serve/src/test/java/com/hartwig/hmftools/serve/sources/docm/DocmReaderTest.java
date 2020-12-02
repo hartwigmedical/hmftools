@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.sources.docm;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 
 import java.io.IOException;
 
@@ -14,6 +14,6 @@ public class DocmReaderTest {
 
     @Test
     public void canReadDcomInputFile() throws IOException {
-        assertNotNull(DocmReader.readAndCurate(EXAMPLE_TSV));
+        assertFalse(DocmReader.readAndCurate(EXAMPLE_TSV).isEmpty());
     }
 }

@@ -32,7 +32,7 @@ public class IclusionExtractor {
 
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
-                    LOGGER.info("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
+                    LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
                 }
             }
         }
