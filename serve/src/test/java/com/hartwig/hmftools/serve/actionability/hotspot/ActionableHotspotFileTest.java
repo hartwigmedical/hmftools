@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 
 import org.junit.Test;
@@ -13,7 +14,8 @@ public class ActionableHotspotFileTest {
 
     @Test
     public void canReadFromFileAndConvert() throws IOException {
-        String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
+        String actionableHotspotTsv =
+                ActionableHotspotFile.actionableHotspotTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR, RefGenomeVersion.HG19);
         List<ActionableHotspot> actionableHotspots = ActionableHotspotFile.read(actionableHotspotTsv);
 
         assertEquals(1, actionableHotspots.size());

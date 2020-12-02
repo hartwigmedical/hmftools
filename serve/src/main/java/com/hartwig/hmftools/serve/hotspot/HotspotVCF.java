@@ -104,5 +104,4 @@ public final class HotspotVCF {
         }
         return sourceJoiner.toString();
     }
-
 }

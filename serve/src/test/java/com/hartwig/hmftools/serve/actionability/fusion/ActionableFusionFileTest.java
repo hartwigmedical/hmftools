@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 
 import org.junit.Test;
@@ -13,7 +14,8 @@ public class ActionableFusionFileTest {
 
     @Test
     public void canReadFromFileAndConvert() throws IOException {
-        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR);
+        String actionableFusionTsv =
+                ActionableFusionFile.actionableFusionTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR, RefGenomeVersion.HG19);
         List<ActionableFusion> actionableFusions = ActionableFusionFile.read(actionableFusionTsv);
 
         assertEquals(3, actionableFusions.size());

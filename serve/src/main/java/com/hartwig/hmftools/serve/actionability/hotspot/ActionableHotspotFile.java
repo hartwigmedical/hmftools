@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -23,8 +24,8 @@ public final class ActionableHotspotFile {
     }
 
     @NotNull
-    public static String actionableHotspotTsvPath(@NotNull String serveActionabilityDir) {
-        return serveActionabilityDir + File.separator + ACTIONABLE_HOTSPOT_TSV;
+    public static String actionableHotspotTsvPath(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion) {
+        return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_HOTSPOT_TSV);
     }
 
     public static void write(@NotNull String actionableHotspotTsv, @NotNull List<ActionableHotspot> actionableHotspots) throws IOException {

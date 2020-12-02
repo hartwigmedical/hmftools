@@ -63,7 +63,7 @@ public class ServeApplication {
         }
 
         List<DriverGene> driverGenes = readDriverGenes(config);
-        Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap37();
+        Map<String, HmfTranscriptRegion> allGenesMap = selectAllGeneMap(config);
         ProteinResolver proteinResolver = buildProteinResolver(config, allGenesMap);
 
         List<ExtractionResult> extractions = Lists.newArrayList();
@@ -73,10 +73,11 @@ public class ServeApplication {
         extractions.add(extractHartwigCohortKnowledge(config.hartwigCohortTsv(), proteinResolver, !config.skipHotspotResolving()));
         extractions.add(extractHartwigCuratedKnowledge(config.hartwigCuratedTsv(), proteinResolver, !config.skipHotspotResolving()));
 
-        ExtractionResult merged = ExtractionFunctions.merge(extractions);
+        evaluateProteinResolver(proteinResolver);
 
+        ExtractionResultWriter.write(config.outputDir(), config.refGenomeVersion(), ExtractionFunctions.merge(extractions));
 
-        LOGGER.info("Done with {} extractions!", extractions.size());
+        LOGGER.info("Done!");
     }
 
     @NotNull
@@ -95,6 +96,18 @@ public class ServeApplication {
         }
     }
 
+    private static void evaluateProteinResolver(@NotNull ProteinResolver proteinResolver) {
+        Set<String> unresolvedProteinAnnotations = proteinResolver.unresolvedProteinAnnotations();
+        if (!unresolvedProteinAnnotations.isEmpty()) {
+            LOGGER.warn("Protein resolver could not resolve {} protein annotations", unresolvedProteinAnnotations.size());
+            for (String unresolvedProteinAnnotation : unresolvedProteinAnnotations) {
+                LOGGER.warn("Protein resolver could not resolve protein annotation '{}'", unresolvedProteinAnnotation);
+            }
+        } else {
+            LOGGER.debug("Protein resolver observed no issues when resolving hotspots");
+        }
+    }
+
     @NotNull
     private static List<DriverGene> readDriverGenes(@NotNull ServeConfig config) throws IOException {
         LOGGER.info("Reading driver genes from {}", config.driverGeneTsv());
@@ -104,11 +117,22 @@ public class ServeApplication {
     }
 
     @NotNull
+    private static Map<String, HmfTranscriptRegion> selectAllGeneMap(@NotNull ServeConfig config) {
+        if (config.refGenomeVersion() == RefGenomeVersion.HG19) {
+            return HmfGenePanelSupplier.allGenesMap37();
+        }
+
+        LOGGER.warn("Ref genome version not supported: '{}'. Reverting to HG19.", config.refGenomeVersion());
+        return HmfGenePanelSupplier.allGenesMap37();
+    }
+
+    @NotNull
     private static ExtractionResult extractViccKnowledge(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver,
             @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap) throws IOException {
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, null);
 
         ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(proteinResolver, driverGenes, allGenesMap);
+        LOGGER.info("Running VICC knowledge extraction");
         return extractor.extractFromViccEntries(entries);
     }
 
@@ -117,6 +141,7 @@ public class ServeApplication {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv);
 
         IclusionExtractor extractor = new IclusionExtractor();
+        LOGGER.info("Running iClusion knowledge extraction");
         return extractor.extractFromIclusionTrials(trials);
     }
 
@@ -127,6 +152,7 @@ public class ServeApplication {
 
         DocmExtractor extractor = new DocmExtractor(proteinResolver);
         List<KnownHotspot> hotspots = extractor.extractFromDocmEntries(entries);
+        LOGGER.info("Running DoCM knowledge extraction");
         return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
     }
 
@@ -139,6 +165,7 @@ public class ServeApplication {
 
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_COHORT, proteinResolver, addExplicitHotspots);
 
+        LOGGER.info("Running Hartwig Cohort knowledge extraction");
         List<KnownHotspot> hotspots = extractor.extractFromHartwigEntries(entries);
         return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
     }
@@ -152,6 +179,7 @@ public class ServeApplication {
 
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_CURATED, proteinResolver, addExplicitHotspots);
 
+        LOGGER.info("Running Hartwig Curated knowledge extraction");
         List<KnownHotspot> hotspots = extractor.extractFromHartwigEntries(entries);
         return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
     }

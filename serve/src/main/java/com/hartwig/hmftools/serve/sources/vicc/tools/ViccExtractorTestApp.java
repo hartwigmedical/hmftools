@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.ExtractionResult;
+import com.hartwig.hmftools.serve.ExtractionResultWriter;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
@@ -44,6 +45,7 @@ public class ViccExtractorTestApp {
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
 
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
         String viccJsonPath;
         String driverGeneTsvPath;
         String outputDir;
@@ -54,7 +56,7 @@ public class ViccExtractorTestApp {
             viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
             driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv";
             outputDir = System.getProperty("user.home") + "/tmp";
-            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
+            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion,
                     "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta",
                     allGenesMap);
         } else {
@@ -87,9 +89,9 @@ public class ViccExtractorTestApp {
                 allGenesMap,
                 featureInterpretationTsv);
 
-        ExtractionResult extractionResult = viccExtractor.extractFromViccEntries(entries);
+        ExtractionResult result = viccExtractor.extractFromViccEntries(entries);
 
         ViccUtil.writeFeatures(featureTsv, entries);
-        ViccUtil.writeActionability(outputDir, extractionResult);
+        ExtractionResultWriter.write(outputDir, refGenomeVersion, result);
     }
 }

@@ -29,6 +29,7 @@ import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 
@@ -46,6 +47,7 @@ public class ProtectApplication implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
     private static final String PAN_CANCER_DOID = "162";
+    private static final RefGenomeVersion REF_GENOME_VERSION = RefGenomeVersion.HG19;
 
     public static void main(@NotNull String[] args) throws IOException {
         Options options = ProtectConfig.createOptions();
@@ -147,7 +149,7 @@ public class ProtectApplication implements AutoCloseable {
 
         // Serve Data
         final String serveActionabilityDir = config.serveActionabilityDir();
-        final ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(serveActionabilityDir);
+        final ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(serveActionabilityDir, REF_GENOME_VERSION);
         final VariantEvidence variantEvidenceFactory = new VariantEvidence(actionableEvents.hotspots(), actionableEvents.ranges());
         final CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(actionableEvents.genes());
         final FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());

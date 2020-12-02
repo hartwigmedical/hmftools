@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -16,15 +17,15 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ActionableSignatureFile {
 
-    private static final String DELIMITER = "\t";
     private static final String ACTIONABLE_SIGNATURE_TSV = "actionableSignatures.tsv";
+    private static final String DELIMITER = "\t";
 
     private ActionableSignatureFile() {
     }
 
     @NotNull
-    public static String actionableSignatureTsvPath(@NotNull String serveActionabilityDir) {
-        return serveActionabilityDir + File.separator + ACTIONABLE_SIGNATURE_TSV;
+    public static String actionableSignatureTsvPath(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion) {
+        return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_SIGNATURE_TSV);
     }
 
     public static void write(@NotNull String actionableSignatureTsv, @NotNull List<ActionableSignature> actionableSignatures)

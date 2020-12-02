@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -17,15 +18,15 @@ import org.jetbrains.annotations.Nullable;
 
 public final class ActionableFusionFile {
 
-    private static final String DELIMITER = "\t";
     private static final String ACTIONABLE_FUSION_TSV = "actionableFusions.tsv";
+    private static final String DELIMITER = "\t";
 
     private ActionableFusionFile() {
     }
 
     @NotNull
-    public static String actionableFusionTsvPath(@NotNull String serveActionabilityDir) {
-        return serveActionabilityDir + File.separator + ACTIONABLE_FUSION_TSV;
+    public static String actionableFusionTsvPath(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion) {
+        return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_FUSION_TSV);
     }
 
     public static void write(@NotNull String actionableFusionTsv, @NotNull List<ActionableFusion> actionableFusions) throws IOException {
