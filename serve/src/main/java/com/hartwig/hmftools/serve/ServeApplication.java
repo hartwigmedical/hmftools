@@ -62,7 +62,7 @@ public class ServeApplication {
             System.exit(1);
         }
 
-        List<DriverGene> driverGenes = readDriverGenes(config);
+        List<DriverGene> driverGenes = readDriverGenesFromFile(config.driverGeneTsv());
         Map<String, HmfTranscriptRegion> allGenesMap = selectAllGeneMap(config);
         ProteinResolver proteinResolver = buildProteinResolver(config, allGenesMap);
 
@@ -110,9 +110,9 @@ public class ServeApplication {
     }
 
     @NotNull
-    private static List<DriverGene> readDriverGenes(@NotNull ServeConfig config) throws IOException {
-        LOGGER.info("Reading driver genes from {}", config.driverGeneTsv());
-        List<DriverGene> driverGenes = DriverGeneFile.read(config.driverGeneTsv());
+    private static List<DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
+        LOGGER.info("Reading driver genes from {}", driverGeneTsv);
+        List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsv);
         LOGGER.info(" Read {} driver gene entries", driverGenes.size());
         return driverGenes;
     }
