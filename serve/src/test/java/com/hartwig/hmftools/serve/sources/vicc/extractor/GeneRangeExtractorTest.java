@@ -15,6 +15,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
@@ -45,6 +46,7 @@ public class GeneRangeExtractorTest {
                         .rangeType(GeneRangeType.EXON)
                         .rangeNumber(11)
                         .exonId("ENSE00001074417")
+                        .geneOrientation(Strand.FORWARD)
                         .build()));
 
         assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));
@@ -65,6 +67,7 @@ public class GeneRangeExtractorTest {
                         .mutationType(MutationTypeFilter.MISSENSE_ANY)
                         .rangeType(GeneRangeType.CODON)
                         .rangeNumber(97)
+                        .geneOrientation(Strand.REVERSE)
                         .build()));
 
         assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));
@@ -85,6 +88,7 @@ public class GeneRangeExtractorTest {
                         .mutationType(MutationTypeFilter.ANY)
                         .rangeType(GeneRangeType.CODON)
                         .rangeNumber(249)
+                        .geneOrientation(Strand.REVERSE)
                         .build()));
 
         assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));
@@ -106,6 +110,7 @@ public class GeneRangeExtractorTest {
                         .rangeType(GeneRangeType.EXON)
                         .rangeNumber(19)
                         .exonId("ENSE00001756460")
+                        .geneOrientation(Strand.FORWARD)
                         .build()));
 
         assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));
@@ -127,6 +132,7 @@ public class GeneRangeExtractorTest {
                         .rangeType(GeneRangeType.EXON)
                         .rangeNumber(2)
                         .exonId("ENSE00000936617")
+                        .geneOrientation(Strand.REVERSE)
                         .build()));
 
         assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));
