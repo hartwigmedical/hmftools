@@ -75,7 +75,7 @@ public final class ActionableFusionFile {
     @NotNull
     private static ActionableFusion fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
-        String url = values.length > 10 ? values[10] : Strings.EMPTY;
+        String url = values.length > 12 ? values[12] : Strings.EMPTY;
 
         return ImmutableActionableFusion.builder()
                 .geneUp(values[0])

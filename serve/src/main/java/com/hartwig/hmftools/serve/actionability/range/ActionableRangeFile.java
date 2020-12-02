@@ -73,6 +73,7 @@ public final class ActionableRangeFile {
     @NotNull
     private static ActionableRange fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
+        String url = values.length > 11 ? values[11] : Strings.EMPTY;
 
         return ImmutableActionableRange.builder()
                 .gene(values[0])
@@ -86,7 +87,7 @@ public final class ActionableRangeFile {
                 .doid(values[8])
                 .level(EvidenceLevel.valueOf(values[9]))
                 .direction(EvidenceDirection.valueOf(values[10]))
-                .url(values.length > 11 ? values[11] : Strings.EMPTY)
+                .url(url)
                 .build();
     }
 
