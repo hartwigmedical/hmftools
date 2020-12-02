@@ -95,7 +95,7 @@ public class GeneRangeExtractorTest {
     }
 
     @Test
-    public void canExtractRangesExon() {
+    public void canExtractRangesExonForward() {
         GeneRangeExtractor geneRangeExtractor =
                 new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"), new GeneChecker());
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
@@ -111,6 +111,28 @@ public class GeneRangeExtractorTest {
                         .rangeType(GeneRangeType.EXON)
                         .rangeNumber(19)
                         .exonId("ENSE00001756460")
+                        .build()));
+
+        assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));
+    }
+
+    @Test
+    public void canExtractRangesExonReverse() {
+        GeneRangeExtractor geneRangeExtractor =
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"), new GeneChecker());
+        Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KRAS", "EXON 2 DELETION");
+
+        geneRangesPerFeature.put(viccEntry.features().get(0),
+                Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
+                        .gene("KRAS")
+                        .chromosome("12")
+                        .start(25398203)
+                        .end(25398334)
+                        .mutationType(MutationTypeFilter.MISSENSE_INFRAME_DELETION)
+                        .rangeType(GeneRangeType.EXON)
+                        .rangeNumber(2)
+                        .exonId("ENSE00000936617")
                         .build()));
 
         assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));
