@@ -50,8 +50,11 @@ public final class KnownHotspotVCF {
 
         writer.writeHeader(header);
 
-        hotspots.sort(new VariantHotspotComparator());
-        for (KnownHotspot hotspot : hotspots) {
+        // Need to make a copy since the input list may be immutable and cannot be sorted!
+        List<KnownHotspot> sorted = Lists.newArrayList(hotspots);
+        sorted.sort(new VariantHotspotComparator());
+
+        for (KnownHotspot hotspot : sorted) {
             List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
             VariantContext variantContext = new VariantContextBuilder().noGenotypes()
