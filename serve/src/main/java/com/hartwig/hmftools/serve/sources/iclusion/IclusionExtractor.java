@@ -7,8 +7,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
-import com.hartwig.hmftools.serve.sources.ExtractionOutput;
-import com.hartwig.hmftools.serve.sources.ImmutableExtractionOutput;
+import com.hartwig.hmftools.serve.ExtractionResult;
+import com.hartwig.hmftools.serve.ImmutableExtractionResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +19,7 @@ public class IclusionExtractor {
     private static final Logger LOGGER = LogManager.getLogger(IclusionExtractor.class);
 
     @NotNull
-    public ExtractionOutput extractFromIclusionTrials(@NotNull List<IclusionTrial> trials) {
+    public ExtractionResult extractFromIclusionTrials(@NotNull List<IclusionTrial> trials) {
         // We assume filtered trials (no empty acronyms, only OR mutations, and no negated mutations
 
         Set<String> uniqueCancerTypes = Sets.newTreeSet();
@@ -42,6 +42,7 @@ public class IclusionExtractor {
             LOGGER.debug(" - {}", cancerType);
         }
 
-        return ImmutableExtractionOutput.builder().build();
+        // TODO Implement!
+        return ImmutableExtractionResult.builder().build();
     }
 }

@@ -10,7 +10,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
-import com.hartwig.hmftools.serve.sources.ExtractionOutput;
+import com.hartwig.hmftools.serve.ExtractionResult;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionUtil;
@@ -65,7 +65,7 @@ public class IclusionExtractorTestApp {
 
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iclusionTrialTsv);
 
-        ExtractionOutput output = new IclusionExtractor().extractFromIclusionTrials(trials);
+        ExtractionResult output = new IclusionExtractor().extractFromIclusionTrials(trials);
         LOGGER.info("Generated {}", output);
 
         IclusionUtil.writeIclusionMutationTypes(iclusionMutationTsv, trials);

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.transvar;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 
@@ -23,7 +24,7 @@ public class TransvarTestApplication {
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
         String refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
 
-        Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
+        Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile, HmfGenePanelSupplier.allGenesMap37());
 
         String gene = "KIT";
         String transcript = null;

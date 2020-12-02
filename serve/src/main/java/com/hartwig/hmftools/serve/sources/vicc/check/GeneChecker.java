@@ -2,8 +2,6 @@ package com.hartwig.hmftools.serve.sources.vicc.check;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -15,11 +13,6 @@ public class GeneChecker {
 
     @NotNull
     private final Set<String> allValidGenes;
-
-    @NotNull
-    public static GeneChecker buildForHG19() {
-        return new GeneChecker(HmfGenePanelSupplier.allGenesMap37().keySet());
-    }
 
     public GeneChecker(@NotNull final Set<String> allValidGenes) {
         this.allValidGenes = allValidGenes;

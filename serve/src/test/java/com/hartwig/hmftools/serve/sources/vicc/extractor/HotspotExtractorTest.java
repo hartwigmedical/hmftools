@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -24,6 +25,8 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class HotspotExtractorTest {
+
+    private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
 
     private static final VariantHotspot TEST_HOTSPOT =
             ImmutableVariantHotspotImpl.builder().chromosome("1").position(10).ref("A").alt("T").build();
@@ -57,7 +60,7 @@ public class HotspotExtractorTest {
 
     @NotNull
     private static HotspotExtractor createWithProtein(@NotNull String protein) {
-        return new HotspotExtractor(GeneChecker.buildForHG19(), new TestProteinResolver(protein), new ProteinAnnotationExtractor());
+        return new HotspotExtractor(HG19_GENE_CHECKER, new TestProteinResolver(protein), new ProteinAnnotationExtractor());
     }
 
     private static class TestProteinResolver implements ProteinResolver {

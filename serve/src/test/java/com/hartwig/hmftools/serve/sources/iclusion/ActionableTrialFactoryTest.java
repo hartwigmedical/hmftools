@@ -30,5 +30,4 @@ public class ActionableTrialFactoryTest {
         assertEquals(location1, actionableTrials.get(0).cancerType());
         assertEquals(location2, actionableTrials.get(1).cancerType());
     }
-
 }

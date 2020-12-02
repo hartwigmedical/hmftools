@@ -98,7 +98,7 @@ public class ServeHotspotGenerator {
         LOGGER.debug("Configured '{}' for generating hotspots yes/no", generateHotspots);
 
         ProteinResolver proteinResolver = generateHotspots
-                ? ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile)
+                ? ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, refGenomeFastaFile, HmfGenePanelSupplier.allGenesMap37())
                 : ProteinResolverFactory.dummy();
 
         List<KnownHotspot> hartwigCohortHotspots = hartwigCohortHotspots(hartwigCohortTsv, proteinResolver, generateHotspots);

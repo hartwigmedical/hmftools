@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -16,9 +17,11 @@ import org.junit.Test;
 
 public class FusionExtractorTest {
 
+    private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
+
     @Test
     public void canExtractFusionPairsGenes() {
-        FusionExtractor fusionExtractor = new FusionExtractor(GeneChecker.buildForHG19());
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("PDGFRA", "BCR-PDGFRA Fusion");
 
         Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
@@ -29,7 +32,7 @@ public class FusionExtractorTest {
 
     @Test
     public void ignoresFusionsOnUnknownGenes() {
-        FusionExtractor fusionExtractor = new FusionExtractor(GeneChecker.buildForHG19());
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("IG", "IG-BCL2");
 
         Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
@@ -39,7 +42,7 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsWithExonsUpDown() {
-        FusionExtractor fusionExtractor = new FusionExtractor(GeneChecker.buildForHG19());
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "EGFRvII");
 
         Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
@@ -65,7 +68,7 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsWithRangeExons() {
-        FusionExtractor fusionExtractor = new FusionExtractor(GeneChecker.buildForHG19());
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("MET", "EXON 14 SKIPPING MUTATION");
 
         Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);

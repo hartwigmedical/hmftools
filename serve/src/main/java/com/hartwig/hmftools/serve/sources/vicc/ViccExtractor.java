@@ -7,13 +7,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.ExtractionResult;
+import com.hartwig.hmftools.serve.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
@@ -34,8 +35,6 @@ import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
-import com.hartwig.hmftools.serve.sources.ExtractionOutput;
-import com.hartwig.hmftools.serve.sources.ImmutableExtractionOutput;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.CopyNumberExtractor;
@@ -86,7 +85,7 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    public ExtractionOutput extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) throws IOException {
+    public ExtractionResult extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) throws IOException {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
 
         for (ViccEntry entry : viccEntries) {
@@ -117,7 +116,7 @@ public final class ViccExtractor {
             writeInterpretationToTsv(resultsPerEntry, featureInterpretationTsv);
         }
 
-        ImmutableExtractionOutput.Builder outputBuilder = ImmutableExtractionOutput.builder()
+        ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
                 .knownHotspots(convertToHotspots(resultsPerEntry, hotspotExtractor.proteinAnnotationExtractor()))
                 .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry))
                 .knownFusionPairs(convertToKnownFusions(resultsPerEntry));
@@ -170,7 +169,7 @@ public final class ViccExtractor {
         return FusionFunctions.consolidate(fusions);
     }
 
-    private static void addActionability(@NotNull ImmutableExtractionOutput.Builder outputBuilder,
+    private static void addActionability(@NotNull ImmutableExtractionResult.Builder outputBuilder,
             @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
         List<ActionableHotspot> actionableHotspots = Lists.newArrayList();
         List<ActionableRange> actionableRanges = Lists.newArrayList();
@@ -183,9 +182,7 @@ public final class ViccExtractor {
             ActionableEvent event = result.actionableEvent();
             if (event != null) {
                 actionableHotspots.addAll(extractActionableHotspots(event, result.hotspotsPerFeature().values()));
-                actionableRanges.addAll(extractActionableRanges(event,
-                        result.geneRangesPerFeature().values(),
-                        result.geneRangesPerFeature().keySet()));
+                actionableRanges.addAll(extractActionableRanges(event, result.geneRangesPerFeature().values()));
                 actionableGenes.addAll(extractActionableAmpsDels(event, result.ampsDelsPerFeature().values()));
                 actionableGenes.addAll(extractActionableGeneLevelEvents(event, result.geneLevelEventsPerFeature().values()));
                 actionableFusions.addAll(extractActionableFusions(event, result.fusionsPerFeature().values()));
@@ -220,7 +217,7 @@ public final class ViccExtractor {
 
     @NotNull
     private static List<ActionableRange> extractActionableRanges(@NotNull ActionableEvent actionableEvent,
-            @NotNull Iterable<List<GeneRangeAnnotation>> geneRangeAnnotationLists, @NotNull Set<Feature> features) {
+            @NotNull Iterable<List<GeneRangeAnnotation>> geneRangeAnnotationLists) {
         List<ActionableRange> actionableRanges = Lists.newArrayList();
         for (List<GeneRangeAnnotation> rangeList : geneRangeAnnotationLists) {
             for (GeneRangeAnnotation range : rangeList) {

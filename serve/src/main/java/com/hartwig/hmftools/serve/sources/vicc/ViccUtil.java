@@ -11,12 +11,12 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.serve.ExtractionResult;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
-import com.hartwig.hmftools.serve.sources.ExtractionOutput;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -51,27 +51,27 @@ public final class ViccUtil {
         }
     }
 
-    public static void writeActionability(@NotNull String outputDir, @NotNull ExtractionOutput extractionOutput)
+    public static void writeActionability(@NotNull String outputDir, @NotNull ExtractionResult extractionResult)
             throws IOException {
         String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable hotspots to {}", extractionOutput.actionableHotspots().size(), actionableHotspotTsv);
-        ActionableHotspotFile.write(actionableHotspotTsv, extractionOutput.actionableHotspots());
+        LOGGER.info("Writing {} actionable hotspots to {}", extractionResult.actionableHotspots().size(), actionableHotspotTsv);
+        ActionableHotspotFile.write(actionableHotspotTsv, extractionResult.actionableHotspots());
 
         String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable ranges to {}", extractionOutput.actionableRanges().size(), actionableRangeTsv);
-        ActionableRangeFile.write(actionableRangeTsv, extractionOutput.actionableRanges());
+        LOGGER.info("Writing {} actionable ranges to {}", extractionResult.actionableRanges().size(), actionableRangeTsv);
+        ActionableRangeFile.write(actionableRangeTsv, extractionResult.actionableRanges());
 
         String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable genes to {}", extractionOutput.actionableGenes().size(), actionableGeneTsv);
-        ActionableGeneFile.write(actionableGeneTsv, extractionOutput.actionableGenes());
+        LOGGER.info("Writing {} actionable genes to {}", extractionResult.actionableGenes().size(), actionableGeneTsv);
+        ActionableGeneFile.write(actionableGeneTsv, extractionResult.actionableGenes());
 
         String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable fusions to {}", extractionOutput.actionableFusions().size(), actionableFusionTsv);
-        ActionableFusionFile.write(actionableFusionTsv, extractionOutput.actionableFusions());
+        LOGGER.info("Writing {} actionable fusions to {}", extractionResult.actionableFusions().size(), actionableFusionTsv);
+        ActionableFusionFile.write(actionableFusionTsv, extractionResult.actionableFusions());
 
         String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable signatures to {}", extractionOutput.actionableSignatures().size(), actionableSignatureTsv);
-        ActionableSignatureFile.write(actionableSignatureTsv, extractionOutput.actionableSignatures());
+        LOGGER.info("Writing {} actionable signatures to {}", extractionResult.actionableSignatures().size(), actionableSignatureTsv);
+        ActionableSignatureFile.write(actionableSignatureTsv, extractionResult.actionableSignatures());
     }
 
     public static void writeFeatures(@NotNull String viccFeatureTsv, @NotNull List<ViccEntry> entries) throws IOException {

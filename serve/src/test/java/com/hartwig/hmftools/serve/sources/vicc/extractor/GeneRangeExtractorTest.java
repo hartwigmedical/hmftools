@@ -15,6 +15,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
@@ -29,6 +30,9 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GeneRangeExtractorTest {
+
+    private static final Map<String, HmfTranscriptRegion> HG19_GENE_MAP = HmfGenePanelSupplier.allGenesMap37();
+    private static final GeneChecker HG19_GENE_CHECKER = new GeneChecker(HG19_GENE_MAP.keySet());
 
     @Test
     public void canExtractRangesExonAndFusion() {
@@ -230,7 +234,7 @@ public class GeneRangeExtractorTest {
 
     @NotNull
     private static GeneRangeExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new GeneRangeExtractor(GeneChecker.buildForHG19(), driverGenes, HmfGenePanelSupplier.allGenesMap37());
+        return new GeneRangeExtractor(HG19_GENE_CHECKER, driverGenes, HG19_GENE_MAP);
     }
 
     @NotNull

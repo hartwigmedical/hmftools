@@ -16,6 +16,7 @@ import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -23,6 +24,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GeneLevelExtractorTest {
+
+    private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
 
     @Test
     public void canExtractGeneLevelEventONCO() {
@@ -109,7 +112,7 @@ public class GeneLevelExtractorTest {
 
     @NotNull
     private static GeneLevelExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new GeneLevelExtractor(GeneChecker.buildForHG19(), GeneChecker.buildForHG19(), driverGenes);
+        return new GeneLevelExtractor(HG19_GENE_CHECKER, HG19_GENE_CHECKER, driverGenes);
     }
 
     @NotNull

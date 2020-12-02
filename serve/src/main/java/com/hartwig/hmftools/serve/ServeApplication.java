@@ -17,8 +17,6 @@ import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
-import com.hartwig.hmftools.serve.sources.ExtractionOutput;
-import com.hartwig.hmftools.serve.sources.ImmutableExtractionOutput;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.sources.docm.DocmReader;
@@ -64,11 +62,11 @@ public class ServeApplication {
             System.exit(1);
         }
 
-        ProteinResolver proteinResolver = buildProteinResolver(config);
         List<DriverGene> driverGenes = readDriverGenes(config);
         Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap37();
+        ProteinResolver proteinResolver = buildProteinResolver(config, allGenesMap);
 
-        List<ExtractionOutput> extractions = Lists.newArrayList();
+        List<ExtractionResult> extractions = Lists.newArrayList();
         extractions.add(extractViccKnowledge(config.viccJson(), proteinResolver, driverGenes, allGenesMap));
         extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
         extractions.add(extractDocmKnowledge(config.docmTsv(), proteinResolver));
@@ -79,7 +77,8 @@ public class ServeApplication {
     }
 
     @NotNull
-    private static ProteinResolver buildProteinResolver(@NotNull ServeConfig config) throws FileNotFoundException {
+    private static ProteinResolver buildProteinResolver(@NotNull ServeConfig config,
+            @NotNull Map<String, HmfTranscriptRegion> transcriptsPerGeneMap) throws FileNotFoundException {
         if (config.skipHotspotResolving()) {
             LOGGER.info("Creating dummy protein resolver");
             return ProteinResolverFactory.dummy();
@@ -87,7 +86,9 @@ public class ServeApplication {
             LOGGER.info("Creating transvar protein resolver with ref genome version '{}' using FASTA {}",
                     config.refGenomeVersion(),
                     config.refGenomeFastaFile());
-            return ProteinResolverFactory.transvarWithRefGenome(config.refGenomeVersion(), config.refGenomeFastaFile());
+            return ProteinResolverFactory.transvarWithRefGenome(config.refGenomeVersion(),
+                    config.refGenomeFastaFile(),
+                    transcriptsPerGeneMap);
         }
     }
 
@@ -100,7 +101,7 @@ public class ServeApplication {
     }
 
     @NotNull
-    private static ExtractionOutput extractViccKnowledge(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver,
+    private static ExtractionResult extractViccKnowledge(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver,
             @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap) throws IOException {
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, null);
 
@@ -109,7 +110,7 @@ public class ServeApplication {
     }
 
     @NotNull
-    private static ExtractionOutput extractIclusionKnowledge(@NotNull String iClusionTrialTsv) throws IOException {
+    private static ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv) throws IOException {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv);
 
         IclusionExtractor extractor = new IclusionExtractor();
@@ -117,17 +118,17 @@ public class ServeApplication {
     }
 
     @NotNull
-    private static ExtractionOutput extractDocmKnowledge(@NotNull String docmTsv, @NotNull ProteinResolver proteinResolver)
+    private static ExtractionResult extractDocmKnowledge(@NotNull String docmTsv, @NotNull ProteinResolver proteinResolver)
             throws IOException {
         List<DocmEntry> entries = DocmReader.readAndCurate(docmTsv);
 
         DocmExtractor extractor = new DocmExtractor(proteinResolver);
         List<KnownHotspot> hotspots = extractor.extractFromDocmEntries(entries);
-        return ImmutableExtractionOutput.builder().knownHotspots(hotspots).build();
+        return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
     }
 
     @NotNull
-    private static ExtractionOutput extractHartwigCohortKnowledge(@NotNull String hartwigCohortTsv,
+    private static ExtractionResult extractHartwigCohortKnowledge(@NotNull String hartwigCohortTsv,
             @NotNull ProteinResolver proteinResolver, boolean addExplicitHotspots) throws IOException {
         LOGGER.info("Reading Hartwig Cohort TSV from '{}'", hartwigCohortTsv);
         List<HartwigEntry> entries = HartwigFileReader.read(hartwigCohortTsv);
@@ -135,12 +136,12 @@ public class ServeApplication {
 
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_COHORT, proteinResolver, addExplicitHotspots);
 
-        List<KnownHotspot> hotspots =  extractor.extractFromHartwigEntries(entries);
-        return ImmutableExtractionOutput.builder().knownHotspots(hotspots).build();
+        List<KnownHotspot> hotspots = extractor.extractFromHartwigEntries(entries);
+        return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
     }
 
     @NotNull
-    private static ExtractionOutput extractHartwigCuratedKnowledge(@NotNull String hartwigCuratedTsv,
+    private static ExtractionResult extractHartwigCuratedKnowledge(@NotNull String hartwigCuratedTsv,
             @NotNull ProteinResolver proteinResolver, boolean addExplicitHotspots) throws IOException {
         LOGGER.info("Reading Hartwig Curated TSV from '{}'", hartwigCuratedTsv);
         List<HartwigEntry> entries = HartwigFileReader.read(hartwigCuratedTsv);
@@ -149,6 +150,6 @@ public class ServeApplication {
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_CURATED, proteinResolver, addExplicitHotspots);
 
         List<KnownHotspot> hotspots = extractor.extractFromHartwigEntries(entries);
-        return ImmutableExtractionOutput.builder().knownHotspots(hotspots).build();
+        return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
     }
 }

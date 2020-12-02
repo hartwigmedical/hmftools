@@ -133,7 +133,6 @@ class TransvarProcessImpl implements TransvarProcess {
         reader.close();
 
         return strings;
-
     }
 
     @NotNull
