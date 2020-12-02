@@ -17,8 +17,10 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
+import com.hartwig.hmftools.patientdb.data.CuratedPrimaryTumor;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -29,8 +31,7 @@ public class BiopsyReaderTest {
     @Test
     public void canFilterOutEmptyAndDuplicateForms() {
         BiopsyReader biopsyReader = new BiopsyReader(TestCuratorFactory.biopsySiteCurator());
-        List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(),
-                ImmutableCuratedPrimaryTumor.of(null, null, null, null, null, null, Lists.newArrayList()));
+        List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(), noCuration());
         assertEquals(1, biopsies.size());
         assertNotNull(biopsies.get(0).date());
         assertNotNull(biopsies.get(0).biopsyTaken());
@@ -39,8 +40,7 @@ public class BiopsyReaderTest {
     @Test
     public void canReadCpctPatientBiopsies() {
         BiopsyReader biopsyReader = new BiopsyReader(TestCuratorFactory.biopsySiteCurator());
-        List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(),
-                ImmutableCuratedPrimaryTumor.of(null, null, null, null, null, null, Lists.newArrayList()));
+        List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(), noCuration());
 
         assertEquals(1, biopsies.size());
         assertEquals("body", biopsies.get(0).site());
@@ -92,5 +92,10 @@ public class BiopsyReaderTest {
         Map<String, List<EcrfStudyEvent>> studyEvents = Maps.newHashMap();
         studyEvents.put(BiopsyReader.STUDY_BIOPSY, Lists.newArrayList(studyEvent));
         return new EcrfPatient(patient, studyEvents, Lists.newArrayList());
+    }
+
+    @NotNull
+    private static CuratedPrimaryTumor noCuration() {
+        return ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).build();
     }
 }

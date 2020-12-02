@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.iclusion.qc;
 
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

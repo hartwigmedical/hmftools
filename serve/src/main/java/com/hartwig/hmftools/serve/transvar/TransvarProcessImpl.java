@@ -46,7 +46,7 @@ class TransvarProcessImpl implements TransvarProcess {
                 "--reference",
                 refGenomeFastaFile,
                 "--refversion",
-                refGenomeVersion.refVersionString(),
+                toTransvarRefVersion(refGenomeVersion),
                 "--noheader",
                 "--ensembl",
                 "-i",
@@ -92,6 +92,11 @@ class TransvarProcessImpl implements TransvarProcess {
     }
 
     @NotNull
+    private static String toTransvarRefVersion(@NotNull RefGenomeVersion refGenomeVersion) {
+        return refGenomeVersion.toString().toLowerCase();
+    }
+
+    @NotNull
     private static List<String> filterErrorOutput(@NotNull List<String> errors) {
         List<String> filteredErrors = Lists.newArrayList();
         for (String error : errors) {
@@ -133,7 +138,6 @@ class TransvarProcessImpl implements TransvarProcess {
         reader.close();
 
         return strings;
-
     }
 
     @NotNull

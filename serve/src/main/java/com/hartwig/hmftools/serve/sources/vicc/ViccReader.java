@@ -31,10 +31,10 @@ public final class ViccReader {
                 ImmutableViccQuerySelection.builder().sourcesToFilterOn(sourcesToFilterOn).maxEntriesToInclude(maxEntries).build();
 
         LOGGER.info("Reading VICC json from '{}' with sources '{}'", viccJson, querySelection.sourcesToFilterOn());
-        List<ViccEntry> viccEntries = ViccJsonReader.buildProductionReader().readSelection(viccJson, querySelection);
-        LOGGER.info(" Read {} entries", viccEntries.size());
+        List<ViccEntry> entries = ViccJsonReader.buildProductionReader().readSelection(viccJson, querySelection);
+        LOGGER.info(" Read {} entries", entries.size());
 
-        return filter(curate(viccEntries));
+        return filter(curate(entries));
     }
 
     @NotNull
@@ -43,7 +43,7 @@ public final class ViccReader {
 
         LOGGER.info("Curating {} VICC entries", entries.size());
         List<ViccEntry> curatedEntries = curator.run(entries);
-        LOGGER.info(" Finished VICC curation. {} curated entries remaining. {} entries have been removed",
+        LOGGER.info(" Finished VICC curation. {} entries remaining, {} entries have been removed",
                 curatedEntries.size(),
                 entries.size() - curatedEntries.size());
 
@@ -58,7 +58,7 @@ public final class ViccReader {
 
         LOGGER.info("Filtering {} VICC entries", entries.size());
         List<ViccEntry> filteredEntries = filter.run(entries);
-        LOGGER.info("Finished VICC filtering. {} filtered entries remaining. {} entries have been removed",
+        LOGGER.info(" Finished VICC filtering. {} entries remaining, {} entries have been removed",
                 filteredEntries.size(),
                 entries.size() - filteredEntries.size());
 

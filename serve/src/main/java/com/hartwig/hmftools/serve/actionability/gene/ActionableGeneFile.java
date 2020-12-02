@@ -8,23 +8,25 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableGeneFile {
 
+    private static final String ACTIONABLE_GENE_TSV = "ActionableGenes.tsv";
     private static final String DELIMITER = "\t";
-    private static final String ACTIONABLE_GENE_TSV = "actionableGenes.tsv";
 
     private ActionableGeneFile() {
     }
 
     @NotNull
-    public static String actionableGeneTsvPath(@NotNull String serveActionabilityDir) {
-        return serveActionabilityDir + File.separator + ACTIONABLE_GENE_TSV;
+    public static String actionableGeneTsvPath(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion) {
+        return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_GENE_TSV);
     }
 
     public static void write(@NotNull String actionableGeneTsv, @NotNull List<ActionableGene> actionableGenes) throws IOException {
@@ -73,12 +75,12 @@ public final class ActionableGeneFile {
         return ImmutableActionableGene.builder()
                 .gene(values[0])
                 .event(GeneLevelEvent.valueOf(values[1]))
-                .source(ActionableEventFactory.sourceFromFileValue(values[2]))
+                .source(Knowledgebase.valueOf(values[2]))
                 .treatment(values[3])
                 .cancerType(values[4])
                 .doid(values[5])
                 .level(EvidenceLevel.valueOf(values[6]))
-                .direction(ActionableEventFactory.directionFromFileValue(values[7]))
+                .direction(EvidenceDirection.valueOf(values[7]))
                 .url(url)
                 .build();
     }
@@ -97,12 +99,12 @@ public final class ActionableGeneFile {
     private static String toLine(@NotNull ActionableGene gene) {
         return new StringJoiner(DELIMITER).add(gene.gene())
                 .add(gene.event().toString())
-                .add(gene.source().display())
+                .add(gene.source().toString())
                 .add(gene.treatment())
                 .add(gene.cancerType())
                 .add(gene.doid())
                 .add(gene.level().toString())
-                .add(gene.direction().display())
+                .add(gene.direction().toString())
                 .add(gene.url())
                 .toString();
     }

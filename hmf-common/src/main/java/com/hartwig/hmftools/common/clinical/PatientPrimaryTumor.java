@@ -32,6 +32,9 @@ public abstract class PatientPrimaryTumor {
     @NotNull
     public abstract List<String> doids();
 
+    @NotNull
+    public abstract List<String> snomedConceptIds();
+
     public abstract boolean isOverridden();
 
 }

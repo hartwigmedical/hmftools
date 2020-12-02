@@ -12,7 +12,7 @@ public class ProtectEvidenceItemTest {
     @NotNull
     public static ImmutableProtectEvidenceItem.Builder createDefault(boolean onLabel, EvidenceDirection direction, EvidenceLevel level) {
         return ImmutableProtectEvidenceItem.builder()
-                .source(Knowledgebase.CGI)
+                .source(Knowledgebase.VICC_CGI)
                 .direction(direction)
                 .level(level)
                 .treatment("treatment")

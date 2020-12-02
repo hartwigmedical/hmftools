@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.iclusion.api.IclusionApiMain;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.iclusion.qc.IclusionTrialChecker;
 

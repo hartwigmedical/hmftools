@@ -12,9 +12,21 @@ public final class FusionAnnotationConfig {
 
     public static final Map<String, KnownFusionPair> EXONIC_FUSIONS_MAP = exonicFusionMap();
 
+    public static final Map<String, KnownFusionPair> ODDLY_NAMED_GENES_MAP = oddlyNamedGenesMap();
+
+    @NotNull
+    private static Map<String, KnownFusionPair> oddlyNamedGenesMap() {
+        Map<String, KnownFusionPair> map = Maps.newHashMap();
+        KnownFusionPair fusionIGH_NKX2_1 = ImmutableKnownFusionPair.builder().geneUp("IGH").geneDown("NKX2-1").build();
+
+        map.put("IGH-NKX2-1 Fusion", fusionIGH_NKX2_1);
+
+        return map;
+    }
+
     @NotNull
     private static Map<String, KnownFusionPair> exonicFusionMap() {
-        Map<String, KnownFusionPair> fusionExonMap = Maps.newHashMap();
+        Map<String, KnownFusionPair> map = Maps.newHashMap();
 
         KnownFusionPair fusionEGFRKDD = ImmutableKnownFusionPair.builder()
                 .geneUp("EGFR")
@@ -24,7 +36,7 @@ public final class FusionAnnotationConfig {
                 .minExonDown(14)
                 .maxExonDown(18)
                 .build();
-        fusionExonMap.put("EGFR-KDD", fusionEGFRKDD);
+        map.put("EGFR-KDD", fusionEGFRKDD);
 
         KnownFusionPair fusionEGFRvII = ImmutableKnownFusionPair.builder()
                 .geneUp("EGFR")
@@ -34,7 +46,7 @@ public final class FusionAnnotationConfig {
                 .minExonDown(16)
                 .maxExonDown(16)
                 .build();
-        fusionExonMap.put("EGFRvII", fusionEGFRvII);
+        map.put("EGFRvII", fusionEGFRvII);
 
         KnownFusionPair fusionEGFRvIII = ImmutableKnownFusionPair.builder()
                 .geneUp("EGFR")
@@ -44,8 +56,8 @@ public final class FusionAnnotationConfig {
                 .minExonDown(8)
                 .maxExonDown(8)
                 .build();
-        fusionExonMap.put("EGFRvIII", fusionEGFRvIII);
-        fusionExonMap.put("VIII", fusionEGFRvIII);
+        map.put("EGFRvIII", fusionEGFRvIII);
+        map.put("VIII", fusionEGFRvIII);
 
         KnownFusionPair fusionEGFRvV = ImmutableKnownFusionPair.builder()
                 .geneUp("EGFR")
@@ -55,7 +67,7 @@ public final class FusionAnnotationConfig {
                 .minExonDown(29)
                 .maxExonDown(29)
                 .build();
-        fusionExonMap.put("EGFRvV", fusionEGFRvV);
+        map.put("EGFRvV", fusionEGFRvV);
 
         KnownFusionPair fusionKITExon11 = ImmutableKnownFusionPair.builder()
                 .geneUp("KIT")
@@ -65,9 +77,9 @@ public final class FusionAnnotationConfig {
                 .minExonDown(11)
                 .maxExonDown(11)
                 .build();
-        fusionExonMap.put("KIT EXON 11 MUTATION", fusionKITExon11);
-        fusionExonMap.put("KIT Exon 11 mutations", fusionKITExon11);
-        fusionExonMap.put("KIT Exon 11 deletions", fusionKITExon11);
+        map.put("EXON 11 MUTATION", fusionKITExon11);
+        map.put("Exon 11 mutations", fusionKITExon11);
+        map.put("Exon 11 deletions", fusionKITExon11);
 
         KnownFusionPair fusionMETExon14 = ImmutableKnownFusionPair.builder()
                 .geneUp("MET")
@@ -77,8 +89,8 @@ public final class FusionAnnotationConfig {
                 .minExonDown(15)
                 .maxExonDown(15)
                 .build();
-        fusionExonMap.put("MET EXON 14 SKIPPING MUTATION", fusionMETExon14);
+        map.put("EXON 14 SKIPPING MUTATION", fusionMETExon14);
 
-        return fusionExonMap;
+        return map;
     }
 }

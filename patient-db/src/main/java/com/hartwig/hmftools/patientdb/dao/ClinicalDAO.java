@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PATIENT
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PRETREATMENTDRUG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.RANOMEASUREMENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SAMPLE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SNOMED;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TREATMENTRESPONSE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMARKER;
@@ -50,6 +51,7 @@ class ClinicalDAO {
         context.truncate(PATIENT).execute();
         context.truncate(BASELINE).execute();
         context.truncate(DOIDNODE).execute();
+        context.truncate(SNOMED).execute();
         context.truncate(PRETREATMENTDRUG).execute();
         context.truncate(SAMPLE).execute();
         context.truncate(BIOPSY).execute();
@@ -168,6 +170,13 @@ class ClinicalDAO {
             }
         }
 
+        List<String> snomedConceptIds = patient.curatedPrimaryTumor().snomedConceptIds();
+        if (snomedConceptIds != null) {
+            for (String snomedConceptId : snomedConceptIds) {
+                writeSnomedConceptId(patientId, snomedConceptId);
+            }
+        }
+
         for (DrugData drug : preTreatmentData.drugs()) {
             writePreTreatmentDrugData(patientId, drug, preTreatmentData.formStatus());
         }
@@ -186,9 +195,13 @@ class ClinicalDAO {
     }
 
     private void writeDoidNode(int patientId, @NotNull DoidNode doidNode) {
-        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM, DOIDNODE.SNOMEDID)
-                .values(patientId, doidNode.doid(), doidNode.doidTerm(), doidNode.snomedId())
+        context.insertInto(DOIDNODE, DOIDNODE.PATIENTID, DOIDNODE.DOID, DOIDNODE.DOIDTERM, DOIDNODE.SNOMEDCONCEPTID)
+                .values(patientId, doidNode.doid(), doidNode.doidTerm(), doidNode.snomedConceptId())
                 .execute();
+    }
+
+    private void writeSnomedConceptId(int patientId, @NotNull String snomedConceptId) {
+        context.insertInto(SNOMED, SNOMED.PATIENTID, SNOMED.SNOMEDCONCEPTID).values(patientId, snomedConceptId).execute();
     }
 
     private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {

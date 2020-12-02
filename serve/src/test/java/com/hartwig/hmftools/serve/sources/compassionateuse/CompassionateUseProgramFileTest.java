@@ -19,15 +19,15 @@ public class CompassionateUseProgramFileTest {
 
         assertEquals(1, compassionateUsePrograms.size());
 
-        CompassionateUseProgram compassionateUsePrograms1 = compassionateUsePrograms.get(0);
-        assertEquals("AC", compassionateUsePrograms1.trialAcronymSite());
-        assertEquals("-", compassionateUsePrograms1.variants());
-        assertEquals("Source", compassionateUsePrograms1.source());
-        assertEquals("Trametinib", compassionateUsePrograms1.drug());
-        assertEquals("inhibitor", compassionateUsePrograms1.drugType());
-        assertEquals("Lung", compassionateUsePrograms1.cancerType());
-        assertEquals("B", compassionateUsePrograms1.level());
-        assertEquals("Responsive", compassionateUsePrograms1.direction());
-        assertEquals("link", compassionateUsePrograms1.link());
+        CompassionateUseProgram compassionateUseProgram = compassionateUsePrograms.get(0);
+        assertEquals("AC", compassionateUseProgram.trialAcronymSite());
+        assertEquals("-", compassionateUseProgram.variants());
+        assertEquals("Source", compassionateUseProgram.source());
+        assertEquals("Trametinib", compassionateUseProgram.drug());
+        assertEquals("inhibitor", compassionateUseProgram.drugType());
+        assertEquals("Lung", compassionateUseProgram.cancerType());
+        assertEquals("B", compassionateUseProgram.level());
+        assertEquals("Responsive", compassionateUseProgram.direction());
+        assertEquals("link", compassionateUseProgram.link());
     }
 }

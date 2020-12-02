@@ -5,11 +5,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -17,54 +17,67 @@ import org.junit.Test;
 
 public class FusionExtractorTest {
 
+    private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
+
     @Test
-    public void canExtractFusionPairsGenesUnknown() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("IG", "IG-BCL2");
+    public void canExtractFusionPairsGenes() {
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("PDGFRA", "BCR-PDGFRA Fusion");
+
         Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        assertEquals(1, fusionsPerFeature.size());
+        assertEquals("BCR", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
+        assertEquals("PDGFRA", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
+    }
+
+    @Test
+    public void ignoresFusionsOnUnknownGenes() {
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("IG", "IG-BCL2");
+
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+
         assertTrue(fusionsPerFeature.isEmpty());
     }
 
     @Test
-    public void canExtractFusionPairsGenes() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
-        Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("PDGFRA", "BCR-PDGFRA Fusion");
-        fusionsPerFeature.put(viccEntry.features().get(0), ImmutableKnownFusionPair.builder().geneUp("BCR").geneDown("PDGFRA").build());
-        assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
+    public void canExtractFusionPairsWithExonsUpDown() {
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "EGFRvII");
+
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        assertEquals(1, fusionsPerFeature.size());
+        assertEquals("EGFR", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
+        assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonUp());
+        assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).maxExonUp());
+        assertEquals("EGFR", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
+        assertEquals(16, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonDown());
+        assertEquals(16, (int) fusionsPerFeature.get(viccEntry.features().get(0)).maxExonDown());
     }
 
     @Test
-    public void canExtractFusionPairsWithExonsUpDown() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
-        Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "EGFRvII");
-        fusionsPerFeature.put(viccEntry.features().get(0),
-                ImmutableKnownFusionPair.builder()
-                        .geneUp("EGFR")
-                        .maxExonUp(13)
-                        .minExonUp(13)
-                        .geneDown("EGFR")
-                        .maxExonDown(16)
-                        .minExonDown(16)
-                        .build());
-        assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
+    public void canExtractFusionPairsWithOddNames() {
+        FusionExtractor fusionExtractor = new FusionExtractor(new GeneChecker(Sets.newHashSet("IGH", "NKX2-1")));
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NKX2-1", "IGH-NKX2-1 Fusion");
+
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        assertEquals(1, fusionsPerFeature.size());
+        assertEquals("IGH", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
+        assertEquals("NKX2-1", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
     }
 
     @Test
     public void canExtractFusionPairsWithRangeExons() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HmfGenePanelSupplier.allGenesMap37());
-        Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("MET", "EXON 14 SKIPPING MUTATION");
-        fusionsPerFeature.put(viccEntry.features().get(0),
-                ImmutableKnownFusionPair.builder()
-                        .geneUp("MET")
-                        .maxExonUp(13)
-                        .minExonUp(13)
-                        .geneDown("MET")
-                        .maxExonDown(15)
-                        .minExonDown(15)
-                        .build());
-        assertEquals(fusionsPerFeature, fusionExtractor.extractFusionPairs(viccEntry));
+
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        assertEquals(1, fusionsPerFeature.size());
+        assertEquals("MET", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
+        assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonUp());
+        assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).maxExonUp());
+        assertEquals("MET", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
+        assertEquals(15, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonDown());
+        assertEquals(15, (int) fusionsPerFeature.get(viccEntry.features().get(0)).maxExonDown());
     }
 }

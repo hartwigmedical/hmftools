@@ -23,7 +23,7 @@ public class PrimaryTumorCuratorTest {
         PrimaryTumorCurator curator = TestCuratorFactory.primaryTumorCurator();
         assertEquals(5, curator.unusedSearchTerms().size());
 
-        curator.search("Morbus Kahler");
+        curator.search("desmoïd tumor");
         assertEquals(4, curator.unusedSearchTerms().size());
     }
 

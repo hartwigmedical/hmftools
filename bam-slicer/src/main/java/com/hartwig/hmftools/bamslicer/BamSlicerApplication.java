@@ -149,7 +149,7 @@ public class BamSlicerApplication {
                     contig = location[0];
                     position = Integer.parseInt(location[1]);
                 } else {
-                    LOGGER.error(variant.getID() + " : could not parse breakpoint");
+                    LOGGER.error("{} : could not parse breakpoint", variant.getID());
                     continue;
                 }
                 queryIntervals.add(new QueryInterval(header.getSequenceIndex(contig),

@@ -15,14 +15,13 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.patientdb.data.CuratedPrimaryTumor;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PrimaryTumorCurator implements CleanableCurator {
 
     private static final String FIELD_DELIMITER = "\t";
-    private static final String DOID_DELIMITER = ";";
+    private static final String STRING_DELIMITER = ";";
 
     @NotNull
     private final Map<String, CuratedPrimaryTumor> primaryTumorMap = Maps.newHashMap();
@@ -37,40 +36,28 @@ public class PrimaryTumorCurator implements CleanableCurator {
             String[] parts = line.split(FIELD_DELIMITER);
             String searchTerm = parts[0];
             String location = parts[1];
-            String subLocation = parts.length > 2 ? parts[2] : Strings.EMPTY;
-            String type = parts.length > 3 ? parts[3] : Strings.EMPTY;
-            String subType = parts.length > 4 ? parts[4] : Strings.EMPTY;
-            String extraDetails = parts.length > 5 ? parts[5] : Strings.EMPTY;
-            List<String> doids = parts.length > 6 ? Lists.newArrayList(parts[6].split(DOID_DELIMITER)) : Lists.newArrayList();
+            String subLocation = parts[2];
+            String type = parts[3];
+            String subType = parts[4];
+            String extraDetails = parts[5];
+            List<String> doids = Lists.newArrayList(parts[6].split(STRING_DELIMITER));
+            List<String> snomedConceptIds = Lists.newArrayList(parts[7].split(STRING_DELIMITER));
 
             primaryTumorMap.put(searchTerm,
                     ImmutableCuratedPrimaryTumor.builder()
+                            .searchTerm(searchTerm)
                             .location(location)
                             .subLocation(subLocation)
                             .type(type)
                             .subType(subType)
                             .extraDetails(extraDetails)
                             .doidNodes(resolveDoidNodes(doidNodes, doids))
-                            .searchTerm(searchTerm)
+                            .snomedConceptIds(snomedConceptIds)
                             .build());
         }
 
         // Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
         unusedSearchTerms = Sets.newHashSet(primaryTumorMap.keySet());
-    }
-
-    @NotNull
-    @VisibleForTesting
-    public static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidsToResolve) {
-        List<DoidNode> resolvedDoidNodes = Lists.newArrayList();
-        for (String doid : doidsToResolve) {
-            for (DoidNode doidNode : doidNodes) {
-                if (doidNode.doid().equals(doid)) {
-                    resolvedDoidNodes.add(doidNode);
-                }
-            }
-        }
-        return resolvedDoidNodes;
     }
 
     @NotNull
@@ -91,5 +78,19 @@ public class PrimaryTumorCurator implements CleanableCurator {
     @Override
     public Set<String> unusedSearchTerms() {
         return unusedSearchTerms;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidsToResolve) {
+        List<DoidNode> resolvedDoidNodes = Lists.newArrayList();
+        for (String doid : doidsToResolve) {
+            for (DoidNode doidNode : doidNodes) {
+                if (doidNode.doid().equals(doid)) {
+                    resolvedDoidNodes.add(doidNode);
+                }
+            }
+        }
+        return resolvedDoidNodes;
     }
 }

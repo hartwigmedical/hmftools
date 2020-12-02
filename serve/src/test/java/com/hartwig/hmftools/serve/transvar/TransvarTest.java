@@ -16,21 +16,21 @@ public class TransvarTest {
     @Test
     public void noHotspotsWhenTransvarProcessReturnsEmpty() {
         Transvar transvar = returnsNoTransvarRecord();
-        assertTrue(transvar.extractHotspotsFromProteinAnnotation("BRAF", "ENST00000288602", "V600E").isEmpty());
+        assertTrue(transvar.resolve("BRAF", "ENST00000288602", "V600E").isEmpty());
     }
 
     @Test
     public void noHotspotsWhenGeneIsUnknown() {
         Transvar transvar = returnsSingleTransvarRecord(createTestRecord());
 
-        assertTrue(transvar.extractHotspotsFromProteinAnnotation("DoesNotExist", null, Strings.EMPTY).isEmpty());
+        assertTrue(transvar.resolve("DoesNotExist", null, Strings.EMPTY).isEmpty());
     }
 
     @Test
     public void noHotspotsWhenRecordIsNotOnSpecificTranscript() {
         Transvar transvar = returnsSingleTransvarRecord(createTestRecord());
 
-        assertTrue(transvar.extractHotspotsFromProteinAnnotation("BRAF", "DoesNotExist", Strings.EMPTY).isEmpty());
+        assertTrue(transvar.resolve("BRAF", "DoesNotExist", Strings.EMPTY).isEmpty());
     }
 
     @NotNull
@@ -39,18 +39,6 @@ public class TransvarTest {
                 .chromosome("7")
                 .gdnaPosition(10)
                 .transcript("X")
-                .variantSpanMultipleExons(false)
-                .annotation(new TransvarAnnotation() {
-                })
-                .build();
-    }
-
-    @NotNull
-    public static TransvarRecord createTestRecordHotspot(@NotNull String chromosome, int pos, @NotNull String transcript) {
-        return ImmutableTransvarRecord.builder()
-                .chromosome(chromosome)
-                .gdnaPosition(pos)
-                .transcript(transcript)
                 .variantSpanMultipleExons(false)
                 .annotation(new TransvarAnnotation() {
                 })

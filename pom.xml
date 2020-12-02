@@ -33,8 +33,9 @@
         <module>isofox</module>
         <module>stat-calcs</module>
         <module>knowledgebase-importer</module>
-        <module>vicc-knowledgebase-importer</module>
+        <module>vicc-importer</module>
         <module>iclusion-importer</module>
+        <module>ckb-importer</module>
         <module>serve</module>
         <module>protect</module>
         <module>patient-reporter</module>
@@ -56,7 +57,7 @@
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
-        <patient-db.version>3.51</patient-db.version>
+        <patient-db.version>3.52</patient-db.version>
         <id-generator.version>2.6</id-generator.version>
         <sage.version>2.5</sage.version>
         <amber.version>3.5</amber.version>
@@ -74,8 +75,9 @@
         <isofox.version>1.1</isofox.version>
         <paddle.version>0.1</paddle.version>
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
-        <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>
+        <vicc-importer.version>1.0</vicc-importer.version>
         <iclusion-importer.version>1.2</iclusion-importer.version>
+        <ckb-importer.version>0.1</ckb-importer.version>
         <serve.version>0.1</serve.version>
         <protect.version>0.1</protect.version>
 
@@ -230,8 +232,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>vicc-knowledgebase-importer</artifactId>
-                <version>${vicc-knowledgebase-importer.version}</version>
+                <artifactId>vicc-importer</artifactId>
+                <version>${vicc-importer.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

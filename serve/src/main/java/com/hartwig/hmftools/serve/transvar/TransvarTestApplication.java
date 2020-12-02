@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.transvar;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 
@@ -23,7 +24,7 @@ public class TransvarTestApplication {
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
         String refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
 
-        Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
+        Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile, HmfGenePanelSupplier.allGenesMap37());
 
         String gene = "KIT";
         String transcript = null;
@@ -34,7 +35,7 @@ public class TransvarTestApplication {
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,
             @NotNull String proteinAnnotation) {
-        List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(gene, specificTranscript, proteinAnnotation);
+        List<VariantHotspot> hotspots = transvar.resolve(gene, specificTranscript, proteinAnnotation);
 
         LOGGER.info("Printing hotspots for '{}:p.{}' on transcript {}", gene, proteinAnnotation, specificTranscript);
         for (VariantHotspot hotspot : hotspots) {

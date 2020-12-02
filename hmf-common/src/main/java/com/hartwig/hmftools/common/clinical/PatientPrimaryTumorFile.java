@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 public class PatientPrimaryTumorFile {
 
     private static final String TAB_DELIMITER = "\t";
-    private static final String DOID_DELIMITER = ";";
+    private static final String STRING_DELIMITER = ";";
 
     private PatientPrimaryTumorFile() {
     }
@@ -38,8 +38,9 @@ public class PatientPrimaryTumorFile {
                     .type(parts[3])
                     .subType(parts[4])
                     .extraDetails(parts[5])
-                    .doids(toDOIDs(parts[6]))
-                    .isOverridden(Boolean.parseBoolean(parts[7]))
+                    .doids(toStringList(parts[6]))
+                    .snomedConceptIds(toStringList(parts[7]))
+                    .isOverridden(Boolean.parseBoolean(parts[8]))
                     .build());
         }
 
@@ -64,12 +65,13 @@ public class PatientPrimaryTumorFile {
     @NotNull
     private static String header() {
         return new StringJoiner(TAB_DELIMITER).add("patientIdentifier")
-                .add("primaryTumorLocation")
-                .add("primaryTumorSubLocation")
-                .add("primaryTumorType")
-                .add("primaryTumorSubType")
-                .add("primaryTumorExtraDetails")
+                .add("location")
+                .add("subLocation")
+                .add("type")
+                .add("subType")
+                .add("extraDetails")
                 .add("doids")
+                .add("snomedConceptIds")
                 .add("overridden")
                 .toString();
     }
@@ -82,23 +84,24 @@ public class PatientPrimaryTumorFile {
                 .add(patientPrimaryTumor.type())
                 .add(patientPrimaryTumor.subType())
                 .add(patientPrimaryTumor.extraDetails())
-                .add(fromDOIDs(patientPrimaryTumor.doids()))
+                .add(fromStringList(patientPrimaryTumor.doids()))
+                .add(fromStringList(patientPrimaryTumor.snomedConceptIds()))
                 .add(String.valueOf(patientPrimaryTumor.isOverridden()))
                 .toString();
     }
 
     @NotNull
     @VisibleForTesting
-    static List<String> toDOIDs(@NotNull String doidPart) {
-        return Lists.newArrayList(doidPart.split(DOID_DELIMITER));
+    static List<String> toStringList(@NotNull String stringPart) {
+        return Lists.newArrayList(stringPart.split(STRING_DELIMITER));
     }
 
     @NotNull
     @VisibleForTesting
-    static String fromDOIDs(@NotNull List<String> doids) {
-        StringJoiner joiner = new StringJoiner(DOID_DELIMITER);
-        for (String doid : doids) {
-            joiner.add(doid);
+    static String fromStringList(@NotNull List<String> strings) {
+        StringJoiner joiner = new StringJoiner(STRING_DELIMITER);
+        for (String string : strings) {
+            joiner.add(string);
         }
         return joiner.toString();
     }

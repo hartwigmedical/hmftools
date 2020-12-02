@@ -10,14 +10,10 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
-import com.hartwig.hmftools.serve.sources.ExtractionOutput;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,27 +29,20 @@ public final class ViccUtil {
     private ViccUtil() {
     }
 
-    public static void writeActionability(@NotNull String outputDir, @NotNull ExtractionOutput extractionOutput)
-            throws IOException {
-        String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable hotspots to {}", extractionOutput.actionableHotspots().size(), actionableHotspotTsv);
-        ActionableHotspotFile.write(actionableHotspotTsv, extractionOutput.actionableHotspots());
-
-        String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable ranges to {}", extractionOutput.actionableRanges().size(), actionableRangeTsv);
-        ActionableRangeFile.write(actionableRangeTsv, extractionOutput.actionableRanges());
-
-        String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable genes to {}", extractionOutput.actionableGenes().size(), actionableGeneTsv);
-        ActionableGeneFile.write(actionableGeneTsv, extractionOutput.actionableGenes());
-
-        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable fusions to {}", extractionOutput.actionableFusions().size(), actionableFusionTsv);
-        ActionableFusionFile.write(actionableFusionTsv, extractionOutput.actionableFusions());
-
-        String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(outputDir);
-        LOGGER.info("Writing {} actionable signatures to {}", extractionOutput.actionableSignatures().size(), actionableSignatureTsv);
-        ActionableSignatureFile.write(actionableSignatureTsv, extractionOutput.actionableSignatures());
+    @NotNull
+    public static Knowledgebase toKnowledgebase(@NotNull ViccSource source) {
+        switch (source) {
+            case ONCOKB:
+                return Knowledgebase.VICC_ONCOKB;
+            case CIVIC:
+                return Knowledgebase.VICC_CIVIC;
+            case JAX:
+                return Knowledgebase.VICC_JAX;
+            case CGI:
+                return Knowledgebase.VICC_CGI;
+            default:
+                throw new IllegalStateException("Source not mapped to knowledgebase yet: " + source.display());
+        }
     }
 
     public static void writeFeatures(@NotNull String viccFeatureTsv, @NotNull List<ViccEntry> entries) throws IOException {

@@ -8,23 +8,25 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableRangeFile {
 
+    private static final String ACTIONABLE_RANGE_TSV = "ActionableRanges.tsv";
     private static final String DELIMITER = "\t";
-    private static final String ACTIONABLE_RANGE_TSV = "actionableRanges.tsv";
 
     private ActionableRangeFile() {
     }
 
     @NotNull
-    public static String actionableRangeTsvPath(@NotNull String serveActionabilityDir) {
-        return serveActionabilityDir + File.separator + ACTIONABLE_RANGE_TSV;
+    public static String actionableRangeTsvPath(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion) {
+        return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_RANGE_TSV);
     }
 
     public static void write(@NotNull String actionableRangeTsv, @NotNull List<ActionableRange> actionableRanges) throws IOException {
@@ -43,12 +45,10 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static String header() {
-        //TODO: rangeInfo and feature can be removed when range positions are verified
         return new StringJoiner(DELIMITER).add("gene")
                 .add("chromosome")
                 .add("start")
                 .add("end")
-                .add("range")
                 .add("mutationType")
                 .add("source")
                 .add("treatment")
@@ -57,7 +57,6 @@ public final class ActionableRangeFile {
                 .add("level")
                 .add("direction")
                 .add("url")
-                .add("feature")
                 .toString();
     }
 
@@ -81,16 +80,14 @@ public final class ActionableRangeFile {
                 .chromosome(values[1])
                 .start(Long.parseLong(values[2]))
                 .end(Long.parseLong(values[3]))
-                .rangeInfo(0) //TODO: @Lieke, (changes to values[4] currently your to and from lines are inconsistent and files on datastore do not contain rangeInfo
                 .mutationType(MutationTypeFilter.valueOf(values[4]))
-                .source(ActionableEventFactory.sourceFromFileValue(values[5]))
+                .source(Knowledgebase.valueOf(values[5]))
                 .treatment(values[6])
                 .cancerType(values[7])
                 .doid(values[8])
                 .level(EvidenceLevel.valueOf(values[9]))
-                .direction(ActionableEventFactory.directionFromFileValue(values[10]))
+                .direction(EvidenceDirection.valueOf(values[10]))
                 .url(url)
-                .feature(Lists.newArrayList()) //TODO: take feature list from file
                 .build();
     }
 
@@ -106,21 +103,18 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableRange range) {
-        //TODO: rangeInfo and feature can be removed when range positions are verified
         return new StringJoiner(DELIMITER).add(range.gene())
                 .add(range.chromosome())
                 .add(Long.toString(range.start()))
                 .add(Long.toString(range.end()))
-                .add(Integer.toString(range.rangeInfo()))
                 .add(range.mutationType().toString())
-                .add(range.source().display())
+                .add(range.source().toString())
                 .add(range.treatment())
                 .add(range.cancerType())
                 .add(range.doid())
                 .add(range.level().toString())
-                .add(range.direction().display())
+                .add(range.direction().toString())
                 .add(range.url())
-                .add(range.feature().toString())
                 .toString();
     }
 }

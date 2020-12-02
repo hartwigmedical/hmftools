@@ -34,4 +34,7 @@ public abstract class CuratedPrimaryTumor {
     @Nullable
     public abstract List<DoidNode> doidNodes();
 
+    @Nullable
+    public abstract List<String> snomedConceptIds();
+
 }

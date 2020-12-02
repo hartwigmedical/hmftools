@@ -258,14 +258,16 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
-                .patientPrimaryTumor(ImmutablePatientPrimaryTumor.of(Strings.EMPTY,
-                        "Skin",
-                        Strings.EMPTY,
-                        "Melanoma",
-                        Strings.EMPTY,
-                        Strings.EMPTY,
-                        Lists.newArrayList("8923"),
-                        false))
+                .patientPrimaryTumor(ImmutablePatientPrimaryTumor.builder()
+                        .patientIdentifier(sample)
+                        .location("Skin")
+                        .subLocation(Strings.EMPTY)
+                        .type("Melanoma")
+                        .subType(Strings.EMPTY)
+                        .extraDetails(Strings.EMPTY)
+                        .doids(Lists.newArrayList("8923"))
+                        .isOverridden(false)
+                        .build())
                 .germlineReportingLevel(reportGermline
                         ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
                         : LimsGermlineReportingLevel.NO_REPORTING)

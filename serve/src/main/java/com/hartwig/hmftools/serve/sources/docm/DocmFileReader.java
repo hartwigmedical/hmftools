@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DocmFileReader {
+final class DocmFileReader {
 
     private static final String DELIMITER = "\t";
 
@@ -17,7 +17,7 @@ public final class DocmFileReader {
     }
 
     @NotNull
-    public static List<DocmEntry> readDcomFile(@NotNull String fileName) throws IOException {
+    public static List<DocmEntry> read(@NotNull String fileName) throws IOException {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 

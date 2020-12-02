@@ -5,39 +5,37 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
-import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class CopyNumberExtractorTest {
 
+    private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
+
     @Test
     public void canExtractCopyNumbersAmps() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(new GeneChecker());
-
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("AKT1", "AKT1  amp");
-        Map<Feature, KnownCopyNumber> featureAmps = Maps.newHashMap();
-        featureAmps.put(viccEntry.features().get(0),
-                ImmutableKnownCopyNumber.builder().gene("AKT1").type(CopyNumberType.AMPLIFICATION).build());
 
-        assertEquals(featureAmps, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
+        Map<Feature, KnownCopyNumber> featureAmps = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);
+
+        assertEquals(1, featureAmps.size());
+        assertEquals("AKT1", featureAmps.get(viccEntry.features().get(0)).gene());
+        assertEquals(CopyNumberType.AMPLIFICATION, featureAmps.get(viccEntry.features().get(0)).type());
     }
 
     @Test
-    // TODO Fixed when GeneChecker is implemented!
-    @Ignore
     public void canExtractCopyNumbersAmpsUnknownGene() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(new GeneChecker());
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NOT-A-GENE", "AMPLIFICATION");
 
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("TET", "AMPLIFICATION");
         Map<Feature, KnownCopyNumber> featureAmpsUnknown = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);
 
         assertTrue(featureAmpsUnknown.isEmpty());
@@ -45,22 +43,21 @@ public class CopyNumberExtractorTest {
 
     @Test
     public void canExtractCopyNumbersDels() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(new GeneChecker());
-
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("PTEN", "DELETION");
-        Map<Feature, KnownCopyNumber> featureDels = Maps.newHashMap();
-        featureDels.put(viccEntry.features().get(0), ImmutableKnownCopyNumber.builder().gene("PTEN").type(CopyNumberType.DELETION).build());
 
-        assertEquals(featureDels, copyNumberExtractor.extractAmplificationsDeletions(viccEntry));
+        Map<Feature, KnownCopyNumber> featureDels = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);
+
+        assertEquals(1, featureDels.size());
+        assertEquals("PTEN", featureDels.get(viccEntry.features().get(0)).gene());
+        assertEquals(CopyNumberType.DELETION, featureDels.get(viccEntry.features().get(0)).type());
     }
 
     @Test
-    // TODO Fixed when GeneChecker is implemented!
-    @Ignore
     public void canExtractCopyNumbersDelsUnknownGene() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(new GeneChecker());
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NOT-A-GENE", "DELETION");
 
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("AC", "DELETION");
         Map<Feature, KnownCopyNumber> featureDelsUnknown = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);
 
         assertTrue(featureDelsUnknown.isEmpty());

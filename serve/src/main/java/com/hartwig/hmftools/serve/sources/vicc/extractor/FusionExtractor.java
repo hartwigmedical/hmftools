@@ -1,15 +1,16 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static com.hartwig.hmftools.serve.sources.vicc.annotation.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
+import static com.hartwig.hmftools.serve.sources.vicc.annotation.FusionAnnotationConfig.ODDLY_NAMED_GENES_MAP;
 
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.sources.vicc.check.CheckGenes;
+import com.hartwig.hmftools.serve.sources.vicc.ViccUtil;
+import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -18,88 +19,53 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FusionExtractor {
+
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
     @NotNull
-    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    private final GeneChecker geneChecker;
 
-    public FusionExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
-        this.transcriptPerGeneMap = transcriptPerGeneMap;
+    public FusionExtractor(@NotNull final GeneChecker geneChecker) {
+        this.geneChecker = geneChecker;
     }
 
     @NotNull
     public Map<Feature, KnownFusionPair> extractFusionPairs(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        boolean usingGenes;
+
+        ImmutableKnownFusionPair.Builder fusionBuilder =
+                ImmutableKnownFusionPair.builder().addSources(ViccUtil.toKnowledgebase(viccEntry.source()));
         for (Feature feature : viccEntry.features()) {
-            KnownFusionPair annotatedFusion = null;
             String fusion = feature.name();
 
             if (feature.type() == MutationType.FUSION_PAIR) {
-                String[] fusionArray = fusion.split("-");
-
-                if (fusionArray.length == 2) {
-                    if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
-                        annotatedFusion = ImmutableKnownFusionPair.builder().from(EXONIC_FUSIONS_MAP.get(fusion)).build();
-                    } else {
-                        annotatedFusion =
-                                ImmutableKnownFusionPair.builder().geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
-                    }
-                } else if (fusionArray.length == 1) {
-                    if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
-                        annotatedFusion = ImmutableKnownFusionPair.builder().from(EXONIC_FUSIONS_MAP.get(fusion)).build();
-                    } else {
-                        LOGGER.warn("Fusion '{}' can not be interpreted!", fusion);
-                    }
+                KnownFusionPair annotatedFusion;
+                if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
+                    annotatedFusion = fusionBuilder.from(EXONIC_FUSIONS_MAP.get(fusion)).build();
+                } else if (ODDLY_NAMED_GENES_MAP.containsKey(fusion)) {
+                    annotatedFusion = fusionBuilder.from(ODDLY_NAMED_GENES_MAP.get(fusion)).build();
                 } else {
-                    if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
-                        annotatedFusion = ImmutableKnownFusionPair.builder().from(EXONIC_FUSIONS_MAP.get(fusion)).build();
-                    } else {
-                        LOGGER.warn("Too many parts in fusion name: {}!", fusion);
-                    }
+                    String[] fusionArray = fusion.split("-");
+                    annotatedFusion = fusionBuilder.geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
                 }
 
-                if (annotatedFusion != null) {
-                    HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
-                    HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
-                    if (canonicalTranscriptStart == null) {
-                        usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneUp(), feature.name());
-                        if (usingGenes) {
-                            fusionsPerFeature.put(feature, annotatedFusion);
-                        }
-                    } else if (canonicalTranscriptEnd == null) {
-                        usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneDown(), feature.name());
-                        if (usingGenes) {
-                            fusionsPerFeature.put(feature, annotatedFusion);
-                        }
-                    } else {
-                        fusionsPerFeature.put(feature, annotatedFusion);
-                    }
-                }
-            } else if (feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
-                String featureDescription = feature.geneSymbol() + " " + feature.name();
-
-                if (EXONIC_FUSIONS_MAP.containsKey(featureDescription)) {
-                    annotatedFusion = ImmutableKnownFusionPair.builder().from(EXONIC_FUSIONS_MAP.get(featureDescription)).build();
-                }
-
-                HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
-                HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
-
-                if (canonicalTranscriptStart == null) {
-                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneUp(), feature.name());
-                    if (usingGenes) {
-                        fusionsPerFeature.put(feature, annotatedFusion);
-                    }
-                } else if (canonicalTranscriptEnd == null) {
-                    usingGenes = CheckGenes.checkGensInPanelForCuration(annotatedFusion.geneDown(), feature.name());
-                    if (usingGenes) {
-                        fusionsPerFeature.put(feature, annotatedFusion);
-                    }
-                } else {
+                if (geneChecker.isValidGene(annotatedFusion.geneUp()) && geneChecker.isValidGene(annotatedFusion.geneDown())) {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
+            } else if (feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
+                if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
+                    KnownFusionPair fusionPair = fusionBuilder.from(EXONIC_FUSIONS_MAP.get(fusion)).build();
+                    if (fusionPair.geneUp().equals(feature.geneSymbol()) && fusionPair.geneDown().equals(feature.geneSymbol())) {
+                        fusionsPerFeature.put(feature, fusionPair);
+                    } else {
+                        LOGGER.warn("Configured fusion for '{}' on '{}' does not match in terms of genes!", fusion, feature.geneSymbol());
+                    }
+                } else {
+                    LOGGER.warn("Exonic fusion not configured for '{}' on '{}'", fusion, feature.geneSymbol());
+                }
+
             }
-        } return fusionsPerFeature;
+        }
+        return fusionsPerFeature;
     }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.sources.vicc.annotation;
 
+import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 
 import org.immutables.value.Value;
@@ -21,14 +22,18 @@ public abstract class GeneRangeAnnotation {
 
     public abstract long end();
 
-    //TODO: can be removed when range positions are verified
-    public abstract int rangeInfo();
-
-    //TODO: can be removed when range positions are verified
-    @Nullable
-    public abstract String exonId();
-
     @NotNull
     public abstract MutationTypeFilter mutationType();
+
+    public abstract GeneRangeType rangeType();
+
+    public abstract int rangeNumber();
+
+    @NotNull
+    public abstract Strand geneOrientation();
+
+    // Only present in case rangeType() == EXON
+    @Nullable
+    public abstract String exonId();
 
 }

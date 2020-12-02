@@ -42,6 +42,7 @@ final class DumpPrimaryTumorData {
                         .subType(Strings.nullToEmpty(patient.baselineData().curatedPrimaryTumor().subType()))
                         .extraDetails(Strings.nullToEmpty(patient.baselineData().curatedPrimaryTumor().extraDetails()))
                         .doids(extractDoids(patient.baselineData().curatedPrimaryTumor().doidNodes()))
+                        .snomedConceptIds(nullToEmpty(patient.baselineData().curatedPrimaryTumor().snomedConceptIds()))
                         .isOverridden(false)
                         .build())
                 .collect(Collectors.toList());
@@ -58,5 +59,10 @@ final class DumpPrimaryTumorData {
             doids.add(doidNode.doid());
         }
         return doids;
+    }
+
+    @NotNull
+    private static List<String> nullToEmpty(@Nullable List<String> strings) {
+        return strings != null ? strings : Lists.newArrayList();
     }
 }

@@ -174,6 +174,7 @@ final class CurationFactory {
         FEATURE_MAPPINGS.put(oncoKb("BRD4", "ENST00000263377", "BRD4-NUT Fusion"), curation("BRD4", "BRD4-NUTM1 Fusion"));
         FEATURE_MAPPINGS.put(oncoKb("NOTCH1", "ENST00000277541", "SEC16A1-NOTCH1 Fusion"), curation("SEC16A", "SEC16A-NOTCH1 Fusion"));
         FEATURE_MAPPINGS.put(oncoKb("FGFR1", "ENST00000425967", "FGFR1OP1-FGFR1 Fusion"), curation("FGFR1OP", "FGFR1OP-FGFR1 Fusion"));
+        FEATURE_MAPPINGS.put(oncoKb("NKX2-1", "ENST00000354822", "IGH-NKX2 Fusion"), curation("NKX2-1", "IGH-NKX2-1 Fusion"));
 
         // These fusions are on synonym genes
         FEATURE_MAPPINGS.put(oncoKb("FGFR1", "ENST00000425967", "ZNF198-FGFR1 Fusion"), curation("ZMYM2", "ZMYM2-FGFR1 Fusion"));
@@ -197,9 +198,11 @@ final class CurationFactory {
         FEATURE_MAPPINGS.put(oncoKb("PTEN", "ENST00000371953", "I32del"), curation("PTEN", "I33del"));
         FEATURE_MAPPINGS.put(oncoKb("RIT1", "ENST00000368323", "T76insTLDT"), curation("RIT1", "T76_A77insTLDT"));
 
-        // Fusions that we don't know what gene they are on
+        // Not clear what TRA and TRB are
         FEATURE_BLACKLIST.add(oncoKb("NKX2-1", "ENST00000354822", "TRA-NKX2-1 Fusion"));
         FEATURE_BLACKLIST.add(oncoKb("NKX2-1", "ENST00000354822", "TRB-NKX2-1 Fusion"));
+
+        // Not sure what "Delta" means in this context.
         FEATURE_BLACKLIST.add(oncoKb("NTRK1", "ENST00000524377", "Delta-NTRK1 Fusion"));
 
         // Variants are unlikely as they span multiple exons (and hence are more fusions than inframes)

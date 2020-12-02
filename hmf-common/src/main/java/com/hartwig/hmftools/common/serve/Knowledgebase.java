@@ -1,44 +1,32 @@
 package com.hartwig.hmftools.common.serve;
 
+import java.util.Comparator;
+import java.util.Set;
+import java.util.StringJoiner;
+
+import com.google.common.collect.Sets;
+
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public enum Knowledgebase {
-    CGI("CGI", false),
-    CIVIC("CIViC", false),
-    DOCM("DoCM", false),
-    HARTWIG_COHORT("HartwigCohort", false),
-    HARTWIG_CURATED("HartwigCurated", false),
-    ICLUSION("iClusion", true),
-    JAX("JAX", false),
-    ONCOKB("OncoKB", false);
+    DOCM,
+    HARTWIG_COHORT,
+    HARTWIG_CURATED,
+    ICLUSION,
+    VICC_CGI,
+    VICC_CIVIC,
+    VICC_JAX,
+    VICC_ONCOKB;
 
-    @Nullable
-    public static Knowledgebase fromDisplayString(@NotNull String display) {
-        for (Knowledgebase knowledgebase : Knowledgebase.values()) {
-            if (knowledgebase.display().equals(display)) {
-                return knowledgebase;
-            }
+    @NotNull
+    public static String commaSeparatedSourceString(@NotNull Set<Knowledgebase> sources) {
+        Set<Knowledgebase> sorted = Sets.newTreeSet(Comparator.naturalOrder());
+        sorted.addAll(sources);
+
+        StringJoiner joiner = new StringJoiner(",");
+        for (Knowledgebase source : sorted) {
+            joiner.add(source.toString().toLowerCase());
         }
-
-        return null;
-    }
-
-    @NotNull
-    private final String display;
-    private final boolean trialSource;
-
-    Knowledgebase(@NotNull final String display, final boolean trialSource) {
-        this.display = display;
-        this.trialSource = trialSource;
-    }
-
-    @NotNull
-    public String display() {
-        return display;
-    }
-
-    public boolean isTrialSource() {
-        return trialSource;
+        return joiner.toString();
     }
 }

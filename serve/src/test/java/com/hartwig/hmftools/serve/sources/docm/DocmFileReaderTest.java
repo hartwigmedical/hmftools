@@ -15,7 +15,7 @@ public class DocmFileReaderTest {
 
     @Test
     public void canReadDcomInputFile() throws IOException {
-        List<DocmEntry> entries = DocmFileReader.readDcomFile(EXAMPLE_TSV);
+        List<DocmEntry> entries = DocmFileReader.read(EXAMPLE_TSV);
 
         assertEquals(2, entries.size());
 

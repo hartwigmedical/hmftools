@@ -3,7 +3,7 @@ package com.hartwig.hmftools.serve.sources.iclusion;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.serve.sources.iclusion.curation.IclusionCurator;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
@@ -23,7 +23,7 @@ public final class IclusionReader {
     public static List<IclusionTrial> readAndCurate(@NotNull String iClusionTrialTsv) throws IOException {
         LOGGER.info("Reading iClusion trial TSV from '{}'", iClusionTrialTsv);
         List<IclusionTrial> trials = IclusionTrialFile.read(iClusionTrialTsv);
-        LOGGER.info(" Read {} trials from {}", trials.size(), iClusionTrialTsv);
+        LOGGER.info(" Read {} trials", trials.size());
 
         return filter(curate(trials));
     }
@@ -34,7 +34,7 @@ public final class IclusionReader {
 
         LOGGER.info("Curating {} iClusion trials", trials.size());
         List<IclusionTrial> curatedTrials = curator.run(trials);
-        LOGGER.info(" Finished iClusion curation. {} curated trials remaining. {} trials have been removed",
+        LOGGER.info(" Finished iClusion curation. {} trials remaining, {} trials have been removed",
                 curatedTrials.size(),
                 trials.size() - curatedTrials.size());
 
@@ -49,9 +49,10 @@ public final class IclusionReader {
 
         LOGGER.info("Filtering {} iClusion entries", trials.size());
         List<IclusionTrial> filteredTrials = filter.run(trials);
-        LOGGER.info("  Finished iClusion filtering. {} trials remaining. {} entries have been removed",
+        LOGGER.info("  Finished iClusion filtering. {} trials remaining, {} entries have been removed",
                 filteredTrials.size(),
                 trials.size() - filteredTrials.size());
+
         filter.reportUnusedFilterEntries();
 
         return filteredTrials;

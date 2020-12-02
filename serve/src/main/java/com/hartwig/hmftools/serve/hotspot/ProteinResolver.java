@@ -11,8 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public interface ProteinResolver {
 
     @NotNull
-    List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String specificTranscript,
-            @NotNull String proteinAnnotation);
+    List<VariantHotspot> resolve(@NotNull String gene, @Nullable String specificTranscript, @NotNull String proteinAnnotation);
 
     @NotNull
     Set<String> unresolvedProteinAnnotations();

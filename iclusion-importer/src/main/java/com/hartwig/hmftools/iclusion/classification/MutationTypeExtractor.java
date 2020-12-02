@@ -3,7 +3,7 @@ package com.hartwig.hmftools.iclusion.classification;
 import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierFactory;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
-import com.hartwig.hmftools.iclusion.data.IclusionMutation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
 
 import org.jetbrains.annotations.NotNull;
 

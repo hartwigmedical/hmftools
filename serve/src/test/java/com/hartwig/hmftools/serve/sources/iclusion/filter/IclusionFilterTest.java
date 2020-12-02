@@ -13,9 +13,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionMutation;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;

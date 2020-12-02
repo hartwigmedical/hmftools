@@ -5,8 +5,8 @@ import java.util.List;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.data.IclusionTumorLocation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;

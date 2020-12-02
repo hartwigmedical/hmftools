@@ -223,14 +223,15 @@ public class CFReportWriterTest {
 
         SampleReport sampleReport = ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
-                .patientPrimaryTumor(ImmutablePatientPrimaryTumor.of(Strings.EMPTY,
-                        "Skin",
-                        Strings.EMPTY,
-                        "Melanoma",
-                        Strings.EMPTY,
-                        Strings.EMPTY,
-                        Lists.newArrayList("1;2"),
-                        false))
+                .patientPrimaryTumor(ImmutablePatientPrimaryTumor.builder()
+                        .patientIdentifier(sampleId)
+                        .location("Skin")
+                        .subLocation(Strings.EMPTY)
+                        .type("Melanoma")
+                        .subType(Strings.EMPTY)
+                        .extraDetails(Strings.EMPTY)
+                        .isOverridden(false)
+                        .build())
                 .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
                 .reportViralInsertions(true)
                 .refArrivalDate(LocalDate.parse("10-Jan-2020", DATE_FORMATTER))

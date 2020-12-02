@@ -32,13 +32,13 @@ public abstract class DoidMetadata {
 
     @Nullable
     @Value.Derived
-    public String snomedId() {
+    public String snomedConceptId() {
         if (xrefs() == null) {
             return null;
         }
 
         for (DoidXref xref : xrefs()) {
-            // Format to look for is DoidXref{val=SNOMEDCT_US_2020_03_01:109355002}
+            // Format to look for is SNOMEDCT_US_2020_03_01:109355002
             if (xref.val().contains("SNOMED")) {
                 String[] parts = xref.val().split(":");
                 if (parts.length == 2 && isLong(parts[1])) {

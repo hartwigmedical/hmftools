@@ -10,9 +10,9 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.iclusion.data.IclusionMutation;
-import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
