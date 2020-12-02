@@ -5,9 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.data.IclusionTumorLocation;
-import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTumorLocation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
+import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTumorLocation;
 
 import org.junit.Test;
 

@@ -9,10 +9,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.sources.ExtractionOutput;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
@@ -36,19 +33,19 @@ public class IclusionExtractorTestApp {
         String iclusionTrialTsv;
         String driverGeneTsvPath;
         String outputDir;
-        ProteinResolver proteinResolver;
+//        ProteinResolver proteinResolver;
 
         if (hostname.toLowerCase().contains("datastore")) {
             iclusionTrialTsv = "/data/common/dbs/iclusion/iclusion_trials_prod.tsv";
             driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv";
             outputDir = System.getProperty("user.home") + "/tmp";
-            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
-                    "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
+//            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
+//                    "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
         } else {
             iclusionTrialTsv = System.getProperty("user.home") + "/hmf/projects/serve/iclusion/iclusion_trials_prod.tsv";
             driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
-            proteinResolver = ProteinResolverFactory.dummy();
+//            proteinResolver = ProteinResolverFactory.dummy();
         }
 
         Path outputPath = new File(outputDir).toPath();

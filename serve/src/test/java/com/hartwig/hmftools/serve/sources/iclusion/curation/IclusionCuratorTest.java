@@ -7,9 +7,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.iclusion.data.IclusionMutation;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionMutation;
 
 import org.junit.Test;
 

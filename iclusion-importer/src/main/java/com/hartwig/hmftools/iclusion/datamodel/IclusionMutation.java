@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.iclusion.data;
+package com.hartwig.hmftools.iclusion.datamodel;
 
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.iclusion.classification.MutationTypeExtractor;

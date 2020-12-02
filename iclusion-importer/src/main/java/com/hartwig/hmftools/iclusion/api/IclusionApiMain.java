@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.hartwig.hmftools.iclusion.IclusionCredentials;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.squareup.moshi.Moshi;
 
 import org.apache.logging.log4j.LogManager;

@@ -6,13 +6,13 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.iclusion.data.IclusionMutation;
-import com.hartwig.hmftools.iclusion.data.IclusionMutationLogicType;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
-import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutationCondition;
-import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTrial;
-import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTumorLocation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationLogicType;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionMutation;
+import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionMutationCondition;
+import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTumorLocation;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

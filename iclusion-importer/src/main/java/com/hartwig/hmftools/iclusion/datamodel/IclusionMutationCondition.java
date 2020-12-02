@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.iclusion.data;
+package com.hartwig.hmftools.iclusion.datamodel;
 
 import java.util.List;
 
@@ -9,11 +9,11 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class IclusionTumorLocation {
+public abstract class IclusionMutationCondition {
 
     @NotNull
-    public abstract String primaryTumorLocation();
+    public abstract IclusionMutationLogicType logicType();
 
     @NotNull
-    public abstract List<String> doids();
+    public abstract List<IclusionMutation> mutations();
 }

@@ -9,8 +9,8 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.iclusion.data.IclusionMutationLogicType;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationLogicType;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 
 import org.junit.Test;
 

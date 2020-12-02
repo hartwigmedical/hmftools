@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.iclusion.data.IclusionMutation;
-import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.sources.ExtractionOutput;
 import com.hartwig.hmftools.serve.sources.ImmutableExtractionOutput;
 

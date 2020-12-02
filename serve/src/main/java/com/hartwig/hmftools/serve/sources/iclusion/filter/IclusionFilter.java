@@ -6,12 +6,12 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.iclusion.data.IclusionMutation;
-import com.hartwig.hmftools.iclusion.data.IclusionMutationCondition;
-import com.hartwig.hmftools.iclusion.data.IclusionMutationLogicType;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutationCondition;
-import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationLogicType;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionMutationCondition;
+import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTrial;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

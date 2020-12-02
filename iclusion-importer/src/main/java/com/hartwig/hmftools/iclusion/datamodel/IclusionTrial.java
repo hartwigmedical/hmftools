@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.iclusion.data;
+package com.hartwig.hmftools.iclusion.datamodel;
 
 import java.util.List;
 
