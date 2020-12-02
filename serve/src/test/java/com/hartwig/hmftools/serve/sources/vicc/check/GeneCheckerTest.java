@@ -11,7 +11,7 @@ public class GeneCheckerTest {
 
     @Test
     public void canCorrectlyAssessGenes() {
-        GeneChecker geneChecker = new GeneChecker(Sets.newHashSet("BRAF"));
+        GeneChecker geneChecker = new GeneChecker(Sets.newHashSet("BRAF", "IGH"));
 
         assertTrue(geneChecker.isValidGene("BRAF"));
         assertTrue(geneChecker.isValidGene("IGH"));

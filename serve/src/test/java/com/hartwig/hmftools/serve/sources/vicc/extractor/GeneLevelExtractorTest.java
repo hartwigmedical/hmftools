@@ -109,7 +109,7 @@ public class GeneLevelExtractorTest {
 
     @NotNull
     private static GeneLevelExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new GeneLevelExtractor(GeneChecker.buildForHG19(), driverGenes);
+        return new GeneLevelExtractor(GeneChecker.buildForHG19(), GeneChecker.buildForHG19(), driverGenes);
     }
 
     @NotNull

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.serve.sources.vicc.check;
 
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 
 import org.apache.logging.log4j.LogManager;
@@ -14,22 +13,20 @@ public class GeneChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneChecker.class);
 
-    private static final Set<String> MANUAL_GENES = Sets.newHashSet("IGH", "IGK", "IGL");
-
     @NotNull
-    private final Set<String> allGenesInExome;
+    private final Set<String> allValidGenes;
 
     @NotNull
     public static GeneChecker buildForHG19() {
         return new GeneChecker(HmfGenePanelSupplier.allGenesMap37().keySet());
     }
 
-    public GeneChecker(@NotNull final Set<String> allGenesInExome) {
-        this.allGenesInExome = allGenesInExome;
+    public GeneChecker(@NotNull final Set<String> allValidGenes) {
+        this.allValidGenes = allValidGenes;
     }
 
     public boolean isValidGene(@Nullable String gene) {
-        if (allGenesInExome.contains(gene) || MANUAL_GENES.contains(gene)) {
+        if (allValidGenes.contains(gene)) {
             return true;
         } else {
             if (gene != null) {

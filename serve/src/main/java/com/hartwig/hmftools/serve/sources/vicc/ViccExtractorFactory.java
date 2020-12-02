@@ -2,7 +2,9 @@ package com.hartwig.hmftools.serve.sources.vicc;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
@@ -20,6 +22,8 @@ import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractorFactory {
 
+    private static final Set<String> VALID_FUSION_GENES = Sets.newHashSet("IGH", "IGK", "IGL");
+
     private ViccExtractorFactory() {
     }
 
@@ -33,13 +37,19 @@ public final class ViccExtractorFactory {
     public static ViccExtractor buildViccExtractorWithInterpretationTsv(@NotNull ProteinResolver proteinResolver,
             @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap,
             @Nullable String featureInterpretationTsv) {
-        GeneChecker geneChecker = new GeneChecker(allGenesMap.keySet());
+        Set<String> genesInExome = allGenesMap.keySet();
+        GeneChecker exomeGeneChecker = new GeneChecker(genesInExome);
 
-        return new ViccExtractor(new HotspotExtractor(proteinResolver, new ProteinAnnotationExtractor(), geneChecker),
-                new CopyNumberExtractor(geneChecker),
-                new FusionExtractor(geneChecker),
-                new GeneLevelExtractor(geneChecker, driverGenes),
-                new GeneRangeExtractor(geneChecker, driverGenes, allGenesMap),
+        Set<String> fusionGeneSet = Sets.newHashSet();
+        fusionGeneSet.addAll(genesInExome);
+        fusionGeneSet.addAll(VALID_FUSION_GENES);
+        GeneChecker fusionGeneChecker = new GeneChecker(fusionGeneSet);
+
+        return new ViccExtractor(new HotspotExtractor(proteinResolver, new ProteinAnnotationExtractor(), exomeGeneChecker),
+                new CopyNumberExtractor(exomeGeneChecker),
+                new FusionExtractor(fusionGeneChecker),
+                new GeneLevelExtractor(exomeGeneChecker, fusionGeneChecker, driverGenes),
+                new GeneRangeExtractor(exomeGeneChecker, driverGenes, allGenesMap),
                 new SignatureExtractor(),
                 featureInterpretationTsv);
     }

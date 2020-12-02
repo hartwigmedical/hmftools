@@ -26,12 +26,16 @@ public class GeneLevelExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelExtractor.class);
 
     @NotNull
-    private final GeneChecker geneChecker;
+    private final GeneChecker exomeGeneChecker;
+    @NotNull
+    private final GeneChecker fusionGeneChecker;
     @NotNull
     private final List<DriverGene> driverGenes;
 
-    public GeneLevelExtractor(@NotNull final GeneChecker geneChecker, @NotNull final List<DriverGene> driverGenes) {
-        this.geneChecker = geneChecker;
+    public GeneLevelExtractor(@NotNull final GeneChecker exomeGeneChecker, @NotNull final GeneChecker fusionGeneChecker,
+            @NotNull final List<DriverGene> driverGenes) {
+        this.exomeGeneChecker = exomeGeneChecker;
+        this.fusionGeneChecker = fusionGeneChecker;
         this.driverGenes = driverGenes;
     }
 
@@ -40,19 +44,22 @@ public class GeneLevelExtractor {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (geneChecker.isValidGene(feature.geneSymbol())) {
-                if (feature.type() == MutationType.GENE_LEVEL) {
+            if (feature.type() == MutationType.GENE_LEVEL) {
+                if (exomeGeneChecker.isValidGene(feature.geneSymbol())) {
                     GeneLevelEvent event = extractGeneLevelEvent(feature, driverGenes);
                     if (event != null) {
                         geneLevelEventsPerFeature.put(feature,
                                 ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(event).build());
                     }
-                } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
+                }
+            } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
+                if (fusionGeneChecker.isValidGene(feature.geneSymbol())) {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
                 }
             }
         }
+
         return geneLevelEventsPerFeature;
     }
 
