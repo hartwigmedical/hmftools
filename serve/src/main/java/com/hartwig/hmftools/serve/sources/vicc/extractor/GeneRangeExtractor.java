@@ -244,7 +244,7 @@ public class GeneRangeExtractor {
                     .rangeNumber(codonNumber)
                     .build();
         } else {
-            LOGGER.warn("None genomic positions of the codon {} on gen {} could be extracted", codonNumber, geneSymbol);
+            LOGGER.warn("None genomic positions of the codon {} on gene {} could be extracted", codonNumber, geneSymbol);
         }
         return null;
     }
