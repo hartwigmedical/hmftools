@@ -219,11 +219,11 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             return false
         }
 
-        if (normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, comparator)) {
+        if (normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport)) {
             return true
         }
 
-        return (normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) && normalSupportRelativeFilter(config.softMaxNormalRelativeSupport, comparator))
+        return (normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) && normalSupportRelativeFilter(config.softMaxNormalRelativeSupport))
     }
 
     fun softFilters(config: GripssFilterConfig, comparator: ContigComparator): Set<String> {
@@ -233,7 +233,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             result.add(MIN_NORMAL_COVERAGE)
         }
 
-        if (normalSupportRelativeFilter(config.softMaxNormalRelativeSupport, comparator)) {
+        if (normalSupportRelativeFilter(config.softMaxNormalRelativeSupport)) {
             result.add(MAX_NORMAL_RELATIVE_SUPPORT)
         }
 
@@ -401,8 +401,8 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         return tumorQual < minTumorQual.toDouble()
     }
 
-    fun normalSupportRelativeFilter(maxNormalRelativeSupport: Double, comparator: ContigComparator): Boolean {
-        if (normalGenotype == null || isSingle && context.hasViralSequenceAlignment(comparator)) {
+    fun normalSupportRelativeFilter(maxNormalRelativeSupport: Double): Boolean {
+        if (normalGenotype == null ) {
             return false
         }
 
