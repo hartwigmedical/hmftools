@@ -8,9 +8,10 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -78,12 +79,12 @@ public final class ActionableHotspotFile {
                 .position(Long.parseLong(values[1]))
                 .ref(values[2])
                 .alt(values[3])
-                .source(ActionableEventFactory.sourceFromFileValue(values[4]))
+                .source(Knowledgebase.valueOf(values[4]))
                 .treatment(values[5])
                 .cancerType(values[6])
                 .doid(values[7])
                 .level(EvidenceLevel.valueOf(values[8]))
-                .direction(ActionableEventFactory.directionFromFileValue(values[9]))
+                .direction(EvidenceDirection.valueOf(values[9]))
                 .url(url)
                 .build();
     }
@@ -104,12 +105,12 @@ public final class ActionableHotspotFile {
                 .add(Long.toString(variant.position()))
                 .add(variant.ref())
                 .add(variant.alt())
-                .add(variant.source().display())
+                .add(variant.source().toString())
                 .add(variant.treatment())
                 .add(variant.cancerType())
                 .add(variant.doid())
                 .add(variant.level().toString())
-                .add(variant.direction().display())
+                .add(variant.direction().toString())
                 .add(variant.url())
                 .toString();
     }

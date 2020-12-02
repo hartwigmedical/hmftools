@@ -8,9 +8,10 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +49,6 @@ public final class ActionableRangeFile {
                 .add("chromosome")
                 .add("start")
                 .add("end")
-                .add("range")
                 .add("mutationType")
                 .add("source")
                 .add("treatment")
@@ -79,15 +79,14 @@ public final class ActionableRangeFile {
                 .chromosome(values[1])
                 .start(Long.parseLong(values[2]))
                 .end(Long.parseLong(values[3]))
-                .rangeInfo(Integer.parseInt(values[4]))
-                .mutationType(MutationTypeFilter.valueOf(values[5]))
-                .source(ActionableEventFactory.sourceFromFileValue(values[6]))
-                .treatment(values[7])
-                .cancerType(values[8])
-                .doid(values[9])
-                .level(EvidenceLevel.valueOf(values[10]))
-                .direction(ActionableEventFactory.directionFromFileValue(values[11]))
-                .url(values.length > 12 ? values[12] : Strings.EMPTY)
+                .mutationType(MutationTypeFilter.valueOf(values[4]))
+                .source(Knowledgebase.valueOf(values[5]))
+                .treatment(values[6])
+                .cancerType(values[7])
+                .doid(values[8])
+                .level(EvidenceLevel.valueOf(values[9]))
+                .direction(EvidenceDirection.valueOf(values[10]))
+                .url(values.length > 11 ? values[11] : Strings.EMPTY)
                 .build();
     }
 
@@ -107,14 +106,13 @@ public final class ActionableRangeFile {
                 .add(range.chromosome())
                 .add(Long.toString(range.start()))
                 .add(Long.toString(range.end()))
-                .add(Integer.toString(range.rangeInfo()))
                 .add(range.mutationType().toString())
-                .add(range.source().display())
+                .add(range.source().toString())
                 .add(range.treatment())
                 .add(range.cancerType())
                 .add(range.doid())
                 .add(range.level().toString())
-                .add(range.direction().display())
+                .add(range.direction().toString())
                 .add(range.url())
                 .toString();
     }

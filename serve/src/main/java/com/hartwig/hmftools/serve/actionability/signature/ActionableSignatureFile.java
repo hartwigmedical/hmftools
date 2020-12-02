@@ -8,9 +8,10 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -73,12 +74,12 @@ public final class ActionableSignatureFile {
 
         return ImmutableActionableSignature.builder()
                 .name(SignatureName.valueOf(values[0]))
-                .source(ActionableEventFactory.sourceFromFileValue(values[1]))
+                .source(Knowledgebase.valueOf(values[1]))
                 .treatment(values[2])
                 .cancerType(values[3])
                 .doid(values[4])
                 .level(EvidenceLevel.valueOf(values[5]))
-                .direction(ActionableEventFactory.directionFromFileValue(values[6]))
+                .direction(EvidenceDirection.valueOf(values[6]))
                 .url(url)
                 .build();
     }
@@ -96,12 +97,12 @@ public final class ActionableSignatureFile {
     @NotNull
     private static String toLine(@NotNull ActionableSignature signature) {
         return new StringJoiner(DELIMITER).add(signature.name().toString())
-                .add(signature.source().display())
+                .add(signature.source().toString())
                 .add(signature.treatment())
                 .add(signature.cancerType())
                 .add(signature.doid())
                 .add(signature.level().toString())
-                .add(signature.direction().display())
+                .add(signature.direction().toString())
                 .add(signature.url())
                 .toString();
     }

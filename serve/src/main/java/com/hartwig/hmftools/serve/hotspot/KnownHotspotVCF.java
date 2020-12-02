@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.serve.hotspot;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -27,14 +25,14 @@ import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public final class HotspotVCF {
+public final class KnownHotspotVCF {
 
-    private static final Logger LOGGER = LogManager.getLogger(HotspotVCF.class);
+    private static final Logger LOGGER = LogManager.getLogger(KnownHotspotVCF.class);
 
     private static final String INFO_SOURCES = "sources";
     private static final String INFO_INPUT = "input";
 
-    private HotspotVCF() {
+    private KnownHotspotVCF() {
     }
 
     public static void write(@NotNull String hotspotVcf, @NotNull List<KnownHotspot> hotspots) {
@@ -62,7 +60,7 @@ public final class HotspotVCF {
                     .start(hotspot.position())
                     .alleles(hotspotAlleles)
                     .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                    .attribute(INFO_SOURCES, toSourceString(hotspot.sources()))
+                    .attribute(INFO_SOURCES, Knowledgebase.commaSeparatedSourceString(hotspot.sources()))
                     .attribute(INFO_INPUT,
                             ProteinKeyFormatter.toProteinKey(hotspot.gene(), hotspot.transcript(), hotspot.proteinAnnotation()))
                     .make();
@@ -81,7 +79,7 @@ public final class HotspotVCF {
         for (KnownHotspot hotspot : hotspots) {
             sources.addAll(hotspot.sources());
         }
-        return toSourceString(sources);
+        return Knowledgebase.commaSeparatedSourceString(sources);
     }
 
     @NotNull
@@ -90,18 +88,5 @@ public final class HotspotVCF {
         Allele alt = Allele.create(hotspot.alt(), false);
 
         return Lists.newArrayList(ref, alt);
-    }
-
-    @VisibleForTesting
-    @NotNull
-    static String toSourceString(@NotNull Set<Knowledgebase> sources) {
-        Set<Knowledgebase> sorted = Sets.newTreeSet(Comparator.naturalOrder());
-        sorted.addAll(sources);
-
-        StringJoiner sourceJoiner = new StringJoiner(",");
-        for (Knowledgebase source : sorted) {
-            sourceJoiner.add(source.display().toLowerCase());
-        }
-        return sourceJoiner.toString();
     }
 }

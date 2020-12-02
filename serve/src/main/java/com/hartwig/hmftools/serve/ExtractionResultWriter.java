@@ -8,7 +8,9 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
-import com.hartwig.hmftools.serve.hotspot.HotspotVCF;
+import com.hartwig.hmftools.serve.copynumber.KnownCopyNumberFile;
+import com.hartwig.hmftools.serve.fusion.KnownFusionPairFile;
+import com.hartwig.hmftools.serve.hotspot.KnownHotspotVCF;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,15 +33,15 @@ public final class ExtractionResultWriter {
 
         String hotspotVcfPath = refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_HOTSPOT_VCF);
         LOGGER.info(" Writing {} known hotspots to {}", result.knownHotspots().size(), hotspotVcfPath);
-        HotspotVCF.write(hotspotVcfPath, result.knownHotspots());
+        KnownHotspotVCF.write(hotspotVcfPath, result.knownHotspots());
 
         String copyNumberTsv = refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_COPY_NUMBER_TSV);
         LOGGER.info(" Writing {} known copy numbers to {}", result.knownCopyNumbers().size(), copyNumberTsv);
-        // TODO Write Copy Numbers
+        KnownCopyNumberFile.write(copyNumberTsv, result.knownCopyNumbers());
 
         String fusionPairTsv = refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_FUSION_PAIR_TSV);
         LOGGER.info(" Writing {} known fusion pairs to {}", result.knownFusionPairs().size(), fusionPairTsv);
-        // TODO Write Fusions
+        KnownFusionPairFile.write(fusionPairTsv, result.knownFusionPairs());
 
         String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(outputDir, refGenomeVersion);
         LOGGER.info(" Writing {} actionable hotspots to {}", result.actionableHotspots().size(), actionableHotspotTsv);

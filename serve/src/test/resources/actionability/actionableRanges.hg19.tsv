@@ -1,3 +1,3 @@
 gene	chromosome	start	end	mutationType	source	treatment	cancerType	doid	level	direction	url
-EGFR	7	55241707	55279321	MISSENSE_INFRAME_ANY	CGI	Erlotinib	Lung Adeno	X	B	Resistant	http
-BRAF	7	140453136	140453137	MISSENSE_ANY	CGI	Vemurafenib	Skin Melanoma	X	A	Responsive
+EGFR	7	55241707	55279321	MISSENSE_INFRAME_ANY	VICC_CGI	Erlotinib	Lung Adeno	X	B	RESISTANT	http
+BRAF	7	140453136	140453137	MISSENSE_ANY	VICC_CGI	Vemurafenib	Skin Melanoma	X	A	RESPONSIVE

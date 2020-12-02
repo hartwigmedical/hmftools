@@ -17,22 +17,22 @@ public class CopyNumberFunctionsTest {
     public void canConsolidateCopyNumbers() {
         String gene1 = "gene1";
         String gene2 = "gene2";
-        KnownCopyNumber copyNumber1 = ampBuilder().gene(gene1).addSources(Knowledgebase.ONCOKB, Knowledgebase.CIVIC).build();
-        KnownCopyNumber copyNumber2 = ampBuilder().gene(gene1).addSources(Knowledgebase.CGI).build();
-        KnownCopyNumber copyNumber3 = ampBuilder().gene(gene2).addSources(Knowledgebase.CGI).build();
+        KnownCopyNumber copyNumber1 = ampBuilder().gene(gene1).addSources(Knowledgebase.VICC_ONCOKB, Knowledgebase.VICC_CIVIC).build();
+        KnownCopyNumber copyNumber2 = ampBuilder().gene(gene1).addSources(Knowledgebase.VICC_CGI).build();
+        KnownCopyNumber copyNumber3 = ampBuilder().gene(gene2).addSources(Knowledgebase.VICC_CGI).build();
 
         List<KnownCopyNumber> consolidated = CopyNumberFunctions.consolidate(Lists.newArrayList(copyNumber1, copyNumber2, copyNumber3));
         assertEquals(2, consolidated.size());
 
         KnownCopyNumber gene1CopyNumber = findByGene(consolidated, gene1);
         assertEquals(3, gene1CopyNumber.sources().size());
-        assertTrue(gene1CopyNumber.sources().contains(Knowledgebase.CGI));
-        assertTrue(gene1CopyNumber.sources().contains(Knowledgebase.ONCOKB));
-        assertTrue(gene1CopyNumber.sources().contains(Knowledgebase.CIVIC));
+        assertTrue(gene1CopyNumber.sources().contains(Knowledgebase.VICC_CGI));
+        assertTrue(gene1CopyNumber.sources().contains(Knowledgebase.VICC_ONCOKB));
+        assertTrue(gene1CopyNumber.sources().contains(Knowledgebase.VICC_CIVIC));
 
         KnownCopyNumber gene2CopyNumber = findByGene(consolidated, gene2);
         assertEquals(1, gene2CopyNumber.sources().size());
-        assertTrue(gene2CopyNumber.sources().contains(Knowledgebase.CGI));
+        assertTrue(gene2CopyNumber.sources().contains(Knowledgebase.VICC_CGI));
     }
 
     @NotNull

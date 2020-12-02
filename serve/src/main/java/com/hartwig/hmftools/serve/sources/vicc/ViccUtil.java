@@ -33,13 +33,13 @@ public final class ViccUtil {
     public static Knowledgebase toKnowledgebase(@NotNull ViccSource source) {
         switch (source) {
             case ONCOKB:
-                return Knowledgebase.ONCOKB;
+                return Knowledgebase.VICC_ONCOKB;
             case CIVIC:
-                return Knowledgebase.CIVIC;
+                return Knowledgebase.VICC_CIVIC;
             case JAX:
-                return Knowledgebase.JAX;
+                return Knowledgebase.VICC_JAX;
             case CGI:
-                return Knowledgebase.CGI;
+                return Knowledgebase.VICC_CGI;
             default:
                 throw new IllegalStateException("Source not mapped to knowledgebase yet: " + source.display());
         }

@@ -228,7 +228,6 @@ public final class ViccExtractor {
                         .start(range.start())
                         .end(range.end())
                         .mutationType(range.mutationType())
-                        .rangeInfo(range.rangeNumber())
                         .build());
             }
         }

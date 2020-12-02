@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.serve.actionability.range;
 
-import java.util.Set;
-
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +23,5 @@ public abstract class ActionableRange implements ActionableEvent {
 
     @NotNull
     public abstract MutationTypeFilter mutationType();
-
-    public abstract int rangeInfo();
 
 }

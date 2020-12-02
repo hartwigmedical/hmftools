@@ -12,8 +12,8 @@ public class ExtractionFunctionsTest {
 
     @Test
     public void canMergeExtractionResults() {
-        Knowledgebase source1 = Knowledgebase.CIVIC;
-        Knowledgebase source2 = Knowledgebase.CGI;
+        Knowledgebase source1 = Knowledgebase.VICC_CIVIC;
+        Knowledgebase source2 = Knowledgebase.VICC_CGI;
         ExtractionResult result1 = ServeTestFactory.createResultForSource(source1);
         ExtractionResult result2 = ServeTestFactory.createResultForSource(source2);
 

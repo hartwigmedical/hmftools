@@ -91,7 +91,6 @@ public final class ServeTestFactory {
                 .start(0)
                 .end(0)
                 .mutationType(MutationTypeFilter.ANY)
-                .rangeInfo(0)
                 .build();
     }
 

@@ -20,23 +20,23 @@ public class FusionFunctionsTest {
         KnownFusionPair fusion1 = ImmutableKnownFusionPair.builder()
                 .geneUp(gene1)
                 .geneDown(gene2)
-                .addSources(Knowledgebase.ONCOKB, Knowledgebase.CIVIC)
+                .addSources(Knowledgebase.VICC_ONCOKB, Knowledgebase.VICC_CIVIC)
                 .build();
-        KnownFusionPair fusion2 = ImmutableKnownFusionPair.builder().geneUp(gene1).geneDown(gene2).addSources(Knowledgebase.CGI).build();
-        KnownFusionPair fusion3 = ImmutableKnownFusionPair.builder().geneUp(gene2).geneDown(gene1).addSources(Knowledgebase.CGI).build();
+        KnownFusionPair fusion2 = ImmutableKnownFusionPair.builder().geneUp(gene1).geneDown(gene2).addSources(Knowledgebase.VICC_CGI).build();
+        KnownFusionPair fusion3 = ImmutableKnownFusionPair.builder().geneUp(gene2).geneDown(gene1).addSources(Knowledgebase.VICC_CGI).build();
 
         List<KnownFusionPair> consolidated = FusionFunctions.consolidate(Lists.newArrayList(fusion1, fusion2, fusion3));
         assertEquals(2, consolidated.size());
 
         KnownFusionPair gene1Fusion = findByGeneUp(consolidated, gene1);
         assertEquals(3, gene1Fusion.sources().size());
-        assertTrue(gene1Fusion.sources().contains(Knowledgebase.CGI));
-        assertTrue(gene1Fusion.sources().contains(Knowledgebase.ONCOKB));
-        assertTrue(gene1Fusion.sources().contains(Knowledgebase.CIVIC));
+        assertTrue(gene1Fusion.sources().contains(Knowledgebase.VICC_CGI));
+        assertTrue(gene1Fusion.sources().contains(Knowledgebase.VICC_ONCOKB));
+        assertTrue(gene1Fusion.sources().contains(Knowledgebase.VICC_CIVIC));
 
         KnownFusionPair gene2Fusion = findByGeneUp(consolidated, gene2);
         assertEquals(1, gene2Fusion.sources().size());
-        assertTrue(gene2Fusion.sources().contains(Knowledgebase.CGI));
+        assertTrue(gene2Fusion.sources().contains(Knowledgebase.VICC_CGI));
     }
 
     @NotNull

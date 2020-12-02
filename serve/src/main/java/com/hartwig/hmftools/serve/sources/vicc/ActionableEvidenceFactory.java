@@ -197,13 +197,13 @@ final class ActionableEvidenceFactory {
     private static Knowledgebase fromViccSource(@NotNull ViccSource source) {
         switch (source) {
             case CIVIC:
-                return Knowledgebase.CIVIC;
+                return Knowledgebase.VICC_CIVIC;
             case CGI:
-                return Knowledgebase.CGI;
+                return Knowledgebase.VICC_CGI;
             case JAX:
-                return Knowledgebase.JAX;
+                return Knowledgebase.VICC_JAX;
             case ONCOKB:
-                return Knowledgebase.ONCOKB;
+                return Knowledgebase.VICC_ONCOKB;
             default:
                 throw new IllegalStateException("Source not supported by SERVE: " + source);
         }

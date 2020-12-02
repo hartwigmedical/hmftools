@@ -8,9 +8,10 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.actionability.ActionableEventFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -83,12 +84,12 @@ public final class ActionableFusionFile {
                 .geneDown(values[3])
                 .minExonDown(optionalInteger(values[4]))
                 .maxExonDown(optionalInteger(values[5]))
-                .source(ActionableEventFactory.sourceFromFileValue(values[6]))
+                .source(Knowledgebase.valueOf(values[6]))
                 .treatment(values[7])
                 .cancerType(values[8])
                 .doid(values[9])
                 .level(EvidenceLevel.valueOf(values[10]))
-                .direction(ActionableEventFactory.directionFromFileValue(values[11]))
+                .direction(EvidenceDirection.valueOf(values[11]))
                 .url(url)
                 .build();
     }
@@ -120,12 +121,12 @@ public final class ActionableFusionFile {
                 .add(fusion.geneDown())
                 .add(fromOptionalInteger(fusion.minExonDown()))
                 .add(fromOptionalInteger(fusion.maxExonDown()))
-                .add(fusion.source().display())
+                .add(fusion.source().toString())
                 .add(fusion.treatment())
                 .add(fusion.cancerType())
                 .add(fusion.doid())
                 .add(fusion.level().toString())
-                .add(fusion.direction().display())
+                .add(fusion.direction().toString())
                 .add(fusion.url())
                 .toString();
     }
