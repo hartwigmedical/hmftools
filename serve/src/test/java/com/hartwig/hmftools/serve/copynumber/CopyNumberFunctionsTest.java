@@ -50,5 +50,4 @@ public class CopyNumberFunctionsTest {
 
         throw new IllegalStateException("Could not find gene in copy numbers: " + gene);
     }
-
 }
