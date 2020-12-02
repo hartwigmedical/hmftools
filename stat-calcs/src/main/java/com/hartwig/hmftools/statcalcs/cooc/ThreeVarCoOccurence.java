@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.stat_calcs;
+package com.hartwig.hmftools.statcalcs.cooc;
 
-import static com.hartwig.hmftools.stat_calcs.SampleCategoryData.SAMPLE_CAT_1_INDEX;
-import static com.hartwig.hmftools.stat_calcs.SampleCategoryData.SAMPLE_CAT_2_INDEX;
+import static com.hartwig.hmftools.statcalcs.cooc.SampleCategoryData.SAMPLE_CAT_1_INDEX;
+import static com.hartwig.hmftools.statcalcs.cooc.SampleCategoryData.SAMPLE_CAT_2_INDEX;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

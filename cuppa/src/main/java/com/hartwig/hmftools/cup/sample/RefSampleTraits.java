@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.cup.sample;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
-import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
-import static com.hartwig.hmftools.common.sigs.Percentiles.buildPercentiles;
+import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
+import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;

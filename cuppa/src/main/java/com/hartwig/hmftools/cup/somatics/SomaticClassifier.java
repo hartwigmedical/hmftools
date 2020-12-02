@@ -6,8 +6,8 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
-import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;

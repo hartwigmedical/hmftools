@@ -7,7 +7,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcRangeValue;
@@ -69,7 +69,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 import com.hartwig.hmftools.sig_analyser.sim.SimConfig;

@@ -5,9 +5,9 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
-import static com.hartwig.hmftools.common.sigs.Percentiles.PERCENTILE_COUNT;
-import static com.hartwig.hmftools.common.sigs.Percentiles.calcPercentileValues;
-import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
+import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
+import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;

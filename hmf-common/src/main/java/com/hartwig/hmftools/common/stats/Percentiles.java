@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sigs;
+package com.hartwig.hmftools.common.stats;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;

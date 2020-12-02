@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.stat_calcs;
+package com.hartwig.hmftools.statcalcs.cooc;
 
 import com.hartwig.hmftools.common.stats.FisherExactTest;
 

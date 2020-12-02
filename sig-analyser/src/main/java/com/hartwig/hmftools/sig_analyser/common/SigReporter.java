@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sig_analyser.common;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.sigs.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.sig_analyser.common.CssRoutines.CSSR_I1;

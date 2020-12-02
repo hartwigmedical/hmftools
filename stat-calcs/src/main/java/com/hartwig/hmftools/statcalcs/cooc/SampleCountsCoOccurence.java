@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.stat_calcs;
+package com.hartwig.hmftools.statcalcs.cooc;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

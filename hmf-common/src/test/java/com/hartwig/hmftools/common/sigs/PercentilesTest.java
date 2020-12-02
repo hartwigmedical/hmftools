@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.sigs;
 
-import static com.hartwig.hmftools.common.sigs.Percentiles.buildPercentiles;
-import static com.hartwig.hmftools.common.sigs.Percentiles.calcPercentileValues;
-import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
+import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
+import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 
 import static junit.framework.TestCase.assertEquals;
 

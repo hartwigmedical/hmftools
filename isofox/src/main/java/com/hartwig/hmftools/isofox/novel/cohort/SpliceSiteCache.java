@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
-import static com.hartwig.hmftools.common.sigs.Percentiles.calcPercentileValues;
-import static com.hartwig.hmftools.common.sigs.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
+import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
