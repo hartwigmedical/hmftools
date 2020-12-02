@@ -31,8 +31,8 @@ public class ViccReaderTestApplication {
         LOGGER.info("Read {} entries", viccEntriesSpecificKnowledgeBase.size());
 
         // Warning: Below code could take a while to run locally!
-        LOGGER.info("Reading entire VICC json from {}", viccJsonPath);
-        List<ViccEntry> allViccEntries = reader.readSelection(viccJsonPath, ImmutableViccQuerySelection.builder().build());
-        LOGGER.info("Read {} entries", allViccEntries.size());
+//        LOGGER.info("Reading entire VICC json from {}", viccJsonPath);
+//        List<ViccEntry> allViccEntries = reader.readSelection(viccJsonPath, ImmutableViccQuerySelection.builder().build());
+//        LOGGER.info("Read {} entries", allViccEntries.size());
     }
 }
