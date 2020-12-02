@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
@@ -17,14 +18,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberExtractor {
 
-    @NotNull
-    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    private static final Set<MutationType> COPY_NUMBER_MUTATIONS = Sets.newHashSet(MutationType.AMPLIFICATION, MutationType.DELETION);
+
     @NotNull
     private final GeneChecker geneChecker;
 
-    public CopyNumberExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
-            @NotNull final GeneChecker geneChecker) {
-        this.transcriptPerGeneMap = transcriptPerGeneMap;
+    public CopyNumberExtractor(@NotNull final GeneChecker geneChecker) {
         this.geneChecker = geneChecker;
     }
 
@@ -33,19 +32,16 @@ public class CopyNumberExtractor {
         Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (feature.type() == MutationType.AMPLIFICATION || feature.type() == MutationType.DELETION) {
-                HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+            if (geneChecker.isValidGene(feature.geneSymbol()) && COPY_NUMBER_MUTATIONS.contains(feature.type())) {
+                CopyNumberType type = feature.type() == MutationType.AMPLIFICATION ? CopyNumberType.AMPLIFICATION : CopyNumberType.DELETION;
 
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
-                    CopyNumberType type =
-                            feature.type() == MutationType.AMPLIFICATION ? CopyNumberType.AMPLIFICATION : CopyNumberType.DELETION;
-                    ampsDelsPerFeature.put(feature,
-                            ImmutableKnownCopyNumber.builder()
-                                    .gene(feature.geneSymbol())
-                                    .type(type)
-                                    .addSources(ViccUtil.toKnowledgebase(viccEntry.source()))
-                                    .build());
-                }
+                ampsDelsPerFeature.put(feature,
+                        ImmutableKnownCopyNumber.builder()
+                                .gene(feature.geneSymbol())
+                                .type(type)
+                                .addSources(ViccUtil.toKnowledgebase(viccEntry.source()))
+                                .build());
+
             }
         }
 

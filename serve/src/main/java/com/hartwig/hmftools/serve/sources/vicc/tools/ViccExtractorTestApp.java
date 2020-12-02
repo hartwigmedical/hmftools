@@ -6,11 +6,14 @@ import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
@@ -65,24 +68,27 @@ public class ViccExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        String viccFeatureTsv = outputDir + "/viccFeatures.tsv";
-        String viccFeatureInterpretationTsv = outputDir + "/viccFeatureInterpretation.tsv";
+        String featureTsv = outputDir + "/viccFeatures.tsv";
+        String featureInterpretationTsv = outputDir + "/viccFeatureInterpretation.tsv";
 
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
-        LOGGER.debug("Configured '{}' as the VICC feature output TSV path", viccFeatureTsv);
-        LOGGER.debug("Configured '{}' as the VICC feature interpretation output TSV path", viccFeatureInterpretationTsv);
+        LOGGER.debug("Configured '{}' as the VICC feature output TSV path", featureTsv);
+        LOGGER.debug("Configured '{}' as the VICC feature interpretation output TSV path", featureInterpretationTsv);
         LOGGER.debug("Configured '{}' as the driver gene TSV path", driverGeneTsvPath);
 
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsvPath);
         LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
 
-        List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
-        ViccExtractor viccExtractor =
-                ViccExtractorFactory.buildViccExtractorWithInterpretationTsv(proteinResolver, driverGenes, viccFeatureInterpretationTsv);
+        Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap37();
+        List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
+        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractorWithInterpretationTsv(proteinResolver,
+                driverGenes,
+                allGenesMap,
+                featureInterpretationTsv);
 
-        ExtractionOutput extractionOutput = viccExtractor.extractFromViccEntries(viccEntries);
+        ExtractionOutput extractionOutput = viccExtractor.extractFromViccEntries(entries);
 
-        ViccUtil.writeFeatures(viccFeatureTsv, viccEntries);
+        ViccUtil.writeFeatures(featureTsv, entries);
         ViccUtil.writeActionability(outputDir, extractionOutput);
     }
 }

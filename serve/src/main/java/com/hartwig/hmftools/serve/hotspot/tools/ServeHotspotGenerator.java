@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
@@ -137,7 +138,8 @@ public class ServeHotspotGenerator {
     private static List<KnownHotspot> viccHotspots(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver) throws IOException {
         List<ViccEntry> viccEntries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
 
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(proteinResolver, Lists.newArrayList());
+        ViccExtractor viccExtractor =
+                ViccExtractorFactory.buildViccExtractor(proteinResolver, Lists.newArrayList(), HmfGenePanelSupplier.allGenesMap37());
         return viccExtractor.extractFromViccEntries(viccEntries).knownHotspots();
     }
 

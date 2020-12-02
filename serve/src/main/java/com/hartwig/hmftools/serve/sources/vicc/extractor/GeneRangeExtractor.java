@@ -32,27 +32,27 @@ public class GeneRangeExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneRangeExtractor.class);
 
     @NotNull
-    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    private final GeneChecker geneChecker;
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
-    private final GeneChecker geneChecker;
+    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
-    public GeneRangeExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
-            @NotNull final List<DriverGene> driverGenes, @NotNull final GeneChecker geneChecker) {
-        this.transcriptPerGeneMap = transcriptPerGeneMap;
-        this.driverGenes = driverGenes;
+    public GeneRangeExtractor(@NotNull final GeneChecker geneChecker, @NotNull final List<DriverGene> driverGenes,
+            @NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.geneChecker = geneChecker;
+        this.driverGenes = driverGenes;
+        this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
     @NotNull
     public Map<Feature, List<GeneRangeAnnotation>> extractGeneRanges(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+            if (geneChecker.isValidGene(feature.geneSymbol())) {
+                HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
 
-            if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
+                if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
                         List<Integer> exonNumbers = extractExonNumbers(feature.name());
@@ -73,9 +73,7 @@ public class GeneRangeExtractor {
                                 canonicalTranscript.transcriptID(),
                                 feature);
                     }
-                }
-            } else if (feature.type() == MutationType.CODON) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
+                } else if (feature.type() == MutationType.CODON) {
                     String transcriptIdVicc = viccEntry.transcriptId();
 
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {

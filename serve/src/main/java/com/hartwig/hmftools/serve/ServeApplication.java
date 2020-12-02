@@ -3,12 +3,15 @@ package com.hartwig.hmftools.serve;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
@@ -63,9 +66,10 @@ public class ServeApplication {
 
         ProteinResolver proteinResolver = buildProteinResolver(config);
         List<DriverGene> driverGenes = readDriverGenes(config);
+        Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap37();
 
         List<ExtractionOutput> extractions = Lists.newArrayList();
-        extractions.add(extractViccKnowledge(config.viccJson(), proteinResolver, driverGenes));
+        extractions.add(extractViccKnowledge(config.viccJson(), proteinResolver, driverGenes, allGenesMap));
         extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
         extractions.add(extractDocmKnowledge(config.docmTsv(), proteinResolver));
         extractions.add(extractHartwigCohortKnowledge(config.hartwigCohortTsv(), proteinResolver, !config.skipHotspotResolving()));
@@ -97,10 +101,10 @@ public class ServeApplication {
 
     @NotNull
     private static ExtractionOutput extractViccKnowledge(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver,
-            @NotNull List<DriverGene> driverGenes) throws IOException {
+            @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap) throws IOException {
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, null);
 
-        ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(proteinResolver, driverGenes);
+        ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(proteinResolver, driverGenes, allGenesMap);
         return extractor.extractFromViccEntries(entries);
     }
 

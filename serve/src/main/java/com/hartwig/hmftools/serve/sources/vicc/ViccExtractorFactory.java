@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
@@ -25,21 +24,22 @@ public final class ViccExtractorFactory {
     }
 
     @NotNull
-    public static ViccExtractor buildViccExtractor(@NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes) {
-        return buildViccExtractorWithInterpretationTsv(proteinResolver, driverGenes, null);
+    public static ViccExtractor buildViccExtractor(@NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes,
+            @NotNull Map<String, HmfTranscriptRegion> allGenesMap) {
+        return buildViccExtractorWithInterpretationTsv(proteinResolver, driverGenes, allGenesMap, null);
     }
 
     @NotNull
     public static ViccExtractor buildViccExtractorWithInterpretationTsv(@NotNull ProteinResolver proteinResolver,
-            @NotNull List<DriverGene> driverGenes, @Nullable String featureInterpretationTsv) {
-        Map<String, HmfTranscriptRegion> transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
+            @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap,
+            @Nullable String featureInterpretationTsv) {
+        GeneChecker geneChecker = new GeneChecker(allGenesMap.keySet());
 
-        GeneChecker geneChecker = new GeneChecker();
-        return new ViccExtractor(new HotspotExtractor(proteinResolver, new ProteinAnnotationExtractor(), geneChecker, transcriptPerGeneMap),
-                new CopyNumberExtractor(transcriptPerGeneMap, geneChecker),
-                new FusionExtractor(transcriptPerGeneMap, geneChecker),
-                new GeneLevelExtractor(transcriptPerGeneMap, driverGenes, geneChecker),
-                new GeneRangeExtractor(transcriptPerGeneMap, driverGenes, geneChecker),
+        return new ViccExtractor(new HotspotExtractor(proteinResolver, new ProteinAnnotationExtractor(), geneChecker),
+                new CopyNumberExtractor(geneChecker),
+                new FusionExtractor(geneChecker),
+                new GeneLevelExtractor(geneChecker, driverGenes),
+                new GeneRangeExtractor(geneChecker, driverGenes, allGenesMap),
                 new SignatureExtractor(),
                 featureInterpretationTsv);
     }

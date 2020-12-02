@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
@@ -19,7 +18,7 @@ public class CopyNumberExtractorTest {
 
     @Test
     public void canExtractCopyNumbersAmps() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37() , new GeneChecker());
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(GeneChecker.buildForHG19());
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("AKT1", "AKT1  amp");
 
         Map<Feature, KnownCopyNumber> featureAmps = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);
@@ -31,7 +30,7 @@ public class CopyNumberExtractorTest {
 
     @Test
     public void canExtractCopyNumbersAmpsUnknownGene() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37(), new GeneChecker());
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(GeneChecker.buildForHG19());
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NOT-A-GENE", "AMPLIFICATION");
 
         Map<Feature, KnownCopyNumber> featureAmpsUnknown = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);
@@ -41,7 +40,7 @@ public class CopyNumberExtractorTest {
 
     @Test
     public void canExtractCopyNumbersDels() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37(), new GeneChecker());
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(GeneChecker.buildForHG19());
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("PTEN", "DELETION");
 
         Map<Feature, KnownCopyNumber> featureDels = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);
@@ -53,7 +52,7 @@ public class CopyNumberExtractorTest {
 
     @Test
     public void canExtractCopyNumbersDelsUnknownGene() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HmfGenePanelSupplier.allGenesMap37(), new GeneChecker());
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(GeneChecker.buildForHG19());
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NOT-A-GENE", "DELETION");
 
         Map<Feature, KnownCopyNumber> featureDelsUnknown = copyNumberExtractor.extractAmplificationsDeletions(viccEntry);

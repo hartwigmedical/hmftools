@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
@@ -29,23 +29,32 @@ public class HotspotExtractorTest {
             ImmutableVariantHotspotImpl.builder().chromosome("1").position(10).ref("A").alt("T").build();
 
     @Test
-    public void canExtractHotspot() {
+    public void canExtractHotspots() {
         String gene = "BRAF";
         String protein = "V600E";
         Feature hotspotFeature = ViccTestFactory.testFeatureWithGeneAndName(gene, protein);
         Feature ampFeature = ViccTestFactory.testFeatureWithName("Amplification");
         ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(hotspotFeature, ampFeature));
 
-        HotspotExtractor hotspotExtractor = new HotspotExtractor(new TestProteinResolver(protein),
-                new ProteinAnnotationExtractor(),
-                new GeneChecker(),
-                HmfGenePanelSupplier.allGenesMap37());
+        HotspotExtractor hotspotExtractor =
+                new HotspotExtractor(new TestProteinResolver(protein), new ProteinAnnotationExtractor(), GeneChecker.buildForHG19());
         Map<Feature, List<VariantHotspot>> hotspots = hotspotExtractor.extractHotspots(entry);
 
         assertEquals(1, hotspots.size());
         assertEquals(1, hotspots.get(hotspotFeature).size());
         assertEquals(TEST_HOTSPOT, hotspots.get(hotspotFeature).get(0));
         assertNull(hotspots.get(ampFeature));
+    }
+
+    @Test
+    public void skipsHotspotsForInvalidGenes() {
+        String protein = "V600E";
+        ViccEntry entry = ViccTestFactory.testEntryWithGeneAndEvent("NOT-A-GENE", protein);
+
+        HotspotExtractor hotspotExtractor =
+                new HotspotExtractor(new TestProteinResolver(protein), new ProteinAnnotationExtractor(), GeneChecker.buildForHG19());
+
+        assertTrue(hotspotExtractor.extractHotspots(entry).isEmpty());
     }
 
     private static class TestProteinResolver implements ProteinResolver {

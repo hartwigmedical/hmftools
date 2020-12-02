@@ -7,7 +7,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
@@ -27,17 +26,13 @@ public class GeneLevelExtractor {
     private static final Logger LOGGER = LogManager.getLogger(GeneLevelExtractor.class);
 
     @NotNull
-    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    private final GeneChecker geneChecker;
     @NotNull
     private final List<DriverGene> driverGenes;
-    @NotNull
-    private final GeneChecker geneChecker;
 
-    public GeneLevelExtractor(@NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap,
-            @NotNull final List<DriverGene> driverGenes, @NotNull final GeneChecker geneChecker) {
-        this.transcriptPerGeneMap = transcriptPerGeneMap;
-        this.driverGenes = driverGenes;
+    public GeneLevelExtractor(@NotNull final GeneChecker geneChecker, @NotNull final List<DriverGene> driverGenes) {
         this.geneChecker = geneChecker;
+        this.driverGenes = driverGenes;
     }
 
     @NotNull
@@ -45,20 +40,14 @@ public class GeneLevelExtractor {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-            if (feature.type() == MutationType.GENE_LEVEL) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), null)) {
+            if (geneChecker.isValidGene(feature.geneSymbol())) {
+                if (feature.type() == MutationType.GENE_LEVEL) {
                     GeneLevelEvent event = extractGeneLevelEvent(feature, driverGenes);
                     if (event != null) {
                         geneLevelEventsPerFeature.put(feature,
-                                ImmutableGeneLevelAnnotation.builder()
-                                        .gene(feature.geneSymbol())
-                                        .event(event)
-                                        .build());
+                                ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(event).build());
                     }
-                }
-            } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
-                if (geneChecker.isValidGene(feature.geneSymbol(), canonicalTranscript, feature.name(), "fusion")) {
+                } else if (feature.type() == MutationType.PROMISCUOUS_FUSION) {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
                 }

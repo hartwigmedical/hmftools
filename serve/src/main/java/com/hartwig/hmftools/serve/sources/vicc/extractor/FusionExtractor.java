@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.serve.sources.vicc.annotation.FusionAnnotatio
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
@@ -24,12 +23,9 @@ public class FusionExtractor {
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
     @NotNull
-    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
-    @NotNull
     private final GeneChecker geneChecker;
 
-    public FusionExtractor(@NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap, @NotNull final GeneChecker geneChecker) {
-        this.transcriptPerGeneMap = transcriptPerGeneMap;
+    public FusionExtractor(@NotNull final GeneChecker geneChecker) {
         this.geneChecker = geneChecker;
     }
 
@@ -53,10 +49,7 @@ public class FusionExtractor {
                     annotatedFusion = fusionBuilder.geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
                 }
 
-                HmfTranscriptRegion canonicalTranscriptStart = transcriptPerGeneMap.get(annotatedFusion.geneUp());
-                HmfTranscriptRegion canonicalTranscriptEnd = transcriptPerGeneMap.get(annotatedFusion.geneDown());
-                if (geneChecker.isValidGene(annotatedFusion.geneUp(), canonicalTranscriptStart, feature.name(), "fusion")
-                        && geneChecker.isValidGene(annotatedFusion.geneDown(), canonicalTranscriptEnd, feature.name(), "fusion")) {
+                if (geneChecker.isValidGene(annotatedFusion.geneUp()) && geneChecker.isValidGene(annotatedFusion.geneDown())) {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
             } else if (feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
