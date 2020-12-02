@@ -25,6 +25,7 @@ import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class GeneRangeExtractorTest {
@@ -46,6 +47,28 @@ public class GeneRangeExtractorTest {
                         .rangeType(GeneRangeType.EXON)
                         .rangeNumber(11)
                         .exonId("ENSE00001074417")
+                        .build()));
+
+        assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));
+    }
+
+    @Test
+    @Ignore
+    public void canExtractRangesCodonOnMultipleExons() {
+        GeneRangeExtractor geneRangeExtractor =
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"), new GeneChecker());
+        Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
+        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KRAS", "R97");
+
+        geneRangesPerFeature.put(viccEntry.features().get(0),
+                Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
+                        .gene("KRAS")
+                        .chromosome("12")
+                        .start(7577534)
+                        .end(7577536)
+                        .mutationType(MutationTypeFilter.ANY)
+                        .rangeType(GeneRangeType.CODON)
+                        .rangeNumber(97)
                         .build()));
 
         assertEquals(geneRangesPerFeature, geneRangeExtractor.extractGeneRanges(viccEntry));
