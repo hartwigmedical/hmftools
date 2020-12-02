@@ -16,7 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class ExtractionResultWriter {
+public class ExtractionResultWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(ExtractionResultWriter.class);
 
@@ -24,11 +24,17 @@ public final class ExtractionResultWriter {
     private static final String KNOWN_COPY_NUMBER_TSV = "KnownCopyNumbers.SERVE.tsv";
     private static final String KNOWN_FUSION_PAIR_TSV = "KnownFusionPairs.SERVE.tsv";
 
-    private ExtractionResultWriter() {
+    @NotNull
+    private final String outputDir;
+    @NotNull
+    private final RefGenomeVersion refGenomeVersion;
+
+    public ExtractionResultWriter(@NotNull final String outputDir, @NotNull final RefGenomeVersion refGenomeVersion) {
+        this.outputDir = outputDir;
+        this.refGenomeVersion = refGenomeVersion;
     }
 
-    public static void write(@NotNull String outputDir, @NotNull RefGenomeVersion refGenomeVersion, @NotNull ExtractionResult result)
-            throws IOException {
+    public void write(@NotNull ExtractionResult result) throws IOException {
         LOGGER.info("Writing SERVE output to {}", outputDir);
 
         String hotspotVcfPath = refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_HOTSPOT_VCF);

@@ -75,7 +75,8 @@ public class ServeApplication {
 
         evaluateProteinResolver(proteinResolver);
 
-        ExtractionResultWriter.write(config.outputDir(), config.refGenomeVersion(), ExtractionFunctions.merge(extractions));
+        ExtractionResultWriter writer = new ExtractionResultWriter(config.outputDir(), config.refGenomeVersion());
+        writer.write(ExtractionFunctions.merge(extractions));
 
         LOGGER.info("Done!");
     }
