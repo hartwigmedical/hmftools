@@ -32,7 +32,7 @@ public class CopyNumberExtractor {
         Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (geneChecker.isValidGene(feature.geneSymbol()) && COPY_NUMBER_MUTATIONS.contains(feature.type())) {
+            if (COPY_NUMBER_MUTATIONS.contains(feature.type()) && geneChecker.isValidGene(feature.geneSymbol())) {
                 CopyNumberType type = feature.type() == MutationType.AMPLIFICATION ? CopyNumberType.AMPLIFICATION : CopyNumberType.DELETION;
 
                 ampsDelsPerFeature.put(feature,
