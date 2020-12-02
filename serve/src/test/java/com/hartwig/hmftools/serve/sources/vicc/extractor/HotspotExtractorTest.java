@@ -59,8 +59,8 @@ public class HotspotExtractorTest {
 
         @NotNull
         @Override
-        public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull final String gene,
-                @Nullable final String specificTranscript, @NotNull final String proteinAnnotation) {
+        public List<VariantHotspot> resolve(@NotNull final String gene, @Nullable final String specificTranscript,
+                @NotNull final String proteinAnnotation) {
             return proteinAnnotation.equals(protein) ? Lists.newArrayList(TEST_HOTSPOT) : Lists.newArrayList();
         }
 

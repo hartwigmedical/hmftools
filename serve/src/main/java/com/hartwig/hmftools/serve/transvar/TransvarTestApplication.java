@@ -34,7 +34,7 @@ public class TransvarTestApplication {
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,
             @NotNull String proteinAnnotation) {
-        List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(gene, specificTranscript, proteinAnnotation);
+        List<VariantHotspot> hotspots = transvar.resolve(gene, specificTranscript, proteinAnnotation);
 
         LOGGER.info("Printing hotspots for '{}:p.{}' on transcript {}", gene, proteinAnnotation, specificTranscript);
         for (VariantHotspot hotspot : hotspots) {

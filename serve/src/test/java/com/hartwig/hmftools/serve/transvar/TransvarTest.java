@@ -16,21 +16,21 @@ public class TransvarTest {
     @Test
     public void noHotspotsWhenTransvarProcessReturnsEmpty() {
         Transvar transvar = returnsNoTransvarRecord();
-        assertTrue(transvar.extractHotspotsFromProteinAnnotation("BRAF", "ENST00000288602", "V600E").isEmpty());
+        assertTrue(transvar.resolve("BRAF", "ENST00000288602", "V600E").isEmpty());
     }
 
     @Test
     public void noHotspotsWhenGeneIsUnknown() {
         Transvar transvar = returnsSingleTransvarRecord(createTestRecord());
 
-        assertTrue(transvar.extractHotspotsFromProteinAnnotation("DoesNotExist", null, Strings.EMPTY).isEmpty());
+        assertTrue(transvar.resolve("DoesNotExist", null, Strings.EMPTY).isEmpty());
     }
 
     @Test
     public void noHotspotsWhenRecordIsNotOnSpecificTranscript() {
         Transvar transvar = returnsSingleTransvarRecord(createTestRecord());
 
-        assertTrue(transvar.extractHotspotsFromProteinAnnotation("BRAF", "DoesNotExist", Strings.EMPTY).isEmpty());
+        assertTrue(transvar.resolve("BRAF", "DoesNotExist", Strings.EMPTY).isEmpty());
     }
 
     @NotNull

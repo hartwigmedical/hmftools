@@ -19,8 +19,8 @@ public final class ProteinResolverFactory {
     }
 
     @NotNull
-    public static ProteinResolver transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion,
-            @NotNull String refGenomeFastaFile) throws FileNotFoundException {
+    public static ProteinResolver transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
+            throws FileNotFoundException {
         return Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
     }
 
@@ -29,8 +29,8 @@ public final class ProteinResolverFactory {
         return new ProteinResolver() {
             @NotNull
             @Override
-            public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull final String gene,
-                    @Nullable final String specificTranscript, @NotNull final String proteinAnnotation) {
+            public List<VariantHotspot> resolve(@NotNull final String gene, @Nullable final String specificTranscript,
+                    @NotNull final String proteinAnnotation) {
                 return Lists.newArrayList();
             }
 

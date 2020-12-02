@@ -25,8 +25,8 @@ public class DocmExtractor {
     public List<KnownHotspot> extractFromDocmEntries(@NotNull List<DocmEntry> entries) {
         List<KnownHotspot> knownHotspots = Lists.newArrayList();
         for (DocmEntry entry : entries) {
-            List<VariantHotspot> hotspots =
-                    proteinResolver.extractHotspotsFromProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation());
+            List<VariantHotspot> hotspots = proteinResolver.resolve(entry.gene(), entry.transcript(), entry.proteinAnnotation());
+
             for (VariantHotspot hotspot : hotspots) {
                 knownHotspots.add(ImmutableKnownHotspot.builder()
                         .from(hotspot)

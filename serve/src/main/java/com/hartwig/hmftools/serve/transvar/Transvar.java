@@ -53,8 +53,7 @@ public class Transvar implements ProteinResolver {
 
     @Override
     @NotNull
-    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @Nullable String specificTranscript,
-            @NotNull String proteinAnnotation) {
+    public List<VariantHotspot> resolve(@NotNull String gene, @Nullable String specificTranscript, @NotNull String proteinAnnotation) {
         List<VariantHotspot> hotspots = extractHotspotsForAnnotation(gene, specificTranscript, proteinAnnotation);
 
         String proteinKey = ProteinKeyFormatter.toProteinKey(gene, specificTranscript, proteinAnnotation);

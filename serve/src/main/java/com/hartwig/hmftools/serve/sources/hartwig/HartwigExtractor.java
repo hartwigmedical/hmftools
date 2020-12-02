@@ -39,8 +39,7 @@ public class HartwigExtractor {
         for (HartwigEntry entry : entries) {
             List<VariantHotspot> hotspots = Lists.newArrayList();
             if (!entry.proteinAnnotation().isEmpty()) {
-                hotspots =
-                        proteinResolver.extractHotspotsFromProteinAnnotation(entry.gene(), entry.transcript(), entry.proteinAnnotation());
+                hotspots = proteinResolver.resolve(entry.gene(), entry.transcript(), entry.proteinAnnotation());
             }
 
             if (addExplicitHotspots) {
