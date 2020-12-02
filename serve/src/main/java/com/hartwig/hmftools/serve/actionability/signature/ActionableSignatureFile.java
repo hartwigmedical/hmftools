@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ActionableSignatureFile {
 
-    private static final String ACTIONABLE_SIGNATURE_TSV = "actionableSignatures.tsv";
+    private static final String ACTIONABLE_SIGNATURE_TSV = "ActionableSignatures.tsv";
     private static final String DELIMITER = "\t";
 
     private ActionableSignatureFile() {

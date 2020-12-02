@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ActionableGeneFile {
 
-    private static final String ACTIONABLE_GENE_TSV = "actionableGenes.tsv";
+    private static final String ACTIONABLE_GENE_TSV = "ActionableGenes.tsv";
     private static final String DELIMITER = "\t";
 
     private ActionableGeneFile() {

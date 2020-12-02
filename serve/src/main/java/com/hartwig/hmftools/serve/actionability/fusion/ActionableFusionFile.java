@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class ActionableFusionFile {
 
-    private static final String ACTIONABLE_FUSION_TSV = "actionableFusions.tsv";
+    private static final String ACTIONABLE_FUSION_TSV = "ActionableFusions.tsv";
     private static final String DELIMITER = "\t";
 
     private ActionableFusionFile() {

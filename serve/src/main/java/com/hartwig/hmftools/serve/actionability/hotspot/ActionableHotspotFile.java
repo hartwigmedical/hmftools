@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public final class ActionableHotspotFile {
 
     private static final String DELIMITER = "\t";
-    private static final String ACTIONABLE_HOTSPOT_TSV = "actionableHotspots.tsv";
+    private static final String ACTIONABLE_HOTSPOT_TSV = "ActionableHotspots.tsv";
 
     private ActionableHotspotFile() {
     }

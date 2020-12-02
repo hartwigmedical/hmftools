@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ActionableRangeFile {
 
-    private static final String ACTIONABLE_RANGE_TSV = "actionableRanges.tsv";
+    private static final String ACTIONABLE_RANGE_TSV = "ActionableRanges.tsv";
     private static final String DELIMITER = "\t";
 
     private ActionableRangeFile() {
