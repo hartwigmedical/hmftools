@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
@@ -22,6 +23,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -81,8 +83,7 @@ public class GeneRangeExtractor {
                         if (codonNumber != null) {
                             List<GeneRangeAnnotation> annotations = Lists.newArrayList();
                             String geneSymbol = feature.geneSymbol();
-                            GeneRangeAnnotation annotation = determineCodonAnnotation(
-                                    canonicalTranscript,
+                            GeneRangeAnnotation annotation = determineCodonAnnotation(canonicalTranscript,
                                     extractMutationTypeFilter(feature.name(), driverGenes, feature.geneSymbol()),
                                     codonNumber,
                                     geneSymbol);
@@ -205,11 +206,9 @@ public class GeneRangeExtractor {
 
     @Nullable
     private static GeneRangeAnnotation determineCodonAnnotation(@NotNull HmfTranscriptRegion canonicalTranscript,
-            @NotNull MutationTypeFilter specificMutationType, int codonNumber,
-            @NotNull String geneSymbol) {
+            @NotNull MutationTypeFilter specificMutationType, int codonNumber, @NotNull String geneSymbol) {
         List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
-        LOGGER.info(genomeRegions);
-        // TODO Support codons spanning multiple exons
+
         if (genomeRegions != null && genomeRegions.size() == 1) {
             String chromosome = genomeRegions.get(0).chromosome();
             long start = genomeRegions.get(0).start();
@@ -224,10 +223,16 @@ public class GeneRangeExtractor {
                     .rangeType(GeneRangeType.CODON)
                     .rangeNumber(codonNumber)
                     .build();
-        } else if (genomeRegions != null && genomeRegions.size() ==2) {
-            String chromosome = genomeRegions.get(0).chromosome();
-            long start = genomeRegions.get(0).start();
-            long end = genomeRegions.get(1).end();
+        } else if (genomeRegions != null && genomeRegions.size() == 2) {
+            String chromosome = genomeRegions.get(0).chromosome().equals(genomeRegions.get(1).chromosome())
+                    ? genomeRegions.get(0).chromosome()
+                    : Strings.EMPTY;
+            if (chromosome.isEmpty()) {
+                LOGGER.warn("Chromosome positions are not equals!");
+            }
+
+            long start = canonicalTranscript.strand() == Strand.FORWARD ? genomeRegions.get(0).start() : genomeRegions.get(1).start();
+            long end = canonicalTranscript.strand() == Strand.FORWARD ? genomeRegions.get(1).start() : genomeRegions.get(0).end();
 
             return ImmutableGeneRangeAnnotation.builder()
                     .gene(geneSymbol)
