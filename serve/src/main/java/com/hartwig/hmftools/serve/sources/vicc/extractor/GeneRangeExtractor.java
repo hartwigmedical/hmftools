@@ -208,11 +208,26 @@ public class GeneRangeExtractor {
             @NotNull MutationTypeFilter specificMutationType, int codonNumber,
             @NotNull String geneSymbol) {
         List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonNumber);
+        LOGGER.info(genomeRegions);
         // TODO Support codons spanning multiple exons
         if (genomeRegions != null && genomeRegions.size() == 1) {
             String chromosome = genomeRegions.get(0).chromosome();
             long start = genomeRegions.get(0).start();
             long end = genomeRegions.get(0).end();
+
+            return ImmutableGeneRangeAnnotation.builder()
+                    .gene(geneSymbol)
+                    .chromosome(chromosome)
+                    .start(start)
+                    .end(end)
+                    .mutationType(specificMutationType)
+                    .rangeType(GeneRangeType.CODON)
+                    .rangeNumber(codonNumber)
+                    .build();
+        } else if (genomeRegions != null && genomeRegions.size() ==2) {
+            String chromosome = genomeRegions.get(0).chromosome();
+            long start = genomeRegions.get(0).start();
+            long end = genomeRegions.get(1).end();
 
             return ImmutableGeneRangeAnnotation.builder()
                     .gene(geneSymbol)

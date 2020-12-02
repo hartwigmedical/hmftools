@@ -53,10 +53,9 @@ public class GeneRangeExtractorTest {
     }
 
     @Test
-    @Ignore
     public void canExtractRangesCodonOnMultipleExons() {
         GeneRangeExtractor geneRangeExtractor =
-                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "EGFR", "KIT"), new GeneChecker());
+                new GeneRangeExtractor(HmfGenePanelSupplier.allGenesMap37(), createDriverGenes("TP53", "KRAS", "KIT"), new GeneChecker());
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KRAS", "R97");
 
@@ -64,9 +63,9 @@ public class GeneRangeExtractorTest {
                 Lists.newArrayList(ImmutableGeneRangeAnnotation.builder()
                         .gene("KRAS")
                         .chromosome("12")
-                        .start(7577534)
-                        .end(7577536)
-                        .mutationType(MutationTypeFilter.ANY)
+                        .start(25378707)
+                        .end(25380169)
+                        .mutationType(MutationTypeFilter.MISSENSE_ANY)
                         .rangeType(GeneRangeType.CODON)
                         .rangeNumber(97)
                         .build()));
