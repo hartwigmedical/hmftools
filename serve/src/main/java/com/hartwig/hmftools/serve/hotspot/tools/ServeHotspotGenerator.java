@@ -71,7 +71,7 @@ public class ServeHotspotGenerator {
 
         if (hostname.toLowerCase().contains("datastore")) {
             refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            serveSourceDir = "/data/common/dbs/serve";
+            serveSourceDir = "/data/common/dbs/serve/static_sources";
 
             generateHotspots = true;
             hotspotVcf = System.getProperty("user.home") + "/tmp/hotspotsServe.vcf";

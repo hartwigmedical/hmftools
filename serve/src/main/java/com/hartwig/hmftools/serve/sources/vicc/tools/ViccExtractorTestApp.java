@@ -53,7 +53,7 @@ public class ViccExtractorTestApp {
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
                     "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
         } else {
-            viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/vicc/all.json";
+            viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json";
             driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
             proteinResolver = ProteinResolverFactory.dummy();
