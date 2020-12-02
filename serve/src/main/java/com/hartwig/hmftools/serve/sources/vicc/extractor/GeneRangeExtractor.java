@@ -181,6 +181,7 @@ public class GeneRangeExtractor {
                 .rangeType(GeneRangeType.EXON)
                 .exonId(hmfExonRegion.exonID())
                 .rangeNumber(exonNumber)
+                .geneOrientation(transcript.strand())
                 .build();
     }
 
@@ -220,6 +221,7 @@ public class GeneRangeExtractor {
                     .mutationType(specificMutationType)
                     .rangeType(GeneRangeType.CODON)
                     .rangeNumber(codonNumber)
+                    .geneOrientation(canonicalTranscript.strand())
                     .build();
         } else if (genomeRegions != null && genomeRegions.size() == 2) {
             String chromosome = genomeRegions.get(0).chromosome().equals(genomeRegions.get(1).chromosome())
@@ -240,6 +242,7 @@ public class GeneRangeExtractor {
                     .mutationType(specificMutationType)
                     .rangeType(GeneRangeType.CODON)
                     .rangeNumber(codonNumber)
+                    .geneOrientation(canonicalTranscript.strand())
                     .build();
         } else {
             LOGGER.warn("None genomic positions of the codon {} on gene {} could be extracted", codonNumber, geneSymbol);
