@@ -10,14 +10,10 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.Transvar;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class ProteinResolverFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(ProteinResolverFactory.class);
 
     private ProteinResolverFactory() {
     }
@@ -25,9 +21,6 @@ public final class ProteinResolverFactory {
     @NotNull
     public static ProteinResolver transvarWithRefGenome(@NotNull RefGenomeVersion refGenomeVersion,
             @NotNull String refGenomeFastaFile) throws FileNotFoundException {
-        LOGGER.info("Creating protein resolver with ref genome version '{}' and fasta path '{}'",
-                refGenomeVersion,
-                refGenomeFastaFile);
         return Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
     }
 

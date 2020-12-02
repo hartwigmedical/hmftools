@@ -20,8 +20,7 @@ import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
-import com.hartwig.hmftools.serve.sources.docm.DocmFileReader;
-import com.hartwig.hmftools.serve.sources.docm.curation.DocmCurator;
+import com.hartwig.hmftools.serve.sources.docm.DocmReader;
 import com.hartwig.hmftools.serve.sources.hartwig.HartwigEntry;
 import com.hartwig.hmftools.serve.sources.hartwig.HartwigExtractor;
 import com.hartwig.hmftools.serve.sources.hartwig.HartwigFileReader;
@@ -102,10 +101,6 @@ public class ServeHotspotGenerator {
                 : ProteinResolverFactory.dummy();
 
         List<KnownHotspot> hartwigCohortHotspots = hartwigCohortHotspots(hartwigCohortTsv, proteinResolver, generateHotspots);
-
-        // Temporary code to just check cohort hotspot generation.
-        System.exit(0);
-
         List<KnownHotspot> hartwigCuratedHotspots = hartwigCuratedHotspots(hartwigCuratedTsv, proteinResolver, generateHotspots);
         List<KnownHotspot> viccHotspots = viccHotspots(viccJson, proteinResolver);
         List<KnownHotspot> docmHotspots = docmHotspots(docmTsv, proteinResolver);
@@ -148,19 +143,9 @@ public class ServeHotspotGenerator {
 
     @NotNull
     private static List<KnownHotspot> docmHotspots(@NotNull String docmTsv, @NotNull ProteinResolver proteinResolver) throws IOException {
-        LOGGER.info("Reading DoCM TSV from '{}'", docmTsv);
-        List<DocmEntry> docmEntries = DocmFileReader.readDcomFile(docmTsv);
-        LOGGER.info(" Read {} entries", docmEntries.size());
+        List<DocmEntry> entries = DocmReader.readAndCurate(docmTsv);
 
-        DocmCurator curator = new DocmCurator();
-        LOGGER.info("Curating {} DoCM entries", docmEntries.size());
-        List<DocmEntry> curatedDocmEntries = curator.curate(docmEntries);
-        LOGGER.info(" Finished DoCM curation. {} entries remaining after curation. {} entries have been removed",
-                curatedDocmEntries.size(),
-                docmEntries.size() - curatedDocmEntries.size());
-        curator.reportUnusedBlacklistEntries();
-
-        return new DocmExtractor(proteinResolver).extractFromDocmEntries(curatedDocmEntries);
+        return new DocmExtractor(proteinResolver).extractFromDocmEntries(entries);
     }
 
     @NotNull

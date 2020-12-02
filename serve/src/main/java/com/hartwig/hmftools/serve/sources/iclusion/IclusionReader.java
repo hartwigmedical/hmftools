@@ -23,7 +23,7 @@ public final class IclusionReader {
     public static List<IclusionTrial> readAndCurate(@NotNull String iClusionTrialTsv) throws IOException {
         LOGGER.info("Reading iClusion trial TSV from '{}'", iClusionTrialTsv);
         List<IclusionTrial> trials = IclusionTrialFile.read(iClusionTrialTsv);
-        LOGGER.info(" Read {} trials from {}", trials.size(), iClusionTrialTsv);
+        LOGGER.info(" Read {} trials", trials.size());
 
         return filter(curate(trials));
     }

@@ -18,7 +18,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -37,18 +36,19 @@ public class PatientReporterApplication {
     //                public static final String VERSION = "7.18";
 
     public static void main(@NotNull String[] args) throws IOException {
+        LOGGER.info("Running patient reporter v{}", VERSION);
+
         Options options = PatientReporterConfig.createOptions();
 
         PatientReporterConfig config = null;
         try {
-            config = PatientReporterConfig.createConfig(createCommandLine(options, args));
+            config = PatientReporterConfig.createConfig(new DefaultParser().parse(options, args));
         } catch (ParseException exception) {
             LOGGER.warn(exception);
             new HelpFormatter().printHelp("PatientReporter", options);
             System.exit(1);
         }
 
-        LOGGER.info("Running patient reporter v{}", VERSION);
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
         if (config.qcFail()) {
@@ -180,10 +180,5 @@ public class PatientReporterApplication {
                 config.knowledgebaseDir(),
                 config.germlineReportingTsv(),
                 config.sampleSummaryTsv());
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull Options options, @NotNull String... args) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }
