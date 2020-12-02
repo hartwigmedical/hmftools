@@ -73,6 +73,9 @@ public class ServeApplication {
         extractions.add(extractHartwigCohortKnowledge(config.hartwigCohortTsv(), proteinResolver, !config.skipHotspotResolving()));
         extractions.add(extractHartwigCuratedKnowledge(config.hartwigCuratedTsv(), proteinResolver, !config.skipHotspotResolving()));
 
+        ExtractionResult merged = ExtractionFunctions.merge(extractions);
+
+
         LOGGER.info("Done with {} extractions!", extractions.size());
     }
 
