@@ -243,8 +243,9 @@ public class GeneRangeExtractor {
                     .rangeType(GeneRangeType.CODON)
                     .rangeNumber(codonNumber)
                     .build();
+        } else {
+            LOGGER.warn("None genomic positions of the codon {} on gen {} could be extracted", codonNumber, geneSymbol);
         }
-
         return null;
     }
 
