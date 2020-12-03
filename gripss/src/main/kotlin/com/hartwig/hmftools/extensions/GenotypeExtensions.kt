@@ -20,6 +20,8 @@ fun Genotype.readPairs(): Int = attributeAsInt("RP", 0)
 
 fun Genotype.splitRead(): Int = requireAttributeAsInt("SR")
 
+fun Genotype.indelCount(): Int = requireAttributeAsInt("IC")
+
 fun Genotype.refSupportRead(): Int = requireAttributeAsInt("REF")
 
 fun Genotype.refSupportReadPair(): Int = requireAttributeAsInt("REFPAIR")

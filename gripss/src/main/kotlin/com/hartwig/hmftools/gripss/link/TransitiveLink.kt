@@ -153,7 +153,7 @@ private data class Node(val transLinkPrefix: String, val maxTransitiveJumps: Int
             val assemblyLinkedVariants = unfilteredAssemblyLinks
                     .filter { x -> !links.contains(x) }
                     .map { x -> Pair(x, variantStore.select(x.otherVcfId)) }
-                    .sortedByDescending { x -> x.second.qual }
+                    .sortedByDescending { x -> x.second.tumorQual }
 
             for (linkPair in assemblyLinkedVariants) {
                 val link = linkPair.first
@@ -213,5 +213,5 @@ private data class Node(val transLinkPrefix: String, val maxTransitiveJumps: Int
 }
 
 private fun Collection<StructuralVariantContext>.sortByQualDesc(): List<StructuralVariantContext> {
-    return this.sortedByDescending { x -> x.qual }
+    return this.sortedByDescending { x -> x.tumorQual }
 }

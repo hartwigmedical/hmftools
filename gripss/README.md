@@ -83,8 +83,8 @@ minLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequ
 maxHomLengthShortInv | 6 | INV(<40b) | Very short INV with high homology are a common sequencer artefact
 maxInexactHomLengthShortDel | 6 | DEL(<1kb) | Short DEL with high homology are a common mapping artefact
 shortStrandBias | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
-shortSRTumorSupport | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read
-shortSRNormalSupport | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read in the normal
+shortSRTumorSupport | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read or in the case of very short DEL and INS at least 1 supporting indel containing read.
+shortSRNormalSupport | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read or 1 indel containing read in the normal 
 shortDelInsArtefact | | DEL(<1kb) | Filter any short DEL where the insert sequence length + 1 = deletion length, unless the insert sequence is identical to the reverse complement (ie a short reciprocal inversion).  This is a known GRIDSS artefact.
 
 ## 4. Linkage, deduplication and rescue
@@ -130,6 +130,10 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
+- [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.10)
+  - Removed viral insertion exception from normal relative support filter
+  - Add EventType flag [DEL, INS, DUP, INV, SGL, BND]
+  - Check IC flag whenever we check SR 
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.9)
   - Warn if malformed BEALN field in input
   - Only include specified samples in VCF output

@@ -42,7 +42,7 @@ class DedupSingle(val duplicates: Set<String>) {
                 return originalPass
             }
 
-            return original.qual > alternative.qual
+            return original.tumorQual > alternative.tumorQual
         }
     }
 }

@@ -60,10 +60,10 @@ class StructuralVariantContextTest {
     @Test
     fun testNormalSupportRelativeFilter() {
         fun assertFilter(expected: Boolean, context: VariantContext, maxNormalRelativeSupport: Double) =
-                assertNormalFilter(expected, context) { x -> x.normalSupportRelativeFilter(maxNormalRelativeSupport, contigComparator)}
+                assertNormalFilter(expected, context) { x -> x.normalSupportRelativeFilter(maxNormalRelativeSupport) }
 
         assertFilter(true, sgl().fragmentSupport(3, 9), 0.03)
-        assertFilter(false, sgl().setViralSequenceAlignment().fragmentSupport(3, 9), 0.03)
+        assertFilter(true, sgl().setViralSequenceAlignment().fragmentSupport(3, 9), 0.03)
 
         assertFilter(true, bnd().fragmentSupport(3, 9), 0.03)
         assertFilter(true, bnd().setViralSequenceAlignment().fragmentSupport(3, 9), 0.03)
@@ -74,7 +74,7 @@ class StructuralVariantContextTest {
 
     @Test
     fun testNormalSupportAbsoluteFilter() {
-        fun assertFilter(expected: Boolean, context: VariantContext, maxNormalAbsoluteSupport: Int) = assertNormalFilter(expected, context) { x -> x.normalSupportAbsoluteFilter(maxNormalAbsoluteSupport)}
+        fun assertFilter(expected: Boolean, context: VariantContext, maxNormalAbsoluteSupport: Int) = assertNormalFilter(expected, context) { x -> x.normalSupportAbsoluteFilter(maxNormalAbsoluteSupport) }
 
         assertFilter(true, sgl().fragmentSupport(4, 0), 3)
         assertFilter(false, sgl().fragmentSupport(3, 0), 3)
@@ -95,7 +95,7 @@ class StructuralVariantContextTest {
         val sgl = sgl().qual(config.hardMinTumorQual - 1).toSv()
         assertTrue(sgl.tumorQualFilter(config.hardMinTumorQual))
         assertFalse(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
-        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, contigComparator))
+        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
         assertTrue(sgl.isHardFilter(config, contigComparator, true))
         assertTrue(sgl.isHardFilter(config, contigComparator, false))
     }
@@ -103,15 +103,15 @@ class StructuralVariantContextTest {
     @Test
     fun testHardMaxNormalAbsoluteSupportIsRecoveredByHotspot() {
         val config = GripssFilterConfig.default()
-        val normalSupport =  config.hardMaxNormalAbsoluteSupport + 1
+        val normalSupport = config.hardMaxNormalAbsoluteSupport + 1
         val tumorSupport = ceil(normalSupport / config.softMaxNormalRelativeSupport).toInt() - 1
         val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
 
         assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
-        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, contigComparator))
+        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
 
         assertTrue(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
-        assertTrue(sgl.normalSupportRelativeFilter(config.softMaxNormalRelativeSupport, contigComparator))
+        assertTrue(sgl.normalSupportRelativeFilter(config.softMaxNormalRelativeSupport))
 
         assertFalse(sgl.isHardFilter(config, contigComparator, true))
         assertTrue(sgl.isHardFilter(config, contigComparator, false))
@@ -124,10 +124,10 @@ class StructuralVariantContextTest {
         val tumorSupport = ceil(normalSupport / config.softMaxNormalRelativeSupport).toInt() + 1
         val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
         assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
-        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, contigComparator))
+        assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
 
         assertTrue(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
-        assertFalse(sgl.normalSupportRelativeFilter(config.softMaxNormalRelativeSupport, contigComparator))
+        assertFalse(sgl.normalSupportRelativeFilter(config.softMaxNormalRelativeSupport))
 
         assertFalse(sgl.isHardFilter(config, contigComparator, true))
         assertFalse(sgl.isHardFilter(config, contigComparator, false))
@@ -141,7 +141,7 @@ class StructuralVariantContextTest {
         val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
         assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
         assertFalse(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
-        assertTrue(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport, contigComparator))
+        assertTrue(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
 
         assertFalse(sgl.isHardFilter(config, contigComparator, true))
         assertTrue(sgl.isHardFilter(config, contigComparator, false))
@@ -211,7 +211,7 @@ class StructuralVariantContextTest {
 
     @Test
     fun testLongDPSupport() {
-        fun assertFilter(expected: Boolean, context: VariantContext) = assertNormalFilter(expected, context) { x -> x.discordantPairSupportFilter()}
+        fun assertFilter(expected: Boolean, context: VariantContext) = assertNormalFilter(expected, context) { x -> x.discordantPairSupportFilter() }
 
         assertFilter(false, sgl())
         assertFilter(false, shortDel())
@@ -233,7 +233,7 @@ class StructuralVariantContextTest {
 
     @Test
     fun testShortSRNormalFilter() {
-        fun assertFilter(expected: Boolean, context: VariantContext) = assertNormalFilter(expected, context) { x -> x.shortSplitReadNormalFilter()}
+        fun assertFilter(expected: Boolean, context: VariantContext) = assertNormalFilter(expected, context) { x -> x.shortSplitReadNormalFilter() }
 
         val bnd = bnd().splitReads(1, 0).toSv()
         assertFalse(bnd.shortSplitReadNormalFilter())
