@@ -8,7 +8,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class GermlineBlacklist {
 
-
     static List<VariantContext> grch37Blacklist() {
         List<VariantContext> result = Lists.newArrayList();
         // FANCL
@@ -32,6 +31,29 @@ public class GermlineBlacklist {
         result.add(create("16", 2138244, "A", "AG"));
         result.add(create("16", 2138249, "A", "AC"));
         result.add(create("16", 2138253, "GCTCC", "G"));
+
+        // PALB2
+        result.add(create("16", 23631307, "G", "C"));
+
+        return result;
+    }
+
+    static List<VariantContext> grch38Blacklist() {
+        final List<VariantContext> result = Lists.newArrayList();
+
+        result.add(create("chr2", 58159793, "G", "GTAAT"));
+        result.add(create("chr5", 177093242, "G", "A"));
+        result.add(create("chr11", 32392003, "CT", "C"));
+        result.add(create("chr11", 32392006, "CA", "C"));
+        result.add(create("chr11", 32392015, "GGA", "G"));
+        result.add(create("chr11", 32392027, "C", "CA"));
+        result.add(create("chr11", 64805745, "C", "CG"));
+        result.add(create("chr11", 64805763, "AGTTG", "A"));
+        result.add(create("chr16", 2088241, "G", "GTTTTT"));
+        result.add(create("chr16", 2088243, "A", "AG"));
+        result.add(create("chr16", 2088248, "A", "AC"));
+        result.add(create("chr16", 2088252, "GCTCC", "G"));
+        result.add(create("chr16", 23619986, "G", "C"));
 
         return result;
     }

@@ -13,15 +13,14 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 class GermlineBlacklistVCF {
 
     public static void main(String[] args) {
-        new GermlineBlacklistVCF().process("/Users/jon/hmf/resources/KnownBlacklist.germline.hg19.vcf.gz");
+        new GermlineBlacklistVCF().process("/Users/jon/hmf/resources/KnownBlacklist.germline.hg19.vcf.gz",  GermlineBlacklist.grch37Blacklist());
+        new GermlineBlacklistVCF().process("/Users/jon/hmf/resources/KnownBlacklist.germline.hg38.vcf.gz",  GermlineBlacklist.grch38Blacklist());
     }
 
 
     static final String BLACKLIST_FLAG = "BLACKLIST";
 
-    public void process(final String outputFile) {
-
-        final List<VariantContext> variants = GermlineBlacklist.grch37Blacklist();
+    public void process(final String outputFile, List<VariantContext> variants) {
 
         // WRITE
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
