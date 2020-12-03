@@ -334,7 +334,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun shortSplitReadTumorFilter(): Boolean {
-        return isShort && tumorGenotype.splitRead() == 0
+        val splitRead = tumorGenotype.splitRead()
+        val indelCount = tumorGenotype.indelCount()
+
+        return isShort && (splitRead + indelCount) == 0
     }
 
     fun shortSplitReadNormalFilter(): Boolean {
@@ -342,7 +345,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             return false
         }
 
-        return isShort && normalGenotype.splitRead() > 0
+        val splitRead = normalGenotype.splitRead()
+        val indelCount = normalGenotype.indelCount()
+
+        return isShort && splitRead + indelCount > 0
     }
 
     fun discordantPairSupportFilter(): Boolean {

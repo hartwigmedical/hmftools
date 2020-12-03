@@ -98,7 +98,7 @@ object VariantContextTestFactory {
     }
 
     fun VariantContext.splitReads(normal: Int, tumor: Int): VariantContext {
-        return addGenotypeAttribute("SR", normal, tumor)
+        return addGenotypeAttribute("SR", normal, tumor).addGenotypeAttribute("IC", 0, 0)
     }
 
     fun VariantContext.fragmentSupport(normal: Int, tumor: Int): VariantContext {
