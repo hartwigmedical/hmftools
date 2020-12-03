@@ -7,7 +7,7 @@ data class Single(
         override val alt: String,
         override val insertSequence: String,
         override val startOrientation: Byte)
-    : VariantType(SvType.SGL) {
+    : VariantType(EventType.SGL) {
 
     override fun toString(): String {
         return if (startOrientation == 1.toByte()) "${alt}${insertSequence}." else ".${insertSequence}${alt}"
@@ -25,7 +25,7 @@ data class Translocation(
         override val otherPosition: Int,
         override val startOrientation: Byte,
         override val endOrientation: Byte)
-    : Paired(SvType.BND) {
+    : Paired(EventType.BND) {
     override fun toString(): String = altString()
 
     override val length: Int = -1
@@ -39,7 +39,7 @@ data class Inversion(
         override val startOrientation: Byte,
         override val endOrientation: Byte,
         override val length: Int)
-    : Paired(SvType.INV) {
+    : Paired(EventType.INV) {
     override fun toString(): String = altString()
 }
 
@@ -51,7 +51,7 @@ data class Deletion(
         override val startOrientation: Byte,
         override val endOrientation: Byte,
         override val length: Int)
-    : Paired(SvType.DEL) {
+    : Paired(EventType.DEL) {
     override fun toString(): String = altString()
 }
 
@@ -62,7 +62,7 @@ data class Duplication(
         override val otherPosition: Int,
         override val startOrientation: Byte,
         override val endOrientation: Byte,
-        override val length: Int) : Paired(SvType.DUP) {
+        override val length: Int) : Paired(EventType.DUP) {
     override fun toString(): String = altString()
 }
 
@@ -73,11 +73,11 @@ data class Insertion(
         override val otherPosition: Int,
         override val startOrientation: Byte,
         override val endOrientation: Byte,
-        override val length: Int) : Paired(SvType.INS) {
+        override val length: Int) : Paired(EventType.INS) {
     override fun toString(): String = altString()
 }
 
-sealed class Paired(type: SvType)  : VariantType(type) {
+sealed class Paired(type: EventType)  : VariantType(type) {
     abstract val otherChromosome: String
     abstract val otherPosition: Int
     abstract val endOrientation: Byte
@@ -97,7 +97,7 @@ sealed class Paired(type: SvType)  : VariantType(type) {
     }
 }
 
-sealed class VariantType(val svType: SvType) {
+sealed class VariantType(val eventType: EventType) {
     abstract val alt: String
     abstract val insertSequence: String
     abstract val startOrientation: Byte

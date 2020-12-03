@@ -27,6 +27,7 @@ const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL = "maxInexactHomLengthShortDel"
 const val PASS = "PASS"
 const val MIN_LENGTH = "minLength"
 
+const val EVENTTYPE = "EVENTTYPE"
 const val TAF = "TAF"
 const val ALT_PATH = "ALTP"
 const val HOTSPOT = "HOTSPOT"
@@ -56,12 +57,13 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
         metaData.add(VCFFilterHeaderLine(MIN_NORMAL_COVERAGE, "Insufficient normal coverage to determine somatic status"))
         metaData.add(VCFFilterHeaderLine(SHORT_STRAND_BIAS, "Short event with excessive strand bias in split reads/soft clipped reads overlapping breakpoint"))
         metaData.add(VCFFilterHeaderLine(MIN_QUAL, "Insufficient quality"))
-        metaData.add(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Single breakend containing long polyC or polyG run. Likely to be an artefact"))
+        metaData.add(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Single breakend containing long polyC or polyG run. Likely to be an artifact"))
         metaData.add(VCFFilterHeaderLine(MAX_POLY_A_HOM_LENGTH, "Homology containing long polyA or polyT run"))
         metaData.add(VCFFilterHeaderLine(IMPRECISE, "Imprecise variant"))
         metaData.add(VCFFilterHeaderLine(PASS, "Variant passes all filters"))
-        metaData.add(VCFFilterHeaderLine(SHORT_DEL_INS_ARTIFACT, "Filter any short DEL where the insert sequence length + 1 = deletion length. This is a known GRIDSS artefact."))
+        metaData.add(VCFFilterHeaderLine(SHORT_DEL_INS_ARTIFACT, "Filter any short DEL where the insert sequence length + 1 = deletion length. This is a known GRIDSS artifact."))
 
+        metaData.add(VCFInfoHeaderLine(EVENTTYPE, 1, VCFHeaderLineType.String, "Event type [${EventType.values().joinToString { it.toString()} }]"))
         metaData.add(VCFInfoHeaderLine(TAF, 1, VCFHeaderLineType.Float, "Description"))
         metaData.add(VCFInfoHeaderLine(ALT_PATH, 1, VCFHeaderLineType.String, "Alternate path"))
         metaData.add(VCFInfoHeaderLine(LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Breakend linking information"))

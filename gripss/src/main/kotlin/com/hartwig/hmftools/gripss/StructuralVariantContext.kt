@@ -198,6 +198,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
                 .attribute(LOCAL_LINKED_BY, localLink)
                 .attribute(REMOTE_LINKED_BY, remoteLink)
                 .attribute(HOTSPOT, isHotspot)
+                .attribute(EVENTTYPE,variantType.eventType)
 
         altPath?.let { x -> builder.attribute(ALT_PATH, x) }
         filters.forEach { x -> builder.filter(x) }
