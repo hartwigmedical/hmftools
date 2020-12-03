@@ -220,7 +220,7 @@ public class ResultsWriter
 
         try
         {
-            final String outputFileName = mConfig.formOutputFile("gene_collection_data.csv");
+            final String outputFileName = mConfig.formOutputFile("gene_collection.csv");
 
             mGeneCollectionWriter = createBufferedWriter(outputFileName, false);
             mGeneCollectionWriter.write("GeneSetId,GeneCount,Chromosome,RangeStart,RangeEnd");

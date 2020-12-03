@@ -289,6 +289,13 @@ public class SpliceVariantMatcher
                 AcceptorDonorType acceptorDonorType = AcceptorDonorType.NONE;
                 int exonDistance = 0;
 
+                if((i == 0 && withinRange(exon.ExonStart, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE))
+                || (i == transData.exons().size() - 1 && withinRange(exon.ExonEnd, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE)))
+                {
+                    // ignore matching at the first or last base of a transcript
+                    continue;
+                }
+
                 if(positionWithin(variant.Position, exon.ExonStart, exon.ExonEnd))
                 {
                     // variant within an exon
