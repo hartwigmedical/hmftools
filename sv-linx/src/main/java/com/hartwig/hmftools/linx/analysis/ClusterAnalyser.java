@@ -326,18 +326,18 @@ public class ClusterAnalyser {
             LNX_LOGGER.debug("cluster({}: {}) de-merging {} simple SVs", cluster.id(), cluster.getDesc(), discardSVs.size());
             mClusters.remove(cluster);
             discardSVs.addAll(cluster.getSVs());
+        }
 
-            for(SvVarData var : discardSVs)
-            {
-                SvCluster newCluster = new SvCluster(mState.getNextClusterId());
-                var.clearClusteringData();
-                newCluster.addVariant(var);
+        for(SvVarData var : discardSVs)
+        {
+            SvCluster newCluster = new SvCluster(mState.getNextClusterId());
+            var.clearClusteringData();
+            newCluster.addVariant(var);
 
-                mDmFinder.analyseCluster(newCluster);
+            mDmFinder.analyseCluster(newCluster);
 
-                setClusterResolvedState(newCluster, true);
-                mClusters.add(newCluster);
-            }
+            setClusterResolvedState(newCluster, true);
+            mClusters.add(newCluster);
         }
     }
 
