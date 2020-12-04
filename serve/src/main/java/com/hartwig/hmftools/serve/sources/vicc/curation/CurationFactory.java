@@ -53,10 +53,9 @@ final class CurationFactory {
         // Improve for consistency
         FEATURE_MAPPINGS.put(cgi("MET", null, "MET (Y1230C;Y1235D)"), curation("MET", "MET (Y1230C,Y1235D)"));
 
-        // These mappings are to work around the missing transcripts in JAX.
-        // We map every mutation that appears on both the canonical + non-canonical form to its canonical form in ensembl.
-        FEATURE_MAPPINGS.put(cgi("FGFR3", null, "FGFR3 (K650) "), curation("FGFR3", "FGFR3 (Y650) "));
-        FEATURE_MAPPINGS.put(cgi("GNAS", null, "GNAS (R201) "), curation("GNAS", "GNAS (E201) "));
+        // Variants that don't exist on this transcript
+        FEATURE_BLACKLIST.add(cgi("FGFR3", null, "FGFR3 (K650)"));
+        FEATURE_BLACKLIST.add(cgi("GNAS", null, "GNAS (R201)"));
     }
 
     private static void populateCIViCCuration() {
