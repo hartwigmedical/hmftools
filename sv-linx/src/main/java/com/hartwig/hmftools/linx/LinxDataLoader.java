@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
+import com.hartwig.hmftools.linx.types.GermlineFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
@@ -172,7 +173,7 @@ public class LinxDataLoader
 
         try
         {
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new GermlineFilter(true));
 
             int svId = 0;
 

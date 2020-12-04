@@ -378,7 +378,7 @@ public class SampleAnalyser
         final List<LinxLink> linksData = prepareSampleData ? generateLinksOutput() : null;
         final List<LinxViralInsertion> viralInserts = prepareSampleData ? generateViralInserts() : null;
 
-        if(mConfig.hasMultipleSamples())
+        if(mCohortDataWriter.writeCohortFiles())
         {
             mCohortDataWriter.writeSvData(mSampleId, mAllVariants, mViralInsertAnnotator);
             mCohortDataWriter.writeLinksData(mSampleId, mAnalyser.getClusters());

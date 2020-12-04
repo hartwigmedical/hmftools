@@ -12,6 +12,7 @@ public class LinxOutput
     public final boolean WriteClusterHistory;
     public final boolean WriteSingleSVClusters;
     public final boolean WriteLinks;
+    public final boolean WriteCohortFiles;
 
     public final int LogChainingMaxSize;
 
@@ -21,6 +22,7 @@ public class LinxOutput
     private static final String WRITE_CLUSTER_HISTORY = "write_cluster_history";
     private static final String WRITE_LINKS = "write_links";
     private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
+    private static final String WRITE_COHORT_FILES = "write_cohort";
     private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
 
     public static final char SUBSET_DELIM = ';';
@@ -47,6 +49,8 @@ public class LinxOutput
             WriteLinks = cmd.hasOption(WRITE_LINKS) || defaultWrite;
         }
 
+        WriteCohortFiles = cmd.hasOption(WRITE_COHORT_FILES);
+
         LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
     }
 
@@ -58,6 +62,7 @@ public class LinxOutput
         options.addOption(WRITE_CLUSTER_HISTORY, false, "Optional: write clustering history (batch-mode)");
         options.addOption(WRITE_SINGLE_SV_CLUSTERS, false, "Optional: write cluster data for single SV clusters (batch-mode)");
         options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos (batch-mode)");
+        options.addOption(WRITE_COHORT_FILES, false, "Optional: write cohort files even for single sample");
         options.addOption(LOG_CHAIN_MAX_SIZE, true, "Write file with chaining diagnostics for chains less than this (off by default)");
     }
 
@@ -69,6 +74,7 @@ public class LinxOutput
         WriteClusterHistory = false;
         WriteSingleSVClusters = false;
         WriteLinks = false;
+        WriteCohortFiles = false;
 
         LogChainingMaxSize = 0;
     }

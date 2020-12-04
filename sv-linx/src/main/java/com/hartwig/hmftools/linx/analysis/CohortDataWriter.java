@@ -83,9 +83,14 @@ public class CohortDataWriter
         mVisWriter.close();
     }
 
+    public boolean writeCohortFiles()
+    {
+        return mConfig.hasMultipleSamples() || mConfig.Output.WriteCohortFiles;
+    }
+
     private BufferedWriter createSvDataFile()
     {
-        if(!mConfig.hasMultipleSamples())
+        if(!writeCohortFiles())
             return null;
 
         try
@@ -304,7 +309,7 @@ public class CohortDataWriter
 
     private BufferedWriter createClusterFile()
     {
-        if(!mConfig.hasMultipleSamples())
+        if(!writeCohortFiles())
             return null;
 
         try
@@ -433,7 +438,7 @@ public class CohortDataWriter
 
     private BufferedWriter createLinksFile()
     {
-        if(!mConfig.Output.WriteLinks || !mConfig.hasMultipleSamples())
+        if(!mConfig.Output.WriteLinks || !writeCohortFiles())
             return null;
 
         try

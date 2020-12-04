@@ -216,13 +216,16 @@ public class FusionDisruptionAnalyser
             }
         }
 
-        if(cmdLineArgs.hasOption(CHECK_FUSIONS) && !mFusionFinder.hasValidConfigData())
-            mValidState = false;
+        if(cmdLineArgs.hasOption(CHECK_FUSIONS))
+        {
+            if(!mFusionFinder.hasValidConfigData())
+                mValidState = false;
 
-        LNX_LOGGER.debug("fusion config: requirePhaseMatch({}) allowExonSkipping({}) requireUpstreamBiotypes({})",
-                mFusionParams.RequirePhaseMatch, mFusionParams.AllowExonSkipping, mFusionParams.RequireUpstreamBiotypes);
+            LNX_LOGGER.debug("fusion config: requirePhaseMatch({}) allowExonSkipping({}) requireUpstreamBiotypes({})",
+                    mFusionParams.RequirePhaseMatch, mFusionParams.AllowExonSkipping, mFusionParams.RequireUpstreamBiotypes);
 
-        cacheSpecialFusionGenes();
+            cacheSpecialFusionGenes();
+        }
     }
 
     public void cacheSpecialFusionGenes()

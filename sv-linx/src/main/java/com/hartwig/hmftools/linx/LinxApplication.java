@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
@@ -222,7 +223,7 @@ public class LinxApplication
             final List<StructuralVariantData> svRecords = sampleDataFromFile ?
                     loadSampleSvDataFromFile(config, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
 
-            final List<SvVarData> svDataList = createSvData(svRecords);
+            final List<SvVarData> svDataList = createSvData(svRecords, config);
 
             sampleAnalyser.setSampleId(sampleId);
 
@@ -322,13 +323,15 @@ public class LinxApplication
         }
     }
 
-    private static List<SvVarData> createSvData(List<StructuralVariantData> svRecords)
+    private static List<SvVarData> createSvData(final List<StructuralVariantData> svRecords, final LinxConfig config)
     {
         List<SvVarData> svVarDataItems = Lists.newArrayList();
 
         for (final StructuralVariantData svRecord : svRecords)
         {
-            if(svRecord.filter().isEmpty() || svRecord.filter().equals(PASS) || svRecord.filter().equals(INFERRED))
+            final String filter = svRecord.filter();
+
+            if(filter.isEmpty() || filter.equals(PASS) || filter.equals(INFERRED) || (config.IsGermline && filter.equals(PON_FILTER_PON)))
             {
                 svVarDataItems.add(new SvVarData(svRecord));
             }
