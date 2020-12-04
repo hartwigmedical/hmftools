@@ -45,25 +45,76 @@ public class CkbImporterApplication {
 
     private static void readJsonData(@NotNull CkbImporterConfig config) throws IOException {
         List<ClinicalTrial> clinicalTrials = readingClinicalTrial(config.clinicalTrialsDir());
+        readingDrugsClasses(config.drugsClassesDir());
+        readingDrugs(config.drugsDir());
+        readingGenes(config.genesDir());
+        readingGlobalTherapyApprovalStatuses(config.globalTherpyApprovalStatusesDir());
+        readingIndications(config.IndicationsDir());
+        readingMolecularProfiles(config.molecularProfilesDir());
+        readingReferences(config.referencesDir());
+        readingTherapies(config.therapiesDir());
+        readingTreatmentApproaches(config.treatmentApproachesDir());
+        readingVariants(config.variantsDir());
 
+        //implement in 1 object
     }
 
     @NotNull
-    private static List<ClinicalTrial>  readingClinicalTrial(@NotNull String clinicalTrialDir) throws IOException{
+    private static List<ClinicalTrial> readingClinicalTrial(@NotNull String clinicalTrialDir) throws IOException {
         List<ClinicalTrial> clinicalTrials = Lists.newArrayList();
-        File [] filesClinicalTrials = new File(clinicalTrialDir).listFiles();
+        File[] filesClinicalTrials = new File(clinicalTrialDir).listFiles();
         if (filesClinicalTrials != null) {
-            for (File clinicalTrial: filesClinicalTrials) {
+            for (File clinicalTrial : filesClinicalTrials) {
                 JsonParser parser = new JsonParser();
                 JsonReader reader = new JsonReader(new FileReader(clinicalTrial));
                 reader.setLenient(true);
 
-                while (reader.peek() != JsonToken.END_DOCUMENT ) {
+                while (reader.peek() != JsonToken.END_DOCUMENT) {
                     JsonObject clinicalTrialsEntryObject = parser.parse(reader).getAsJsonObject();
                     //clinicalTrials.add();
                 }
             }
         }
         return clinicalTrials;
+    }
+
+    private static void readingDrugsClasses(@NotNull String drugsClassesDir) throws IOException {
+
+    }
+
+    private static void readingDrugs(@NotNull String drugsDir) throws IOException {
+
+    }
+
+    private static void readingGenes(@NotNull String genesDir) throws IOException {
+
+    }
+
+    private static void readingGlobalTherapyApprovalStatuses(@NotNull String globalTherpyApprovalStatusesDir) throws IOException {
+
+    }
+
+    private static void readingIndications(@NotNull String indicationsDir) throws IOException {
+
+    }
+
+    private static void readingMolecularProfiles(@NotNull String molecularProfilesDir) throws IOException {
+
+    }
+
+    private static void readingReferences(@NotNull String referencesDir) throws IOException {
+
+    }
+
+    private static void readingTreatmentApproaches(@NotNull String therapiesDir) throws IOException {
+
+    }
+
+    private static void readingTherapies(@NotNull String treatmentApproachesDir) throws IOException {
+
+    }
+
+    private static void readingVariants(@NotNull String variantsDir) throws IOException {
+
     }
 }
