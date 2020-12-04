@@ -115,7 +115,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The ‘primary tumor location’ and ‘cancer subtype’ have influence on the "
                 + "clinical evidence/study matching. No check is performed to verify the received information."));
         div.add(createContentParagraph("The conclusion of this report is based solely on the results of the DNA sequencing of the tumor"
-                + " and the received tumor type. BIALLELIC_ONLY other patient/tumor characteristics that might influence the interpretation of "
+                + " and the received tumor type. Other patient/tumor characteristics that might influence the interpretation of "
                 + "these results, are not considered. Final interpretation of the clinical consequence of this report should therefore "
                 + "always be performed by the treating physician."));
         div.add(createContentParagraph("Based on a tumor purity of at least 20%, the test has a sensitivity of >95% for detection of "
