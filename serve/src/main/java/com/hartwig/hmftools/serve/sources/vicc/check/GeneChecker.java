@@ -18,12 +18,12 @@ public class GeneChecker {
         this.allValidGenes = allValidGenes;
     }
 
-    public boolean isValidGene(@Nullable String gene, @Nullable String event) {
+    public boolean isValidGene(@Nullable String gene) {
         if (allValidGenes.contains(gene)) {
             return true;
         } else {
             if (gene != null) {
-                LOGGER.warn("Gene '{}' on event '{}' is not defined in the exome used!", gene, event);
+                LOGGER.warn("Gene '{}' is not defined in the exome used!", gene);
             }
             return false;
         }

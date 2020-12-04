@@ -49,11 +49,11 @@ public class GeneRangeExtractor {
     public Map<Feature, List<GeneRangeAnnotation>> extractGeneRanges(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            if (geneChecker.isValidGene(feature.geneSymbol(), feature.name())) {
-                HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-                assert canonicalTranscript != null;
+            if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
+                if (geneChecker.isValidGene(feature.geneSymbol())) {
+                    HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+                    assert canonicalTranscript != null;
 
-                if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
                         List<Integer> exonNumbers = extractExonNumbers(feature.name());
@@ -74,7 +74,12 @@ public class GeneRangeExtractor {
                                 canonicalTranscript.transcriptID(),
                                 feature);
                     }
-                } else if (feature.type() == MutationType.CODON) {
+                }
+            } else if (feature.type() == MutationType.CODON) {
+                if (geneChecker.isValidGene(feature.geneSymbol())) {
+                    HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+                    assert canonicalTranscript != null;
+
                     String transcriptIdVicc = viccEntry.transcriptId();
 
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {

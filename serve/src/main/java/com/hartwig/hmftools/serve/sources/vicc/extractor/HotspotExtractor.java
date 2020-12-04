@@ -34,7 +34,7 @@ public class HotspotExtractor {
     public Map<Feature, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            if (feature.type() == MutationType.HOTSPOT && geneChecker.isValidGene(feature.geneSymbol(), feature.name())) {
+            if (feature.type() == MutationType.HOTSPOT && geneChecker.isValidGene(feature.geneSymbol())) {
                 String proteinAnnotation = proteinAnnotationExtractor.apply(feature.name());
                 List<VariantHotspot> hotspots = proteinResolver.resolve(feature.geneSymbol(), viccEntry.transcriptId(), proteinAnnotation);
                 hotspotsPerFeature.put(feature, hotspots);

@@ -13,10 +13,10 @@ public class GeneCheckerTest {
     public void canCorrectlyAssessGenes() {
         GeneChecker geneChecker = new GeneChecker(Sets.newHashSet("BRAF", "IGH"));
 
-        assertTrue(geneChecker.isValidGene("BRAF", "Amplification"));
-        assertTrue(geneChecker.isValidGene("IGH", "Amplification"));
+        assertTrue(geneChecker.isValidGene("BRAF"));
+        assertTrue(geneChecker.isValidGene("IGH"));
 
-        assertFalse(geneChecker.isValidGene("I am not a gene", "Amplification"));
-        assertFalse(geneChecker.isValidGene(null, null));
+        assertFalse(geneChecker.isValidGene("I am not a gene"));
+        assertFalse(geneChecker.isValidGene(null));
     }
 }
