@@ -118,9 +118,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 + " and the received tumor type. BIALLELIC_ONLY other patient/tumor characteristics that might influence the interpretation of "
                 + "these results, are not considered. Final interpretation of the clinical consequence of this report should therefore "
                 + "always be performed by the treating physician."));
-        div.add(createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection "
-                + "of somatic variants and >95% for detection of translocations and gene copy number changes. For samples "
-                + "with a purity above 20%, the test has a sensitivity of >90%."));
+        div.add(createContentParagraph("Based on a tumor purity of at least 20%, the test has a sensitivity of >95% for detection of "
+                + "somatic variants and >95% for detection of translocations and gene copy number changes"));
         div.add(createContentParagraphTwice("For feedback or complaints please contact ",
                 ReportResources.CONTACT_EMAIL_QA,
                 " and for general questions, please contact ",
