@@ -211,8 +211,8 @@ public class GeneRangeExtractor {
 
         if (genomeRegions != null && genomeRegions.size() == 1) {
             String chromosome = genomeRegions.get(0).chromosome();
-            long start = canonicalTranscript.strand() == Strand.FORWARD ? genomeRegions.get(0).start() : genomeRegions.get(0).end();
-            long end = canonicalTranscript.strand() == Strand.FORWARD ? genomeRegions.get(0).end() : genomeRegions.get(0).start();
+            long start = genomeRegions.get(0).start();
+            long end = genomeRegions.get(0).end();
 
             return ImmutableGeneRangeAnnotation.builder()
                     .gene(geneSymbol)
