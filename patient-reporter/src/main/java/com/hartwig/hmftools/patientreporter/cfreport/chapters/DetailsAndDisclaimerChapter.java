@@ -120,9 +120,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 + "always be performed by the treating physician."));
         div.add(createContentParagraph("Based on a tumor purity of at least 20%, the test has a sensitivity of >95% for detection of "
                 + "somatic variants and >95% for detection of translocations and gene copy number changes"));
-        div.add(createContentParagraphTwice("For feedback or complaints please contact ",
-                ReportResources.CONTACT_EMAIL_QA,
-                " and for general questions, please contact ",
+        div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
+        div.add(createContentParagraph("For questions regarding the results described in this report, please contact ",
                 ReportResources.CONTACT_EMAIL_GENERAL));
 
         return div;

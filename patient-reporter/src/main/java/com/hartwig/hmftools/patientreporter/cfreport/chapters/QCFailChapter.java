@@ -319,7 +319,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph forQuestionsPleaseContactHMF() {
-        return createContentParagraph("For questions, please contact ", "info@hartwigmedicalfoundation.nl");
+        return createContentParagraph("For questions regarding the results described in this report, please contact ",
+                ReportResources.CONTACT_EMAIL_GENERAL);
     }
 
     @NotNull
