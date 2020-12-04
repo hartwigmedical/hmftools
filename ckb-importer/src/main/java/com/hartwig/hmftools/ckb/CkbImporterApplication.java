@@ -40,6 +40,7 @@ public class CkbImporterApplication {
         }
 
         readJsonData(config);
+        LOGGER.info("Complete!");
     }
 
     private static void readJsonData(@NotNull CkbImporterConfig config) throws IOException {
