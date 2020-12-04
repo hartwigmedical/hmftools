@@ -56,11 +56,13 @@ public class CkbImporterApplication {
         readingTreatmentApproaches(config.treatmentApproachesDir());
         readingVariants(config.variantsDir());
 
-        //implement in 1 object
+        //TODO: implement in 1 object
     }
 
     @NotNull
     private static List<ClinicalTrial> readingClinicalTrial(@NotNull String clinicalTrialDir) throws IOException {
+        LOGGER.info("Start reading clinical trials");
+
         List<ClinicalTrial> clinicalTrials = Lists.newArrayList();
         File[] filesClinicalTrials = new File(clinicalTrialDir).listFiles();
         if (filesClinicalTrials != null) {
@@ -75,46 +77,68 @@ public class CkbImporterApplication {
                 }
             }
         }
+        LOGGER.info("Finished reading clinical trials");
+
         return clinicalTrials;
     }
 
     private static void readingDrugsClasses(@NotNull String drugsClassesDir) throws IOException {
+        LOGGER.info("Start reading drugs classes");
 
+        LOGGER.info("Finished reading drugs classes");
     }
 
     private static void readingDrugs(@NotNull String drugsDir) throws IOException {
+        LOGGER.info("Start reading drugs");
 
+        LOGGER.info("Finished reading drugs");
     }
 
     private static void readingGenes(@NotNull String genesDir) throws IOException {
+        LOGGER.info("Start reading genes");
 
+        LOGGER.info("Finished reading genes");
     }
 
     private static void readingGlobalTherapyApprovalStatuses(@NotNull String globalTherpyApprovalStatusesDir) throws IOException {
+        LOGGER.info("Start reading global therpy approval statuses");
 
+        LOGGER.info("Finished reading global therpy approval statuses");
     }
 
     private static void readingIndications(@NotNull String indicationsDir) throws IOException {
+        LOGGER.info("Start reading indications");
 
+        LOGGER.info("Finished reading indications");
     }
 
     private static void readingMolecularProfiles(@NotNull String molecularProfilesDir) throws IOException {
+        LOGGER.info("Start reading molecular profiles");
 
+        LOGGER.info("Finished reading molecular profiles");
     }
 
     private static void readingReferences(@NotNull String referencesDir) throws IOException {
+        LOGGER.info("Start reading references");
 
+        LOGGER.info("Finished reading references");
     }
 
     private static void readingTreatmentApproaches(@NotNull String therapiesDir) throws IOException {
+        LOGGER.info("Start reading therapies");
 
+        LOGGER.info("Finished reading therapies");
     }
 
     private static void readingTherapies(@NotNull String treatmentApproachesDir) throws IOException {
+        LOGGER.info("Start reading treatment approaches");
 
+        LOGGER.info("Finished reading treatment approaches");
     }
 
     private static void readingVariants(@NotNull String variantsDir) throws IOException {
+        LOGGER.info("Start reading variants");
 
+        LOGGER.info("Finished reading variants");
     }
 }
