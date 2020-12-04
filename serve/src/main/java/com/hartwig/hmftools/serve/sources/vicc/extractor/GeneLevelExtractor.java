@@ -44,13 +44,13 @@ public class GeneLevelExtractor {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (feature.type() == MutationType.GENE_LEVEL && exomeGeneChecker.isValidGene(feature.geneSymbol())) {
+            if (feature.type() == MutationType.GENE_LEVEL && exomeGeneChecker.isValidGene(feature.geneSymbol(), feature.name())) {
                 GeneLevelEvent event = extractGeneLevelEvent(feature, driverGenes);
                 if (event != null) {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(event).build());
                 }
-            } else if (feature.type() == MutationType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(feature.geneSymbol())) {
+            } else if (feature.type() == MutationType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(feature.geneSymbol(), feature.name())) {
                 geneLevelEventsPerFeature.put(feature,
                         ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
             }

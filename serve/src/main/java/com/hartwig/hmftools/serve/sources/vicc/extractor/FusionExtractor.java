@@ -49,7 +49,7 @@ public class FusionExtractor {
                     annotatedFusion = fusionBuilder.geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
                 }
 
-                if (geneChecker.isValidGene(annotatedFusion.geneUp()) && geneChecker.isValidGene(annotatedFusion.geneDown())) {
+                if (geneChecker.isValidGene(annotatedFusion.geneUp(), feature.name()) && geneChecker.isValidGene(annotatedFusion.geneDown(), feature.name())) {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
             } else if (feature.type() == MutationType.FUSION_PAIR_AND_EXON) {

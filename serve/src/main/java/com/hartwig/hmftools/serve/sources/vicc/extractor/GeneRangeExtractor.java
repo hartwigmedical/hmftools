@@ -49,7 +49,7 @@ public class GeneRangeExtractor {
     public Map<Feature, List<GeneRangeAnnotation>> extractGeneRanges(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            if (geneChecker.isValidGene(feature.geneSymbol())) {
+            if (geneChecker.isValidGene(feature.geneSymbol(), feature.name())) {
                 HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
                 assert canonicalTranscript != null;
 
