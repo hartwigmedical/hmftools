@@ -150,6 +150,9 @@ public class ClusterAnalyser {
 
     public boolean clusterAndAnalyse()
     {
+        if(mConfig.IsGermline)
+            return clusterAndAnalyseGermline();
+
         mClusters.clear();
         mDmFinder.clear();
 
@@ -222,6 +225,58 @@ public class ClusterAnalyser {
             if(cluster.getResolvedType() != DOUBLE_MINUTE && !cluster.isResolved())
                 mBfbFinder.analyseCluster(cluster);
 
+            if(!cluster.isResolved())
+            {
+                if(cluster.getResolvedType() != NONE)
+                {
+                    // any cluster with a long DEL or DUP not merged can now be marked as resolved
+                    if(cluster.getSvCount() == 1 && cluster.getResolvedType().isSimple())
+                        cluster.setResolved(true, cluster.getResolvedType());
+                }
+                else
+                {
+                    setClusterResolvedState(cluster, true);
+                    cluster.logDetails();
+                }
+            }
+
+            cluster.cacheLinkedPairs();
+            buildArmClusters(cluster);
+        }
+
+        return true;
+    }
+
+    public boolean clusterAndAnalyseGermline()
+    {
+        mClusters.clear();
+
+        mPcClustering.start();
+        mFilters.clusterExcludedVariants(mClusters);
+        mSimpleClustering.clusterByProximity(mClusters);
+        mClusters.stream().filter(x -> x.getSvCount() > 1).forEach(x -> x.updateClusterDetails());
+        mPcClustering.pause();
+
+        // mark line clusters since these are excluded from most subsequent logic
+        mClusters.forEach(x -> mLineElementAnnotator.markLineCluster(x));
+
+        mPcChaining.start();
+        findLimitedChains();
+        mPcChaining.pause();
+
+        // log basic clustering details
+        mClusters.stream().filter(x -> x.getSvCount() > 1).forEach(SvCluster::logDetails);
+
+        // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
+        FoldbackFinder.markFoldbacks(mState.getChrBreakendMap());
+
+        mPcChaining.resume();
+        findLinksAndChains();
+        dissolveSimpleGroups();
+        mPcChaining.stop();
+
+        for(SvCluster cluster : mClusters)
+        {
             if(!cluster.isResolved())
             {
                 if(cluster.getResolvedType() != NONE)
