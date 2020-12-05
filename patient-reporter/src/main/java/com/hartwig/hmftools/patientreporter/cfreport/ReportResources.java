@@ -22,7 +22,7 @@ public final class ReportResources {
 
     private static final String HARTWIG_NAME = "Hartwig Medical Foundation";
     public static final String HARTWIG_ADDRESS = HARTWIG_NAME + ", Science Park 408, 1098XH Amsterdam";
-    public static final String CONTACT_EMAIL_GENERAL = "info@hartwigmedicalfoundation.nl";
+    public static final String CONTACT_EMAIL_GENERAL = "diagnosticssupport@hartwigmedicalfoundation.nl";
     public static final String CONTACT_EMAIL_QA = "qualitysystem@hartwigmedicalfoundation.nl";
     public static final String SIGNATURE_NAME = "Edwin Cuppen";
     public static final String SIGNATURE_TITLE = "Director " + HARTWIG_NAME;

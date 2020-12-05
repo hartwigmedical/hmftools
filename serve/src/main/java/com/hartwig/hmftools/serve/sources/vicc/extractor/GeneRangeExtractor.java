@@ -49,11 +49,11 @@ public class GeneRangeExtractor {
     public Map<Feature, List<GeneRangeAnnotation>> extractGeneRanges(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            if (geneChecker.isValidGene(feature.geneSymbol())) {
-                HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-                assert canonicalTranscript != null;
+            if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
+                if (geneChecker.isValidGene(feature.geneSymbol())) {
+                    HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+                    assert canonicalTranscript != null;
 
-                if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
                     String transcriptIdVicc = viccEntry.transcriptId();
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
                         List<Integer> exonNumbers = extractExonNumbers(feature.name());
@@ -74,7 +74,12 @@ public class GeneRangeExtractor {
                                 canonicalTranscript.transcriptID(),
                                 feature);
                     }
-                } else if (feature.type() == MutationType.CODON) {
+                }
+            } else if (feature.type() == MutationType.CODON) {
+                if (geneChecker.isValidGene(feature.geneSymbol())) {
+                    HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
+                    assert canonicalTranscript != null;
+
                     String transcriptIdVicc = viccEntry.transcriptId();
 
                     if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
@@ -211,8 +216,8 @@ public class GeneRangeExtractor {
 
         if (genomeRegions != null && genomeRegions.size() == 1) {
             String chromosome = genomeRegions.get(0).chromosome();
-            long start = canonicalTranscript.strand() == Strand.FORWARD ? genomeRegions.get(0).start() : genomeRegions.get(0).end();
-            long end = canonicalTranscript.strand() == Strand.FORWARD ? genomeRegions.get(0).end() : genomeRegions.get(0).start();
+            long start = genomeRegions.get(0).start();
+            long end = genomeRegions.get(0).end();
 
             return ImmutableGeneRangeAnnotation.builder()
                     .gene(geneSymbol)

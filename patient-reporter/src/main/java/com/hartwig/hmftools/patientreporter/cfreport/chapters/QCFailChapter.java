@@ -319,7 +319,8 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph forQuestionsPleaseContactHMF() {
-        return createContentParagraph("For questions, please contact ", "info@hartwigmedicalfoundation.nl");
+        return createContentParagraph("For questions regarding the results described in this report, please contact ",
+                ReportResources.CONTACT_EMAIL_GENERAL);
     }
 
     @NotNull
@@ -350,7 +351,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Paragraph testsArePerformedByAccreditedLab() {
         return createContentParagraph(
-                "The results on this report are based on tests that are performed under ISO/ICE-17025:2017 accreditation.");
+                "The results on this report are based on tests that are performed under ISO/ICE-17025:2017 TESTING L633 accreditation.");
     }
 
     @NotNull

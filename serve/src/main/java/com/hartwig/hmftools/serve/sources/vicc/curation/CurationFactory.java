@@ -52,6 +52,10 @@ final class CurationFactory {
 
         // Improve for consistency
         FEATURE_MAPPINGS.put(cgi("MET", null, "MET (Y1230C;Y1235D)"), curation("MET", "MET (Y1230C,Y1235D)"));
+
+        // Variants that don't exist on this transcript
+        FEATURE_BLACKLIST.add(cgi("FGFR3", null, "FGFR3 (K650)"));
+        FEATURE_BLACKLIST.add(cgi("GNAS", null, "GNAS (R201)"));
     }
 
     private static void populateCIViCCuration() {
