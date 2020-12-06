@@ -35,15 +35,18 @@ public class ReadContextCounter implements VariantHotspot {
     private int full;
     private int partial;
     private int core;
-    private int reference;
+    private int alt;
     private int realigned;
+    private int reference;
+    private int coverage;
+
     private int lengthened;
     private int shortened;
-    private int coverage;
 
     private int fullQuality;
     private int partialQuality;
     private int coreQuality;
+    private int altQuality;
     private int realignedQuality;
     private int referenceQuality;
     private int totalQuality;
@@ -111,7 +114,7 @@ public class ReadContextCounter implements VariantHotspot {
     }
 
     public int altSupport() {
-        return full + partial + core + realigned;
+        return full + partial + core + alt + realigned;
     }
 
     public int refSupport() {
@@ -144,7 +147,7 @@ public class ReadContextCounter implements VariantHotspot {
     }
 
     public int[] counts() {
-        return new int[] { full, partial, core, realigned, reference, coverage };
+        return new int[] { full, partial, core, realigned, alt, reference, coverage };
     }
 
     public int[] jitter() {
@@ -152,7 +155,7 @@ public class ReadContextCounter implements VariantHotspot {
     }
 
     public int[] quality() {
-        return new int[] { fullQuality, partialQuality, coreQuality, realignedQuality, referenceQuality, totalQuality };
+        return new int[] { fullQuality, partialQuality, coreQuality, realignedQuality, altQuality, referenceQuality, totalQuality };
     }
 
     public int improperPair() {
@@ -280,8 +283,15 @@ public class ReadContextCounter implements VariantHotspot {
 
             coverage++;
             totalQuality += quality;
+            if (rawContext.isRefSupport()) {
+                reference++;
+                referenceQuality += quality;
+            } else if (rawContext.isAltSupport()) {
+                alt++;
+                altQuality++;
+            }
 
-            // Check if lengthened, shortened AND/OR reference!
+            // Jitter Penalty
             switch (realignmentType) {
                 case LENGTHENED:
                     jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
@@ -293,13 +303,6 @@ public class ReadContextCounter implements VariantHotspot {
                     break;
             }
 
-            byte refBase = (byte) this.variant.ref().charAt(0);
-            byte readBase = record.getReadBases()[readIndex];
-
-            if (refBase == readBase && !rawContext.isReadIndexInDelete() && !rawContext.isIndelAtPosition()) {
-                reference++;
-                referenceQuality += quality;
-            }
         } catch (Exception e) {
             LOGGER.error("Error at chromosome: {}, position: {}", chromosome(), position());
             throw e;
