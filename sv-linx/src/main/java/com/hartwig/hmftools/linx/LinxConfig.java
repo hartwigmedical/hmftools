@@ -196,6 +196,34 @@ public class LinxConfig
         return sampleIds;
     }
 
+    public boolean hasValidSampleDataSource(final CommandLine cmd)
+    {
+        if(!cmd.hasOption(VCF_FILE))
+        {
+            LNX_LOGGER.error("missing structrual variant VCF file");
+            return false;
+        }
+
+        if(!IsGermline)
+        {
+            if(PurpleDataPath == null || PurpleDataPath.isEmpty())
+            {
+                LNX_LOGGER.error("missing purple directory");
+                return false;
+            }
+        }
+        else
+        {
+            if(hasMultipleSamples() && !cmd.getOptionValue(VCF_FILE).contains("*"))
+            {
+                LNX_LOGGER.error("VCF filename mask({}) invalid for multiple samples", cmd.getOptionValue(VCF_FILE));
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public LinxConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
@@ -236,6 +264,10 @@ public class LinxConfig
             return true;
 
         final String filePath = cmd.getOptionValue(configItem);
+
+        if(filePath.contains("*")) // too difficult to determine
+            return true;
+
         if(!Files.exists(Paths.get(filePath)))
         {
             LNX_LOGGER.error("invalid config path: {} = {}", configItem, filePath);

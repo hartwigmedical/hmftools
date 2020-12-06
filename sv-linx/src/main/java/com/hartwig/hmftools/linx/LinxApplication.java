@@ -87,20 +87,8 @@ public class LinxApplication
 
         List<String> samplesList = config.getSampleIds();
 
-        if(dbAccess == null)
-        {
-            if((config.hasMultipleSamples() || samplesList.isEmpty()))
-            {
-                LNX_LOGGER.error("batch mode requires a DB connection");
-                return;
-            }
-
-            if(!sampleDataFromFile)
-            {
-                LNX_LOGGER.error("no DB connection and no purple data directory specified");
-                return;
-            }
-        }
+        if(dbAccess == null && !config.hasValidSampleDataSource(cmd))
+            return;
 
         if (samplesList.isEmpty())
         {
@@ -312,10 +300,25 @@ public class LinxApplication
     {
         if(cmd.hasOption(VCF_FILE))
         {
+            String vcfFile = cmd.getOptionValue(VCF_FILE);
+
+            if(config.hasMultipleSamples())
+            {
+                if(vcfFile.contains("*"))
+                {
+                    vcfFile = vcfFile.replaceAll("\\*", sampleId);
+                }
+                else
+                {
+                    LNX_LOGGER.warn("single VCF({}) provided for multiple samples", vcfFile);
+                    return Lists.newArrayList();
+                }
+            }
+
             if(config.IsGermline)
-                return loadSvDataFromGermlineVcf(cmd.getOptionValue(VCF_FILE));
+                return loadSvDataFromGermlineVcf(vcfFile);
             else
-                return loadSvDataFromVcf(cmd.getOptionValue(VCF_FILE));
+                return loadSvDataFromVcf(vcfFile);
         }
         else
         {
