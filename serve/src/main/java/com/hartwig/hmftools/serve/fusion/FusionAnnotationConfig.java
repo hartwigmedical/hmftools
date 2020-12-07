@@ -1,10 +1,8 @@
-package com.hartwig.hmftools.serve.sources.vicc.annotation;
+package com.hartwig.hmftools.serve.fusion;
 
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
-import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 
 import org.jetbrains.annotations.NotNull;
 

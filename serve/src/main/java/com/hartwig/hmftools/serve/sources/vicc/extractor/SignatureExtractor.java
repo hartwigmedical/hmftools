@@ -22,7 +22,7 @@ public class SignatureExtractor {
     }
 
     @NotNull
-    public Map<Feature, SignatureName> extractSignatures(@NotNull ViccEntry viccEntry) {
+    public Map<Feature, SignatureName> extract(@NotNull ViccEntry viccEntry) {
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
             if (feature.type() == MutationType.SIGNATURE) {

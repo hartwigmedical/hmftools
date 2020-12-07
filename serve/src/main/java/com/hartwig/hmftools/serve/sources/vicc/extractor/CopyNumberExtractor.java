@@ -28,7 +28,7 @@ public class CopyNumberExtractor {
     }
 
     @NotNull
-    public Map<Feature, KnownCopyNumber> extractAmplificationsDeletions(@NotNull ViccEntry viccEntry) {
+    public Map<Feature, KnownCopyNumber> extract(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {

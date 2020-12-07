@@ -28,19 +28,21 @@ import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
+import com.hartwig.hmftools.serve.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.fusion.FusionFunctions;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
+import com.hartwig.hmftools.serve.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
-import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneRangeAnnotation;
+import com.hartwig.hmftools.serve.sources.vicc.extractor.CodonExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.CopyNumberExtractor;
+import com.hartwig.hmftools.serve.sources.vicc.extractor.ExonExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.FusionExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
-import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignatureExtractor;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
@@ -60,27 +62,30 @@ public final class ViccExtractor {
     @NotNull
     private final HotspotExtractor hotspotExtractor;
     @NotNull
-    private final CopyNumberExtractor copyNumberExtractor;
+    private final CodonExtractor codonExtractor;
     @NotNull
-    private final FusionExtractor fusionExtractor;
+    private final ExonExtractor exonExtractor;
     @NotNull
     private final GeneLevelExtractor geneLevelExtractor;
     @NotNull
-    private final GeneRangeExtractor geneRangeExtractor;
+    private final CopyNumberExtractor copyNumberExtractor;
+    @NotNull
+    private final FusionExtractor fusionExtractor;
     @NotNull
     private final SignatureExtractor signatureExtractor;
     @Nullable
     private final String featureInterpretationTsv;
 
-    public ViccExtractor(@NotNull final HotspotExtractor hotspotExtractor, @NotNull final CopyNumberExtractor copyNumberExtractor,
-            @NotNull final FusionExtractor fusionExtractor, @NotNull final GeneLevelExtractor geneLevelExtractor,
-            @NotNull final GeneRangeExtractor geneRangeExtractor, @NotNull final SignatureExtractor signatureExtractor,
-            @Nullable final String featureInterpretationTsv) {
+    public ViccExtractor(@NotNull final HotspotExtractor hotspotExtractor, @NotNull final CodonExtractor codonExtractor,
+            @NotNull final ExonExtractor exonExtractor, @NotNull final GeneLevelExtractor geneLevelExtractor,
+            @NotNull final CopyNumberExtractor copyNumberExtractor, @NotNull final FusionExtractor fusionExtractor,
+            @NotNull final SignatureExtractor signatureExtractor, @Nullable final String featureInterpretationTsv) {
         this.hotspotExtractor = hotspotExtractor;
+        this.codonExtractor = codonExtractor;
+        this.exonExtractor = exonExtractor;
+        this.geneLevelExtractor = geneLevelExtractor;
         this.copyNumberExtractor = copyNumberExtractor;
         this.fusionExtractor = fusionExtractor;
-        this.geneLevelExtractor = geneLevelExtractor;
-        this.geneRangeExtractor = geneRangeExtractor;
         this.signatureExtractor = signatureExtractor;
         this.featureInterpretationTsv = featureInterpretationTsv;
     }
@@ -92,21 +97,23 @@ public final class ViccExtractor {
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
         for (ViccEntry entry : entries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
-            Map<Feature, KnownCopyNumber> ampsDelsPerFeature = copyNumberExtractor.extractAmplificationsDeletions(entry);
-            Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(entry);
-            Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extractGeneLevelEvents(entry);
-            Map<Feature, List<GeneRangeAnnotation>> geneRangesPerFeature = geneRangeExtractor.extractGeneRanges(entry);
-            Map<Feature, SignatureName> signaturesPerFeature = signatureExtractor.extractSignatures(entry);
+            Map<Feature, List<CodonAnnotation>> codonsPerFeature = codonExtractor.extract(entry);
+            Map<Feature, List<ExonAnnotation>> exonsPerFeature = exonExtractor.extract(entry);
+            Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(entry);
+            Map<Feature, KnownCopyNumber> ampsDelsPerFeature = copyNumberExtractor.extract(entry);
+            Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(entry);
+            Map<Feature, SignatureName> signaturesPerFeature = signatureExtractor.extract(entry);
 
             ActionableEvent actionableEvidence = ActionableEvidenceFactory.toActionableEvent(entry);
 
             resultsPerEntry.put(entry,
                     ImmutableViccExtractionResult.builder()
                             .hotspotsPerFeature(hotspotsPerFeature)
+                            .codonsPerFeature(codonsPerFeature)
+                            .exonsPerFeature(exonsPerFeature)
+                            .geneLevelEventsPerFeature(geneLevelEventsPerFeature)
                             .ampsDelsPerFeature(ampsDelsPerFeature)
                             .fusionsPerFeature(fusionsPerFeature)
-                            .geneLevelEventsPerFeature(geneLevelEventsPerFeature)
-                            .geneRangesPerFeature(geneRangesPerFeature)
                             .signaturesPerFeature(signaturesPerFeature)
                             .actionableEvent(actionableEvidence)
                             .build());
@@ -186,7 +193,9 @@ public final class ViccExtractor {
             ActionableEvent event = result.actionableEvent();
             if (event != null) {
                 actionableHotspots.addAll(extractActionableHotspots(event, result.hotspotsPerFeature().values()));
-                actionableRanges.addAll(extractActionableRanges(event, result.geneRangesPerFeature().values()));
+                actionableRanges.addAll(extractActionableRanges(event,
+                        result.codonsPerFeature().values(),
+                        result.exonsPerFeature().values()));
                 actionableGenes.addAll(extractActionableAmpsDels(event, result.ampsDelsPerFeature().values()));
                 actionableGenes.addAll(extractActionableGeneLevelEvents(event, result.geneLevelEventsPerFeature().values()));
                 actionableFusions.addAll(extractActionableFusions(event, result.fusionsPerFeature().values()));
@@ -221,16 +230,29 @@ public final class ViccExtractor {
 
     @NotNull
     private static List<ActionableRange> extractActionableRanges(@NotNull ActionableEvent actionableEvent,
-            @NotNull Iterable<List<GeneRangeAnnotation>> geneRangeAnnotationLists) {
+            @NotNull Iterable<List<CodonAnnotation>> codonLists, @NotNull Iterable<List<ExonAnnotation>> exonLists) {
         List<ActionableRange> actionableRanges = Lists.newArrayList();
-        for (List<GeneRangeAnnotation> rangeList : geneRangeAnnotationLists) {
-            for (GeneRangeAnnotation range : rangeList) {
+        for (List<CodonAnnotation> codonList : codonLists) {
+            for (CodonAnnotation range : codonList) {
                 actionableRanges.add(ImmutableActionableRange.builder()
                         .from(actionableEvent)
-                        .gene(range.gene())
                         .chromosome(range.chromosome())
                         .start(range.start())
                         .end(range.end())
+                        .gene(range.gene())
+                        .mutationType(range.mutationType())
+                        .build());
+            }
+        }
+
+        for (List<ExonAnnotation> exonList : exonLists) {
+            for (ExonAnnotation range : exonList) {
+                actionableRanges.add(ImmutableActionableRange.builder()
+                        .from(actionableEvent)
+                        .chromosome(range.chromosome())
+                        .start(range.start())
+                        .end(range.end())
+                        .gene(range.gene())
                         .mutationType(range.mutationType())
                         .build());
             }
@@ -309,11 +331,13 @@ public final class ViccExtractor {
         int totalFeatureCount = 0;
         int featuresWithHotspotsCount = 0;
         int totalHotspotsCount = 0;
+        int featuresWithCodonCount = 0;
+        int totalCodonCount = 0;
+        int featuresWithExonCount = 0;
+        int totalExonCount = 0;
+        int featuresWithGeneLevelEventCount = 0;
         int featuresWithCopyNumberCount = 0;
         int featuresWithFusionCount = 0;
-        int featuresWithGeneLevelEventCount = 0;
-        int featuresWithGeneRangeCount = 0;
-        int totalRangeCount = 0;
         int featuresWithSignatureCount = 0;
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
@@ -321,14 +345,15 @@ public final class ViccExtractor {
             ViccExtractionResult viccExtractionResult = entry.getValue();
             for (Feature feature : viccEntry.features()) {
                 List<VariantHotspot> hotspotsForFeature = viccExtractionResult.hotspotsPerFeature().get(feature);
+                List<CodonAnnotation> codonsForFeature = viccExtractionResult.codonsPerFeature().get(feature);
+                List<ExonAnnotation> exonsForFeature = viccExtractionResult.exonsPerFeature().get(feature);
+                GeneLevelAnnotation geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
                 KnownCopyNumber ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
                 KnownFusionPair fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
-                GeneLevelAnnotation geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
-                List<GeneRangeAnnotation> geneRangesForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
                 SignatureName signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);
 
-                if (hotspotsForFeature == null && ampDelForFeature == null && fusionForFeature == null && geneLevelEventForFeature == null
-                        && geneRangesForFeature == null && signatureForFeature == null) {
+                if (hotspotsForFeature == null && codonsForFeature == null && exonsForFeature == null && geneLevelEventForFeature == null
+                        && ampDelForFeature == null && fusionForFeature == null && signatureForFeature == null) {
                     if (feature.type() != MutationType.COMBINED && feature.type() != MutationType.COMPLEX) {
                         // For both combined and complex events we expect no genomic events to be derived.
                         featuresWithoutGenomicEvents.add(feature);
@@ -339,21 +364,26 @@ public final class ViccExtractor {
                         totalHotspotsCount += hotspotsForFeature.size();
                     }
 
-                    if (ampDelForFeature != null) {
-                        featuresWithCopyNumberCount++;
+                    if (codonsForFeature != null) {
+                        featuresWithCodonCount++;
+                        totalCodonCount += codonsForFeature.size();
                     }
 
-                    if (fusionForFeature != null) {
-                        featuresWithFusionCount++;
+                    if (exonsForFeature != null) {
+                        featuresWithExonCount++;
+                        totalExonCount += exonsForFeature.size();
                     }
 
                     if (geneLevelEventForFeature != null) {
                         featuresWithGeneLevelEventCount++;
                     }
 
-                    if (geneRangesForFeature != null) {
-                        featuresWithGeneRangeCount++;
-                        totalRangeCount += geneRangesForFeature.size();
+                    if (ampDelForFeature != null) {
+                        featuresWithCopyNumberCount++;
+                    }
+
+                    if (fusionForFeature != null) {
+                        featuresWithFusionCount++;
                     }
 
                     if (signatureForFeature != null) {
@@ -375,10 +405,11 @@ public final class ViccExtractor {
 
         LOGGER.info("Extraction performed on {} features in {} VICC entries", totalFeatureCount, resultsPerEntry.size());
         LOGGER.info(" Extracted {} hotspots for {} features", totalHotspotsCount, featuresWithHotspotsCount);
+        LOGGER.info(" Extracted {} codons for {} features", totalCodonCount, featuresWithCodonCount);
+        LOGGER.info(" Extracted {} exons for {} features", totalExonCount, featuresWithExonCount);
+        LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
         LOGGER.info(" Extracted {} known amps and dels", featuresWithCopyNumberCount);
         LOGGER.info(" Extracted {} known fusions pairs", featuresWithFusionCount);
-        LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
-        LOGGER.info(" Extracted {} gene ranges for {} features", totalRangeCount, featuresWithGeneRangeCount);
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
     }
 
@@ -399,6 +430,21 @@ public final class ViccExtractor {
                     interpretation.add(hotspotsForFeature.toString());
                 }
 
+                List<CodonAnnotation> codonsForFeature = viccExtractionResult.codonsPerFeature().get(feature);
+                if (codonsForFeature != null) {
+                    interpretation.add(codonsForFeature.toString());
+                }
+
+                List<ExonAnnotation> exonsForFeature = viccExtractionResult.exonsPerFeature().get(feature);
+                if (exonsForFeature != null) {
+                    interpretation.add(exonsForFeature.toString());
+                }
+
+                GeneLevelAnnotation geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
+                if (geneLevelEventForFeature != null) {
+                    interpretation.add(geneLevelEventForFeature.toString());
+                }
+
                 KnownCopyNumber ampDelForFeature = viccExtractionResult.ampsDelsPerFeature().get(feature);
                 if (ampDelForFeature != null) {
                     interpretation.add(ampDelForFeature.toString());
@@ -407,16 +453,6 @@ public final class ViccExtractor {
                 KnownFusionPair fusionForFeature = viccExtractionResult.fusionsPerFeature().get(feature);
                 if (fusionForFeature != null) {
                     interpretation.add(fusionForFeature.toString());
-                }
-
-                GeneLevelAnnotation geneLevelEventForFeature = viccExtractionResult.geneLevelEventsPerFeature().get(feature);
-                if (geneLevelEventForFeature != null) {
-                    interpretation.add(geneLevelEventForFeature.toString());
-                }
-
-                List<GeneRangeAnnotation> geneRangesForFeature = viccExtractionResult.geneRangesPerFeature().get(feature);
-                if (geneRangesForFeature != null) {
-                    interpretation.add(geneRangesForFeature.toString());
                 }
 
                 SignatureName signatureForFeature = viccExtractionResult.signaturesPerFeature().get(feature);

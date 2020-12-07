@@ -20,7 +20,7 @@ public class SignatureExtractorTest {
         SignatureExtractor signatureExtractor = new SignatureExtractor();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("Other Biomarkers", "Microsatellite Instability-High");
 
-        Map<Feature, SignatureName> signaturesPerFeature = signatureExtractor.extractSignatures(viccEntry);
+        Map<Feature, SignatureName> signaturesPerFeature = signatureExtractor.extract(viccEntry);
 
         assertEquals(1, signaturesPerFeature.size());
         assertEquals(SignatureName.MICROSATELLITE_UNSTABLE, signaturesPerFeature.get(viccEntry.features().get(0)));
@@ -31,7 +31,7 @@ public class SignatureExtractorTest {
         SignatureExtractor signatureExtractor = new SignatureExtractor();
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("Other Biomarkers", "Not a signature");
 
-        Map<Feature, SignatureName> signaturesPerFeature = signatureExtractor.extractSignatures(viccEntry);
+        Map<Feature, SignatureName> signaturesPerFeature = signatureExtractor.extract(viccEntry);
 
         assertTrue(signaturesPerFeature.isEmpty());
     }

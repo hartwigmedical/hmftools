@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
-import static com.hartwig.hmftools.serve.sources.vicc.annotation.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
-import static com.hartwig.hmftools.serve.sources.vicc.annotation.FusionAnnotationConfig.ODDLY_NAMED_GENES_MAP;
+import static com.hartwig.hmftools.serve.fusion.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
+import static com.hartwig.hmftools.serve.fusion.FusionAnnotationConfig.ODDLY_NAMED_GENES_MAP;
 
 import java.util.Map;
 
@@ -30,7 +30,7 @@ public class FusionExtractor {
     }
 
     @NotNull
-    public Map<Feature, KnownFusionPair> extractFusionPairs(@NotNull ViccEntry viccEntry) {
+    public Map<Feature, KnownFusionPair> extract(@NotNull ViccEntry viccEntry) {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
 
         ImmutableKnownFusionPair.Builder fusionBuilder =
