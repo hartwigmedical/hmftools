@@ -152,9 +152,8 @@ public class ServeApplication {
         List<DocmEntry> entries = DocmReader.readAndCurate(docmTsv);
 
         DocmExtractor extractor = new DocmExtractor(proteinResolver);
-        List<KnownHotspot> hotspots = extractor.extractFromDocmEntries(entries);
         LOGGER.info("Running DoCM knowledge extraction");
-        return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
+        return ImmutableExtractionResult.builder().knownHotspots(extractor.extractFromDocmEntries(entries)).build();
     }
 
     @NotNull
@@ -165,10 +164,8 @@ public class ServeApplication {
         LOGGER.info(" Read {} entries", entries.size());
 
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_COHORT, proteinResolver, addExplicitHotspots);
-
         LOGGER.info("Running Hartwig Cohort knowledge extraction");
-        List<KnownHotspot> hotspots = extractor.extractFromHartwigEntries(entries);
-        return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
+        return ImmutableExtractionResult.builder().knownHotspots(extractor.extractFromHartwigEntries(entries)).build();
     }
 
     @NotNull
