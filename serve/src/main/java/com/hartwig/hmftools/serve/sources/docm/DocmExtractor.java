@@ -9,6 +9,7 @@ import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,6 +25,7 @@ public class DocmExtractor {
     @NotNull
     public List<KnownHotspot> extractFromDocmEntries(@NotNull List<DocmEntry> entries) {
         List<KnownHotspot> knownHotspots = Lists.newArrayList();
+        ProgressTracker tracker = new ProgressTracker("DoCM", entries.size());
         for (DocmEntry entry : entries) {
             List<VariantHotspot> hotspots = proteinResolver.resolve(entry.gene(), entry.transcript(), entry.proteinAnnotation());
 
@@ -36,6 +38,8 @@ public class DocmExtractor {
                         .proteinAnnotation(entry.proteinAnnotation())
                         .build());
             }
+
+            tracker.update();
         }
 
         // Hotspots appear multiple times in DoCM on different transcripts. We need to consolidate even though there is only one source.

@@ -43,6 +43,7 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneRangeExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignatureExtractor;
+import com.hartwig.hmftools.serve.util.ProgressTracker;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -85,10 +86,11 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    public ExtractionResult extractFromViccEntries(@NotNull List<ViccEntry> viccEntries) throws IOException {
+    public ExtractionResult extractFromViccEntries(@NotNull List<ViccEntry> entries) throws IOException {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
 
-        for (ViccEntry entry : viccEntries) {
+        ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
+        for (ViccEntry entry : entries) {
             Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
             Map<Feature, KnownCopyNumber> ampsDelsPerFeature = copyNumberExtractor.extractAmplificationsDeletions(entry);
             Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(entry);
@@ -108,6 +110,8 @@ public final class ViccExtractor {
                             .signaturesPerFeature(signaturesPerFeature)
                             .actionableEvent(actionableEvidence)
                             .build());
+
+            tracker.update();
         }
 
         printResults(resultsPerEntry);
