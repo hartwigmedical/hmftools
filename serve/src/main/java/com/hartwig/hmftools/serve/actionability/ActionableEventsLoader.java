@@ -24,29 +24,29 @@ public final class ActionableEventsLoader {
     private static final Logger LOGGER = LogManager.getLogger(ActionableEventsLoader.class);
 
     @NotNull
-    public static ActionableEvents readFromDir(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion)
+    public static ActionableEvents readFromDir(@NotNull String actionabilityDir, @NotNull RefGenomeVersion refGenomeVersion)
             throws IOException {
-        LOGGER.info("Loading SERVE actionability files from {}", serveActionabilityDir);
+        LOGGER.info("Loading SERVE actionability files from {}", actionabilityDir);
 
-        String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(serveActionabilityDir, refGenomeVersion);
+        String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableHotspot> hotspots = ActionableHotspotFile.read(actionableHotspotTsv);
-        LOGGER.info(" Actionable hotspots: {}", hotspots.size());
+        LOGGER.info(" Loaded {} actionable hotspots", hotspots.size());
 
-        String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(serveActionabilityDir, refGenomeVersion);
+        String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableRange> ranges = ActionableRangeFile.read(actionableRangeTsv);
-        LOGGER.info(" Actionable ranges: {}", ranges.size());
+        LOGGER.info(" Loaded {} actionable ranges", ranges.size());
 
-        String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(serveActionabilityDir, refGenomeVersion);
+        String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableGene> genes = ActionableGeneFile.read(actionableGeneTsv);
-        LOGGER.info(" Actionable genes: {}", genes.size());
+        LOGGER.info(" Loaded {} actionable genes", genes.size());
 
-        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(serveActionabilityDir, refGenomeVersion);
+        String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableFusion> fusions = ActionableFusionFile.read(actionableFusionTsv);
-        LOGGER.info(" Actionable fusions: {}", fusions.size());
+        LOGGER.info(" Loaded {} actionable fusions", fusions.size());
 
-        String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(serveActionabilityDir, refGenomeVersion);
+        String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableSignature> signatures = ActionableSignatureFile.read(actionableSignatureTsv);
-        LOGGER.info(" Actionable signatures: {}", signatures.size());
+        LOGGER.info(" Loaded {} actionable signatures", signatures.size());
 
         return ImmutableActionableEvents.builder()
                 .addAllHotspots(hotspots)
