@@ -582,29 +582,31 @@ If a germline VCF is supplied to PURPLE each variant is enriched with the follow
 - PURPLE_VCN: Purity adjusted copy number of variant
 - BIALLELIC: Flag to indicate variant is biallelic
 - GT: Genotype of variant (applied to germline sample only)
-- PATH: Pathogenicity of variant. One of PATHOGENIC,LIKELY_PATHOGENIC,BENIGN,LIKELY_BENIGN,BENIGN_BLACKLIST,CONFLICTING,UNKNOWN
-- REPORTED: Will appear in the driver catalog
+- PATH: Pathogenicity of variant
+- REPORTED: Will contribute in the driver catalog
 
 More detailed descriptions of the PATH and GT fields are found below.
 
 #### Pathogenicity
-The pathogencity enrichment requires the clinvar `CLNSIG` and `CLNSIGCONF` annotations. These are consolidated into a single interpretation by taking the strongest signal after ignoring `Uncertain_significance'. 
-If both benign and pathogenic signals exist the pathogenicity is set to 'CONFLICTING'.
+The pathogencity enrichment requires the clinvar `CLNSIG` and `CLNSIGCONF` annotations. These are consolidated into a single interpretation by taking the strongest signal after ignoring `Uncertain_significance`. 
+If both benign and pathogenic signals exist the pathogenicity is set to `CONFLICTING`. 
 
 Regardless of the clinvar signals, a variant will be set to `BENIGN_BLACKLIST` if it contains either of the `BLACKLIST_BED` or `BLACKLIST_VCF` flags.
+
+Valid values are `PATHOGENIC`, `LIKELY_PATHOGENIC`, `BENIGN`, `LIKELY_BENIGN`, `BENIGN_BLACKLIST`, `CONFLICTING`, `UNKNOWN`.
 
 #### Genotype
 The genotype enrichment can set the GT field of the germline sample to `0/1` (HET), `1/1` (HOM) or leave it unchanged as `./.` and filter the variant as `LOW_VAF`.
 
 A variant is filtered as `LOW_VAF` if AltReadCount < 0.3*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.002.
 
-Alternatively, if [totalReadCount==AltReadCount] OR [AltReadCount > 0.75*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.005] the variant GT will be set to `HOM (1/1)` and `HET (0/1)` otherwise.
+Alternatively, the variant GT will be set to `1/1` (HOM)  if (totalReadCount==AltReadCount) OR (AltReadCount > 0.75*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.005) and `0/1` (HET) otherwise.
 
 #### Reported
 The reported flag controls if the variant should appear in the driver catalog.
 
 To be reported, the variant must PASS and either:
-- be a hotspot (but without a pathogenicity of `BENIGN_BLACKLIST`) on a gene where we report germline hotspots; or
+- be a hotspot (but not `BENIGN_BLACKLIST`) on a gene where we report germline hotspots; or
 - be a nonsense/frameshift or splice on a gene where we report germline variants.
 
 ### 12. Driver Catalog
