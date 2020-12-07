@@ -34,6 +34,8 @@ public interface CkbImporterConfig {
     static Options createOptions() {
         Options options = new Options();
 
+        //TODO: implement as 1 dir and not as seperate dirs
+
         options.addOption(CLINICAL_TRIALS_DIR, true, "Path towards the directory holding the clincial trials data");
         options.addOption(DRUG_CLASSES_DIR, true, "Path towards the directory holding the drugs classes data");
         options.addOption(DRUGS_DIR, true, "Path towards the directory holding the drugs data");
