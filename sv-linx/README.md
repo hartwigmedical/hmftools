@@ -66,13 +66,13 @@ check_fusions | discover and annotate gene fusions
 Argument  | Description
 ---|---
 fragile_site_file | List of known fragile sites - specify Chromosome,PosStart,PosEnd
-line_element_file | List of known LINE elements - specify Chromosome,PosStart,PosEnd
+line_element_file | List of known LINE source regions - specify Chromosome,PosStart,PosEnd
 replication_origins_file | Optional: Replication timing input - in BED format with replication timing as the 4th column
 viral_hosts_file | Optional: List of known viral hosts - Refseq_id,Virus_name
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 
 Reference files are available for HG19 and HG38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
-- Linx: fragile sites, LINE elements, viral hosts and replication origins
+- Linx: fragile sites, LINE source regions, viral hosts and replication origins
 - Ensembl: cached Ensembl files
 - KnownFusions: HMF known fusion data
 - GenePanel: HMF driver genes
@@ -193,8 +193,8 @@ clusterReason | Reason for clustering and svId of clustered break junction for o
 fragileSiteStart | Start breakend of break junction is in a known fragile site (T/F)
 fragileSiteEnd | End breakend of break junction is in a known fragile site (T/F)
 isFoldback | Break junction is classified as a foldback (T/F)
-lineTypeStart | Start breakend of break junction is in a known or suspected line source element
-lineTypeEnd | End breakend of break junction is in a known or suspected line source element
+lineTypeStart | Start breakend of break junction is in a known or suspected line source region
+lineTypeEnd | End breakend of break junction is in a known or suspected line source region
 junctionCopyNumberMin | Minimum bound JCN estimate for breakjunction
 junctionCopyNumberMax | Maximum bound JCN estimate for breakjunction
 geneStart | Gene(s) overlapping start breakend of SV
@@ -410,7 +410,7 @@ A deletion and duplication can together also form either a duplication or deleti
 #### Insertions
 An insertion event is modelled by LINX as a pair of structural variants which inserts a section of templated sequence from either another part of the genome WITHOUT disruption to the DNA at the source location OR from an external sequence such as an insertion from a viral genome.
 
-The most common class of insertion in tumor genomes by far are mobile element insertions, which are not typically active in the germline, but can be highly deregulated in many different types of cancer. Mobile elements insertions frequently insert short sequences of their own DNA sequence and templated segments from adjacent to the source LINE element, with sometimes many segments from the same source location being inserted at multiple locations around the genome [36]. Mobile LINE elements can also cause SINE and pseudogene insertions. LINE insertion source breakends can be often difficult to map correctly on both ends, since they typically involve a repetitive LINE element at the start of the insertion element and a poly-A section at the end of the inserted section. LINX uses a combination of previously known active LINE element source information [CITE PCAWG] and identification of both the local breakpoint structure and POLY-A sequences to classify both fully and partially mapped breakpoints as LINE insertions. 
+The most common class of insertion in tumor genomes by far are mobile element insertions, which are not typically active in the germline, but can be highly deregulated in many different types of cancer. Mobile elements insertions frequently insert short sequences of their own DNA sequence and templated segments from adjacent to the source LINE region, with sometimes many segments from the same source location being inserted at multiple locations around the genome [36]. Actived LINE can also cause SINE and pseudogene insertions. LINE insertion source breakends can be often difficult to map correctly on both ends, since they typically involve a repetitive LINE motif at the start of the insertion and a poly-A section at the end of the inserted section. LINX uses a combination of previously known active LINE source region information [CITE PCAWG] and identification of both the local breakpoint structure and POLY-A sequences to classify both fully and partially mapped breakpoints as LINE insertions. 
 
 #### Double Minute
 Any 1 or 2 variant cluster which is predicted to form a closed loop by LINX without a centromere is resolved as a ‘double minute’.   All variants must form part of the ecDNA to be classified as event type double minute, although ecDNA may also occur as part of a complex cluster.    An exception is made for a simple DUP double minute clustered with an enclosing DEL, which is classified as double minute despite the DEL not being a part of the ecDNA structure.   Complex clusters may also contain double minutes.
@@ -452,7 +452,7 @@ To help resolve and characterise events, LINX first annotates a number of genomi
 #### Externally sourced genomic annotations
 Each breakend is first annotated with the following information from external sources
 - Whether it is in a known fragile site
-- Whether it is in a known LINE source element [Ref: https://www.nature.com/articles/s41588-019-0562-0]
+- Whether it is in a known LINE source region [Ref: https://www.nature.com/articles/s41588-019-0562-0]
 - The replication timing of the breakend 
 
 #### Identification of foldback inversions
@@ -704,7 +704,7 @@ For uniform ploidy clusters, only rules 1, 3,5 & 7 are considered in the priorit
 A cluster can be chained into more than 1 chain, each one representing the neo-chromosomes resulting from the rearrangement event. Chaining is often imperfect and incomplete due to the inclusion of single breakends and uncertainty about JCN and subsequent breakend replication. 
 
 ##### Special considerations for LINE clusters
-LINE clusters typically involve one or more insertions from a single source location to multiple target sites in the genome, with occasional inversion or rearrangement of the inserted sequence. Due to the highly localised origin and frequent overlap of these inserted elements, the above chaining rules are not appropriate for LINE clusters. Instead, assembled and transitive links are chained first and then pairs of SVs or assembled/transitive chains that make consistent insertions to a single remote site are chained together. Single breakends at an insertion site that are paired with a breakpoint to a known or suspected LINE source element and have insert sequence alignment matching the same source LINE element with the correct orientation are also chained at the source site. SVs that cannot be paired off to form consistent insertions are not chained.
+LINE clusters typically involve one or more insertions from a single source location to multiple target sites in the genome, with occasional inversion or rearrangement of the inserted sequence. Due to the highly localised origin and frequent overlap of these inserted elements, the above chaining rules are not appropriate for LINE clusters. Instead, assembled and transitive links are chained first and then pairs of SVs or assembled/transitive chains that make consistent insertions to a single remote site are chained together. Single breakends at an insertion site that are paired with a breakpoint to a known or suspected LINE source region and have insert sequence alignment matching the same source LINE region with the correct orientation are also chained at the source site. SVs that cannot be paired off to form consistent insertions are not chained.
 
 
 ##### Special considerations for extrachromosomal DNA (ecDNA)
