@@ -35,7 +35,6 @@ public final class KnownFusionPairFile {
                 .add("geneDown")
                 .add("minExonDown")
                 .add("maxExonDown")
-                .add("geneUp")
                 .add("sources")
                 .toString();
     }
