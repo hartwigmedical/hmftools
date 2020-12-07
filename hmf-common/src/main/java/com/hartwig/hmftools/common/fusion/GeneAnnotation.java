@@ -68,10 +68,10 @@ public class GeneAnnotation {
         mUpstream = isUpstream(this);
     }
 
-    public void setSvData(final StructuralVariantData var)
+    public void setSvData(final StructuralVariantData var, double jcn)
     {
         mOrientation = mIsStart ? var.startOrientation() : var.endOrientation();
-        mJunctionCopyNumber = var.junctionCopyNumber();
+        mJunctionCopyNumber = jcn;
         mPosition = mIsStart ? var.startPosition() : var.endPosition();
         mChromosome = mIsStart ? var.startChromosome() : var.endChromosome();
         mSvType = var.type();

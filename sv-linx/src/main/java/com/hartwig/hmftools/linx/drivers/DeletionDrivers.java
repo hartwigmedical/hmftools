@@ -269,7 +269,7 @@ public class DeletionDrivers
 
                         delDriverGeneIds.add(gene.StableId);
 
-                        LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozygous disruption for cnLowSide({}) dbLength({}) otherSvPloidy({})",
+                        LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozygous disruption for cnLowSide({}) dbLength({}) otherSvJcn({})",
                                 trans.geneName(), breakend.getCluster().id(), breakend,
                                 formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvJcn));
 
@@ -301,16 +301,16 @@ public class DeletionDrivers
 
                         double cnLowSideStart = breakend.copyNumberLowSide();
                         double cnLowSideEnd = otherBreakend.copyNumberLowSide();
-                        double ploidy = breakend.jcn();
-                        double ploidyThreshold = max(ploidy * (1 + MAX_COPY_NUM_DIFF_PERC), ploidy + MAX_COPY_NUM_DIFF);
+                        double jcn = breakend.jcn();
+                        double jcnThreshold = max(jcn * (1 + MAX_COPY_NUM_DIFF_PERC), jcn + MAX_COPY_NUM_DIFF);
 
-                        if(cnLowSideStart < ploidyThreshold && cnLowSideEnd < ploidyThreshold)
+                        if(cnLowSideStart < jcnThreshold && cnLowSideEnd < jcnThreshold)
                         {
                             delDriverGeneIds.add(gene.StableId);
 
-                            LNX_LOGGER.debug("gene({}) cluster({}) DUP({}) cause homozygous disruption cnLowSide({} & {}) ploidy({})",
+                            LNX_LOGGER.debug("gene({}) cluster({}) DUP({}) cause homozygous disruption cnLowSide({} & {}) jcn({})",
                                     trans.geneName(), breakend.getCluster().id(), breakend.getSV().id(),
-                                    formatJcn(cnLowSideStart), formatJcn(cnLowSideEnd), formatJcn(ploidy));
+                                    formatJcn(cnLowSideStart), formatJcn(cnLowSideEnd), formatJcn(jcn));
 
                             DriverGeneData dgData = mDataCache.createDriverData(gene);
 

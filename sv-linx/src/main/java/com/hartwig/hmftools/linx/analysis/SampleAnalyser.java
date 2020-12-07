@@ -304,7 +304,7 @@ public class SampleAnalyser
 
                     for (GeneAnnotation gene : genesList)
                     {
-                        gene.setSvData(var.getSvData());
+                        gene.setSvData(var.getSvData(), var.jcn());
                     }
                 }
             }
