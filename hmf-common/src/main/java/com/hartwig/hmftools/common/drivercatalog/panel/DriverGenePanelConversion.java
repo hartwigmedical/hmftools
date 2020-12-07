@@ -84,7 +84,7 @@ public class DriverGenePanelConversion {
         createBedFiles(true, germlineActionableFile, allGenes, transcripts);
 
         // Write out germline hotspot files
-        new GermlineHotspotVCF(germlineGenes).process(clinvarFile, germlineHotspotFile);
+        new GermlineHotspotVCF(germlineHotspotGenes(driverGenes)).process(clinvarFile, germlineHotspotFile);
     }
 
     private static void createBedFiles(boolean includeUTR, String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {
@@ -109,6 +109,19 @@ public class DriverGenePanelConversion {
         final Set<String> actionableGenes = Sets.newHashSet();
         for (DriverGene driverGene : genePanel) {
             if (driverGene.reportGermline()) {
+                actionableGenes.add(driverGene.gene());
+            }
+
+        }
+
+        return actionableGenes;
+    }
+
+    @NotNull
+    static Set<String> germlineHotspotGenes(@NotNull final List<DriverGene> genePanel) {
+        final Set<String> actionableGenes = Sets.newHashSet();
+        for (DriverGene driverGene : genePanel) {
+            if (driverGene.reportGermlineHotspot()) {
                 actionableGenes.add(driverGene.gene());
             }
 

@@ -15,8 +15,8 @@ public class PathogenicSummaryFactory {
     @NotNull
     public static PathogenicSummary fromContext(@NotNull VariantContext context) {
 
-        final String clnSig = context.getAttributeAsString(CLNSIG, Strings.EMPTY);
-        final String clnSigConf = String.join(",", context.getAttributeAsStringList(CLNSIGCONF, Strings.EMPTY));
+        final String clnSig = clnSig(context);
+        final String clnSigConf = clnSigConf(context);
         final String clinvarInfo = !clnSigConf.isEmpty() ? clnSigConf : clnSig;
 
         final Pathogenic path = context.getAttributeAsBoolean(BLACKLIST_BED, false) || context.getAttributeAsBoolean(BLACKLIST_VCF, false)
@@ -24,6 +24,14 @@ public class PathogenicSummaryFactory {
                 : Pathogenic.fromClinvarAnnotation(clnSig, clnSigConf);
 
         return ImmutablePathogenicSummary.builder().clinvarInfo(clinvarInfo).pathogenicity(path).build();
+    }
+
+    public static String clnSig(@NotNull VariantContext context) {
+        return context.getAttributeAsString(CLNSIG, Strings.EMPTY);
+    }
+
+    public static String clnSigConf(@NotNull VariantContext context) {
+        return String.join(",", context.getAttributeAsStringList(CLNSIGCONF, Strings.EMPTY));
     }
 
 }
