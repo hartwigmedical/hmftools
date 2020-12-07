@@ -62,7 +62,7 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment {
 
         GermlineGenotypeStatus status = status(depth);
         if (status.equals(GermlineGenotypeStatus.LOW_VAF)) {
-            VariantContext variantContext = new VariantContextBuilder(context).filter("LOW_VAF").make();
+            VariantContext variantContext = new VariantContextBuilder(context).filter(LOW_VAF_FILTER).make();
             consumer.accept(variantContext);
         } else {
             Allele refAllele = context.getReference();
