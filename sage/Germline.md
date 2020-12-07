@@ -1,13 +1,13 @@
 # Pathogenic Germline
 
-Currently we use GATK Haplotype caller for germline variant calling and Bachelor to search for variants which match a configured set of genes and coding effects or which are found to be pathogenic and annotates them with both their tumor VAF and copy number.
+Previously we used GATK Haplotype caller for germline variant calling and bachelor to search for variants which match a configured set of genes and coding effects or which are found to be pathogenic and annotates them with both their tumor VAF and copy number.
 
 This setup has a few drawbacks:
 - Our germline filters are sub-optimal in general (our soft filters filter a significant number of real variants)
 - We have to reimplement logic in bachelor to search for variant calls made by GATK haplotype caller in the tumor sample. 
 Some variants such as indels in repeats may not be called particularly accurately by bachelor in the tumor.
 - If variant calls fail hard filtering criteria in GATK in the reference sample they will be missed altogether, even if they are a known hotspot or may have stronger support in the tumor sample.
-We don’t know how confident we are that a gene is truly wildtype, since we don’t record any information about coverage.
+- We don’t know how confident we are that a gene is truly wildtype, since we don’t record any information about coverage.
 
 SAGE is the natural component to do this analysis, since it has comprehensive logic for calls both SNV and small indel, supports analysing normal and tumor at the same time.
 
