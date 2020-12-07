@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 
@@ -54,8 +55,8 @@ public class CnSegmentBuilder
     {
         // use SV breakend data to re-create the copy number segments
 
-        Map<String, List<SvCNData>> chrCnDataMap = cnDataLoader.getChrCnDataMap();
-        Map<Integer,SvCNData[]> svIdCnDataMap = cnDataLoader.getSvIdCnDataMap();
+        final Map<String, List<SvCNData>> chrCnDataMap = cnDataLoader.getChrCnDataMap();
+        final Map<Integer,SvCNData[]> svIdCnDataMap = cnDataLoader.getSvIdCnDataMap();
 
         chrCnDataMap.clear();
         svIdCnDataMap.clear();
@@ -140,8 +141,9 @@ public class CnSegmentBuilder
 
                 if(currentCopyNumber < 0)
                 {
-                    LNX_LOGGER.error("invalid copy number({}) at breakend({})", currentCopyNumber, breakend);
-                    return;
+                    LNX_LOGGER.warn("invalid copy number({}) from jcnChange({}) at breakend({})",
+                            currentCopyNumber, formatJcn(jcnChange), breakend);
+                    currentCopyNumber = 0;
                 }
 
                 double actualBaf = calcActualBaf(currentCopyNumber);
@@ -241,6 +243,143 @@ public class CnSegmentBuilder
         else
             return mOtherAlleleJcn / copyNumber;
     }
+
+    public void createIndependentCopyNumberData(final CnDataLoader cnDataLoader, final Map<String, List<SvBreakend>> chrBreakendMap)
+    {
+        // set copy number data for each breakend irrespective of the breakends around it
+
+        final Map<String, List<SvCNData>> chrCnDataMap = cnDataLoader.getChrCnDataMap();
+        final Map<Integer,SvCNData[]> svIdCnDataMap = cnDataLoader.getSvIdCnDataMap();
+
+        chrCnDataMap.clear();
+        svIdCnDataMap.clear();
+
+        double assumedCn = 2;
+        double assumedBaf = 0.5;
+
+        int cnId = 0;
+        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        {
+            final String chromosome = entry.getKey();
+            final List<SvBreakend> breakendList = entry.getValue();
+            final List<SvCNData> cnDataList = Lists.newArrayList();
+            chrCnDataMap.put(chromosome, cnDataList);
+
+            int centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, P_ARM);
+            int chromosomeLength = SvUtilities.getChromosomeLength(chromosome);
+
+            for (int i = 0; i < breakendList.size(); ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+                final StructuralVariantData svData = breakend.getSV().getSvData();
+                final SvVarData var = breakend.getSV();
+                double jcn = var.jcn();
+
+                double jcnChange = -jcn * breakend.orientation();
+
+                SvCNData cnData = null;
+
+                if (i == 0)
+                {
+                    // add telomere segment at start, and centromere as soon as the breakend crosses the centromere
+                    if(breakend.arm() == Q_ARM)
+                    {
+                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, centromerePosition,
+                                assumedCn, TELOMERE.toString(), CENTROMERE.toString(), 1, assumedBaf, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+
+                        extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, breakend.position() - 1,
+                                assumedCn, CENTROMERE.toString(), var.type().toString(), 1, assumedBaf, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+                    }
+                    else
+                    {
+                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, breakend.position() - 1,
+                                assumedCn, TELOMERE.toString(), var.type().toString(), 1, assumedBaf, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+                    }
+                }
+
+                if (i < breakendList.size() - 1)
+                {
+                    final SvBreakend nextBreakend = breakendList.get(i + 1);
+
+                    if(breakend.arm() == P_ARM && nextBreakend.arm() == Q_ARM)
+                    {
+                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition-1,
+                                assumedCn, var.type().toString(), CENTROMERE.toString(), 1, assumedBaf, 100);
+
+                        cnData.setIndex(cnDataList.size());
+                        cnData.setStructuralVariantData(svData, breakend.usesStart());
+                        cnDataList.add(cnData);
+
+                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, nextBreakend.position() - 1,
+                                assumedCn, CENTROMERE.toString(), nextBreakend.type().toString(), 1, assumedBaf, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+                    }
+                    else
+                    {
+                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), nextBreakend.position() - 1,
+                                assumedCn, var.type().toString(), nextBreakend.type().toString(), 1, assumedBaf, 100);
+
+                        cnData.setIndex(cnDataList.size());
+                        cnData.setStructuralVariantData(svData, breakend.usesStart());
+                        cnDataList.add(cnData);
+                    }
+                }
+                else
+                {
+                    // last breakend runs out to the telomere
+                    if(breakend.arm() == P_ARM)
+                    {
+                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition - 1,
+                                assumedCn, var.type().toString(), CENTROMERE.toString(), 1, assumedBaf, 100);
+
+                        cnData.setIndex(cnDataList.size());
+                        cnData.setStructuralVariantData(svData, breakend.usesStart());
+                        cnDataList.add(cnData);
+
+                        SvCNData extraCnData = new SvCNData(cnId++, chromosome, centromerePosition, chromosomeLength,
+                                assumedCn, CENTROMERE.toString(), TELOMERE.toString(), 1, assumedBaf, 100);
+
+                        extraCnData.setIndex(cnDataList.size());
+                        cnDataList.add(extraCnData);
+                    }
+                    else
+                    {
+                        cnData = new SvCNData(cnId++, chromosome, breakend.position(), chromosomeLength,
+                                assumedCn, var.type().toString(), TELOMERE.toString(), 1, assumedBaf, 100);
+
+                        cnData.setIndex(cnDataList.size());
+                        cnData.setStructuralVariantData(svData, breakend.usesStart());
+                        cnDataList.add(cnData);
+                    }
+                }
+
+                SvCNData[] cnDataPair = svIdCnDataMap.get(var.id());
+
+                if(cnDataPair == null)
+                {
+                    cnDataPair = new SvCNData[2];
+                    svIdCnDataMap.put(var.id(), cnDataPair);
+                }
+
+                cnDataPair[breakend.usesStart() ? SE_START : SE_END] = cnData;
+
+                // set copy number data back into the SV
+                breakend.getSV().setCopyNumberData(breakend.usesStart(), assumedCn, jcn);
+            }
+        }
+    }
+
 
     public void setSamplePurity(final CnDataLoader cnDataLoader, double purity, double ploidy, Gender gender)
     {

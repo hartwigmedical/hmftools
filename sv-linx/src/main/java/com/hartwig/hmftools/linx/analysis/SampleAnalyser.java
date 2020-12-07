@@ -474,7 +474,7 @@ public class SampleAnalyser
         CnSegmentBuilder cnSegmentBuilder = new CnSegmentBuilder();
         cnSegmentBuilder.setAllelePloidies(1, 1);
 
-        cnSegmentBuilder.createCopyNumberData(mCnDataLoader, mAnalyser.getState().getChrBreakendMap());
+        cnSegmentBuilder.createIndependentCopyNumberData(mCnDataLoader, mAnalyser.getState().getChrBreakendMap());
 
         cnSegmentBuilder.setSamplePurity(mCnDataLoader, 1, 2, MALE);
 

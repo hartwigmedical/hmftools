@@ -262,16 +262,12 @@ public class ClusterAnalyser {
 
         mPcChaining.start();
         findLimitedChains();
-        mPcChaining.pause();
 
         // log basic clustering details
         mClusters.stream().filter(x -> x.getSvCount() > 1).forEach(SvCluster::logDetails);
 
-        // INVs and other SV-pairs which make foldbacks are now used in the inconsistent clustering logic
         FoldbackFinder.markFoldbacks(mState.getChrBreakendMap());
 
-        mPcChaining.resume();
-        findLinksAndChains();
         dissolveSimpleGroups();
         mPcChaining.stop();
 

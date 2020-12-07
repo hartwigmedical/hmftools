@@ -244,7 +244,7 @@ public class LinxApplication
                 break;
             }
 
-            if(checkDrivers || checkFusions)
+            if(fusionAnalyser != null)
             {
                 // when matching RNA, allow all transcripts regardless of their viability for fusions
                 fusionAnalyser.annotateTranscripts(svDataList, purgeInvalidTranscripts);
@@ -257,7 +257,7 @@ public class LinxApplication
                 driverGeneAnnotator.annotateSVs(sampleId, sampleAnalyser.getChrBreakendMap());
             }
 
-            if(checkFusions)
+            if(checkFusions || config.IsGermline)
             {
                 fusionAnalyser.run(sampleId, svDataList, dbAccess, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
             }

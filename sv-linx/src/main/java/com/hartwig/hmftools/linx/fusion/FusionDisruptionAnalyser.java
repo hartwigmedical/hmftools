@@ -75,6 +75,7 @@ public class FusionDisruptionAnalyser
     private final EnsemblDataCache mGeneDataCache;
     private LinxConfig mConfig;
 
+    private final boolean mRunFusions;
     private final FusionParameters mFusionParams;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
@@ -112,6 +113,7 @@ public class FusionDisruptionAnalyser
 
         mNeoEpitopeFinder = null;
 
+        mRunFusions = cmdLineArgs == null || cmdLineArgs.hasOption(CHECK_FUSIONS);
         mFusions = Lists.newArrayList();
         mUniqueFusions = Lists.newArrayList();
         mInvalidFusions = Maps.newHashMap();
@@ -182,11 +184,6 @@ public class FusionDisruptionAnalyser
             mFusionParams.LogInvalidReasons = cmdLineArgs.hasOption(LOG_INVALID_REASONS);
         }
 
-        if(mConfig.hasMultipleSamples() || mLogAllPotentials)
-        {
-            mFusionWriter.initialiseOutputFiles();
-        }
-
         if(mConfig.hasMultipleSamples())
         {
             mDisruptionFinder.initialiseOutputFile("LNX_DISRUPTIONS.csv");
@@ -216,8 +213,13 @@ public class FusionDisruptionAnalyser
             }
         }
 
-        if(cmdLineArgs.hasOption(CHECK_FUSIONS))
+        if(mRunFusions)
         {
+            if(mConfig.hasMultipleSamples() || mLogAllPotentials)
+            {
+                mFusionWriter.initialiseOutputFiles();
+            }
+
             if(!mFusionFinder.hasValidConfigData())
                 mValidState = false;
 
@@ -328,13 +330,19 @@ public class FusionDisruptionAnalyser
 
         mUniqueFusions.clear();
         mFusionFinder.reset();
-        findFusions(svList, clusters);
+
+        if(mRunFusions)
+            findFusions(svList, clusters);
+
         mDisruptionFinder.findReportableDisruptions(svList);
 
-        mUniqueFusions.addAll(extractUniqueFusions());
+        if(mRunFusions)
+        {
+            mUniqueFusions.addAll(extractUniqueFusions());
 
-        // add protein information which won't have been set for unreported fusions
-        mUniqueFusions.stream().filter(x -> x.knownType() != NONE).forEach(x -> mFusionFinder.setFusionProteinFeatures(x));
+            // add protein information which won't have been set for unreported fusions
+            mUniqueFusions.stream().filter(x -> x.knownType() != NONE).forEach(x -> mFusionFinder.setFusionProteinFeatures(x));
+        }
 
         final List<Transcript> transcripts = getTranscriptList(svList, mUniqueFusions);
 
@@ -363,19 +371,23 @@ public class FusionDisruptionAnalyser
             mDisruptionFinder.writeMultiSampleData(mSampleId, svList);
         }
 
-        addVisualisationData(mUniqueFusions);
-
-        if(LNX_LOGGER.isDebugEnabled())
+        if(mRunFusions)
         {
-            for(final GeneFusion fusion : mUniqueFusions)
+            addVisualisationData(mUniqueFusions);
+
+            if(LNX_LOGGER.isDebugEnabled())
             {
-                if(fusion.knownType() != KnownFusionType.NONE)
+                for(final GeneFusion fusion : mUniqueFusions)
                 {
-                    LNX_LOGGER.debug("fusion({}:{}-{}) reportable({}) knownType({}) cluster({} sv={} chain={}) SVs({} & {})",
-                            fusion.id(), fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans().gene().GeneName, fusion.reportable(),
-                            fusion.knownTypeStr(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
-                            fusion.getAnnotations().chainInfo() != null ? fusion.getAnnotations().chainInfo().chainId() : -1,
-                            fusion.upstreamTrans().gene().id(), fusion.downstreamTrans().gene().id());
+                    if(fusion.knownType() != KnownFusionType.NONE)
+                    {
+                        LNX_LOGGER.debug("fusion({}:{}-{}) reportable({}) knownType({}) cluster({} sv={} chain={}) SVs({} & {})",
+                                fusion.id(), fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans()
+                                        .gene().GeneName, fusion.reportable(),
+                                fusion.knownTypeStr(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
+                                fusion.getAnnotations().chainInfo() != null ? fusion.getAnnotations().chainInfo().chainId() : -1,
+                                fusion.upstreamTrans().gene().id(), fusion.downstreamTrans().gene().id());
+                    }
                 }
             }
         }
