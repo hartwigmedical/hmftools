@@ -26,7 +26,6 @@ public interface ActionableEvent {
     @NotNull
     EvidenceDirection direction();
 
-    // TODO Turn into Set<String> and consolidate.
     @NotNull
     String url();
 }
