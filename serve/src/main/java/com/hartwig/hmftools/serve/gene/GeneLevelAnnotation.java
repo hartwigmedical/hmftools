@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.vicc.annotation;
+package com.hartwig.hmftools.serve.gene;
 
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 

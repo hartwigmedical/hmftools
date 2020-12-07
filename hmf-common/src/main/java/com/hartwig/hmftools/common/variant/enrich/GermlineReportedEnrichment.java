@@ -57,17 +57,17 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
             return false;
         }
 
+        final PathogenicSummary pathogenicSummary = PathogenicSummaryFactory.fromContext(context);
         final SnpEffSummary snpEffSummary = SnpEffSummaryFactory.fromSage(context);
         final String gene = snpEffSummary.gene();
         final boolean inHotspotGenes = reportableHotspotGenes.contains(gene);
         final boolean isHotspot = HotspotEnrichment.fromVariant(context).equals(Hotspot.HOTSPOT);
-        if (isHotspot && inHotspotGenes) {
+        if (isHotspot && inHotspotGenes && !pathogenicSummary.pathogenicity().equals(Pathogenic.BENIGN_BLACKLIST)) {
             return true;
         }
 
         final boolean inVariantGenes = reportableVariantGenes.contains(gene);
         if (inVariantGenes) {
-            final PathogenicSummary pathogenicSummary = PathogenicSummaryFactory.fromContext(context);
             if (pathogenicSummary.pathogenicity().isPathogenic()) {
                 return true;
             }

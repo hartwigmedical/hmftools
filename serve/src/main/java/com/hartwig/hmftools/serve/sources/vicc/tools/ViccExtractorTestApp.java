@@ -89,7 +89,7 @@ public class ViccExtractorTestApp {
                 allGenesMap,
                 featureInterpretationTsv);
 
-        ExtractionResult result = viccExtractor.extractFromViccEntries(entries);
+        ExtractionResult result = viccExtractor.extract(entries);
 
         ViccUtil.writeFeatures(featureTsv, entries);
 

@@ -21,7 +21,8 @@ public class CopyNumberFunctionsTest {
         KnownCopyNumber copyNumber2 = ampBuilder().gene(gene1).addSources(Knowledgebase.VICC_CGI).build();
         KnownCopyNumber copyNumber3 = ampBuilder().gene(gene2).addSources(Knowledgebase.VICC_CGI).build();
 
-        List<KnownCopyNumber> consolidated = CopyNumberFunctions.consolidate(Lists.newArrayList(copyNumber1, copyNumber2, copyNumber3));
+        List<KnownCopyNumber> consolidated =
+                Lists.newArrayList(CopyNumberFunctions.consolidate(Lists.newArrayList(copyNumber1, copyNumber2, copyNumber3)));
         assertEquals(2, consolidated.size());
 
         KnownCopyNumber gene1CopyNumber = findByGene(consolidated, gene1);

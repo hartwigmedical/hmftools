@@ -15,6 +15,9 @@ public class MutationTypeExtractor {
 
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(ViccClassificationConfig.build());
 
+    private MutationTypeExtractor() {
+    }
+
     @NotNull
     public static MutationType extractType(@NotNull Feature feature) {
         String gene = feature.geneSymbol();

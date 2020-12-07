@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.serve;
 
 import java.util.List;
+import java.util.Set;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.fusion.FusionFunctions;
@@ -21,9 +22,9 @@ public final class ExtractionFunctions {
     public static ExtractionResult merge(@NotNull List<ExtractionResult> results) {
         ImmutableExtractionResult.Builder mergedBuilder = ImmutableExtractionResult.builder();
 
-        List<KnownHotspot> allHotspots = Lists.newArrayList();
-        List<KnownCopyNumber> allCopyNumbers = Lists.newArrayList();
-        List<KnownFusionPair> allFusionPairs = Lists.newArrayList();
+        Set<KnownHotspot> allHotspots = Sets.newHashSet();
+        Set<KnownCopyNumber> allCopyNumbers = Sets.newHashSet();
+        Set<KnownFusionPair> allFusionPairs = Sets.newHashSet();
 
         for (ExtractionResult result : results) {
             allHotspots.addAll(result.knownHotspots());

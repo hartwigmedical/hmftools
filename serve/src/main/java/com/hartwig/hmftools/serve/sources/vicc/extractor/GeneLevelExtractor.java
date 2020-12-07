@@ -9,8 +9,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
-import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.annotation.ImmutableGeneLevelAnnotation;
+import com.hartwig.hmftools.serve.gene.GeneLevelAnnotation;
+import com.hartwig.hmftools.serve.gene.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -40,7 +40,7 @@ public class GeneLevelExtractor {
     }
 
     @NotNull
-    public Map<Feature, GeneLevelAnnotation> extractGeneLevelEvents(@NotNull ViccEntry viccEntry) {
+    public Map<Feature, GeneLevelAnnotation> extract(@NotNull ViccEntry viccEntry) {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {

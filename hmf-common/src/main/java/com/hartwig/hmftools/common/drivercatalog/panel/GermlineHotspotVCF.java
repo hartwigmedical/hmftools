@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.pathogenic.Pathogenic;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
@@ -53,13 +55,20 @@ class GermlineHotspotVCF {
             // Intersection of variant and approved genes
             variantGenes.retainAll(germlineGenes);
 
-            String clinsig = context.getAttributeAsString("CLNSIG", "unknown");
-            if (!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(clinsig) && context.getAlleles().size() == 2) {
+            Pathogenic pathogenic = PathogenicSummaryFactory.fromContext(context).pathogenicity();
+            if (!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(pathogenic) && context.getAlleles().size() == 2) {
+                final String clinsigConf = PathogenicSummaryFactory.clnSigConf(context);
                 VariantContextBuilder builder = new VariantContextBuilder("clinvar",
                         contigPrefix + context.getContig(),
                         context.getStart(),
                         context.getEnd(),
-                        context.getAlleles()).attribute("GENEINFO", geneinfo).attribute("CLNSIG", clinsig);
+                        context.getAlleles())
+                        .attribute("GENEINFO", geneinfo)
+                        .attribute(PathogenicSummaryFactory.CLNSIG, PathogenicSummaryFactory.clnSig(context));
+
+                if (!clinsigConf.isEmpty()) {
+                    builder.attribute(PathogenicSummaryFactory.CLNSIGCONF, clinsigConf);
+                }
 
                 variants.add(builder.make());
             }
@@ -72,7 +81,6 @@ class GermlineHotspotVCF {
         // Get sorted contigs
         final List<String> contigs = variants.stream().map(VariantContext::getContig).distinct().collect(Collectors.toList());
 
-
         // WRITE
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
@@ -81,7 +89,8 @@ class GermlineHotspotVCF {
 
         VCFHeader writerheader = new VCFHeader();
         writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine("GENEINFO"));
-        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine("CLNSIG"));
+        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine(PathogenicSummaryFactory.CLNSIG));
+        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine(PathogenicSummaryFactory.CLNSIGCONF));
         writerheader.addMetaDataLine(new VCFInfoHeaderLine(WHITELIST_FLAG, 1, VCFHeaderLineType.Flag, "Whitelisted hotspot"));
         writer.writeHeader(writerheader);
 
@@ -91,8 +100,8 @@ class GermlineHotspotVCF {
 
     }
 
-    private boolean isPathogenicOrLikelyPathogenic(String clnsig) {
-        return clnsig.startsWith("Pathogenic") || clnsig.equals("Likely_pathogenic");
+    private boolean isPathogenicOrLikelyPathogenic(Pathogenic pathogenic) {
+        return pathogenic.isPathogenic();
     }
 
 }

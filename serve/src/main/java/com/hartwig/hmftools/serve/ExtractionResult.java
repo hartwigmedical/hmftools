@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve;
 
-import java.util.List;
+import java.util.Set;
 
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -21,26 +21,26 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ExtractionResult {
 
     @NotNull
-    public abstract List<KnownHotspot> knownHotspots();
+    public abstract Set<KnownHotspot> knownHotspots();
 
     @NotNull
-    public abstract List<KnownCopyNumber> knownCopyNumbers();
+    public abstract Set<KnownCopyNumber> knownCopyNumbers();
 
     @NotNull
-    public abstract List<KnownFusionPair> knownFusionPairs();
+    public abstract Set<KnownFusionPair> knownFusionPairs();
 
     @NotNull
-    public abstract List<ActionableHotspot> actionableHotspots();
+    public abstract Set<ActionableHotspot> actionableHotspots();
 
     @NotNull
-    public abstract List<ActionableRange> actionableRanges();
+    public abstract Set<ActionableRange> actionableRanges();
 
     @NotNull
-    public abstract List<ActionableGene> actionableGenes();
+    public abstract Set<ActionableGene> actionableGenes();
 
     @NotNull
-    public abstract List<ActionableFusion> actionableFusions();
+    public abstract Set<ActionableFusion> actionableFusions();
 
     @NotNull
-    public abstract List<ActionableSignature> actionableSignatures();
+    public abstract Set<ActionableSignature> actionableSignatures();
 }

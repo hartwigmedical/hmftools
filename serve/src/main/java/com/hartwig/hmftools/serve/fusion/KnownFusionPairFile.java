@@ -20,7 +20,7 @@ public final class KnownFusionPairFile {
     private KnownFusionPairFile() {
     }
 
-    public static void write(@NotNull String fusionPairTsv, @NotNull List<KnownFusionPair> fusionPairs) throws IOException {
+    public static void write(@NotNull String fusionPairTsv, @NotNull Iterable<KnownFusionPair> fusionPairs) throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(fusionPairs));
@@ -35,18 +35,26 @@ public final class KnownFusionPairFile {
                 .add("geneDown")
                 .add("minExonDown")
                 .add("maxExonDown")
-                .add("geneUp")
                 .add("sources")
                 .toString();
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull List<KnownFusionPair> fusionPairs) {
+    private static List<String> toLines(@NotNull Iterable<KnownFusionPair> fusionPairs) {
         List<String> lines = Lists.newArrayList();
-        for (KnownFusionPair fusionPair : fusionPairs) {
+        for (KnownFusionPair fusionPair : sort(fusionPairs)) {
             lines.add(toLine(fusionPair));
         }
         return lines;
+    }
+
+    @NotNull
+    private static List<KnownFusionPair> sort(@NotNull Iterable<KnownFusionPair> fusionPairs) {
+        // Need to make a copy since the input may be immutable and cannot be sorted!
+        List<KnownFusionPair> sorted = Lists.newArrayList(fusionPairs);
+        sorted.sort(new FusionPairComparator());
+
+        return sorted;
     }
 
     @NotNull

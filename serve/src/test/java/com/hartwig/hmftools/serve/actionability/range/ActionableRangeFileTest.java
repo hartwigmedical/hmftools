@@ -15,7 +15,7 @@ public class ActionableRangeFileTest {
     @Test
     public void canReadFromFileAndConvert() throws IOException {
         String actionableRangeTsv =
-                ActionableRangeFile.actionableRangeTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR, RefGenomeVersion.HG19);
+                ActionableRangeFile.actionableRangeTsvPath(ActionabilityTestUtil.TEST_ACTIONABILITY_DIR, RefGenomeVersion.HG19);
         List<ActionableRange> actionableRanges = ActionableRangeFile.read(actionableRangeTsv);
 
         assertEquals(2, actionableRanges.size());

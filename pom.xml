@@ -10,6 +10,7 @@
 
     <modules>
         <module>hmf-common</module>
+        <module>patient-db</module>
         <module>hmf-extensions</module>
         <module>api-clients</module>
         <module>hmf-gene-panel-builder</module>
@@ -20,7 +21,6 @@
         <module>paddle</module>
         <module>health-checker</module>
         <module>fastq-stats</module>
-        <module>patient-db</module>
         <module>amber</module>
         <module>count-bam-lines</module>
         <module>purity-ploidy-estimator</module>

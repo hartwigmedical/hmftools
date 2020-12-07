@@ -5,6 +5,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
+import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
 
 import org.junit.Test;
 
@@ -20,16 +23,19 @@ public class ExtractionFunctionsTest {
         ExtractionResult merged = ExtractionFunctions.merge(Lists.newArrayList(result1, result2));
 
         assertEquals(1, merged.knownHotspots().size());
-        assertTrue(merged.knownHotspots().get(0).sources().contains(source1));
-        assertTrue(merged.knownHotspots().get(0).sources().contains(source2));
+        KnownHotspot hotspot = merged.knownHotspots().iterator().next();
+        assertTrue(hotspot.sources().contains(source1));
+        assertTrue(hotspot.sources().contains(source2));
 
         assertEquals(1, merged.knownCopyNumbers().size());
-        assertTrue(merged.knownCopyNumbers().get(0).sources().contains(source1));
-        assertTrue(merged.knownCopyNumbers().get(0).sources().contains(source2));
+        KnownCopyNumber copyNumber = merged.knownCopyNumbers().iterator().next();
+        assertTrue(copyNumber.sources().contains(source1));
+        assertTrue(copyNumber.sources().contains(source2));
 
         assertEquals(1, merged.knownFusionPairs().size());
-        assertTrue(merged.knownFusionPairs().get(0).sources().contains(source1));
-        assertTrue(merged.knownFusionPairs().get(0).sources().contains(source2));
+        KnownFusionPair fusionPair = merged.knownFusionPairs().iterator().next();
+        assertTrue(fusionPair.sources().contains(source1));
+        assertTrue(fusionPair.sources().contains(source2));
 
         assertEquals(2, merged.actionableHotspots().size());
         assertEquals(2, merged.actionableRanges().size());

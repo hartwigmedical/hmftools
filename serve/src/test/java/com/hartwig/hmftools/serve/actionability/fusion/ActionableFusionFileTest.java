@@ -15,7 +15,7 @@ public class ActionableFusionFileTest {
     @Test
     public void canReadFromFileAndConvert() throws IOException {
         String actionableFusionTsv =
-                ActionableFusionFile.actionableFusionTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR, RefGenomeVersion.HG19);
+                ActionableFusionFile.actionableFusionTsvPath(ActionabilityTestUtil.TEST_ACTIONABILITY_DIR, RefGenomeVersion.HG19);
         List<ActionableFusion> actionableFusions = ActionableFusionFile.read(actionableFusionTsv);
 
         assertEquals(3, actionableFusions.size());

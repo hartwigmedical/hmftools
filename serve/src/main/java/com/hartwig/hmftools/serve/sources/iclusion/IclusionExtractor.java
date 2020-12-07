@@ -9,6 +9,7 @@ import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.ExtractionResult;
 import com.hartwig.hmftools.serve.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,10 +20,11 @@ public class IclusionExtractor {
     private static final Logger LOGGER = LogManager.getLogger(IclusionExtractor.class);
 
     @NotNull
-    public ExtractionResult extractFromIclusionTrials(@NotNull List<IclusionTrial> trials) {
+    public ExtractionResult extract(@NotNull List<IclusionTrial> trials) {
         // We assume filtered trials (no empty acronyms, only OR mutations, and no negated mutations
 
         Set<String> uniqueCancerTypes = Sets.newTreeSet();
+        ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
         for (IclusionTrial trial : trials) {
             List<ActionableTrial> actionableTrials = ActionableTrialFactory.toActionableTrials(trial);
             for (ActionableTrial actionableTrial : actionableTrials) {
@@ -35,6 +37,8 @@ public class IclusionExtractor {
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
                 }
             }
+
+            tracker.update();
         }
 
         LOGGER.debug("Printing {} unique cancer types", uniqueCancerTypes.size());

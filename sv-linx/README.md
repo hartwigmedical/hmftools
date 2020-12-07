@@ -66,13 +66,13 @@ check_fusions | discover and annotate gene fusions
 Argument  | Description
 ---|---
 fragile_site_file | List of known fragile sites - specify Chromosome,PosStart,PosEnd
-line_element_file | List of known LINE elements - specify Chromosome,PosStart,PosEnd
+line_element_file | List of known LINE source regions - specify Chromosome,PosStart,PosEnd
 replication_origins_file | Optional: Replication timing input - in BED format with replication timing as the 4th column
 viral_hosts_file | Optional: List of known viral hosts - Refseq_id,Virus_name
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 
 Reference files are available for HG19 and HG38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
-- Linx: fragile sites, LINE elements, viral hosts and replication origins
+- Linx: fragile sites, LINE source regions, viral hosts and replication origins
 - Ensembl: cached Ensembl files
 - KnownFusions: HMF known fusion data
 - GenePanel: HMF driver genes
@@ -180,7 +180,7 @@ Linx writes all output to tsv files, each of which is decribed below.
 
 ### SV Annotations
 
-Additional annotations of each breakjunction
+Additional annotations of each non PON filtered breakjunction
 
 Generated file: sample_id.svs.tsv
 
@@ -193,8 +193,8 @@ clusterReason | Reason for clustering and svId of clustered break junction for o
 fragileSiteStart | Start breakend of break junction is in a known fragile site (T/F)
 fragileSiteEnd | End breakend of break junction is in a known fragile site (T/F)
 isFoldback | Break junction is classified as a foldback (T/F)
-lineTypeStart | Start breakend of break junction is in a known or suspected line source element
-lineTypeEnd | End breakend of break junction is in a known or suspected line source element
+lineTypeStart | Start breakend of break junction is in a known or suspected line source region
+lineTypeEnd | End breakend of break junction is in a known or suspected line source region
 junctionCopyNumberMin | Minimum bound JCN estimate for breakjunction
 junctionCopyNumberMax | Maximum bound JCN estimate for breakjunction
 geneStart | Gene(s) overlapping start breakend of SV
@@ -210,7 +210,7 @@ localTICountEnd | Number of chained templated insertions in local topology group
 
 ### Breakends
 
-Impact of each break junction on each overlapping gene
+Impact of each non PON filtered break junction on each overlapping gene
 
 Generated file: sample_id.breakend.tsv
 
@@ -237,7 +237,7 @@ TotalExonCount | Total number of exons in the transcript
 
 ### Clusters
 
-Clustering of all SV events and their resolved classification.
+Clustering of all non PON filtered SV events and their resolved classification.
 
 Generated file: sample_id.clusters.tsv
 
@@ -410,7 +410,7 @@ A deletion and duplication can together also form either a duplication or deleti
 #### Insertions
 An insertion event is modelled by LINX as a pair of structural variants which inserts a section of templated sequence from either another part of the genome WITHOUT disruption to the DNA at the source location OR from an external sequence such as an insertion from a viral genome.
 
-The most common class of insertion in tumor genomes by far are mobile element insertions, which are not typically active in the germline, but can be highly deregulated in many different types of cancer. Mobile elements insertions frequently insert short sequences of their own DNA sequence and templated segments from adjacent to the source LINE element, with sometimes many segments from the same source location being inserted at multiple locations around the genome [36]. Mobile LINE elements can also cause SINE and pseudogene insertions. LINE insertion source breakends can be often difficult to map correctly on both ends, since they typically involve a repetitive LINE element at the start of the insertion element and a poly-A section at the end of the inserted section. LINX uses a combination of previously known active LINE element source information [CITE PCAWG] and identification of both the local breakpoint structure and POLY-A sequences to classify both fully and partially mapped breakpoints as LINE insertions. 
+The most common class of insertion in tumor genomes by far are mobile element insertions, which are not typically active in the germline, but can be highly deregulated in many different types of cancer. Mobile elements insertions frequently insert short sequences of their own DNA sequence and templated segments from adjacent to the source LINE region, with sometimes many segments from the same source location being inserted at multiple locations around the genome [36]. Actived LINE can also cause SINE and pseudogene insertions. LINE insertion source breakends can be often difficult to map correctly on both ends, since they typically involve a repetitive LINE motif at the start of the insertion and a poly-A section at the end of the inserted section. LINX uses a combination of previously known active LINE source region information [CITE PCAWG] and identification of both the local breakpoint structure and POLY-A sequences to classify both fully and partially mapped breakpoints as LINE insertions. 
 
 #### Double Minute
 Any 1 or 2 variant cluster which is predicted to form a closed loop by LINX without a centromere is resolved as a ‘double minute’.   All variants must form part of the ecDNA to be classified as event type double minute, although ecDNA may also occur as part of a complex cluster.    An exception is made for a simple DUP double minute clustered with an enclosing DEL, which is classified as double minute despite the DEL not being a part of the ecDNA structure.   Complex clusters may also contain double minutes.
@@ -452,7 +452,7 @@ To help resolve and characterise events, LINX first annotates a number of genomi
 #### Externally sourced genomic annotations
 Each breakend is first annotated with the following information from external sources
 - Whether it is in a known fragile site
-- Whether it is in a known LINE source element [Ref: https://www.nature.com/articles/s41588-019-0562-0]
+- Whether it is in a known LINE source region [Ref: https://www.nature.com/articles/s41588-019-0562-0]
 - The replication timing of the breakend 
 
 #### Identification of foldback inversions
@@ -465,17 +465,17 @@ Foldback inversions are important structural features in the genome since they a
 - Neither breakend forming the foldback is linked via assembly to another breakend.
 
 
-#### Identification of suspected LINE source elements
-LINE source elements are also important genomic features and are modelled in LINX as regions of ~5000 bases which LINX suspects are the source for templated LINE insertions. LINE driven mobile element insertions are common in cancer genomes and typically present as a pair of balanced SVs representing a templated sequence from around the source element with a poly-A tail inserted into random locations in the genome although favoring a A|TTTTT motif [ref: https://www.nature.com/articles/s41588-019-0562-0] for the insertion site with no net copy number change at either source or insertion site. However, due to both the repetitive nature of the LINE source elements and the difficulty of accurately sequencing across the poly-A tail, one or both of the SVs that make up the insertion may be mapped as a single breakend (failing to uniquely map on the other side) OR be missed altogether. Since the lone remaining breakend can be mistaken as an unbalanced translocation, it is important to correctly identify it as a LINE element. This picture can be complicated even further by the fact that many overlapping fragments from a single source location may be copied to many different locations in the same genome, each potentially with one or both sides incompletely mapped. 
+#### Identification of suspected LINE source regions
+LINE source regions are also important genomic features and are modelled in LINX as regions of ~5000 bases which LINX suspects are the source for templated LINE insertions. LINE driven mobile element insertions are common in cancer genomes and typically present as a pair of balanced SVs representing a templated sequence from around the source region with a poly-A tail inserted into random locations in the genome although favoring a A|TTTTT motif [ref: https://www.nature.com/articles/s41588-019-0562-0] for the insertion site with no net copy number change at either source or insertion site. However, due to both the repetitive nature of the LINE source regions and the difficulty of accurately sequencing across the poly-A tail, one or both of the SVs that make up the insertion may be mapped as a single breakend (failing to uniquely map on the other side) OR be missed altogether. Since the lone remaining breakend can be mistaken as an unbalanced translocation, it is important to correctly identify it as a LINE insertion. This picture can be complicated even further by the fact that many overlapping fragments from a single source location may be copied to many different locations in the same genome, each potentially with one or both sides incompletely mapped. 
 
-Although we already annotate 124 well ‘known’ mobile LINE source elements which have been previously discovered [ref: https://www.nature.com/articles/s41588-019-0562-0], there are many more potential mobile LINE source elements which may be less common in the population or more rarely activated. We look exhaustively for likely LINE source elements in each individual tumor genome, by looking for both the characteristic poly-A tail of mobile element insertions and the local break topology structure at the insertion site. We define a poly-A tail as either at least 16 of the last 20 bases of the sequence are A or there is a repeat of 10 or more consecutive A or within the last 20 bases of the insert sequence. The orientation of the breakend relative to the insertion can help distinguish between the source and insertion site for a mobile element. At the mobile element source site, the poly-A tail positive oriented breakends will have the poly-A at the start of the insert sequence, or poly-T at the end of the insert sequence for negative oriented breakends (if sourced from the reverse strand). Conversely at the insertion site, negative oriented breakends will have poly-A tails at the end of the insert sequence and positive oriented breakends have poly-T at the start of the insert sequence (if inserted on the reverse strand)
+Although we already annotate 124 well ‘known’ mobile LINE source regions which have been previously discovered [ref: https://www.nature.com/articles/s41588-019-0562-0], there are many more potential mobile LINE source regions which may be less common in the population or more rarely activated. We look exhaustively for likely LINE source regions in each individual tumor genome, by looking for both the characteristic poly-A tail of mobile element insertions and the local break topology structure at the insertion site. We define a poly-A tail as either at least 16 of the last 20 bases of the sequence are A or there is a repeat of 10 or more consecutive A or within the last 20 bases of the insert sequence. The orientation of the breakend relative to the insertion can help distinguish between the source and insertion site for a mobile element. At the mobile element source site, the poly-A tail positive oriented breakends will have the poly-A at the start of the insert sequence, or poly-T at the end of the insert sequence for negative oriented breakends (if sourced from the reverse strand). Conversely at the insertion site, negative oriented breakends will have poly-A tails at the end of the insert sequence and positive oriented breakends have poly-T at the start of the insert sequence (if inserted on the reverse strand)
 
-Each breakend will be classified as being a ‘Suspected’ LINE source element if any of the following conditions are met:
+Each breakend will be classified as being a ‘Suspected’ LINE source region if any of the following conditions are met:
 - there are 2+ breakends within 5kb with poly-A/poly-T tails with expected orientations for a source site.
 - there are 2+ translocations or local junctions > 1M bases which are not connected at their remote end to a known LINE site within 5kb with at least one not forming a deletion bridge of < 30 bases AND at least one breakend within 5kb having a poly-A tail with expected orientation for a source site
 - we find at least 1 translocation or local junction >1M bases with it’s remote breakend proximity clustered with ONLY 1 single breakend and forming a deletion bridge of < 30 bases AND EITHER the junction has a poly-A / poly-T tail with the expected orientation of the source site OR the remote single breakend has a poly-A/poly-T tail with expected orientation for an insertion site.
 
-The suspected LINE source element is also checked that it is not a potential pseudogene insertion by checking that there is no deletion within 5kb of the suspected source element that matches an exon boundary at both ends.  Both known and suspected source elements have special logic applied in the clustering phase.
+The suspected LINE source region is also checked that it is not a potential pseudogene insertion by checking that there is no deletion within 5kb of the suspected source region that matches an exon boundary at both ends.  Both known and suspected source regions have special logic applied in the clustering phase.
 
 
 #### Identification of LOH boundaries
@@ -562,10 +562,10 @@ Any SV with a breakend within the specified proximity_distance (default = 5Kb) o
 LINX performs early resolution of mobile element insertions as insertions typically cause translocations that may inadvertently be clustered with other variants, particularly in tumors with highly deregulated LINE activation.
 
 LINX resolves a cluster as type LINE if any of the following conditions are met:
-- It contains a suspected LINE element AND (the cluster has <=10 variants OR at least 50% of the non single or inferred junctions in the cluster have a known or suspected breakend)
-- Every non single or inferred breakend variant in the cluster touches a KNOWN LINE element AND at LEAST one of the variants is a translocation
+- It contains a suspected LINE source region AND (the cluster has <=10 variants OR at least 50% of the non single or inferred junctions in the cluster have a known or suspected breakend)
+- Every non single or inferred breakend variant in the cluster touches a KNOWN LINE source region AND at LEAST one of the variants is a translocation
 
-Due to the low mappability of the LINE elements, frequently we will also identify LINE insertions only as single breakends as the insertion site. We therefore also resolve a cluster as LINE insertion if it contains either : 
+Due to the low mappability of the LINE motifs, frequently we will also identify LINE insertions only as single breakends as the insertion site. We therefore also resolve a cluster as LINE insertion if it contains either : 
 - 2 single breakends only, forming a deletion bridge (less than +/-30 bases) with [one side having a poly-A/poly-T tail with the expected orientation of an insertion site OR one of them has insertSequenceRepeatClass = ‘LINE/L1’]
 - 1 single breakend and 1 inferred breakend only and the single breakend has insertSequenceRepeatClass = ‘LINE/L1’ or a poly-A/poly-T tail with the expected orientation of an insertion site
 - 1 single breakend with insertSequenceRepeatClass = ‘LINE/L1’ or a poly-A/poly-T tail with the expected orientation of an insertion site and copy number change < 0.5 / 15%
@@ -704,7 +704,7 @@ For uniform ploidy clusters, only rules 1, 3,5 & 7 are considered in the priorit
 A cluster can be chained into more than 1 chain, each one representing the neo-chromosomes resulting from the rearrangement event. Chaining is often imperfect and incomplete due to the inclusion of single breakends and uncertainty about JCN and subsequent breakend replication. 
 
 ##### Special considerations for LINE clusters
-LINE clusters typically involve one or more insertions from a single source location to multiple target sites in the genome, with occasional inversion or rearrangement of the inserted sequence. Due to the highly localised origin and frequent overlap of these inserted elements, the above chaining rules are not appropriate for LINE clusters. Instead, assembled and transitive links are chained first and then pairs of SVs or assembled/transitive chains that make consistent insertions to a single remote site are chained together. Single breakends at an insertion site that are paired with a breakpoint to a known or suspected LINE source element and have insert sequence alignment matching the same source LINE element with the correct orientation are also chained at the source site. SVs that cannot be paired off to form consistent insertions are not chained.
+LINE clusters typically involve one or more insertions from a single source location to multiple target sites in the genome, with occasional inversion or rearrangement of the inserted sequence. Due to the highly localised origin and frequent overlap of these inserted elements, the above chaining rules are not appropriate for LINE clusters. Instead, assembled and transitive links are chained first and then pairs of SVs or assembled/transitive chains that make consistent insertions to a single remote site are chained together. Single breakends at an insertion site that are paired with a breakpoint to a known or suspected LINE source region and have insert sequence alignment matching the same source LINE region with the correct orientation are also chained at the source site. SVs that cannot be paired off to form consistent insertions are not chained.
 
 
 ##### Special considerations for extrachromosomal DNA (ecDNA)

@@ -18,7 +18,7 @@ public final class KnownCopyNumberFile {
     private KnownCopyNumberFile() {
     }
 
-    public static void write(@NotNull String copyNumberTsv, @NotNull List<KnownCopyNumber> copyNumbers) throws IOException {
+    public static void write(@NotNull String copyNumberTsv, @NotNull Iterable<KnownCopyNumber> copyNumbers) throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(copyNumbers));
@@ -31,12 +31,21 @@ public final class KnownCopyNumberFile {
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull List<KnownCopyNumber> copyNumbers) {
+    private static List<String> toLines(@NotNull Iterable<KnownCopyNumber> copyNumbers) {
         List<String> lines = Lists.newArrayList();
-        for (KnownCopyNumber copyNumber : copyNumbers) {
+        for (KnownCopyNumber copyNumber : sort(copyNumbers)) {
             lines.add(toLine(copyNumber));
         }
         return lines;
+    }
+
+    @NotNull
+    private static List<KnownCopyNumber> sort(@NotNull Iterable<KnownCopyNumber> copyNumbers) {
+        // Need to make a copy since the input may be immutable and cannot be sorted!
+        List<KnownCopyNumber> sorted = Lists.newArrayList(copyNumbers);
+        sorted.sort(new KnownCopyNumberComparator());
+
+        return sorted;
     }
 
     @NotNull

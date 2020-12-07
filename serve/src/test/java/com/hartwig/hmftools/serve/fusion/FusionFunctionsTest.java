@@ -22,10 +22,12 @@ public class FusionFunctionsTest {
                 .geneDown(gene2)
                 .addSources(Knowledgebase.VICC_ONCOKB, Knowledgebase.VICC_CIVIC)
                 .build();
-        KnownFusionPair fusion2 = ImmutableKnownFusionPair.builder().geneUp(gene1).geneDown(gene2).addSources(Knowledgebase.VICC_CGI).build();
-        KnownFusionPair fusion3 = ImmutableKnownFusionPair.builder().geneUp(gene2).geneDown(gene1).addSources(Knowledgebase.VICC_CGI).build();
+        KnownFusionPair fusion2 =
+                ImmutableKnownFusionPair.builder().geneUp(gene1).geneDown(gene2).addSources(Knowledgebase.VICC_CGI).build();
+        KnownFusionPair fusion3 =
+                ImmutableKnownFusionPair.builder().geneUp(gene2).geneDown(gene1).addSources(Knowledgebase.VICC_CGI).build();
 
-        List<KnownFusionPair> consolidated = FusionFunctions.consolidate(Lists.newArrayList(fusion1, fusion2, fusion3));
+        List<KnownFusionPair> consolidated = Lists.newArrayList(FusionFunctions.consolidate(Lists.newArrayList(fusion1, fusion2, fusion3)));
         assertEquals(2, consolidated.size());
 
         KnownFusionPair gene1Fusion = findByGeneUp(consolidated, gene1);

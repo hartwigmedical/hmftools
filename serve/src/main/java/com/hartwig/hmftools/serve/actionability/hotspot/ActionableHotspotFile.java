@@ -29,7 +29,8 @@ public final class ActionableHotspotFile {
         return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_HOTSPOT_TSV);
     }
 
-    public static void write(@NotNull String actionableHotspotTsv, @NotNull List<ActionableHotspot> actionableHotspots) throws IOException {
+    public static void write(@NotNull String actionableHotspotTsv, @NotNull Iterable<ActionableHotspot> actionableHotspots)
+            throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(actionableHotspots));
@@ -91,12 +92,21 @@ public final class ActionableHotspotFile {
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull List<ActionableHotspot> actionableHotspots) {
+    static List<String> toLines(@NotNull Iterable<ActionableHotspot> actionableHotspots) {
         List<String> lines = Lists.newArrayList();
-        for (ActionableHotspot actionableHotspot : actionableHotspots) {
+        for (ActionableHotspot actionableHotspot : sort(actionableHotspots)) {
             lines.add(toLine(actionableHotspot));
         }
         return lines;
+    }
+
+    @NotNull
+    private static List<ActionableHotspot> sort(@NotNull Iterable<ActionableHotspot> actionableHotspots) {
+        // Need to make a copy since the input may be immutable and cannot be sorted!
+        List<ActionableHotspot> sorted = Lists.newArrayList(actionableHotspots);
+        sorted.sort(new ActionableHotspotComparator());
+
+        return sorted;
     }
 
     @NotNull

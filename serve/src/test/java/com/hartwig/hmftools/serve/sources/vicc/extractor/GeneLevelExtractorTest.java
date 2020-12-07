@@ -13,8 +13,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
-import com.hartwig.hmftools.serve.sources.vicc.annotation.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -32,7 +32,7 @@ public class GeneLevelExtractorTest {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET", "KIT"));
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KIT", "KIT  positive");
 
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extractGeneLevelEvents(viccEntry);
+        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(viccEntry);
 
         assertEquals(1, geneLevelEventsPerFeature.size());
         assertEquals("KIT", geneLevelEventsPerFeature.get(viccEntry.features().get(0)).gene());
@@ -44,7 +44,7 @@ public class GeneLevelExtractorTest {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET", "KIT"));
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("TP53", "TP53  negative");
 
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extractGeneLevelEvents(viccEntry);
+        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(viccEntry);
 
         assertEquals(1, geneLevelEventsPerFeature.size());
         assertEquals("TP53", geneLevelEventsPerFeature.get(viccEntry.features().get(0)).gene());
@@ -56,7 +56,7 @@ public class GeneLevelExtractorTest {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET", "KIT"));
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("STK11", "Truncating Mutations");
 
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extractGeneLevelEvents(viccEntry);
+        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(viccEntry);
 
         assertEquals(1, geneLevelEventsPerFeature.size());
         assertEquals("STK11", geneLevelEventsPerFeature.get(viccEntry.features().get(0)).gene());
@@ -68,7 +68,7 @@ public class GeneLevelExtractorTest {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET", "KIT"));
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NTRK3", "NTRK3 fusion");
 
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extractGeneLevelEvents(viccEntry);
+        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(viccEntry);
 
         assertEquals(1, geneLevelEventsPerFeature.size());
         assertEquals("NTRK3", geneLevelEventsPerFeature.get(viccEntry.features().get(0)).gene());

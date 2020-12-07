@@ -18,8 +18,7 @@ public class HotspotFunctionsTest {
 
     @Test
     public void canConsolidateEmptyHotspots() {
-        List<KnownHotspot> knownHotspots = Lists.newArrayList();
-        assertTrue(HotspotFunctions.consolidate(knownHotspots).isEmpty());
+        assertTrue(HotspotFunctions.consolidate(Lists.newArrayList()).isEmpty());
     }
 
     @Test
@@ -50,18 +49,18 @@ public class HotspotFunctionsTest {
                 .proteinAnnotation("prot3")
                 .build());
 
-        List<KnownHotspot> consolidateHotspots = HotspotFunctions.consolidate(knownHotspots);
+        List<KnownHotspot> consolidateHotspots = Lists.newArrayList(HotspotFunctions.consolidate(knownHotspots));
         assertEquals(2, consolidateHotspots.size());
 
         assertEquals(Sets.newHashSet(source), consolidateHotspots.get(0).sources());
-        assertEquals("gene1", consolidateHotspots.get(0).gene());
-        assertEquals("trans1", consolidateHotspots.get(0).transcript());
-        assertEquals("prot1", consolidateHotspots.get(0).proteinAnnotation());
+        assertEquals("gene2", consolidateHotspots.get(0).gene());
+        assertEquals("trans2", consolidateHotspots.get(0).transcript());
+        assertEquals("prot3", consolidateHotspots.get(0).proteinAnnotation());
 
         assertEquals(Sets.newHashSet(source), consolidateHotspots.get(1).sources());
-        assertEquals("gene2", consolidateHotspots.get(1).gene());
-        assertEquals("trans2", consolidateHotspots.get(1).transcript());
-        assertEquals("prot3", consolidateHotspots.get(1).proteinAnnotation());
+        assertEquals("gene1", consolidateHotspots.get(1).gene());
+        assertEquals("trans1", consolidateHotspots.get(1).transcript());
+        assertEquals("prot1", consolidateHotspots.get(1).proteinAnnotation());
     }
 
     @Test
@@ -85,7 +84,7 @@ public class HotspotFunctionsTest {
                 .proteinAnnotation("prot2")
                 .build());
 
-        List<KnownHotspot> consolidateHotspots = HotspotFunctions.consolidate(knownHotspots);
+        List<KnownHotspot> consolidateHotspots = Lists.newArrayList(HotspotFunctions.consolidate(knownHotspots));
         assertEquals(1, consolidateHotspots.size());
 
         assertEquals(Sets.newHashSet(source1, source2), consolidateHotspots.get(0).sources());

@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
-import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
@@ -134,7 +133,7 @@ public class ServeApplication {
 
         ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(proteinResolver, driverGenes, allGenesMap);
         LOGGER.info("Running VICC knowledge extraction");
-        return extractor.extractFromViccEntries(entries);
+        return extractor.extract(entries);
     }
 
     @NotNull
@@ -143,7 +142,7 @@ public class ServeApplication {
 
         IclusionExtractor extractor = new IclusionExtractor();
         LOGGER.info("Running iClusion knowledge extraction");
-        return extractor.extractFromIclusionTrials(trials);
+        return extractor.extract(trials);
     }
 
     @NotNull
@@ -152,9 +151,8 @@ public class ServeApplication {
         List<DocmEntry> entries = DocmReader.readAndCurate(docmTsv);
 
         DocmExtractor extractor = new DocmExtractor(proteinResolver);
-        List<KnownHotspot> hotspots = extractor.extractFromDocmEntries(entries);
         LOGGER.info("Running DoCM knowledge extraction");
-        return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
+        return extractor.extract(entries);
     }
 
     @NotNull
@@ -165,10 +163,8 @@ public class ServeApplication {
         LOGGER.info(" Read {} entries", entries.size());
 
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_COHORT, proteinResolver, addExplicitHotspots);
-
         LOGGER.info("Running Hartwig Cohort knowledge extraction");
-        List<KnownHotspot> hotspots = extractor.extractFromHartwigEntries(entries);
-        return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
+        return extractor.extract(entries);
     }
 
     @NotNull
@@ -179,9 +175,7 @@ public class ServeApplication {
         LOGGER.info(" Read {} entries", entries.size());
 
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_CURATED, proteinResolver, addExplicitHotspots);
-
         LOGGER.info("Running Hartwig Curated knowledge extraction");
-        List<KnownHotspot> hotspots = extractor.extractFromHartwigEntries(entries);
-        return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
+        return extractor.extract(entries);
     }
 }

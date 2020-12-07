@@ -35,7 +35,7 @@ public final class KnownHotspotVCF {
     private KnownHotspotVCF() {
     }
 
-    public static void write(@NotNull String hotspotVcf, @NotNull List<KnownHotspot> hotspots) {
+    public static void write(@NotNull String hotspotVcf, @NotNull Iterable<KnownHotspot> hotspots) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(hotspotVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)
@@ -50,11 +50,7 @@ public final class KnownHotspotVCF {
 
         writer.writeHeader(header);
 
-        // Need to make a copy since the input list may be immutable and cannot be sorted!
-        List<KnownHotspot> sorted = Lists.newArrayList(hotspots);
-        sorted.sort(new VariantHotspotComparator());
-
-        for (KnownHotspot hotspot : sorted) {
+        for (KnownHotspot hotspot : sort(hotspots)) {
             List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
             VariantContext variantContext = new VariantContextBuilder().noGenotypes()
@@ -75,9 +71,18 @@ public final class KnownHotspotVCF {
         writer.close();
     }
 
+    @NotNull
+    private static List<KnownHotspot> sort(@NotNull Iterable<KnownHotspot> hotspots) {
+        // Need to make a copy since the input may be immutable and cannot be sorted!
+        List<KnownHotspot> sorted = Lists.newArrayList(hotspots);
+        sorted.sort(new VariantHotspotComparator());
+
+        return sorted;
+    }
+
     @VisibleForTesting
     @NotNull
-    static String uniqueSourcesString(@NotNull List<KnownHotspot> hotspots) {
+    static String uniqueSourcesString(@NotNull Iterable<KnownHotspot> hotspots) {
         Set<Knowledgebase> sources = Sets.newHashSet();
         for (KnownHotspot hotspot : hotspots) {
             sources.addAll(hotspot.sources());

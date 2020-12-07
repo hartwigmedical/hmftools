@@ -32,7 +32,8 @@ Whole exome sequenced (WES) data is not supported.
   + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
   + [10. Somatic enrichment](#10-somatic-enrichment)
-  + [11. Driver Catalog](#11-driver-catalog)
+  + [11. Germline enrichment](#11-germline-enrichment)
+  + [12. Driver Catalog](#12-driver-catalog)
 * [Output](#output)
   + [Files](#files)
   + [VCF](#VCF)
@@ -305,7 +306,7 @@ Tumor only mode impacts PURPLE in the following ways:
 
 ## Algorithm
 
-There are 11 key steps in the PURPLE pipeline described in detail below:
+There are 12 key steps in the PURPLE pipeline described in detail below:
 1. Sex determination
 2. Segmentation
 3. Sample purity and ploidy fitting
@@ -316,7 +317,8 @@ There are 11 key steps in the PURPLE pipeline described in detail below:
 8. Identification of germline copy number alterations that are homozygously deleted in the tumor
 9. QC Status for the tumor
 10. Somatic enrichment
-11. Driver Catalog
+11. Germline enrichment
+12. Driver Catalog
 
 ### 1. Sex determination
 
@@ -571,7 +573,43 @@ We apply an iterative algorithm to find peaks in the variant copy number distrib
 This process yields a set of variant copy number peaks, each with a copy number and a total density (i.e. count of variants). 
 To avoid overfitting small amounts of noise in the distribution, we filter out any peaks that account for less than 40% of the variants in the copy number bucket at the peak itself.   After this filtering we scale the fitted peaks by a constant so that the sum of fitted peaks = the total variant count of the sample.  We mark a peak as subclonal if the peak variant copy number < 0.85.   We also calculate the subclonal likelihood for each individual variant as the proportion of variants in that same copy number bucket fitted as belonging to a subclonal peak. 
 
-### 11. Driver Catalog
+### 11. Germline Enrichment
+If a germline VCF is supplied to PURPLE each variant is enriched with the following fields:
+
+- PURPLE_CN: Purity adjusted copy number surrounding variant location
+- PURPLE_MACN: Purity adjusted minor allele copy number surrounding variant location
+- PURPLE_AF: Purity adjusted allelic frequency of variant
+- PURPLE_VCN: Purity adjusted copy number of variant
+- BIALLELIC: Flag to indicate variant is biallelic
+- GT: Genotype of variant (applied to germline sample only)
+- PATH: Pathogenicity of variant
+- REPORTED: Will contribute in the driver catalog
+
+More detailed descriptions of the PATH and GT fields are found below.
+
+#### Pathogenicity
+The pathogencity enrichment requires the clinvar `CLNSIG` and `CLNSIGCONF` annotations. These are consolidated into a single interpretation by taking the strongest signal after ignoring `Uncertain_significance`. 
+If both benign and pathogenic signals exist the pathogenicity is set to `CONFLICTING`. 
+
+Regardless of the clinvar signals, a variant will be set to `BENIGN_BLACKLIST` if it contains either of the `BLACKLIST_BED` or `BLACKLIST_VCF` flags.
+
+Valid values are `PATHOGENIC`, `LIKELY_PATHOGENIC`, `BENIGN`, `LIKELY_BENIGN`, `BENIGN_BLACKLIST`, `CONFLICTING`, `UNKNOWN`.
+
+#### Genotype
+The genotype enrichment can set the GT field of the germline sample to `0/1` (HET), `1/1` (HOM) or leave it unchanged as `./.` and filter the variant as `LOW_VAF`.
+
+A variant is filtered as `LOW_VAF` if AltReadCount < 0.3*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.002.
+
+Alternatively, the variant GT will be set to `1/1` (HOM)  if (totalReadCount==AltReadCount) OR (AltReadCount > 0.75*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.005) and `0/1` (HET) otherwise.
+
+#### Reported
+The reported flag controls if the variant should appear in the driver catalog.
+
+To be reported, the variant must PASS and either:
+- be a hotspot (but not `BENIGN_BLACKLIST`) on a gene where we report germline hotspots; or
+- be a nonsense/frameshift or splice on a gene where we report germline variants.
+
+### 12. Driver Catalog
 
 PURPLE builds a catalog of drivers based on a configured gene panel.    PURPLE automatically assigns a driver likelihood of 1 to all significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that are reportable.  If the somatic VCF is SnpEff annotated, a driver likelihood is calculated for any point mutations in the gene panel.
 

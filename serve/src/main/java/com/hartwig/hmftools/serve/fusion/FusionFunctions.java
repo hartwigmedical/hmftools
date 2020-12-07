@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.serve.fusion;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -19,7 +17,7 @@ public final class FusionFunctions {
     }
 
     @NotNull
-    public static List<KnownFusionPair> consolidate(@NotNull List<KnownFusionPair> fusionPairs) {
+    public static Set<KnownFusionPair> consolidate(@NotNull Iterable<KnownFusionPair> fusionPairs) {
         Map<FusionKey, Set<Knowledgebase>> sourcesPerFusion = Maps.newHashMap();
         for (KnownFusionPair fusionPair : fusionPairs) {
             FusionKey key = new FusionKey(fusionPair);
@@ -31,7 +29,7 @@ public final class FusionFunctions {
             sourcesPerFusion.put(key, sources);
         }
 
-        List<KnownFusionPair> consolidated = Lists.newArrayList();
+        Set<KnownFusionPair> consolidated = Sets.newHashSet();
         for (Map.Entry<FusionKey, Set<Knowledgebase>> entry : sourcesPerFusion.entrySet()) {
             consolidated.add(ImmutableKnownFusionPair.builder()
                     .geneUp(entry.getKey().geneUp())
@@ -46,7 +44,7 @@ public final class FusionFunctions {
         return consolidated;
     }
 
-    private static class FusionKey {
+    private static class FusionKey implements FusionPair {
 
         @NotNull
         private final String geneUp;
@@ -71,31 +69,37 @@ public final class FusionFunctions {
         }
 
         @NotNull
+        @Override
         public String geneUp() {
             return geneUp;
         }
 
         @Nullable
+        @Override
         public Integer minExonUp() {
             return minExonUp;
         }
 
         @Nullable
+        @Override
         public Integer maxExonUp() {
             return maxExonUp;
         }
 
         @NotNull
+        @Override
         public String geneDown() {
             return geneDown;
         }
 
         @Nullable
+        @Override
         public Integer minExonDown() {
             return minExonDown;
         }
 
         @Nullable
+        @Override
         public Integer maxExonDown() {
             return maxExonDown;
         }

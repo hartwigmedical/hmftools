@@ -629,6 +629,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - Upcoming
   - Gene panel coverage
   - Changed default value of max_germline_rel_raw_base_qual for HOTSPOTS to 50% (from 100%)
+  - Improved VAF estimation
 - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.4)
   - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
   - Do not hard filter germline variants in the same local phase set as passing somatic variants

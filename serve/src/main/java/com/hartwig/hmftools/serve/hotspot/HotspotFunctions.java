@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.serve.hotspot;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -25,7 +23,7 @@ public final class HotspotFunctions {
     }
 
     @NotNull
-    public static List<KnownHotspot> consolidate(@NotNull List<KnownHotspot> hotspots) {
+    public static Set<KnownHotspot> consolidate(@NotNull Iterable<KnownHotspot> hotspots) {
         Map<VariantHotspot, HotspotAnnotation> annotationPerHotspot = Maps.newHashMap();
         for (KnownHotspot hotspot : hotspots) {
             HotspotAnnotation newAnnotation = new HotspotAnnotation(Sets.newHashSet(hotspot.sources()),
@@ -42,7 +40,7 @@ public final class HotspotFunctions {
             }
         }
 
-        List<KnownHotspot> consolidatedHotspots = Lists.newArrayList();
+        Set<KnownHotspot> consolidatedHotspots = Sets.newHashSet();
         for (Map.Entry<VariantHotspot, HotspotAnnotation> entry : annotationPerHotspot.entrySet()) {
             HotspotAnnotation annotation = entry.getValue();
             consolidatedHotspots.add(ImmutableKnownHotspot.builder()

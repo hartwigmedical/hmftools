@@ -29,7 +29,7 @@ public final class ActionableSignatureFile {
         return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_SIGNATURE_TSV);
     }
 
-    public static void write(@NotNull String actionableSignatureTsv, @NotNull List<ActionableSignature> actionableSignatures)
+    public static void write(@NotNull String actionableSignatureTsv, @NotNull Iterable<ActionableSignature> actionableSignatures)
             throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -86,12 +86,21 @@ public final class ActionableSignatureFile {
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull List<ActionableSignature> actionableSignatures) {
+    static List<String> toLines(@NotNull Iterable<ActionableSignature> actionableSignatures) {
         List<String> lines = Lists.newArrayList();
-        for (ActionableSignature actionableSignature : actionableSignatures) {
+        for (ActionableSignature actionableSignature : sort(actionableSignatures)) {
             lines.add(toLine(actionableSignature));
         }
         return lines;
+    }
+
+    @NotNull
+    private static List<ActionableSignature> sort(@NotNull Iterable<ActionableSignature> actionableSignatures) {
+        // Need to make a copy since the input may be immutable and cannot be sorted!
+        List<ActionableSignature> sorted = Lists.newArrayList(actionableSignatures);
+        sorted.sort(new ActionableSignatureComparator());
+
+        return sorted;
     }
 
     @NotNull

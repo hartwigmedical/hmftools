@@ -24,7 +24,7 @@ public class FusionExtractorTest {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("PDGFRA", "BCR-PDGFRA Fusion");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
         assertEquals(1, fusionsPerFeature.size());
         assertEquals("BCR", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
         assertEquals("PDGFRA", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
@@ -35,7 +35,7 @@ public class FusionExtractorTest {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("IG", "IG-BCL2");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
 
         assertTrue(fusionsPerFeature.isEmpty());
     }
@@ -45,7 +45,7 @@ public class FusionExtractorTest {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "EGFRvII");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
         assertEquals(1, fusionsPerFeature.size());
         assertEquals("EGFR", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
         assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonUp());
@@ -60,7 +60,7 @@ public class FusionExtractorTest {
         FusionExtractor fusionExtractor = new FusionExtractor(new GeneChecker(Sets.newHashSet("IGH", "NKX2-1")));
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NKX2-1", "IGH-NKX2-1 Fusion");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
         assertEquals(1, fusionsPerFeature.size());
         assertEquals("IGH", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
         assertEquals("NKX2-1", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
@@ -71,7 +71,7 @@ public class FusionExtractorTest {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("MET", "EXON 14 SKIPPING MUTATION");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extractFusionPairs(viccEntry);
+        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
         assertEquals(1, fusionsPerFeature.size());
         assertEquals("MET", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
         assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonUp());

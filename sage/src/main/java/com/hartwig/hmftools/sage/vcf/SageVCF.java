@@ -48,7 +48,7 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_EVENTS_DESCRIPTION = "Minimum number of events in read";
 
     public static final String READ_CONTEXT_COUNT = "RC_CNT";
-    private static final String READ_CONTEXT_COUNT_DESCRIPTION = "Read context counts [Full, Partial, Core, Realigned, Reference, Total]";
+    private static final String READ_CONTEXT_COUNT_DESCRIPTION = "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
     public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
     private static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
     public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
@@ -57,9 +57,9 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION = "Micro-homology at read context";
     public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
     private static final String READ_CONTEXT_QUALITY_DESCRIPTION =
-            "Read context quality [Full, Partial, Core, Realigned, Reference, Total]";
+            "Read context quality [Full, Partial, Core, Realigned, Alt, Reference, Total]";
     private static final String READ_CONTEXT_AF_DESCRIPTION =
-            "Allelic frequency calculated from read context counts as (Full + Partial + Realigned) / Coverage";
+            "Allelic frequency calculated from read context counts as (Full + Partial + Core + Realigned + Alt) / Coverage";
 
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
@@ -147,13 +147,13 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 7, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,
                 1,
                 VCFHeaderLineType.Integer,
                 READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
-                6,
+                7,
                 VCFHeaderLineType.Integer,
                 READ_CONTEXT_QUALITY_DESCRIPTION));
 
