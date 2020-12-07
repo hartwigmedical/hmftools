@@ -29,7 +29,7 @@ public final class ActionableRangeFile {
         return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_RANGE_TSV);
     }
 
-    public static void write(@NotNull String actionableRangeTsv, @NotNull List<ActionableRange> actionableRanges) throws IOException {
+    public static void write(@NotNull String actionableRangeTsv, @NotNull Iterable<ActionableRange> actionableRanges) throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(actionableRanges));
@@ -93,7 +93,7 @@ public final class ActionableRangeFile {
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull List<ActionableRange> actionableRanges) {
+    static List<String> toLines(@NotNull Iterable<ActionableRange> actionableRanges) {
         List<String> lines = Lists.newArrayList();
         for (ActionableRange actionableRange : sort(actionableRanges)) {
             lines.add(toLine(actionableRange));
@@ -102,8 +102,8 @@ public final class ActionableRangeFile {
     }
 
     @NotNull
-    private static List<ActionableRange> sort(@NotNull List<ActionableRange> actionableRanges) {
-        // Need to make a copy since the input list may be immutable and cannot be sorted!
+    private static List<ActionableRange> sort(@NotNull Iterable<ActionableRange> actionableRanges) {
+        // Need to make a copy since the input may be immutable and cannot be sorted!
         List<ActionableRange> sorted = Lists.newArrayList(actionableRanges);
         sorted.sort(new ActionableRangeComparator());
 

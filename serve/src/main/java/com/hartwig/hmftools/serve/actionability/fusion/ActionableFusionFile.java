@@ -30,7 +30,8 @@ public final class ActionableFusionFile {
         return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_FUSION_TSV);
     }
 
-    public static void write(@NotNull String actionableFusionTsv, @NotNull List<ActionableFusion> actionableFusions) throws IOException {
+    public static void write(@NotNull String actionableFusionTsv, @NotNull Iterable<ActionableFusion> actionableFusions)
+            throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(actionableFusions));
@@ -105,7 +106,7 @@ public final class ActionableFusionFile {
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull List<ActionableFusion> actionableFusions) {
+    static List<String> toLines(@NotNull Iterable<ActionableFusion> actionableFusions) {
         List<String> lines = Lists.newArrayList();
         for (ActionableFusion actionableFusion : sort(actionableFusions)) {
             lines.add(toLine(actionableFusion));
@@ -114,8 +115,8 @@ public final class ActionableFusionFile {
     }
 
     @NotNull
-    private static List<ActionableFusion> sort(@NotNull List<ActionableFusion> actionableFusions) {
-        // Need to make a copy since the input list may be immutable and cannot be sorted!
+    private static List<ActionableFusion> sort(@NotNull Iterable<ActionableFusion> actionableFusions) {
+        // Need to make a copy since the input may be immutable and cannot be sorted!
         List<ActionableFusion> sorted = Lists.newArrayList(actionableFusions);
         sorted.sort(new ActionableFusionComparator());
 

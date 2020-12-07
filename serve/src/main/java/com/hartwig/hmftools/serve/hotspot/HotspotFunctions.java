@@ -25,7 +25,7 @@ public final class HotspotFunctions {
     }
 
     @NotNull
-    public static List<KnownHotspot> consolidate(@NotNull List<KnownHotspot> hotspots) {
+    public static List<KnownHotspot> consolidate(@NotNull Iterable<KnownHotspot> hotspots) {
         Map<VariantHotspot, HotspotAnnotation> annotationPerHotspot = Maps.newHashMap();
         for (KnownHotspot hotspot : hotspots) {
             HotspotAnnotation newAnnotation = new HotspotAnnotation(Sets.newHashSet(hotspot.sources()),

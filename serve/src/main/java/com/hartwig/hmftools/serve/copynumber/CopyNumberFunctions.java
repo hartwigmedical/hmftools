@@ -18,7 +18,7 @@ public final class CopyNumberFunctions {
     }
 
     @NotNull
-    public static List<KnownCopyNumber> consolidate(@NotNull List<KnownCopyNumber> copyNumbers) {
+    public static List<KnownCopyNumber> consolidate(@NotNull Iterable<KnownCopyNumber> copyNumbers) {
         Map<CopyNumberKey, Set<Knowledgebase>> sourcesPerCopyNumber = Maps.newHashMap();
         for (KnownCopyNumber copyNumber : copyNumbers) {
             CopyNumberKey key = new CopyNumberKey(copyNumber.gene(), copyNumber.type());

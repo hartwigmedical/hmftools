@@ -43,15 +43,12 @@ public class ExtractionResultWriter {
 
         String copyNumberTsv = refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_COPY_NUMBER_TSV);
         LOGGER.info(" Writing {} known copy numbers to {}", result.knownCopyNumbers().size(), copyNumberTsv);
-        // TODO Sort copy numbers
         KnownCopyNumberFile.write(copyNumberTsv, result.knownCopyNumbers());
 
         String fusionPairTsv = refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_FUSION_PAIR_TSV);
         LOGGER.info(" Writing {} known fusion pairs to {}", result.knownFusionPairs().size(), fusionPairTsv);
-        // TODO Known fusions
         KnownFusionPairFile.write(fusionPairTsv, result.knownFusionPairs());
 
-        // TODO Sort all actionable output?
         String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(outputDir, refGenomeVersion);
         LOGGER.info(" Writing {} actionable hotspots to {}", result.actionableHotspots().size(), actionableHotspotTsv);
         ActionableHotspotFile.write(actionableHotspotTsv, result.actionableHotspots());

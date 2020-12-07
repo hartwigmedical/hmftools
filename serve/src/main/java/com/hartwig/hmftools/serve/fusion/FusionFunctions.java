@@ -19,7 +19,7 @@ public final class FusionFunctions {
     }
 
     @NotNull
-    public static List<KnownFusionPair> consolidate(@NotNull List<KnownFusionPair> fusionPairs) {
+    public static List<KnownFusionPair> consolidate(@NotNull Iterable<KnownFusionPair> fusionPairs) {
         Map<FusionKey, Set<Knowledgebase>> sourcesPerFusion = Maps.newHashMap();
         for (KnownFusionPair fusionPair : fusionPairs) {
             FusionKey key = new FusionKey(fusionPair);
@@ -46,7 +46,7 @@ public final class FusionFunctions {
         return consolidated;
     }
 
-    private static class FusionKey {
+    private static class FusionKey implements FusionPair {
 
         @NotNull
         private final String geneUp;
@@ -71,31 +71,37 @@ public final class FusionFunctions {
         }
 
         @NotNull
+        @Override
         public String geneUp() {
             return geneUp;
         }
 
         @Nullable
+        @Override
         public Integer minExonUp() {
             return minExonUp;
         }
 
         @Nullable
+        @Override
         public Integer maxExonUp() {
             return maxExonUp;
         }
 
         @NotNull
+        @Override
         public String geneDown() {
             return geneDown;
         }
 
         @Nullable
+        @Override
         public Integer minExonDown() {
             return minExonDown;
         }
 
         @Nullable
+        @Override
         public Integer maxExonDown() {
             return maxExonDown;
         }

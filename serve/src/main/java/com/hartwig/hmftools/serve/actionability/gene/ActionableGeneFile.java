@@ -29,7 +29,7 @@ public final class ActionableGeneFile {
         return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_GENE_TSV);
     }
 
-    public static void write(@NotNull String actionableGeneTsv, @NotNull List<ActionableGene> actionableGenes) throws IOException {
+    public static void write(@NotNull String actionableGeneTsv, @NotNull Iterable<ActionableGene> actionableGenes) throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(actionableGenes));
@@ -87,7 +87,7 @@ public final class ActionableGeneFile {
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull List<ActionableGene> actionableGenes) {
+    static List<String> toLines(@NotNull Iterable<ActionableGene> actionableGenes) {
         List<String> lines = Lists.newArrayList();
         for (ActionableGene actionableGene : sort(actionableGenes)) {
             lines.add(toLine(actionableGene));
@@ -96,8 +96,8 @@ public final class ActionableGeneFile {
     }
 
     @NotNull
-    private static List<ActionableGene> sort(@NotNull List<ActionableGene> actionableGenes) {
-        // Need to make a copy since the input list may be immutable and cannot be sorted!
+    private static List<ActionableGene> sort(@NotNull Iterable<ActionableGene> actionableGenes) {
+        // Need to make a copy since the input may be immutable and cannot be sorted!
         List<ActionableGene> sorted = Lists.newArrayList(actionableGenes);
         sorted.sort(new ActionableGeneComparator());
 
