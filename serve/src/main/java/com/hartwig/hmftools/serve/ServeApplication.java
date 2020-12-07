@@ -133,7 +133,7 @@ public class ServeApplication {
 
         ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(proteinResolver, driverGenes, allGenesMap);
         LOGGER.info("Running VICC knowledge extraction");
-        return extractor.extractFromViccEntries(entries);
+        return extractor.extract(entries);
     }
 
     @NotNull
@@ -142,7 +142,7 @@ public class ServeApplication {
 
         IclusionExtractor extractor = new IclusionExtractor();
         LOGGER.info("Running iClusion knowledge extraction");
-        return extractor.extractFromIclusionTrials(trials);
+        return extractor.extract(trials);
     }
 
     @NotNull
@@ -152,7 +152,7 @@ public class ServeApplication {
 
         DocmExtractor extractor = new DocmExtractor(proteinResolver);
         LOGGER.info("Running DoCM knowledge extraction");
-        return ImmutableExtractionResult.builder().knownHotspots(extractor.extractFromDocmEntries(entries)).build();
+        return extractor.extract(entries);
     }
 
     @NotNull
@@ -164,7 +164,7 @@ public class ServeApplication {
 
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_COHORT, proteinResolver, addExplicitHotspots);
         LOGGER.info("Running Hartwig Cohort knowledge extraction");
-        return ImmutableExtractionResult.builder().knownHotspots(extractor.extractFromHartwigEntries(entries)).build();
+        return extractor.extract(entries);
     }
 
     @NotNull
@@ -176,6 +176,6 @@ public class ServeApplication {
 
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_CURATED, proteinResolver, addExplicitHotspots);
         LOGGER.info("Running Hartwig Curated knowledge extraction");
-        return ImmutableExtractionResult.builder().knownHotspots(extractor.extractFromHartwigEntries(entries)).build();
+        return extractor.extract(entries);
     }
 }

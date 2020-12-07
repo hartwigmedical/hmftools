@@ -20,7 +20,7 @@ public class IclusionExtractor {
     private static final Logger LOGGER = LogManager.getLogger(IclusionExtractor.class);
 
     @NotNull
-    public ExtractionResult extractFromIclusionTrials(@NotNull List<IclusionTrial> trials) {
+    public ExtractionResult extract(@NotNull List<IclusionTrial> trials) {
         // We assume filtered trials (no empty acronyms, only OR mutations, and no negated mutations
 
         Set<String> uniqueCancerTypes = Sets.newTreeSet();

@@ -7,10 +7,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.MutationType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.ExtractionResult;
@@ -91,7 +93,7 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    public ExtractionResult extractFromViccEntries(@NotNull List<ViccEntry> entries) throws IOException {
+    public ExtractionResult extract(@NotNull List<ViccEntry> entries) throws IOException {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
 
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
@@ -138,9 +140,9 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
+    private static Set<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
             @NotNull ProteinAnnotationExtractor proteinAnnotationExtractor) {
-        List<KnownHotspot> hotspots = Lists.newArrayList();
+        Set<KnownHotspot> hotspots = Sets.newHashSet();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
             ViccEntry entry = entryResult.getKey();
             for (Map.Entry<Feature, List<VariantHotspot>> featureResult : entryResult.getValue().hotspotsPerFeature().entrySet()) {
@@ -161,8 +163,8 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<KnownCopyNumber> convertToKnownAmpsDels(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        List<KnownCopyNumber> copyNumbers = Lists.newArrayList();
+    private static Set<KnownCopyNumber> convertToKnownAmpsDels(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        Set<KnownCopyNumber> copyNumbers = Sets.newHashSet();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             copyNumbers.addAll(entry.getValue().ampsDelsPerFeature().values());
         }
@@ -171,8 +173,8 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<KnownFusionPair> convertToKnownFusions(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        List<KnownFusionPair> fusions = Lists.newArrayList();
+    private static Set<KnownFusionPair> convertToKnownFusions(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        Set<KnownFusionPair> fusions = Sets.newHashSet();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             fusions.addAll(entry.getValue().fusionsPerFeature().values());
         }
@@ -182,11 +184,11 @@ public final class ViccExtractor {
 
     private static void addActionability(@NotNull ImmutableExtractionResult.Builder outputBuilder,
             @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        List<ActionableHotspot> actionableHotspots = Lists.newArrayList();
-        List<ActionableRange> actionableRanges = Lists.newArrayList();
-        List<ActionableGene> actionableGenes = Lists.newArrayList();
-        List<ActionableFusion> actionableFusions = Lists.newArrayList();
-        List<ActionableSignature> actionableSignatures = Lists.newArrayList();
+        Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
+        Set<ActionableRange> actionableRanges = Sets.newHashSet();
+        Set<ActionableGene> actionableGenes = Sets.newHashSet();
+        Set<ActionableFusion> actionableFusions = Sets.newHashSet();
+        Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
             ViccExtractionResult result = entry.getValue();
@@ -211,9 +213,9 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<ActionableHotspot> extractActionableHotspots(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableHotspot> extractActionableHotspots(@NotNull ActionableEvent actionableEvent,
             @NotNull Iterable<List<VariantHotspot>> hotspotLists) {
-        List<ActionableHotspot> actionableHotspots = Lists.newArrayList();
+        Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         for (List<VariantHotspot> hotspotList : hotspotLists) {
             for (VariantHotspot hotspot : hotspotList) {
                 actionableHotspots.add(ImmutableActionableHotspot.builder()
@@ -229,9 +231,9 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<ActionableRange> extractActionableRanges(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableRange> extractActionableRanges(@NotNull ActionableEvent actionableEvent,
             @NotNull Iterable<List<CodonAnnotation>> codonLists, @NotNull Iterable<List<ExonAnnotation>> exonLists) {
-        List<ActionableRange> actionableRanges = Lists.newArrayList();
+        Set<ActionableRange> actionableRanges = Sets.newHashSet();
         for (List<CodonAnnotation> codonList : codonLists) {
             for (CodonAnnotation range : codonList) {
                 actionableRanges.add(ImmutableActionableRange.builder()
@@ -261,9 +263,9 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<ActionableGene> extractActionableAmpsDels(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableGene> extractActionableAmpsDels(@NotNull ActionableEvent actionableEvent,
             @NotNull Iterable<KnownCopyNumber> copyNumbers) {
-        List<ActionableGene> actionableGenes = Lists.newArrayList();
+        Set<ActionableGene> actionableGenes = Sets.newHashSet();
         for (KnownCopyNumber copyNumber : copyNumbers) {
             GeneLevelEvent event;
             switch (copyNumber.type()) {
@@ -285,9 +287,9 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<ActionableGene> extractActionableGeneLevelEvents(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableGene> extractActionableGeneLevelEvents(@NotNull ActionableEvent actionableEvent,
             @NotNull Iterable<GeneLevelAnnotation> geneLevelEvents) {
-        List<ActionableGene> actionableGenes = Lists.newArrayList();
+        Set<ActionableGene> actionableGenes = Sets.newHashSet();
         for (GeneLevelAnnotation geneLevelEvent : geneLevelEvents) {
             actionableGenes.add(ImmutableActionableGene.builder()
                     .from(actionableEvent)
@@ -299,9 +301,9 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<ActionableFusion> extractActionableFusions(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableFusion> extractActionableFusions(@NotNull ActionableEvent actionableEvent,
             @NotNull Iterable<KnownFusionPair> fusionAnnotations) {
-        List<ActionableFusion> actionableFusions = Lists.newArrayList();
+        Set<ActionableFusion> actionableFusions = Sets.newHashSet();
         for (KnownFusionPair fusion : fusionAnnotations) {
             actionableFusions.add(ImmutableActionableFusion.builder()
                     .from(actionableEvent)
@@ -317,9 +319,9 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static List<ActionableSignature> extractActionableSignatures(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableSignature> extractActionableSignatures(@NotNull ActionableEvent actionableEvent,
             @NotNull Iterable<SignatureName> signatures) {
-        List<ActionableSignature> actionableSignatures = Lists.newArrayList();
+        Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
         for (SignatureName signature : signatures) {
             actionableSignatures.add(ImmutableActionableSignature.builder().from(actionableEvent).name(signature).build());
         }

@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.serve.sources.hartwig;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.ExtractionResult;
+import com.hartwig.hmftools.serve.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
@@ -35,8 +39,8 @@ public class HartwigExtractor {
     }
 
     @NotNull
-    public List<KnownHotspot> extractFromHartwigEntries(@NotNull List<HartwigEntry> entries) {
-        List<KnownHotspot> knownHotspots = Lists.newArrayList();
+    public ExtractionResult extract(@NotNull List<HartwigEntry> entries) {
+        Set<KnownHotspot> knownHotspots = Sets.newHashSet();
         ProgressTracker tracker = new ProgressTracker("Hartwig", entries.size());
         for (HartwigEntry entry : entries) {
             List<VariantHotspot> hotspots = Lists.newArrayList();
@@ -72,7 +76,7 @@ public class HartwigExtractor {
         }
 
         // Even for Hartwig sources the extractor may generate duplicate hotspots, so we need to consolidate them.
-        return HotspotFunctions.consolidate(knownHotspots);
+        return ImmutableExtractionResult.builder().knownHotspots(HotspotFunctions.consolidate(knownHotspots)).build();
     }
 
     @NotNull

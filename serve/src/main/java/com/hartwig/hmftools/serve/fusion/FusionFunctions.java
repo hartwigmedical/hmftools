@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.serve.fusion;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -19,7 +17,7 @@ public final class FusionFunctions {
     }
 
     @NotNull
-    public static List<KnownFusionPair> consolidate(@NotNull Iterable<KnownFusionPair> fusionPairs) {
+    public static Set<KnownFusionPair> consolidate(@NotNull Iterable<KnownFusionPair> fusionPairs) {
         Map<FusionKey, Set<Knowledgebase>> sourcesPerFusion = Maps.newHashMap();
         for (KnownFusionPair fusionPair : fusionPairs) {
             FusionKey key = new FusionKey(fusionPair);
@@ -31,7 +29,7 @@ public final class FusionFunctions {
             sourcesPerFusion.put(key, sources);
         }
 
-        List<KnownFusionPair> consolidated = Lists.newArrayList();
+        Set<KnownFusionPair> consolidated = Sets.newHashSet();
         for (Map.Entry<FusionKey, Set<Knowledgebase>> entry : sourcesPerFusion.entrySet()) {
             consolidated.add(ImmutableKnownFusionPair.builder()
                     .geneUp(entry.getKey().geneUp())
