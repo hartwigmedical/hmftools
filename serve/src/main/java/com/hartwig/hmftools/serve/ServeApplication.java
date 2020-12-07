@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
-import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
@@ -176,9 +175,7 @@ public class ServeApplication {
         LOGGER.info(" Read {} entries", entries.size());
 
         HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_CURATED, proteinResolver, addExplicitHotspots);
-
         LOGGER.info("Running Hartwig Curated knowledge extraction");
-        List<KnownHotspot> hotspots = extractor.extractFromHartwigEntries(entries);
-        return ImmutableExtractionResult.builder().knownHotspots(hotspots).build();
+        return ImmutableExtractionResult.builder().knownHotspots(extractor.extractFromHartwigEntries(entries)).build();
     }
 }
