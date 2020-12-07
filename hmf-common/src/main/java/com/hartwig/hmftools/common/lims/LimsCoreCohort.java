@@ -7,6 +7,7 @@ public enum LimsCoreCohort {
     CORERI02,
     CORELR11,
     CORESC11,
+    COREDB,
     NON_CORE;
 
     @NotNull
@@ -19,6 +20,8 @@ public enum LimsCoreCohort {
             return LimsCoreCohort.CORELR11;
         } else if (sampleId.startsWith("CORESC11")) {
             return LimsCoreCohort.CORESC11;
+        } else if (sampleId.startsWith("COREDB")) {
+            return LimsCoreCohort.COREDB;
         }
 
         return NON_CORE;
