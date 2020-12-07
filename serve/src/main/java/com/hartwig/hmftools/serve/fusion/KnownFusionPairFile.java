@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
@@ -51,11 +50,10 @@ public final class KnownFusionPairFile {
     }
 
     @NotNull
-    @VisibleForTesting
-    static List<KnownFusionPair> sort(@NotNull List<KnownFusionPair> fusionPairs) {
+    private static List<KnownFusionPair> sort(@NotNull List<KnownFusionPair> fusionPairs) {
         // Need to make a copy since the input list may be immutable and cannot be sorted!
         List<KnownFusionPair> sorted = Lists.newArrayList(fusionPairs);
-        sorted.sort(new KnownFusionPairComparator());
+        sorted.sort(new FusionPairComparator());
 
         return sorted;
     }

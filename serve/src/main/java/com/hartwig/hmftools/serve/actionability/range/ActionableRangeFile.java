@@ -95,10 +95,19 @@ public final class ActionableRangeFile {
     @VisibleForTesting
     static List<String> toLines(@NotNull List<ActionableRange> actionableRanges) {
         List<String> lines = Lists.newArrayList();
-        for (ActionableRange actionableRange : actionableRanges) {
+        for (ActionableRange actionableRange : sort(actionableRanges)) {
             lines.add(toLine(actionableRange));
         }
         return lines;
+    }
+
+    @NotNull
+    private static List<ActionableRange> sort(@NotNull List<ActionableRange> actionableRanges) {
+        // Need to make a copy since the input list may be immutable and cannot be sorted!
+        List<ActionableRange> sorted = Lists.newArrayList(actionableRanges);
+        sorted.sort(new ActionableRangeComparator());
+
+        return sorted;
     }
 
     @NotNull

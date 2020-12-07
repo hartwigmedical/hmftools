@@ -93,10 +93,19 @@ public final class ActionableHotspotFile {
     @VisibleForTesting
     static List<String> toLines(@NotNull List<ActionableHotspot> actionableHotspots) {
         List<String> lines = Lists.newArrayList();
-        for (ActionableHotspot actionableHotspot : actionableHotspots) {
+        for (ActionableHotspot actionableHotspot : sort(actionableHotspots)) {
             lines.add(toLine(actionableHotspot));
         }
         return lines;
+    }
+
+    @NotNull
+    private static List<ActionableHotspot> sort(@NotNull List<ActionableHotspot> actionableHotspots) {
+        // Need to make a copy since the input list may be immutable and cannot be sorted!
+        List<ActionableHotspot> sorted = Lists.newArrayList(actionableHotspots);
+        sorted.sort(new ActionableHotspotComparator());
+
+        return sorted;
     }
 
     @NotNull

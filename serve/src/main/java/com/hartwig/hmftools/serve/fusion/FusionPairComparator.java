@@ -5,10 +5,10 @@ import java.util.Comparator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class KnownFusionPairComparator implements Comparator<KnownFusionPair> {
+public class FusionPairComparator implements Comparator<FusionPair> {
 
     @Override
-    public int compare(@NotNull KnownFusionPair pair1, @NotNull KnownFusionPair pair2) {
+    public int compare(@NotNull FusionPair pair1, @NotNull FusionPair pair2) {
         int geneUpCompare = pair1.geneUp().compareTo(pair2.geneUp());
         if (geneUpCompare != 0) {
             return geneUpCompare;

@@ -107,10 +107,19 @@ public final class ActionableFusionFile {
     @VisibleForTesting
     static List<String> toLines(@NotNull List<ActionableFusion> actionableFusions) {
         List<String> lines = Lists.newArrayList();
-        for (ActionableFusion actionableFusion : actionableFusions) {
+        for (ActionableFusion actionableFusion : sort(actionableFusions)) {
             lines.add(toLine(actionableFusion));
         }
         return lines;
+    }
+
+    @NotNull
+    private static List<ActionableFusion> sort(@NotNull List<ActionableFusion> actionableFusions) {
+        // Need to make a copy since the input list may be immutable and cannot be sorted!
+        List<ActionableFusion> sorted = Lists.newArrayList(actionableFusions);
+        sorted.sort(new ActionableFusionComparator());
+
+        return sorted;
     }
 
     @NotNull

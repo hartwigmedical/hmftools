@@ -15,7 +15,7 @@ public class ActionableSignatureFileTest {
     @Test
     public void canReadFromFileAndConvert() throws IOException {
         String actionableSignatureTsv =
-                ActionableSignatureFile.actionableSignatureTsvPath(ActionabilityTestUtil.SERVE_ACTIONABILITY_DIR, RefGenomeVersion.HG19);
+                ActionableSignatureFile.actionableSignatureTsvPath(ActionabilityTestUtil.TEST_ACTIONABILITY_DIR, RefGenomeVersion.HG19);
         List<ActionableSignature> actionableSignatures = ActionableSignatureFile.read(actionableSignatureTsv);
 
         assertEquals(1, actionableSignatures.size());

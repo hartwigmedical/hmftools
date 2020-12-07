@@ -88,11 +88,21 @@ public final class ActionableSignatureFile {
     @VisibleForTesting
     static List<String> toLines(@NotNull List<ActionableSignature> actionableSignatures) {
         List<String> lines = Lists.newArrayList();
-        for (ActionableSignature actionableSignature : actionableSignatures) {
+        for (ActionableSignature actionableSignature : sort(actionableSignatures)) {
             lines.add(toLine(actionableSignature));
         }
         return lines;
     }
+
+    @NotNull
+    private static List<ActionableSignature> sort(@NotNull List<ActionableSignature> actionableSignatures) {
+        // Need to make a copy since the input list may be immutable and cannot be sorted!
+        List<ActionableSignature> sorted = Lists.newArrayList(actionableSignatures);
+        sorted.sort(new ActionableSignatureComparator());
+
+        return sorted;
+    }
+
 
     @NotNull
     private static String toLine(@NotNull ActionableSignature signature) {

@@ -4,10 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
+
 import org.junit.Test;
 
-public class KnownFusionPairFileTest {
+public class FusionPairComparatorTest {
 
     @Test
     public void canSortFusionPairs() {
@@ -17,20 +18,14 @@ public class KnownFusionPairFileTest {
         KnownFusionPair pair4 = ImmutableKnownFusionPair.builder().geneUp("A").geneDown("C").build();
         KnownFusionPair pair5 = ImmutableKnownFusionPair.builder().geneUp("X").geneDown("A").build();
 
-        List<KnownFusionPair> knownFusionPairs = Lists.newArrayList();
-        knownFusionPairs.add(pair3);
-        knownFusionPairs.add(pair1);
-        knownFusionPairs.add(pair5);
-        knownFusionPairs.add(pair4);
-        knownFusionPairs.add(pair2);
+        List<KnownFusionPair> knownFusionPairs = Lists.newArrayList(pair3, pair1, pair5, pair4, pair2);
+        knownFusionPairs.sort(new FusionPairComparator());
 
-        List<KnownFusionPair> sorted = KnownFusionPairFile.sort(knownFusionPairs);
-
-        assertEquals(pair1, sorted.get(0));
-        assertEquals(pair2, sorted.get(1));
-        assertEquals(pair3, sorted.get(2));
-        assertEquals(pair4, sorted.get(3));
-        assertEquals(pair5, sorted.get(4));
+        assertEquals(pair1, knownFusionPairs.get(0));
+        assertEquals(pair2, knownFusionPairs.get(1));
+        assertEquals(pair3, knownFusionPairs.get(2));
+        assertEquals(pair4, knownFusionPairs.get(3));
+        assertEquals(pair5, knownFusionPairs.get(4));
     }
 
 }

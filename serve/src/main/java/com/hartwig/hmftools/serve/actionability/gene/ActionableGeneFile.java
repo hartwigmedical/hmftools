@@ -89,10 +89,19 @@ public final class ActionableGeneFile {
     @VisibleForTesting
     static List<String> toLines(@NotNull List<ActionableGene> actionableGenes) {
         List<String> lines = Lists.newArrayList();
-        for (ActionableGene actionableGene : actionableGenes) {
+        for (ActionableGene actionableGene : sort(actionableGenes)) {
             lines.add(toLine(actionableGene));
         }
         return lines;
+    }
+
+    @NotNull
+    private static List<ActionableGene> sort(@NotNull List<ActionableGene> actionableGenes) {
+        // Need to make a copy since the input list may be immutable and cannot be sorted!
+        List<ActionableGene> sorted = Lists.newArrayList(actionableGenes);
+        sorted.sort(new ActionableGeneComparator());
+
+        return sorted;
     }
 
     @NotNull
