@@ -180,7 +180,7 @@ Linx writes all output to tsv files, each of which is decribed below.
 
 ### SV Annotations
 
-Additional annotations of each breakjunction
+Additional annotations of each non PON filtered breakjunction
 
 Generated file: sample_id.svs.tsv
 
@@ -210,7 +210,7 @@ localTICountEnd | Number of chained templated insertions in local topology group
 
 ### Breakends
 
-Impact of each break junction on each overlapping gene
+Impact of each non PON filtered break junction on each overlapping gene
 
 Generated file: sample_id.breakend.tsv
 
@@ -237,7 +237,7 @@ TotalExonCount | Total number of exons in the transcript
 
 ### Clusters
 
-Clustering of all SV events and their resolved classification.
+Clustering of all non PON filtered SV events and their resolved classification.
 
 Generated file: sample_id.clusters.tsv
 
