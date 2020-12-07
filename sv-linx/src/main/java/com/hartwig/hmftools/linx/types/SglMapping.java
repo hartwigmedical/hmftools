@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERT
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+
 public class SglMapping
 {
     public final String Chromosome;
@@ -45,6 +47,10 @@ public class SglMapping
             return null;
 
         String chromosome = location[0];
+
+        if(!HumanChromosome.contains(chromosome))
+            return null;
+
         int position = Integer.parseInt(location[1]);
         byte orientation = items[1].equals("+") ? POS_ORIENT : NEG_ORIENT;
         final String cigar = items[2];

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_CHAINING_SV_LIMIT;
@@ -17,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -42,7 +44,6 @@ public class LinxConfig
     public final String LineElementFile;
     public final String ReplicationOriginsFile;
     public final String ViralHostsFile;
-    public final int MaxSamples;
     public final int ChainingSvLimit; // for analysis and chaining
     public final boolean IsGermline;
     public final boolean IndelAnnotation;
@@ -56,6 +57,7 @@ public class LinxConfig
     private final List<String> mSampleIds;
 
     public final List<DriverGene> DriverGenes;
+    public final List<String> RestrictedGeneIds; // specific set of genes to process
 
     // config options
     public static final String PURPLE_DATA_DIR = "purple_dir";
@@ -84,14 +86,12 @@ public class LinxConfig
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String VIRAL_HOSTS_FILE = "viral_hosts_file";
     private static final String REPLICATION_ORIGINS_FILE = "replication_origins_file";
+    public static final String GENE_ID_FILE = "gene_id_file";
     private static final String GERMLINE = "germline";
 
     // logging options
     public static final String LOG_DEBUG = "log_debug";
     public static final String LOG_VERBOSE = "log_verbose";
-
-    // limit batch run to first X samples
-    private static final String MAX_SAMPLES = "max_samples";
 
     // global Linx logger
     public static final Logger LNX_LOGGER = LogManager.getLogger(LinxConfig.class);
@@ -140,13 +140,20 @@ public class LinxConfig
         IndelAnnotation = cmd.hasOption(INDEL_ANNOTATIONS);
         IndelFile = cmd.getOptionValue(INDEL_FILE, "");
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
-        MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
 
         DriverGenes = loadDriverGenes(cmd);
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
 
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
+
+        RestrictedGeneIds = Lists.newArrayList();
+        if(cmd.hasOption(GENE_ID_FILE))
+        {
+            final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
+            loadGeneIdsFile(inputFile, RestrictedGeneIds);
+            LNX_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
+        }
     }
 
     private List<DriverGene> loadDriverGenes(final CommandLine cmd)
@@ -165,6 +172,54 @@ public class LinxConfig
 
         return Lists.newArrayList();
     }
+
+    private void loadGeneIdsFile(final String filename, final List<String> geneIdList)
+    {
+        if (!Files.exists(Paths.get(filename)))
+        {
+            LNX_LOGGER.warn("invalid gene ID file({})", filename);
+            return;
+        }
+
+        try
+        {
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+
+            if(fileContents.isEmpty())
+                return;
+
+            int geneIdIndex = 0;
+            boolean parseData = false;
+            if (fileContents.get(0).contains("GeneId"))
+            {
+                final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(fileContents.get(0), ",");
+                geneIdIndex = fieldsIndexMap.get("GeneId");
+                parseData = fieldsIndexMap.size() > 1;
+                fileContents.remove(0);
+            }
+
+            for(String data : fileContents)
+            {
+                if(data.startsWith("#"))
+                    continue;
+
+                if(parseData)
+                {
+                    final String[] items = data.split(",", -1);
+                    geneIdList.add(items[geneIdIndex]);
+                }
+                else
+                {
+                    geneIdList.add(data);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            LNX_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
+            }
+    }
+
 
     public final List<String> getSampleIds() { return mSampleIds; }
     public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
@@ -242,11 +297,11 @@ public class LinxConfig
         IndelAnnotation = false;
         RequiredAnnotations = "";
         mSampleIds = Lists.newArrayList();
-        MaxSamples = 0;
         LogVerbose = false;
         Output = new LinxOutput();
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
         DriverGenes = Lists.newArrayList();
+        RestrictedGeneIds = Lists.newArrayList();
     }
 
     public static boolean validConfig(final CommandLine cmd)
@@ -293,7 +348,7 @@ public class LinxConfig
         options.addOption(KATAEGIS_FILE, true, "Kataegis data file");
         options.addOption(REPLICATION_ORIGINS_FILE, true, "Origins of replication file");
         options.addOption(GERMLINE, false, "Process germline SVs");
-        options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");
+        options.addOption(GENE_ID_FILE, true, "Limit to Ensembl gene ids specified in file");
         options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
         options.addOption(INDEL_ANNOTATIONS, false, "Optional: annotate clusters and TIs with INDELs");

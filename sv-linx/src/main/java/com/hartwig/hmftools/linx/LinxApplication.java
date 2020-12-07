@@ -124,7 +124,7 @@ public class LinxApplication
         FusionDisruptionAnalyser fusionAnalyser = null;
         boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
 
-        boolean selectiveGeneLoading = (samplesList.size() == 1 && !checkDrivers);
+        boolean breakendGeneLoading = (samplesList.size() == 1 && !checkDrivers) && config.RestrictedGeneIds.isEmpty();
         boolean applyPromotorDistance = checkFusions;
         boolean purgeInvalidTranscripts = true;
 
@@ -137,9 +137,14 @@ public class LinxApplication
 
             boolean ensemblLoadOk = false;
 
-            if(!selectiveGeneLoading)
+            if(!breakendGeneLoading)
             {
-                if(!checkFusions && checkDrivers)
+                if(!config.RestrictedGeneIds.isEmpty())
+                {
+                    ensemblDataCache.setRestrictedGeneIdList(config.RestrictedGeneIds);
+                    ensemblLoadOk = ensemblDataCache.load(false);
+                }
+                else if(!checkFusions && checkDrivers)
                 {
                     // only load transcripts for the driver gene panel
                     ensemblLoadOk = ensemblDataCache.load(true);
@@ -233,7 +238,7 @@ public class LinxApplication
 
             if(ensemblDataCache != null)
             {
-                sampleAnalyser.setSvGeneData(svDataList, ensemblDataCache, applyPromotorDistance, selectiveGeneLoading);
+                sampleAnalyser.setSvGeneData(svDataList, ensemblDataCache, applyPromotorDistance, breakendGeneLoading);
             }
 
             sampleAnalyser.analyse();
@@ -265,12 +270,6 @@ public class LinxApplication
             sampleAnalyser.writeOutput(dbAccess);
 
             prefCounter.stop();
-
-            if(config.MaxSamples > 0 && count >= config.MaxSamples)
-            {
-                LNX_LOGGER.info("exiting after max sample count {} reached", count);
-                break;
-            }
         }
 
         if(LNX_LOGGER.isDebugEnabled() || config.hasMultipleSamples())

@@ -79,7 +79,6 @@ public class FusionDisruptionAnalyser
     private final FusionParameters mFusionParams;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
-    private List<String> mRestrictedGenes;
     private boolean mFindNeoEpitopes;
 
     private final List<GeneFusion> mFusions; // all possible valid transcript-pair fusions
@@ -92,7 +91,6 @@ public class FusionDisruptionAnalyser
     private PerformanceCounter mPerfCounter;
 
     public static final String PRE_GENE_BREAKEND_DISTANCE = "fusion_gene_distance";
-    public static final String RESTRICTED_GENE_LIST = "restricted_fusion_genes";
     public static final String LOG_REPORTABLE_ONLY = "log_reportable_fusions";
     public static final String LOG_ALL_POTENTIALS = "log_all_potential_fusions";
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
@@ -128,8 +126,6 @@ public class FusionDisruptionAnalyser
 
         mPerfCounter = new PerformanceCounter("Fusions");
 
-        mRestrictedGenes = Lists.newArrayList();
-
         mValidState = true;
         initialise(cmdLineArgs);
     }
@@ -137,7 +133,6 @@ public class FusionDisruptionAnalyser
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
-        options.addOption(RESTRICTED_GENE_LIST, true, "Restrict fusion search to specific genes");
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
         options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
@@ -164,14 +159,6 @@ public class FusionDisruptionAnalyser
         {
             int preGeneBreakendDistance = Integer.parseInt(cmdLineArgs.getOptionValue(PRE_GENE_BREAKEND_DISTANCE));
             PRE_GENE_PROMOTOR_DISTANCE = preGeneBreakendDistance;
-        }
-
-        if(cmdLineArgs.hasOption(RESTRICTED_GENE_LIST))
-        {
-            String restrictedGenesStr = cmdLineArgs.getOptionValue(RESTRICTED_GENE_LIST);
-            mRestrictedGenes = Arrays.stream(restrictedGenesStr.split(";")).collect(Collectors.toList());
-
-            LNX_LOGGER.info("restricting fusion genes to: {}", restrictedGenesStr);
         }
 
         mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
@@ -854,10 +841,7 @@ public class FusionDisruptionAnalyser
             return genesList.stream().filter(x -> mFusionFinder.getKnownFusionCache().isSingleBreakendCandidate(x)).collect(Collectors.toList());
         }
 
-        if(mRestrictedGenes.isEmpty())
-            return var.getGenesList(isStart);
-
-        return var.getGenesList(isStart).stream().filter(x -> mRestrictedGenes.contains(x.GeneName)).collect(Collectors.toList());
+        return var.getGenesList(isStart);
     }
 
     private boolean checkTranscriptDisruptionInfo(

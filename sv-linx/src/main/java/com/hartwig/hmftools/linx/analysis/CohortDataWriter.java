@@ -169,6 +169,9 @@ public class CohortDataWriter
                     continue;
                 }
 
+                if(mConfig.IsGermline && var.getGenesList(true).isEmpty() && var.getGenesList(false).isEmpty())
+                    continue;
+
                 final StructuralVariantData dbData = var.getSvData();
 
                 final ArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
@@ -358,6 +361,15 @@ public class CohortDataWriter
 
                 if(clusterSvCount == 1 && !mConfig.Output.WriteSingleSVClusters)
                     continue;
+
+                if(mConfig.IsGermline)
+                {
+                    if(cluster.getSVs().stream()
+                            .noneMatch(x -> !x.getGenesList(true).isEmpty() || !x.getGenesList(false).isEmpty()))
+                    {
+                        continue;
+                    }
+                }
 
                 ResolvedType resolvedType = cluster.getResolvedType();
 
