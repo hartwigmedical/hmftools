@@ -2,7 +2,6 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.extraction.GeneChecker;
@@ -28,14 +27,14 @@ public class HotspotExtractor {
         this.proteinAnnotationExtractor = proteinAnnotationExtractor;
     }
 
-    @NotNull
+    @Nullable
     public List<VariantHotspot> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
         if (type == EventType.HOTSPOT && geneChecker.isValidGene(gene)) {
             return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
         }
 
-        return Lists.newArrayList();
+        return null;
     }
 
     @NotNull

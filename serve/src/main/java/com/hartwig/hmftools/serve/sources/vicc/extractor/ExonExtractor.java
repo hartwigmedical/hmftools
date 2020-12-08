@@ -37,7 +37,7 @@ public class ExonExtractor {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
-    @NotNull
+    @Nullable
     public List<ExonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
         if (type == EventType.EXON || type == EventType.FUSION_PAIR_AND_EXON) {
@@ -67,7 +67,7 @@ public class ExonExtractor {
             }
         }
 
-        return Lists.newArrayList();
+        return null;
     }
 
     @NotNull

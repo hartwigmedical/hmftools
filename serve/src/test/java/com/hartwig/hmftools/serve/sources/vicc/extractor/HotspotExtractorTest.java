@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 import java.util.Set;
@@ -44,7 +44,7 @@ public class HotspotExtractorTest {
 
         HotspotExtractor hotspotExtractor = createWithProtein(protein);
 
-        assertTrue(hotspotExtractor.extract("NOT-A-GENE", null, EventType.HOTSPOT, "V600E").isEmpty());
+        assertNull(hotspotExtractor.extract("NOT-A-GENE", null, EventType.HOTSPOT, "V600E"));
     }
 
     @NotNull

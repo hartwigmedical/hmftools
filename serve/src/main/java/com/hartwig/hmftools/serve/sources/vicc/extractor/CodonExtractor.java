@@ -39,7 +39,7 @@ public class CodonExtractor {
         this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
-    @NotNull
+    @Nullable
     public List<CodonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
         if (type == EventType.CODON && geneChecker.isValidGene(gene)) {
@@ -67,7 +67,7 @@ public class CodonExtractor {
             }
         }
 
-        return Lists.newArrayList();
+        return null;
     }
 
     @Nullable

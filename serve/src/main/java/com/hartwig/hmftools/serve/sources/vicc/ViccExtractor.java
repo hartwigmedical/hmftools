@@ -131,17 +131,17 @@ public final class ViccExtractor {
                 LOGGER.warn("No gene configured for {}. Skipping!", feature);
             } else {
                 List<VariantHotspot> hotspots = hotspotExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
-                if (!hotspots.isEmpty()) {
+                if (hotspots != null) {
                     hotspotsPerFeature.put(feature, hotspots);
                 }
 
                 List<CodonAnnotation> codons = codonExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
-                if (!codons.isEmpty()) {
+                if (codons != null) {
                     codonsPerFeature.put(feature, codons);
                 }
 
                 List<ExonAnnotation> exons = exonExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
-                if (!exons.isEmpty()) {
+                if (exons != null) {
                     exonsPerFeature.put(feature, exons);
                 }
 
