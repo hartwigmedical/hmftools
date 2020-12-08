@@ -9,9 +9,9 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
-import com.hartwig.hmftools.serve.copynumber.KnownCopyNumberFile;
-import com.hartwig.hmftools.serve.fusion.KnownFusionPairFile;
-import com.hartwig.hmftools.serve.hotspot.KnownHotspotVCF;
+import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumberFile;
+import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPairFile;
+import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspotVCF;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

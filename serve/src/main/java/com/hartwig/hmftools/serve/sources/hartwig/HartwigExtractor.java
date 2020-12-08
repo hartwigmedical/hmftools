@@ -10,11 +10,11 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
-import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
-import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
-import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
-import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
+import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
+import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinKeyFormatter;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;

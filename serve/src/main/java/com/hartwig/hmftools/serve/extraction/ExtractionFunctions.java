@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.copynumber.CopyNumberFunctions;
-import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.serve.fusion.FusionFunctions;
-import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
-import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
+import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.fusion.FusionFunctions;
+import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
+import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
+import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 
 import org.jetbrains.annotations.NotNull;
 
