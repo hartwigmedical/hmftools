@@ -6,10 +6,14 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class MutationTypeFilterAlgo {
+
+    private static final Logger LOGGER = LogManager.getLogger(MutationTypeFilterAlgo.class);
 
     @NotNull
     private final List<DriverGene> driverGenes;
@@ -18,7 +22,7 @@ public class MutationTypeFilterAlgo {
         this.driverGenes = driverGenes;
     }
 
-    @NotNull
+    @Nullable
     public MutationTypeFilter determine(@NotNull String gene, @NotNull String event) {
         String formattedEvent = event.toLowerCase();
 
@@ -43,7 +47,8 @@ public class MutationTypeFilterAlgo {
             }
         }
 
-        return MutationTypeFilter.UNKNOWN;
+        LOGGER.warn("Could not determine mutation type filter for '{}' on '{}'", event, gene);
+        return null;
     }
 
     @Nullable

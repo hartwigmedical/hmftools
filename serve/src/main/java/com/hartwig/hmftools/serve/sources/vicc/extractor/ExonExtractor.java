@@ -47,13 +47,16 @@ public class ExonExtractor {
                 if (transcriptId == null || transcriptId.equals(canonicalTranscript.transcriptID())) {
                     List<Integer> exonNumbers = extractExonNumbers(event);
                     List<ExonAnnotation> annotations = Lists.newArrayList();
-                    for (int exonNumber : exonNumbers) {
-                        ExonAnnotation annotation = determineExonAnnotation(gene,
-                                canonicalTranscript,
-                                exonNumber,
-                                mutationTypeFilterAlgo.determine(gene, event));
-                        if (annotation != null) {
-                            annotations.add(annotation);
+                    MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
+                    if (mutationTypeFilter != null) {
+                        for (int exonNumber : exonNumbers) {
+                            ExonAnnotation annotation = determineExonAnnotation(gene,
+                                    canonicalTranscript,
+                                    exonNumber,
+                                    mutationTypeFilterAlgo.determine(gene, event));
+                            if (annotation != null) {
+                                annotations.add(annotation);
+                            }
                         }
                     }
                     return annotations;

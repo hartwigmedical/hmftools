@@ -7,6 +7,5 @@ public enum MutationTypeFilter {
     MISSENSE_INFRAME_DELETION,
     MISSENSE_INFRAME_INSERTION,
     MISSENSE_ANY,
-    ANY,
-    UNKNOWN
+    ANY
 }

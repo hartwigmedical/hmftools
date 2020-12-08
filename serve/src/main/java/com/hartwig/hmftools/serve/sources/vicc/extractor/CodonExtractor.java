@@ -47,12 +47,10 @@ public class CodonExtractor {
 
             if (transcriptId == null || transcriptId.equals(canonicalTranscript.transcriptID())) {
                 Integer codonNumber = extractCodonNumber(event);
-                if (codonNumber != null) {
+                MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
+                if (codonNumber != null && mutationTypeFilter != null) {
                     List<CodonAnnotation> annotations = Lists.newArrayList();
-                    CodonAnnotation annotation = determineCodonAnnotation(canonicalTranscript,
-                            mutationTypeFilterAlgo.determine(gene, event),
-                            codonNumber,
-                            gene);
+                    CodonAnnotation annotation = determineCodonAnnotation(canonicalTranscript, mutationTypeFilter, codonNumber, gene);
                     if (annotation != null) {
                         annotations.add(annotation);
                     }
