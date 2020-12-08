@@ -83,7 +83,7 @@ public class ExonExtractorTest {
 
     @NotNull
     private static ExonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new ExonExtractor(HG19_GENE_CHECKER, driverGenes, HG19_GENE_MAP);
+        return new ExonExtractor(HG19_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), HG19_GENE_MAP);
     }
 
     @NotNull

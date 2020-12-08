@@ -68,7 +68,7 @@ public class CodonExtractorTest {
 
     @NotNull
     private static CodonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new CodonExtractor(HG19_GENE_CHECKER, driverGenes, HG19_GENE_MAP);
+        return new CodonExtractor(HG19_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), HG19_GENE_MAP);
     }
 
     @NotNull

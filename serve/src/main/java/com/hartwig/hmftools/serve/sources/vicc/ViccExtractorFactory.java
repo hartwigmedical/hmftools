@@ -15,6 +15,7 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.ExonExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.FusionExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
+import com.hartwig.hmftools.serve.sources.vicc.extractor.MutationTypeFilterAlgo;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignatureExtractor;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
@@ -46,9 +47,10 @@ public final class ViccExtractorFactory {
         fusionGeneSet.addAll(VALID_FUSION_GENES);
         GeneChecker fusionGeneChecker = new GeneChecker(fusionGeneSet);
 
+        MutationTypeFilterAlgo mutationTypeFilterAlgo = new MutationTypeFilterAlgo(driverGenes);
         return new ViccExtractor(new HotspotExtractor(exomeGeneChecker, proteinResolver, new ProteinAnnotationExtractor()),
-                new CodonExtractor(exomeGeneChecker, driverGenes, allGenesMap),
-                new ExonExtractor(exomeGeneChecker, driverGenes, allGenesMap),
+                new CodonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
+                new ExonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
                 new GeneLevelExtractor(exomeGeneChecker, fusionGeneChecker, driverGenes),
                 new CopyNumberExtractor(exomeGeneChecker),
                 new FusionExtractor(fusionGeneChecker),

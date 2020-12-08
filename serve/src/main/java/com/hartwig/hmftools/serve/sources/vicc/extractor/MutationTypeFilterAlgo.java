@@ -8,20 +8,23 @@ import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 
 import org.jetbrains.annotations.NotNull;
 
-final class MutationTypeFilterExtraction {
+public class MutationTypeFilterAlgo {
 
-    private MutationTypeFilterExtraction() {
+    @NotNull
+    private final List<DriverGene> driverGenes;
+
+    public MutationTypeFilterAlgo(@NotNull final List<DriverGene> driverGenes) {
+        this.driverGenes = driverGenes;
     }
 
     @NotNull
-    static MutationTypeFilter extract(@NotNull String featureName, @NotNull List<DriverGene> driverGenes,
-            @NotNull String gene) {
-        String featureEvent = featureName.toLowerCase();
-        String extractSpecificInfoOfEvent = featureEvent.substring(featureEvent.lastIndexOf(" ") + 1);
+    public MutationTypeFilter determine(@NotNull String gene, @NotNull String event) {
+        String lowerCaseEvent = event.toLowerCase();
+        String extractSpecificInfoOfEvent = lowerCaseEvent.substring(lowerCaseEvent.lastIndexOf(" ") + 1);
         MutationTypeFilter filter;
-        if (featureEvent.contains("skipping mutation") || featureEvent.contains("splice site insertion")) {
+        if (lowerCaseEvent.contains("skipping mutation") || lowerCaseEvent.contains("splice site insertion")) {
             filter = MutationTypeFilter.SPLICE;
-        } else if (extractSpecificInfoOfEvent.equals("deletions") || extractSpecificInfoOfEvent.equals("deletion") || featureEvent.contains(
+        } else if (extractSpecificInfoOfEvent.equals("deletions") || extractSpecificInfoOfEvent.equals("deletion") || lowerCaseEvent.contains(
                 "partial deletion of exons")) {
             filter = MutationTypeFilter.MISSENSE_INFRAME_DELETION;
         } else if (extractSpecificInfoOfEvent.equals("insertions") || extractSpecificInfoOfEvent.equals("insertion")) {

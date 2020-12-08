@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
@@ -26,14 +25,14 @@ public class ExonExtractor {
     @NotNull
     private final GeneChecker geneChecker;
     @NotNull
-    private final List<DriverGene> driverGenes;
+    private final MutationTypeFilterAlgo mutationTypeFilterAlgo;
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
-    public ExonExtractor(@NotNull final GeneChecker geneChecker, @NotNull final List<DriverGene> driverGenes,
+    public ExonExtractor(@NotNull final GeneChecker geneChecker, @NotNull final MutationTypeFilterAlgo mutationTypeFilterAlgo,
             @NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.geneChecker = geneChecker;
-        this.driverGenes = driverGenes;
+        this.mutationTypeFilterAlgo = mutationTypeFilterAlgo;
         this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
@@ -52,7 +51,7 @@ public class ExonExtractor {
                         ExonAnnotation annotation = determineExonAnnotation(gene,
                                 canonicalTranscript,
                                 exonNumber,
-                                MutationTypeFilterExtraction.extract(event, driverGenes, gene));
+                                mutationTypeFilterAlgo.determine(gene, event));
                         if (annotation != null) {
                             annotations.add(annotation);
                         }

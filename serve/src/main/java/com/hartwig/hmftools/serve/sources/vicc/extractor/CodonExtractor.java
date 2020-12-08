@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
@@ -28,14 +27,14 @@ public class CodonExtractor {
     @NotNull
     private final GeneChecker geneChecker;
     @NotNull
-    private final List<DriverGene> driverGenes;
+    private final MutationTypeFilterAlgo mutationTypeFilterAlgo;
     @NotNull
     private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
-    public CodonExtractor(@NotNull final GeneChecker geneChecker, @NotNull final List<DriverGene> driverGenes,
+    public CodonExtractor(@NotNull final GeneChecker geneChecker, @NotNull final MutationTypeFilterAlgo mutationTypeFilterAlgo,
             @NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.geneChecker = geneChecker;
-        this.driverGenes = driverGenes;
+        this.mutationTypeFilterAlgo = mutationTypeFilterAlgo;
         this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
@@ -51,7 +50,7 @@ public class CodonExtractor {
                 if (codonNumber != null) {
                     List<CodonAnnotation> annotations = Lists.newArrayList();
                     CodonAnnotation annotation = determineCodonAnnotation(canonicalTranscript,
-                            MutationTypeFilterExtraction.extract(event, driverGenes, gene),
+                            mutationTypeFilterAlgo.determine(gene, event),
                             codonNumber,
                             gene);
                     if (annotation != null) {
