@@ -49,7 +49,6 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
     @Value.Derived
     @Nullable
-    // TODO: Convert to using long.
     public List<GenomeRegion> codingRangeByGenomicCoordinates(int genomicStartPosition, int genomicEndPosition) {
         if (genomicStartPosition < 1 || genomicEndPosition < 1) {
             // Only allow a range to return if start and end are 1-based.
