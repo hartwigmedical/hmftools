@@ -39,7 +39,7 @@ public class LimsTest {
         String purityShallowSeq = "0.71";
         String primaryTumor = "Prostate";
         String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
-        String cohort = "Cohort";
+        String cohort = "CPCT";
         String projectName = "projectX";
         String requesterName = "henk";
         String requesterEmail = "henk@hmf.nl";
@@ -100,7 +100,7 @@ public class LimsTest {
         assertEquals(projectName, lims.projectName(TUMOR_SAMPLE_BARCODE));
         assertEquals(requesterName, lims.requesterName(TUMOR_SAMPLE_BARCODE));
         assertEquals(requesterEmail, lims.requesterEmail(TUMOR_SAMPLE_BARCODE));
-        assertEquals(cohort, lims.cohort(TUMOR_SAMPLE_BARCODE));
+        assertEquals(LimsCohort.CPCT, lims.cohort(TUMOR_SAMPLE_BARCODE));
 
         Integer dnaAmount = lims.dnaNanograms(TUMOR_SAMPLE_BARCODE);
         assertNotNull(dnaAmount);
