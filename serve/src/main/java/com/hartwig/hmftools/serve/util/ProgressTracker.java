@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 public class ProgressTracker {
 
     private static final Logger LOGGER = LogManager.getLogger(ProgressTracker.class);
+    private static final int INTERVAL = 10;
 
     @NotNull
     private final String label;
@@ -21,7 +22,8 @@ public class ProgressTracker {
     }
 
     public void update() {
-        if (++counter % (totalCount / 10) == 0) {
+        ++counter;
+        if (totalCount >= INTERVAL && counter % (totalCount / INTERVAL) == 0) {
             LOGGER.info(" Processed {} of {} {} entries", counter, totalCount, label);
         }
     }
