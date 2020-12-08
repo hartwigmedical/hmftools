@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ public class ExonExtractorTest {
 
     @Test
     public void canExtractExonForExonAndFusion() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR", "KIT"));
+        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KIT"));
         List<ExonAnnotation> exons = extractor.extract("KIT", null, EventType.FUSION_PAIR_AND_EXON, "EXON 11 MUTATION");
 
         assertEquals(1, exons.size());
@@ -43,7 +43,7 @@ public class ExonExtractorTest {
 
     @Test
     public void canExtractExonForwardStrand() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR", "KIT"));
+        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
         List<ExonAnnotation> exons = extractor.extract("EGFR", null, EventType.EXON, "EXON 19 DELETION");
 
         assertEquals(1, exons.size());
@@ -57,7 +57,7 @@ public class ExonExtractorTest {
 
     @Test
     public void canExtractExonReverseStrand() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR", "KIT"));
+        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
         List<ExonAnnotation> exons = extractor.extract("KRAS", null, EventType.EXON, "EXON 2 DELETION");
 
         assertEquals(1, exons.size());
@@ -70,15 +70,33 @@ public class ExonExtractorTest {
     }
 
     @Test
-    public void canExtractExons() {
-        assertEquals(Lists.newArrayList(19), ExonExtractor.extractExonNumbers("EGFR exon 19 insertions"));
-        assertEquals(Lists.newArrayList(20), ExonExtractor.extractExonNumbers("ERBB2 proximal exon 20"));
-        assertEquals(Lists.newArrayList(9, 11, 13, 14, 17), ExonExtractor.extractExonNumbers("KIT mutation in exon 9,11,13,14 or 17"));
-        assertEquals(Lists.newArrayList(16, 17, 18, 19), ExonExtractor.extractExonNumbers("MET mutation in exon 16-19"));
-        assertEquals(Lists.newArrayList(2, 3), ExonExtractor.extractExonNumbers("Null (Partial deletion of Exons 2 & 3)"));
-        assertEquals(Lists.newArrayList(12), ExonExtractor.extractExonNumbers("Exon 12 splice site insertion"));
+    public void canFilterOnNonCanonicalTranscript() {
+        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
+        assertNull(extractor.extract("KRAS", "not the canonical transcript", EventType.EXON, "EXON 2 DELETION"));
+    }
 
-        assertTrue(ExonExtractor.extractExonNumbers("Not an exon number").isEmpty());
+    @Test
+    public void canFilterWhenExonIndicesDoNotExist() {
+        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
+        assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.EXON, "not a correct event"));
+    }
+
+    @Test
+    public void canFilterWhenExonIndexNotOnTranscript() {
+        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
+        assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.EXON, "Exon 2000 deletion"));
+    }
+
+    @Test
+    public void canExtractExonIndices() {
+        assertEquals(Lists.newArrayList(19), ExonExtractor.extractExonIndices("EGFR exon 19 insertions"));
+        assertEquals(Lists.newArrayList(20), ExonExtractor.extractExonIndices("ERBB2 proximal exon 20"));
+        assertEquals(Lists.newArrayList(9, 11, 13, 14, 17), ExonExtractor.extractExonIndices("KIT mutation in exon 9,11,13,14 or 17"));
+        assertEquals(Lists.newArrayList(16, 17, 18, 19), ExonExtractor.extractExonIndices("MET mutation in exon 16-19"));
+        assertEquals(Lists.newArrayList(2, 3), ExonExtractor.extractExonIndices("Null (Partial deletion of Exons 2 & 3)"));
+        assertEquals(Lists.newArrayList(12), ExonExtractor.extractExonIndices("Exon 12 splice site insertion"));
+
+        assertNull(ExonExtractor.extractExonIndices("Not an exon number"));
     }
 
     @NotNull
@@ -87,7 +105,7 @@ public class ExonExtractorTest {
     }
 
     @NotNull
-    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco1, @NotNull String geneOnco2) {
+    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco) {
         ImmutableDriverGene.Builder driverGeneBuilder = ImmutableDriverGene.builder()
                 .reportMissenseAndInframe(false)
                 .reportNonsenseAndFrameshift(false)
@@ -100,9 +118,8 @@ public class ExonExtractorTest {
                 .reportGermlineHotspot(false);
 
         DriverGene driverGeneTsg = driverGeneBuilder.gene(geneTsg).likelihoodType(TSG).build();
-        DriverGene driverGeneOnco1 = driverGeneBuilder.gene(geneOnco1).likelihoodType(ONCO).build();
-        DriverGene driverGeneOnco2 = driverGeneBuilder.gene(geneOnco2).likelihoodType(ONCO).build();
+        DriverGene driverGeneOnco = driverGeneBuilder.gene(geneOnco).likelihoodType(ONCO).build();
 
-        return Lists.newArrayList(driverGeneTsg, driverGeneOnco1, driverGeneOnco2);
+        return Lists.newArrayList(driverGeneTsg, driverGeneOnco);
     }
 }

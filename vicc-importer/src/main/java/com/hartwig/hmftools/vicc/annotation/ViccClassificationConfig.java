@@ -17,9 +17,9 @@ public final class ViccClassificationConfig {
     private static final Set<String> SPECIFIC_EXON_EVENTS = specificExonEvents();
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXONS_PER_GENE = fusionPairAndExonsPerGene();
     private static final Set<String> GENE_LEVEL_BLACKLIST_KEY_PHRASES = geneLevelBlacklistKeyPhrases();
-    public static final Set<String> GENERIC_GENE_LEVEL_KEY_PHRASES = genericGeneLevelKeyPhrases();
-    public static final Set<String> ACTIVATING_GENE_LEVEL_KEY_PHRASES = activatingGeneLevelKeyPhrases();
-    public static final Set<String> INACTIVATING_GENE_LEVEL_KEY_PHRASES = inactivatingGeneLevelKeyPhrases();
+    private static final Set<String> GENERIC_GENE_LEVEL_KEY_PHRASES = genericGeneLevelKeyPhrases();
+    private static final Set<String> ACTIVATING_GENE_LEVEL_KEY_PHRASES = activatingGeneLevelKeyPhrases();
+    private static final Set<String> INACTIVATING_GENE_LEVEL_KEY_PHRASES = inactivatingGeneLevelKeyPhrases();
     private static final Set<String> AMPLIFICATION_KEYWORDS = amplificationKeywords();
     private static final Set<String> AMPLIFICATION_KEY_PHRASES = amplificationKeyPhrases();
     private static final Set<String> DELETION_BLACKLIST_KEY_PHRASES = deletionBlacklistKeyPhrases();
@@ -28,7 +28,9 @@ public final class ViccClassificationConfig {
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
     private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
-    private static final Set<String> SIGNATURE_EVENTS = signatureEvents();
+    private static final Set<String> MICROSATELLITE_UNSTABLE_EVENTS = microsatelliteUnstableEvents();
+    private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS = highTumorMutationalLoadEvents();
+    private static final Set<String> HR_DEFICIENCY_EVENTS = hrDeficiencyEvents();
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = complexEventsPerGene();
 
@@ -36,7 +38,7 @@ public final class ViccClassificationConfig {
     }
 
     @NotNull
-    static EventClassifierConfig build() {
+    public static EventClassifierConfig build() {
         return ImmutableEventClassifierConfig.builder()
                 .proteinAnnotationExtractor(new ProteinAnnotationExtractor())
                 .exonIdentifiers(EXON_IDENTIFIERS)
@@ -55,7 +57,9 @@ public final class ViccClassificationConfig {
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
                 .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
-                .signatureEvents(SIGNATURE_EVENTS)
+                .microsatelliteUnstableEvents(MICROSATELLITE_UNSTABLE_EVENTS)
+                .highTumorMutationalLoadEvents(HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS)
+                .hrDeficiencyEvents(HR_DEFICIENCY_EVENTS)
                 .combinedEventsPerGene(COMBINED_EVENTS_PER_GENE)
                 .complexEventsPerGene(COMPLEX_EVENTS_PER_GENE)
                 .build();
@@ -249,10 +253,20 @@ public final class ViccClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> signatureEvents() {
+    private static Set<String> microsatelliteUnstableEvents() {
         Set<String> set = Sets.newHashSet();
         set.add("Microsatellite Instability-High");
         return set;
+    }
+
+    @NotNull
+    private static Set<String> highTumorMutationalLoadEvents() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> hrDeficiencyEvents() {
+        return Sets.newHashSet();
     }
 
     @NotNull

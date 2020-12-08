@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.extraction.GeneChecker;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.CodonExtractor;
@@ -17,7 +18,6 @@ import com.hartwig.hmftools.serve.sources.vicc.extractor.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.HotspotExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.MutationTypeFilterAlgo;
 import com.hartwig.hmftools.serve.sources.vicc.extractor.SignatureExtractor;
-import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,15 +30,15 @@ public final class ViccExtractorFactory {
     }
 
     @NotNull
-    public static ViccExtractor buildViccExtractor(@NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes,
-            @NotNull Map<String, HmfTranscriptRegion> allGenesMap) {
-        return buildViccExtractorWithInterpretationTsv(proteinResolver, driverGenes, allGenesMap, null);
+    public static ViccExtractor buildViccExtractor(@NotNull EventClassifierConfig config, @NotNull ProteinResolver proteinResolver,
+            @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap) {
+        return buildViccExtractorWithInterpretationTsv(config, proteinResolver, driverGenes, allGenesMap, null);
     }
 
     @NotNull
-    public static ViccExtractor buildViccExtractorWithInterpretationTsv(@NotNull ProteinResolver proteinResolver,
-            @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap,
-            @Nullable String featureInterpretationTsv) {
+    public static ViccExtractor buildViccExtractorWithInterpretationTsv(@NotNull EventClassifierConfig config,
+            @NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes,
+            @NotNull Map<String, HmfTranscriptRegion> allGenesMap, @Nullable String featureInterpretationTsv) {
         Set<String> genesInExome = allGenesMap.keySet();
         GeneChecker exomeGeneChecker = new GeneChecker(genesInExome);
 
@@ -48,13 +48,19 @@ public final class ViccExtractorFactory {
         GeneChecker fusionGeneChecker = new GeneChecker(fusionGeneSet);
 
         MutationTypeFilterAlgo mutationTypeFilterAlgo = new MutationTypeFilterAlgo(driverGenes);
-        return new ViccExtractor(new HotspotExtractor(exomeGeneChecker, proteinResolver, new ProteinAnnotationExtractor()),
+        return new ViccExtractor(new HotspotExtractor(exomeGeneChecker, proteinResolver, config.proteinAnnotationExtractor()),
                 new CodonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
                 new ExonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
-                new GeneLevelExtractor(exomeGeneChecker, fusionGeneChecker, driverGenes),
+                new GeneLevelExtractor(exomeGeneChecker,
+                        fusionGeneChecker,
+                        driverGenes,
+                        config.activatingGeneLevelKeyPhrases(),
+                        config.inactivatingGeneLevelKeyPhrases()),
                 new CopyNumberExtractor(exomeGeneChecker),
                 new FusionExtractor(fusionGeneChecker),
-                new SignatureExtractor(),
+                new SignatureExtractor(config.microsatelliteUnstableEvents(),
+                        config.highTumorMutationalLoadEvents(),
+                        config.hrDeficiencyEvents()),
                 featureInterpretationTsv);
     }
 }

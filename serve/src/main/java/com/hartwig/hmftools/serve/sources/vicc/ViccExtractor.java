@@ -105,7 +105,7 @@ public final class ViccExtractor {
         }
 
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
-                .knownHotspots(convertToHotspots(resultsPerEntry, hotspotExtractor.proteinAnnotationExtractor()))
+                .knownHotspots(convertToHotspots(resultsPerEntry))
                 .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry))
                 .knownFusionPairs(convertToKnownFusions(resultsPerEntry));
 
@@ -182,8 +182,8 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static Set<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry,
-            @NotNull ProteinAnnotationExtractor proteinAnnotationExtractor) {
+    private static Set<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        ProteinAnnotationExtractor proteinExtractor = new ProteinAnnotationExtractor();
         Set<KnownHotspot> hotspots = Sets.newHashSet();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
             ViccEntry entry = entryResult.getKey();
@@ -195,7 +195,7 @@ public final class ViccExtractor {
                             .addSources(ViccSource.toKnowledgebase(entry.source()))
                             .gene(feature.geneSymbol())
                             .transcript(entry.transcriptId())
-                            .proteinAnnotation(proteinAnnotationExtractor.apply(feature.name()))
+                            .proteinAnnotation(proteinExtractor.apply(feature.name()))
                             .build());
                 }
             }

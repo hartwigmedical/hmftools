@@ -2,9 +2,11 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
@@ -21,6 +23,8 @@ import org.jetbrains.annotations.Nullable;
 public class ExonExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(ExonExtractor.class);
+
+    private static final Set<EventType> EXON_EVENTS = Sets.newHashSet(EventType.EXON, EventType.FUSION_PAIR_AND_EXON);
 
     @NotNull
     private final GeneChecker geneChecker;
@@ -39,49 +43,53 @@ public class ExonExtractor {
     @Nullable
     public List<ExonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
-        if (type == EventType.EXON || type == EventType.FUSION_PAIR_AND_EXON) {
-            if (geneChecker.isValidGene(gene)) {
-                HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
-                assert canonicalTranscript != null;
+        if (EXON_EVENTS.contains(type) && geneChecker.isValidGene(gene)) {
+            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
+            assert canonicalTranscript != null;
 
-                if (transcriptId == null || transcriptId.equals(canonicalTranscript.transcriptID())) {
-                    List<Integer> exonNumbers = extractExonNumbers(event);
-                    List<ExonAnnotation> annotations = Lists.newArrayList();
-                    MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
-                    if (mutationTypeFilter != null) {
-                        for (int exonNumber : exonNumbers) {
-                            ExonAnnotation annotation = determineExonAnnotation(gene,
-                                    canonicalTranscript,
-                                    exonNumber,
-                                    mutationTypeFilterAlgo.determine(gene, event));
-                            if (annotation != null) {
-                                annotations.add(annotation);
-                            }
-                        }
-                    }
-                    return annotations;
-                } else {
-                    LOGGER.warn("Transcript IDs not equal for provided transcript '{}' and HMF canonical transcript '{}' for {} ",
-                            transcriptId,
-                            canonicalTranscript.transcriptID(),
-                            event);
+            if (transcriptId == null || transcriptId.equals(canonicalTranscript.transcriptID())) {
+                List<Integer> exonIndices = extractExonIndices(event);
+                if (exonIndices == null) {
+                    LOGGER.warn("Could not extract exon indices from '{}'", event);
+                    return null;
                 }
+
+                MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
+
+                List<ExonAnnotation> annotations = Lists.newArrayList();
+                for (int exonIndex : exonIndices) {
+                    ExonAnnotation annotation = determineExonAnnotation(gene, canonicalTranscript, exonIndex, mutationTypeFilter);
+                    if (annotation != null) {
+                        annotations.add(annotation);
+                    } else {
+                        LOGGER.warn("Could not determine exon annotation for exon index {} on transcript '{}' on '{}'",
+                                exonIndex,
+                                canonicalTranscript.transcriptID(),
+                                gene);
+                    }
+                }
+                return !annotations.isEmpty() ? annotations : null;
+            } else {
+                LOGGER.warn("Transcript IDs not equal for provided transcript '{}' and HMF canonical transcript '{}' for {} ",
+                        transcriptId,
+                        canonicalTranscript.transcriptID(),
+                        event);
             }
         }
 
         return null;
     }
 
-    @NotNull
+    @Nullable
     @VisibleForTesting
-    static List<Integer> extractExonNumbers(@NotNull String featureName) {
+    static List<Integer> extractExonIndices(@NotNull String event) {
         List<Integer> exons = Lists.newArrayList();
-        if (featureName.contains(" or ") || featureName.contains(" & ")) {
-            exons = extractMultipleExonNumbers(featureName);
-        } else if (featureName.contains("-")) {
-            exons = extractListOfExonNumbers(featureName);
+        if (event.contains(" or ") || event.contains(" & ")) {
+            exons = extractMultipleExonIndices(event);
+        } else if (event.contains("-")) {
+            exons = extractContinuousRangeOfExonIndices(event);
         } else {
-            String[] words = featureName.split(" ");
+            String[] words = event.split(" ");
             for (String word : words) {
                 if (isInteger(word)) {
                     exons.add(Integer.valueOf(word));
@@ -89,30 +97,27 @@ public class ExonExtractor {
             }
         }
 
-        if (exons.isEmpty()) {
-            LOGGER.warn("Could not extract exon numbers from '{}'", featureName);
-        }
-        return exons;
+        return !exons.isEmpty() ? exons : null;
     }
 
     @NotNull
-    private static List<Integer> extractMultipleExonNumbers(@NotNull String featureName) {
-        List<Integer> exonNumbers = Lists.newArrayList();
-        String[] words = featureName.replace(" or ", ",").replace(" & ", ",").replace(")", "").split(" ");
+    private static List<Integer> extractMultipleExonIndices(@NotNull String event) {
+        List<Integer> exonIndices = Lists.newArrayList();
+        String[] words = event.replace(" or ", ",").replace(" & ", ",").replace(")", "").split(" ");
         for (String word : words) {
             if (word.contains(",")) {
                 String[] exons = word.split(",");
                 for (String exon : exons) {
-                    exonNumbers.add(Integer.valueOf(exon));
+                    exonIndices.add(Integer.valueOf(exon));
                 }
             }
         }
-        return exonNumbers;
+        return exonIndices;
     }
 
     @NotNull
-    private static List<Integer> extractListOfExonNumbers(@NotNull String featureName) {
-        List<Integer> exonNumbers = Lists.newArrayList();
+    private static List<Integer> extractContinuousRangeOfExonIndices(@NotNull String featureName) {
+        List<Integer> exonIndices = Lists.newArrayList();
         String[] words = featureName.split(" ");
         for (String word : words) {
             if (word.contains("-")) {
@@ -120,20 +125,20 @@ public class ExonExtractor {
                 int eventStart = Integer.parseInt(splitEvents[0]);
                 int eventEnd = Integer.parseInt(splitEvents[1]);
                 for (int i = eventStart; i <= eventEnd; i++) {
-                    exonNumbers.add(i);
+                    exonIndices.add(i);
                 }
             }
         }
-        return exonNumbers;
+        return exonIndices;
     }
 
     @Nullable
     private static ExonAnnotation determineExonAnnotation(@NotNull String gene, @NotNull HmfTranscriptRegion transcript, int exonIndex,
-            @NotNull MutationTypeFilter specificMutationType) {
+            @NotNull MutationTypeFilter mutationTypeFilter) {
         HmfExonRegion hmfExonRegion = transcript.exonByIndex(exonIndex);
 
         if (hmfExonRegion == null) {
-            LOGGER.warn("Could not resolve exon index {} from transcript {}", exonIndex, transcript.transcriptID());
+            return null;
         }
 
         // Extend exonic range by 5 to include SPLICE variants.
@@ -145,7 +150,7 @@ public class ExonExtractor {
                 .start(start)
                 .end(end)
                 .gene(gene)
-                .mutationType(specificMutationType)
+                .mutationType(mutationTypeFilter)
                 .exonEnsemblId(hmfExonRegion.exonID())
                 .exonIndex(exonIndex)
                 .build();

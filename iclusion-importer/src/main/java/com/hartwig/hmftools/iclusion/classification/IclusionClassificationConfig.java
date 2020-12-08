@@ -28,7 +28,9 @@ public final class IclusionClassificationConfig {
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
     private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
-    private static final Set<String> SIGNATURE_EVENTS = signatureEvents();
+    private static final Set<String> MICROSATELLITE_UNSTABLE_EVENTS = microsatelliteUnstableEvents();
+    private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS = highTumorMutationalLoadEvents();
+    private static final Set<String> HR_DEFICIENCY_EVENTS = hrDeficiencyEvents();
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = complexEventsPerGene();
 
@@ -36,7 +38,7 @@ public final class IclusionClassificationConfig {
     }
 
     @NotNull
-    static EventClassifierConfig build() {
+    public static EventClassifierConfig build() {
         return ImmutableEventClassifierConfig.builder()
                 .proteinAnnotationExtractor(new ProteinAnnotationExtractor())
                 .exonIdentifiers(EXON_IDENTIFIERS)
@@ -55,7 +57,9 @@ public final class IclusionClassificationConfig {
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
                 .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
-                .signatureEvents(SIGNATURE_EVENTS)
+                .microsatelliteUnstableEvents(MICROSATELLITE_UNSTABLE_EVENTS)
+                .highTumorMutationalLoadEvents(HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS)
+                .hrDeficiencyEvents(HR_DEFICIENCY_EVENTS)
                 .combinedEventsPerGene(COMBINED_EVENTS_PER_GENE)
                 .complexEventsPerGene(COMPLEX_EVENTS_PER_GENE)
                 .build();
@@ -173,11 +177,23 @@ public final class IclusionClassificationConfig {
     }
 
     @NotNull
-    private static Set<String> signatureEvents() {
+    private static Set<String> microsatelliteUnstableEvents() {
         Set<String> set = Sets.newHashSet();
         set.add("MSI HIGH");
-        set.add("HRD POSITIVE");
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> highTumorMutationalLoadEvents() {
+        Set<String> set = Sets.newHashSet();
         set.add("TumMutLoad HIGH");
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> hrDeficiencyEvents() {
+        Set<String> set = Sets.newHashSet();
+        set.add("HRD POSITIVE");
         return set;
     }
 

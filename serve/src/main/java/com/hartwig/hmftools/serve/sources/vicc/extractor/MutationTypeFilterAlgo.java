@@ -22,7 +22,7 @@ public class MutationTypeFilterAlgo {
         this.driverGenes = driverGenes;
     }
 
-    @Nullable
+    @NotNull
     public MutationTypeFilter determine(@NotNull String gene, @NotNull String event) {
         String formattedEvent = event.toLowerCase();
 
@@ -47,8 +47,7 @@ public class MutationTypeFilterAlgo {
             }
         }
 
-        LOGGER.warn("Could not determine mutation type filter for '{}' on '{}'", event, gene);
-        return null;
+        return MutationTypeFilter.ANY;
     }
 
     @Nullable

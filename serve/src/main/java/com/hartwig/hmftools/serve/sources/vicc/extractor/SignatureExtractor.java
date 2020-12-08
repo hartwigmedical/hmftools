@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
+import java.util.Set;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
@@ -13,18 +15,28 @@ public class SignatureExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(SignatureExtractor.class);
 
-    public SignatureExtractor() {
+    @NotNull
+    private final Set<String> microsatelliteUnstableEvents;
+    @NotNull
+    private final Set<String> highTumorMutationalLoadEvents;
+    @NotNull
+    private final Set<String> hrDeficiencyEvents;
+
+    public SignatureExtractor(@NotNull final Set<String> microsatelliteUnstableEvents,
+            @NotNull final Set<String> highTumorMutationalLoadEvents, @NotNull final Set<String> hrDeficiencyEvents) {
+        this.microsatelliteUnstableEvents = microsatelliteUnstableEvents;
+        this.highTumorMutationalLoadEvents = highTumorMutationalLoadEvents;
+        this.hrDeficiencyEvents = hrDeficiencyEvents;
     }
 
     @Nullable
     public SignatureName extract(@NotNull EventType type, @NotNull String event) {
         if (type == EventType.SIGNATURE) {
-            SignatureName signatureName = extractSignatureName(event);
-            if (signatureName != null) {
-                return signatureName;
-            } else {
+            SignatureName signature = determineSignature(event);
+            if (signature == null) {
                 LOGGER.warn("Could not extract signature from '{}'", event);
             }
+            return signature;
         }
 
         return null;
@@ -32,9 +44,13 @@ public class SignatureExtractor {
 
     @Nullable
     @VisibleForTesting
-    static SignatureName extractSignatureName(@NotNull String featureName) {
-        if (featureName.equals("Microsatellite Instability-High")) {
+    SignatureName determineSignature(@NotNull String event) {
+        if (microsatelliteUnstableEvents.contains(event)) {
             return SignatureName.MICROSATELLITE_UNSTABLE;
+        } else if (highTumorMutationalLoadEvents.contains(event)) {
+            return SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD;
+        } else if (hrDeficiencyEvents.contains(event)) {
+            return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENCY;
         }
 
         return null;

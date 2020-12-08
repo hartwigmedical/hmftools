@@ -2,11 +2,11 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.extraction.GeneChecker;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
-import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,10 +18,10 @@ public class HotspotExtractor {
     @NotNull
     private final ProteinResolver proteinResolver;
     @NotNull
-    private final ProteinAnnotationExtractor proteinAnnotationExtractor;
+    private final EventPreprocessor proteinAnnotationExtractor;
 
     public HotspotExtractor(@NotNull final GeneChecker geneChecker, @NotNull final ProteinResolver proteinResolver,
-            @NotNull final ProteinAnnotationExtractor proteinAnnotationExtractor) {
+            @NotNull final EventPreprocessor proteinAnnotationExtractor) {
         this.geneChecker = geneChecker;
         this.proteinResolver = proteinResolver;
         this.proteinAnnotationExtractor = proteinAnnotationExtractor;
@@ -35,10 +35,5 @@ public class HotspotExtractor {
         }
 
         return null;
-    }
-
-    @NotNull
-    public ProteinAnnotationExtractor proteinAnnotationExtractor() {
-        return proteinAnnotationExtractor;
     }
 }

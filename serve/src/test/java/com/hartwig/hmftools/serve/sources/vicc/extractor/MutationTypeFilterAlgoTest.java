@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -38,7 +37,7 @@ public class MutationTypeFilterAlgoTest {
         assertEquals(MutationTypeFilter.ANY, algo.determine(tsg, "mut"));
         assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT, algo.determine(tsg, "frameshift"));
 
-        assertNull(algo.determine("NOT-A-GENE", "abcd"));
+        assertEquals(MutationTypeFilter.ANY, algo.determine("NOT-A-GENE", "abcd"));
     }
 
     @NotNull

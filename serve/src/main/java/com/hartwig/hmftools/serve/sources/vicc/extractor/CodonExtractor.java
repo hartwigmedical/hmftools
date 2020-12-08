@@ -7,7 +7,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.codon.CodonAnnotation;
@@ -16,7 +15,6 @@ import com.hartwig.hmftools.serve.extraction.GeneChecker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,16 +44,25 @@ public class CodonExtractor {
             assert canonicalTranscript != null;
 
             if (transcriptId == null || transcriptId.equals(canonicalTranscript.transcriptID())) {
-                Integer codonNumber = extractCodonNumber(event);
-                MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
-                if (codonNumber != null && mutationTypeFilter != null) {
-                    List<CodonAnnotation> annotations = Lists.newArrayList();
-                    CodonAnnotation annotation = determineCodonAnnotation(canonicalTranscript, mutationTypeFilter, codonNumber, gene);
-                    if (annotation != null) {
-                        annotations.add(annotation);
-                    }
-                    return annotations;
+                Integer codonIndex = extractCodonIndex(event);
+                if (codonIndex == null) {
+                    LOGGER.warn("Could not extract codon index from '{}'", event);
+                    return null;
+
                 }
+
+                MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
+                List<CodonAnnotation> codonAnnotations =
+                        determineCodonAnnotations(gene, canonicalTranscript, codonIndex, mutationTypeFilter);
+
+                if (codonAnnotations == null) {
+                    LOGGER.warn("Could not resolve codon index {} on transcript '{}' for gene '{}'",
+                            codonIndex,
+                            canonicalTranscript.transcriptID(),
+                            gene);
+                }
+
+                return codonAnnotations;
             } else {
                 LOGGER.warn("Transcript IDs not equal for provided transcript '{}' and HMF canonical transcript '{}' for {} ",
                         transcriptId,
@@ -69,62 +76,41 @@ public class CodonExtractor {
 
     @Nullable
     @VisibleForTesting
-    static Integer extractCodonNumber(@NotNull String featureName) {
+    static Integer extractCodonIndex(@NotNull String event) {
         String codonPart;
-        if (featureName.contains(" ")) {
-            codonPart = featureName.split(" ")[1];
+        if (event.contains(" ")) {
+            codonPart = event.split(" ")[1];
         } else {
-            codonPart = featureName;
+            codonPart = event;
         }
         codonPart = codonPart.replaceAll("\\D+", "");
         if (isInteger(codonPart)) {
             return Integer.parseInt(codonPart);
-        } else {
-            LOGGER.warn("Could not extract codon number from '{}'", featureName);
-            return null;
         }
+
+        return null;
     }
 
     @Nullable
-    private static CodonAnnotation determineCodonAnnotation(@NotNull HmfTranscriptRegion canonicalTranscript,
-            @NotNull MutationTypeFilter specificMutationType, int codonIndex, @NotNull String geneSymbol) {
-        List<GenomeRegion> genomeRegions = canonicalTranscript.codonByIndex(codonIndex);
+    private static List<CodonAnnotation> determineCodonAnnotations(@NotNull String gene, @NotNull HmfTranscriptRegion canonicalTranscript,
+            int codonIndex, @NotNull MutationTypeFilter mutationTypeFilter) {
+        List<GenomeRegion> regions = canonicalTranscript.codonByIndex(codonIndex);
 
-        if (genomeRegions != null && genomeRegions.size() == 1) {
-            String chromosome = genomeRegions.get(0).chromosome();
-            long start = genomeRegions.get(0).start();
-            long end = genomeRegions.get(0).end();
-
-            return ImmutableCodonAnnotation.builder()
-                    .chromosome(chromosome)
-                    .start(start)
-                    .end(end)
-                    .gene(geneSymbol)
-                    .mutationType(specificMutationType)
-                    .codonIndex(codonIndex)
-                    .build();
-        } else if (genomeRegions != null && genomeRegions.size() == 2) {
-            String chromosome = genomeRegions.get(0).chromosome().equals(genomeRegions.get(1).chromosome())
-                    ? genomeRegions.get(0).chromosome()
-                    : Strings.EMPTY;
-            if (chromosome.isEmpty()) {
-                LOGGER.warn("Chromosome positions are not equals!");
+        if (regions != null) {
+            List<CodonAnnotation> codonAnnotations = Lists.newArrayList();
+            for (GenomeRegion region : regions) {
+                codonAnnotations.add(ImmutableCodonAnnotation.builder()
+                        .chromosome(region.chromosome())
+                        .start(region.start())
+                        .end(region.end())
+                        .gene(gene)
+                        .mutationType(mutationTypeFilter)
+                        .codonIndex(codonIndex)
+                        .build());
             }
-
-            long start = canonicalTranscript.strand() == Strand.FORWARD ? genomeRegions.get(0).start() : genomeRegions.get(1).start();
-            long end = canonicalTranscript.strand() == Strand.FORWARD ? genomeRegions.get(1).start() : genomeRegions.get(0).end();
-
-            return ImmutableCodonAnnotation.builder()
-                    .chromosome(chromosome)
-                    .start(start)
-                    .end(end)
-                    .gene(geneSymbol)
-                    .mutationType(specificMutationType)
-                    .codonIndex(codonIndex)
-                    .build();
-        } else {
-            LOGGER.warn("None genomic positions of the codon {} on gene {} could be extracted", codonIndex, geneSymbol);
+            return codonAnnotations;
         }
+
         return null;
     }
 

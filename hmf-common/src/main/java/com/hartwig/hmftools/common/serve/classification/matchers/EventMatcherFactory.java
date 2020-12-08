@@ -2,9 +2,11 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 
@@ -35,7 +37,8 @@ public final class EventMatcherFactory {
         DeletionMatcher deletionMatcher =
                 new DeletionMatcher(config.deletionBlacklistKeyPhrases(), config.deletionKeywords(), config.deletionKeyPhrases());
 
-        SignatureMatcher signatureMatcher = new SignatureMatcher(config.signatureEvents());
+
+        SignatureMatcher signatureMatcher = new SignatureMatcher(allSignatureEvents(config));
         ComplexMatcher complexMatcher = new ComplexMatcher(config.complexEventsPerGene());
         CombinedMatcher combinedMatcher =
                 new CombinedMatcher(config.combinedEventsPerGene(), hotspotMatcher, fusionPairMatcher, amplificationMatcher);
@@ -57,6 +60,15 @@ public final class EventMatcherFactory {
         map.put(EventType.COMPLEX, complexMatcher);
 
         return map;
+    }
+
+    @NotNull
+    private static Set<String> allSignatureEvents(@NotNull EventClassifierConfig config) {
+        Set<String> signatures = Sets.newHashSet();
+        signatures.addAll(config.microsatelliteUnstableEvents());
+        signatures.addAll(config.highTumorMutationalLoadEvents());
+        signatures.addAll(config.hrDeficiencyEvents());
+        return signatures;
     }
 
     @NotNull

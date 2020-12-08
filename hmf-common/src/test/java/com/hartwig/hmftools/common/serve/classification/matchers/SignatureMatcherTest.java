@@ -11,13 +11,13 @@ import org.junit.Test;
 
 public class SignatureMatcherTest {
 
-    private static final Set<String> SIGNATURE_EVENTS = Sets.newHashSet("Microsatellite Instability-High");
+    private static final Set<String> SIGNATURE_EVENTS = Sets.newHashSet("Signature");
 
     @Test
     public void canAssessWhetherEventIsSignature() {
         EventMatcher matcher = new SignatureMatcher(SIGNATURE_EVENTS);
 
-        assertTrue(matcher.matches("-", "Microsatellite Instability-High"));
+        assertTrue(matcher.matches("-", "Signature"));
 
         assertFalse(matcher.matches("BRAF", "V600E"));
     }

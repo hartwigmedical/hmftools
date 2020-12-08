@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -10,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
@@ -29,7 +27,7 @@ public class CodonExtractorTest {
 
     @Test
     public void canExtractSimpleCodon() {
-        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR", "KIT"));
+        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
         List<CodonAnnotation> codons = extractor.extract("TP53", null, EventType.CODON, "R249");
 
         assertEquals(1, codons.size());
@@ -43,27 +41,50 @@ public class CodonExtractorTest {
 
     @Test
     public void canExtractCodonOnMultipleExons() {
-        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS", "KIT"));
+        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
         List<CodonAnnotation> codons = extractor.extract("KRAS", null, EventType.CODON, "R97");
 
-        // TODO Should be multiple annotations
-        assertEquals(1, codons.size());
+        assertEquals(2, codons.size());
 
         assertEquals("12", codons.get(0).chromosome());
-        assertEquals(25380168, codons.get(0).start());
+        assertEquals(25378707, codons.get(0).start());
         assertEquals(25378707, codons.get(0).end());
         assertEquals("KRAS", codons.get(0).gene());
         assertEquals(MutationTypeFilter.MISSENSE_ANY, codons.get(0).mutationType());
+
+        assertEquals("12", codons.get(1).chromosome());
+        assertEquals(25380168, codons.get(1).start());
+        assertEquals(25380169, codons.get(1).end());
+        assertEquals("KRAS", codons.get(1).gene());
+        assertEquals(MutationTypeFilter.MISSENSE_ANY, codons.get(1).mutationType());
     }
 
     @Test
-    public void canExtractCodons() {
-        assertEquals(600, (int) CodonExtractor.extractCodonNumber("BRAF (V600)"));
-        assertEquals(742, (int) CodonExtractor.extractCodonNumber("W742"));
-        assertEquals(179, (int) CodonExtractor.extractCodonNumber("Q179X"));
-        assertEquals(61, (int) CodonExtractor.extractCodonNumber("KRAS Q61X"));
+    public void failsOnTranscriptMismatch() {
+        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
+        assertNull(extractor.extract("KRAS", "not the canonical transcript", EventType.CODON, "R97"));
+    }
 
-        assertNull(CodonExtractor.extractCodonNumber("Not a codon number"));
+    @Test
+    public void failsOnUnresolvableCodonIndex() {
+        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
+        assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.CODON, "Not a codon"));
+    }
+
+    @Test
+    public void failsOnNonExistingCodonIndex() {
+        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
+        assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.CODON, "R10000"));
+    }
+
+    @Test
+    public void canExtractCodonIndices() {
+        assertEquals(600, (int) CodonExtractor.extractCodonIndex("BRAF (V600)"));
+        assertEquals(742, (int) CodonExtractor.extractCodonIndex("W742"));
+        assertEquals(179, (int) CodonExtractor.extractCodonIndex("Q179X"));
+        assertEquals(61, (int) CodonExtractor.extractCodonIndex("KRAS Q61X"));
+
+        assertNull(CodonExtractor.extractCodonIndex("Not a codon number"));
     }
 
     @NotNull
@@ -72,7 +93,7 @@ public class CodonExtractorTest {
     }
 
     @NotNull
-    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco1, @NotNull String geneOnco2) {
+    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco) {
         ImmutableDriverGene.Builder driverGeneBuilder = ImmutableDriverGene.builder()
                 .reportMissenseAndInframe(false)
                 .reportNonsenseAndFrameshift(false)
@@ -84,10 +105,9 @@ public class CodonExtractorTest {
                 .reportGermlineVariant(false)
                 .reportGermlineHotspot(false);
 
-        DriverGene driverGeneTsg = driverGeneBuilder.gene(geneTsg).likelihoodType(TSG).build();
-        DriverGene driverGeneOnco1 = driverGeneBuilder.gene(geneOnco1).likelihoodType(ONCO).build();
-        DriverGene driverGeneOnco2 = driverGeneBuilder.gene(geneOnco2).likelihoodType(ONCO).build();
+        DriverGene driverGeneTsg = driverGeneBuilder.gene(geneTsg).likelihoodType(DriverCategory.TSG).build();
+        DriverGene driverGeneOnco = driverGeneBuilder.gene(geneOnco).likelihoodType(DriverCategory.ONCO).build();
 
-        return Lists.newArrayList(driverGeneTsg, driverGeneOnco1, driverGeneOnco2);
+        return Lists.newArrayList(driverGeneTsg, driverGeneOnco);
     }
 }

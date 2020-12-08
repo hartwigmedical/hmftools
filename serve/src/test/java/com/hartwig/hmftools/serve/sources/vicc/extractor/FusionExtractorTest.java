@@ -18,7 +18,7 @@ public class FusionExtractorTest {
     private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
 
     @Test
-    public void canExtractFusionPairsGenes() {
+    public void canExtractSimpleFusionPair() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         KnownFusionPair fusion = fusionExtractor.extract(Knowledgebase.VICC_CGI, "PDGFRA", EventType.FUSION_PAIR, "BCR-PDGFRA Fusion");
 
@@ -60,7 +60,7 @@ public class FusionExtractorTest {
     }
 
     @Test
-    public void canExtractFusionPairsWithRangeExons() {
+    public void canExtractFusionPairsWithExons() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
         KnownFusionPair fusion =
                 fusionExtractor.extract(Knowledgebase.VICC_CGI, "MET", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION");
@@ -72,5 +72,17 @@ public class FusionExtractorTest {
         assertEquals("MET", fusion.geneDown());
         assertEquals(15, (int) fusion.minExonDown());
         assertEquals(15, (int) fusion.maxExonDown());
+    }
+
+    @Test
+    public void canFilterFusionPairsWithExonsOnWrongGenes() {
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        assertNull(fusionExtractor.extract(Knowledgebase.VICC_CGI, "BRAF", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION"));
+    }
+
+    @Test
+    public void canFilterNonConfiguredFusionPairsWithExons() {
+        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        assertNull(fusionExtractor.extract(Knowledgebase.VICC_CGI, "MET", EventType.FUSION_PAIR_AND_EXON, "Does not exist"));
     }
 }

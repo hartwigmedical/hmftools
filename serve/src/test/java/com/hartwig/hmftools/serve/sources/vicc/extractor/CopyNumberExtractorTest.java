@@ -28,9 +28,7 @@ public class CopyNumberExtractorTest {
     @Test
     public void canFilterAmpOnUnknownGene() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
-        KnownCopyNumber ampUnknown = copyNumberExtractor.extract(Knowledgebase.VICC_CGI, "NOT-A-GENE", EventType.AMPLIFICATION);
-
-        assertNull(ampUnknown);
+        assertNull(copyNumberExtractor.extract(Knowledgebase.VICC_CGI, "NOT-A-GENE", EventType.AMPLIFICATION));
     }
 
     @Test
@@ -45,8 +43,6 @@ public class CopyNumberExtractorTest {
     @Test
     public void canFilterDelOnUnknownGene() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
-        KnownCopyNumber delUnknown = copyNumberExtractor.extract(Knowledgebase.VICC_CGI, "NOT-A-GENE", EventType.DELETION);
-
-        assertNull(delUnknown);
+        assertNull(copyNumberExtractor.extract(Knowledgebase.VICC_CGI, "NOT-A-GENE", EventType.DELETION));
     }
 }

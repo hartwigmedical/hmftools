@@ -11,10 +11,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
+import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -28,7 +30,9 @@ public class ViccExtractorTest {
 
     @Test
     public void canExtractFromViccEntries() throws IOException {
-        ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(new TestProteinResolver(), Lists.newArrayList(), HG19_GENE_MAP);
+        EventClassifierConfig config = ViccClassificationConfig.build();
+        ViccExtractor extractor =
+                ViccExtractorFactory.buildViccExtractor(config, new TestProteinResolver(), Lists.newArrayList(), HG19_GENE_MAP);
 
         Association association =
                 ViccTestFactory.testActionableAssociation("drugs", "colorectal cancer", "DOID:123", "A", "Responsive", "http");

@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.extraction.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.GeneCheckerTestFactory;
 import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
-import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +48,7 @@ public class HotspotExtractorTest {
 
     @NotNull
     private static HotspotExtractor createWithProtein(@NotNull String protein) {
-        return new HotspotExtractor(HG19_GENE_CHECKER, new TestProteinResolver(protein), new ProteinAnnotationExtractor());
+        return new HotspotExtractor(HG19_GENE_CHECKER, new TestProteinResolver(protein), event -> event);
     }
 
     private static class TestProteinResolver implements ProteinResolver {
