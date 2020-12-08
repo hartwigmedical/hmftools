@@ -1,17 +1,15 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Map;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.junit.Test;
 
@@ -22,62 +20,57 @@ public class FusionExtractorTest {
     @Test
     public void canExtractFusionPairsGenes() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("PDGFRA", "BCR-PDGFRA Fusion");
+        KnownFusionPair fusion = fusionExtractor.extract(Knowledgebase.VICC_CGI, "PDGFRA", EventType.FUSION_PAIR, "BCR-PDGFRA Fusion");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
-        assertEquals(1, fusionsPerFeature.size());
-        assertEquals("BCR", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
-        assertEquals("PDGFRA", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
+        assertNotNull(fusion);
+        assertEquals("BCR", fusion.geneUp());
+        assertEquals("PDGFRA", fusion.geneDown());
     }
 
     @Test
     public void ignoresFusionsOnUnknownGenes() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("IG", "IG-BCL2");
+        KnownFusionPair fusion = fusionExtractor.extract(Knowledgebase.VICC_CGI, "IG", EventType.FUSION_PAIR, "IG-BCL2");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
-
-        assertTrue(fusionsPerFeature.isEmpty());
+        assertNull(fusion);
     }
 
     @Test
     public void canExtractFusionPairsWithExonsUpDown() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "EGFRvII");
+        KnownFusionPair fusion = fusionExtractor.extract(Knowledgebase.VICC_CGI, "EGFR", EventType.FUSION_PAIR, "EGFRvII");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
-        assertEquals(1, fusionsPerFeature.size());
-        assertEquals("EGFR", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
-        assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonUp());
-        assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).maxExonUp());
-        assertEquals("EGFR", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
-        assertEquals(16, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonDown());
-        assertEquals(16, (int) fusionsPerFeature.get(viccEntry.features().get(0)).maxExonDown());
+        assertNotNull(fusion);
+        assertEquals("EGFR", fusion.geneUp());
+        assertEquals(13, (int) fusion.minExonUp());
+        assertEquals(13, (int) fusion.maxExonUp());
+        assertEquals("EGFR", fusion.geneDown());
+        assertEquals(16, (int) fusion.minExonDown());
+        assertEquals(16, (int) fusion.maxExonDown());
     }
 
     @Test
     public void canExtractFusionPairsWithOddNames() {
         FusionExtractor fusionExtractor = new FusionExtractor(new GeneChecker(Sets.newHashSet("IGH", "NKX2-1")));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NKX2-1", "IGH-NKX2-1 Fusion");
+        KnownFusionPair fusion = fusionExtractor.extract(Knowledgebase.VICC_CGI, "NKX2-1", EventType.FUSION_PAIR, "IGH-NKX2-1 Fusion");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
-        assertEquals(1, fusionsPerFeature.size());
-        assertEquals("IGH", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
-        assertEquals("NKX2-1", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
+        assertNotNull(fusion);
+        assertEquals("IGH", fusion.geneUp());
+        assertEquals("NKX2-1", fusion.geneDown());
     }
 
     @Test
     public void canExtractFusionPairsWithRangeExons() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("MET", "EXON 14 SKIPPING MUTATION");
+        KnownFusionPair fusion =
+                fusionExtractor.extract(Knowledgebase.VICC_CGI, "MET", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION");
 
-        Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(viccEntry);
-        assertEquals(1, fusionsPerFeature.size());
-        assertEquals("MET", fusionsPerFeature.get(viccEntry.features().get(0)).geneUp());
-        assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonUp());
-        assertEquals(13, (int) fusionsPerFeature.get(viccEntry.features().get(0)).maxExonUp());
-        assertEquals("MET", fusionsPerFeature.get(viccEntry.features().get(0)).geneDown());
-        assertEquals(15, (int) fusionsPerFeature.get(viccEntry.features().get(0)).minExonDown());
-        assertEquals(15, (int) fusionsPerFeature.get(viccEntry.features().get(0)).maxExonDown());
+        assertNotNull(fusion);
+        assertEquals("MET", fusion.geneUp());
+        assertEquals(13, (int) fusion.minExonUp());
+        assertEquals(13, (int) fusion.maxExonUp());
+        assertEquals("MET", fusion.geneDown());
+        assertEquals(15, (int) fusion.minExonDown());
+        assertEquals(15, (int) fusion.maxExonDown());
     }
 }

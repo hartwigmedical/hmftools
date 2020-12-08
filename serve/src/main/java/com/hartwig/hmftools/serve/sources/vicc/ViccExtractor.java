@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
@@ -98,27 +99,7 @@ public final class ViccExtractor {
 
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
         for (ViccEntry entry : entries) {
-            Map<Feature, List<VariantHotspot>> hotspotsPerFeature = hotspotExtractor.extractHotspots(entry);
-            Map<Feature, List<CodonAnnotation>> codonsPerFeature = codonExtractor.extract(entry);
-            Map<Feature, List<ExonAnnotation>> exonsPerFeature = exonExtractor.extract(entry);
-            Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(entry);
-            Map<Feature, KnownCopyNumber> ampsDelsPerFeature = copyNumberExtractor.extract(entry);
-            Map<Feature, KnownFusionPair> fusionsPerFeature = fusionExtractor.extract(entry);
-            Map<Feature, SignatureName> signaturesPerFeature = signatureExtractor.extract(entry);
-
-            ActionableEvent actionableEvidence = ActionableEvidenceFactory.toActionableEvent(entry);
-
-            resultsPerEntry.put(entry,
-                    ImmutableViccExtractionResult.builder()
-                            .hotspotsPerFeature(hotspotsPerFeature)
-                            .codonsPerFeature(codonsPerFeature)
-                            .exonsPerFeature(exonsPerFeature)
-                            .geneLevelEventsPerFeature(geneLevelEventsPerFeature)
-                            .ampsDelsPerFeature(ampsDelsPerFeature)
-                            .fusionsPerFeature(fusionsPerFeature)
-                            .signaturesPerFeature(signaturesPerFeature)
-                            .actionableEvent(actionableEvidence)
-                            .build());
+            resultsPerEntry.put(entry, extractSingleEntry(entry));
 
             tracker.update();
         }
@@ -137,6 +118,73 @@ public final class ViccExtractor {
         addActionability(outputBuilder, resultsPerEntry);
 
         return outputBuilder.build();
+    }
+
+    @NotNull
+    private ViccExtractionResult extractSingleEntry(@NotNull ViccEntry entry) {
+        Map<Feature, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
+        Map<Feature, List<CodonAnnotation>> codonsPerFeature = Maps.newHashMap();
+        Map<Feature, List<ExonAnnotation>> exonsPerFeature = Maps.newHashMap();
+        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
+        Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
+        Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
+        Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
+
+        Knowledgebase source = ViccUtil.toKnowledgebase(entry.source());
+        for (Feature feature : entry.features()) {
+            String gene = feature.geneSymbol();
+            if (gene == null) {
+                LOGGER.warn("No gene configured for {}. Skipping!", feature);
+            } else {
+                List<VariantHotspot> hotspots = hotspotExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
+                if (!hotspots.isEmpty()) {
+                    hotspotsPerFeature.put(feature, hotspots);
+                }
+
+                List<CodonAnnotation> codons = codonExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
+                if (!codons.isEmpty()) {
+                    codonsPerFeature.put(feature, codons);
+                }
+
+                List<ExonAnnotation> exons = exonExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
+                if (!exons.isEmpty()) {
+                    exonsPerFeature.put(feature, exons);
+                }
+
+                GeneLevelAnnotation geneLevelAnnotation = geneLevelExtractor.extract(gene, feature.type(), feature.name());
+                if (geneLevelAnnotation != null) {
+                    geneLevelEventsPerFeature.put(feature, geneLevelAnnotation);
+                }
+
+                KnownCopyNumber knownCopyNumber = copyNumberExtractor.extract(source, gene, feature.type());
+                if (knownCopyNumber != null) {
+                    ampsDelsPerFeature.put(feature, knownCopyNumber);
+                }
+
+                KnownFusionPair knownFusionPair = fusionExtractor.extract(source, gene, feature.type(), feature.name());
+                if (knownFusionPair != null) {
+                    fusionsPerFeature.put(feature, knownFusionPair);
+                }
+
+                SignatureName signatureName = signatureExtractor.extract(feature.type(), feature.name());
+                if (signatureName != null) {
+                    signaturesPerFeature.put(feature, signatureName);
+                }
+            }
+        }
+
+        ActionableEvent actionableEvidence = ActionableEvidenceFactory.toActionableEvent(entry);
+
+        return ImmutableViccExtractionResult.builder()
+                .hotspotsPerFeature(hotspotsPerFeature)
+                .codonsPerFeature(codonsPerFeature)
+                .exonsPerFeature(exonsPerFeature)
+                .geneLevelEventsPerFeature(geneLevelEventsPerFeature)
+                .ampsDelsPerFeature(ampsDelsPerFeature)
+                .fusionsPerFeature(fusionsPerFeature)
+                .signaturesPerFeature(signaturesPerFeature)
+                .actionableEvent(actionableEvidence)
+                .build();
     }
 
     @NotNull

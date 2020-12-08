@@ -14,12 +14,10 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.codon.CodonAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -32,59 +30,38 @@ public class CodonExtractorTest {
     @Test
     public void canExtractSimpleCodon() {
         CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("TP53", "R249");
+        List<CodonAnnotation> codons = extractor.extract("TP53", null, EventType.CODON, "R249");
 
-        Map<Feature, List<CodonAnnotation>> codonsPerFeature = extractor.extract(viccEntry);
+        assertEquals(1, codons.size());
 
-        assertEquals(1, codonsPerFeature.size());
-        assertEquals(1, codonsPerFeature.values().size());
-        CodonAnnotation annotation = codonsPerFeature.get(viccEntry.features().get(0)).get(0);
-
-        assertEquals("17", annotation.chromosome());
-        assertEquals(7577534, annotation.start());
-        assertEquals(7577536, annotation.end());
-        assertEquals("TP53", annotation.gene());
-        assertEquals(MutationTypeFilter.ANY, annotation.mutationType());
+        assertEquals("17", codons.get(0).chromosome());
+        assertEquals(7577534, codons.get(0).start());
+        assertEquals(7577536, codons.get(0).end());
+        assertEquals("TP53", codons.get(0).gene());
+        assertEquals(MutationTypeFilter.ANY, codons.get(0).mutationType());
     }
 
     @Test
     public void canExtractCodonOnMultipleExons() {
         CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KRAS", "R97");
-
-        Map<Feature, List<CodonAnnotation>> codonsPerFeature = extractor.extract(viccEntry);
+        List<CodonAnnotation> codons = extractor.extract("KRAS", null, EventType.CODON, "R97");
 
         // TODO Should be multiple annotations
-        assertEquals(1, codonsPerFeature.size());
-        assertEquals(1, codonsPerFeature.values().size());
-        CodonAnnotation annotation = codonsPerFeature.get(viccEntry.features().get(0)).get(0);
+        assertEquals(1, codons.size());
 
-        assertEquals("12", annotation.chromosome());
-        assertEquals(25380168, annotation.start());
-        assertEquals(25378707, annotation.end());
-        assertEquals("KRAS", annotation.gene());
-        assertEquals(MutationTypeFilter.MISSENSE_ANY, annotation.mutationType());
-    }
-
-    @Test
-    public void canExtractAnnotationForEntryWithTwoCodonFeatures() {
-        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "PIK3CA", "KRAS"));
-
-        Feature feature1 = ViccTestFactory.testFeatureWithGeneAndName("PIK3CA", "E545X");
-        Feature feature2 = ViccTestFactory.testFeatureWithGeneAndName("KRAS", "G12X");
-        ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(feature1, feature2));
-
-        assertEquals(2, extractor.extract(entry).size());
-        assertEquals(1, extractor.extract(entry).get(feature1).size());
-        assertEquals(1, extractor.extract(entry).get(feature2).size());
+        assertEquals("12", codons.get(0).chromosome());
+        assertEquals(25380168, codons.get(0).start());
+        assertEquals(25378707, codons.get(0).end());
+        assertEquals("KRAS", codons.get(0).gene());
+        assertEquals(MutationTypeFilter.MISSENSE_ANY, codons.get(0).mutationType());
     }
 
     @Test
     public void canExtractCodons() {
-        assertEquals(Integer.valueOf("600"), CodonExtractor.extractCodonNumber("BRAF (V600)"));
-        assertEquals(Integer.valueOf("742"), CodonExtractor.extractCodonNumber("W742"));
-        assertEquals(Integer.valueOf("179"), CodonExtractor.extractCodonNumber("Q179X"));
-        assertEquals(Integer.valueOf("61"), CodonExtractor.extractCodonNumber("KRAS Q61X"));
+        assertEquals(600, (int) CodonExtractor.extractCodonNumber("BRAF (V600)"));
+        assertEquals(742, (int) CodonExtractor.extractCodonNumber("W742"));
+        assertEquals(179, (int) CodonExtractor.extractCodonNumber("Q179X"));
+        assertEquals(61, (int) CodonExtractor.extractCodonNumber("KRAS Q61X"));
 
         assertNull(CodonExtractor.extractCodonNumber("Not a codon number"));
     }

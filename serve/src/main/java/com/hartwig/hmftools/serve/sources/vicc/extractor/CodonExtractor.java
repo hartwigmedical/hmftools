@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -15,8 +14,6 @@ import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,42 +40,34 @@ public class CodonExtractor {
     }
 
     @NotNull
-    public Map<Feature, List<CodonAnnotation>> extract(@NotNull ViccEntry viccEntry) {
-        Map<Feature, List<CodonAnnotation>> geneRangesPerFeature = Maps.newHashMap();
-        for (Feature feature : viccEntry.features()) {
-            if (feature.type() == EventType.CODON) {
-                if (geneChecker.isValidGene(feature.geneSymbol())) {
-                    HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-                    assert canonicalTranscript != null;
+    public List<CodonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
+            @NotNull String event) {
+        if (type == EventType.CODON && geneChecker.isValidGene(gene)) {
+            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
+            assert canonicalTranscript != null;
 
-                    String transcriptIdVicc = viccEntry.transcriptId();
-
-                    if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-                        Integer codonNumber = extractCodonNumber(feature.name());
-                        if (codonNumber != null) {
-                            List<CodonAnnotation> annotations = Lists.newArrayList();
-                            String geneSymbol = feature.geneSymbol();
-                            CodonAnnotation annotation = determineCodonAnnotation(canonicalTranscript,
-                                    MutationTypeFilterExtraction.extract(feature.name(), driverGenes, feature.geneSymbol()),
-                                    codonNumber,
-                                    geneSymbol);
-                            if (annotation != null) {
-                                annotations.add(annotation);
-                            }
-                            geneRangesPerFeature.put(feature, annotations);
-                        }
-
-                    } else {
-                        LOGGER.warn("Transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-                                transcriptIdVicc,
-                                canonicalTranscript.transcriptID(),
-                                feature);
+            if (transcriptId == null || transcriptId.equals(canonicalTranscript.transcriptID())) {
+                Integer codonNumber = extractCodonNumber(event);
+                if (codonNumber != null) {
+                    List<CodonAnnotation> annotations = Lists.newArrayList();
+                    CodonAnnotation annotation = determineCodonAnnotation(canonicalTranscript,
+                            MutationTypeFilterExtraction.extract(event, driverGenes, gene),
+                            codonNumber,
+                            gene);
+                    if (annotation != null) {
+                        annotations.add(annotation);
                     }
+                    return annotations;
                 }
+            } else {
+                LOGGER.warn("Transcript IDs not equal for provided transcript '{}' and HMF canonical transcript '{}' for {} ",
+                        transcriptId,
+                        canonicalTranscript.transcriptID(),
+                        event);
             }
         }
 
-        return geneRangesPerFeature;
+        return Lists.newArrayList();
     }
 
     @Nullable

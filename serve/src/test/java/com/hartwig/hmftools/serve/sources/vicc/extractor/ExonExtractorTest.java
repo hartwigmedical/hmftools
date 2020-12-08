@@ -14,12 +14,10 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.exon.ExonAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -30,70 +28,45 @@ public class ExonExtractorTest {
     private static final GeneChecker HG19_GENE_CHECKER = new GeneChecker(HG19_GENE_MAP.keySet());
 
     @Test
-    public void canExtractRangesExonAndFusion() {
+    public void canExtractExonForExonAndFusion() {
         ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KIT", "EXON 11 MUTATION");
+        List<ExonAnnotation> exons = extractor.extract("KIT", null, EventType.FUSION_PAIR_AND_EXON, "EXON 11 MUTATION");
 
-        Map<Feature, List<ExonAnnotation>> exonsPerFeature = extractor.extract(viccEntry);
+        assertEquals(1, exons.size());
 
-        assertEquals(1, exonsPerFeature.size());
-        assertEquals(1, exonsPerFeature.values().size());
-        ExonAnnotation annotation = exonsPerFeature.get(viccEntry.features().get(0)).get(0);
-
-        assertEquals("4", annotation.chromosome());
-        assertEquals(55593577, annotation.start());
-        assertEquals(55593713, annotation.end());
-        assertEquals("KIT", annotation.gene());
-        assertEquals(MutationTypeFilter.MISSENSE_ANY, annotation.mutationType());
-    }
-    
-    @Test
-    public void canExtractRangesExonForward() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("EGFR", "EXON 19 DELETION");
-
-        Map<Feature, List<ExonAnnotation>> exonsPerFeature = extractor.extract(viccEntry);
-
-        assertEquals(1, exonsPerFeature.size());
-        assertEquals(1, exonsPerFeature.values().size());
-        ExonAnnotation annotation = exonsPerFeature.get(viccEntry.features().get(0)).get(0);
-
-        assertEquals("7", annotation.chromosome());
-        assertEquals(55242410, annotation.start());
-        assertEquals(55242518, annotation.end());
-        assertEquals("EGFR", annotation.gene());
-        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION, annotation.mutationType());
+        assertEquals("4", exons.get(0).chromosome());
+        assertEquals(55593577, exons.get(0).start());
+        assertEquals(55593713, exons.get(0).end());
+        assertEquals("KIT", exons.get(0).gene());
+        assertEquals(MutationTypeFilter.MISSENSE_ANY, exons.get(0).mutationType());
     }
 
     @Test
-    public void canExtractRangesExonReverse() {
+    public void canExtractExonForwardStrand() {
         ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KRAS", "EXON 2 DELETION");
+        List<ExonAnnotation> exons = extractor.extract("EGFR", null, EventType.EXON, "EXON 19 DELETION");
 
-        Map<Feature, List<ExonAnnotation>> exonsPerFeature = extractor.extract(viccEntry);
+        assertEquals(1, exons.size());
 
-        assertEquals(1, exonsPerFeature.size());
-        assertEquals(1, exonsPerFeature.values().size());
-        ExonAnnotation annotation = exonsPerFeature.get(viccEntry.features().get(0)).get(0);
-
-        assertEquals("12", annotation.chromosome());
-        assertEquals(25398203, annotation.start());
-        assertEquals(25398334, annotation.end());
-        assertEquals("KRAS", annotation.gene());
-        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION, annotation.mutationType());
+        assertEquals("7", exons.get(0).chromosome());
+        assertEquals(55242410, exons.get(0).start());
+        assertEquals(55242518, exons.get(0).end());
+        assertEquals("EGFR", exons.get(0).gene());
+        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION, exons.get(0).mutationType());
     }
 
     @Test
-    public void canExtractAnnotationForEntryWithTwoFeaturesExon() {
-        ExonExtractor extractor = createWithDriverGenes(Lists.newArrayList());
+    public void canExtractExonReverseStrand() {
+        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR", "KIT"));
+        List<ExonAnnotation> exons = extractor.extract("KRAS", null, EventType.EXON, "EXON 2 DELETION");
 
-        Feature feature1 = ViccTestFactory.testFeatureWithGeneAndName("ERBB2", "Exon 20 insertions/deletions");
-        Feature feature2 = ViccTestFactory.testFeatureWithGeneAndName("ERBB2", "Exon 20 insertions");
-        ViccEntry entry = ViccTestFactory.testEntryWithFeatures(Lists.newArrayList(feature1, feature2));
+        assertEquals(1, exons.size());
 
-        assertEquals(2, extractor.extract(entry).size());
-        assertEquals(1, extractor.extract(entry).get(feature1).size());
-        assertEquals(1, extractor.extract(entry).get(feature2).size());
+        assertEquals("12", exons.get(0).chromosome());
+        assertEquals(25398203, exons.get(0).start());
+        assertEquals(25398334, exons.get(0).end());
+        assertEquals("KRAS", exons.get(0).gene());
+        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION, exons.get(0).mutationType());
     }
 
     @Test

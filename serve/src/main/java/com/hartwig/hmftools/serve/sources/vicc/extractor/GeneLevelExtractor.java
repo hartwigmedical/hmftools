@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
@@ -13,8 +11,6 @@ import com.hartwig.hmftools.serve.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.gene.ImmutableGeneLevelAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,48 +35,43 @@ public class GeneLevelExtractor {
         this.driverGenes = driverGenes;
     }
 
-    @NotNull
-    public Map<Feature, GeneLevelAnnotation> extract(@NotNull ViccEntry viccEntry) {
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
-
-        for (Feature feature : viccEntry.features()) {
-            if (feature.type() == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(feature.geneSymbol())) {
-                GeneLevelEvent event = extractGeneLevelEvent(feature, driverGenes);
-                if (event != null) {
-                    geneLevelEventsPerFeature.put(feature,
-                            ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(event).build());
-                }
-            } else if (feature.type() == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(feature.geneSymbol())) {
-                geneLevelEventsPerFeature.put(feature,
-                        ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
+    @Nullable
+    public GeneLevelAnnotation extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
+        if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene)) {
+            GeneLevelEvent geneLevelEvent = extractGeneLevelEvent(gene, driverGenes, event);
+            if (event != null) {
+                return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
             }
+        } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene)) {
+            return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
         }
 
-        return geneLevelEventsPerFeature;
+        return null;
     }
 
     @Nullable
     @VisibleForTesting
-    static GeneLevelEvent extractGeneLevelEvent(@NotNull Feature feature, @NotNull List<DriverGene> driverGenes) {
-        String event = feature.name().trim();
-        String gene = feature.geneSymbol();
+    static GeneLevelEvent extractGeneLevelEvent(@NotNull String gene, @NotNull List<DriverGene> driverGenes, @NotNull String event) {
+        String trimmedEvent = event.trim();
 
-        if (event.contains(" ")) {
-            String firstWord = event.split(" ")[0];
+        if (trimmedEvent.contains(" ")) {
+            String firstWord = trimmedEvent.split(" ")[0];
             if (firstWord.equals(gene)) {
-                event = event.split(" ", 2)[1].trim();
+                trimmedEvent = trimmedEvent.split(" ", 2)[1].trim();
             }
         }
 
-        if (ViccClassificationConfig.INACTIVATING_GENE_LEVEL_KEY_PHRASES.contains(event)) {
+        if (ViccClassificationConfig.INACTIVATING_GENE_LEVEL_KEY_PHRASES.contains(trimmedEvent)) {
             return GeneLevelEvent.INACTIVATION;
-        } else if (ViccClassificationConfig.ACTIVATING_GENE_LEVEL_KEY_PHRASES.contains(event)) {
+        } else if (ViccClassificationConfig.ACTIVATING_GENE_LEVEL_KEY_PHRASES.contains(trimmedEvent)) {
             return GeneLevelEvent.ACTIVATION;
-        } else if (ViccClassificationConfig.GENERIC_GENE_LEVEL_KEY_PHRASES.contains(event) || gene.equals(event.replaceAll("\\s+", ""))) {
+        } else if (ViccClassificationConfig.GENERIC_GENE_LEVEL_KEY_PHRASES.contains(trimmedEvent) || gene.equals(trimmedEvent.replaceAll(
+                "\\s+",
+                ""))) {
             return determineGeneLevelEventFromDriverGenes(gene, driverGenes);
         }
 
-        LOGGER.warn("Could not determine gene level event for '{}' on '{}'", feature.name(), gene);
+        LOGGER.warn("Could not determine gene level event for '{}' on '{}'", event, gene);
         return null;
     }
 

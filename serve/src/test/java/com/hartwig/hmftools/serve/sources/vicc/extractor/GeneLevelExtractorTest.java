@@ -4,21 +4,19 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.gene.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -30,75 +28,55 @@ public class GeneLevelExtractorTest {
     @Test
     public void canExtractGeneLevelEventONCO() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("KIT", "KIT  positive");
+        GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("KIT", EventType.GENE_LEVEL, "KIT  positive");
 
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(viccEntry);
-
-        assertEquals(1, geneLevelEventsPerFeature.size());
-        assertEquals("KIT", geneLevelEventsPerFeature.get(viccEntry.features().get(0)).gene());
-        assertEquals(GeneLevelEvent.ACTIVATION, geneLevelEventsPerFeature.get(viccEntry.features().get(0)).event());
+        assertNotNull(geneLevelEvent);
+        assertEquals("KIT", geneLevelEvent.gene());
+        assertEquals(GeneLevelEvent.ACTIVATION, geneLevelEvent.event());
     }
 
     @Test
     public void canExtractGeneLevelEventTSG() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("TP53", "TP53  negative");
+        GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("TP53", EventType.GENE_LEVEL, "TP53  negative");
 
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(viccEntry);
-
-        assertEquals(1, geneLevelEventsPerFeature.size());
-        assertEquals("TP53", geneLevelEventsPerFeature.get(viccEntry.features().get(0)).gene());
-        assertEquals(GeneLevelEvent.INACTIVATION, geneLevelEventsPerFeature.get(viccEntry.features().get(0)).event());
+        assertNotNull(geneLevelEvent);
+        assertEquals("TP53", geneLevelEvent.gene());
+        assertEquals(GeneLevelEvent.INACTIVATION, geneLevelEvent.event());
     }
 
     @Test
     public void canExtractGeneLevelEventGeneral() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("STK11", "Truncating Mutations");
+        GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("STK11", EventType.GENE_LEVEL, "Truncating Mutations");
 
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(viccEntry);
-
-        assertEquals(1, geneLevelEventsPerFeature.size());
-        assertEquals("STK11", geneLevelEventsPerFeature.get(viccEntry.features().get(0)).gene());
-        assertEquals(GeneLevelEvent.INACTIVATION, geneLevelEventsPerFeature.get(viccEntry.features().get(0)).event());
+        assertNotNull(geneLevelEvent);
+        assertEquals("STK11", geneLevelEvent.gene());
+        assertEquals(GeneLevelEvent.INACTIVATION, geneLevelEvent.event());
     }
 
     @Test
     public void canExtractGeneLevelEventFusion() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET", "KIT"));
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NTRK3", "NTRK3 fusion");
+        GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("NTRK3", EventType.PROMISCUOUS_FUSION, "NTRK3 fusion");
 
-        Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = geneLevelExtractor.extract(viccEntry);
-
-        assertEquals(1, geneLevelEventsPerFeature.size());
-        assertEquals("NTRK3", geneLevelEventsPerFeature.get(viccEntry.features().get(0)).gene());
-        assertEquals(GeneLevelEvent.FUSION, geneLevelEventsPerFeature.get(viccEntry.features().get(0)).event());
+        assertNotNull(geneLevelEvent);
+        assertEquals("NTRK3", geneLevelEvent.gene());
+        assertEquals(GeneLevelEvent.FUSION, geneLevelEvent.event());
     }
 
     @Test
     public void canExtractGeneLevelEvent() {
         List<DriverGene> driverGenes = createDriverGenes("NOTCH1", "NF2", "KRAS");
 
-        Feature featureActivation = ViccTestFactory.testFeatureWithGeneAndName("KRAS", "KRAS oncogenic mutation");
-        assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureActivation, driverGenes));
+        assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEvent("KRAS", driverGenes, "KRAS oncogenic mutation"));
+        assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent("NOTCH1", driverGenes, "LOSS-OF-FUNCTION"));
+        assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEvent("NF2", driverGenes, "MUTATION"));
+        assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent("NOTCH1", driverGenes, "MUTATION"));
+        assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent("NOTCH1", driverGenes, "NOTCH1 "));
+        assertEquals(GeneLevelEvent.ANY_MUTATION, GeneLevelExtractor.extractGeneLevelEvent("BRCA1", driverGenes, "BRCA1"));
 
-        Feature featureInactivation = ViccTestFactory.testFeatureWithGeneAndName("NOTCH1", "LOSS-OF-FUNCTION");
-        assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureInactivation, driverGenes));
-
-        Feature featureGeneralActivation = ViccTestFactory.testFeatureWithGeneAndName("NF2", "MUTATION");
-        assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneralActivation, driverGenes));
-
-        Feature featureGeneralInactivation = ViccTestFactory.testFeatureWithGeneAndName("NOTCH1", "MUTATION");
-        assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneralInactivation, driverGenes));
-
-        Feature featureGeneOnly = ViccTestFactory.testFeatureWithGeneAndName("NOTCH1", "NOTCH1 ");
-        assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.extractGeneLevelEvent(featureGeneOnly, driverGenes));
-
-        Feature featureNoDriverGene = ViccTestFactory.testFeatureWithGeneAndName("BRCA1", "BRCA1");
-        assertEquals(GeneLevelEvent.ANY_MUTATION, GeneLevelExtractor.extractGeneLevelEvent(featureNoDriverGene, driverGenes));
-
-        Feature featureUnknown = ViccTestFactory.testFeatureWithGeneAndName("KRAS", "not a gene level event");
-        assertNull(GeneLevelExtractor.extractGeneLevelEvent(featureUnknown, driverGenes));
+        assertNull(GeneLevelExtractor.extractGeneLevelEvent("KRAS", driverGenes, "not a gene level event"));
     }
 
     @Test

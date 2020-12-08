@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -14,8 +13,6 @@ import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.exon.ImmutableExonAnnotation;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,41 +38,36 @@ public class ExonExtractor {
     }
 
     @NotNull
-    public Map<Feature, List<ExonAnnotation>> extract(@NotNull ViccEntry viccEntry) {
-        Map<Feature, List<ExonAnnotation>> exonsPerFeature = Maps.newHashMap();
-        for (Feature feature : viccEntry.features()) {
-            if (feature.type() == EventType.EXON || feature.type() == EventType.FUSION_PAIR_AND_EXON) {
-                if (geneChecker.isValidGene(feature.geneSymbol())) {
-                    HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
-                    assert canonicalTranscript != null;
+    public List<ExonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
+            @NotNull String event) {
+        if (type == EventType.EXON || type == EventType.FUSION_PAIR_AND_EXON) {
+            if (geneChecker.isValidGene(gene)) {
+                HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
+                assert canonicalTranscript != null;
 
-                    String transcriptIdVicc = viccEntry.transcriptId();
-                    if (transcriptIdVicc == null || transcriptIdVicc.equals(canonicalTranscript.transcriptID())) {
-                        List<Integer> exonNumbers = extractExonNumbers(feature.name());
-                        List<ExonAnnotation> annotations = Lists.newArrayList();
-                        for (int exonNumber : exonNumbers) {
-                            ExonAnnotation annotation = determineExonAnnotation(feature.geneSymbol(),
-                                    canonicalTranscript,
-                                    exonNumber,
-                                    MutationTypeFilterExtraction.extract(feature.name(),
-                                            driverGenes,
-                                            feature.geneSymbol()));
-                            if (annotation != null) {
-                                annotations.add(annotation);
-                            }
+                if (transcriptId == null || transcriptId.equals(canonicalTranscript.transcriptID())) {
+                    List<Integer> exonNumbers = extractExonNumbers(event);
+                    List<ExonAnnotation> annotations = Lists.newArrayList();
+                    for (int exonNumber : exonNumbers) {
+                        ExonAnnotation annotation = determineExonAnnotation(gene,
+                                canonicalTranscript,
+                                exonNumber,
+                                MutationTypeFilterExtraction.extract(event, driverGenes, gene));
+                        if (annotation != null) {
+                            annotations.add(annotation);
                         }
-                        exonsPerFeature.put(feature, annotations);
-                    } else {
-                        LOGGER.warn("Transcript IDs not equal for transcript VICC {} and HMF {} for {} ",
-                                transcriptIdVicc,
-                                canonicalTranscript.transcriptID(),
-                                feature);
                     }
+                    return annotations;
+                } else {
+                    LOGGER.warn("Transcript IDs not equal for provided transcript '{}' and HMF canonical transcript '{}' for {} ",
+                            transcriptId,
+                            canonicalTranscript.transcriptID(),
+                            event);
                 }
             }
         }
 
-        return exonsPerFeature;
+        return Lists.newArrayList();
     }
 
     @NotNull

@@ -1,17 +1,14 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
-import java.util.Map;
-
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.serve.sources.vicc.ViccTestFactory;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.junit.Test;
 
@@ -20,46 +17,36 @@ public class CopyNumberExtractorTest {
     private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
 
     @Test
-    public void canExtractCopyNumbersAmps() {
+    public void canExtractCopyNumbersAmp() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("AKT1", "AKT1  amp");
+        KnownCopyNumber amp = copyNumberExtractor.extract(Knowledgebase.VICC_CGI, "AKT1", EventType.AMPLIFICATION);
 
-        Map<Feature, KnownCopyNumber> featureAmps = copyNumberExtractor.extract(viccEntry);
-
-        assertEquals(1, featureAmps.size());
-        assertEquals("AKT1", featureAmps.get(viccEntry.features().get(0)).gene());
-        assertEquals(CopyNumberType.AMPLIFICATION, featureAmps.get(viccEntry.features().get(0)).type());
+        assertEquals("AKT1", amp.gene());
+        assertEquals(CopyNumberType.AMPLIFICATION, amp.type());
     }
 
     @Test
-    public void canExtractCopyNumbersAmpsUnknownGene() {
+    public void canFilterAmpOnUnknownGene() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NOT-A-GENE", "AMPLIFICATION");
+        KnownCopyNumber ampUnknown = copyNumberExtractor.extract(Knowledgebase.VICC_CGI, "NOT-A-GENE", EventType.AMPLIFICATION);
 
-        Map<Feature, KnownCopyNumber> featureAmpsUnknown = copyNumberExtractor.extract(viccEntry);
-
-        assertTrue(featureAmpsUnknown.isEmpty());
+        assertNull(ampUnknown);
     }
 
     @Test
-    public void canExtractCopyNumbersDels() {
+    public void canExtractCopyNumbersDel() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("PTEN", "DELETION");
+        KnownCopyNumber del = copyNumberExtractor.extract(Knowledgebase.VICC_CGI, "PTEN", EventType.DELETION);
 
-        Map<Feature, KnownCopyNumber> featureDels = copyNumberExtractor.extract(viccEntry);
-
-        assertEquals(1, featureDels.size());
-        assertEquals("PTEN", featureDels.get(viccEntry.features().get(0)).gene());
-        assertEquals(CopyNumberType.DELETION, featureDels.get(viccEntry.features().get(0)).type());
+        assertEquals("PTEN", del.gene());
+        assertEquals(CopyNumberType.DELETION, del.type());
     }
 
     @Test
-    public void canExtractCopyNumbersDelsUnknownGene() {
+    public void canFilterDelOnUnknownGene() {
         CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
-        ViccEntry viccEntry = ViccTestFactory.testEntryWithGeneAndEvent("NOT-A-GENE", "DELETION");
+        KnownCopyNumber delUnknown = copyNumberExtractor.extract(Knowledgebase.VICC_CGI, "NOT-A-GENE", EventType.DELETION);
 
-        Map<Feature, KnownCopyNumber> featureDelsUnknown = copyNumberExtractor.extract(viccEntry);
-
-        assertTrue(featureDelsUnknown.isEmpty());
+        assertNull(delUnknown);
     }
 }

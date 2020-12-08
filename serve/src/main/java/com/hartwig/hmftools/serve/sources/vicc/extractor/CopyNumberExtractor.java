@@ -1,20 +1,17 @@
 package com.hartwig.hmftools.serve.sources.vicc.extractor;
 
-import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.serve.sources.vicc.ViccUtil;
 import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CopyNumberExtractor {
 
@@ -27,24 +24,14 @@ public class CopyNumberExtractor {
         this.geneChecker = geneChecker;
     }
 
-    @NotNull
-    public Map<Feature, KnownCopyNumber> extract(@NotNull ViccEntry viccEntry) {
-        Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
+    @Nullable
+    public KnownCopyNumber extract(@NotNull Knowledgebase source, @NotNull String gene, @NotNull EventType type) {
+        if (COPY_NUMBER_MUTATIONS.contains(type) && geneChecker.isValidGene(gene)) {
+            CopyNumberType copyNumberType = type == EventType.AMPLIFICATION ? CopyNumberType.AMPLIFICATION : CopyNumberType.DELETION;
 
-        for (Feature feature : viccEntry.features()) {
-            if (COPY_NUMBER_MUTATIONS.contains(feature.type()) && geneChecker.isValidGene(feature.geneSymbol())) {
-                CopyNumberType type = feature.type() == EventType.AMPLIFICATION ? CopyNumberType.AMPLIFICATION : CopyNumberType.DELETION;
-
-                ampsDelsPerFeature.put(feature,
-                        ImmutableKnownCopyNumber.builder()
-                                .gene(feature.geneSymbol())
-                                .type(type)
-                                .addSources(ViccUtil.toKnowledgebase(viccEntry.source()))
-                                .build());
-
-            }
+            return ImmutableKnownCopyNumber.builder().gene(gene).type(copyNumberType).addSources(source).build();
         }
 
-        return ampsDelsPerFeature;
+        return null;
     }
 }
