@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.vicc.extractor;
+package com.hartwig.hmftools.serve.extraction.extractor;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;

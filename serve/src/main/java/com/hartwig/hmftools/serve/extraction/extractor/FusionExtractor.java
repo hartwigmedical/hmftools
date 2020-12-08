@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.vicc.extractor;
+package com.hartwig.hmftools.serve.extraction.extractor;
 
 import static com.hartwig.hmftools.serve.fusion.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
 import static com.hartwig.hmftools.serve.fusion.FusionAnnotationConfig.ODDLY_NAMED_GENES_MAP;

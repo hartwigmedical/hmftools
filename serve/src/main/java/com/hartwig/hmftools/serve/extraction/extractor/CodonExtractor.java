@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.vicc.extractor;
+package com.hartwig.hmftools.serve.extraction.extractor;
 
 import java.util.List;
 import java.util.Map;
