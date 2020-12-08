@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -42,7 +43,7 @@ public final class ReportingDb {
             LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
         } else if (study != LimsStudy.NON_CANCER_STUDY) {
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
-            String cohort = !report.sampleReport().cohort().isEmpty() ? report.sampleReport().cohort() : NA_STRING;
+            LimsCohort cohort = report.sampleReport().cohort();
             String reportDate = ReportResources.REPORT_DATE;
             String purity = new DecimalFormat("0.00").format(analysis.impliedPurity());
 
@@ -84,7 +85,7 @@ public final class ReportingDb {
     }
 
     private static void addToReportingDb(@NotNull String reportingDbTsv, @NotNull String tumorBarcode, @NotNull String sampleId,
-            @NotNull String cohort, @NotNull String reportType, @NotNull String reportDate, @NotNull String purity,
+            @NotNull LimsCohort cohort, @NotNull String reportType, @NotNull String reportDate, @NotNull String purity,
             boolean hasReliableQuality, boolean hasReliablePurity) throws IOException {
         boolean present = false;
         for (ReportingEntry entry : read(reportingDbTsv)) {
@@ -106,7 +107,7 @@ public final class ReportingDb {
 
     public static void addQCFailReportToReportingDb(@NotNull String reportingDbTsv, @NotNull QCFailReport report) throws IOException {
         String sampleId = report.sampleReport().tumorSampleId();
-        String cohort = !report.sampleReport().cohort().isEmpty() ? report.sampleReport().cohort() : NA_STRING;
+        LimsCohort cohort = report.sampleReport().cohort();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String reportDate = ReportResources.REPORT_DATE;
 

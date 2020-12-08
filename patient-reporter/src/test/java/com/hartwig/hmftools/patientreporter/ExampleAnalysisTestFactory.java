@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
@@ -276,7 +277,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .cohort("TEST")
+                .cohort(LimsCohort.CPCT)
                 .projectName("TEST-001-002")
                 .submissionId("SUBM")
                 .hospitalContactData(createTestHospitalContactData())

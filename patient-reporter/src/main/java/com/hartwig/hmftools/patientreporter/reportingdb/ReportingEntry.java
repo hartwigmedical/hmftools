@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.reportingdb;
 
+import com.hartwig.hmftools.common.lims.LimsCohort;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

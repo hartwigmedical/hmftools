@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 
@@ -47,17 +48,8 @@ public final class SampleReportFactory {
 
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
-        String cohort = lims.cohort(tumorSampleBarcode);
+        LimsCohort cohort = lims.cohort(tumorSampleBarcode);
         LimsStudy type = LimsStudy.fromSampleId(tumorSampleId);
-        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(tumorSampleId);
-
-        if (cohort.isEmpty()) {
-            if (coreCohort.equals(LimsCoreCohort.NON_CORE)) {
-                cohort = type.toString();
-            } else {
-                cohort = coreCohort.toString();
-            }
-        }
 
         String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), type, tumorSampleId);
 

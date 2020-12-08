@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
@@ -42,7 +43,7 @@ public abstract class SampleReport {
     public abstract String labProcedures();
 
     @NotNull
-    public abstract String cohort();
+    public abstract LimsCohort cohort();
 
     @NotNull
     public abstract String projectName();

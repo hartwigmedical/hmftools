@@ -9,6 +9,7 @@ import java.util.Locale;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
@@ -238,7 +239,7 @@ public class CFReportWriterTest {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(shallowSeqPurity)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .cohort("TEST")
+                .cohort(LimsCohort.CPCT)
                 .projectName("TEST-001-002")
                 .submissionId("SUBM")
                 .hospitalContactData(createTestHospitalContactData())
