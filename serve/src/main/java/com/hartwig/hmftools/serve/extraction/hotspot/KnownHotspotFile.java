@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.hotspot;
 
+import java.io.File;
 import java.util.List;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,14 +27,20 @@ import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public final class KnownHotspotVCF {
+public final class KnownHotspotFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(KnownHotspotVCF.class);
+    private static final Logger LOGGER = LogManager.getLogger(KnownHotspotFile.class);
+    private static final String KNOWN_HOTSPOT_VCF = "KnownHotspots.SERVE.vcf.gz";
 
     private static final String INFO_SOURCES = "sources";
     private static final String INFO_INPUT = "input";
 
-    private KnownHotspotVCF() {
+    private KnownHotspotFile() {
+    }
+
+    @NotNull
+    public static String knownHotspotVcfPath(@NotNull String outputDir, @NotNull RefGenomeVersion refGenomeVersion) {
+        return refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_HOTSPOT_VCF);
     }
 
     public static void write(@NotNull String hotspotVcf, @NotNull Iterable<KnownHotspot> hotspots) {

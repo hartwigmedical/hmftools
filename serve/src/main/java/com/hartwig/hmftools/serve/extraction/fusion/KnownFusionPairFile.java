@@ -8,6 +8,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -16,8 +17,14 @@ import org.jetbrains.annotations.Nullable;
 public final class KnownFusionPairFile {
 
     private static final String DELIMITER = "\t";
+    private static final String KNOWN_FUSION_PAIR_TSV = "KnownFusionPairs.SERVE.tsv";
 
     private KnownFusionPairFile() {
+    }
+
+    @NotNull
+    public static String knownFusionPairTsvPath(@NotNull String outputDir, @NotNull RefGenomeVersion refGenomeVersion) {
+        return refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_FUSION_PAIR_TSV);
     }
 
     public static void write(@NotNull String fusionPairTsv, @NotNull Iterable<KnownFusionPair> fusionPairs) throws IOException {

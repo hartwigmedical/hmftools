@@ -8,14 +8,21 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class KnownCopyNumberFile {
 
     private static final String DELIMITER = "\t";
+    private static final String KNOWN_COPY_NUMBER_TSV = "KnownCopyNumbers.SERVE.tsv";
 
     private KnownCopyNumberFile() {
+    }
+
+    @NotNull
+    public static String knownCopyNumberTsvPath(@NotNull String outputDir, @NotNull RefGenomeVersion refGenomeVersion) {
+        return refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_COPY_NUMBER_TSV);
     }
 
     public static void write(@NotNull String copyNumberTsv, @NotNull Iterable<KnownCopyNumber> copyNumbers) throws IOException {
