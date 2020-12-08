@@ -11,7 +11,6 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -39,7 +38,7 @@ public final class ReportingDb {
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
-        if (requiresSummary(sampleId, study) && report.clinicalSummary().isEmpty()) {
+        if (requiresSummary(report.sampleReport().cohort()) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
         } else if (study != LimsStudy.NON_CANCER_STUDY) {
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
@@ -74,13 +73,12 @@ public final class ReportingDb {
     }
 
     @VisibleForTesting
-    static boolean requiresSummary(@NotNull String sampleId, @NotNull LimsStudy study) {
-        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(sampleId);
+    static boolean requiresSummary(@NotNull LimsCohort cohort) {
 
-        if (study == LimsStudy.WIDE) {
+        if (cohort == LimsCohort.WIDE || cohort == LimsCohort.CORE || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.CORELR11) {
             return true;
         } else {
-            return study == LimsStudy.CORE && coreCohort != LimsCoreCohort.CORELR02 && coreCohort != LimsCoreCohort.CORERI02;
+            return false;
         }
     }
 

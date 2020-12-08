@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 
 import org.junit.Test;
 
@@ -17,7 +18,7 @@ public class SummaryFileTest {
         SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
         assertEquals(1, summaryModel.summaryCount());
 
-        String summary = summaryModel.findSummaryForSample("sample");
+        String summary = summaryModel.findSummaryForSample("sample", LimsCohort.CORE);
 
         assertEquals(3, summary.split("\n").length);
     }
