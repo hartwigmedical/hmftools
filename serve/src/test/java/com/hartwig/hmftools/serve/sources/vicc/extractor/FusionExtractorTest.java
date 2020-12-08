@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.GeneCheckerTestFactory;
@@ -20,7 +19,7 @@ public class FusionExtractorTest {
     @Test
     public void canExtractSimpleFusionPair() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        KnownFusionPair fusion = fusionExtractor.extract(Knowledgebase.VICC_CGI, "PDGFRA", EventType.FUSION_PAIR, "BCR-PDGFRA Fusion");
+        KnownFusionPair fusion = fusionExtractor.extract("PDGFRA", EventType.FUSION_PAIR, "BCR-PDGFRA Fusion");
 
         assertNotNull(fusion);
         assertEquals("BCR", fusion.geneUp());
@@ -30,7 +29,7 @@ public class FusionExtractorTest {
     @Test
     public void ignoresFusionsOnUnknownGenes() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        KnownFusionPair fusion = fusionExtractor.extract(Knowledgebase.VICC_CGI, "IG", EventType.FUSION_PAIR, "IG-BCL2");
+        KnownFusionPair fusion = fusionExtractor.extract("IG", EventType.FUSION_PAIR, "IG-BCL2");
 
         assertNull(fusion);
     }
@@ -38,7 +37,7 @@ public class FusionExtractorTest {
     @Test
     public void canExtractFusionPairsWithExonsUpDown() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        KnownFusionPair fusion = fusionExtractor.extract(Knowledgebase.VICC_CGI, "EGFR", EventType.FUSION_PAIR, "EGFRvII");
+        KnownFusionPair fusion = fusionExtractor.extract("EGFR", EventType.FUSION_PAIR, "EGFRvII");
 
         assertNotNull(fusion);
         assertEquals("EGFR", fusion.geneUp());
@@ -52,7 +51,7 @@ public class FusionExtractorTest {
     @Test
     public void canExtractFusionPairsWithOddNames() {
         FusionExtractor fusionExtractor = new FusionExtractor(new GeneChecker(Sets.newHashSet("IGH", "NKX2-1")));
-        KnownFusionPair fusion = fusionExtractor.extract(Knowledgebase.VICC_CGI, "NKX2-1", EventType.FUSION_PAIR, "IGH-NKX2-1 Fusion");
+        KnownFusionPair fusion = fusionExtractor.extract("NKX2-1", EventType.FUSION_PAIR, "IGH-NKX2-1 Fusion");
 
         assertNotNull(fusion);
         assertEquals("IGH", fusion.geneUp());
@@ -62,8 +61,7 @@ public class FusionExtractorTest {
     @Test
     public void canExtractFusionPairsWithExons() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        KnownFusionPair fusion =
-                fusionExtractor.extract(Knowledgebase.VICC_CGI, "MET", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION");
+        KnownFusionPair fusion = fusionExtractor.extract("MET", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION");
 
         assertNotNull(fusion);
         assertEquals("MET", fusion.geneUp());
@@ -77,12 +75,12 @@ public class FusionExtractorTest {
     @Test
     public void canFilterFusionPairsWithExonsOnWrongGenes() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        assertNull(fusionExtractor.extract(Knowledgebase.VICC_CGI, "BRAF", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION"));
+        assertNull(fusionExtractor.extract("BRAF", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION"));
     }
 
     @Test
     public void canFilterNonConfiguredFusionPairsWithExons() {
         FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
-        assertNull(fusionExtractor.extract(Knowledgebase.VICC_CGI, "MET", EventType.FUSION_PAIR_AND_EXON, "Does not exist"));
+        assertNull(fusionExtractor.extract("MET", EventType.FUSION_PAIR_AND_EXON, "Does not exist"));
     }
 }

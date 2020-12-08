@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
@@ -25,9 +24,9 @@ public class CopyNumberExtractor {
     }
 
     @Nullable
-    public KnownCopyNumber extract(@NotNull Knowledgebase source, @NotNull String gene, @NotNull EventType type) {
+    public KnownCopyNumber extract(@NotNull String gene, @NotNull EventType type) {
         if (COPY_NUMBER_EVENTS.contains(type) && geneChecker.isValidGene(gene)) {
-            return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).addSources(source).build();
+            return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
         }
 
         return null;

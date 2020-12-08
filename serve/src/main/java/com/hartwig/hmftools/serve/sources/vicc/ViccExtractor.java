@@ -24,11 +24,13 @@ import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSig
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.serve.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberFunctions;
+import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.fusion.FusionFunctions;
+import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
@@ -124,7 +126,6 @@ public final class ViccExtractor {
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
 
-        Knowledgebase source = ViccSource.toKnowledgebase(entry.source());
         for (Feature feature : entry.features()) {
             String gene = feature.geneSymbol();
             if (gene == null) {
@@ -150,12 +151,12 @@ public final class ViccExtractor {
                     geneLevelEventsPerFeature.put(feature, geneLevelAnnotation);
                 }
 
-                KnownCopyNumber knownCopyNumber = copyNumberExtractor.extract(source, gene, feature.type());
+                KnownCopyNumber knownCopyNumber = copyNumberExtractor.extract(gene, feature.type());
                 if (knownCopyNumber != null) {
                     ampsDelsPerFeature.put(feature, knownCopyNumber);
                 }
 
-                KnownFusionPair knownFusionPair = fusionExtractor.extract(source, gene, feature.type(), feature.name());
+                KnownFusionPair knownFusionPair = fusionExtractor.extract(gene, feature.type(), feature.name());
                 if (knownFusionPair != null) {
                     fusionsPerFeature.put(feature, knownFusionPair);
                 }
@@ -187,12 +188,13 @@ public final class ViccExtractor {
         Set<KnownHotspot> hotspots = Sets.newHashSet();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
             ViccEntry entry = entryResult.getKey();
+            Knowledgebase source = ViccSource.toKnowledgebase(entry.source());
             for (Map.Entry<Feature, List<VariantHotspot>> featureResult : entryResult.getValue().hotspotsPerFeature().entrySet()) {
                 Feature feature = featureResult.getKey();
                 for (VariantHotspot hotspot : featureResult.getValue()) {
                     hotspots.add(ImmutableKnownHotspot.builder()
                             .from(hotspot)
-                            .addSources(ViccSource.toKnowledgebase(entry.source()))
+                            .addSources(source)
                             .gene(feature.geneSymbol())
                             .transcript(entry.transcriptId())
                             .proteinAnnotation(proteinExtractor.apply(feature.name()))
@@ -208,7 +210,10 @@ public final class ViccExtractor {
     private static Set<KnownCopyNumber> convertToKnownAmpsDels(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
         Set<KnownCopyNumber> copyNumbers = Sets.newHashSet();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            copyNumbers.addAll(entry.getValue().ampsDelsPerFeature().values());
+            Knowledgebase source = ViccSource.toKnowledgebase(entry.getKey().source());
+            for (KnownCopyNumber copyNumber : entry.getValue().ampsDelsPerFeature().values()) {
+                copyNumbers.add(ImmutableKnownCopyNumber.builder().from(copyNumber).addSources(source).build());
+            }
         }
 
         return CopyNumberFunctions.consolidate(copyNumbers);
@@ -218,7 +223,10 @@ public final class ViccExtractor {
     private static Set<KnownFusionPair> convertToKnownFusions(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
         Set<KnownFusionPair> fusions = Sets.newHashSet();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            fusions.addAll(entry.getValue().fusionsPerFeature().values());
+            Knowledgebase source = ViccSource.toKnowledgebase(entry.getKey().source());
+            for (KnownFusionPair fusionPair : entry.getValue().fusionsPerFeature().values()) {
+                fusions.add(ImmutableKnownFusionPair.builder().from(fusionPair).addSources(source).build());
+            }
         }
 
         return FusionFunctions.consolidate(fusions);

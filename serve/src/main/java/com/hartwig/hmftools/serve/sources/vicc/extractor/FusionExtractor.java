@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.sources.vicc.extractor;
 import static com.hartwig.hmftools.serve.fusion.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
 import static com.hartwig.hmftools.serve.fusion.FusionAnnotationConfig.ODDLY_NAMED_GENES_MAP;
 
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.GeneChecker;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
@@ -26,19 +25,16 @@ public class FusionExtractor {
     }
 
     @Nullable
-    public KnownFusionPair extract(@NotNull Knowledgebase source, @NotNull String gene, @NotNull EventType type, @NotNull String event) {
+    public KnownFusionPair extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
         if (type == EventType.FUSION_PAIR) {
             if (EXONIC_FUSIONS_MAP.containsKey(event)) {
-                return fromConfiguredPair(EXONIC_FUSIONS_MAP.get(event), source, gene);
+                return fromConfiguredPair(EXONIC_FUSIONS_MAP.get(event), gene);
             } else if (ODDLY_NAMED_GENES_MAP.containsKey(event)) {
-                return fromConfiguredPair(ODDLY_NAMED_GENES_MAP.get(event), source, gene);
+                return fromConfiguredPair(ODDLY_NAMED_GENES_MAP.get(event), gene);
             } else {
                 String[] fusionArray = event.split("-");
-                KnownFusionPair pair = ImmutableKnownFusionPair.builder()
-                        .addSources(source)
-                        .geneUp(fusionArray[0])
-                        .geneDown(fusionArray[1].split(" ")[0])
-                        .build();
+                KnownFusionPair pair =
+                        ImmutableKnownFusionPair.builder().geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
 
                 if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
                     return pair;
@@ -46,7 +42,7 @@ public class FusionExtractor {
             }
         } else if (type == EventType.FUSION_PAIR_AND_EXON) {
             if (EXONIC_FUSIONS_MAP.containsKey(event)) {
-                return fromConfiguredPair(EXONIC_FUSIONS_MAP.get(event), source, gene);
+                return fromConfiguredPair(EXONIC_FUSIONS_MAP.get(event), gene);
             } else {
                 LOGGER.warn("Exonic fusion not configured for '{}' on '{}'", event, gene);
             }
@@ -55,9 +51,8 @@ public class FusionExtractor {
     }
 
     @Nullable
-    private static KnownFusionPair fromConfiguredPair(@NotNull KnownFusionPair configuredPair, @NotNull Knowledgebase source,
-            @NotNull String gene) {
-        KnownFusionPair pair = ImmutableKnownFusionPair.builder().from(configuredPair).addSources(source).build();
+    private static KnownFusionPair fromConfiguredPair(@NotNull KnownFusionPair configuredPair, @NotNull String gene) {
+        KnownFusionPair pair = ImmutableKnownFusionPair.builder().from(configuredPair).build();
         if (pair.geneUp().equals(gene) || pair.geneDown().equals(gene)) {
             return pair;
         }
