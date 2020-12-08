@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.lims;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -23,7 +23,6 @@ public class LimsCohortTest {
 
     @Test(expected = IllegalStateException.class)
     public void hasUnknownCohortType() {
-
         LimsCohort.fromCohort("ABCD", "ACDV01010000T");
         LimsCohort.fromCohort("", "ACDV01010000T");
     }

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.serve.extraction.signature;
 
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 
 import org.apache.logging.log4j.LogManager;
@@ -42,8 +41,7 @@ public class SignatureExtractor {
     }
 
     @Nullable
-    @VisibleForTesting
-    SignatureName determineSignature(@NotNull String event) {
+    private SignatureName determineSignature(@NotNull String event) {
         if (microsatelliteUnstableEvents.contains(event)) {
             return SignatureName.MICROSATELLITE_UNSTABLE;
         } else if (highTumorMutationalLoadEvents.contains(event)) {

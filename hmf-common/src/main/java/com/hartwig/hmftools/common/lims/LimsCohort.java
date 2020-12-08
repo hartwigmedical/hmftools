@@ -37,12 +37,8 @@ public enum LimsCohort {
                 return CORESC11;
             case "COREDB01":
                 return COREDB01;
-
             default:
-                throw new IllegalStateException(
-                        "Cannot resolve cohort type: " + cohortString+  " of sample: " + sampleId );
+                throw new IllegalStateException("Cannot resolve cohort type: " + cohortString + " of sample: " + sampleId);
         }
-
     }
-
 }

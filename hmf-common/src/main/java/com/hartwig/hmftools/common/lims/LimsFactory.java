@@ -46,8 +46,7 @@ public final class LimsFactory {
     }
 
     @NotNull
-    public static Lims fromLimsDirectory(@NotNull String limsDirectory)
-            throws IOException {
+    public static Lims fromLimsDirectory(@NotNull String limsDirectory) throws IOException {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
@@ -77,11 +76,7 @@ public final class LimsFactory {
                 Maps.newHashMap(),
                 Sets.newHashSet(),
                 Sets.newHashSet(),
-                ImmutableHospitalModel.of(Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap()));
+                ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap()));
     }
 
     @NotNull

@@ -47,8 +47,8 @@ public class GeneLevelExtractor {
         return null;
     }
 
-    @VisibleForTesting
     @NotNull
+    @VisibleForTesting
     GeneLevelEvent extractGeneLevelEvent(@NotNull String gene, @NotNull String event) {
         for (String keyPhrase : activationKeyPhrases) {
             if (event.contains(keyPhrase)) {
@@ -65,8 +65,8 @@ public class GeneLevelExtractor {
         return determineGeneLevelEventFromDriverGenes(driverGenes, gene);
     }
 
-    @VisibleForTesting
     @NotNull
+    @VisibleForTesting
     static GeneLevelEvent determineGeneLevelEventFromDriverGenes(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
         for (DriverGene driverGene : driverGenes) {
             if (driverGene.gene().equals(gene)) {
