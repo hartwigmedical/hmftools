@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -25,7 +25,7 @@ public class SignatureExtractor {
     public Map<Feature, SignatureName> extract(@NotNull ViccEntry viccEntry) {
         Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            if (feature.type() == MutationType.SIGNATURE) {
+            if (feature.type() == EventType.SIGNATURE) {
                 SignatureName signatureName = extractSignatureName(feature.name());
                 if (signatureName != null) {
                     signaturesPerFeature.put(feature, signatureName);

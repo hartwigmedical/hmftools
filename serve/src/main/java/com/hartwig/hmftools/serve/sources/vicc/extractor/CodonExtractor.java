@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.codon.ImmutableCodonAnnotation;
@@ -46,7 +46,7 @@ public class CodonExtractor {
     public Map<Feature, List<CodonAnnotation>> extract(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<CodonAnnotation>> geneRangesPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            if (feature.type() == MutationType.CODON) {
+            if (feature.type() == EventType.CODON) {
                 if (geneChecker.isValidGene(feature.geneSymbol())) {
                     HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
                     assert canonicalTranscript != null;

@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberExtractor {
 
-    private static final Set<MutationType> COPY_NUMBER_MUTATIONS = Sets.newHashSet(MutationType.AMPLIFICATION, MutationType.DELETION);
+    private static final Set<EventType> COPY_NUMBER_MUTATIONS = Sets.newHashSet(EventType.AMPLIFICATION, EventType.DELETION);
 
     @NotNull
     private final GeneChecker geneChecker;
@@ -33,7 +33,7 @@ public class CopyNumberExtractor {
 
         for (Feature feature : viccEntry.features()) {
             if (COPY_NUMBER_MUTATIONS.contains(feature.type()) && geneChecker.isValidGene(feature.geneSymbol())) {
-                CopyNumberType type = feature.type() == MutationType.AMPLIFICATION ? CopyNumberType.AMPLIFICATION : CopyNumberType.DELETION;
+                CopyNumberType type = feature.type() == EventType.AMPLIFICATION ? CopyNumberType.AMPLIFICATION : CopyNumberType.DELETION;
 
                 ampsDelsPerFeature.put(feature,
                         ImmutableKnownCopyNumber.builder()

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.vicc.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.vicc.annotation.MutationTypeExtractor;
 
 import org.immutables.value.Value;
@@ -18,7 +18,7 @@ public abstract class Feature {
 
     @NotNull
     @Value.Derived
-    public MutationType type() {
+    public EventType type() {
         return MutationTypeExtractor.extractType(this);
     }
 

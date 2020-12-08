@@ -2,7 +2,7 @@ package com.hartwig.hmftools.vicc.annotation;
 
 import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierFactory;
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,11 +19,11 @@ public class MutationTypeExtractor {
     }
 
     @NotNull
-    public static MutationType extractType(@NotNull Feature feature) {
+    public static EventType extractType(@NotNull Feature feature) {
         String gene = feature.geneSymbol();
         if (gene == null) {
             LOGGER.debug("Skipping extraction for '{}' since gene is missing", feature.name());
-            return MutationType.UNKNOWN;
+            return EventType.UNKNOWN;
         } else {
             return CLASSIFIER.determineType(gene, feature.name());
         }

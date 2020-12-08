@@ -6,7 +6,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +16,7 @@ public final class EventMatcherFactory {
     }
 
     @NotNull
-    public static Map<MutationType, EventMatcher> buildMatcherMap(@NotNull EventClassifierConfig config) {
+    public static Map<EventType, EventMatcher> buildMatcherMap(@NotNull EventClassifierConfig config) {
         FusionPairMatcher fusionPairMatcher = new FusionPairMatcher(config.exonicDelDupFusionEvents(), config.fusionPairEventsToSkip());
         PromiscuousFusionMatcher promiscuousFusionMatcher =
                 new PromiscuousFusionMatcher(config.promiscuousFusionKeyPhrases(), fusionPairMatcher);
@@ -42,19 +42,19 @@ public final class EventMatcherFactory {
 
         List<EventMatcher> firstTierEventMatchers = Lists.newArrayList(complexMatcher, combinedMatcher, fusionPairAndExonMatcher);
 
-        Map<MutationType, EventMatcher> map = Maps.newHashMap();
-        map.put(MutationType.HOTSPOT, withFirstTierMatchers(firstTierEventMatchers, hotspotMatcher));
-        map.put(MutationType.CODON, withFirstTierMatchers(firstTierEventMatchers, codonMatcher));
-        map.put(MutationType.EXON, withFirstTierMatchers(firstTierEventMatchers, exonMatcher));
-        map.put(MutationType.FUSION_PAIR_AND_EXON, fusionPairAndExonMatcher);
-        map.put(MutationType.GENE_LEVEL, withFirstTierMatchers(firstTierEventMatchers, geneLevelMatcher));
-        map.put(MutationType.AMPLIFICATION, withFirstTierMatchers(firstTierEventMatchers, amplificationMatcher));
-        map.put(MutationType.DELETION, withFirstTierMatchers(firstTierEventMatchers, deletionMatcher));
-        map.put(MutationType.FUSION_PAIR, withFirstTierMatchers(firstTierEventMatchers, fusionPairMatcher));
-        map.put(MutationType.PROMISCUOUS_FUSION, withFirstTierMatchers(firstTierEventMatchers, promiscuousFusionMatcher));
-        map.put(MutationType.SIGNATURE, withFirstTierMatchers(firstTierEventMatchers, signatureMatcher));
-        map.put(MutationType.COMBINED, combinedMatcher);
-        map.put(MutationType.COMPLEX, complexMatcher);
+        Map<EventType, EventMatcher> map = Maps.newHashMap();
+        map.put(EventType.HOTSPOT, withFirstTierMatchers(firstTierEventMatchers, hotspotMatcher));
+        map.put(EventType.CODON, withFirstTierMatchers(firstTierEventMatchers, codonMatcher));
+        map.put(EventType.EXON, withFirstTierMatchers(firstTierEventMatchers, exonMatcher));
+        map.put(EventType.FUSION_PAIR_AND_EXON, fusionPairAndExonMatcher);
+        map.put(EventType.GENE_LEVEL, withFirstTierMatchers(firstTierEventMatchers, geneLevelMatcher));
+        map.put(EventType.AMPLIFICATION, withFirstTierMatchers(firstTierEventMatchers, amplificationMatcher));
+        map.put(EventType.DELETION, withFirstTierMatchers(firstTierEventMatchers, deletionMatcher));
+        map.put(EventType.FUSION_PAIR, withFirstTierMatchers(firstTierEventMatchers, fusionPairMatcher));
+        map.put(EventType.PROMISCUOUS_FUSION, withFirstTierMatchers(firstTierEventMatchers, promiscuousFusionMatcher));
+        map.put(EventType.SIGNATURE, withFirstTierMatchers(firstTierEventMatchers, signatureMatcher));
+        map.put(EventType.COMBINED, combinedMatcher);
+        map.put(EventType.COMPLEX, complexMatcher);
 
         return map;
     }

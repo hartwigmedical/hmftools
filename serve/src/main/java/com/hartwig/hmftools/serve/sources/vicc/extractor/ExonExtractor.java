@@ -9,7 +9,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.exon.ImmutableExonAnnotation;
@@ -44,7 +44,7 @@ public class ExonExtractor {
     public Map<Feature, List<ExonAnnotation>> extract(@NotNull ViccEntry viccEntry) {
         Map<Feature, List<ExonAnnotation>> exonsPerFeature = Maps.newHashMap();
         for (Feature feature : viccEntry.features()) {
-            if (feature.type() == MutationType.EXON || feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
+            if (feature.type() == EventType.EXON || feature.type() == EventType.FUSION_PAIR_AND_EXON) {
                 if (geneChecker.isValidGene(feature.geneSymbol())) {
                     HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(feature.geneSymbol());
                     assert canonicalTranscript != null;

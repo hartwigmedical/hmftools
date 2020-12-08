@@ -7,7 +7,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.gene.ImmutableGeneLevelAnnotation;
@@ -44,13 +44,13 @@ public class GeneLevelExtractor {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
 
         for (Feature feature : viccEntry.features()) {
-            if (feature.type() == MutationType.GENE_LEVEL && exomeGeneChecker.isValidGene(feature.geneSymbol())) {
+            if (feature.type() == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(feature.geneSymbol())) {
                 GeneLevelEvent event = extractGeneLevelEvent(feature, driverGenes);
                 if (event != null) {
                     geneLevelEventsPerFeature.put(feature,
                             ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(event).build());
                 }
-            } else if (feature.type() == MutationType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(feature.geneSymbol())) {
+            } else if (feature.type() == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(feature.geneSymbol())) {
                 geneLevelEventsPerFeature.put(feature,
                         ImmutableGeneLevelAnnotation.builder().gene(feature.geneSymbol()).event(GeneLevelEvent.FUSION).build());
             }

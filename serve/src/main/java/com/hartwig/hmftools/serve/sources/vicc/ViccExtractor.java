@@ -13,7 +13,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -356,7 +356,7 @@ public final class ViccExtractor {
 
                 if (hotspotsForFeature == null && codonsForFeature == null && exonsForFeature == null && geneLevelEventForFeature == null
                         && ampDelForFeature == null && fusionForFeature == null && signatureForFeature == null) {
-                    if (feature.type() != MutationType.COMBINED && feature.type() != MutationType.COMPLEX) {
+                    if (feature.type() != EventType.COMBINED && feature.type() != EventType.COMPLEX) {
                         // For both combined and complex events we expect no genomic events to be derived.
                         featuresWithoutGenomicEvents.add(feature);
                     }

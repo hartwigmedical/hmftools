@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.serve.fusion.FusionAnnotationConfig.ODDLY_NAM
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.serve.classification.MutationType;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.sources.vicc.ViccUtil;
@@ -38,7 +38,7 @@ public class FusionExtractor {
         for (Feature feature : viccEntry.features()) {
             String fusion = feature.name();
 
-            if (feature.type() == MutationType.FUSION_PAIR) {
+            if (feature.type() == EventType.FUSION_PAIR) {
                 KnownFusionPair annotatedFusion;
                 if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
                     annotatedFusion = fusionBuilder.from(EXONIC_FUSIONS_MAP.get(fusion)).build();
@@ -52,7 +52,7 @@ public class FusionExtractor {
                 if (geneChecker.isValidGene(annotatedFusion.geneUp()) && geneChecker.isValidGene(annotatedFusion.geneDown())) {
                     fusionsPerFeature.put(feature, annotatedFusion);
                 }
-            } else if (feature.type() == MutationType.FUSION_PAIR_AND_EXON) {
+            } else if (feature.type() == EventType.FUSION_PAIR_AND_EXON) {
                 if (EXONIC_FUSIONS_MAP.containsKey(fusion)) {
                     KnownFusionPair fusionPair = fusionBuilder.from(EXONIC_FUSIONS_MAP.get(fusion)).build();
                     if (fusionPair.geneUp().equals(feature.geneSymbol()) && fusionPair.geneDown().equals(feature.geneSymbol())) {
