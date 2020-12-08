@@ -74,8 +74,8 @@ public class ViccExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        String featureTsv = outputDir + "/viccFeatures.tsv";
-        String featureInterpretationTsv = outputDir + "/viccFeatureInterpretation.tsv";
+        String featureTsv = outputDir + "/ViccFeatures.tsv";
+        String featureInterpretationTsv = outputDir + "/ViccFeatureInterpretation.tsv";
 
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the VICC feature output TSV path", featureTsv);
