@@ -37,10 +37,10 @@ public class EcrfModel {
     @NotNull
     public static EcrfModel loadFromXMLWithFormStates(@NotNull String ecrfXmlPath, @NotNull FormStatusModel formStatusModel)
             throws XMLStreamException, FileNotFoundException {
-        final XMLInputFactory factory = XMLInputFactory.newInstance();
-        final XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
-        final XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
-        final Iterable<EcrfPatient> patients = XMLPatientReader.readPatients(reader, datamodel, formStatusModel);
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+        XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
+        XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
+        Iterable<EcrfPatient> patients = XMLPatientReader.readPatients(reader, datamodel, formStatusModel);
 
         return new EcrfModel(datamodel, patients);
     }

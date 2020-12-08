@@ -12,7 +12,7 @@ final class CodeListFactory {
     @NotNull
     static String fromText(@NotNull String codeListItemString) {
         // Convert "1=x" to "x".
-        final int marker = codeListItemString.indexOf(CODE_LIST_MARKER);
+        int marker = codeListItemString.indexOf(CODE_LIST_MARKER);
         if (marker < 0) {
             return codeListItemString;
         }
