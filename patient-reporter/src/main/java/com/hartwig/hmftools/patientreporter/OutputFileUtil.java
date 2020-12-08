@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
@@ -14,9 +15,9 @@ public final class OutputFileUtil {
     @NotNull
     public static String generateOutputFileNameForReport(@NotNull PatientReport report) {
         SampleReport sampleReport = report.sampleReport();
-        LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
+        LimsCohort cohort = report.sampleReport().cohort();
 
-        String filePrefix = study == LimsStudy.CORE
+        String filePrefix = cohort == LimsCohort.CORE
                 ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
                 : sampleReport.tumorSampleId();
 

@@ -11,7 +11,6 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -36,13 +35,12 @@ public final class ReportingDb {
         String sampleId = report.sampleReport().tumorSampleId();
         GenomicAnalysis analysis = report.genomicAnalysis();
 
-        LimsStudy study = LimsStudy.fromSampleId(sampleId);
+        LimsCohort cohort = report.sampleReport().cohort();
 
         if (requiresSummary(report.sampleReport().cohort()) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
-        } else if (study != LimsStudy.NON_CANCER_STUDY) {
+        } else if (cohort != LimsCohort.NON_CANCER) {
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
-            LimsCohort cohort = report.sampleReport().cohort();
             String reportDate = ReportResources.REPORT_DATE;
             String purity = new DecimalFormat("0.00").format(analysis.impliedPurity());
 
@@ -111,8 +109,7 @@ public final class ReportingDb {
 
         String reportType = report.isCorrectedReport() ? report.reason().identifier() + "_corrected" : report.reason().identifier();
 
-        LimsStudy study = LimsStudy.fromSampleId(sampleId);
-        if (study != LimsStudy.NON_CANCER_STUDY) {
+        if (cohort != LimsCohort.NON_CANCER) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())

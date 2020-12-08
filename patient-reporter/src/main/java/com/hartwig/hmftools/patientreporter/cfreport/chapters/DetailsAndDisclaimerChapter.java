@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -53,7 +54,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     @NotNull
     private static Div createSampleDetailsDiv(@NotNull AnalysedPatientReport patientReport) {
         SampleReport sampleReport = patientReport.sampleReport();
-        LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
+        LimsCohort cohort = sampleReport.cohort();
 
         Div div = new Div();
 
@@ -86,7 +87,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph(whoVerified));
         div.add(createContentParagraph("This report is addressed to: ", sampleReport.addressee()));
 
-        if (study == LimsStudy.CORE) {
+        if (cohort == LimsCohort.CORE) {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
             div.add(createContentParagraphTwice("The project name of sample is: ",
                     sampleReport.projectName(),

@@ -48,9 +48,8 @@ public final class SampleReportFactory {
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
         LimsCohort cohort = lims.cohort(tumorSampleBarcode);
-        LimsStudy type = LimsStudy.fromSampleId(tumorSampleId);
 
-        String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), type, tumorSampleId);
+        String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), cohort, tumorSampleId);
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
@@ -66,13 +65,13 @@ public final class SampleReportFactory {
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
                 .hospitalPatientId(hospitalPatientId)
-                .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId))
+                .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohort))
                 .build();
     }
 
     @VisibleForTesting
-    static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull LimsStudy type, @NotNull String sampleId) {
-        if (type == LimsStudy.CORE) {
+    static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull LimsCohort cohort, @NotNull String sampleId) {
+        if (cohort == LimsCohort.CORE) {
             if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
                 LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
             }
@@ -82,15 +81,15 @@ public final class SampleReportFactory {
 
     @VisibleForTesting
     @Nullable
-    static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId) {
-        LimsStudy study = LimsStudy.fromSampleId(tumorSampleId);
+    static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
+            @NotNull LimsCohort cohort) {
 
-        if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
+        if (cohort == LimsCohort.CORE || cohort == LimsCohort.WIDE) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
                     && isValidHospitalPathologySampleId(hospitalPathologySampleId)) {
                 return hospitalPathologySampleId;
             } else {
-                if (study == LimsStudy.WIDE) {
+                if (cohort == LimsCohort.WIDE) {
                     LOGGER.warn("Missing or invalid hospital pathology sample ID for sample '{}': {}. Please fix!",
                             tumorSampleId,
                             hospitalPathologySampleId);

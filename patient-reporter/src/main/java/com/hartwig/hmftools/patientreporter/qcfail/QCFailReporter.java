@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -30,15 +31,17 @@ public class QCFailReporter {
     @NotNull
     public QCFailReport run(@NotNull QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
             @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport) throws IOException {
-        LimsStudy study = LimsStudy.fromSampleId(sampleMetadata.tumorSampleId());
-
-        if (study == LimsStudy.NON_CANCER_STUDY) {
-            throw new IllegalStateException("QC fail report not supported for non-cancer study samples: " + sampleMetadata.tumorSampleId());
-        }
 
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForSample(reportData.patientPrimaryTumors(),
                         sampleMetadata.tumorSampleId());
+        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
+
+        LimsCohort cohort = sampleReport.cohort();
+
+        if (cohort == cohort.NON_CANCER) {
+            throw new IllegalStateException("QC fail report not supported for non-cancer study samples: " + sampleMetadata.tumorSampleId());
+        }
 
         String wgsPurityString = null;
         if (reason.isDeepWGSDataAvailable()) {
@@ -49,7 +52,6 @@ public class QCFailReporter {
             wgsPurityString = hasReliablePurity ? formattedPurity : Lims.PURITY_NOT_RELIABLE_STRING;
         }
 
-        SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)

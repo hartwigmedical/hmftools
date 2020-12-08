@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
@@ -60,13 +61,18 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
-        LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
+        LimsCohort cohort = failReport.sampleReport().cohort();
 
-        switch (study) {
+        switch (cohort) {
             case WIDE:
+            case COREDB01:
                 reportDocument.add(createWIDEContentBody());
                 break;
             case CORE:
+            case CORELR02:
+            case CORERI02:
+            case CORESC11:
+            case CORELR11:
                 reportDocument.add(createCOREContentBody());
                 break;
             case DRUP:

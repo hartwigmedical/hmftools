@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.util.Strings;
@@ -21,18 +22,18 @@ public class SampleReportFactoryTest {
         String correctIdC = "C18-00124";
         String wrongId = "BGr-12111";
 
-        assertEquals(correctIdT, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, wideSampleId));
-        assertEquals(correctIdC, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC, wideSampleId));
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId, wideSampleId));
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Lims.NOT_AVAILABLE_STRING, wideSampleId));
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY, wideSampleId));
+        assertEquals(correctIdT, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, wideSampleId, LimsCohort.WIDE));
+        assertEquals(correctIdC, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC, wideSampleId, LimsCohort.WIDE));
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId, wideSampleId, LimsCohort.WIDE));
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Lims.NOT_AVAILABLE_STRING, wideSampleId, LimsCohort.WIDE));
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY, wideSampleId, LimsCohort.WIDE));
 
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY, coreSampleId));
-        assertEquals(correctIdT,SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, coreSampleId));
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId, coreSampleId));
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY, coreSampleId, LimsCohort.CORE));
+        assertEquals(correctIdT,SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, coreSampleId, LimsCohort.CORE));
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId, coreSampleId, LimsCohort.CORE));
 
-        assertNull(correctIdT, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, cpctSampleId));
-        assertNull(correctIdC, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC, cpctSampleId));
+        assertNull(correctIdT, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, cpctSampleId, LimsCohort.CPCT));
+        assertNull(correctIdC, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC, cpctSampleId, LimsCohort.CPCT));
     }
 
     @Test
@@ -40,8 +41,8 @@ public class SampleReportFactoryTest {
         String coreSampleId = "CORE020000001T";
         String wideSampleId = "WIDE020000001T";
 
-        LimsStudy typeCORE = LimsStudy.CORE;
-        LimsStudy typeWIDE = LimsStudy.WIDE;
+        LimsCohort typeCORE = LimsCohort.CORE;
+        LimsCohort typeWIDE = LimsCohort.WIDE;
 
         String hospitalIdNA = Lims.NOT_AVAILABLE_STRING;
         String hospitalIDEmpty = Strings.EMPTY;

@@ -15,7 +15,7 @@ public enum LimsCohort {
     NON_CANCER;
 
     @NotNull
-    public static LimsCohort fromCohort(@NotNull String cohortString, @NotNull String sampleId) {
+    public static LimsCohort fromCohort(@NotNull String cohortString) {
         switch (cohortString) {
             case "CPCT":
             case "CPCTpancreas":
@@ -38,7 +38,7 @@ public enum LimsCohort {
             case "COREDB01":
                 return COREDB01;
             default:
-                throw new IllegalStateException("Cannot resolve cohort type: " + cohortString + " of sample: " + sampleId);
+                throw new IllegalStateException("Cannot resolve cohort type: " + cohortString);
         }
     }
 }

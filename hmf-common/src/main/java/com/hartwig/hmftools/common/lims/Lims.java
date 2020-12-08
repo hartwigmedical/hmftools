@@ -240,7 +240,7 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String cohortString = sampleData.cohort();
-            return cohortString != null ? LimsCohort.fromCohort(cohortString, sampleId(sampleBarcode)) : LimsCohort.NON_CANCER;
+            return cohortString != null ? LimsCohort.fromCohort(cohortString) : LimsCohort.NON_CANCER;
         } else {
             return LimsCohort.NON_CANCER;
         }
@@ -249,7 +249,10 @@ public class Lims {
     @NotNull
     public HospitalContactData hospitalContactData(@NotNull String sampleBarcode) {
         String sampleId = sampleId(sampleBarcode);
-        HospitalContactData data = hospitalModel.queryHospitalData(sampleId, requesterName(sampleBarcode), requesterEmail(sampleBarcode));
+        HospitalContactData data = hospitalModel.queryHospitalData(sampleId,
+                requesterName(sampleBarcode),
+                requesterEmail(sampleBarcode),
+                cohort(sampleBarcode));
 
         if (data == null) {
             LOGGER.warn("Could not find hospital data for sample '{}' with barcode '{}'", sampleId, sampleBarcode);
@@ -292,7 +295,8 @@ public class Lims {
             String germlineReportingLevelString = sampleData.germlineReportingLevel();
             return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode),
                     germlineReportingLevelString,
-                    sampleId(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
+                    sampleId(sampleBarcode),
+                    cohort(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
         } else {
             return LimsGermlineReportingLevel.NO_REPORTING;
         }
