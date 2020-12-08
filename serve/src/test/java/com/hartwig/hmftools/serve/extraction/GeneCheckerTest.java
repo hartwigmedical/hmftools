@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.vicc.check;
+package com.hartwig.hmftools.serve.extraction;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

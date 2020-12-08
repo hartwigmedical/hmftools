@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.vicc.check;
+package com.hartwig.hmftools.serve.extraction;
 
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 

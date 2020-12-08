@@ -7,9 +7,9 @@ import static org.junit.Assert.assertNull;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.GeneChecker;
+import com.hartwig.hmftools.serve.extraction.GeneCheckerTestFactory;
 import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
-import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
 
 import org.junit.Test;
 

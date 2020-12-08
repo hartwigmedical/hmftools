@@ -7,8 +7,8 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
-import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
+import com.hartwig.hmftools.serve.extraction.GeneChecker;
+import com.hartwig.hmftools.serve.extraction.GeneCheckerTestFactory;
 
 import org.junit.Test;
 

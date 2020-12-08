@@ -14,9 +14,9 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.extraction.GeneChecker;
+import com.hartwig.hmftools.serve.extraction.GeneCheckerTestFactory;
 import com.hartwig.hmftools.serve.gene.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.sources.vicc.check.GeneChecker;
-import com.hartwig.hmftools.serve.sources.vicc.check.GeneCheckerTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
