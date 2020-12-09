@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_PSD;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.PROGRAM_LINX;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.PROGRAM_PCAWG;
-import static com.hartwig.hmftools.svtools.germline.GermlineVcfConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 
 import java.io.BufferedWriter;
 import java.io.File;

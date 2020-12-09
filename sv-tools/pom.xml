@@ -24,10 +24,6 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>ensembl-db</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
             <artifactId>sv-linx</artifactId>
         </dependency>
         <dependency>
