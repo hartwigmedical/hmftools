@@ -16,18 +16,29 @@ public class ActionableTrialFactoryTest {
     @Test
     public void canCreateActionableTrials() {
         String location1 = "loc1";
+        String loc1Doid1 = "loc1Doid1";
+        String loc1Doid2 = "loc1Doid2";
         String location2 = "loc2";
+        String loc2Doid1 = "loc2Doid2";
         String treatment = "trial";
 
-        IclusionTumorLocation loc1 = ImmutableIclusionTumorLocation.builder().primaryTumorLocation(location1).build();
-        IclusionTumorLocation loc2 = ImmutableIclusionTumorLocation.builder().primaryTumorLocation(location2).build();
+        IclusionTumorLocation loc1 =
+                ImmutableIclusionTumorLocation.builder().primaryTumorLocation(location1).addDoids(loc1Doid1).addDoids(loc1Doid2).build();
+        IclusionTumorLocation loc2 = ImmutableIclusionTumorLocation.builder().primaryTumorLocation(location2).addDoids(loc2Doid1).build();
         IclusionTrial trial = IclusionTestFactory.trialWithTumors(treatment, Lists.newArrayList(loc1, loc2));
 
         List<ActionableTrial> actionableTrials = ActionableTrialFactory.toActionableTrials(trial);
-        assertEquals(2, actionableTrials.size());
+        assertEquals(3, actionableTrials.size());
         assertEquals(treatment, actionableTrials.get(0).treatment());
-        assertEquals(treatment, actionableTrials.get(1).treatment());
         assertEquals(location1, actionableTrials.get(0).cancerType());
-        assertEquals(location2, actionableTrials.get(1).cancerType());
+        assertEquals(loc1Doid1, actionableTrials.get(0).doid());
+
+        assertEquals(treatment, actionableTrials.get(1).treatment());
+        assertEquals(location1, actionableTrials.get(1).cancerType());
+        assertEquals(loc1Doid2, actionableTrials.get(1).doid());
+
+        assertEquals(treatment, actionableTrials.get(2).treatment());
+        assertEquals(location2, actionableTrials.get(2).cancerType());
+        assertEquals(loc2Doid1, actionableTrials.get(2).doid());
     }
 }

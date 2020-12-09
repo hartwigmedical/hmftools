@@ -58,7 +58,7 @@ public final class ViccExtractor {
     @Nullable
     private final String featureInterpretationTsv;
 
-    public ViccExtractor(@NotNull final EventExtractor eventExtractor, @Nullable final String featureInterpretationTsv) {
+    ViccExtractor(@NotNull final EventExtractor eventExtractor, @Nullable final String featureInterpretationTsv) {
         this.eventExtractor = eventExtractor;
         this.featureInterpretationTsv = featureInterpretationTsv;
     }
@@ -85,7 +85,7 @@ public final class ViccExtractor {
                 .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry))
                 .knownFusionPairs(convertToKnownFusions(resultsPerEntry));
 
-        addActionability(outputBuilder, resultsPerEntry);
+        addActionability(outputBuilder, resultsPerEntry.values());
 
         return outputBuilder.build();
     }
@@ -201,15 +201,14 @@ public final class ViccExtractor {
     }
 
     private static void addActionability(@NotNull ImmutableExtractionResult.Builder outputBuilder,
-            @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+            @NotNull Iterable<ViccExtractionResult> results) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
         Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
 
-        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
-            ViccExtractionResult result = entry.getValue();
+        for (ViccExtractionResult result : results) {
             ActionableEvent event = result.actionableEvent();
             if (event != null) {
                 actionableHotspots.addAll(extractActionableHotspots(event, result.hotspotsPerFeature().values()));

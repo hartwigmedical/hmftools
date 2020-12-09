@@ -97,7 +97,6 @@ public class ViccExtractorTestApp {
 
         ViccUtil.writeFeaturesToTsv(featureTsv, entries);
 
-        ExtractionResultWriter writer = new ExtractionResultWriter(outputDir, refGenomeVersion);
-        writer.write(result);
+        new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);
     }
 }

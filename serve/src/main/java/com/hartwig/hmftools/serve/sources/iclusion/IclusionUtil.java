@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +27,15 @@ public final class IclusionUtil {
     private static final String FIELD_DELIMITER = "\t";
 
     private IclusionUtil() {
+    }
+
+    public static void printIclusionResult(@NotNull ExtractionResult result) {
+        LOGGER.info("Analysis performed iClusion extraction result");
+        LOGGER.info(" {} actionable hotspot records generated", result.actionableHotspots().size());
+        LOGGER.info(" {} actionable range records generated", result.actionableRanges().size());
+        LOGGER.info(" {} actionable gene records generated", result.actionableGenes().size());
+        LOGGER.info(" {} actionable fusion records generated", result.actionableFusions().size());
+        LOGGER.info(" {} actionable signature records generated", result.actionableSignatures().size());
     }
 
     public static void writeIclusionMutationTypes(@NotNull String iClusionMutationTsv, @NotNull List<IclusionTrial> trials)
