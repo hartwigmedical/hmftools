@@ -500,7 +500,9 @@ public class BamFragmentAllocator
 
         // track splice site info
         if(mConfig.WriteSpliceSiteData)
-            mSpliceSiteCounter.registerSpliceSiteSupport(commonMappings, mCurrentGenes.getExonRegions());
+        {
+            mSpliceSiteCounter.registerSpliceSiteSupport(read1.getMappedRegionCoords(), read2.getMappedRegionCoords(), mCurrentGenes.getExonRegions());
+        }
 
         for(Map.Entry<Integer,TransMatchType> entry : firstReadTransTypes.entrySet())
         {

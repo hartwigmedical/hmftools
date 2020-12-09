@@ -36,15 +36,28 @@ public class SpliceSiteCounter
     public final Map<Integer,int[]> getSiteCounts() { return mSiteCounts; }
     public void clear() { mSiteCounts.clear(); }
 
-    public void registerSpliceSiteSupport(final List<int[]> readMappedCoords, final List<RegionReadData> allRegions)
+    public void registerSpliceSiteSupport(
+            final List<int[]> readMappedCoords1, final List<int[]> readMappedCoords2, final List<RegionReadData> allRegions)
+    {
+        final Set<Integer> traversedSites = Sets.newHashSet();
+        final Set<Integer> supportedSites = Sets.newHashSet();
+
+        registerSpliceSiteSupport(readMappedCoords1, allRegions, traversedSites, supportedSites);
+        registerSpliceSiteSupport(readMappedCoords2, allRegions, traversedSites, supportedSites);
+
+        traversedSites.forEach(x -> addCount(x, SPLICE_SITE_TRAVERSED));
+        supportedSites.forEach(x -> addCount(x, SPLICE_SITE_SUPPORT));
+    }
+
+    private void registerSpliceSiteSupport(
+            final List<int[]> readMappedCoords, final List<RegionReadData> allRegions,
+            final Set<Integer> traversedSites, final Set<Integer> supportedSites)
     {
         // for each read region (ie unique exon) record if the read supports its splice junction on each side, or skips it
         if(readMappedCoords.size() <= 1)
             return;
 
-        Set<Integer> traversedSites = Sets.newHashSet();
-        Set<Integer> supportedSites = Sets.newHashSet();
-        Set<Integer> skippedSites = Sets.newHashSet();
+        // Set<Integer> skippedSites = Sets.newHashSet();
 
         for(int i = 0; i < readMappedCoords.size() - 1; ++i)
         {
@@ -76,22 +89,18 @@ public class SpliceSiteCounter
                 {
                     if(junctionUpper == region.start())
                         supportedSites.add(region.start());
-                    else if(junctionUpper > region.start())
-                        skippedSites.add(region.start());
+                    // else if(junctionUpper > region.start())
+                    //    skippedSites.add(region.start());
                 }
                 else if(region.getPostRegions().stream().anyMatch(x -> x.start() == junctionUpper))
                 {
                     if(junctionLower == region.end())
                         supportedSites.add(region.end());
-                    else if(junctionLower < region.end())
-                        skippedSites.add(region.end());
+                    // else if(junctionLower < region.end())
+                    //    skippedSites.add(region.end());
                 }
             }
         }
-
-        traversedSites.forEach(x -> addCount(x, SPLICE_SITE_TRAVERSED));
-        supportedSites.forEach(x -> addCount(x, SPLICE_SITE_SUPPORT));
-        skippedSites.forEach(x -> addCount(x, SPLICE_SITE_SKIPPED));
     }
 
     private void addCount(int position, int type)
@@ -117,7 +126,7 @@ public class SpliceSiteCounter
             final String outputFileName = config.formOutputFile(SPLICE_SITE_FILE);
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneSetId,Chromosome,SpliceSitePosition,TraverseFrags,SupportFrags,SkipFrags");
+            writer.write("GeneSetId,Chromosome,SpliceSitePosition,TraverseFrags,SupportFrags");
             writer.newLine();
             return writer;
         }
@@ -151,8 +160,7 @@ public class SpliceSiteCounter
 
                 writer.write(String.format("%s,%s,%d", geneCollection.chrId(), geneCollection.chromosome(), spliceSite));
 
-                writer.write(String.format(",%d,%d,%d",
-                        counts[SPLICE_SITE_TRAVERSED], counts[SPLICE_SITE_SUPPORT], counts[SPLICE_SITE_SKIPPED]));
+                writer.write(String.format(",%d,%d", counts[SPLICE_SITE_TRAVERSED], counts[SPLICE_SITE_SUPPORT]));
 
                 // StringJoiner transIdStr = new StringJoiner(SUB_ITEM_DELIM);
                 // region.getTransExonRefs().forEach(x -> transIdStr.add(String.valueOf(x.TransId)));
