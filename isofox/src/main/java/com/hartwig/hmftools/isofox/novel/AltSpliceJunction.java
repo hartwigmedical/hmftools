@@ -271,13 +271,9 @@ public class AltSpliceJunction
         while(index < mCandidateTransIds.size())
         {
             if(validTransIds.contains(mCandidateTransIds.get(index)))
-            {
                 ++index;
-            }
             else
-            {
                 mCandidateTransIds.remove(index);
-            }
         }
     }
 

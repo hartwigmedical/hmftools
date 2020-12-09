@@ -3,7 +3,6 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
-import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
@@ -112,15 +111,15 @@ public class NovelJunctionsTest
 
         spliceJunction[SE_START] = 300;
         spliceJunction[SE_END] = 400;
-        assertTrue(asjFinder.junctionMatchesGene(genes.genes(), spliceJunction, transIds));
+        assertTrue(asjFinder.junctionMatchesKnownSpliceJunction(genes.genes(), spliceJunction, transIds));
 
         spliceJunction[SE_START] = 300;
         spliceJunction[SE_END] = 401;
-        assertFalse(asjFinder.junctionMatchesGene(genes.genes(), spliceJunction, transIds));
+        assertFalse(asjFinder.junctionMatchesKnownSpliceJunction(genes.genes(), spliceJunction, transIds));
 
         spliceJunction[SE_START] = 350;
         spliceJunction[SE_END] = 800;
-        assertFalse(asjFinder.junctionMatchesGene(genes.genes(), spliceJunction, transIds));
+        assertFalse(asjFinder.junctionMatchesKnownSpliceJunction(genes.genes(), spliceJunction, transIds));
 
         // test out various types of novel junctions:
 

@@ -221,7 +221,7 @@ public class FusionReadData
             {
                 int junctionBase = mJunctionPositions[se];
 
-                if (junctionOrientations()[se] == 1)
+                if (junctionOrientations()[se] == POS_ORIENT)
                 {
                     String junctionBases = refGenome.getBaseString(
                             mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH + 1, junctionBase + JUNCTION_BASE_LENGTH);

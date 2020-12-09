@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.isofox.novel;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
@@ -11,6 +13,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.CIRCULAR;
@@ -51,6 +55,8 @@ public class AltSpliceJunctionFinder
     private final BufferedWriter mWriter;
 
     private GeneCollection mGenes;
+
+    public static final String ALT_SJ_FILE_ID = "alt_splice_junc.csv";
 
     public AltSpliceJunctionFinder(final IsofoxConfig config, final BufferedWriter writer)
     {
@@ -152,7 +158,7 @@ public class AltSpliceJunctionFinder
         return read1.hasSuppAlignment() && read2.hasSuppAlignment();
     }
 
-    public boolean junctionMatchesGene(final List<GeneReadData> genes, final int[] spliceJunction, final List<Integer> transIds)
+    public boolean junctionMatchesKnownSpliceJunction(final List<GeneReadData> genes, final int[] spliceJunction, final List<Integer> transIds)
     {
         for(GeneReadData gene : genes)
         {
@@ -192,6 +198,8 @@ public class AltSpliceJunctionFinder
             spliceJunction[SE_END] = mappedCoords.get(1)[SE_START];
         }
 
+        checkJunctionHomology(spliceJunction, read.getMappedRegions());
+
         List<RegionReadData> sjStartRegions = Lists.newArrayList(); // transcript regions with an exon matching the start of the alt SJ
         List<RegionReadData> sjEndRegions = Lists.newArrayList();
         final AltSpliceJunctionContext[] regionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN };
@@ -206,6 +214,72 @@ public class AltSpliceJunctionFinder
         altSplicJunction.setCandidateTranscripts(read.getMappedRegions().keySet().stream().collect(Collectors.toList()));
 
         return altSplicJunction;
+    }
+
+    private static final int MAX_HOMOLOGY_LENGTH = 5;
+
+    private void checkJunctionHomology(final int[] spliceJunction, final Map<RegionReadData,RegionMatchType> readRegions)
+    {
+        if(readRegions.values().stream().anyMatch(x -> x == EXON_BOUNDARY)) // only consider if neither side matches a known junction
+            return;
+
+        // check for a junction position (or both) which can be moved by homology to match a known splice site
+        final String[] junctionBases = new String[] {"", ""}; // 5 bases either side of the junction
+        int[] nearestExonBoundary = {0, 0}; // +ve if SJ is beyond the boundary
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            junctionBases[se] = mConfig.RefGenome.getBaseString(
+                    mGenes.chromosome(), spliceJunction[se] - MAX_HOMOLOGY_LENGTH, spliceJunction[se] + MAX_HOMOLOGY_LENGTH);
+
+            int nearestBoundary = MAX_HOMOLOGY_LENGTH + 1;
+
+            for(RegionReadData region : readRegions.keySet())
+            {
+                int distance = abs(spliceJunction[se] - region.start()) < abs(spliceJunction[se] - region.end()) ?
+                        spliceJunction[se] - region.start() : spliceJunction[se] - region.end();
+
+                if(abs(distance) < abs(nearestBoundary))
+                    nearestBoundary = distance;
+            }
+
+            nearestExonBoundary[se] = nearestBoundary;
+        }
+
+        if(abs(nearestExonBoundary[SE_START]) > MAX_HOMOLOGY_LENGTH && abs(nearestExonBoundary[SE_END]) > MAX_HOMOLOGY_LENGTH)
+            return;
+
+        // check the closer of the 2 ends
+        int minDistance = min(nearestExonBoundary[SE_START], nearestExonBoundary[SE_END]);
+        int juncBaseIndex = MAX_HOMOLOGY_LENGTH;
+
+        if(minDistance > 0)
+        {
+            // SJ is past the nearest exon boundary, so compare the preceding bases
+            final String startBases = junctionBases[SE_START].substring(juncBaseIndex - abs(minDistance), juncBaseIndex);
+            final String endBases = junctionBases[SE_START].substring(juncBaseIndex - abs(minDistance), juncBaseIndex);
+
+            if(!startBases.equals(endBases))
+                return;
+        }
+        else
+        {
+            // try to shift the junction forwards - requiring the bases to the right at the start to match at each end
+
+            // example of the SJ being 2 bases back from the exon boundary
+            // 01234567
+            //      S E
+
+            final String startBases = junctionBases[SE_START].substring(juncBaseIndex, juncBaseIndex + abs(minDistance));
+            final String endBases = junctionBases[SE_START].substring(juncBaseIndex, juncBaseIndex + abs(minDistance));
+
+            if(!startBases.equals(endBases))
+                return;
+        }
+
+        // shift the bases
+        spliceJunction[SE_START] -= minDistance;
+        spliceJunction[SE_END] -= minDistance;
     }
 
     public AltSpliceJunction createFromReads(final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
@@ -489,7 +563,7 @@ public class AltSpliceJunctionFinder
         }
 
         // extra check that the SJ doesn't match any transcript
-        if(junctionMatchesGene(candidateGenes, altSpliceJunc.SpliceJunction, regionTranscripts))
+        if(junctionMatchesKnownSpliceJunction(candidateGenes, altSpliceJunc.SpliceJunction, regionTranscripts))
             return null;
 
         altSpliceJunc.addFragmentCount();
@@ -515,8 +589,7 @@ public class AltSpliceJunctionFinder
             return existingSpliceJunc;
         }
 
-        // extra check that the SJ doesn't match any transcript
-        if(junctionMatchesGene(candidateGenes, altSpliceJunc.SpliceJunction, regionTranscripts))
+        if(junctionMatchesKnownSpliceJunction(candidateGenes, altSpliceJunc.SpliceJunction, regionTranscripts))
             return null;
 
         altSpliceJunc.addFragmentCount();
@@ -587,8 +660,6 @@ public class AltSpliceJunctionFinder
             }
         }
     }
-
-    public static final String ALT_SJ_FILE_ID = "alt_splice_junc.csv";
 
     public static BufferedWriter createWriter(final IsofoxConfig config)
     {

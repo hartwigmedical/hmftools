@@ -134,8 +134,6 @@ public class SpliceSiteCache
 
             lines.remove(0);
 
-            int spliceSiteCount = 0;
-
             for(final String line : lines)
             {
                 // GeneSetId,Chromosome,SpliceSitePosition,TraverseFrags,SupportFrags,SkipFrags
@@ -160,7 +158,6 @@ public class SpliceSiteCache
                 }
 
                 positionsMap.put(splicePosition, supportRate);
-                ++spliceSiteCount;
             }
         }
         catch(IOException e)

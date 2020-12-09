@@ -81,6 +81,7 @@ public class SpliceVariantMatcher
     private static final int SPLICE_REGION_NON_CODING_DISTANCE = 10;
     private static final int SPLICE_REGION_CODING_DISTANCE = 2;
     private static final int CLOSE_ALT_SJ_DISTANCE = 5;
+    private static final int ALT_SJ_MISALIGN_BUFFER = 5;
 
     public SpliceVariantMatcher(final CohortConfig config, final CommandLine cmd)
     {
@@ -125,6 +126,18 @@ public class SpliceVariantMatcher
 
     public void processAltSpliceJunctions()
     {
+        if(mGeneTransCache == null)
+        {
+            ISF_LOGGER.error("missing Ensembl data cache,");
+            return;
+        }
+
+        if(!mDataCache.hasCachedSomaticVariants() && mConfig.DbAccess == null)
+        {
+            ISF_LOGGER.error("missing DB connection or cached somatic variants,");
+            return;
+        }
+
         final List<Path> filenames = Lists.newArrayList();
 
         if(!formSampleFilenames(mConfig, ALT_SPLICE_JUNCTION, filenames))
@@ -146,11 +159,8 @@ public class SpliceVariantMatcher
         closeBufferedWriter(mWriter);mDataCache.close();
     }
 
-    public void evaluateSpliceVariants(final String sampleId, final List<AltSpliceJunction> altSpliceJunctions)
+    private void evaluateSpliceVariants(final String sampleId, final List<AltSpliceJunction> altSpliceJunctions)
     {
-        if(mGeneTransCache == null || (!mDataCache.hasCachedSomaticVariants() && mConfig.DbAccess == null))
-            return;
-
         final List<SpliceVariant> spliceVariants = getSomaticVariants(sampleId);
 
         if(spliceVariants == null || spliceVariants.isEmpty())
@@ -251,7 +261,7 @@ public class SpliceVariantMatcher
 
         if(geneData == null)
         {
-            ISF_LOGGER.error("variant({}) gene data not found");
+            ISF_LOGGER.error("variant({}) gene data not found", variant);
             return;
         }
 
@@ -261,9 +271,15 @@ public class SpliceVariantMatcher
 
     private static boolean withinRange(int pos1, int pos2, int distance) { return abs(pos1 - pos2) <= distance; }
 
-    private static boolean validDisruptionType(AltSpliceJunctionType type)
+    private static boolean validDisruptionType(AltSpliceJunctionType type, AcceptorDonorType acceptorDonorType)
     {
-        return type == SKIPPED_EXONS || type == NOVEL_5_PRIME || type == NOVEL_3_PRIME || type == NOVEL_EXON || type == MIXED_TRANS;
+        if(type == NOVEL_5_PRIME)
+            return acceptorDonorType == DONOR;
+
+        if(type == NOVEL_3_PRIME)
+            return acceptorDonorType == ACCEPTOR;
+
+        return type == SKIPPED_EXONS || type == NOVEL_EXON || type == MIXED_TRANS;
     }
 
     private void findRelatedAltSpliceJunctions(
@@ -358,7 +374,7 @@ public class SpliceVariantMatcher
                     if(!altSJ.getGeneId().equals(geneData.GeneId))
                         continue;
 
-                    if(!validDisruptionType(altSJ.type()))
+                    if(!validDisruptionType(altSJ.type(), acceptorDonorType))
                         continue;
 
                     if(altSJ.type() == SKIPPED_EXONS)
@@ -372,8 +388,12 @@ public class SpliceVariantMatcher
                     }
                     else
                     {
-                        int minPosition = prevExon != null ? prevExon.ExonEnd + 1 : exon.ExonStart + 1;
-                        int maxPosition = nextExon != null ? nextExon.ExonStart - 1 : exon.ExonEnd - 1;
+                        int minPosition = prevExon != null ? prevExon.ExonEnd : exon.ExonStart;
+                        int maxPosition = nextExon != null ? nextExon.ExonStart : exon.ExonEnd;
+
+                        // allow a margin for misalignment
+                        minPosition -= ALT_SJ_MISALIGN_BUFFER;
+                        maxPosition += ALT_SJ_MISALIGN_BUFFER;
 
                         if(!positionsWithin(altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END], minPosition, maxPosition))
                             continue;
@@ -500,6 +520,15 @@ public class SpliceVariantMatcher
                     variant.HgvsCodingImpact, variant.TriNucContext, variant.LocalPhaseSet, accDonType,
                     exonBaseDistance, exonPosition != null ? exonPosition : -1));
 
+            double samplePsi = PSI_NO_RATE;
+            double cohortPsi = PSI_NO_RATE;
+
+            if(exonPosition != null)
+            {
+                samplePsi = mSpliceSiteCache.getSampleSpliceSitePsi(variant.Chromosome, exonPosition);
+                cohortPsi = mSpliceSiteCache.getCohortSpliceSitePsi(variant.Chromosome, exonPosition, samplePsi);;
+            }
+
             if(altSJ != null)
             {
                 mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%d",
@@ -512,21 +541,12 @@ public class SpliceVariantMatcher
                         getBaseContext(variant, altSJ.SpliceJunction[SE_END], geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR),
                         mDataCache.getCohortAltSjFrequency(altSJ), transDataStr));
 
-                double samplePsi = PSI_NO_RATE;
-                double cohortPsi = PSI_NO_RATE;
-
-                if(exonPosition != null)
-                {
-                    samplePsi = mSpliceSiteCache.getSampleSpliceSitePsi(altSJ.Chromosome, exonPosition);
-                    cohortPsi = mSpliceSiteCache.getCohortSpliceSitePsi(altSJ.Chromosome, exonPosition, samplePsi);;
-                }
-
                 mWriter.write(String.format(",%.4f,%.4f", samplePsi, cohortPsi));
             }
             else
             {
-                mWriter.write(String.format(",%s,%s,%s,-1,-1,0,0,0,,,0,,0,0",
-                        UNKNOWN, AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN));
+                mWriter.write(String.format(",%s,%s,%s,-1,-1,0,0,0,,,0,,%.4f,%.4f",
+                        UNKNOWN, AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN, samplePsi, cohortPsi));
             }
 
             mWriter.newLine();
