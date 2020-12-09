@@ -308,15 +308,16 @@ public class Lims {
         if (sampleData != null) {
             LimsCohort cohort = cohort(sampleBarcode);
             if (sampleData.reportGermlineVariants()) {
-                if (cohort == LimsCohort.CPCT || cohort == LimsCohort.DRUP) {
+                if (cohort == LimsCohort.CPCT || cohort == LimsCohort.CPCT_PANCREAS || cohort == LimsCohort.DRUP
+                        || cohort == LimsCohort.DRUP_STAGE3) {
                     LOGGER.warn("Consent of report germline variants is true, but must be false at study CPCT/DRUP for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return true;
             } else {
-                if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02
-                        || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.WIDE
-                        || cohort == LimsCohort.COREDB) {
+                if (cohort == LimsCohort.WIDE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02
+                        || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB
+                        || cohort == LimsCohort.CORE) {
                     LOGGER.warn("Consent of report germline variants is false, but must be true at study CORE/WIDE for sample '{}'",
                             sampleId(sampleBarcode));
                 }
@@ -333,15 +334,16 @@ public class Lims {
         if (sampleData != null) {
             LimsCohort cohort = cohort(sampleBarcode);
             if (sampleData.reportViralInsertions()) {
-                if (cohort == LimsCohort.CPCT || cohort == LimsCohort.DRUP) {
+                if (cohort == LimsCohort.CPCT || cohort == LimsCohort.CPCT_PANCREAS || cohort == LimsCohort.DRUP
+                        || cohort == LimsCohort.DRUP_STAGE3) {
                     LOGGER.warn("Consent of viral insertions is true, but must be false at study CPCT/DRUP for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return true;
             } else {
-                if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02
-                        || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.WIDE
-                        || cohort == LimsCohort.COREDB) {
+                if (cohort == LimsCohort.WIDE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02
+                        || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB
+                        || cohort == LimsCohort.CORE) {
                     LOGGER.warn("Consent of viral insertions is false, but must be true at study CORE/WIDE for sample '{}'",
                             sampleId(sampleBarcode));
                 }
