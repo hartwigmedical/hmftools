@@ -9,7 +9,7 @@ public class LimsCohortTest {
     @Test
     public void canExtractCohortTypeFromSample() {
         assertEquals(LimsCohort.CPCT, LimsCohort.fromCohort("CPCT"));
-        assertEquals(LimsCohort.CPCT_PANCREAS, LimsCohort.fromCohort("Pancreas"));
+        assertEquals(LimsCohort.CPCT_PANCREAS, LimsCohort.fromCohort("CPCTPancreas"));
         assertEquals(LimsCohort.DRUP, LimsCohort.fromCohort("DRUP"));
         assertEquals(LimsCohort.DRUP_STAGE3, LimsCohort.fromCohort("DRUPstage3"));
         assertEquals(LimsCohort.CORE, LimsCohort.fromCohort("CORE"));

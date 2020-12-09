@@ -21,7 +21,7 @@ public enum LimsCohort {
         switch (cohortString) {
             case "CPCT":
                 return CPCT;
-            case "Pancreas":
+            case "CPCTPancreas":
                 return CPCT_PANCREAS;
             case "DRUP":
                 return DRUP;
