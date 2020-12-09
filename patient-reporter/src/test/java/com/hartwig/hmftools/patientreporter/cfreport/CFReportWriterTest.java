@@ -50,7 +50,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING, LimsCohort.CPCT);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -58,7 +58,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED, LimsCohort.CPCT);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -73,7 +73,7 @@ public class CFReportWriterTest {
                 true,
                 1D,
                 true,
-                true);
+                true, LimsCohort.CPCT);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -88,7 +88,7 @@ public class CFReportWriterTest {
                 false,
                 0.23,
                 false,
-                false);
+                false, LimsCohort.CPCT);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -103,7 +103,7 @@ public class CFReportWriterTest {
                 true,
                 0.19,
                 false,
-                false);
+                false, LimsCohort.CPCT);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -112,7 +112,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCPCTSample() throws IOException {
         AnalysedPatientReport patientReport =
-                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_FULL", FULL_TABLES_COMMENT_STRING);
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_FULL", FULL_TABLES_COMMENT_STRING, LimsCohort.CPCT);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -121,7 +121,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCORESample() throws IOException {
         AnalysedPatientReport patientReport =
-                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CORE01_FULL", null);
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CORE01_FULL", null, LimsCohort.CORE);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -130,7 +130,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForWIDESample() throws IOException {
         AnalysedPatientReport patientReport =
-                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("WIDE01_FULL", FULL_TABLES_COMMENT_STRING);
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("WIDE01_FULL", FULL_TABLES_COMMENT_STRING, LimsCohort.WIDE);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -139,7 +139,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCOREDBSample() throws IOException {
         AnalysedPatientReport patientReport =
-                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("COREDB01_FULL", FULL_TABLES_COMMENT_STRING);
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("COREDB01_FULL", FULL_TABLES_COMMENT_STRING, LimsCohort.COREDB);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -148,7 +148,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForBelowDetectionSample() throws IOException {
         AnalysedPatientReport patientReport =
-                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_NO_TUMOR", FULL_TABLES_COMMENT_STRING, false, 1D);
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_NO_TUMOR", FULL_TABLES_COMMENT_STRING, false, 1D, LimsCohort.CPCT);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -159,7 +159,7 @@ public class CFReportWriterTest {
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_INSUFFICIENT_TUMOR",
                 FULL_TABLES_COMMENT_STRING,
                 true,
-                0.19);
+                0.19, LimsCohort.CPCT);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -167,7 +167,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateInsufficientDNAReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01", Lims.NOT_PERFORMED_STRING, null, QCFailReason.INSUFFICIENT_DNA, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT01", Lims.NOT_PERFORMED_STRING, null, QCFailReason.INSUFFICIENT_DNA, false, COMMENT_STRING_QC_FAIL, LimsCohort.CPCT);
     }
 
     @Test
@@ -177,7 +177,7 @@ public class CFReportWriterTest {
                 null,
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
-                COMMENT_STRING_QC_FAIL_CORRECTED);
+                COMMENT_STRING_QC_FAIL_CORRECTED, LimsCohort.CPCT);
     }
 
     @Test
@@ -187,37 +187,37 @@ public class CFReportWriterTest {
                 null,
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
-                COMMENT_STRING_QC_FAIL_CORRECTED);
+                COMMENT_STRING_QC_FAIL_CORRECTED, LimsCohort.COREDB);
     }
 
     @Test
     public void canGenerateTechnicalFailureReport() throws IOException {
-        generateQCFailCPCTReport("CPCT02", "60%", null, QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT02", "60%", null, QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL, LimsCohort.CPCT);
     }
 
     @Test
     public void canGenerateSufficientTCPQCFailReport() throws IOException {
-        generateQCFailCPCTReport("CPCT03", "60%", "70%", QCFailReason.SUFFICIENT_TCP_QC_FAILURE, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT03", "60%", "70%", QCFailReason.SUFFICIENT_TCP_QC_FAILURE, false, COMMENT_STRING_QC_FAIL, LimsCohort.CPCT);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterDeepWGSReport() throws IOException {
-        generateQCFailCPCTReport("CPCT04", "22%", "18%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT04", "22%", "18%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL, LimsCohort.CPCT);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReport() throws IOException {
-        generateQCFailCPCTReport("CPCT05", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CPCT05", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL, LimsCohort.CPCT);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReportCORE() throws IOException {
-        generateQCFailCPCTReport("CORE01", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("CORE01", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL, LimsCohort.CORE);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReportWIDE() throws IOException {
-        generateQCFailCPCTReport("WIDE01", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL);
+        generateQCFailCPCTReport("WIDE01", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL, LimsCohort.WIDE);
     }
 
     @NotNull
@@ -232,7 +232,7 @@ public class CFReportWriterTest {
     }
 
     private static void generateQCFailCPCTReport(@NotNull String sampleId, @NotNull String shallowSeqPurity,
-            @Nullable String wgsPurityString, @NotNull QCFailReason reason, boolean correctedReport, @NotNull String comments)
+            @Nullable String wgsPurityString, @NotNull QCFailReason reason, boolean correctedReport, @NotNull String comments, @NotNull LimsCohort cohort)
             throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .patientId("patient")
@@ -259,7 +259,7 @@ public class CFReportWriterTest {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(shallowSeqPurity)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .cohort(LimsCohort.COREDB)
+                .cohort(cohort)
                 .projectName("TEST-001-002")
                 .submissionId("SUBM")
                 .hospitalContactData(createTestHospitalContactData())
