@@ -123,6 +123,7 @@ public class ProtectApplication implements AutoCloseable {
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
         final DoidParents doidParent = new DoidParents(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
 
+
         LOGGER.info("Loading patient primary tumors from {}", config.primaryTumorTsv());
         final List<PatientPrimaryTumor> primaryTumors = PatientPrimaryTumorFile.read(config.primaryTumorTsv());
 
