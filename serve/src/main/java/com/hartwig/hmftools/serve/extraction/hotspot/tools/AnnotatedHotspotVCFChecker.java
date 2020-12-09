@@ -232,6 +232,7 @@ public class AnnotatedHotspotVCFChecker {
         serveToSnpEffMappings.put("ENST00000231790", createMLH1Map());
         serveToSnpEffMappings.put("ENST00000371953", createPTENMap());
         serveToSnpEffMappings.put("ENST00000227507", createCCND1Map());
+        serveToSnpEffMappings.put("ENST00000368323", createRIT1Map());
 
         return serveToSnpEffMappings;
     }
@@ -290,11 +291,14 @@ public class AnnotatedHotspotVCFChecker {
     private static Map<String, List<String>> createBRAFMap() {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.T599_V600insV", Lists.newArrayList("p.V600dup"));
+        map.put("p.T599_V600insTT", Lists.newArrayList("p.A598_T599insTT"));
         map.put("p.T599_V600insEAT", Lists.newArrayList("p.A598_T599insTEA"));
         map.put("p.T599_V600insETT", Lists.newArrayList("p.A598_T599insTET"));
         map.put("p.L485_Q494del", Lists.newArrayList("p.N486_L495del"));
         return map;
     }
+
+
 
     @NotNull
     private static Map<String, List<String>> createNOTCH1Map() {
@@ -395,6 +399,14 @@ public class AnnotatedHotspotVCFChecker {
         Map<String, List<String>> map = Maps.newHashMap();
         map.put("p.L283_D294del", Lists.newArrayList("p.V281_D292del", "p.D282_V293del"));
         return map;
+    }
+
+    @NotNull
+    private static Map<String, List<String>> createRIT1Map() {
+        Map<String, List<String>> map = Maps.newHashMap();
+        map.put("p.T76_A77insTLDT", Lists.newArrayList("p.D75_T76insTTLD"));
+        return map;
+
     }
 
     @NotNull
