@@ -63,10 +63,14 @@ public class ReportingDbTest {
             }
 
             ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS", null));
+                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS",
+                            null,
+                            LimsCohort.CPCT));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS));
+                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL",
+                            QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
+                            LimsCohort.CPCT));
         }
     }
 

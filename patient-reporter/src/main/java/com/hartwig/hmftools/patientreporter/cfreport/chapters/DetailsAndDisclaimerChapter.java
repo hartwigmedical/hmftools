@@ -86,8 +86,13 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph(whoVerified));
         div.add(createContentParagraph("This report is addressed to: ", sampleReport.addressee()));
 
-        if (cohort == LimsCohort.CORE) {
+        if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
+                || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB) {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
+        }
+
+        if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
+                || cohort == LimsCohort.CORESC11) {
             div.add(createContentParagraphTwice("The project name of sample is: ",
                     sampleReport.projectName(),
                     " and the submission ID is ",

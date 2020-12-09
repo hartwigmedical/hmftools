@@ -61,14 +61,15 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments) {
-        return buildWithCOLO829Data(sampleId, correctionReport, comments, QsFormNumber.FOR_080.display(), true, 1D, true, false);
+    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
+            @NotNull LimsCohort cohort) {
+        return buildWithCOLO829Data(sampleId, correctionReport, comments, QsFormNumber.FOR_080.display(), true, 1D, true, false, cohort);
     }
 
     @NotNull
     public static AnalysedPatientReport buildWithCOLO829Data(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
             @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary,
-            boolean reportGermline) {
+            boolean reportGermline, @NotNull LimsCohort cohort) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 190;
         double tumorMutationalBurden = 13.7;
@@ -88,7 +89,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline, cohort);
 
         String summaryWithoutGermline = "Melanoma sample showing:\n"
                 + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
@@ -155,13 +156,13 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildAnalysisWithAllTablesFilledInAndReliablePurity(@NotNull String sampleId,
-            @Nullable String comments) {
-        return buildAnalysisWithAllTablesFilledIn(sampleId, comments, true, 1D);
+            @Nullable String comments, @NotNull LimsCohort cohort) {
+        return buildAnalysisWithAllTablesFilledIn(sampleId, comments, true, 1D, cohort);
     }
 
     @NotNull
     public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId, @Nullable String comments,
-            boolean hasReliablePurity, double impliedTumorPurity) {
+            boolean hasReliablePurity, double impliedTumorPurity, @NotNull LimsCohort cohort) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 182;
         double tumorMutationalBurden = 13.6;
@@ -181,7 +182,7 @@ public final class ExampleAnalysisTestFactory {
         List<ViralInsertion> viralInsertions = createTestViralInsertions();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, cohort);
         String clinicalSummary = Strings.EMPTY;
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
@@ -222,8 +223,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true);
+    public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason, @NotNull LimsCohort cohort) {
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, cohort);
 
         ReportData reportData = PatientReporterTestFactory.loadTestReportData();
         return ImmutableQCFailReport.builder()
@@ -249,7 +250,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample, boolean reportGermline) {
+    private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample, boolean reportGermline, @NotNull LimsCohort cohort) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .patientId("COLO829")
                 .refSampleId(Strings.EMPTY)
@@ -278,7 +279,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .cohort(LimsCohort.CPCT)
+                .cohort(cohort)
                 .projectName("TEST-001-002")
                 .submissionId("SUBM")
                 .hospitalContactData(createTestHospitalContactData())
