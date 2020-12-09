@@ -92,7 +92,7 @@ public class IclusionExtractor {
                 }
 
                 if (extraction.signatureName() != null) {
-                    actionableSignatures.add(ActionableEventFactory.toActionableSignatures(trial, extraction.signatureName()));
+                    actionableSignatures.add(ActionableEventFactory.toActionableSignature(trial, extraction.signatureName()));
                 }
             }
         }

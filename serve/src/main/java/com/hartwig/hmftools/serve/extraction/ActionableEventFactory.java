@@ -136,7 +136,7 @@ public final class ActionableEventFactory {
     }
 
     @NotNull
-    public static ActionableSignature toActionableSignatures(@NotNull ActionableEvent actionableEvent, @NotNull SignatureName signature) {
+    public static ActionableSignature toActionableSignature(@NotNull ActionableEvent actionableEvent, @NotNull SignatureName signature) {
         return ImmutableActionableSignature.builder().from(actionableEvent).name(signature).build();
     }
 }

@@ -11,15 +11,11 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
-import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
-import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
+import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -33,7 +29,6 @@ import com.hartwig.hmftools.serve.extraction.fusion.FusionFunctions;
 import com.hartwig.hmftools.serve.extraction.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
@@ -234,15 +229,7 @@ public final class ViccExtractor {
             @NotNull Iterable<List<VariantHotspot>> hotspotLists) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         for (List<VariantHotspot> hotspotList : hotspotLists) {
-            for (VariantHotspot hotspot : hotspotList) {
-                actionableHotspots.add(ImmutableActionableHotspot.builder()
-                        .from(actionableEvent)
-                        .chromosome(hotspot.chromosome())
-                        .position(hotspot.position())
-                        .ref(hotspot.ref())
-                        .alt(hotspot.alt())
-                        .build());
-            }
+            actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(actionableEvent, hotspotList));
         }
         return actionableHotspots;
     }
@@ -252,29 +239,11 @@ public final class ViccExtractor {
             @NotNull Iterable<List<CodonAnnotation>> codonLists, @NotNull Iterable<List<ExonAnnotation>> exonLists) {
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         for (List<CodonAnnotation> codonList : codonLists) {
-            for (CodonAnnotation codon : codonList) {
-                actionableRanges.add(ImmutableActionableRange.builder()
-                        .from(actionableEvent)
-                        .chromosome(codon.chromosome())
-                        .start(codon.start())
-                        .end(codon.end())
-                        .gene(codon.gene())
-                        .mutationType(codon.mutationType())
-                        .build());
-            }
+            actionableRanges.addAll(ActionableEventFactory.codonsToActionableRanges(actionableEvent, codonList));
         }
 
         for (List<ExonAnnotation> exonList : exonLists) {
-            for (ExonAnnotation exon : exonList) {
-                actionableRanges.add(ImmutableActionableRange.builder()
-                        .from(actionableEvent)
-                        .chromosome(exon.chromosome())
-                        .start(exon.start())
-                        .end(exon.end())
-                        .gene(exon.gene())
-                        .mutationType(exon.mutationType())
-                        .build());
-            }
+            actionableRanges.addAll(ActionableEventFactory.exonsToActionableRanges(actionableEvent, exonList));
         }
         return actionableRanges;
     }
@@ -284,21 +253,7 @@ public final class ViccExtractor {
             @NotNull Iterable<KnownCopyNumber> copyNumbers) {
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         for (KnownCopyNumber copyNumber : copyNumbers) {
-            GeneLevelEvent event;
-            switch (copyNumber.type()) {
-                case AMPLIFICATION: {
-                    event = GeneLevelEvent.AMPLIFICATION;
-                    break;
-                }
-                case DELETION: {
-                    event = GeneLevelEvent.DELETION;
-                    break;
-                }
-                default:
-                    throw new IllegalStateException("Invalid copy number type: " + copyNumber.type());
-            }
-
-            actionableGenes.add(ImmutableActionableGene.builder().from(actionableEvent).gene(copyNumber.gene()).event(event).build());
+            actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(actionableEvent, copyNumber));
         }
         return actionableGenes;
     }
@@ -308,29 +263,17 @@ public final class ViccExtractor {
             @NotNull Iterable<GeneLevelAnnotation> geneLevelEvents) {
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         for (GeneLevelAnnotation geneLevelEvent : geneLevelEvents) {
-            actionableGenes.add(ImmutableActionableGene.builder()
-                    .from(actionableEvent)
-                    .gene(geneLevelEvent.gene())
-                    .event(geneLevelEvent.event())
-                    .build());
+            actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(actionableEvent, geneLevelEvent));
         }
         return actionableGenes;
     }
 
     @NotNull
     private static Set<ActionableFusion> extractActionableFusions(@NotNull ActionableEvent actionableEvent,
-            @NotNull Iterable<KnownFusionPair> fusionAnnotations) {
+            @NotNull Iterable<KnownFusionPair> knownFusions) {
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
-        for (KnownFusionPair fusion : fusionAnnotations) {
-            actionableFusions.add(ImmutableActionableFusion.builder()
-                    .from(actionableEvent)
-                    .geneUp(fusion.geneUp())
-                    .minExonUp(fusion.minExonUp())
-                    .maxExonUp(fusion.maxExonUp())
-                    .geneDown(fusion.geneDown())
-                    .minExonDown(fusion.minExonDown())
-                    .maxExonDown(fusion.maxExonDown())
-                    .build());
+        for (KnownFusionPair fusion : knownFusions) {
+            actionableFusions.add(ActionableEventFactory.toActionableFusion(actionableEvent, fusion));
         }
         return actionableFusions;
     }
@@ -340,7 +283,7 @@ public final class ViccExtractor {
             @NotNull Iterable<SignatureName> signatures) {
         Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
         for (SignatureName signature : signatures) {
-            actionableSignatures.add(ImmutableActionableSignature.builder().from(actionableEvent).name(signature).build());
+            actionableSignatures.add(ActionableEventFactory.toActionableSignature(actionableEvent, signature));
         }
         return actionableSignatures;
     }
