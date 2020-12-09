@@ -308,7 +308,7 @@ public interface SvVisualiserConfig
 
         if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
         {
-            geneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.HG19);
+            geneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.RG_37);
             geneTransCache.setRequiredData(true, false, false, true);
             geneTransCache.load(false);
         }

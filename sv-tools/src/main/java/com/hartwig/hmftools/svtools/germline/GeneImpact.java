@@ -62,7 +62,7 @@ public class GeneImpact
             final List<String> genePanelIds = cmd.hasOption(GENE_PANEL_FILE) ?
                     loadGenePanel(cmd.getOptionValue(GENE_PANEL_FILE)) : Lists.newArrayList();
 
-            mGeneDataCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.HG19);
+            mGeneDataCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.RG_37);
             mGeneDataCache.setRestrictedGeneIdList(genePanelIds);
             mGeneDataCache.load(true);
 

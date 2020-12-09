@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.linx.misc;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_19;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
@@ -60,21 +60,21 @@ public class MiscTest
         String chr19 = "chr10";
         String chr38 = "chr10";
 
-        RefGenomeVersion version = HG37;
+        RefGenomeVersion version = RG_37;
         assertEquals(chr37, refGenomeChromosome(chr37, version));
 
-        version = HG38;
+        version = RG_38;
         assertEquals(chr38, refGenomeChromosome(chr37, version));
 
-        version = HG19;
+        version = RG_19;
         assertEquals(chr19, refGenomeChromosome(chr37, version));
 
         assertEquals(chr38, refGenomeChromosome(chr38, version));
 
-        version = HG37;
+        version = RG_37;
         assertEquals(chr37, refGenomeChromosome(chr19, version));
 
-        version = HG37;
+        version = RG_37;
         assertEquals(chr37, refGenomeChromosome(chr38, version));
     }
 

@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
@@ -74,7 +73,7 @@ public class LinxConfig
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
 
-    public static RefGenomeVersion RG_VERSION = RefGenomeVersion.HG37;
+    public static RefGenomeVersion RG_VERSION = RG_37;
 
     private static final String INDEL_ANNOTATIONS = "indel_annotation";
 
@@ -121,11 +120,11 @@ public class LinxConfig
         {
             try
             {
-                RG_VERSION = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION));
+                RG_VERSION = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
             }
             catch(Exception e)
             {
-                LNX_LOGGER.error("invalid ref genome version({}), default to HG37", cmd.getOptionValue(REF_GENOME_VERSION));
+                LNX_LOGGER.error("invalid ref genome version({}), default to 37", cmd.getOptionValue(REF_GENOME_VERSION));
             }
         }
 
@@ -282,7 +281,7 @@ public class LinxConfig
     public LinxConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
-        RG_VERSION = HG19;
+        RG_VERSION = RG_37;
         PurpleDataPath = "";
         OutputDataPath = "";
         SvDataPath = "";

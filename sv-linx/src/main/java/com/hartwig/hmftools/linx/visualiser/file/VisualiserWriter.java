@@ -523,18 +523,18 @@ public class VisualiserWriter
 
         if(geneData.TransName.equals("@IGH"))
         {
-            posStart = RG_VERSION == RefGenomeVersion.HG19 ? 106032614 : 105586437;
-            posEnd = RG_VERSION == RefGenomeVersion.HG19 ? 107288051 : 106879844;
+            posStart = RefGenomeVersion.is37(RG_VERSION) ? 106032614 : 105586437;
+            posEnd = RefGenomeVersion.is37(RG_VERSION) ? 107288051 : 106879844;
         }
         else if(geneData.TransName.equals("@IGK"))
         {
-            posStart = RG_VERSION == RefGenomeVersion.HG19 ? 89890568 : 88857361;
-            posEnd = RG_VERSION == RefGenomeVersion.HG19 ? 90274235 : 90235368;
+            posStart = RefGenomeVersion.is37(RG_VERSION) ? 89890568 : 88857361;
+            posEnd = RefGenomeVersion.is37(RG_VERSION) ? 90274235 : 90235368;
         }
         else if(geneData.TransName.equals("@IGL"))
         {
-            posStart = RG_VERSION == RefGenomeVersion.HG19 ? 22380474 : 22026076;
-            posEnd = RG_VERSION == RefGenomeVersion.HG19 ? 23265085 : 22922913;
+            posStart = RefGenomeVersion.is37(RG_VERSION) ? 22380474 : 22026076;
+            posEnd = RefGenomeVersion.is37(RG_VERSION) ? 23265085 : 22922913;
         }
 
         geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,

@@ -33,7 +33,7 @@ public class SvUtilities {
 
     public static RefGenome refGenomeLengths()
     {
-        return RG_VERSION == RefGenomeVersion.HG38 ? RefGenome.HG38 : RefGenome.HG19;
+        return RG_VERSION == RefGenomeVersion.RG_38 ? RefGenome.HG38 : RefGenome.HG19;
     }
 
 

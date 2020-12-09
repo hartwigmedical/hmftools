@@ -23,12 +23,12 @@ public class IsofoxConstants
     public static final int MAX_NOVEL_SJ_DISTANCE = 500000; // beyond which a fragment will be considered chimeric
 
     // LINC00486
-    public static final SvRegion EXCLUDED_REGION_1_HG19 = new SvRegion("2", 33141260, 33141700);
-    public static final SvRegion EXCLUDED_REGION_1_HG38 = new SvRegion("2", 32916190, 32916630);
+    public static final SvRegion EXCLUDED_REGION_1_REF_37 = new SvRegion("2", 33141260, 33141700);
+    public static final SvRegion EXCLUDED_REGION_1_REF_38 = new SvRegion("2", 32916190, 32916630);
 
     public static void populateEnrichedGeneIds(final List<String> geneIds, final RefGenomeVersion version)
     {
-        if(version == RefGenomeVersion.HG38)
+        if(version == RefGenomeVersion.RG_38)
         {
             geneIds.add("ENSG00000276168");
             geneIds.add("ENSG00000274012");

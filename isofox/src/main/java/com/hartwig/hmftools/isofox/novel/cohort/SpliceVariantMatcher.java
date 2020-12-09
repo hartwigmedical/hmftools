@@ -91,7 +91,7 @@ public class SpliceVariantMatcher
 
         boolean allTranscripts = cmd.hasOption(INCLUDE_ALL_TRANSCRIPTS);
 
-        mGeneTransCache = new EnsemblDataCache(mConfig.EnsemblDataCache, RefGenomeVersion.HG37);
+        mGeneTransCache = new EnsemblDataCache(mConfig.EnsemblDataCache, RefGenomeVersion.RG_37);
         mGeneTransCache.setRequiredData(true, false, false, !allTranscripts);
         mGeneTransCache.load(false);
 

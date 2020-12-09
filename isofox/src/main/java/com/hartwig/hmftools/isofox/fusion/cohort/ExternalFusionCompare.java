@@ -57,7 +57,7 @@ public class ExternalFusionCompare
     {
         mConfig = config;
 
-        mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.HG19);
+        mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.RG_37);
         mGeneTransCache.setRequiredData(false, false, false, false);
         mGeneTransCache.setRequireGeneSynonyms();
         mGeneTransCache.load(true); // only need  genes, not transcript data

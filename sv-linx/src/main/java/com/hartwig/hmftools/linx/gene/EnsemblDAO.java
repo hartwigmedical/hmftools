@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.linx.gene;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_19;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -49,7 +49,7 @@ public class EnsemblDAO
 
     public EnsemblDAO(final CommandLine cmd)
     {
-        mRefGenomeVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(HG19)));
+        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(RG_37)));
         mGeneIds = Sets.newHashSet();
         mTranscriptIds = Sets.newHashSet();
 
@@ -76,7 +76,7 @@ public class EnsemblDAO
 
     private boolean ignoreTranscript(final String transName)
     {
-        if(mRefGenomeVersion == HG38)
+        if(mRefGenomeVersion == RG_38)
             return false;
 
         return transName.equals("ENST00000467125"); // GOPC processed transcript which matches a ROS1 splice site
@@ -106,7 +106,7 @@ public class EnsemblDAO
 
     private int findCoordSystemId()
     {
-        final String version = (mRefGenomeVersion == HG37 || mRefGenomeVersion == HG19) ? "GRCh37" : "GRCh38";
+        final String version = RefGenomeVersion.is37(mRefGenomeVersion) ? "GRCh37" : "GRCh38";
 
         final String queryStr = "select coord_system_id from coord_system"
                 + " where version = '" + version + "'"
