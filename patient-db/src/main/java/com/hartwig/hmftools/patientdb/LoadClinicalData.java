@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientdb.context.RunContext;
@@ -132,7 +133,7 @@ public final class LoadClinicalData {
         EcrfModels ecrfModels = loadEcrfModels(cmd);
 
         Map<String, Patient> patients =
-                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator);
+                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, lims);
 
         LOGGER.info("Writing curated primary tumors");
         DumpPrimaryTumorData.writeCuratedPrimaryTumorsToTSV(cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV), patients.values());
@@ -199,9 +200,9 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsStudy study = LimsStudy.fromSampleId(sampleId);
+            LimsCohort cohort = lims.cohort(sampleBarcode);
 
-            if (study != LimsStudy.NON_CANCER_STUDY) {
+            if (cohort != LimsCohort.NON_CANCER) {
                 String patientId = lims.patientId(sampleBarcode);
                 SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
@@ -380,7 +381,7 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
             @NotNull EcrfModels ecrfModels, @NotNull PrimaryTumorCurator primaryTumorCurator,
-            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator) {
+            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator, @NotNull Lims lims) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
         EcrfPatientReader cpctPatientReader = new CpctPatientReader(primaryTumorCurator,
@@ -400,11 +401,11 @@ public final class LoadClinicalData {
 
         LOGGER.info("Interpreting and curating data for WIDE patients");
         Map<String, Patient> widePatients =
-                readWidePatients(ecrfModels.wideModel(), sampleDataPerPatient, primaryTumorCurator, treatmentCurator);
+                readWidePatients(ecrfModels.wideModel(), sampleDataPerPatient, primaryTumorCurator, treatmentCurator, lims);
         LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
         LOGGER.info("Interpreting and curating data for CORE patients");
-        Map<String, Patient> corePatients = readCorePatients(sampleDataPerPatient, primaryTumorCurator);
+        Map<String, Patient> corePatients = readCorePatients(sampleDataPerPatient, primaryTumorCurator, lims);
         LOGGER.info(" Finished curation of {} CORE patients", corePatients.size());
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
@@ -431,7 +432,7 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, Patient> readWidePatients(@NotNull WideEcrfModel wideEcrfModel,
             @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull PrimaryTumorCurator primaryTumorCurator,
-            @NotNull TreatmentCurator treatmentCurator) {
+            @NotNull TreatmentCurator treatmentCurator, @NotNull Lims lims) {
         Map<String, Patient> patientMap = Maps.newHashMap();
 
         WidePatientReader widePatientReader = new WidePatientReader(wideEcrfModel, primaryTumorCurator, treatmentCurator);
@@ -439,11 +440,11 @@ public final class LoadClinicalData {
             List<SampleData> samples = entry.getValue();
 
             assert samples != null;
-            List<SampleData> tumorSamples = extractTumorSamples(samples);
+            List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsStudy study = LimsStudy.fromSampleId(tumorSamples.get(0).sampleId());
+                LimsCohort cohort = lims.cohort(tumorSamples.get(0).sampleBarcode());
 
-                if (study == LimsStudy.WIDE) {
+                if (cohort == LimsCohort.WIDE) {
                     String patientId = entry.getKey();
                     Patient widePatient =
                             widePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
@@ -456,7 +457,7 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> readCorePatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull PrimaryTumorCurator primaryTumorCurator) {
+            @NotNull PrimaryTumorCurator primaryTumorCurator, @NotNull Lims lims) {
         Map<String, Patient> patientMap = Maps.newHashMap();
         CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
 
@@ -464,11 +465,11 @@ public final class LoadClinicalData {
             List<SampleData> samples = entry.getValue();
 
             assert samples != null;
-            List<SampleData> tumorSamples = extractTumorSamples(samples);
+            List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsStudy study = LimsStudy.fromSampleId(tumorSamples.get(0).sampleId());
+                LimsCohort cohort = LimsCohort.fromCohort(tumorSamples.get(0).sampleBarcode());
 
-                if (study == LimsStudy.CORE) {
+                if (cohort == LimsCohort.CORE) {
                     String patientId = entry.getKey();
                     Patient corePatient =
                             corePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
@@ -481,12 +482,12 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static List<SampleData> extractTumorSamples(@NotNull Iterable<SampleData> samples) {
+    private static List<SampleData> extractTumorSamples(@NotNull Iterable<SampleData> samples, @NotNull Lims lims) {
         List<SampleData> tumorSamples = Lists.newArrayList();
 
         for (SampleData sample : samples) {
-            LimsStudy study = LimsStudy.fromSampleId(sample.sampleId());
-            if (study != LimsStudy.NON_CANCER_STUDY) {
+            LimsCohort cohort = lims.cohort(sample.sampleBarcode());
+            if (cohort != LimsCohort.NON_CANCER) {
                 if (sample.sampleId().substring(12).contains("T")) {
                     tumorSamples.add(sample);
                 }
