@@ -40,7 +40,7 @@ public final class KnownHotspotFile {
 
     @NotNull
     public static String knownHotspotVcfPath(@NotNull String outputDir, @NotNull RefGenomeVersion refGenomeVersion) {
-        return refGenomeVersion.makeVersioned(outputDir + File.separator + KNOWN_HOTSPOT_VCF);
+        return refGenomeVersion.addVersionToFilePath(outputDir + File.separator + KNOWN_HOTSPOT_VCF);
     }
 
     public static void write(@NotNull String hotspotVcf, @NotNull Iterable<KnownHotspot> hotspots) {

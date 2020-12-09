@@ -47,7 +47,7 @@ public class ProtectApplication implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
     private static final String PAN_CANCER_DOID = "162";
-    private static final RefGenomeVersion REF_GENOME_VERSION = RefGenomeVersion.HG19;
+    private static final RefGenomeVersion REF_GENOME_VERSION = RefGenomeVersion.V37;
 
     public static void main(@NotNull String[] args) throws IOException {
         Options options = ProtectConfig.createOptions();

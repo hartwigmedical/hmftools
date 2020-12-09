@@ -47,7 +47,7 @@ public class ViccExtractorTestApp {
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
         String viccJsonPath;
         String driverGeneTsvPath;
         String outputDir;

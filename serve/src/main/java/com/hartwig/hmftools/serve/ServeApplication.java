@@ -123,7 +123,7 @@ public class ServeApplication {
 
     @NotNull
     private static Map<String, HmfTranscriptRegion> selectAllGeneMap(@NotNull ServeConfig config) {
-        if (config.refGenomeVersion() == RefGenomeVersion.HG19) {
+        if (config.refGenomeVersion() == RefGenomeVersion.V37) {
             return HmfGenePanelSupplier.allGenesMap37();
         }
 
