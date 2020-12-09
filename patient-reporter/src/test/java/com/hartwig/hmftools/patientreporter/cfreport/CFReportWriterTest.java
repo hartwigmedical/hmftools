@@ -259,7 +259,7 @@ public class CFReportWriterTest {
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(shallowSeqPurity)
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
-                .cohort(LimsCohort.CPCT)
+                .cohort(LimsCohort.COREDB)
                 .projectName("TEST-001-002")
                 .submissionId("SUBM")
                 .hospitalContactData(createTestHospitalContactData())

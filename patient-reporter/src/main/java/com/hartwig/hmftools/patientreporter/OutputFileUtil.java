@@ -16,9 +16,10 @@ public final class OutputFileUtil {
         SampleReport sampleReport = report.sampleReport();
         LimsCohort cohort = report.sampleReport().cohort();
 
-        String filePrefix = cohort == LimsCohort.CORE
-                ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
-                : sampleReport.tumorSampleId();
+        String filePrefix =
+                cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
+                        || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB ? sampleReport.tumorSampleId() + "_"
+                        + sampleReport.hospitalPatientId().replace(" ", "_") : sampleReport.tumorSampleId();
 
         String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";
 
