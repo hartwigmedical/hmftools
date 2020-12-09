@@ -76,8 +76,8 @@ public class IclusionExtractor {
         for (ActionableTrial trial : actionableTrials) {
             for (EventExtractorOutput extraction : eventExtractions) {
                 actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots()));
-                actionableRanges.addAll(ActionableEventFactory.codonsToActionableRanges(trial, extraction.codons()));
-                actionableRanges.addAll(ActionableEventFactory.exonsToActionableRanges(trial, extraction.exons()));
+                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.codons()));
+                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.exons()));
 
                 if (extraction.geneLevelEvent() != null) {
                     actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, extraction.geneLevelEvent()));

@@ -16,12 +16,11 @@ import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
-import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
 import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 
 import org.jetbrains.annotations.NotNull;
@@ -54,43 +53,21 @@ public final class ActionableEventFactory {
     }
 
     @NotNull
-    public static Set<ActionableRange> codonsToActionableRanges(@NotNull ActionableEvent actionableEvent,
-            @Nullable List<CodonAnnotation> codons) {
-        if (codons == null) {
+    public static Set<ActionableRange> toActionableRanges(@NotNull ActionableEvent actionableEvent,
+            @Nullable List<? extends RangeAnnotation> ranges) {
+        if (ranges == null) {
             return Sets.newHashSet();
         }
 
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
-        for (CodonAnnotation codon : codons) {
+        for (RangeAnnotation range : ranges) {
             actionableRanges.add(ImmutableActionableRange.builder()
                     .from(actionableEvent)
-                    .chromosome(codon.chromosome())
-                    .start(codon.start())
-                    .end(codon.end())
-                    .gene(codon.gene())
-                    .mutationType(codon.mutationType())
-                    .build());
-        }
-
-        return actionableRanges;
-    }
-
-    @NotNull
-    public static Set<ActionableRange> exonsToActionableRanges(@NotNull ActionableEvent actionableEvent,
-            @Nullable List<ExonAnnotation> exons) {
-        if (exons == null) {
-            return Sets.newHashSet();
-        }
-
-        Set<ActionableRange> actionableRanges = Sets.newHashSet();
-        for (ExonAnnotation exon : exons) {
-            actionableRanges.add(ImmutableActionableRange.builder()
-                    .from(actionableEvent)
-                    .chromosome(exon.chromosome())
-                    .start(exon.start())
-                    .end(exon.end())
-                    .gene(exon.gene())
-                    .mutationType(exon.mutationType())
+                    .chromosome(range.chromosome())
+                    .start(range.start())
+                    .end(range.end())
+                    .gene(range.gene())
+                    .mutationType(range.mutationType())
                     .build());
         }
 

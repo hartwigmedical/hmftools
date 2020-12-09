@@ -239,11 +239,11 @@ public final class ViccExtractor {
             @NotNull Iterable<List<CodonAnnotation>> codonLists, @NotNull Iterable<List<ExonAnnotation>> exonLists) {
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         for (List<CodonAnnotation> codonList : codonLists) {
-            actionableRanges.addAll(ActionableEventFactory.codonsToActionableRanges(actionableEvent, codonList));
+            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(actionableEvent, codonList));
         }
 
         for (List<ExonAnnotation> exonList : exonLists) {
-            actionableRanges.addAll(ActionableEventFactory.exonsToActionableRanges(actionableEvent, exonList));
+            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(actionableEvent, exonList));
         }
         return actionableRanges;
     }
