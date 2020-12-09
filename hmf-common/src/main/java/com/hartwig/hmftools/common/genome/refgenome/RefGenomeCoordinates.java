@@ -13,9 +13,10 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum RefGenome {
-    HG19(fromResource("hg19_len.tsv"), fromResource("hg19_centromere.tsv")),
-    HG38(fromResource("hg38_len.tsv"), fromResource("hg38_centromere.tsv"));
+public enum RefGenomeCoordinates
+{
+    COORDS_37(fromResource("hg19_len.tsv"), fromResource("hg19_centromere.tsv")),
+    COORDS_38(fromResource("hg38_len.tsv"), fromResource("hg38_centromere.tsv"));
 
     @NotNull
     private final Map<Chromosome, Long> lengths;
@@ -24,7 +25,7 @@ public enum RefGenome {
 
     private static final String FIELD_SEPARATOR = "\t";
 
-    RefGenome(@NotNull final Map<Chromosome, Long> lengths, @NotNull final Map<Chromosome, Long> centromeres) {
+    RefGenomeCoordinates(@NotNull final Map<Chromosome, Long> lengths, @NotNull final Map<Chromosome, Long> centromeres) {
         this.lengths = lengths;
         this.centromeres = centromeres;
     }
@@ -41,7 +42,7 @@ public enum RefGenome {
 
     @NotNull
     private static Map<Chromosome, Long> fromResource(@NotNull final String resource) {
-        final InputStream inputStream = RefGenome.class.getResourceAsStream("/refgenome/" + resource);
+        final InputStream inputStream = RefGenomeCoordinates.class.getResourceAsStream("/refgenome/" + resource);
         return fromLines(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
     }
 

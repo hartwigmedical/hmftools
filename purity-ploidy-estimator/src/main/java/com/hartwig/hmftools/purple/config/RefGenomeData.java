@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.ImmutableHmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.ImmutableHmfTranscriptRegion;
@@ -78,11 +78,11 @@ public interface RefGenomeData {
         }
 
         final GenomePosition chr1Length = lengthPositions.get(HumanChromosome._1);
-        final RefGenome refGenome;
-        if (chr1Length != null && chr1Length.position() == RefGenome.HG38.lengths().get(HumanChromosome._1)) {
-            refGenome = RefGenome.HG38;
+        final RefGenomeCoordinates refGenome;
+        if (chr1Length != null && chr1Length.position() == RefGenomeCoordinates.COORDS_38.lengths().get(HumanChromosome._1)) {
+            refGenome = RefGenomeCoordinates.COORDS_38;
         } else {
-            refGenome = RefGenome.HG19;
+            refGenome = RefGenomeCoordinates.COORDS_37;
         }
         LOGGER.info("Using ref genome: {}", refGenome);
 
@@ -90,7 +90,7 @@ public interface RefGenomeData {
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
 
         final List<HmfTranscriptRegion> rawGenePanel =
-                refGenome == RefGenome.HG38 ? HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
+                refGenome == RefGenomeCoordinates.COORDS_38 ? HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
 
         final Function<String, String> chromosomeToContig = s -> contigMap.get(HumanChromosome.fromString(s));
 
@@ -103,7 +103,7 @@ public interface RefGenomeData {
                 .length(toPosition(refGenome.lengths(), contigMap))
                 .centromere(toPosition(refGenome.centromeres(), contigMap))
                 .refGenome(refGenomePath)
-                .isHg38(refGenome.equals(RefGenome.HG38))
+                .isHg38(refGenome.equals(RefGenomeCoordinates.COORDS_38))
                 .genePanel(genePanel)
                 .build();
     }

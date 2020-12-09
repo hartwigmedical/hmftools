@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 public class Segments
 {
 
-    private static final RefGenome REF_GENOME = RefGenome.HG19;
+    private static final RefGenomeCoordinates REF_GENOME = RefGenomeCoordinates.COORDS_37;
 
     public static double segmentPloidyBefore(final int track, @NotNull final GenomePosition position,
             @NotNull final List<Segment> segments)

@@ -18,7 +18,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
@@ -31,9 +31,9 @@ public class SvUtilities {
 
     public static final int NO_LENGTH = -1;
 
-    public static RefGenome refGenomeLengths()
+    public static RefGenomeCoordinates refGenomeLengths()
     {
-        return RG_VERSION == RefGenomeVersion.RG_38 ? RefGenome.HG38 : RefGenome.HG19;
+        return RG_VERSION == RefGenomeVersion.RG_38 ? RefGenomeCoordinates.COORDS_38 : RefGenomeCoordinates.COORDS_37;
     }
 
 
@@ -55,7 +55,7 @@ public class SvUtilities {
 
     public static int getChromosomalArmLength(final String chromosome, final ChromosomeArm armType)
     {
-        final RefGenome refGenome = refGenomeLengths();
+        final RefGenomeCoordinates refGenome = refGenomeLengths();
         final HumanChromosome chr = HumanChromosome.fromString(chromosome);
 
         final Long centromerePos = refGenome.centromeres().get(chr);

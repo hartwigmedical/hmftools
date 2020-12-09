@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -183,8 +182,8 @@ public class PositionFreqBuilder
 
         mChromosomeLengths.clear();
 
-        final RefGenome refGenome37 = RefGenome.HG19;
-        final RefGenome refGenome38 = RefGenome.HG38;
+        final RefGenomeCoordinates refGenome37 = RefGenomeCoordinates.COORDS_37;
+        final RefGenomeCoordinates refGenome38 = RefGenomeCoordinates.COORDS_38;
 
         int lastEndPosIndex = -1;
 

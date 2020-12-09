@@ -15,7 +15,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 public class RnaUtils
@@ -234,9 +234,9 @@ public class RnaUtils
             return context.equals(SP_SEQ_NEG_STRAND_DONOR_1) || context.equals(SP_SEQ_NEG_STRAND_DONOR_2);
     }
 
-    public static final RefGenome refGenomeLengths()
+    public static final RefGenomeCoordinates refGenomeLengths()
     {
-        return RefGenome.HG19;
+        return RefGenomeCoordinates.COORDS_37;
     }
 
     public static long getChromosomeLength(final String chromosome)

@@ -5,7 +5,6 @@ import static java.lang.Math.floor;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.SU_LOGGER;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -14,7 +13,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 
 public class PositionFrequencies
 {
@@ -95,8 +94,8 @@ public class PositionFrequencies
 
         mChromosomeLengths.clear();
 
-        final RefGenome refGenome37 = RefGenome.HG19;
-        final RefGenome refGenome38 = RefGenome.HG38;
+        final RefGenomeCoordinates refGenome37 = RefGenomeCoordinates.COORDS_37;
+        final RefGenomeCoordinates refGenome38 = RefGenomeCoordinates.COORDS_38;
 
         int lastEndPosIndex = -1;
 
