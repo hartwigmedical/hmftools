@@ -5,14 +5,10 @@ import java.util.List;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class MutationTypeFilterAlgo {
-
-    private static final Logger LOGGER = LogManager.getLogger(MutationTypeFilterAlgo.class);
 
     @NotNull
     private final List<DriverGene> driverGenes;

@@ -20,28 +20,23 @@ import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
+import com.hartwig.hmftools.serve.extraction.EventExtractor;
+import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
-import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
-import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
-import com.hartwig.hmftools.serve.extraction.exon.ExonExtractor;
-import com.hartwig.hmftools.serve.extraction.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionFunctions;
 import com.hartwig.hmftools.serve.extraction.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
-import com.hartwig.hmftools.serve.extraction.gene.GeneLevelExtractor;
-import com.hartwig.hmftools.serve.extraction.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureExtractor;
 import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
@@ -59,33 +54,12 @@ public final class ViccExtractor {
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractor.class);
 
     @NotNull
-    private final HotspotExtractor hotspotExtractor;
-    @NotNull
-    private final CodonExtractor codonExtractor;
-    @NotNull
-    private final ExonExtractor exonExtractor;
-    @NotNull
-    private final GeneLevelExtractor geneLevelExtractor;
-    @NotNull
-    private final CopyNumberExtractor copyNumberExtractor;
-    @NotNull
-    private final FusionExtractor fusionExtractor;
-    @NotNull
-    private final SignatureExtractor signatureExtractor;
+    private final EventExtractor eventExtractor;
     @Nullable
     private final String featureInterpretationTsv;
 
-    public ViccExtractor(@NotNull final HotspotExtractor hotspotExtractor, @NotNull final CodonExtractor codonExtractor,
-            @NotNull final ExonExtractor exonExtractor, @NotNull final GeneLevelExtractor geneLevelExtractor,
-            @NotNull final CopyNumberExtractor copyNumberExtractor, @NotNull final FusionExtractor fusionExtractor,
-            @NotNull final SignatureExtractor signatureExtractor, @Nullable final String featureInterpretationTsv) {
-        this.hotspotExtractor = hotspotExtractor;
-        this.codonExtractor = codonExtractor;
-        this.exonExtractor = exonExtractor;
-        this.geneLevelExtractor = geneLevelExtractor;
-        this.copyNumberExtractor = copyNumberExtractor;
-        this.fusionExtractor = fusionExtractor;
-        this.signatureExtractor = signatureExtractor;
+    public ViccExtractor(@NotNull final EventExtractor eventExtractor, @Nullable final String featureInterpretationTsv) {
+        this.eventExtractor = eventExtractor;
         this.featureInterpretationTsv = featureInterpretationTsv;
     }
 
@@ -131,39 +105,33 @@ public final class ViccExtractor {
             if (gene == null) {
                 LOGGER.warn("No gene configured for {}. Skipping!", feature);
             } else {
-                List<VariantHotspot> hotspots = hotspotExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
-                if (hotspots != null) {
-                    hotspotsPerFeature.put(feature, hotspots);
+                EventExtractorOutput extractorOutput = eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
+                if (extractorOutput.hotspots() != null) {
+                    hotspotsPerFeature.put(feature, extractorOutput.hotspots());
                 }
 
-                List<CodonAnnotation> codons = codonExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
-                if (codons != null) {
-                    codonsPerFeature.put(feature, codons);
+                if (extractorOutput.codons() != null) {
+                    codonsPerFeature.put(feature, extractorOutput.codons());
                 }
 
-                List<ExonAnnotation> exons = exonExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
-                if (exons != null) {
-                    exonsPerFeature.put(feature, exons);
+                if (extractorOutput.exons() != null) {
+                    exonsPerFeature.put(feature, extractorOutput.exons());
                 }
 
-                GeneLevelAnnotation geneLevelAnnotation = geneLevelExtractor.extract(gene, feature.type(), feature.name());
-                if (geneLevelAnnotation != null) {
-                    geneLevelEventsPerFeature.put(feature, geneLevelAnnotation);
+                if (extractorOutput.geneLevelEvent() != null) {
+                    geneLevelEventsPerFeature.put(feature, extractorOutput.geneLevelEvent());
                 }
 
-                KnownCopyNumber knownCopyNumber = copyNumberExtractor.extract(gene, feature.type());
-                if (knownCopyNumber != null) {
-                    ampsDelsPerFeature.put(feature, knownCopyNumber);
+                if (extractorOutput.knownCopyNumber() != null) {
+                    ampsDelsPerFeature.put(feature, extractorOutput.knownCopyNumber());
                 }
 
-                KnownFusionPair knownFusionPair = fusionExtractor.extract(gene, feature.type(), feature.name());
-                if (knownFusionPair != null) {
-                    fusionsPerFeature.put(feature, knownFusionPair);
+                if (extractorOutput.knownFusionPair() != null) {
+                    fusionsPerFeature.put(feature, extractorOutput.knownFusionPair());
                 }
 
-                SignatureName signatureName = signatureExtractor.extract(feature.type(), feature.name());
-                if (signatureName != null) {
-                    signaturesPerFeature.put(feature, signatureName);
+                if (extractorOutput.signatureName() != null) {
+                    signaturesPerFeature.put(feature, extractorOutput.signatureName());
                 }
             }
         }

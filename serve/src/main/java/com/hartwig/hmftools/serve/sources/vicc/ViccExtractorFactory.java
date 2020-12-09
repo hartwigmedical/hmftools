@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
+import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.extraction.exon.ExonExtractor;
@@ -48,19 +49,21 @@ public final class ViccExtractorFactory {
         GeneChecker fusionGeneChecker = new GeneChecker(fusionGeneSet);
 
         MutationTypeFilterAlgo mutationTypeFilterAlgo = new MutationTypeFilterAlgo(driverGenes);
-        return new ViccExtractor(new HotspotExtractor(exomeGeneChecker, proteinResolver, config.proteinAnnotationExtractor()),
-                new CodonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
-                new ExonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
-                new GeneLevelExtractor(exomeGeneChecker,
-                        fusionGeneChecker,
-                        driverGenes,
-                        config.activatingGeneLevelKeyPhrases(),
-                        config.inactivatingGeneLevelKeyPhrases()),
-                new CopyNumberExtractor(exomeGeneChecker),
-                new FusionExtractor(fusionGeneChecker),
-                new SignatureExtractor(config.microsatelliteUnstableEvents(),
-                        config.highTumorMutationalLoadEvents(),
-                        config.hrDeficiencyEvents()),
-                featureInterpretationTsv);
+        EventExtractor eventExtractor =
+                new EventExtractor(new HotspotExtractor(exomeGeneChecker, proteinResolver, config.proteinAnnotationExtractor()),
+                        new CodonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
+                        new ExonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
+                        new GeneLevelExtractor(exomeGeneChecker,
+                                fusionGeneChecker,
+                                driverGenes,
+                                config.activatingGeneLevelKeyPhrases(),
+                                config.inactivatingGeneLevelKeyPhrases()),
+                        new CopyNumberExtractor(exomeGeneChecker),
+                        new FusionExtractor(fusionGeneChecker),
+                        new SignatureExtractor(config.microsatelliteUnstableEvents(),
+                                config.highTumorMutationalLoadEvents(),
+                                config.hrDeficiencyEvents()));
+
+        return new ViccExtractor(eventExtractor, featureInterpretationTsv);
     }
 }
