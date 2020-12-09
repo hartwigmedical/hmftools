@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
@@ -33,7 +32,7 @@ public class QCFailReporter {
             @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport) throws IOException {
 
         PatientPrimaryTumor patientPrimaryTumor =
-                PatientPrimaryTumorFunctions.findPrimaryTumorForSample(reportData.patientPrimaryTumors(),
+                PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(),
                         sampleMetadata.tumorSampleId());
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 

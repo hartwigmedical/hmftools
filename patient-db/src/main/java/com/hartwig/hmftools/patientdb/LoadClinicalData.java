@@ -27,7 +27,6 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;

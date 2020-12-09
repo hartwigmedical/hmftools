@@ -216,6 +216,7 @@ public class CFReportWriterTest {
             @Nullable String wgsPurityString, @NotNull QCFailReason reason, boolean correctedReport, @NotNull String comments)
             throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
+                .patientId("patient")
                 .refSampleId("x")
                 .refSampleBarcode("FR12123488")
                 .tumorSampleId(sampleId)

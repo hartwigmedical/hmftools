@@ -12,7 +12,6 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 

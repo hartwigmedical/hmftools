@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.util.Strings;

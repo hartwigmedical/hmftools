@@ -316,7 +316,7 @@ public class Lims {
             } else {
                 if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02
                         || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.WIDE
-                        || cohort == LimsCohort.COREDB01) {
+                        || cohort == LimsCohort.COREDB) {
                     LOGGER.warn("Consent of report germline variants is false, but must be true at study CORE/WIDE for sample '{}'",
                             sampleId(sampleBarcode));
                 }
@@ -341,7 +341,7 @@ public class Lims {
             } else {
                 if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02
                         || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.WIDE
-                        || cohort == LimsCohort.COREDB01) {
+                        || cohort == LimsCohort.COREDB) {
                     LOGGER.warn("Consent of viral insertions is false, but must be true at study CORE/WIDE for sample '{}'",
                             sampleId(sampleBarcode));
                 }

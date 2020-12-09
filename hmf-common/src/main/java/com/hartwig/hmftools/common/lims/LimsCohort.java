@@ -12,7 +12,7 @@ public enum LimsCohort {
     CORERI02,
     CORELR11,
     CORESC11,
-    COREDB01,
+    COREDB,
     CORE,
     NON_CANCER;
 
@@ -21,7 +21,7 @@ public enum LimsCohort {
         switch (cohortString) {
             case "CPCT":
                 return CPCT;
-            case "CPCTpancreas":
+            case "Pancreas":
                 return CPCT_PANCREAS;
             case "DRUP":
                 return DRUP;
@@ -39,8 +39,8 @@ public enum LimsCohort {
                 return CORELR11;
             case "CORESC11":
                 return CORESC11;
-            case "COREDB01":
-                return COREDB01;
+            case "COREDB":
+                return COREDB;
             default:
                 throw new IllegalStateException("Cannot resolve cohort type: " + cohortString);
         }

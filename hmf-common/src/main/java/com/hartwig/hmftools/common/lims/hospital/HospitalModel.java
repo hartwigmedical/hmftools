@@ -4,7 +4,6 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

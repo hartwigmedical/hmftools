@@ -6,7 +6,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

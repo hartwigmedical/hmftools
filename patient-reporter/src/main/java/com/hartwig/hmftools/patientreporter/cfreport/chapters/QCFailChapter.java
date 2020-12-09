@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
@@ -65,7 +64,7 @@ public class QCFailChapter implements ReportChapter {
 
         switch (cohort) {
             case WIDE:
-            case COREDB01:
+            case COREDB:
                 reportDocument.add(createWIDEContentBody());
                 break;
             case CORE:

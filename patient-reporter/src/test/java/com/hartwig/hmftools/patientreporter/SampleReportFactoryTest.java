@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;

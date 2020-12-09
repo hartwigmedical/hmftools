@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.common.lims.LimsCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;

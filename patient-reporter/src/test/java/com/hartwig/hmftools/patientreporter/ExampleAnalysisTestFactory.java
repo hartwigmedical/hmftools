@@ -251,6 +251,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample, boolean reportGermline) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
+                .patientId("COLO829")
                 .refSampleId(Strings.EMPTY)
                 .refSampleBarcode("FR12123488")
                 .tumorSampleId(sample)
