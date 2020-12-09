@@ -40,16 +40,16 @@ public class SampleReportFactoryTest {
         String coreSampleId = "CORE020000001T";
         String wideSampleId = "WIDE020000001T";
 
-        LimsCohort typeCORE = LimsCohort.CORE;
-        LimsCohort typeWIDE = LimsCohort.WIDE;
+        LimsCohort cohortCORE = LimsCohort.CORE;
+        LimsCohort cohortWIDE = LimsCohort.WIDE;
 
         String hospitalIdNA = Lims.NOT_AVAILABLE_STRING;
         String hospitalIDEmpty = Strings.EMPTY;
         String hospitalId = "1234";
 
-        assertEquals(hospitalIdNA, SampleReportFactory.checkHospitalPatientId(hospitalIdNA, typeCORE, coreSampleId));
-        assertEquals(hospitalIDEmpty, SampleReportFactory.checkHospitalPatientId(hospitalIDEmpty, typeCORE, coreSampleId));
-        assertEquals(hospitalId, SampleReportFactory.checkHospitalPatientId(hospitalId, typeCORE, coreSampleId));
-        assertEquals(hospitalIdNA, SampleReportFactory.checkHospitalPatientId(hospitalIdNA, typeWIDE, wideSampleId));
+        assertEquals(hospitalIdNA, SampleReportFactory.checkHospitalPatientId(hospitalIdNA, cohortCORE, coreSampleId));
+        assertEquals(hospitalIDEmpty, SampleReportFactory.checkHospitalPatientId(hospitalIDEmpty, cohortCORE, coreSampleId));
+        assertEquals(hospitalId, SampleReportFactory.checkHospitalPatientId(hospitalId, cohortCORE, coreSampleId));
+        assertEquals(hospitalIdNA, SampleReportFactory.checkHospitalPatientId(hospitalIdNA, cohortWIDE, wideSampleId));
     }
 }

@@ -64,7 +64,6 @@ public class QCFailChapter implements ReportChapter {
 
         switch (cohort) {
             case WIDE:
-            case COREDB:
                 reportDocument.add(createWIDEContentBody());
                 break;
             case CORE:
@@ -72,9 +71,12 @@ public class QCFailChapter implements ReportChapter {
             case CORERI02:
             case CORESC11:
             case CORELR11:
+            case COREDB:
                 reportDocument.add(createCOREContentBody());
                 break;
             case DRUP:
+            case DRUP_STAGE3:
+            case CPCT_PANCREAS:
             case CPCT:
                 reportDocument.add(createCPCTDRUPContentBody());
                 break;

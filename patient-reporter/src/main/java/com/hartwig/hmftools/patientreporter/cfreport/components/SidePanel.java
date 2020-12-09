@@ -41,15 +41,22 @@ public final class SidePanel {
         LimsCohort cohort = sampleReport.cohort();
 
         if (fullHeight && fullContent) {
-            if (cohort == LimsCohort.CORE || cohort == LimsCohort.WIDE) {
+            if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
+                    || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.WIDE || cohort == LimsCohort.COREDB) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", sampleReport.hospitalContactData().requesterName()));
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", sampleReport.hospitalContactData().requesterEmail()));
             }
 
             cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", sampleReport.hospitalContactData().hospitalName()));
 
-            if (cohort == LimsCohort.CORE && !sampleReport.hospitalPatientId().isEmpty()) {
+            if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB
+                    || cohort == LimsCohort.WIDE && !sampleReport.hospitalPatientId().isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
+            }
+
+            if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
+                    || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB && !sampleReport.hospitalPatientId().isEmpty()) {
+                cv.add(createSidePanelDiv(++sideTextIndex, "Hospital pathology id", sampleReport.hospitalPathologySampleId()));
             }
         }
 

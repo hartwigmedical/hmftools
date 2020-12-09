@@ -36,7 +36,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -137,6 +137,15 @@ public class CFReportWriterTest {
     }
 
     @Test
+    public void canGeneratePatientReportForCOREDBSample() throws IOException {
+        AnalysedPatientReport patientReport =
+                ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("COREDB01_FULL", FULL_TABLES_COMMENT_STRING);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+    }
+
+    @Test
     public void canGeneratePatientReportForBelowDetectionSample() throws IOException {
         AnalysedPatientReport patientReport =
                 ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_NO_TUMOR", FULL_TABLES_COMMENT_STRING, false, 1D);
@@ -164,6 +173,16 @@ public class CFReportWriterTest {
     @Test
     public void canGenerateCorrectedInsufficientDNAReport() throws IOException {
         generateQCFailCPCTReport("CPCT01",
+                Lims.NOT_PERFORMED_STRING,
+                null,
+                QCFailReason.INSUFFICIENT_DNA,
+                true,
+                COMMENT_STRING_QC_FAIL_CORRECTED);
+    }
+
+    @Test
+    public void canGenerateCorrectedInsufficientDNAReportCOREDB() throws IOException {
+        generateQCFailCPCTReport("COREDB",
                 Lims.NOT_PERFORMED_STRING,
                 null,
                 QCFailReason.INSUFFICIENT_DNA,

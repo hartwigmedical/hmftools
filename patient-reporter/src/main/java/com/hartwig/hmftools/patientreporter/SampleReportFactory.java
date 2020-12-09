@@ -70,7 +70,8 @@ public final class SampleReportFactory {
 
     @VisibleForTesting
     static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull LimsCohort cohort, @NotNull String sampleId) {
-        if (cohort == LimsCohort.CORE) {
+        if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
+                || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB) {
             if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
                 LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
             }
@@ -83,20 +84,17 @@ public final class SampleReportFactory {
     static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
             @NotNull LimsCohort cohort) {
 
-        if (cohort == LimsCohort.CORE || cohort == LimsCohort.WIDE) {
+        if (cohort == LimsCohort.CORE || cohort == LimsCohort.WIDE || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11
+                || cohort == LimsCohort.COREDB) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
                     && isValidHospitalPathologySampleId(hospitalPathologySampleId)) {
                 return hospitalPathologySampleId;
             } else {
-                if (cohort == LimsCohort.WIDE) {
-                    LOGGER.warn("Missing or invalid hospital pathology sample ID for sample '{}': {}. Please fix!",
-                            tumorSampleId,
-                            hospitalPathologySampleId);
-                } else {
-                    if (!hospitalPathologySampleId.isEmpty()) {
-                        LOGGER.warn("No valid hospital pathology sample ID found for '{}': {}", tumorSampleId, hospitalPathologySampleId);
-                    }
-                }
+
+                LOGGER.warn("Missing or invalid hospital pathology sample ID for sample '{}': {}. Please fix!",
+                        tumorSampleId,
+                        hospitalPathologySampleId);
+
                 return null;
             }
         } else {

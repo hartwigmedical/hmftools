@@ -72,19 +72,11 @@ public class ReportingDbTest {
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        String sampleId1 = "WIDE01000001T";
         assertTrue(ReportingDb.requiresSummary(LimsCohort.WIDE));
-
-        String sampleId2 = "CPCT01000001T";
         assertFalse(ReportingDb.requiresSummary(LimsCohort.CPCT));
-
-        String sampleId3 = "CORE01000001T";
         assertTrue(ReportingDb.requiresSummary(LimsCohort.CORE));
-
-        String sampleId4 = "CORELR020000T";
         assertFalse(ReportingDb.requiresSummary(LimsCohort.CORELR02));
-
-        String sampleId5 = "CORELR110000T";
         assertTrue(ReportingDb.requiresSummary(LimsCohort.CORELR11));
+        assertFalse(ReportingDb.requiresSummary(LimsCohort.COREDB));
     }
 }
