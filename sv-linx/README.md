@@ -32,7 +32,7 @@ sample  | Required: Specific sample ID
 sv_vcf | Full path and filename for the SV VCF
 purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
 output_dir | Required: directory where all output files are written
-ref_genome_version | Defaults to HG19, valid values are HG19, HG37 or HG38. 
+ref_genome_version | Defaults to version 37, valid values are 19, 37 or 38. 
 
 #### Database Connectivity
 LINX can source structural variants, copy number and purity data from the HMF MySQL database instead of from the VCF and TSV files.
@@ -71,7 +71,7 @@ replication_origins_file | Optional: Replication timing input - in BED format wi
 viral_hosts_file | Optional: List of known viral hosts - Refseq_id,Virus_name
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 
-Reference files are available for HG19 and HG38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
+Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
 - Linx: fragile sites, LINE source regions, viral hosts and replication origins
 - Ensembl: cached Ensembl files
 - KnownFusions: HMF known fusion data
@@ -169,9 +169,9 @@ java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
 
 Ensembl database URLs for 19/37 & 38 are:
 - mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37
-- mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_98_38
+- mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_102_38
 
-By default LINX will use HG19, but this can be overridden using the ref_genome_version config described above.
+By default LINX will use versiopn 37, but this can be overridden using the ref_genome_version config described above.
 
 Note that ENST00000467125 is blacklisted from Ensembl as it is shares a splice boundary with a chimeric pathogenic GOPC_ROS1 fusion transcript.
 
