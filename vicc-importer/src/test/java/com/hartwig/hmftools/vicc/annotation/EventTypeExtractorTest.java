@@ -14,12 +14,12 @@ public class EventTypeExtractorTest {
 
     @Test
     public void canDetermineMutationTypes() {
-        assertEquals(EventType.HOTSPOT, MutationTypeExtractor.extractType(createFeature("BRAF", "V600E")));
+        assertEquals(EventType.HOTSPOT, EventTypeExtractor.extractType(createFeature("BRAF", "V600E")));
 
-        assertEquals(EventType.UNKNOWN, MutationTypeExtractor.extractType(createFeature("BRAF", "what is this?")));
+        assertEquals(EventType.UNKNOWN, EventTypeExtractor.extractType(createFeature("BRAF", "what is this?")));
 
         // If gene symbol is missing, we always classify as UNKNOWN.
-        assertEquals(EventType.UNKNOWN, MutationTypeExtractor.extractType(createFeature(null, "V600E")));
+        assertEquals(EventType.UNKNOWN, EventTypeExtractor.extractType(createFeature(null, "V600E")));
     }
 
     @NotNull
