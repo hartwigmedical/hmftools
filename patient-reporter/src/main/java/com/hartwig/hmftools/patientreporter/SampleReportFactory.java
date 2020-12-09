@@ -5,8 +5,7 @@ import java.time.LocalDate;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsCoreCohort;
-import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,19 +46,9 @@ public final class SampleReportFactory {
 
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
-        String cohort = lims.cohort(tumorSampleBarcode);
-        LimsStudy type = LimsStudy.fromSampleId(tumorSampleId);
-        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(tumorSampleId);
+        LimsCohort cohort = lims.cohort(tumorSampleBarcode);
 
-        if (cohort.isEmpty()) {
-            if (coreCohort.equals(LimsCoreCohort.NON_CORE)) {
-                cohort = type.toString();
-            } else {
-                cohort = coreCohort.toString();
-            }
-        }
-
-        String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), type, tumorSampleId);
+        String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), cohort, tumorSampleId);
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
@@ -75,13 +64,14 @@ public final class SampleReportFactory {
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
                 .hospitalPatientId(hospitalPatientId)
-                .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId))
+                .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohort))
                 .build();
     }
 
     @VisibleForTesting
-    static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull LimsStudy type, @NotNull String sampleId) {
-        if (type == LimsStudy.CORE) {
+    static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull LimsCohort cohort, @NotNull String sampleId) {
+        if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
+                || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB) {
             if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
                 LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
             }
@@ -91,23 +81,20 @@ public final class SampleReportFactory {
 
     @VisibleForTesting
     @Nullable
-    static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId) {
-        LimsStudy study = LimsStudy.fromSampleId(tumorSampleId);
+    static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
+            @NotNull LimsCohort cohort) {
 
-        if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
+        if (cohort == LimsCohort.CORE || cohort == LimsCohort.WIDE || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11
+                || cohort == LimsCohort.COREDB) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
                     && isValidHospitalPathologySampleId(hospitalPathologySampleId)) {
                 return hospitalPathologySampleId;
             } else {
-                if (study == LimsStudy.WIDE) {
-                    LOGGER.warn("Missing or invalid hospital pathology sample ID for sample '{}': {}. Please fix!",
-                            tumorSampleId,
-                            hospitalPathologySampleId);
-                } else {
-                    if (!hospitalPathologySampleId.isEmpty()) {
-                        LOGGER.warn("No valid hospital pathology sample ID found for '{}': {}", tumorSampleId, hospitalPathologySampleId);
-                    }
-                }
+
+                LOGGER.warn("Missing or invalid hospital pathology sample ID for sample '{}': {}. Please fix!",
+                        tumorSampleId,
+                        hospitalPathologySampleId);
+
                 return null;
             }
         } else {

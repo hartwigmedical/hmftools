@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.hotspot.ProteinKeyFormatter;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinKeyFormatter;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 
 import org.apache.logging.log4j.LogManager;

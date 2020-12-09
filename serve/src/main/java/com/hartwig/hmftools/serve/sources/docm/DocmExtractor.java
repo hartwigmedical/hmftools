@@ -6,12 +6,12 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.ExtractionResult;
-import com.hartwig.hmftools.serve.ImmutableExtractionResult;
-import com.hartwig.hmftools.serve.hotspot.HotspotFunctions;
-import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
-import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.extraction.ExtractionResult;
+import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
+import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
+import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.jetbrains.annotations.NotNull;

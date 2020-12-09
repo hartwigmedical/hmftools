@@ -26,7 +26,7 @@ public final class ActionableHotspotFile {
 
     @NotNull
     public static String actionableHotspotTsvPath(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion) {
-        return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_HOTSPOT_TSV);
+        return refGenomeVersion.addVersionToFilePath(serveActionabilityDir + File.separator + ACTIONABLE_HOTSPOT_TSV);
     }
 
     public static void write(@NotNull String actionableHotspotTsv, @NotNull Iterable<ActionableHotspot> actionableHotspots)

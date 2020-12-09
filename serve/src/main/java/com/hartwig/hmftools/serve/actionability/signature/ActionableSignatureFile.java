@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +27,7 @@ public final class ActionableSignatureFile {
 
     @NotNull
     public static String actionableSignatureTsvPath(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion) {
-        return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_SIGNATURE_TSV);
+        return refGenomeVersion.addVersionToFilePath(serveActionabilityDir + File.separator + ACTIONABLE_SIGNATURE_TSV);
     }
 
     public static void write(@NotNull String actionableSignatureTsv, @NotNull Iterable<ActionableSignature> actionableSignatures)

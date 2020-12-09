@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +27,7 @@ public final class ActionableGeneFile {
 
     @NotNull
     public static String actionableGeneTsvPath(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion) {
-        return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_GENE_TSV);
+        return refGenomeVersion.addVersionToFilePath(serveActionabilityDir + File.separator + ACTIONABLE_GENE_TSV);
     }
 
     public static void write(@NotNull String actionableGeneTsv, @NotNull Iterable<ActionableGene> actionableGenes) throws IOException {

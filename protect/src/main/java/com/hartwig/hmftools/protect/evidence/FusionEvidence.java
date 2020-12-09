@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
 import org.jetbrains.annotations.NotNull;
 

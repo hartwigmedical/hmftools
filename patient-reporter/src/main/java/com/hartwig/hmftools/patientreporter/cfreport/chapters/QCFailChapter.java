@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
@@ -60,16 +60,25 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
-        LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
+        LimsCohort cohort = failReport.sampleReport().cohort();
 
-        switch (study) {
+        switch (cohort) {
             case WIDE:
                 reportDocument.add(createWIDEContentBody());
                 break;
+            case COREDB:
+                reportDocument.add(createCOREDBContentBody());
+                break;
             case CORE:
+            case CORELR02:
+            case CORERI02:
+            case CORESC11:
+            case CORELR11:
                 reportDocument.add(createCOREContentBody());
                 break;
             case DRUP:
+            case DRUP_STAGE3:
+            case CPCT_PANCREAS:
             case CPCT:
                 reportDocument.add(createCPCTDRUPContentBody());
                 break;
@@ -174,6 +183,46 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
+    private Table createCOREDBContentBody() {
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
+        table.setWidth(contentWidth());
+        table.addCell(TableUtil.createLayoutCell().add(createCOREDBSampleDetailsColumn()));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createCOREDBDisclaimerColumn()));
+        return table;
+    }
+
+    @NotNull
+    private Div createCOREDBSampleDetailsColumn() {
+        Div div = createSampleDetailsDiv();
+        div.add(samplesAreEvaluatedAtHMFAndWithSampleID());
+        div.add(reportIsBasedOnTumorSampleArrivedAt());
+        div.add(reportIsBasedOnBloodSampleArrivedAt());
+        div.add(resultsAreObtainedBetweenDates());
+        if (failReport.sampleReport().hospitalPathologySampleId() != null && failReport.sampleReport().hospitalPatientId() != null) {
+            div.add(reportHospitalPatientIDAndPathologySampleId());
+        }
+        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
+            div.add(sampleHasMolecularTumorPercentage());
+        }
+
+        return div;
+    }
+
+    @NotNull
+    private Div createCOREDBDisclaimerColumn() {
+        Div div = createDisclaimerDiv();
+        div.add(reportIsBasedOnBloodAndTumorSamples());
+        div.add(testsArePerformedByAccreditedLab());
+        div.add(reportIsVerifiedByAndAddressedTo());
+        div.add(reportIsGeneratedByPatientReporterVersion());
+        failReport.comments().ifPresent(comments -> div.add(createContentParagraphRed("Comments: " + comments)));
+        div.add(resubmitSample());
+        div.add(forQuestionsPleaseContactHMF());
+        return div;
+    }
+
+    @NotNull
     private Table createCOREContentBody() {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
@@ -256,7 +305,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsForHospitalPatientIDAndPathologySampleId() {
-        if (failReport.sampleReport().hospitalPathologySampleId() != null) {
+        if (failReport.sampleReport().hospitalPathologySampleId() != null && failReport.sampleReport().hospitalPatientId() != null) {
             return createContentParagraphTwice("The hospital patient ID is ",
                     failReport.sampleReport().hospitalPatientId(),
                     " and the pathology tissue ID is: ",
@@ -264,6 +313,15 @@ public class QCFailChapter implements ReportChapter {
         } else {
             return createContentParagraph("The hospital patient ID is ", failReport.sampleReport().hospitalPatientId());
         }
+    }
+
+    @NotNull
+    private Paragraph reportHospitalPatientIDAndPathologySampleId() {
+        return createContentParagraphTwice("The hospital patient ID is ",
+                failReport.sampleReport().hospitalPatientId(),
+                " and the pathology tissue ID is: ",
+                failReport.sampleReport().hospitalPathologySampleId());
+
     }
 
     @NotNull

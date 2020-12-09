@@ -12,6 +12,6 @@ public class EventClassifierFactoryTest {
                 .proteinAnnotationExtractor(event -> event)
                 .build());
 
-        assertEquals(MutationType.UNKNOWN, classifier.determineType("gene", "mutation"));
+        assertEquals(EventType.UNKNOWN, classifier.determineType("gene", "mutation"));
     }
 }

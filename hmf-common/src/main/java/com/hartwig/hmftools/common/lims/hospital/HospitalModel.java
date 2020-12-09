@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.lims.hospital;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsStudy;
+import com.hartwig.hmftools.common.lims.LimsCohort;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -31,22 +31,23 @@ public abstract class HospitalModel {
 
     @Nullable
     public HospitalContactData queryHospitalData(@NotNull String sampleId, @NotNull String coreRequesterName,
-            @NotNull String coreRequesterEmail) {
-        String hospitalId = getHospitalIdForSample(sampleId);
+            @NotNull String coreRequesterEmail, @NotNull LimsCohort cohort) {
+        String hospitalId = getHospitalIdForSample(sampleId, cohort);
         if (hospitalId == null) {
             return null;
         }
 
         HospitalAddress address = hospitalAddressMap().get(hospitalId);
-        LimsStudy study = LimsStudy.fromSampleId(sampleId);
-        HospitalPersons persons = findPersonsForStudy(hospitalId, study);
-        if (address == null || (persons == null && (study == LimsStudy.CPCT || study == LimsStudy.WIDE || study == LimsStudy.DRUP))) {
+        HospitalPersons persons = findPersonsForStudy(hospitalId, cohort);
+        if (address == null || (persons == null && (cohort == LimsCohort.CPCT || cohort == LimsCohort.CPCT_PANCREAS
+                || cohort == LimsCohort.DRUP || cohort == LimsCohort.DRUP_STAGE3 || cohort == LimsCohort.WIDE ))) {
             return null;
         }
 
         String requesterName = null;
         String requesterEmail = null;
-        if (study == LimsStudy.CORE) {
+        if (cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11
+                || cohort == LimsCohort.COREDB || cohort == LimsCohort.CORE) {
             requesterName = coreRequesterName;
             requesterEmail = coreRequesterEmail;
         } else if (persons != null) {
@@ -64,11 +65,13 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @NotNull LimsStudy study) {
-        switch (study) {
+    private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @NotNull LimsCohort cohort) {
+        switch (cohort) {
             case CPCT:
+            case CPCT_PANCREAS:
                 return hospitalPersonsCPCT().get(hospitalId);
             case DRUP:
+            case DRUP_STAGE3:
                 return hospitalPersonsDRUP().get(hospitalId);
             case WIDE:
                 return hospitalPersonsWIDE().get(hospitalId);
@@ -78,14 +81,15 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private String getHospitalIdForSample(@NotNull String sampleId) {
+    private String getHospitalIdForSample(@NotNull String sampleId, @NotNull LimsCohort cohort) {
         if (sampleToHospitalMapping().containsKey(sampleId)) {
             return sampleToHospitalMapping().get(sampleId);
         } else {
-            LimsStudy type = LimsStudy.fromSampleId(sampleId);
 
-            if ((type == LimsStudy.DRUP || type == LimsStudy.CPCT || type == LimsStudy.WIDE || type == LimsStudy.CORE)
-                    && sampleId.length() >= 12) {
+            if ((cohort == LimsCohort.WIDE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02
+                    || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB
+                    || cohort == LimsCohort.CORE || cohort == LimsCohort.CPCT || cohort == LimsCohort.CPCT_PANCREAS
+                    || cohort == LimsCohort.DRUP || cohort == LimsCohort.DRUP_STAGE3) && sampleId.length() >= 12) {
                 // We assume all these projects follow a structure like CPCT##<hospitalId><identifier>
                 return sampleId.substring(6, 8);
             } else {

@@ -15,7 +15,7 @@ public class ActionableHotspotFileTest {
     @Test
     public void canReadFromFileAndConvert() throws IOException {
         String actionableHotspotTsv =
-                ActionableHotspotFile.actionableHotspotTsvPath(ActionabilityTestUtil.TEST_ACTIONABILITY_DIR, RefGenomeVersion.HG19);
+                ActionableHotspotFile.actionableHotspotTsvPath(ActionabilityTestUtil.TEST_ACTIONABILITY_DIR, RefGenomeVersion.V37);
         List<ActionableHotspot> actionableHotspots = ActionableHotspotFile.read(actionableHotspotTsv);
 
         assertEquals(1, actionableHotspots.size());

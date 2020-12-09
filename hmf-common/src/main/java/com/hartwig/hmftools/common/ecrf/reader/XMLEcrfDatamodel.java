@@ -77,9 +77,9 @@ public abstract class XMLEcrfDatamodel {
         return ecrfValue;
     }
 
-    private static boolean isInteger(@NotNull String integerString) {
+    private static boolean isInteger(@NotNull String string) {
         try {
-            Integer.valueOf(integerString);
+            Integer.valueOf(string);
             return true;
         } catch (NumberFormatException exception) {
             return false;

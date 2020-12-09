@@ -76,8 +76,14 @@ final class IclusionApiObjectMapper {
         for (String id : indicationIds) {
             IclusionObjectIndication indication = findIndicationById(indications, id);
             if (indication != null) {
-                // TODO: Figure out how to get DOIDs?
                 List<String> doids = Lists.newArrayList();
+                if (indication.doid != null) {
+                    doids.add(indication.doid);
+                }
+
+                if (indication.doid2 != null) {
+                    doids.add(indication.doid2);
+                }
 
                 tumorLocations.add(ImmutableIclusionTumorLocation.builder()
                         .primaryTumorLocation(indication.indicationNameFull)

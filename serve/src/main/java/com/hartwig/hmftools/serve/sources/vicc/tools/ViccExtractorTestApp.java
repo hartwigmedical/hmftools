@@ -14,15 +14,17 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.serve.ExtractionResult;
-import com.hartwig.hmftools.serve.ExtractionResultWriter;
+import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
+import com.hartwig.hmftools.serve.extraction.ExtractionResult;
+import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
 import com.hartwig.hmftools.serve.sources.vicc.ViccUtil;
+import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
@@ -45,7 +47,7 @@ public class ViccExtractorTestApp {
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
         String viccJsonPath;
         String driverGeneTsvPath;
         String outputDir;
@@ -72,8 +74,8 @@ public class ViccExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        String featureTsv = outputDir + "/viccFeatures.tsv";
-        String featureInterpretationTsv = outputDir + "/viccFeatureInterpretation.tsv";
+        String featureTsv = outputDir + "/ViccFeatures.tsv";
+        String featureInterpretationTsv = outputDir + "/ViccFeatureInterpretation.tsv";
 
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the VICC feature output TSV path", featureTsv);
@@ -84,16 +86,17 @@ public class ViccExtractorTestApp {
         LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
 
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractorWithInterpretationTsv(proteinResolver,
+        EventClassifierConfig config = ViccClassificationConfig.build();
+        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractorWithInterpretationTsv(config,
+                proteinResolver,
                 driverGenes,
                 allGenesMap,
                 featureInterpretationTsv);
 
         ExtractionResult result = viccExtractor.extract(entries);
 
-        ViccUtil.writeFeatures(featureTsv, entries);
+        ViccUtil.writeFeaturesToTsv(featureTsv, entries);
 
-        ExtractionResultWriter writer = new ExtractionResultWriter(outputDir, refGenomeVersion);
-        writer.write(result);
+        new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);
     }
 }

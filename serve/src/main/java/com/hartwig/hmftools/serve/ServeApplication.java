@@ -13,9 +13,14 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
+import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolver;
-import com.hartwig.hmftools.serve.hotspot.ProteinResolverFactory;
+import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
+import com.hartwig.hmftools.serve.extraction.ExtractionResult;
+import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.sources.docm.DocmReader;
@@ -23,10 +28,12 @@ import com.hartwig.hmftools.serve.sources.hartwig.HartwigEntry;
 import com.hartwig.hmftools.serve.sources.hartwig.HartwigExtractor;
 import com.hartwig.hmftools.serve.sources.hartwig.HartwigFileReader;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
+import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractorFactory;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
+import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
@@ -67,7 +74,7 @@ public class ServeApplication {
 
         List<ExtractionResult> extractions = Lists.newArrayList();
         extractions.add(extractViccKnowledge(config.viccJson(), proteinResolver, driverGenes, allGenesMap));
-        extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
+        extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv(), proteinResolver, driverGenes, allGenesMap));
         extractions.add(extractDocmKnowledge(config.docmTsv(), proteinResolver));
         extractions.add(extractHartwigCohortKnowledge(config.hartwigCohortTsv(), proteinResolver, !config.skipHotspotResolving()));
         extractions.add(extractHartwigCuratedKnowledge(config.hartwigCuratedTsv(), proteinResolver, !config.skipHotspotResolving()));
@@ -118,7 +125,7 @@ public class ServeApplication {
 
     @NotNull
     private static Map<String, HmfTranscriptRegion> selectAllGeneMap(@NotNull ServeConfig config) {
-        if (config.refGenomeVersion() == RefGenomeVersion.HG19) {
+        if (config.refGenomeVersion() == RefGenomeVersion.V37) {
             return HmfGenePanelSupplier.allGenesMap37();
         }
 
@@ -131,16 +138,19 @@ public class ServeApplication {
             @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap) throws IOException {
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, null);
 
-        ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(proteinResolver, driverGenes, allGenesMap);
+        EventClassifierConfig config = ViccClassificationConfig.build();
+        ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config, proteinResolver, driverGenes, allGenesMap);
         LOGGER.info("Running VICC knowledge extraction");
         return extractor.extract(entries);
     }
 
     @NotNull
-    private static ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv) throws IOException {
+    private static ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv, @NotNull ProteinResolver proteinResolver,
+            @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap) throws IOException {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv);
 
-        IclusionExtractor extractor = new IclusionExtractor();
+        EventClassifierConfig config = IclusionClassificationConfig.build();
+        IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(config, proteinResolver, driverGenes, allGenesMap);
         LOGGER.info("Running iClusion knowledge extraction");
         return extractor.extract(trials);
     }

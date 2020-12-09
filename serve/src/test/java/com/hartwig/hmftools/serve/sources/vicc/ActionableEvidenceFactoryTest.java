@@ -54,6 +54,7 @@ public class ActionableEvidenceFactoryTest {
         assertEquals("123", ActionableEvidenceFactory.extractDoid("DOID:123"));
         assertEquals(Strings.EMPTY, ActionableEvidenceFactory.extractDoid("SNOMED:123"));
         assertEquals(Strings.EMPTY, ActionableEvidenceFactory.extractDoid("DOID"));
+
         assertNull(ActionableEvidenceFactory.extractDoid(null));
     }
 }

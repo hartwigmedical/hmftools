@@ -5,12 +5,12 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
-import com.hartwig.hmftools.serve.codon.CodonAnnotation;
-import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.serve.exon.ExonAnnotation;
-import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.gene.GeneLevelAnnotation;
+import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
+import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
+import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
+import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
+import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 
 import org.immutables.value.Value;

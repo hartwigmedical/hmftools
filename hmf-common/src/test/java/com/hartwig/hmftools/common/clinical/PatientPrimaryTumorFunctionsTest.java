@@ -20,17 +20,17 @@ public class PatientPrimaryTumorFunctionsTest {
 
         List<PatientPrimaryTumor> patientPrimaryTumors = Lists.newArrayList(cpct, colo);
 
-        PatientPrimaryTumor primary1 = PatientPrimaryTumorFunctions.findPrimaryTumorForSample(patientPrimaryTumors, "CPCT02020202T");
+        PatientPrimaryTumor primary1 = PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(patientPrimaryTumors, "CPCT02020202");
         assertNotNull(primary1);
         assertEquals(cpct.location(), primary1.location());
         assertEquals(cpct.type(), primary1.type());
 
-        PatientPrimaryTumor primary2 = PatientPrimaryTumorFunctions.findPrimaryTumorForSample(patientPrimaryTumors, "COLO829T");
+        PatientPrimaryTumor primary2 = PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(patientPrimaryTumors, "COLO829");
         assertNotNull(primary2);
         assertEquals(colo.location(), primary2.location());
         assertEquals(colo.type(), primary2.type());
 
-        PatientPrimaryTumor primary3 = PatientPrimaryTumorFunctions.findPrimaryTumorForSample(patientPrimaryTumors, "any");
+        PatientPrimaryTumor primary3 = PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(patientPrimaryTumors, "any");
         assertNull(primary3);
     }
 

@@ -50,8 +50,8 @@ class AnalysedPatientReporter {
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile, @Nullable String comments,
             boolean correctedReport) throws IOException {
         PatientPrimaryTumor patientPrimaryTumor =
-                PatientPrimaryTumorFunctions.findPrimaryTumorForSample(reportData.patientPrimaryTumors(),
-                        sampleMetadata.tumorSampleId());
+                PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(),
+                        sampleMetadata.patientId());
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
@@ -71,7 +71,7 @@ class AnalysedPatientReporter {
         GenomicAnalysis filteredAnalysis =
                 filterForConsent(genomicAnalysis, sampleReport.germlineReportingLevel(), sampleReport.reportViralInsertions());
 
-        String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
+        String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)

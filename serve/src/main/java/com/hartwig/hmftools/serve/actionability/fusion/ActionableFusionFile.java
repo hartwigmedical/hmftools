@@ -27,7 +27,7 @@ public final class ActionableFusionFile {
 
     @NotNull
     public static String actionableFusionTsvPath(@NotNull String serveActionabilityDir, @NotNull RefGenomeVersion refGenomeVersion) {
-        return refGenomeVersion.makeVersioned(serveActionabilityDir + File.separator + ACTIONABLE_FUSION_TSV);
+        return refGenomeVersion.addVersionToFilePath(serveActionabilityDir + File.separator + ACTIONABLE_FUSION_TSV);
     }
 
     public static void write(@NotNull String actionableFusionTsv, @NotNull Iterable<ActionableFusion> actionableFusions)

@@ -98,7 +98,7 @@ public interface ServeConfig {
                 .docmTsv(nonOptionalFile(cmd, DOCM_TSV))
                 .hartwigCohortTsv(nonOptionalFile(cmd, HARTWIG_COHORT_TSV))
                 .hartwigCuratedTsv(nonOptionalFile(cmd, HARTWIG_CURATED_TSV))
-                .refGenomeVersion(RefGenomeVersion.valueOf(nonOptionalValue(cmd, REF_GENOME_VERSION)))
+                .refGenomeVersion(RefGenomeVersion.fromIdentifier(nonOptionalValue(cmd, REF_GENOME_VERSION)))
                 .refGenomeFastaFile(nonOptionalFile(cmd, REF_GENOME_FASTA_FILE))
                 .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIR))

@@ -5,27 +5,21 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
+import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
+import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKb;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbBiological;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbConsequence;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbGene;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbVariant;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbBiological;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbConsequence;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbGene;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -33,54 +27,41 @@ import org.jetbrains.annotations.Nullable;
 
 public final class ViccTestFactory {
 
+    private static final ViccSource TEST_SOURCE = ViccSource.CGI;
+
     private ViccTestFactory() {
     }
 
     @NotNull
     public static ViccEntry testEntryWithGeneAndEvent(@Nullable String gene, @NotNull String event) {
-        return testEntryWithFeatures(Lists.newArrayList(testFeatureWithGeneAndName(gene, event)));
+        return testEntryWithGeneEventAndAssociation(gene, event, testAssociation());
     }
 
     @NotNull
-    public static ViccEntry testEntryWithFeatures(@NotNull List<Feature> features) {
-        return testViccEntry(ViccSource.ONCOKB, Strings.EMPTY, null, features);
+    public static ViccEntry testEntryWithGeneEventAndAssociation(@Nullable String gene, @NotNull String event,
+            @NotNull Association association) {
+        List<Feature> features = Lists.newArrayList(testFeatureWithGeneAndName(gene, event));
+        return testViccEntry(TEST_SOURCE, null, features, association);
     }
 
     @NotNull
     public static ViccEntry testEntryWithOncogenic(@NotNull String oncogenic) {
-        return testViccEntry(ViccSource.ONCOKB, oncogenic, null, Lists.newArrayList());
+        return testViccEntry(TEST_SOURCE, null, Lists.newArrayList(), testAssociationWithOncogenic(oncogenic));
     }
 
     @NotNull
     public static ViccEntry testEntryWithSourceAndTranscript(@NotNull ViccSource source, @Nullable String transcriptId) {
-        return testViccEntry(source, Strings.EMPTY, transcriptId, Lists.newArrayList());
+        return testViccEntry(source, transcriptId, Lists.newArrayList(), testAssociation());
     }
 
     @NotNull
-    public static ViccEntry testViccEntry(@NotNull ViccSource source, @NotNull String oncogenic, @Nullable String transcriptId,
-            @NotNull List<Feature> features) {
-        EvidenceType evidenceType = ImmutableEvidenceType.builder().sourceName(Strings.EMPTY).build();
-        Evidence evidence = ImmutableEvidence.builder().evidenceType(evidenceType).build();
-
-        Phenotype phenotype = ImmutablePhenotype.builder().description(Strings.EMPTY).family(Strings.EMPTY).build();
-
-        Association association = ImmutableAssociation.builder()
-                .evidence(evidence)
-                .evidenceLevel(Strings.EMPTY)
-                .evidenceLabel(Strings.EMPTY)
-                .responseType(Strings.EMPTY)
-                .drugLabels(Strings.EMPTY)
-                .sourceLink(Strings.EMPTY)
-                .phenotype(phenotype)
-                .description(Strings.EMPTY)
-                .oncogenic(oncogenic)
-                .build();
-
+    public static ViccEntry testViccEntry(@NotNull ViccSource source, @Nullable String transcriptId, @NotNull List<Feature> features,
+            @NotNull Association association) {
         return ImmutableViccEntry.builder()
                 .source(source)
                 .association(association)
                 .transcriptId(transcriptId)
-                .kbSpecificObject(testOncoKb())
+                .kbSpecificObject(new TestKbSpecificObject())
                 .features(features)
                 .build();
     }
@@ -96,46 +77,61 @@ public final class ViccTestFactory {
     }
 
     @NotNull
-    private static OncoKb testOncoKb() {
-        OncoKbConsequence consequence = ImmutableOncoKbConsequence.builder()
-                .term(Strings.EMPTY)
+    public static Association testActionableAssociation(@Nullable String drugLabels, @NotNull String phenotypeDescription,
+            @NotNull String phenotypeTypeId, @Nullable String evidenceLabel, @Nullable String responseType, @Nullable String publication) {
+        EvidenceInfo evidenceInfo = null;
+        if (publication != null) {
+            evidenceInfo = ImmutableEvidenceInfo.builder().addPublications(publication).build();
+        }
+
+        EvidenceType evidenceType = ImmutableEvidenceType.builder().sourceName(Strings.EMPTY).build();
+        Evidence evidence = ImmutableEvidence.builder().evidenceType(evidenceType).info(evidenceInfo).build();
+
+        Phenotype phenotype = ImmutablePhenotype.builder()
+                .description(phenotypeDescription)
+                .family(Strings.EMPTY)
+                .type(ImmutablePhenotypeType.builder().source(Strings.EMPTY).term(Strings.EMPTY).id(phenotypeTypeId).build())
+                .build();
+
+        return ImmutableAssociation.builder()
+                .evidence(evidence)
+                .evidenceLevel(Strings.EMPTY)
+                .evidenceLabel(evidenceLabel)
+                .responseType(responseType)
+                .drugLabels(drugLabels)
+                .sourceLink(Strings.EMPTY)
+                .phenotype(phenotype)
                 .description(Strings.EMPTY)
-                .isGenerallyTruncating(Strings.EMPTY)
-                .build();
-
-        OncoKbGene gene = ImmutableOncoKbGene.builder()
-                .hugoSymbol(Strings.EMPTY)
-                .name(Strings.EMPTY)
-                .entrezGeneId(Strings.EMPTY)
-                .curatedIsoform(Strings.EMPTY)
-                .curatedRefSeq(Strings.EMPTY)
-                .oncogene(Strings.EMPTY)
-                .tsg(Strings.EMPTY)
-                .build();
-
-        OncoKbVariant variant = ImmutableOncoKbVariant.builder()
-                .name(Strings.EMPTY)
-                .alteration(Strings.EMPTY)
-                .consequence(consequence)
-                .gene(gene)
-                .proteinStart(Strings.EMPTY)
-                .proteinEnd(Strings.EMPTY)
-                .refResidues(Strings.EMPTY)
-                .variantResidues(Strings.EMPTY)
-                .build();
-
-        OncoKbBiological biological = ImmutableOncoKbBiological.builder()
-                .gene(Strings.EMPTY)
-                .entrezGeneId(Strings.EMPTY)
-                .isoform(Strings.EMPTY)
-                .refSeq(Strings.EMPTY)
-                .oncokbVariant(variant)
                 .oncogenic(Strings.EMPTY)
-                .mutationEffect(Strings.EMPTY)
-                .mutationEffectPmids(Strings.EMPTY)
-                .mutationEffectAbstracts(Strings.EMPTY)
                 .build();
+    }
 
-        return ImmutableOncoKb.builder().oncoKbBiological(biological).build();
+    @NotNull
+    private static Association testAssociation() {
+        return testAssociationWithOncogenic(Strings.EMPTY);
+    }
+
+    @NotNull
+    private static Association testAssociationWithOncogenic(@NotNull String oncogenic) {
+        EvidenceType evidenceType = ImmutableEvidenceType.builder().sourceName(Strings.EMPTY).build();
+        Evidence evidence = ImmutableEvidence.builder().evidenceType(evidenceType).build();
+
+        Phenotype phenotype = ImmutablePhenotype.builder().description(Strings.EMPTY).family(Strings.EMPTY).build();
+
+        return ImmutableAssociation.builder()
+                .evidence(evidence)
+                .evidenceLevel(Strings.EMPTY)
+                .evidenceLabel(Strings.EMPTY)
+                .responseType(Strings.EMPTY)
+                .drugLabels(Strings.EMPTY)
+                .sourceLink(Strings.EMPTY)
+                .phenotype(phenotype)
+                .description(Strings.EMPTY)
+                .oncogenic(oncogenic)
+                .build();
+    }
+
+    private static class TestKbSpecificObject implements KbSpecificObject {
+
     }
 }

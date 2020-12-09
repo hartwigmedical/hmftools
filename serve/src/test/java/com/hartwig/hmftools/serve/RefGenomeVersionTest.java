@@ -9,14 +9,14 @@ public class RefGenomeVersionTest {
     @Test
     public void canVersionFilePaths() {
         String path = "/this/is/my/path.vcf";
-        assertEquals("/this/is/my/path.hg19.vcf", RefGenomeVersion.HG19.makeVersioned(path));
+        assertEquals("/this/is/my/path.37.vcf", RefGenomeVersion.V37.addVersionToFilePath(path));
 
         String path2 = "file.testing.tsv";
-        assertEquals("file.testing.hg19.tsv", RefGenomeVersion.HG19.makeVersioned(path2));
+        assertEquals("file.testing.37.tsv", RefGenomeVersion.V37.addVersionToFilePath(path2));
     }
 
     @Test(expected = IllegalStateException.class)
     public void cannotHandlePathsWithNoExtension() {
-        RefGenomeVersion.HG19.makeVersioned("path");
+        RefGenomeVersion.V37.addVersionToFilePath("path");
     }
 }

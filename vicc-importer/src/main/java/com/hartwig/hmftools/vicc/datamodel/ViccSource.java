@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.vicc.datamodel;
 
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -41,5 +43,21 @@ public enum ViccSource {
 
         LOGGER.warn("Unknown source in knowledgebase: {}!", sourceString);
         return ViccSource.UNKNOWN;
+    }
+
+    @NotNull
+    public static Knowledgebase toKnowledgebase(@NotNull ViccSource source) {
+        switch (source) {
+            case ONCOKB:
+                return Knowledgebase.VICC_ONCOKB;
+            case CIVIC:
+                return Knowledgebase.VICC_CIVIC;
+            case JAX:
+                return Knowledgebase.VICC_JAX;
+            case CGI:
+                return Knowledgebase.VICC_CGI;
+            default:
+                throw new IllegalStateException("Source not mapped to knowledgebase yet: " + source.display());
+        }
     }
 }

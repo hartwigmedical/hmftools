@@ -7,23 +7,25 @@ import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
-import com.hartwig.hmftools.serve.actionability.range.MutationTypeFilter;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
-import com.hartwig.hmftools.serve.actionability.signature.SignatureName;
-import com.hartwig.hmftools.serve.copynumber.CopyNumberType;
-import com.hartwig.hmftools.serve.copynumber.ImmutableKnownCopyNumber;
-import com.hartwig.hmftools.serve.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.serve.fusion.ImmutableKnownFusionPair;
-import com.hartwig.hmftools.serve.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.hotspot.ImmutableKnownHotspot;
-import com.hartwig.hmftools.serve.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.extraction.ExtractionResult;
+import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberType;
+import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.fusion.ImmutableKnownFusionPair;
+import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
+import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
+import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
+import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -74,7 +76,6 @@ public final class ServeTestFactory {
     public static ActionableHotspot createTestActionableHotspotForSource(@NotNull Knowledgebase source) {
         return ImmutableActionableHotspot.builder()
                 .from(createTestBaseEvent(source))
-                .url(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .ref(Strings.EMPTY)

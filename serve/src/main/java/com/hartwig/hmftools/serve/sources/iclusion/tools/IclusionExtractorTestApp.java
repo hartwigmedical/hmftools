@@ -6,12 +6,22 @@ import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
+import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
-import com.hartwig.hmftools.serve.ExtractionResult;
+import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.extraction.ExtractionResult;
+import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
+import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractorFactory;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionUtil;
 
@@ -33,19 +43,22 @@ public class IclusionExtractorTestApp {
         String iclusionTrialTsv;
         String driverGeneTsvPath;
         String outputDir;
-//        ProteinResolver proteinResolver;
+        ProteinResolver proteinResolver;
 
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
+        Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap37();
         if (hostname.toLowerCase().contains("datastore")) {
             iclusionTrialTsv = "/data/common/dbs/iclusion/iclusion_trials_prod.tsv";
             driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv";
             outputDir = System.getProperty("user.home") + "/tmp";
-//            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.HG19,
-//                    "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
+            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion,
+                    "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta",
+                    allGenesMap);
         } else {
             iclusionTrialTsv = System.getProperty("user.home") + "/hmf/projects/serve/iclusion/iclusion_trials_prod.tsv";
             driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
-//            proteinResolver = ProteinResolverFactory.dummy();
+            proteinResolver = ProteinResolverFactory.dummy();
         }
 
         Path outputPath = new File(outputDir).toPath();
@@ -65,9 +78,14 @@ public class IclusionExtractorTestApp {
 
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iclusionTrialTsv);
 
-        ExtractionResult output = new IclusionExtractor().extract(trials);
-        LOGGER.info("Generated {}", output);
+        EventClassifierConfig config = IclusionClassificationConfig.build();
+        IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(config, proteinResolver, driverGenes, allGenesMap);
+        ExtractionResult result = extractor.extract(trials);
 
+        IclusionUtil.printIclusionResult(result);
         IclusionUtil.writeIclusionMutationTypes(iclusionMutationTsv, trials);
+
+        new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);
     }
+
 }
