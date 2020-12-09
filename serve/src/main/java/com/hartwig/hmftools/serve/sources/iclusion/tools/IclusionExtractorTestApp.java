@@ -65,7 +65,7 @@ public class IclusionExtractorTestApp {
 
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iclusionTrialTsv);
 
-        ExtractionResult output = new IclusionExtractor().extract(trials);
+        ExtractionResult output = new IclusionExtractor(null).extract(trials);
         LOGGER.info("Generated {}", output);
 
         IclusionUtil.writeIclusionMutationTypes(iclusionMutationTsv, trials);

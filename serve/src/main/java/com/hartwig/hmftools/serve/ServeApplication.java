@@ -146,7 +146,7 @@ public class ServeApplication {
     private static ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv) throws IOException {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv);
 
-        IclusionExtractor extractor = new IclusionExtractor();
+        IclusionExtractor extractor = new IclusionExtractor(null);
         LOGGER.info("Running iClusion knowledge extraction");
         return extractor.extract(trials);
     }
