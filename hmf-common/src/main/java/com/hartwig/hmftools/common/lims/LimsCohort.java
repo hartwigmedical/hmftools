@@ -4,7 +4,9 @@ import org.jetbrains.annotations.NotNull;
 
 public enum LimsCohort {
     CPCT,
+    CPCT_PANCREAS,
     DRUP,
+    DRUP_STAGE3,
     WIDE,
     CORELR02,
     CORERI02,
@@ -18,11 +20,13 @@ public enum LimsCohort {
     public static LimsCohort fromCohort(@NotNull String cohortString) {
         switch (cohortString) {
             case "CPCT":
-            case "CPCTpancreas":
                 return CPCT;
+            case "CPCTpancreas":
+                return CPCT_PANCREAS;
             case "DRUP":
-            case "DRUPstage3":
                 return DRUP;
+            case "DRUPstage3":
+                return DRUP_STAGE3;
             case "WIDE":
                 return WIDE;
             case "CORE":
