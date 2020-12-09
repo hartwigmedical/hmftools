@@ -30,7 +30,7 @@ public final class IclusionUtil {
     }
 
     public static void printIclusionResult(@NotNull ExtractionResult result) {
-        LOGGER.info("Analysis performed iClusion extraction result");
+        LOGGER.info("Analysis performed on iClusion extraction result");
         LOGGER.info(" {} actionable hotspot records generated", result.actionableHotspots().size());
         LOGGER.info(" {} actionable range records generated", result.actionableRanges().size());
         LOGGER.info(" {} actionable gene records generated", result.actionableGenes().size());
