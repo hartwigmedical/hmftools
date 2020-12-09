@@ -16,6 +16,7 @@ public final class TestDatamodelFactory {
     public static ImmutableSampleData.Builder sampleBuilder(@NotNull LocalDate arrivalDate) {
         return ImmutableSampleData.builder()
                 .sampleId("sample-" + arrivalDate.toString())
+                .sampleBarcode("ABC")
                 .setName(Strings.EMPTY)
                 .sequenced(false)
                 .arrivalDate(arrivalDate)

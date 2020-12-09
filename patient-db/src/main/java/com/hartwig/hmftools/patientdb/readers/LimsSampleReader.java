@@ -56,6 +56,7 @@ public class LimsSampleReader {
 
         return ImmutableSampleData.builder()
                 .sampleId(sampleId)
+                .sampleBarcode(sampleBarcode)
                 .sequenced(isSequenced)
                 .setName(setName != null ? setName : Strings.EMPTY)
                 .arrivalDate(arrivalDate)
