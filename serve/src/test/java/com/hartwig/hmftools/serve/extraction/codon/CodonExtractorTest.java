@@ -50,13 +50,13 @@ public class CodonExtractorTest {
         assertEquals(25378707, codons.get(0).start());
         assertEquals(25378707, codons.get(0).end());
         assertEquals("KRAS", codons.get(0).gene());
-        assertEquals(MutationTypeFilter.MISSENSE_ANY, codons.get(0).mutationType());
+        assertEquals(MutationTypeFilter.MISSENSE, codons.get(0).mutationType());
 
         assertEquals("12", codons.get(1).chromosome());
         assertEquals(25380168, codons.get(1).start());
         assertEquals(25380169, codons.get(1).end());
         assertEquals("KRAS", codons.get(1).gene());
-        assertEquals(MutationTypeFilter.MISSENSE_ANY, codons.get(1).mutationType());
+        assertEquals(MutationTypeFilter.MISSENSE, codons.get(1).mutationType());
     }
 
     @Test

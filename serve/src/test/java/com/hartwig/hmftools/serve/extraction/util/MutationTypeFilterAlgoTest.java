@@ -26,13 +26,13 @@ public class MutationTypeFilterAlgoTest {
         assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT, algo.determine(onco, "EXON 9 FRAMESHIFT"));
         assertEquals(MutationTypeFilter.SPLICE, algo.determine(onco, "Exon 12 splice site insertion"));
         assertEquals(MutationTypeFilter.SPLICE, algo.determine(onco, "EXON 14 SKIPPING MUTATION"));
-        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION, algo.determine(onco, "EGFR exon 19 deletions"));
-        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_DELETION, algo.determine(onco, "Null (Partial deletion of Exons 2 & 3)"));
-        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION, algo.determine(onco, "Exon 20 insertions"));
-        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY, algo.determine(onco, "Exon 20 insertions/deletions"));
-        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_ANY, algo.determine(onco, "Exon 19 deletion/insertion"));
-        assertEquals(MutationTypeFilter.MISSENSE_ANY, algo.determine(onco, "mut"));
-        assertEquals(MutationTypeFilter.MISSENSE_INFRAME_INSERTION, algo.determine(onco, "insertion"));
+        assertEquals(MutationTypeFilter.INFRAME_DELETION, algo.determine(onco, "EGFR exon 19 deletions"));
+        assertEquals(MutationTypeFilter.INFRAME_DELETION, algo.determine(onco, "Null (Partial deletion of Exons 2 & 3)"));
+        assertEquals(MutationTypeFilter.INFRAME_INSERTION, algo.determine(onco, "Exon 20 insertions"));
+        assertEquals(MutationTypeFilter.INFRAME, algo.determine(onco, "Exon 20 insertions/deletions"));
+        assertEquals(MutationTypeFilter.INFRAME, algo.determine(onco, "Exon 19 deletion/insertion"));
+        assertEquals(MutationTypeFilter.MISSENSE, algo.determine(onco, "mut"));
+        assertEquals(MutationTypeFilter.INFRAME_INSERTION, algo.determine(onco, "insertion"));
         assertEquals(MutationTypeFilter.ANY, algo.determine(tsg, "mut"));
         assertEquals(MutationTypeFilter.NONSENSE_OR_FRAMESHIFT, algo.determine(tsg, "frameshift"));
 
