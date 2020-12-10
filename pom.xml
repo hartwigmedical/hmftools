@@ -17,6 +17,7 @@
         <module>hmf-id-generator</module>
         <module>bam-slicer</module>
         <module>gripss</module>
+        <module>lilac</module>
         <module>paddle</module>
         <module>health-checker</module>
         <module>fastq-stats</module>
@@ -65,6 +66,7 @@
         <bam-slicer.version>1.5</bam-slicer.version>
         <bachelor.version>1.12</bachelor.version>
         <gripss.version>1.10</gripss.version>
+        <lilac.version>0.1</lilac.version>
         <sv-linx.version>1.12</sv-linx.version>
         <health-checker.version>3.2</health-checker.version>
         <patient-reporter.version>7.19</patient-reporter.version>
