@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SPLICE_SITE_PERCENTILES;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
@@ -27,6 +28,9 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType;
 
@@ -38,28 +42,40 @@ public class SpliceSiteCache
     private final CohortConfig mConfig;
 
     // for building a cache
-    private final Map<String, Set<Integer>> mCohortAltSJPositions;
     private final Map<String,Map<Integer,List<Double>>> mSpliceSiteRates;
+    private final Map<String,Map<Integer,int[]>> mSpliceSiteTotals;
 
     // when used as a cache
     private final Map<String,Map<Integer,double[]>> mSpliceSitePercentilesMap;
-    private final Map<String,Map<Integer,Double>> mCurrentSampleSpliceSiteMap;
+    private final Map<String,Map<Integer,int[]>> mCurrentSampleSpliceSiteMap;
+
+    private final EnsemblDataCache mGeneTransCache;
 
     protected static final String COHORT_SPLICE_SITE_FILE = "cohort_splice_site_file";
+
+    public static final int SS_TRAVERSED = 0;
+    public static final int SS_SUPPORT = 1;
 
     public SpliceSiteCache(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
-        mCohortAltSJPositions = Maps.newHashMap();
         mSpliceSiteRates = Maps.newHashMap();
-
-        if(cmd.hasOption(COHORT_ALT_SJ_FILE) && config.AnalysisTypes.contains(SPLICE_SITE_PERCENTILES))
-        {
-            loadCohortAltSJs(cmd.getOptionValue(COHORT_ALT_SJ_FILE));
-        }
+        mSpliceSiteTotals = Maps.newHashMap();
 
         mSpliceSitePercentilesMap = Maps.newHashMap();
         mCurrentSampleSpliceSiteMap = Maps.newHashMap();
+
+        if(config.EnsemblDataCache != null)
+        {
+            mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.RG_37);
+            mGeneTransCache.setRequiredData(false, false, false, false);
+            mGeneTransCache.setRestrictedGeneIdList(config.RestrictedGeneIds);
+            mGeneTransCache.load(true); // only need  genes, not transcript data
+        }
+        else
+        {
+            mGeneTransCache = null;
+        }
 
         if(cmd.hasOption(COHORT_SPLICE_SITE_FILE))
         {
@@ -69,7 +85,6 @@ public class SpliceSiteCache
 
     public static void addCmdLineOptions(final Options options)
     {
-        options.addOption(COHORT_ALT_SJ_FILE, true, "Cohort frequency for alt SJs");
         options.addOption(COHORT_SPLICE_SITE_FILE, true, "Cohort splice site percentiles");
     }
 
@@ -87,25 +102,28 @@ public class SpliceSiteCache
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final Path sampleFile = filenames.get(i);
 
-            final Map<String,Map<Integer,Double>> spliceSiteMap = loadSpliceSiteFile(sampleFile, fieldsIndexMap);
+            final Map<String,Map<Integer,int[]>> spliceSiteMap = loadSpliceSiteFile(sampleFile, fieldsIndexMap);
 
             ISF_LOGGER.debug("{}: sample({}) loaded {} splice-site records",
                     i, sampleId, spliceSiteMap.values().stream().mapToInt(x -> x.size()).sum());
 
-            for(Map.Entry<String,Map<Integer,Double>> chrEntry : spliceSiteMap.entrySet())
+            for(Map.Entry<String,Map<Integer,int[]>> chrEntry : spliceSiteMap.entrySet())
             {
                 final String chromosome = chrEntry.getKey();
 
-                for(Map.Entry<Integer,Double> posEntry : chrEntry.getValue().entrySet())
+                final List<EnsemblGeneData> geneDataList = mGeneTransCache != null ?
+                        mGeneTransCache.getChrGeneDataMap().get(chromosome) : null;
+
+                for(Map.Entry<Integer,int[]> posEntry : chrEntry.getValue().entrySet())
                 {
                     int splicePosition = posEntry.getKey();
 
-                    if(!hasAltSpliceSitePosition(chromosome, splicePosition))
+                    if(mGeneTransCache != null && !inRequiredGenes(geneDataList, splicePosition))
                         continue;
 
-                    double supportRate = posEntry.getValue();
+                    final int[] spliceSiteData = posEntry.getValue();
 
-                    addSpliceSiteSupport(chromosome, splicePosition, supportRate);
+                    addSpliceSiteSupport(chromosome, splicePosition, spliceSiteData);
                 }
             }
         }
@@ -116,9 +134,9 @@ public class SpliceSiteCache
         writePercentiles();
     }
 
-    public static final Map<String,Map<Integer,Double>> loadSpliceSiteFile(final Path filename, final Map<String,Integer> fieldsIndexMap)
+    public static final Map<String,Map<Integer,int[]>> loadSpliceSiteFile(final Path filename, final Map<String,Integer> fieldsIndexMap)
     {
-        final Map<String,Map<Integer,Double>> spliceSiteMap = Maps.newHashMap();
+        final Map<String,Map<Integer,int[]>> spliceSiteMap = Maps.newHashMap();
 
         try
         {
@@ -147,9 +165,11 @@ public class SpliceSiteCache
                 if(traverseFrags == 0 && supportFrags == 0)
                     continue;
 
-                double supportRate = supportFrags / (double)(traverseFrags + supportFrags);
+                final int[] spliceSiteData = new int[2];
+                spliceSiteData[SS_SUPPORT] = supportFrags;
+                spliceSiteData[SS_TRAVERSED] = traverseFrags;
 
-                Map<Integer,Double> positionsMap = spliceSiteMap.get(chromosome);
+                Map<Integer,int[]> positionsMap = spliceSiteMap.get(chromosome);
 
                 if(positionsMap == null)
                 {
@@ -157,7 +177,7 @@ public class SpliceSiteCache
                     spliceSiteMap.put(chromosome, positionsMap);
                 }
 
-                positionsMap.put(splicePosition, supportRate);
+                positionsMap.put(splicePosition, spliceSiteData);
             }
         }
         catch(IOException e)
@@ -168,7 +188,34 @@ public class SpliceSiteCache
         return spliceSiteMap;
     }
 
-    private void addSpliceSiteSupport(final String chromosome, int splicePosition, double supportRate)
+    private static boolean inRequiredGenes(final List<EnsemblGeneData> geneDataList, int position)
+    {
+        if(geneDataList == null)
+            return false;
+
+        for(final EnsemblGeneData geneData : geneDataList)
+        {
+            if(positionWithin(position, geneData.GeneStart, geneData.GeneEnd))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static double calcSupportRate(final int[] spliceSiteData)
+    {
+        if(spliceSiteData == null || spliceSiteData.length != 2)
+            return -1;
+
+        double denom = spliceSiteData[SS_SUPPORT] + spliceSiteData[SS_TRAVERSED];
+
+        if(denom == 0)
+            return -1;
+
+        return spliceSiteData[SS_SUPPORT] / denom;
+    }
+
+    private void addSpliceSiteSupport(final String chromosome, int splicePosition, final int[] spliceSiteData)
     {
         Map<Integer,List<Double>> positionsMap = mSpliceSiteRates.get(chromosome);
 
@@ -178,113 +225,48 @@ public class SpliceSiteCache
             mSpliceSiteRates.put(chromosome, positionsMap);
         }
 
+        double supportRate = calcSupportRate(spliceSiteData);
+
         List<Double> supportRates = positionsMap.get(splicePosition);
 
         if(supportRates == null)
         {
             positionsMap.put(splicePosition, Lists.newArrayList(supportRate));
-            return;
         }
-
-        int index = 0;
-
-        while(index < supportRates.size())
+        else
         {
-            if(supportRate < supportRates.get(index))
-                break;
+            int index = 0;
 
-            ++index;
-        }
-
-        supportRates.add(index, supportRate);
-    }
-
-    private boolean processType(AltSpliceJunctionType type)
-    {
-        switch(type)
-        {
-            case SKIPPED_EXONS:
-            case NOVEL_3_PRIME:
-            case NOVEL_5_PRIME:
-            case NOVEL_EXON:
-            case MIXED_TRANS:
-            case EXON_INTRON:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private void loadCohortAltSJs(final String filename)
-    {
-        if(!Files.exists(Paths.get(filename)))
-        {
-            ISF_LOGGER.error("invalid cohort alt-SJ file({})", filename);
-            return;
-        }
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-                return;
-
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, DELIMITER);
-
-            int typeIndex = fieldsMap.get("Type");
-            int chromosomeIndex = fieldsMap.get("Chromosome");
-            int sjStartPosIndex = fieldsMap.get("SjStart");
-            int sjEndPosIndex = fieldsMap.get("SjEnd");
-
-            int asjCount = 0;
-
-            while ((line = fileReader.readLine()) != null)
+            while(index < supportRates.size())
             {
-                final String[] items = line.split(DELIMITER);
+                if(supportRate < supportRates.get(index))
+                    break;
 
-                AltSpliceJunctionType type = AltSpliceJunctionType.valueOf(items[typeIndex]);
-
-                if(!processType(type))
-                    continue;
-
-                String chromosome = items[chromosomeIndex];
-                int asjPosStart = Integer.parseInt(items[sjStartPosIndex]);
-                int asjPosEnd = Integer.parseInt(items[sjEndPosIndex]);
-
-                Set<Integer> positions = mCohortAltSJPositions.get(chromosome);
-
-                if(positions == null)
-                {
-                    positions = Sets.newHashSet();
-                    mCohortAltSJPositions.put(chromosome, positions);
-                }
-
-                positions.add(asjPosStart);
-                positions.add(asjPosEnd);
-
-                ++asjCount;
+                ++index;
             }
 
-            ISF_LOGGER.info("loaded {} cohort alt-SJ records", asjCount);
+            supportRates.add(index, supportRate);
         }
-        catch(IOException e)
+
+        Map<Integer,int[]> positionTotalsMap = mSpliceSiteTotals.get(chromosome);
+
+        if(positionTotalsMap == null)
         {
-            ISF_LOGGER.error("failed to load cohort alt-SJ data file({}): {}", filename, e.toString());
-            return;
+            positionTotalsMap = Maps.newHashMap();
+            mSpliceSiteTotals.put(chromosome, positionTotalsMap);
         }
-    }
 
-    private boolean hasAltSpliceSitePosition(final String chromosome, int splicePosition)
-    {
-        final Set<Integer> positions = mCohortAltSJPositions.get(chromosome);
+        int[] siteTotals = positionTotalsMap.get(splicePosition);
 
-        if(positions == null)
-            return false;
-
-        return positions.contains(splicePosition);
+        if(siteTotals == null)
+        {
+            positionTotalsMap.put(splicePosition, spliceSiteData);
+        }
+        else
+        {
+            siteTotals[SS_SUPPORT] += spliceSiteData[SS_SUPPORT];
+            siteTotals[SS_TRAVERSED] += spliceSiteData[SS_TRAVERSED];
+        }
     }
 
     private void writePercentiles()
@@ -296,7 +278,7 @@ public class SpliceSiteCache
             final String outputFileName = mConfig.formCohortFilename("splice_site_support_perc.csv");
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("Chromosome,SplicePosition");
+            writer.write("Chromosome,SplicePosition,FragTotal,SupportTotal");
 
             for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
             {
@@ -316,7 +298,11 @@ public class SpliceSiteCache
                     final double[] supportRates = convertList(posEntry.getValue());
                     calcPercentileValues(supportRates, percentileValues);
 
-                    writer.write(String.format("%s,%d", chromosome, splicePosition));
+                    final int[] spliceSiteTotals = mSpliceSiteTotals.get(chromosome).get(splicePosition);
+                    int totalSupport = spliceSiteTotals[SS_TRAVERSED] + spliceSiteTotals[SS_SUPPORT];
+
+                    writer.write(String.format("%s,%d,%d,%d",
+                            chromosome, splicePosition, totalSupport, spliceSiteTotals[SS_SUPPORT]));
 
                     for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
                     {
@@ -424,14 +410,14 @@ public class SpliceSiteCache
 
     public double getSampleSpliceSitePsi(final String chromosome, int splicePosition)
     {
-        final Map<Integer,Double> positions = mCurrentSampleSpliceSiteMap.get(chromosome);
+        final Map<Integer,int[]> positions = mCurrentSampleSpliceSiteMap.get(chromosome);
 
         if(positions == null)
             return PSI_NO_RATE;
 
-        Double rate = positions.get(splicePosition);
+        final int[] spliceSiteData = positions.get(splicePosition);
 
-        return rate != null ? rate : PSI_NO_RATE;
+        return spliceSiteData != null ? calcSupportRate(spliceSiteData) : PSI_NO_RATE;
     }
 
     public double getCohortSpliceSitePsi(final String chromosome, int splicePosition, double sampleRate)
