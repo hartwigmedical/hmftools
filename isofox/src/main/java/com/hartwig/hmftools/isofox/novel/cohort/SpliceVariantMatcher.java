@@ -27,6 +27,9 @@ import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.DONOR;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.NONE;
 import static com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser.loadFile;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.PSI_NO_RATE;
+import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.SS_SUPPORT;
+import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.SS_TRAVERSED;
+import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.calcSupportRate;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.NOVEL;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.DISRUPTION;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
@@ -164,7 +167,10 @@ public class SpliceVariantMatcher
         final List<SpliceVariant> spliceVariants = getSomaticVariants(sampleId);
 
         if(spliceVariants == null || spliceVariants.isEmpty())
+        {
+            ISF_LOGGER.debug("sampleId({}) no splice variants found", sampleId);
             return;
+        }
 
         final Map<String,List<Integer>> svBreakends = getStructuralVariants(sampleId);
 
@@ -495,7 +501,8 @@ public class SpliceVariantMatcher
             mWriter.write("SampleId,MatchType,GeneId,GeneName,Chromosome,Strand");
             mWriter.write(",Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,LocalPhaseSet,AccDonType,ExonDistance,ExonPosition");
             mWriter.write(",AsjType,AsjContextStart,AsjContextEnd,AsjPosStart,AsjPosEnd,FragmentCount,DepthStart,DepthEnd");
-            mWriter.write(",BasesStart,BasesEnd,AsjCohortCount,AsjTransData,PsiSample,PsiCohortPerc");
+            mWriter.write(",BasesStart,BasesEnd,AsjCohortCount,AsjTransData");
+            mWriter.write(",PsiSample,PsiSampleSupportFrags,PsiCohortPerc,PsiCohortAvg,PsiCohortSupportFrags");
 
             mWriter.newLine();
         }
@@ -520,13 +527,31 @@ public class SpliceVariantMatcher
                     variant.HgvsCodingImpact, variant.TriNucContext, variant.LocalPhaseSet, accDonType,
                     exonBaseDistance, exonPosition != null ? exonPosition : -1));
 
+            int sampleSupportFrags = 0;
             double samplePsi = PSI_NO_RATE;
-            double cohortPsi = PSI_NO_RATE;
+            double cohortPsiPerc = PSI_NO_RATE;
+
+            double cohortAvgRate = 0;
+            int cohortSupportFrags = 0;
 
             if(exonPosition != null)
             {
-                samplePsi = mSpliceSiteCache.getSampleSpliceSitePsi(variant.Chromosome, exonPosition);
-                cohortPsi = mSpliceSiteCache.getCohortSpliceSitePsi(variant.Chromosome, exonPosition, samplePsi);;
+                final int[] spliceSiteData = mSpliceSiteCache.getSampleSpliceSiteData(variant.Chromosome, exonPosition);
+
+                if(spliceSiteData != null)
+                {
+                    sampleSupportFrags = spliceSiteData[SS_SUPPORT];
+                    samplePsi = calcSupportRate(spliceSiteData);
+                    cohortPsiPerc = mSpliceSiteCache.getCohortSpliceSitePsiPercentile(variant.Chromosome, exonPosition, samplePsi);
+
+                    final int[] cohortData = mSpliceSiteCache.getCohortSpliceSiteData(variant.Chromosome, exonPosition);
+
+                    if(cohortData != null)
+                    {
+                        cohortAvgRate = calcSupportRate(cohortData);
+                        cohortSupportFrags = cohortData[SS_SUPPORT];
+                    }
+                }
             }
 
             if(altSJ != null)
@@ -541,12 +566,14 @@ public class SpliceVariantMatcher
                         getBaseContext(variant, altSJ.SpliceJunction[SE_END], geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR),
                         mDataCache.getCohortAltSjFrequency(altSJ), transDataStr));
 
-                mWriter.write(String.format(",%.4f,%.4f", samplePsi, cohortPsi));
+                mWriter.write(String.format(",%.4f,%d,%.4f,%.4f,%d",
+                        samplePsi, sampleSupportFrags, cohortPsiPerc, cohortAvgRate, cohortSupportFrags));
             }
             else
             {
-                mWriter.write(String.format(",%s,%s,%s,-1,-1,0,0,0,,,0,,%.4f,%.4f",
-                        UNKNOWN, AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN, samplePsi, cohortPsi));
+                mWriter.write(String.format(",%s,%s,%s,-1,-1,0,0,0,,,0,,%.4f,%d,%.4f,%.4f,%d",
+                        UNKNOWN, AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN,
+                        samplePsi, sampleSupportFrags, cohortPsiPerc, cohortAvgRate, cohortSupportFrags));
             }
 
             mWriter.newLine();
