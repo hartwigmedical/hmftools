@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac
 
 import com.hartwig.hmftools.lilac.hla.HlaReferenceSequence
-import com.hartwig.hmftools.lilac.prot.UnwrappedProtFile
+import com.hartwig.hmftools.lilac.prot.ProteinSequenceFile
 import org.apache.logging.log4j.LogManager
 
 fun main(args: Array<String>) {
@@ -25,7 +25,7 @@ class LilacApplication : AutoCloseable, Runnable {
 //        val sequenceC = readHlaSequence("/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/C_prot.fasta")
 
 
-        UnwrappedProtFile.unwrap("/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/A_prot.fasta","/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/A_prot.txt", "/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/A_prot.unwrapped.txt")
+        ProteinSequenceFile.writeUnwrappedFile("/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/A_prot.txt", "/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/A_prot.unwrapped.txt")
 
 //        allSequences.addAll(sequenceA)
 //        allSequences.addAll(sequenceB)
