@@ -15,9 +15,11 @@ final class CurationFactory {
 
     static {
         GENE_MAPPINGS.put("ERBB2 (HER2)", "ERBB2");
+        GENE_MAPPINGS.put("PDGFRα", "PDGFRA");
+        GENE_MAPPINGS.put("PDGFRβ", "PDGFRB");
 
-        MUTATION_MAPPINGS.put(new CurationEntry("MLL", "MLL-AF10"), new CurationEntry("KMT2A", "KMT2A-AF10"));
-        MUTATION_MAPPINGS.put(new CurationEntry("MLL", "MLL-AF9"), new CurationEntry("KMT2A", "KMT2A-AF9"));
+        MUTATION_MAPPINGS.put(new CurationEntry("MLL", "MLL-AF10"), new CurationEntry("KMT2A", "KMT2A-MLLT10"));
+        MUTATION_MAPPINGS.put(new CurationEntry("MLL", "MLL-AF9"), new CurationEntry("KMT2A", "KMT2A-MLLT3"));
 
         MUTATION_MAPPINGS.put(new CurationEntry("MSI", "HIGH"), new CurationEntry("-", "MSI HIGH"));
         MUTATION_MAPPINGS.put(new CurationEntry("TumMutLoad", "HIGH"), new CurationEntry("-", "TumMutLoad HIGH"));
