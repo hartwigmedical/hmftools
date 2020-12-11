@@ -76,7 +76,12 @@ public final class LimsFactory {
                 Maps.newHashMap(),
                 Sets.newHashSet(),
                 Sets.newHashSet(),
-                ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap()));
+                ImmutableHospitalModel.of(Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap()));
     }
 
     @NotNull

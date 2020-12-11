@@ -23,6 +23,7 @@ public final class HospitalModelFactory {
     private static final String HOSPITAL_CPCT_TSV = "hospital_cpct.tsv";
     private static final String HOSPITAL_DRUP_TSV = "hospital_drup.tsv";
     private static final String HOSPITAL_WIDE_TSV = "hospital_wide.tsv";
+    private static final String HOSPITAL_COREDB_TSV = "hospital_coredb.tsv";
     private static final String SAMPLE_HOSPITAL_MAPPING_TSV = "sample_hospital_mapping.tsv";
 
     private static final int HOSPITAL_ADDRESS_ID_COLUMN = 0;
@@ -36,6 +37,7 @@ public final class HospitalModelFactory {
     private static final int HOSPITAL_PERSONS_REQUESTER_NAME_COLUMN = 2;
     private static final int HOSPITAL_PERSONS_REQUESTER_EMAIL_COLUMN = 3;
     private static final int HOSPITAL_PERSONS_FIELD_COUNT_WIDE = 4;
+    private static final int HOSPITAL_PERSONS_FIELD_COUNT_COREDB = 4;
     private static final int HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP = 2;
 
     private static final int SAMPLE_MAPPING_ID_COLUMN = 0;
@@ -54,6 +56,8 @@ public final class HospitalModelFactory {
         String hospitalPersonsCPCTTsv = limsDirectory + File.separator + HOSPITAL_CPCT_TSV;
         String hospitalPersonsDRUPTsv = limsDirectory + File.separator + HOSPITAL_DRUP_TSV;
         String hospitalPersonsWIDETsv = limsDirectory + File.separator + HOSPITAL_WIDE_TSV;
+        String hospitalPersonsCOREDBTsv = limsDirectory + File.separator + HOSPITAL_COREDB_TSV;
+
 
         String sampleHospitalMappingTsv = limsDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_TSV;
 
@@ -64,6 +68,8 @@ public final class HospitalModelFactory {
                 readFromHospitalPersons(hospitalPersonsDRUPTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP);
         Map<String, HospitalPersons> hospitalPersonsWIDE =
                 readFromHospitalPersons(hospitalPersonsWIDETsv, HOSPITAL_PERSONS_FIELD_COUNT_WIDE);
+        Map<String, HospitalPersons> hospitalPersonsCOREDB =
+                readFromHospitalPersons(hospitalPersonsWIDETsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB);
         Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMapping(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
@@ -71,6 +77,7 @@ public final class HospitalModelFactory {
                 .hospitalPersonsCPCT(hospitalPersonsCPCT)
                 .hospitalPersonsDRUP(hospitalPersonsDRUP)
                 .hospitalPersonsWIDE(hospitalPersonsWIDE)
+                .hospitalPersonsCOREDB(hospitalPersonsCOREDB)
                 .sampleToHospitalMapping(sampleHospitalMapping)
                 .build();
 
@@ -85,6 +92,7 @@ public final class HospitalModelFactory {
         Set<String> keyCPCT = hospitalModel.hospitalPersonsCPCT().keySet();
         Set<String> keyDRUP = hospitalModel.hospitalPersonsDRUP().keySet();
         Set<String> keyWIDE = hospitalModel.hospitalPersonsWIDE().keySet();
+        Set<String> keyCOREDB = hospitalModel.hospitalPersonsCOREDB().keySet();
         Set<String> keySampleMapping = Sets.newHashSet(hospitalModel.sampleToHospitalMapping().values());
 
         boolean allCorrect = true;
@@ -106,6 +114,13 @@ public final class HospitalModelFactory {
             if (!hospitalIdsInAddressList.contains(WIDE)) {
                 allCorrect = false;
                 LOGGER.warn("WIDE hospital ID is not present in hospital address list: '{}'", WIDE);
+            }
+        }
+
+        for (String COREDB : keyCOREDB) {
+            if (!hospitalIdsInAddressList.contains(COREDB)) {
+                allCorrect = false;
+                LOGGER.warn("WIDE hospital ID is not present in hospital address list: '{}'", COREDB);
             }
         }
 

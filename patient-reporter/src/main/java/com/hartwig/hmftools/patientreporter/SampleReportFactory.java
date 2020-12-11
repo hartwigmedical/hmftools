@@ -47,6 +47,7 @@ public final class SampleReportFactory {
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
         LimsCohort cohort = lims.cohort(tumorSampleBarcode);
+        LOGGER.info("Cohort type of this sample is: {}", cohort);
 
         String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), cohort, tumorSampleId);
 

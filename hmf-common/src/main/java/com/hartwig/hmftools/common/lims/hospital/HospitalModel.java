@@ -27,6 +27,9 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalPersons> hospitalPersonsWIDE();
 
     @NotNull
+    abstract Map<String, HospitalPersons> hospitalPersonsCOREDB();
+
+    @NotNull
     abstract Map<String, String> sampleToHospitalMapping();
 
     @Nullable
