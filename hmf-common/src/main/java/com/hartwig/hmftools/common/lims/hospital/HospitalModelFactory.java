@@ -58,18 +58,17 @@ public final class HospitalModelFactory {
         String hospitalPersonsWIDETsv = limsDirectory + File.separator + HOSPITAL_WIDE_TSV;
         String hospitalPersonsCOREDBTsv = limsDirectory + File.separator + HOSPITAL_COREDB_TSV;
 
-
         String sampleHospitalMappingTsv = limsDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_TSV;
 
         Map<String, HospitalAddress> hospitalAddressMap = readFromHospitalAddress(hospitalAddressTsv);
         Map<String, HospitalPersons> hospitalPersonsCPCT =
-                readFromHospitalPersons(hospitalPersonsCPCTTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP);
+                readFromHospitalPersons(hospitalPersonsCPCTTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP, "CPCT");
         Map<String, HospitalPersons> hospitalPersonsDRUP =
-                readFromHospitalPersons(hospitalPersonsDRUPTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP);
+                readFromHospitalPersons(hospitalPersonsDRUPTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP, "DRUP");
         Map<String, HospitalPersons> hospitalPersonsWIDE =
-                readFromHospitalPersons(hospitalPersonsWIDETsv, HOSPITAL_PERSONS_FIELD_COUNT_WIDE);
+                readFromHospitalPersons(hospitalPersonsWIDETsv, HOSPITAL_PERSONS_FIELD_COUNT_WIDE, "WIDE");
         Map<String, HospitalPersons> hospitalPersonsCOREDB =
-                readFromHospitalPersons(hospitalPersonsWIDETsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB);
+                readFromHospitalPersons(hospitalPersonsCOREDBTsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB, "COREDB");
         Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMapping(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
@@ -159,8 +158,8 @@ public final class HospitalModelFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, HospitalPersons> readFromHospitalPersons(@NotNull String hospitalPersonsTsv, int expectedFieldCount)
-            throws IOException {
+    static Map<String, HospitalPersons> readFromHospitalPersons(@NotNull String hospitalPersonsTsv, int expectedFieldCount,
+            @NotNull String cohort) throws IOException {
         Map<String, HospitalPersons> hospitalPersonsMap = Maps.newHashMap();
         List<String> lines = Files.readAllLines(new File(hospitalPersonsTsv).toPath());
 
@@ -171,7 +170,7 @@ public final class HospitalModelFactory {
                 String requesterEmail = parts.length > 2 ? parts[HOSPITAL_PERSONS_REQUESTER_EMAIL_COLUMN] : null;
 
                 HospitalPersons hospitalPersons = ImmutableHospitalPersons.builder()
-                        .hospitalPI(parts[HOSPITAL_PERSONS_PI_COLUMN])
+                        .hospitalPI(cohort.equals("COREDB") ? requesterName : parts[HOSPITAL_PERSONS_PI_COLUMN])
                         .requesterName(requesterName)
                         .requesterEmail(requesterEmail)
                         .build();
