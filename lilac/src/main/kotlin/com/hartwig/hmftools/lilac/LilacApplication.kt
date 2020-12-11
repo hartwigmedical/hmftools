@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac
 
 import com.hartwig.hmftools.lilac.hla.HlaReferenceSequence
+import com.hartwig.hmftools.lilac.prot.ProteinSequenceBoundaries
 import com.hartwig.hmftools.lilac.prot.ProteinSequenceFile
 import org.apache.logging.log4j.LogManager
 
@@ -24,41 +25,30 @@ class LilacApplication : AutoCloseable, Runnable {
 //        val sequenceB = readHlaSequence("/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/B_prot.fasta")
 //        val sequenceC = readHlaSequence("/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/C_prot.fasta")
 
+        val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
+        val sequenceAFile = "${resourcesDir}/A_prot.txt"
+        val sequenceBFile = "${resourcesDir}/B_prot.txt"
+        val sequenceCFile = "${resourcesDir}/C_prot.txt"
 
-        ProteinSequenceFile.writeUnwrappedFile("/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/A_prot.txt", "/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/A_prot.unwrapped.txt")
-
-//        allSequences.addAll(sequenceA)
-//        allSequences.addAll(sequenceB)
-//        allSequences.addAll(sequenceC)
-
-//        KmerByGeneCount("/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/KmerByGeneCount.tmp.txt").doIt(sequenceA, sequenceB, sequenceC)
-//        HlaUniqueKmerCountSuperSlow("/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/HlaUniqueKmerCount.tmp.txt").doIt(sequenceA, sequenceB, sequenceC)
-//        HlaUniqueKmerCountFast(10, 400, "/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/HlaUniqueKmerCount.10.400.txt").doIt(sequenceA, sequenceB, sequenceC)
+//        writeUnwrappedFiles(sequenceAFile, sequenceBFile, sequenceCFile)
 
 
-//        logger.info("Extracting kmers")
-//        val kmers = sequences.flatMap { x -> x.rollingKmers(10) }.distinct().sorted()
+        val aSequences = ProteinSequenceFile.readWrappedFile("${resourcesDir}/A_prot.txt");
+        val bSequences = ProteinSequenceFile.readWrappedFile("${resourcesDir}/B_prot.txt");
+        val cSequences = ProteinSequenceFile.readWrappedFile("${resourcesDir}/C_prot.txt");
 
-//        for (i in 0..200) {
-//            val jon = UniqueKmers.uniqueKmers(sequences[i], sequences)
-//            println("${sequences[i].allele.fourDigitName()} -> ${jon[0].length} -> ${jon[0]}")
-//        }
-//
-//
-//
-////        val jon = UniqueKmers.uniqueKmers(sequences[3], sequences)
-////        println(jon[0].length)
-//
-////        val file = KmerCountFile("/Users/jon/hmf/repos/hmftools/lilac/src/main/resources/A_count.txt", sequences)
-////        file.addEntry(kmers)
-//
-//
-//        println(kmers.size)
+
 
     }
 
     private fun extractKmers() {
 
+    }
+
+    private fun writeUnwrappedFiles(aFile: String,  bFile: String, cFile: String) {
+        ProteinSequenceFile.writeUnwrappedFile(ProteinSequenceBoundaries.aBoundaries(), aFile, aFile.replace("txt", "unwrapped.txt"))
+        ProteinSequenceFile.writeUnwrappedFile(ProteinSequenceBoundaries.bBoundaries(), bFile, bFile.replace("txt", "unwrapped.txt"))
+        ProteinSequenceFile.writeUnwrappedFile(ProteinSequenceBoundaries.cBoundaries(), cFile, cFile.replace("txt", "unwrapped.txt"))
     }
 
 

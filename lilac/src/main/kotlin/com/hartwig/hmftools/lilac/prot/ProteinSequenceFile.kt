@@ -1,29 +1,48 @@
 package com.hartwig.hmftools.lilac.prot
 
+import org.apache.logging.log4j.LogManager
 import java.io.File
 
 object ProteinSequenceFile {
 
-    fun aBoundaries(): List<Int> {
-        val boundaries = listOf(24, 114, 206, 298, 337, 348, 365)
-        val offsets = listOf(2, 2, 20, 20, 20, 20, 20)
+    val logger = LogManager.getLogger(this::class.java)
 
-        return boundaries.zip(offsets) { x, y -> x + y }
+
+    fun readWrappedFile(alignment: String): List<ProteinSequence> {
+        return reduceToFourDigit(expand(readFile(alignment)))
     }
 
-    fun bBoundaries(): List<Int> {
-        val boundaries = listOf(24, 114, 206, 298, 337, 348)
-        val offsets = listOf(0, 13, 13, 13, 14, 14)
+    fun writeUnwrappedFile(codonBoundaries: List<Int>, input: String, output: String) {
+        val originalEntries = readFile(input)
+        val fourDigitEntries = reduceToFourDigit(originalEntries)
 
-        return boundaries.zip(offsets) { x, y -> x + y }
+        if (fourDigitEntries.isNotEmpty()) {
+            val outputFile = File(output)
+            outputFile.writeText(header(codonBoundaries))
+            for (entry in fourDigitEntries) {
+                outputFile.appendText("${entry.contig.padEnd(20, ' ')}\t${entry.proteins}\n")
+            }
+        }
     }
 
-    fun cBoundaries(): List<Int> {
-        val boundaries = listOf(24, 114, 206, 298, 338, 349, 365)
-        val offsets = listOf(0, 5, 24, 24, 30, 36, 36)
+    private fun readFile(alignment: String): List<ProteinSequence> {
+        val entries = LinkedHashMap<String, ProteinSequence>()
+        for (line in File(alignment).readLines()) {
+            if (line.startsWith("*", 2)) {
+                val splitLine = line.split(" ")
+                val allele = splitLine[1].trim()
+                val remainder = line.substring(allele.length + 2).replace(" ", "")
+                if (entries.containsKey(allele)) {
+                    entries[allele] = entries[allele]!!.copyWithAdditionalProtein(remainder)
+                } else {
+                    entries[allele] = ProteinSequence(allele, remainder)
+                }
+            }
+        }
 
-        return boundaries.zip(offsets) { x, y -> x + y }
+        return entries.values.toList()
     }
+
 
     private fun header(boundaryIndices: List<Int>): String {
 
@@ -46,37 +65,25 @@ object ProteinSequenceFile {
         return builder.append("\n").toString()
     }
 
-    fun readWrappedFile(alignment: String): List<ProteinSequence> {
-        val entries = LinkedHashMap<String, ProteinSequence>()
-        for (line in File(alignment).readLines()) {
-            if (line.startsWith("*", 2)) {
-                val splitLine = line.split(" ")
-                val allele = splitLine[1].trim()
-                val remainder = line.substring(allele.length + 2).replace(" ", "")
-                if (entries.containsKey(allele)) {
-                    entries[allele] = entries[allele]!!.addProtein(remainder)
-                } else {
-                    entries[allele] = ProteinSequence(allele, remainder)
+
+    private fun reduceToFourDigit(sequences: List<ProteinSequence>): List<ProteinSequence> {
+        val map = LinkedHashMap<String, ProteinSequence>()
+
+        for (sequence in sequences) {
+            val fourDigitName = sequence.allele.fourDigitName()
+            if (!map.containsKey(fourDigitName)) {
+                map[fourDigitName] = sequence
+            } else {
+                val existing = map[fourDigitName]!!
+                if (existing.length < sequence.length) {
+                    logger.info("Replacing ${existing.allele} with ${sequence.allele}")
+                    map[fourDigitName] = sequence
                 }
             }
+
         }
 
-        return entries.values.toList()
-    }
-
-
-    fun writeUnwrappedFile(codonBoundaries: List<Int>, input: String, output: String) {
-
-        val originalEntries = readWrappedFile(input)
-        val expandedEntries = expand(originalEntries)
-
-        if (originalEntries.isNotEmpty()) {
-            val outputFile = File(output)
-            outputFile.writeText(header(codonBoundaries))
-            for (entry in originalEntries) {
-                outputFile.appendText("${entry.contig.padEnd(20, ' ')}\t${entry.proteins}\n")
-            }
-        }
+        return map.values.toList()
     }
 
     private fun expand(sequences: List<ProteinSequence>): List<ProteinSequence> {
