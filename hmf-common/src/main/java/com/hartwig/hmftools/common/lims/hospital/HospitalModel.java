@@ -43,14 +43,15 @@ public abstract class HospitalModel {
         HospitalAddress address = hospitalAddressMap().get(hospitalId);
         HospitalPersons persons = findPersonsForStudy(hospitalId, cohort);
         if (address == null || (persons == null && (cohort == LimsCohort.CPCT || cohort == LimsCohort.CPCT_PANCREAS
-                || cohort == LimsCohort.DRUP || cohort == LimsCohort.DRUP_STAGE3 || cohort == LimsCohort.WIDE ))) {
+                || cohort == LimsCohort.DRUP || cohort == LimsCohort.DRUP_STAGE3 || cohort == LimsCohort.WIDE
+                || cohort == LimsCohort.COREDB))) {
             return null;
         }
 
         String requesterName = null;
         String requesterEmail = null;
         if (cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11
-                || cohort == LimsCohort.COREDB || cohort == LimsCohort.CORE) {
+                || cohort == LimsCohort.CORE) {
             requesterName = coreRequesterName;
             requesterEmail = coreRequesterEmail;
         } else if (persons != null) {
@@ -78,6 +79,8 @@ public abstract class HospitalModel {
                 return hospitalPersonsDRUP().get(hospitalId);
             case WIDE:
                 return hospitalPersonsWIDE().get(hospitalId);
+            case COREDB:
+                return hospitalPersonsCOREDB().get(hospitalId);
             default:
                 return null;
         }
