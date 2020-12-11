@@ -18,6 +18,13 @@ object ProteinSequenceFile {
         return boundaries.zip(offsets) { x, y -> x + y }
     }
 
+    fun cBoundaries(): List<Int> {
+        val boundaries = listOf(24, 114, 206, 298, 338, 349, 365)
+        val offsets = listOf(0, 5, 24, 24, 30, 36, 36)
+
+        return boundaries.zip(offsets) { x, y -> x + y }
+    }
+
     private fun header(boundaryIndices: List<Int>): String {
 
         val builder = StringBuilder()
