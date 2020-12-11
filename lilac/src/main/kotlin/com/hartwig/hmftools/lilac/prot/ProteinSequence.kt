@@ -17,7 +17,12 @@ data class ProteinSequence(val contig: String, val proteins: String) {
         var previousBoundary = -1
         for (i in exonicBoundaries.indices) {
             val boundary = exonicBoundaries[i]
-            result.add(proteins.substring(previousBoundary + 1, boundary).replace(".", "").replace("*", ""))
+            val start = previousBoundary + 1
+            if (start < proteins.length) {
+                val end = Math.min(proteins.length, boundary)
+                result.add(proteins.substring(start, end).replace(".", "").replace("*", ""))
+            }
+
             previousBoundary = boundary
         }
 

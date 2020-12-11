@@ -76,7 +76,7 @@ object ProteinSequenceFile {
             } else {
                 val existing = map[fourDigitName]!!
                 if (existing.length < sequence.length) {
-                    logger.info("Replacing ${existing.allele} with ${sequence.allele}")
+                    logger.debug("Replacing ${existing.allele} with ${sequence.allele}")
                     map[fourDigitName] = sequence
                 }
             }
