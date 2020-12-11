@@ -114,6 +114,18 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
+    public void canReadHospitalContactCOREDB() throws IOException {
+        Map<String, HospitalPersons> hospitalContactCOREDB =
+                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_coredb.tsv", 4, "COREDB");
+        assertEquals(1, hospitalContactCOREDB.size());
+
+        HospitalPersons coredb01 = hospitalContactCOREDB.get("01");
+        assertEquals("Someone1", coredb01.hospitalPI());
+        assertEquals("Someone1", coredb01.requesterName());
+        assertEquals("my@email.com", coredb01.requesterEmail());
+    }
+
+    @Test
     public void canReadSampleToHospitalMapping() throws IOException {
         Map<String, String> sampleHospitalMapping =
                 HospitalModelFactory.readFromSampleToHospitalMapping(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
