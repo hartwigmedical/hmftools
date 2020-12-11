@@ -23,8 +23,25 @@ class KmerCount(private val codonKmers: Set<String>) : Consumer<SAMRecord> {
         return kmerCountDna(record.readString)
     }
 
+    private fun reverseComplement(dna: String): String {
+        val builder = StringBuilder()
+        for (i in dna.indices.reversed()) {
+            when (dna[i]) {
+                'G' -> builder.append('C')
+                'C' -> builder.append('G')
+                'A' -> builder.append('T')
+                'T' -> builder.append('A')
+                else -> builder.append(dna[i])
+
+            }
+        }
+
+
+        return builder.toString()
+    }
+
     private fun kmerCountDna(dna: String): Map<String, Int> {
-        val dnaReversed = dna.reversed()
+        val dnaReversed = reverseComplement(dna)
 
         val codonString0 = Codons.asCodonString(dna)
         val codonString1 = Codons.asCodonString(dna.substring(1))
@@ -36,10 +53,10 @@ class KmerCount(private val codonKmers: Set<String>) : Consumer<SAMRecord> {
         val searchTrees = listOf(
                 SuffixTree(codonString0),
                 SuffixTree(codonString1),
-                SuffixTree(codonString2))
-//                SuffixTree(codonString3),
-//                SuffixTree(codonString4),
-//                SuffixTree(codonString5))
+                SuffixTree(codonString2),
+                SuffixTree(codonString3),
+                SuffixTree(codonString4),
+                SuffixTree(codonString5))
 
         val result = mutableMapOf<String, Int>()
         for (kmer in codonKmers) {
