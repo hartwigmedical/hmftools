@@ -64,7 +64,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactCPCT() throws IOException {
         Map<String, HospitalPersons> hospitalContactCPCT =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv", 2);
+                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv", 2, "CPCT");
 
         assertEquals(2, hospitalContactCPCT.size());
 
@@ -82,7 +82,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactDRUP() throws IOException {
         Map<String, HospitalPersons> hospitalContactDRUP =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv", 2);
+                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv", 2, "DRUP");
         assertEquals(2, hospitalContactDRUP.size());
 
         HospitalPersons drup1 = hospitalContactDRUP.get("01");
@@ -99,7 +99,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactWIDE() throws IOException {
         Map<String, HospitalPersons> hospitalContactWIDE =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4);
+                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");
         assertEquals(2, hospitalContactWIDE.size());
 
         HospitalPersons wide1 = hospitalContactWIDE.get("01");

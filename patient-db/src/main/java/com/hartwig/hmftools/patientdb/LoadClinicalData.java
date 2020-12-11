@@ -466,7 +466,7 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohort cohort = LimsCohort.fromCohort(tumorSamples.get(0).sampleBarcode());
+                LimsCohort cohort = lims.cohort(tumorSamples.get(0).sampleBarcode());
 
                 if (cohort == LimsCohort.CORE) {
                     String patientId = entry.getKey();

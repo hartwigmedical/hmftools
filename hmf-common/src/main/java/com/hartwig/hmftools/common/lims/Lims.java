@@ -240,7 +240,7 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String cohortString = sampleData.cohort();
-            return cohortString != null ? LimsCohort.fromCohort(cohortString) : LimsCohort.NON_CANCER;
+            return cohortString != null ? LimsCohort.fromCohort(cohortString, sampleData.sampleId()) : LimsCohort.NON_CANCER;
         } else {
             return LimsCohort.NON_CANCER;
         }
