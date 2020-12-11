@@ -11,6 +11,12 @@ object ProteinSequenceFile {
         return boundaries.zip(offsets) { x, y -> x + y }
     }
 
+    fun bBoundaries(): List<Int> {
+        val boundaries = listOf(24, 114, 206, 298, 337, 348)
+        val offsets = listOf(0, 13, 13, 13, 14, 14)
+
+        return boundaries.zip(offsets) { x, y -> x + y }
+    }
 
     private fun header(boundaryIndices: List<Int>): String {
 
@@ -52,23 +58,15 @@ object ProteinSequenceFile {
     }
 
 
-    fun writeUnwrappedFile(alignment: String, output: String) {
+    fun writeUnwrappedFile(codonBoundaries: List<Int>, input: String, output: String) {
 
-        val originalEntries = readWrappedFile(alignment)
+        val originalEntries = readWrappedFile(input)
         val expandedEntries = expand(originalEntries)
 
-        if (expandedEntries.isNotEmpty()) {
+        if (originalEntries.isNotEmpty()) {
             val outputFile = File(output)
-
-            outputFile.writeText(header(aBoundaries()))
-
-            val boundaries = aBoundaries();
-            val template =  expandedEntries[0]
-            println(template.allKmers(10).size)
-            println(template.exonicKmers(10, boundaries).size)
-
-
-            for (entry in expandedEntries) {
+            outputFile.writeText(header(codonBoundaries))
+            for (entry in originalEntries) {
                 outputFile.appendText("${entry.contig.padEnd(20, ' ')}\t${entry.proteins}\n")
             }
         }
