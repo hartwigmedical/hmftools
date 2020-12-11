@@ -4,7 +4,6 @@ public enum ReportableReason
 {
     UNSET,
     OK,
-    NEOEPITOPE,
     KNOWN_TYPE,
     UNPHASED_NOT_KNOWN,
     UNPHASED_5P_UTR,

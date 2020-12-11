@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.cohort;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.EXCLUDED_GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
@@ -9,7 +11,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.REF_GENOME;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.loadRefGenome;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXTERNAL_EXPRESSION_COMPARE;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_DISTRIBUTION;
@@ -95,10 +96,7 @@ public class CohortConfig
         AllAvailableFiles = !UseSampleDirectories && cmd.hasOption(ALL_AVAILABLE_FILES);
         FailOnMissingSample = cmd.hasOption(FAIL_MISSING);
 
-        String outputdir = cmd.getOptionValue(DATA_OUTPUT_DIR);
-        if(!outputdir.endsWith(File.separator))
-            outputdir += File.separator;
-        OutputDir = outputdir;
+        OutputDir = parseOutputDir(cmd);
         OutputIdentifier = cmd.getOptionValue(OUTPUT_ID);
 
         final String sampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE);

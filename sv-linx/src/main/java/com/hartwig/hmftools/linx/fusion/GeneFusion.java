@@ -37,7 +37,6 @@ public class GeneFusion
     private final boolean[] mIsPromiscuous;
     private boolean mKnownExons;
     private boolean mHighImpactPromiscuous;
-    private boolean mNeoEpitopeOnly;
     private boolean mProteinFeaturesSet;
 
     private FusionAnnotations mAnnotations;
@@ -57,7 +56,6 @@ public class GeneFusion
         mExonsSkipped = new int[] { 0, 0 };
         mKnownExons = false;
         mHighImpactPromiscuous = false;
-        mNeoEpitopeOnly = false;
         mProteinFeaturesSet = false;
         mAnnotations = null;
         mPriority = 0;
@@ -92,9 +90,6 @@ public class GeneFusion
     public void setReportable(boolean toggle) { mIsReportable = toggle; }
     public void setReportableReason(final ReportableReason reason) { mReportableReason = reason; }
     public ReportableReason reportableReason() { return mReportableReason; }
-
-    public boolean neoEpitopeOnly(){ return mNeoEpitopeOnly; }
-    public void setNeoEpitopeOnly(boolean toggle) { mNeoEpitopeOnly = toggle; }
 
     public boolean proteinFeaturesSet() { return mProteinFeaturesSet; }
     public void setProteinFeaturesSet() { mProteinFeaturesSet = true; }

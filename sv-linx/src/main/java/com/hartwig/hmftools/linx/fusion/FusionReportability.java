@@ -23,7 +23,6 @@ import static com.hartwig.hmftools.linx.fusion.ReportableReason.EXON_SKIPPING;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.INVALID_TRAVERSAL;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.KNOWN_TYPE;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.NEG_SPLICE_ACC_DISTANCE;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.NEOEPITOPE;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.NMD;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.SGL_NOT_KNOWN;
@@ -46,9 +45,6 @@ public class FusionReportability
 
     public static ReportableReason determineReportability(GeneFusion fusion)
     {
-        if(fusion.neoEpitopeOnly())
-            return NEOEPITOPE;
-
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
         if (fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
             return KNOWN_TYPE;

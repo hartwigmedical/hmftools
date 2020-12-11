@@ -117,16 +117,7 @@ public class LinxConfig
         SvDataPath = cmd.hasOption(SV_DATA_DIR) ? cmd.getOptionValue(SV_DATA_DIR) : OutputDataPath;
 
         if(cmd.hasOption(REF_GENOME_VERSION))
-        {
-            try
-            {
-                RG_VERSION = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
-            }
-            catch(Exception e)
-            {
-                LNX_LOGGER.error("invalid ref genome version({}), default to 37", cmd.getOptionValue(REF_GENOME_VERSION));
-            }
-        }
+            RG_VERSION = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
 
         ProximityDistance = cmd.hasOption(CLUSTER_BASE_DISTANCE) ? Integer.parseInt(cmd.getOptionValue(CLUSTER_BASE_DISTANCE))
                 : DEFAULT_PROXIMITY_DISTANCE;

@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_SINGLE_MAP_QUALITY;
@@ -179,10 +181,7 @@ public class IsofoxConfig
 
         CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);
 
-        String outputdir = cmd.getOptionValue(DATA_OUTPUT_DIR);
-        if(!outputdir.endsWith(File.separator))
-            outputdir += File.separator;
-        OutputDir = outputdir;
+        OutputDir = parseOutputDir(cmd);
         OutputIdentifier = cmd.getOptionValue(OUTPUT_ID);
 
         BamFile = cmd.getOptionValue(BAM_FILE);
@@ -310,24 +309,6 @@ public class IsofoxConfig
             final String chromosomes = cmd.getOptionValue(SPECIFIC_CHR);
             ISF_LOGGER.info("filtering for specific chromosomes: {}", chromosomes);
             SpecificChromosomes.addAll(Arrays.stream(chromosomes.split(ITEM_DELIM)).collect(Collectors.toList()));
-        }
-    }
-
-    public static RefGenomeSource loadRefGenome(final String filename)
-    {
-        if(filename == null || filename.isEmpty())
-            return null;
-
-        try
-        {
-            ISF_LOGGER.debug("loading indexed fasta reference file");
-            IndexedFastaSequenceFile refFastaSeqFile = new IndexedFastaSequenceFile(new File(filename));
-            return new RefGenomeSource(refFastaSeqFile);
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.error("Reference file loading failed: {}", e.toString());
-            return null;
         }
     }
 

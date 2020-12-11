@@ -23,9 +23,6 @@ import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOUR
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +36,6 @@ import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.Transcript;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
@@ -47,7 +43,6 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
-import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -60,14 +55,12 @@ import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-
 public class FusionDisruptionAnalyser
 {
     private FusionFinder mFusionFinder;
     private DisruptionFinder mDisruptionFinder;
     private FusionWriter mFusionWriter;
-    private NeoEpitopeFinder mNeoEpitopeFinder;
+    private NeoEpitopeWriter mNeoEpitopeWriter;
     private boolean mValidState;
 
     private String mSampleId;
@@ -79,7 +72,6 @@ public class FusionDisruptionAnalyser
     private final FusionParameters mFusionParams;
     private boolean mLogReportableOnly;
     private boolean mLogAllPotentials;
-    private boolean mFindNeoEpitopes;
 
     private final List<GeneFusion> mFusions; // all possible valid transcript-pair fusions
     private final List<GeneFusion> mUniqueFusions; // top-priority fusions from within each unique gene and SV pair
@@ -95,7 +87,7 @@ public class FusionDisruptionAnalyser
     public static final String LOG_ALL_POTENTIALS = "log_all_potential_fusions";
     public static final String LOG_INVALID_REASONS = "log_invalid_fusions";
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
-    public static final String NEO_EPITOPES = "neo_epitopes";
+    public static final String WRITE_NEO_EPITOPES = "write_neo_epitopes";
 
     public FusionDisruptionAnalyser(final CommandLine cmdLineArgs, final LinxConfig config,
             EnsemblDataCache ensemblDataCache, VisualiserWriter writer)
@@ -109,7 +101,7 @@ public class FusionDisruptionAnalyser
         mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache);
         mVisWriter = writer;
 
-        mNeoEpitopeFinder = null;
+        mNeoEpitopeWriter = null;
 
         mRunFusions = cmdLineArgs == null || cmdLineArgs.hasOption(CHECK_FUSIONS);
         mFusions = Lists.newArrayList();
@@ -117,7 +109,6 @@ public class FusionDisruptionAnalyser
         mInvalidFusions = Maps.newHashMap();
         mLogReportableOnly = false;
         mLogAllPotentials = false;
-        mFindNeoEpitopes = false;
 
         mFusionParams = new FusionParameters();
         mFusionParams.RequireUpstreamBiotypes = true;
@@ -134,7 +125,7 @@ public class FusionDisruptionAnalyser
     {
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
-        options.addOption(NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
+        options.addOption(WRITE_NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
         options.addOption(REF_GENOME_FILE, true, "Reference genome file");
 
         options.addOption(RNA_FUSIONS_FILE, true, "Sample RNA fusion data to match vs Linx fusions");
@@ -182,22 +173,9 @@ public class FusionDisruptionAnalyser
                     mOutputDir, cmdLineArgs, mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
         }
 
-        mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);
-
-        if(mFindNeoEpitopes && cmdLineArgs.hasOption(REF_GENOME_FILE))
+        if(cmdLineArgs.hasOption(WRITE_NEO_EPITOPES))
         {
-            try
-            {
-                IndexedFastaSequenceFile refGenomeFile =
-                        new IndexedFastaSequenceFile(new File(cmdLineArgs.getOptionValue(REF_GENOME_FILE)));
-                RefGenomeSource refGenome = new RefGenomeSource(refGenomeFile);
-                mNeoEpitopeFinder = new NeoEpitopeFinder(refGenome, mGeneDataCache, mOutputDir);
-            }
-            catch(IOException e)
-            {
-                LNX_LOGGER.error("failed to load ref genome: {}", e.toString());
-                mValidState = false;
-            }
+            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, mConfig.hasMultipleSamples());
         }
 
         if(mRunFusions)
@@ -390,9 +368,6 @@ public class FusionDisruptionAnalyser
         if(mRnaFusionMapper != null)
             mRnaFusionMapper.assessRnaFusions(sampleId, chrBreakendMap);
 
-        if(mNeoEpitopeFinder != null)
-            mNeoEpitopeFinder.reportNeoEpitopes(mSampleId, mFusions);
-
         mPerfCounter.stop();
     }
 
@@ -403,6 +378,9 @@ public class FusionDisruptionAnalyser
 
         mFusions.clear();
         mInvalidFusions.clear();
+
+        if(mNeoEpitopeWriter != null)
+            mNeoEpitopeWriter.initialiseSample(mSampleId);
 
         finalSingleSVFusions(svList);
         findChainedFusions(clusters);
@@ -428,8 +406,8 @@ public class FusionDisruptionAnalyser
 
             List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, mFusionParams);
 
-            if(mNeoEpitopeFinder != null)
-                mNeoEpitopeFinder.checkFusions(fusions, genesListStart, genesListEnd);
+            if(mNeoEpitopeWriter != null)
+                mNeoEpitopeWriter.processFusionCandidate(genesListStart, genesListEnd);
 
             if (fusions.isEmpty())
                 continue;
@@ -617,8 +595,8 @@ public class FusionDisruptionAnalyser
                 // test the fusion between these 2 breakends
                 List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, mFusionParams);
 
-                if(mNeoEpitopeFinder != null)
-                    mNeoEpitopeFinder.checkFusions(fusions, genesListLower, genesListUpper);
+                if(mNeoEpitopeWriter != null)
+                    mNeoEpitopeWriter.processFusionCandidate(genesListLower, genesListUpper);
 
                 if(fusions.isEmpty())
                     continue;
@@ -911,7 +889,7 @@ public class FusionDisruptionAnalyser
         // allocate fusions to unique SV pairings
         for(final GeneFusion fusion : mFusions)
         {
-            if(!persistFusion(fusion) || fusion.neoEpitopeOnly())
+            if(!persistFusion(fusion))
                 continue;
 
             final String svIdPair = fusion.svIdPair();
@@ -1005,9 +983,6 @@ public class FusionDisruptionAnalyser
 
         for(final GeneFusion fusion : fusionList)
         {
-            if (fusion.neoEpitopeOnly())
-                return;
-
             if (fusion.reportable())
             {
                 int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
@@ -1049,7 +1024,7 @@ public class FusionDisruptionAnalyser
         if(mDisruptionFinder != null)
             mDisruptionFinder.close();
 
-        if(mNeoEpitopeFinder != null)
-            mNeoEpitopeFinder.close();
+        if(mNeoEpitopeWriter != null)
+            mNeoEpitopeWriter.close();
     }
 }
