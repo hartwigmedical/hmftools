@@ -502,7 +502,7 @@ public class SpliceVariantMatcher
             mWriter.write(",Position,Type,CodingEffect,Ref,Alt,HgvsImpact,TriNucContext,LocalPhaseSet,AccDonType,ExonDistance,ExonPosition");
             mWriter.write(",AsjType,AsjContextStart,AsjContextEnd,AsjPosStart,AsjPosEnd,FragmentCount,DepthStart,DepthEnd");
             mWriter.write(",BasesStart,BasesEnd,AsjCohortCount,AsjTransData");
-            mWriter.write(",PsiSample,PsiSampleSupportFrags,PsiCohortPerc,PsiCohortAvg,PsiCohortSupportFrags");
+            mWriter.write(",PsiSample,PsiSampleTotalFrags,PsiCohortPerc,PsiCohortAvg,PsiCohortTotalFrags");
 
             mWriter.newLine();
         }
@@ -527,12 +527,12 @@ public class SpliceVariantMatcher
                     variant.HgvsCodingImpact, variant.TriNucContext, variant.LocalPhaseSet, accDonType,
                     exonBaseDistance, exonPosition != null ? exonPosition : -1));
 
-            int sampleSupportFrags = 0;
+            int sampleTotalFrags = 0;
             double samplePsi = PSI_NO_RATE;
             double cohortPsiPerc = PSI_NO_RATE;
 
             double cohortAvgRate = 0;
-            int cohortSupportFrags = 0;
+            int cohortTotalFrags = 0;
 
             if(exonPosition != null)
             {
@@ -540,17 +540,17 @@ public class SpliceVariantMatcher
 
                 if(spliceSiteData != null)
                 {
-                    sampleSupportFrags = spliceSiteData[SS_SUPPORT];
+                    sampleTotalFrags = spliceSiteData[SS_SUPPORT] + spliceSiteData[SS_TRAVERSED];
                     samplePsi = calcSupportRate(spliceSiteData);
                     cohortPsiPerc = mSpliceSiteCache.getCohortSpliceSitePsiPercentile(variant.Chromosome, exonPosition, samplePsi);
+                }
 
-                    final int[] cohortData = mSpliceSiteCache.getCohortSpliceSiteData(variant.Chromosome, exonPosition);
+                final int[] cohortData = mSpliceSiteCache.getCohortSpliceSiteData(variant.Chromosome, exonPosition);
 
-                    if(cohortData != null)
-                    {
-                        cohortAvgRate = calcSupportRate(cohortData);
-                        cohortSupportFrags = cohortData[SS_SUPPORT];
-                    }
+                if(cohortData != null)
+                {
+                    cohortAvgRate = calcSupportRate(cohortData);
+                    cohortTotalFrags = cohortData[SS_SUPPORT] + cohortData[SS_TRAVERSED];
                 }
             }
 
@@ -567,13 +567,13 @@ public class SpliceVariantMatcher
                         mDataCache.getCohortAltSjFrequency(altSJ), transDataStr));
 
                 mWriter.write(String.format(",%.4f,%d,%.4f,%.4f,%d",
-                        samplePsi, sampleSupportFrags, cohortPsiPerc, cohortAvgRate, cohortSupportFrags));
+                        samplePsi, sampleTotalFrags, cohortPsiPerc, cohortAvgRate, cohortTotalFrags));
             }
             else
             {
                 mWriter.write(String.format(",%s,%s,%s,-1,-1,0,0,0,,,0,,%.4f,%d,%.4f,%.4f,%d",
                         UNKNOWN, AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN,
-                        samplePsi, sampleSupportFrags, cohortPsiPerc, cohortAvgRate, cohortSupportFrags));
+                        samplePsi, sampleTotalFrags, cohortPsiPerc, cohortAvgRate, cohortTotalFrags));
             }
 
             mWriter.newLine();

@@ -367,7 +367,12 @@ public class SpliceSiteCache
                 final String chromosome = items[chromosomeIndex];
                 final int splicePosition = Integer.parseInt(items[positionIndex]);
 
-                final int[] totals = new int[] { Integer.parseInt(items[fragsIndex]), Integer.parseInt(items[supportIndex]) };
+                int totalFrags = Integer.parseInt(items[fragsIndex]);
+                int supportFrags = Integer.parseInt(items[supportIndex]);
+
+                final int[] totals = new int[2];
+                totals[SS_TRAVERSED] = totalFrags - supportFrags;
+                totals[SS_SUPPORT] = supportFrags;
 
                 double[] percentileData = new double[DISTRIBUTION_SIZE];
 
