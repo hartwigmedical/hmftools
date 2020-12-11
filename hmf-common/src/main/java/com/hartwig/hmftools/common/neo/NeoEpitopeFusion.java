@@ -23,12 +23,14 @@ public class NeoEpitopeFusion
     public final int[] Positions;
     public final byte[] Orientations;
     public final int[] SvIds;
+    public final String InsertSequence;
 
     public static final String DELIMITER = ",";
 
     public NeoEpitopeFusion(
             final String geneIdUp, final String geneNameUp, final String chrUp, int posUp, byte orientUp, int svIdUp,
-            final String geneIdDown, final String geneNameDown, final String chrDown, int posDown, byte orientDown, int svIdDown)
+            final String geneIdDown, final String geneNameDown, final String chrDown, int posDown, byte orientDown, int svIdDown,
+            final String insertSequence)
     {
         GeneIds = new String[] { geneIdUp, geneIdDown };
         GeneNames = new String[] { geneNameUp, geneNameDown };
@@ -36,18 +38,7 @@ public class NeoEpitopeFusion
         Positions = new int[] { posUp, posDown };
         Orientations = new byte[] { orientUp, orientDown };
         SvIds = new int[] { svIdUp, svIdDown };
-    }
-
-    public NeoEpitopeFusion(
-            final String[] geneIds, final String[] geneNames, final String[] chromosomes, final int[] positions,
-            final byte[] orientations, final int[] svIds)
-    {
-        GeneIds = geneIds;
-        GeneNames = geneNames;
-        Chromosomes = chromosomes;
-        Positions = positions;
-        Orientations = orientations;
-        SvIds = svIds;
+        InsertSequence = insertSequence;
     }
 
     private static final String FILE_EXTENSION = ".linx.neo_epitope.tsv";
@@ -108,6 +99,7 @@ public class NeoEpitopeFusion
                 .add("positionDown")
                 .add("orientationDown")
                 .add("svIdDown")
+                .add("insertSeq")
                 .toString();
     }
 
@@ -126,6 +118,8 @@ public class NeoEpitopeFusion
             sj.add(String.valueOf(fusion.SvIds[fs]));
         }
 
+        sj.add(fusion.InsertSequence);
+
         return sj.toString();
     }
 
@@ -143,6 +137,6 @@ public class NeoEpitopeFusion
                 values[index++], values[index++], values[index++],
                 Integer.parseInt(values[index++]), Byte.parseByte(values[index++]), Integer.parseInt(values[index++]),
                 values[index++], values[index++], values[index++],
-                Integer.parseInt(values[index++]), Byte.parseByte(values[index++]), Integer.parseInt(values[index++]));
+                Integer.parseInt(values[index++]), Byte.parseByte(values[index++]), Integer.parseInt(values[index++]), values[index++]);
     }
 }

@@ -407,7 +407,7 @@ public class FusionDisruptionAnalyser
             List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, mFusionParams);
 
             if(mNeoEpitopeWriter != null)
-                mNeoEpitopeWriter.processFusionCandidate(genesListStart, genesListEnd);
+                mNeoEpitopeWriter.processFusionCandidate(genesListStart, genesListEnd, null, null);
 
             if (fusions.isEmpty())
                 continue;
@@ -542,7 +542,7 @@ public class FusionDisruptionAnalyser
             if (genesListLower.isEmpty())
                 continue;
 
-            List<LinkedPair> traversedPairs = Lists.newArrayList();
+            final List<LinkedPair> traversedPairs = Lists.newArrayList();
 
             for (int lpIndex2 = lpIndex1; lpIndex2 <= linkedPairs.size(); ++lpIndex2)
             {
@@ -596,7 +596,9 @@ public class FusionDisruptionAnalyser
                 List<GeneFusion> fusions = mFusionFinder.findFusions(genesListLower, genesListUpper, mFusionParams);
 
                 if(mNeoEpitopeWriter != null)
-                    mNeoEpitopeWriter.processFusionCandidate(genesListLower, genesListUpper);
+                {
+                    mNeoEpitopeWriter.processFusionCandidate(genesListLower, genesListUpper, traversedPairs, mDisruptionFinder);
+                }
 
                 if(fusions.isEmpty())
                     continue;

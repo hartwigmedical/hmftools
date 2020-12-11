@@ -3,13 +3,13 @@ package com.hartwig.hmftools.linx.fusion;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.isIrrelevantSameGene;
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.allowSuspectChains;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -18,6 +18,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
+import com.hartwig.hmftools.linx.types.LinkedPair;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -28,6 +29,7 @@ public class NeoEpitopeWriter
     private boolean mIsMultiSample;
     private BufferedWriter mFileWriter;
     private String mSampleId;
+
     private final List<NeoEpitopeFusion> mFusions;
 
     public NeoEpitopeWriter(final String outputDir, boolean isMultiSample)
@@ -37,9 +39,6 @@ public class NeoEpitopeWriter
         mFileWriter = null;
         mSampleId = null;
         mFusions = Lists.newArrayList();
-
-        if(mIsMultiSample)
-            intialiseMultiSampleWriter();
     }
 
     public void initialiseSample(final String sampleId)
@@ -48,82 +47,139 @@ public class NeoEpitopeWriter
 
         // clear any cache
         mFusions.clear();
-
-        if(!mIsMultiSample)
-        {
-
-        }
-
     }
 
-    public void processFusionCandidate(final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2)
+    public void processFusionCandidate(
+            final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2,
+            final List<LinkedPair> traversedPairs, final DisruptionFinder disruptionFinder)
     {
+        if(breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
+            return;
+
+        // avoid writing duplicates of the same junction
+        if(isDuplicate(breakendGenes1.get(0), breakendGenes2.get(0)))
+            return;
+
+        boolean fusionAdded = false;
+
         for (final GeneAnnotation gene1 : breakendGenes1)
         {
-            boolean startUpstream = gene1.isUpstream();
-
-            final Transcript trans1 = gene1.transcripts().stream().filter(Transcript::isCanonical).findFirst().orElse(null);
-
-            if (trans1 == null)
-                continue;
-
             for (final GeneAnnotation gene2 : breakendGenes2)
             {
-                boolean endUpstream = gene2.isUpstream();
-
                 // can allow upstream to upstream in reverse order??
-                if (startUpstream == endUpstream)
+                if (gene1.isUpstream() == gene2.isUpstream())
+                    continue;
+
+                final GeneAnnotation upGene = gene1.isUpstream() ? gene1 : gene2;
+
+                if(!isCandidateUpstreamGene(upGene))
+                    continue;
+
+                final GeneAnnotation downGene = upGene == gene1 ? gene2 : gene1;
+
+                if(!hasValidTraversal(upGene, downGene, traversedPairs, gene1.isUpstream(), disruptionFinder))
                     continue;
 
                 NeoEpitopeFusion fusion = new NeoEpitopeFusion(
-                        gene1.StableId, gene1.GeneName, gene1.chromosome(), gene1.position(), gene1.orientation(), gene1.id(),
-                        gene2.StableId, gene2.GeneName, gene2.chromosome(), gene2.position(), gene2.orientation(), gene2.id());
-
-                // TO-DO - avoid writing duplicates of the same junction
-                if(isDuplicate(fusion))
-                    continue;
-
-                mFusions.add(fusion);
+                        upGene.StableId, upGene.GeneName, upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.id(),
+                        downGene.StableId, downGene.GeneName, downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.id(),
+                        upGene.insertSequence());
 
                 writeData(fusion);
+
+                if(!fusionAdded)
+                {
+                    mFusions.add(fusion);
+                    fusionAdded = true;
+                }
             }
         }
     }
 
-    private boolean isDuplicate(final NeoEpitopeFusion fusion)
+    private boolean hasValidTraversal(
+            final GeneAnnotation upGene, final GeneAnnotation downGene, final List<LinkedPair> traversedPairs,
+            boolean fusionLowerToUpper, final DisruptionFinder disruptionFinder)
     {
-        // mFusions
-        return false;
+        if(traversedPairs == null || traversedPairs.isEmpty())
+            return true;
+
+        int upGeneStrand = upGene.Strand;
+        boolean isPrecodingUpstream = false;
+
+        for(LinkedPair pair : traversedPairs)
+        {
+            // if going lower to upper, if the orientation of the first breakend in the pair is opposite to the strand of
+            // the upstream gene, then the fusion direction for that pair is the same as a the upstream gene
+            // otherwise it needs to be switched
+            int fusionDirection = 0;
+
+            if(fusionLowerToUpper)
+            {
+                fusionDirection = pair.firstBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
+            }
+            else
+            {
+                fusionDirection = pair.secondBreakend().orientation() != upGeneStrand ? upGeneStrand : -upGeneStrand;
+            }
+
+            // any invalid traversal causes this fusion to be entirely skipped from further analysis
+            if(disruptionFinder.pairTraversesGene(pair, fusionDirection, isPrecodingUpstream))
+                return false;
+        }
+
+        return true;
     }
 
-    private void intialiseMultiSampleWriter()
+    private boolean isCandidateUpstreamGene(final GeneAnnotation gene)
     {
-        if(mOutputDir.isEmpty())
-            return;
+        // must have at least 1 coding transcript
+        return gene.transcripts().stream().anyMatch(x -> x.isCoding());
+    }
 
-        try
+    private boolean isDuplicate(final GeneAnnotation gene1, final GeneAnnotation gene2)
+    {
+        for(final NeoEpitopeFusion fusion : mFusions)
         {
-            String outputFileName = mOutputDir + "LNX_NEO_EPITOPES.csv";
-
-            mFileWriter = createBufferedWriter(outputFileName, false);
-
-            mFileWriter.write("sampleId");
-            mFileWriter.write(NeoEpitopeFusion.header());
-            mFileWriter.newLine();
+            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+            {
+                if(fusion.SvIds[fs] == gene1.id() && fusion.SvIds[switchStream(fs)] == gene2.id()
+                && fusion.Chromosomes[fs].equals(gene1.chromosome()) && fusion.Chromosomes[switchStream(fs)].equals(gene2.chromosome())
+                && fusion.Positions[fs] == gene1.position() && fusion.Positions[switchStream(fs)] == gene2.position())
+                {
+                    return true;
+                }
+            }
         }
-        catch (final IOException e)
-        {
-            LNX_LOGGER.error("error writing neo-epitope output file: {}", e.toString());
-        }
+
+        return false;
     }
 
     private void writeData(final NeoEpitopeFusion fusion)
     {
-        if(mFileWriter == null)
-            return;
-
         try
         {
+            if(mFileWriter == null)
+            {
+                if(mIsMultiSample)
+                {
+                    String outputFileName = mOutputDir + "LNX_NEO_EPITOPES.csv";
+
+                    mFileWriter = createBufferedWriter(outputFileName, false);
+
+                    mFileWriter.write("sampleId");
+                    mFileWriter.write(NeoEpitopeFusion.header());
+                    mFileWriter.newLine();
+                }
+                else
+                {
+                    String outputFileName = NeoEpitopeFusion.generateFilename(mOutputDir, mSampleId);
+
+                    mFileWriter = createBufferedWriter(outputFileName, false);
+                    mFileWriter.write(NeoEpitopeFusion.header());
+                    mFileWriter.newLine();
+                }
+            }
+
             if(mIsMultiSample)
             {
                 mFileWriter.write(String.format("%s",mSampleId));
