@@ -14,4 +14,13 @@ public class SuffixTreeTest {
         assertFalse(tree.contains("bananad"));
     }
 
+    @Test
+    public void testRealExample() {
+        final String read = "AATGTAGGTGCTGCTGTGAAGGGATTTAGCAGATATAATTAAGGGTCTCAATTAGTTGACTTTATGCTGCGTTTATCCTGCTTGGACTGTCCTAATCAGGTGAGCCCTTGAAAGGACTGGGTTCTTCATGAGCATAGAGACTTACAGTGTG";
+        SuffixTree tree = new SuffixTree(read);
+        for (int i = 0; i < read.length() - 10; i++) {
+            assertTrue(tree.contains(read.substring(i, i + 10)));
+        }
+    }
+
 }
