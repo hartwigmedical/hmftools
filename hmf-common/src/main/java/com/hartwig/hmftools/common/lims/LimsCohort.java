@@ -17,6 +17,7 @@ public enum LimsCohort {
     COREDB,
     CORE,
     NON_CANCER;
+
     private static final Logger LOGGER = LogManager.getLogger(LimsCohort.class);
 
     @NotNull
