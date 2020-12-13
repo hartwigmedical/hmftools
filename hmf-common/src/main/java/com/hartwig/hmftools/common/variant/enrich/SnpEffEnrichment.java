@@ -32,7 +32,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment {
 
     @Override
     public void accept(@NotNull final VariantContext context) {
-        final SnpEffSummary snpEffSummary = snpEffSummaryFactory.fromAnnotations(context);
+        final SnpEffSummary snpEffSummary = snpEffSummaryFactory.fromSnpEffAnnotations(context);
         if (!snpEffSummary.worstGene().isEmpty()) {
             context.getCommonInfo().putAttribute(SNPEFF_WORST, SnpEffSummarySerialiser.worstDetails(snpEffSummary), true);
         }

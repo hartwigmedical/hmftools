@@ -26,21 +26,21 @@ public class SnpEffSummaryFactory {
     }
 
     @NotNull
-    public static SnpEffSummary fromSage(@NotNull final VariantContext context) {
+    public static SnpEffSummary fromSnpEffEnrichment(@NotNull final VariantContext context) {
         final List<String> worst = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_WORST, Strings.EMPTY);
         final List<String> canonical = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_CANONICAL, Strings.EMPTY);
         return SnpEffSummarySerialiser.fromDetails(worst, canonical);
     }
 
     @NotNull
-    public SnpEffSummary fromAnnotations(@NotNull final VariantContext context) {
+    public SnpEffSummary fromSnpEffAnnotations(@NotNull final VariantContext context) {
         final boolean phasedInframeIndel = context.isIndel() && context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
         final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
-        return fromAnnotations(phasedInframeIndel, allAnnotations);
+        return fromSnpEffAnnotations(phasedInframeIndel, allAnnotations);
     }
 
     @NotNull
-    public SnpEffSummary fromAnnotations(boolean phasedInframeIndel, @NotNull final List<SnpEffAnnotation> allAnnotations) {
+    public SnpEffSummary fromSnpEffAnnotations(boolean phasedInframeIndel, @NotNull final List<SnpEffAnnotation> allAnnotations) {
         final ImmutableSnpEffSummary.Builder builder = SnpEffSummarySerialiser.createBuilder();
 
         final List<SnpEffAnnotation> transcriptAnnotations =

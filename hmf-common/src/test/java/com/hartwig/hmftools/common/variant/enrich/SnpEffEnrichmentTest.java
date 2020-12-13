@@ -56,7 +56,7 @@ public class SnpEffEnrichmentTest {
                 "13\t24871731\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=43;QSS_NT=43;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs;ANN=T|synonymous_variant|LOW|RP11-307N16.6|ENSG00000273167|transcript|ENST00000382141|nonsense_mediated_decay|12/16|c.3075C>T|p.Leu1025Leu|3653/4157|3075/3318|1025/1105||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000382108|protein_coding|11/13|c.3441C>T|p.Leu1147Leu|3763/8457|3441/3834|1147/1277||\tGT:AD:DP\t0/1:36,38:75";
         final VariantContext variantContext = codec.decode(line);
         victim.accept(variantContext);
-        final SnpEffSummary summary = SnpEffSummaryFactory.fromSage(capture.get(0));
+        final SnpEffSummary summary = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
         assertEquals("RP11-307N16.6", summary.gene());
     }
 
@@ -66,7 +66,7 @@ public class SnpEffEnrichmentTest {
                 "13\t24871731\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=43;QSS_NT=43;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs;ANN=T|synonymous_variant|LOW|RP11-307N16.6|ENSG00000273167|transcript|ENST00000382141|nonsense_mediated_decay|12/16|c.3075C>T|p.Leu1025Leu|3653/4157|3075/3318|1025/1105||,T|synonymous_variant|LOW|SPATA13|ENSG00000182957|transcript|ENST00000424834|protein_coding|11/13|c.3441C>T|p.Leu1147Leu|3763/8457|3441/3834|1147/1277||\tGT:AD:DP\t0/1:36,38:75";
         final VariantContext variantContext = codec.decode(line);
         victim.accept(variantContext);
-        final SnpEffSummary summary = SnpEffSummaryFactory.fromSage(capture.get(0));
+        final SnpEffSummary summary = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
         assertEquals("SPATA13", summary.gene());
     }
 
@@ -76,7 +76,7 @@ public class SnpEffEnrichmentTest {
                 "11\t133715264\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=40;QSS_NT=40;SGT=CC->CT;SOMATIC;TQSS=1;TQSS_NT=1;set=snvs;ANN=T|sequence_feature|MODERATE|SPATA19|ENSG00000166118|modified-residue:Phosphoserine|ENST00000299140|protein_coding|1/7|c.78G>A||||||,T|splice_region_variant&synonymous_variant|LOW|SPATA19|ENSG00000166118|transcript|ENST00000299140|protein_coding|1/7|c.78G>A|p.Ser26Ser|133/861|78/504|26/167||,T|splice_region_variant&synonymous_variant|LOW|SPATA19|ENSG00000166118|transcript|ENST00000532889|protein_coding|1/7|c.78G>A|p.Ser26Ser|170/653|78/504|26/167||\tGT:AD:DP\t0/1:57,49:108";
         final VariantContext variantContext = codec.decode(line);
         victim.accept(variantContext);
-        final SnpEffSummary summary = SnpEffSummaryFactory.fromSage(capture.get(0));
+        final SnpEffSummary summary = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
 
         assertEquals("SPATA19", summary.gene());
         assertEquals(CodingEffect.SYNONYMOUS, summary.canonicalCodingEffect());
@@ -95,8 +95,8 @@ public class SnpEffEnrichmentTest {
         final VariantContext variantContext2 = codec.decode(line2);
         victim.accept(variantContext1);
         victim.accept(variantContext2);
-        final SnpEffSummary summary1 = SnpEffSummaryFactory.fromSage(capture.get(0));
-        final SnpEffSummary summary2 = SnpEffSummaryFactory.fromSage(capture.get(1));
+        final SnpEffSummary summary1 = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
+        final SnpEffSummary summary2 = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(1));
         assertEquals(CodingEffect.NONE, summary1.canonicalCodingEffect());
         assertEquals(CodingEffect.NONE, summary2.canonicalCodingEffect());
     }
@@ -112,8 +112,8 @@ public class SnpEffEnrichmentTest {
         final VariantContext variantContext2 = codec.decode(line2);
         victim.accept(variantContext1);
         victim.accept(variantContext2);
-        final SnpEffSummary summary1 = SnpEffSummaryFactory.fromSage(capture.get(0));
-        final SnpEffSummary summary2 = SnpEffSummaryFactory.fromSage(capture.get(1));
+        final SnpEffSummary summary1 = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
+        final SnpEffSummary summary2 = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(1));
         assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, summary1.canonicalCodingEffect());
         assertEquals(CodingEffect.MISSENSE, summary2.canonicalCodingEffect());
     }

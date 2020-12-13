@@ -58,7 +58,7 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         }
 
         final PathogenicSummary pathogenicSummary = PathogenicSummaryFactory.fromContext(context);
-        final SnpEffSummary snpEffSummary = SnpEffSummaryFactory.fromSage(context);
+        final SnpEffSummary snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
         final String gene = snpEffSummary.gene();
         final boolean inHotspotGenes = reportableHotspotGenes.contains(gene);
         final boolean isHotspot = HotspotEnrichment.fromVariant(context).equals(Hotspot.HOTSPOT);
