@@ -32,9 +32,9 @@ public enum LimsGermlineReportingLevel {
                         return REPORT_WITH_NOTIFICATION;
                     case "No":
                         return REPORT_WITHOUT_NOTIFICATION;
-                        default:
-                            throw new IllegalStateException(
-                                    "Cannot resolve germline reporting choice for sample: " + sampleId + ": " + germlineReportingLevelString);
+                    default:
+                        throw new IllegalStateException(
+                                "Cannot resolve germline reporting choice for sample: " + sampleId + ": " + germlineReportingLevelString);
                 }
 
             }

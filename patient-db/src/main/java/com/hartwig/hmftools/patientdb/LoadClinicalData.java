@@ -379,14 +379,12 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull EcrfModels ecrfModels, @NotNull PrimaryTumorCurator primaryTumorCurator,
-            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator, @NotNull Lims lims) {
+            @NotNull EcrfModels ecrfModels, @NotNull PrimaryTumorCurator primaryTumorCurator, @NotNull BiopsySiteCurator biopsySiteCurator,
+            @NotNull TreatmentCurator treatmentCurator, @NotNull Lims lims) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
-        EcrfPatientReader cpctPatientReader = new CpctPatientReader(primaryTumorCurator,
-                CpctUtil.extractHospitalMap(cpctEcrfModel),
-                biopsySiteCurator,
-                treatmentCurator);
+        EcrfPatientReader cpctPatientReader =
+                new CpctPatientReader(primaryTumorCurator, CpctUtil.extractHospitalMap(cpctEcrfModel), biopsySiteCurator, treatmentCurator);
 
         Map<String, Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), sampleDataPerPatient);
         LOGGER.info(" Finished curation of {} CPCT patients", cpctPatients.size());

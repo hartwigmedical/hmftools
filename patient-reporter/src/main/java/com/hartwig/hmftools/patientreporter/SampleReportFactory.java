@@ -84,7 +84,6 @@ public final class SampleReportFactory {
     @Nullable
     static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
             @NotNull LimsCohort cohort) {
-
         if (cohort == LimsCohort.CORE || cohort == LimsCohort.WIDE || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11
                 || cohort == LimsCohort.COREDB) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
