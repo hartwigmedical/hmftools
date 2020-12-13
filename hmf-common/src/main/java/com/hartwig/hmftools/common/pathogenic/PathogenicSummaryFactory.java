@@ -12,9 +12,11 @@ public class PathogenicSummaryFactory {
     public static final String BLACKLIST_BED = "BLACKLIST_BED";
     public static final String BLACKLIST_VCF = "BLACKLIST_VCF";
 
+    private PathogenicSummaryFactory() {
+    }
+
     @NotNull
     public static PathogenicSummary fromContext(@NotNull VariantContext context) {
-
         final String clnSig = clnSig(context);
         final String clnSigConf = clnSigConf(context);
         final String clinvarInfo = !clnSigConf.isEmpty() ? clnSigConf : clnSig;
@@ -26,12 +28,13 @@ public class PathogenicSummaryFactory {
         return ImmutablePathogenicSummary.builder().clinvarInfo(clinvarInfo).pathogenicity(path).build();
     }
 
+    @NotNull
     public static String clnSig(@NotNull VariantContext context) {
         return context.getAttributeAsString(CLNSIG, Strings.EMPTY);
     }
 
+    @NotNull
     public static String clnSigConf(@NotNull VariantContext context) {
         return String.join(",", context.getAttributeAsStringList(CLNSIGCONF, Strings.EMPTY));
     }
-
 }

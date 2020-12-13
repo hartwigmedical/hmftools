@@ -37,7 +37,6 @@ public abstract class ProtectEvidenceItem implements Comparable<ProtectEvidenceI
 
     @Override
     public int compareTo(@NotNull final ProtectEvidenceItem o) {
-
         int reportedCompare = -Boolean.compare(reported(), o.reported());
         if (reportedCompare != 0) {
             return reportedCompare;

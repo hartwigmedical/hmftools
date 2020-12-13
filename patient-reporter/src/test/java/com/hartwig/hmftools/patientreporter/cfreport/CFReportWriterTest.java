@@ -51,7 +51,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
         AnalysedPatientReport colo829Report =
-                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING, LimsCohort.CPCT);
+                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -60,7 +60,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
         AnalysedPatientReport colo829Report =
-                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED, LimsCohort.CPCT);
+                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));

@@ -54,7 +54,6 @@ public final class GenomePositionSelectorFactory {
 
     @NotNull
     public static <P extends GenomePosition> GenomePositionSelector<P> create(@NotNull final Multimap<Chromosome, P> positions) {
-
         final GenomePositionSelector<P> nullSelector = new NullGenomePositionSelector<>();
 
         final Map<Chromosome, GenomePositionSelector<P>> chromosomeSelectors = Maps.newHashMap();

@@ -10,6 +10,7 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 public final class PGXCallsFile {
+
     private static final String DELIMITER = "\t";
 
     private PGXCallsFile() {

@@ -61,9 +61,16 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
-            @NotNull LimsCohort cohort) {
-        return buildWithCOLO829Data(sampleId, correctionReport, comments, QsFormNumber.FOR_080.display(), true, 1D, true, false, cohort);
+    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments) {
+        return buildWithCOLO829Data(sampleId,
+                correctionReport,
+                comments,
+                QsFormNumber.FOR_080.display(),
+                true,
+                1D,
+                true,
+                false,
+                LimsCohort.CPCT);
     }
 
     @NotNull

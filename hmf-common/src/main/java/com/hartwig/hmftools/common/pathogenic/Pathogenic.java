@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.pathogenic;
 import org.jetbrains.annotations.NotNull;
 
 public enum Pathogenic {
-
     PATHOGENIC(true),
     LIKELY_PATHOGENIC(true),
     BENIGN(false),
@@ -27,9 +26,11 @@ public enum Pathogenic {
 
         /*
          * CLINVAR_PATHOGENIC - At least 1 interpretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
-         * CLINVAR_LIKELY_PATHOGENIC - No interpretation of PATHOGENIC, but at least 1 interpretation of 'LIKELY_PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’
+         * CLINVAR_LIKELY_PATHOGENIC - No interpretation of PATHOGENIC, but at least 1 interpretation of 'LIKELY_PATHOGENIC'
+         *          and none ‘BENIGN’ or ‘LIKELY_BENIGN’
          * CLINVAR_CONFLICTING - Variant has both likely 'BENIGN'/'LIKELY_BENIGN' and 'PATHOGENIC'/'LIKELY_PATHOGENIC' interpretations
-         * CLINVAR_LIKELY_BENIGN - No interpretation of 'BENIGN' and at least 1 interpretation of 'LIKELY_BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
+         * CLINVAR_LIKELY_BENIGN - No interpretation of 'BENIGN' and at least 1 interpretation of 'LIKELY_BENIGN' and
+         *          none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
          * CLINVAR_BENIGN - At least 1 interpretation of 'BENIGN' and none ‘PATHOGENIC’ or ‘LIKELY_PATHOGENIC’
          */
 
