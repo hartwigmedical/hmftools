@@ -80,10 +80,12 @@ public class NeoEpitopeWriter
                 if(!hasValidTraversal(upGene, downGene, traversedPairs, gene1.isUpstream(), disruptionFinder))
                     continue;
 
+                double avgJcn = (upGene.jcn() + downGene.jcn()) * 0.5;
+
                 NeoEpitopeFusion fusion = new NeoEpitopeFusion(
                         upGene.StableId, upGene.GeneName, upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.id(),
                         downGene.StableId, downGene.GeneName, downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.id(),
-                        upGene.insertSequence());
+                        avgJcn, upGene.insertSequence());
 
                 writeData(fusion);
 

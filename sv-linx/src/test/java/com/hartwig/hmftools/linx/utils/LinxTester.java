@@ -39,8 +39,6 @@ public class LinxTester
     private CnSegmentBuilder mCnSegmentBuilder;
     private int mNextVarId;
 
-    private static final Logger LOGGER = LogManager.getLogger(LinxTester.class);
-
     public LinxTester()
     {
         Config = new LinxConfig(DEFAULT_PROXIMITY_DISTANCE);

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svtools.neo;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
@@ -10,6 +13,7 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateTra
 import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.swapDnaToRna;
 import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.swapRnaToDna;
+import static com.hartwig.hmftools.svtools.neo.NeoUtils.getCodingBases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -22,6 +26,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.linx.fusion.FusionParameters;
 import com.hartwig.hmftools.linx.fusion.GeneFusion;
 import com.hartwig.hmftools.linx.fusion.NeoEpitopeWriter;
@@ -31,6 +36,10 @@ import org.junit.Test;
 
 public class NeoEpitopeTest
 {
+    private static final String CHR_1 = "";
+    private static final String GENE_ID_1 = "ENSG001";
+    private static final int TRANS_ID_1 = 1;
+
     @Test
     public void testDnaRnaRoutines()
     {
@@ -42,6 +51,151 @@ public class NeoEpitopeTest
         dnaBases = "AGCTTCGACT";
         String reverseStrandDna = reverseStrandBases(dnaBases);
         assertTrue(reverseStrandDna.equals("AGTCGAAGCT"));
+    }
+
+    public static String generateRandomBases(int length)
+    {
+        char[] str = new char[length];
+        String bases = "ACGT";
+
+        int baseIndex = 0;
+        for(int i = 0; i < length; ++i)
+        {
+            str[i] = bases.charAt(baseIndex);
+
+            if(baseIndex == 3)
+                baseIndex = 0;
+            else
+                ++baseIndex;
+        }
+
+        return String.valueOf(str);
+    }
+
+    @Test
+    public void testGetCodingBase()
+    {
+        final MockRefGenome refGenome = new MockRefGenome();
+
+        final String chr1Bases = generateRandomBases(100);
+
+        refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
+
+        // tests: repeated for each strand
+        // upstream: intronic
+        // upstream: intronic, coding bases insufficient for required bases
+        // upstream: exonic
+        // upstream: exonic, coding bases insufficient for required bases
+        // upstream: exonic, coding finishes in same exon
+
+        int[] exonStarts = {0, 20, 40, 60, 80, 100};
+        Integer codingStart = new Integer(25);
+        Integer codingEnd = new Integer(85);
+
+        TranscriptData transData1 = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
+
+        // upstream: intronic
+        int nePosition = 32; // intronic
+        byte neOrientation = NEG_ORIENT;
+
+        String codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 9, true);
+
+        String actCodingBases = chr1Bases.substring(40, 49);
+        assertEquals(actCodingBases, codingBases);
+
+        // spanning 3 exons
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 25, true);
+
+        actCodingBases = chr1Bases.substring(40, 51) + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 83);
+        assertEquals(actCodingBases, codingBases);
+
+        // upstream: intronic, coding bases insufficient for required bases
+        nePosition = 76;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(80, 86);
+        assertEquals(actCodingBases, codingBases);
+
+        // upstream: exonic
+        nePosition = 44;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(44, 51) + chr1Bases.substring(60, 63);
+        assertEquals(actCodingBases, codingBases);
+
+        // upstream: exonic, coding bases insufficient for required bases
+        nePosition = 68;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(68, 71) + chr1Bases.substring(80, 86);
+        assertEquals(actCodingBases, codingBases);
+
+        // upstream: exonic, coding finishes in same exon
+        nePosition = 81;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(81, 86);
+        assertEquals(actCodingBases, codingBases);
+
+        // downstream, when not allowed to start in the same exon
+        nePosition = 44;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 15, false);
+
+        actCodingBases = chr1Bases.substring(60, 71) + chr1Bases.substring(80, 84);
+        assertEquals(actCodingBases, codingBases);
+
+
+        // test again with reverse orientation
+        neOrientation = POS_ORIENT;
+        nePosition = 55; // intronic
+
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 9, true);
+
+        actCodingBases = chr1Bases.substring(42, 51);
+        assertEquals(actCodingBases, codingBases);
+
+        // spanning 3 exons
+        nePosition = 75;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 25, true);
+
+        actCodingBases = chr1Bases.substring(28, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 71);
+        assertEquals(actCodingBases, codingBases);
+
+        // downstream: intronic, coding bases insufficient for required bases
+        nePosition = 35;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(25, 31);
+        assertEquals(actCodingBases, codingBases);
+
+        // downstream: exonic
+        nePosition = 44;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(26, 31) + chr1Bases.substring(40, 45);
+        assertEquals(actCodingBases, codingBases);
+
+        // downstream: exonic, coding bases insufficient for required bases
+        nePosition = 40;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(25, 31) + chr1Bases.substring(40, 41);
+        assertEquals(actCodingBases, codingBases);
+
+        // downstream: exonic, coding finishes in same exon
+        nePosition = 29;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(25, 30);
+        assertEquals(actCodingBases, codingBases);
+
+        // downstream, when not allowed to start in the same exon
+        nePosition = 64;
+        codingBases = getCodingBases(refGenome, transData1, CHR_1, nePosition, neOrientation, 15, false);
+
+        actCodingBases = chr1Bases.substring(27, 31) + chr1Bases.substring(40, 51);
+        assertEquals(actCodingBases, codingBases);
     }
 
     /*

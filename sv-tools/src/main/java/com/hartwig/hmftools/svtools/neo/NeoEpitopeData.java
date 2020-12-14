@@ -1,9 +1,16 @@
 package com.hartwig.hmftools.svtools.neo;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UNKNOWN;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.TranscriptCodingType;
 import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
@@ -14,7 +21,7 @@ public class NeoEpitopeData
     private final NeoEpitopeFusion mSvFusion;
 
     // transcript context
-    public final String[] TransNames; // only start is populated for same-gene NEs
+    public final TranscriptData[] TransData; // only start is populated for same-gene NEs
 
     public final int[] Phases;
     public final int[] ExonRank;
@@ -31,11 +38,11 @@ public class NeoEpitopeData
     {
         mPointMutation = pointMutation;
         mSvFusion = fusion;
-        TransNames = new String[FS_PAIR];
-        Phases = new int[FS_PAIR];
+        TransData = new TranscriptData[] {null, null};
+        Phases = new int[] {-1, -1};
         ExonRank = new int[FS_PAIR];
-        CodingType = new TranscriptCodingType[FS_PAIR];
-        RegionType = new TranscriptRegionType[FS_PAIR];
+        CodingType = new TranscriptCodingType[] {TranscriptCodingType.UNKNOWN, TranscriptCodingType.UNKNOWN};
+        RegionType = new TranscriptRegionType[] {TranscriptRegionType.UNKNOWN, TranscriptRegionType.UNKNOWN};
 
         UpstreamAcids = "";
         DownstreamAcids = "";
@@ -45,6 +52,41 @@ public class NeoEpitopeData
 
     public final PointMutationData pointMutation() { return mPointMutation; }
     private final NeoEpitopeFusion fusion() { return mSvFusion; }
+
+    public byte orientation(int fs)
+    {
+        return (fs == FS_UPSTREAM) == (TransData[fs].Strand == POS_STRAND) ? POS_ORIENT : NEG_ORIENT;
+    }
+
+    public int positon(int stream)
+    {
+        if(mSvFusion != null)
+            return mSvFusion.Positions[stream];
+
+        int indelBaseDiff = mPointMutation.Alt.length() - mPointMutation.Ref.length();
+
+        int pmPosition = mPointMutation.Position;
+
+        if(indelBaseDiff >= 0)
+            return pmPosition;
+
+        if((TransData[FS_UPSTREAM].Strand == POS_STRAND) == (stream == FS_UPSTREAM))
+            return pmPosition;
+        else
+            return pmPosition + abs(indelBaseDiff);
+    }
+
+    public String chromosome(int stream)
+    {
+        if(mSvFusion != null)
+            return mSvFusion.Chromosomes[stream];
+        else
+            return mPointMutation.Chromosome;
+    }
+
+    public byte strand(int stream) { return TransData[stream].Strand; }
+
+    public boolean phaseMatched() { return Phases[FS_UPSTREAM] == Phases[FS_DOWNSTREAM]; }
 
     public String toString()
     {

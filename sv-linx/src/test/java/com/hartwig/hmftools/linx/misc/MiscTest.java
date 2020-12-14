@@ -24,6 +24,8 @@ import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -127,6 +129,4 @@ public class MiscTest
         assertEquals(-1, findCentromereBreakendIndex(breakendList, P_ARM));
         assertEquals(0, findCentromereBreakendIndex(breakendList, Q_ARM));
     }
-
-
 }

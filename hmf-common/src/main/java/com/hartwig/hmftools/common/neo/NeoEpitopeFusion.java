@@ -23,6 +23,7 @@ public class NeoEpitopeFusion
     public final int[] Positions;
     public final byte[] Orientations;
     public final int[] SvIds;
+    public final double JunctionCopyNumber;
     public final String InsertSequence;
 
     public static final String DELIMITER = ",";
@@ -30,7 +31,7 @@ public class NeoEpitopeFusion
     public NeoEpitopeFusion(
             final String geneIdUp, final String geneNameUp, final String chrUp, int posUp, byte orientUp, int svIdUp,
             final String geneIdDown, final String geneNameDown, final String chrDown, int posDown, byte orientDown, int svIdDown,
-            final String insertSequence)
+            final double junctionCopyNumber, final String insertSequence)
     {
         GeneIds = new String[] { geneIdUp, geneIdDown };
         GeneNames = new String[] { geneNameUp, geneNameDown };
@@ -38,6 +39,7 @@ public class NeoEpitopeFusion
         Positions = new int[] { posUp, posDown };
         Orientations = new byte[] { orientUp, orientDown };
         SvIds = new int[] { svIdUp, svIdDown };
+        JunctionCopyNumber = junctionCopyNumber;
         InsertSequence = insertSequence;
     }
 
@@ -99,6 +101,7 @@ public class NeoEpitopeFusion
                 .add("positionDown")
                 .add("orientationDown")
                 .add("svIdDown")
+                .add("junctionCopyNumber")
                 .add("insertSeq")
                 .toString();
     }
@@ -118,6 +121,7 @@ public class NeoEpitopeFusion
             sj.add(String.valueOf(fusion.SvIds[fs]));
         }
 
+        sj.add(String.format("%.4f",fusion.JunctionCopyNumber));
         sj.add(fusion.InsertSequence);
 
         return sj.toString();
@@ -137,6 +141,7 @@ public class NeoEpitopeFusion
                 values[index++], values[index++], values[index++],
                 Integer.parseInt(values[index++]), Byte.parseByte(values[index++]), Integer.parseInt(values[index++]),
                 values[index++], values[index++], values[index++],
-                Integer.parseInt(values[index++]), Byte.parseByte(values[index++]), Integer.parseInt(values[index++]), values[index++]);
+                Integer.parseInt(values[index++]), Byte.parseByte(values[index++]), Integer.parseInt(values[index++]),
+                Double.parseDouble(values[index++]), values[index++]);
     }
 }
