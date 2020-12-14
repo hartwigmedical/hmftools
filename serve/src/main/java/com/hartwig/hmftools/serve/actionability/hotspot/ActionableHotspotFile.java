@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.actionability.hotspot;
 
+import static com.hartwig.hmftools.serve.actionability.ActionableFileFunctions.FIELD_DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,17 +10,13 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.actionability.ActionableFileFunctions;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableHotspotFile {
 
-    private static final String DELIMITER = "\t";
     private static final String ACTIONABLE_HOTSPOT_TSV = "ActionableHotspots.tsv";
 
     private ActionableHotspotFile() {
@@ -46,17 +44,11 @@ public final class ActionableHotspotFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER).add("chromosome")
+        return new StringJoiner(FIELD_DELIMITER).add("chromosome")
                 .add("position")
                 .add("ref")
                 .add("alt")
-                .add("source")
-                .add("treatment")
-                .add("cancerType")
-                .add("doid")
-                .add("level")
-                .add("direction")
-                .add("url")
+                .add(ActionableFileFunctions.header())
                 .toString();
     }
 
@@ -72,21 +64,14 @@ public final class ActionableHotspotFile {
 
     @NotNull
     private static ActionableHotspot fromLine(@NotNull String line) {
-        String[] values = line.split(DELIMITER);
-        String url = values.length > 10 ? values[10] : Strings.EMPTY;
+        String[] values = line.split(FIELD_DELIMITER);
 
         return ImmutableActionableHotspot.builder()
+                .from(ActionableFileFunctions.fromLine(values, 4))
                 .chromosome(values[0])
                 .position(Long.parseLong(values[1]))
                 .ref(values[2])
                 .alt(values[3])
-                .source(Knowledgebase.valueOf(values[4]))
-                .treatment(values[5])
-                .cancerType(values[6])
-                .doid(values[7])
-                .level(EvidenceLevel.valueOf(values[8]))
-                .direction(EvidenceDirection.valueOf(values[9]))
-                .url(url)
                 .build();
     }
 
@@ -111,17 +96,11 @@ public final class ActionableHotspotFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableHotspot variant) {
-        return new StringJoiner(DELIMITER).add(variant.chromosome())
+        return new StringJoiner(FIELD_DELIMITER).add(variant.chromosome())
                 .add(Long.toString(variant.position()))
                 .add(variant.ref())
                 .add(variant.alt())
-                .add(variant.source().toString())
-                .add(variant.treatment())
-                .add(variant.cancerType())
-                .add(variant.doid())
-                .add(variant.level().toString())
-                .add(variant.direction().toString())
-                .add(variant.url())
+                .add(ActionableFileFunctions.toLine(variant))
                 .toString();
     }
 }

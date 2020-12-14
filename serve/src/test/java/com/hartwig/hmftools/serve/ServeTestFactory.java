@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.serve;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
@@ -116,16 +118,12 @@ public final class ServeTestFactory {
 
     @NotNull
     private static ActionableEvent createTestBaseEvent(@NotNull Knowledgebase source) {
-        return ImmutableActionableGene.builder()
-                .source(source)
-                .treatment(Strings.EMPTY)
-                .cancerType(Strings.EMPTY)
-                .doid(Strings.EMPTY)
-                .level(EvidenceLevel.A)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .url(Strings.EMPTY)
-                .gene(Strings.EMPTY)
-                .event(GeneLevelEvent.AMPLIFICATION)
-                .build();
+        return ActionabilityTestUtil.create(source,
+                Strings.EMPTY,
+                Strings.EMPTY,
+                Strings.EMPTY,
+                EvidenceLevel.A,
+                EvidenceDirection.RESPONSIVE,
+                Sets.newHashSet());
     }
 }

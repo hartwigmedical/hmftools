@@ -23,6 +23,9 @@ public final class ActionableEventsLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(ActionableEventsLoader.class);
 
+    private ActionableEventsLoader() {
+    }
+
     @NotNull
     public static ActionableEvents readFromDir(@NotNull String actionabilityDir, @NotNull RefGenomeVersion refGenomeVersion)
             throws IOException {

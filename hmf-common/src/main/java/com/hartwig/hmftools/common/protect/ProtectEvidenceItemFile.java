@@ -11,13 +11,17 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ProtectEvidenceItemFile {
+public final class ProtectEvidenceItemFile {
 
-    private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".protect.tsv";
+    private static final String FIELD_DELIMITER = "\t";
+    private static final String URL_DELIMITER = ",";
+
+    private ProtectEvidenceItemFile() {
+    }
 
     @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateFilename(@NotNull String basePath, @NotNull String sample) {
         return basePath + File.separator + sample + EXTENSION;
     }
 
@@ -30,27 +34,32 @@ public class ProtectEvidenceItemFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER).add("event")
+        return new StringJoiner(FIELD_DELIMITER).add("event")
                 .add("source")
                 .add("treatment")
                 .add("onLabel")
                 .add("level")
                 .add("direction")
                 .add("reported")
-                .add("url")
+                .add("urls")
                 .toString();
     }
 
     @NotNull
     private static String toLine(@NotNull ProtectEvidenceItem evidence) {
-        return new StringJoiner(DELIMITER).add(evidence.genomicEvent())
+        StringJoiner urlJoiner = new StringJoiner(URL_DELIMITER);
+        for (String url : evidence.urls()) {
+            urlJoiner.add(url);
+        }
+
+        return new StringJoiner(FIELD_DELIMITER).add(evidence.genomicEvent())
                 .add(evidence.source().toString())
                 .add(evidence.treatment())
                 .add(String.valueOf(evidence.onLabel()))
                 .add(evidence.level().toString())
                 .add(evidence.direction().toString())
                 .add(String.valueOf(evidence.reported()))
-                .add(evidence.url())
+                .add(urlJoiner.toString())
                 .toString();
     }
 }

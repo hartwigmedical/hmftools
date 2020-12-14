@@ -23,18 +23,20 @@ import org.junit.Test;
 
 public class ProtectEvidenceItemsTest {
 
-    private final ProtectEvidenceItem onLabelResponsiveA = ProtectEvidenceItemTest.createDefault(true, RESPONSIVE, A).build();
-    private final ProtectEvidenceItem onLabelResponsiveB = ProtectEvidenceItemTest.createDefault(true, RESPONSIVE, B).build();
-    private final ProtectEvidenceItem onLabelResponsiveC = ProtectEvidenceItemTest.createDefault(true, RESPONSIVE, C).build();
-    private final ProtectEvidenceItem offLabelResponsiveA = ProtectEvidenceItemTest.createDefault(false, RESPONSIVE, A).build();
-    private final ProtectEvidenceItem offLabelResponsiveB = ProtectEvidenceItemTest.createDefault(false, RESPONSIVE, B).build();
-    private final ProtectEvidenceItem offLabelResponsiveC = ProtectEvidenceItemTest.createDefault(false, RESPONSIVE, C).build();
+    private final ProtectEvidenceItem onLabelResponsiveA = ProtectEvidenceItemTestFactory.createDefault(true, RESPONSIVE, A).build();
+    private final ProtectEvidenceItem onLabelResponsiveB = ProtectEvidenceItemTestFactory.createDefault(true, RESPONSIVE, B).build();
+    private final ProtectEvidenceItem onLabelResponsiveC = ProtectEvidenceItemTestFactory.createDefault(true, RESPONSIVE, C).build();
+    private final ProtectEvidenceItem offLabelResponsiveA = ProtectEvidenceItemTestFactory.createDefault(false, RESPONSIVE, A).build();
+    private final ProtectEvidenceItem offLabelResponsiveB = ProtectEvidenceItemTestFactory.createDefault(false, RESPONSIVE, B).build();
+    private final ProtectEvidenceItem offLabelResponsiveC = ProtectEvidenceItemTestFactory.createDefault(false, RESPONSIVE, C).build();
 
     @Test
     public void testHighestReportableLevel() {
-        assertEquals(Optional.of(A), highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
+        assertEquals(Optional.of(A),
+                highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
         assertEquals(Optional.of(B), highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveB, offLabelResponsiveA)));
-        assertEquals(Optional.of(A), highestReportableLevel(false, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
+        assertEquals(Optional.of(A),
+                highestReportableLevel(false, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
         assertEquals(Optional.of(A), highestReportableLevel(false, Lists.newArrayList(offLabelResponsiveA)));
     }
 
@@ -76,5 +78,4 @@ public class ProtectEvidenceItemsTest {
         final ProtectEvidenceItem notReportedVictim = ProtectEvidenceItems.reportHighest(Lists.newArrayList(notReported)).get(0);
         assertFalse(notReportedVictim.reported());
     }
-
 }

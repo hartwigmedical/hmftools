@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.actionability.fusion;
 
+import static com.hartwig.hmftools.serve.actionability.ActionableFileFunctions.FIELD_DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,10 +10,8 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.actionability.ActionableFileFunctions;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 public final class ActionableFusionFile {
 
     private static final String ACTIONABLE_FUSION_TSV = "ActionableFusions.tsv";
-    private static final String DELIMITER = "\t";
 
     private ActionableFusionFile() {
     }
@@ -47,19 +46,13 @@ public final class ActionableFusionFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER).add("geneUp")
+        return new StringJoiner(FIELD_DELIMITER).add("geneUp")
                 .add("minExonUp")
                 .add("maxExonUp")
                 .add("geneDown")
                 .add("minExonDown")
                 .add("maxExonDown")
-                .add("source")
-                .add("treatment")
-                .add("cancerType")
-                .add("doid")
-                .add("level")
-                .add("direction")
-                .add("url")
+                .add(ActionableFileFunctions.header())
                 .toString();
     }
 
@@ -75,23 +68,16 @@ public final class ActionableFusionFile {
 
     @NotNull
     private static ActionableFusion fromLine(@NotNull String line) {
-        String[] values = line.split(DELIMITER);
-        String url = values.length > 12 ? values[12] : Strings.EMPTY;
+        String[] values = line.split(FIELD_DELIMITER);
 
         return ImmutableActionableFusion.builder()
+                .from(ActionableFileFunctions.fromLine(values, 6))
                 .geneUp(values[0])
                 .minExonUp(optionalInteger(values[1]))
                 .maxExonDown(optionalInteger(values[2]))
                 .geneDown(values[3])
                 .minExonDown(optionalInteger(values[4]))
                 .maxExonDown(optionalInteger(values[5]))
-                .source(Knowledgebase.valueOf(values[6]))
-                .treatment(values[7])
-                .cancerType(values[8])
-                .doid(values[9])
-                .level(EvidenceLevel.valueOf(values[10]))
-                .direction(EvidenceDirection.valueOf(values[11]))
-                .url(url)
                 .build();
     }
 
@@ -125,19 +111,13 @@ public final class ActionableFusionFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableFusion fusion) {
-        return new StringJoiner(DELIMITER).add(fusion.geneUp())
+        return new StringJoiner(FIELD_DELIMITER).add(fusion.geneUp())
                 .add(fromOptionalInteger(fusion.minExonUp()))
                 .add(fromOptionalInteger(fusion.maxExonUp()))
                 .add(fusion.geneDown())
                 .add(fromOptionalInteger(fusion.minExonDown()))
                 .add(fromOptionalInteger(fusion.maxExonDown()))
-                .add(fusion.source().toString())
-                .add(fusion.treatment())
-                .add(fusion.cancerType())
-                .add(fusion.doid())
-                .add(fusion.level().toString())
-                .add(fusion.direction().toString())
-                .add(fusion.url())
+                .add(ActionableFileFunctions.toLine(fusion))
                 .toString();
     }
 

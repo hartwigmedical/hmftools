@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.protect;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -33,7 +35,7 @@ public abstract class ProtectEvidenceItem implements Comparable<ProtectEvidenceI
     public abstract EvidenceDirection direction();
 
     @NotNull
-    public abstract String url();
+    public abstract Set<String> urls();
 
     @Override
     public int compareTo(@NotNull final ProtectEvidenceItem o) {
@@ -72,6 +74,6 @@ public abstract class ProtectEvidenceItem implements Comparable<ProtectEvidenceI
             return directionCompare;
         }
 
-        return url().compareTo(o.url());
+        return 0;
     }
 }
