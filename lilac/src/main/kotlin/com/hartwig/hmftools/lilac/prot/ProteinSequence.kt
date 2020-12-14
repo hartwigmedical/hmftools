@@ -5,7 +5,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele
 data class ProteinSequence(val contig: String, val proteins: String) {
     val allele: HlaAllele by lazy { HlaAllele(contig) }
 
-    private val fullProteinSequence: String by lazy { proteins.replace("*", "").replace(".", "") }
+    val fullProteinSequence: String by lazy { proteins.replace("*", "").replace(".", "") }
     val length: Int by lazy { fullProteinSequence.length }
 
     fun copyWithAdditionalProtein(more: String): ProteinSequence {
@@ -13,6 +13,10 @@ data class ProteinSequence(val contig: String, val proteins: String) {
     }
 
     fun exonicProteins(exonicBoundaries: List<Int>): List<String> {
+        if (exonicBoundaries.isEmpty()) {
+            return listOf(fullProteinSequence)
+        }
+
         val result = mutableListOf<String>()
         var previousBoundary = -1
         for (i in exonicBoundaries.indices) {
@@ -30,19 +34,33 @@ data class ProteinSequence(val contig: String, val proteins: String) {
     }
 
     fun allKmers(length: Int): Set<String> {
-        return rollingKmers(length, fullProteinSequence).toSet()
+        return fixedLengthRollingKmers(length, fullProteinSequence).toSet()
     }
 
-    fun exonicKmers(length: Int, exonicBoundaries: List<Int>): Set<String> {
-        return exonicProteins(exonicBoundaries).flatMap { rollingKmers(length, it) }.toSet()
+    fun uniqueExonicKmers(length: Int, exonicBoundaries: List<Int>): Set<String> {
+        return exonicProteins(exonicBoundaries)
+                .flatMap { fixedLengthRollingKmers(length, it) }
+                .groupBy { it }
+                .filter { it.value.size == 1 }
+                .keys
     }
 
-    private fun rollingKmers(kmerSize: Int, sequence: String): List<String> {
+    private fun fixedLengthRollingKmers(kmerSize: Int, sequence: String): List<String> {
         val result = mutableListOf<String>()
         for (i in 0..sequence.length - kmerSize) {
             result.add(sequence.substring(i, i + kmerSize))
         }
 
+        return result
+    }
+
+    private fun variableLengthRollingKmers(minKmerSize: Int, sequence: String): List<String> {
+        val result = mutableListOf<String>()
+        for (i in 0..sequence.length - minKmerSize) {
+            for (j in i + minKmerSize..sequence.length) {
+                result.add(sequence.substring(i, j))
+            }
+        }
 
         return result
     }

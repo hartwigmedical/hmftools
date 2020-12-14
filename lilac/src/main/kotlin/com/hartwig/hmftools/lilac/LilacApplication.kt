@@ -49,9 +49,9 @@ class LilacApplication : AutoCloseable, Runnable {
 
 
         logger.info("Extracting ${kmerLength} length kmers")
-        val aKmerMap = aSequences.map { Pair(it, it.exonicKmers(kmerLength, ProteinSequenceBoundaries.aBoundaries())) }.toMap()
-        val bKmerMap = bSequences.map { Pair(it, it.exonicKmers(kmerLength, ProteinSequenceBoundaries.bBoundaries())) }.toMap()
-        val cKmerMap = cSequences.map { Pair(it, it.exonicKmers(kmerLength, ProteinSequenceBoundaries.cBoundaries())) }.toMap()
+        val aKmerMap = aSequences.map { Pair(it, it.uniqueExonicKmers(kmerLength, ProteinSequenceBoundaries.aBoundaries())) }.filter { it.second.isNotEmpty() }.toMap()
+        val bKmerMap = bSequences.map { Pair(it, it.uniqueExonicKmers(kmerLength, ProteinSequenceBoundaries.bBoundaries())) }.filter { it.second.isNotEmpty() }.toMap()
+        val cKmerMap = cSequences.map { Pair(it, it.uniqueExonicKmers(kmerLength, ProteinSequenceBoundaries.cBoundaries())) }.filter { it.second.isNotEmpty() }.toMap()
 
         val hlaKmers = HlaKmer(aKmerMap, bKmerMap, cKmerMap)
         println(hlaKmers.uniqueKmers().size)
@@ -74,27 +74,30 @@ class LilacApplication : AutoCloseable, Runnable {
 //                logger.info("  Kmer $kmer count -> ${kmerCount.kmerCount()[kmer]}")
 //            }
 
-            if (bamKmers.containsAll(kmers)) {
-                logger.info("Found potential candidate ${proteinSequence.allele.toString()}")
+
+            if (kmers.isNotEmpty() && bamKmers.containsAll(kmers)) {
+                val matches = kmerCount.kmerCount().filter { it.key in kmers }.map { it.value }.sum()
+//                if (matches > 15000) {
+                    logger.info("Found potential candidate ${proteinSequence.allele.toString()} -> $matches")
+//                }
 
 //                logger.info("PROCESSING ${proteinSequence.allele.fourDigitName()}")
 //                for (kmer in kmers) {
 //                    logger.info("       Kmer $kmer count -> ${kmerCount.kmerCount()[kmer]}")
 //                }
-
+//
             }
 
 
         }
 
-//        val kmerMap = kmerCount.kmerCount().filter { it.value > 10 }
-//        val uniqueKmers = kmerMap.keys intersect hlaKmers.uniqueKmers()
-//        println(uniqueKmers.size)
-//
-//        for (kmer in uniqueKmers) {
-//            logger.info("Found unique candidate ${hlaKmers.proteinSequence(kmer).allele.toString()}")
-//
-//        }
+        val uniqueKmers = bamKmers intersect hlaKmers.uniqueKmers()
+        println(uniqueKmers.size)
+
+        for (kmer in uniqueKmers) {
+            val matches = kmerCount.kmerCount().filter { it.key in kmer }.map { it.value }.sum()
+            logger.info("Found unique candidate ${hlaKmers.proteinSequence(kmer).allele.toString()} -> $matches -> $kmer")
+        }
 
 
     }

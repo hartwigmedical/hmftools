@@ -4,18 +4,16 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.prot.ProteinSequence
 
 class HlaKmer(a: Map<ProteinSequence, Set<String>>, b: Map<ProteinSequence, Set<String>>, c: Map<ProteinSequence, Set<String>>) {
-    private val kmerCount = mutableMapOf<String, Int>()
     private val sequences = mutableMapOf<ProteinSequence, Set<String>>()
 
     init {
         sequences.putAll(a)
         sequences.putAll(b)
         sequences.putAll(c)
-        sequences.values.flatten().forEach { kmer -> kmerCount.compute(kmer) { _, old -> (old ?: 0) + 1 } }
     }
 
-    val uniqueKmers = kmerCount.filter { it.value == 1 }.map { it.key }.toSet()
-
+    val kmers = sequences.values.flatten().toSet()
+    val uniqueKmers = sequences.values.flatten().groupBy { it }.filter { it.value.size == 1 }.keys
 
     fun proteinSequence(uniqueKmer: String): ProteinSequence {
         assert(uniqueKmers.contains(uniqueKmer))
@@ -34,7 +32,7 @@ class HlaKmer(a: Map<ProteinSequence, Set<String>>, b: Map<ProteinSequence, Set<
     }
 
     fun kmers(): Set<String> {
-        return kmerCount.keys
+        return kmers
     }
 
     fun kmers(hlaAlleles: Set<HlaAllele>): Set<String> {

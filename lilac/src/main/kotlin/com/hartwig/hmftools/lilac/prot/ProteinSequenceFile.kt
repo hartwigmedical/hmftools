@@ -13,13 +13,13 @@ object ProteinSequenceFile {
 
     fun writeUnwrappedFile(codonBoundaries: List<Int>, input: String, output: String) {
         val originalEntries = readFile(input)
-        val fourDigitEntries = originalEntries.firstFourDigits()//.filter { it.allele.fourDigitName() == "A*01:01" || it.allele.fourDigitName() == "A*11:01" }
+        val fourDigitEntries = originalEntries.inflate().firstFourDigits()//.filter { it.allele.fourDigitName() == "A*01:01" || it.allele.fourDigitName() == "A*11:01" }
 
         if (fourDigitEntries.isNotEmpty()) {
             val outputFile = File(output)
             outputFile.writeText(header(codonBoundaries))
             for (entry in fourDigitEntries) {
-                outputFile.appendText("${entry.contig.padEnd(20, ' ')}\t${entry.proteins}\n")
+                outputFile.appendText("${entry.contig.padEnd(20, ' ')}\t${entry.fullProteinSequence}\n")
             }
         }
     }
