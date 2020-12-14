@@ -246,6 +246,17 @@ public class Lims {
         }
     }
 
+//    @Nullable
+//    public LimsCohortConfigFactory cohortConfig(@NotNull String sampleBarcode) {
+//        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+//        if (sampleData != null) {
+//            String cohortString = sampleData.cohort();
+//
+//        } else {
+//            return null;
+//        }
+//    }
+
     @Nullable
     public LimsAnalysisType extractAnalysisType(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
