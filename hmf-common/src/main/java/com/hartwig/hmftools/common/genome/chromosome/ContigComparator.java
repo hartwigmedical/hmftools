@@ -8,7 +8,6 @@ public enum ContigComparator implements Comparator<String> {
 
     @Override
     public int compare(final String contig1, final String contig2) {
-
         final boolean humanContig1 = HumanChromosome.contains(contig1);
         final boolean humanContig2 = HumanChromosome.contains(contig2);
 

@@ -50,7 +50,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
 
     public SomaticVariantFactory(@NotNull final VariantContextFilter... filters) {
         this.filter = new CompoundFilter(true);
-        filter.addAll(Arrays.asList(filters));
+        this.filter.addAll(Arrays.asList(filters));
         this.filter.add(new ChromosomeFilter());
         this.filter.add(new NTFilter());
     }
@@ -202,5 +202,4 @@ public class SomaticVariantFactory implements VariantContextFilter {
     public boolean test(final VariantContext variantContext) {
         return filter.test(variantContext);
     }
-
 }

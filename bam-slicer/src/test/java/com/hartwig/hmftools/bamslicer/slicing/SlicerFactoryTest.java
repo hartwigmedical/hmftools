@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.slicing;
+package com.hartwig.hmftools.bamslicer.slicing;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -20,20 +20,20 @@ public class SlicerFactoryTest {
 
     @Test
     public void handleTrivialBed() throws IOException {
-        final Slicer slicer = SlicerFactory.fromBedFile(VALID_BED);
+        Slicer slicer = SlicerFactory.fromBedFile(VALID_BED);
         assertTrue(slicer.includes(new TestGenomePosition("1", 1)));
         assertFalse(slicer.includes(new TestGenomePosition("1", 2)));
     }
 
     @Test
     public void handleUnsortedBed() throws IOException {
-        final Slicer slicer = SlicerFactory.fromBedFile(UNSORTED_BED);
+        Slicer slicer = SlicerFactory.fromBedFile(UNSORTED_BED);
         assertEquals(2, slicer.regions().size());
     }
 
     @Test
     public void handleInvalidBedRegion() throws IOException {
-        final Slicer slicer = SlicerFactory.fromBedFile(INVALID_BED);
+        Slicer slicer = SlicerFactory.fromBedFile(INVALID_BED);
         assertEquals(2, slicer.regions().size());
     }
 

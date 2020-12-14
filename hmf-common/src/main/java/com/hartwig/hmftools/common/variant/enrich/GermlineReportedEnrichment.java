@@ -50,7 +50,6 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
     }
 
     private boolean report(@NotNull final VariantContext context) {
-
         final boolean isPass = !context.isFiltered() || (context.getFilters().size() == 1 && context.getFilters().contains("PASS"));
 
         if (!isPass) {

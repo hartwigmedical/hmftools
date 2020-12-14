@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface NamedBed extends GenomeRegion {
+
     @NotNull
     String name();
 }

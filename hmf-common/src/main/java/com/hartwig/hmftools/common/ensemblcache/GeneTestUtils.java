@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-public class GeneTestUtils
+public final class GeneTestUtils
 {
     public static GeneAnnotation createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, int strand,
             final String chromosome, int position, int orientation)

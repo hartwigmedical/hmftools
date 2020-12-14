@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.slicing;
+package com.hartwig.hmftools.bamslicer.slicing;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -20,7 +20,7 @@ public class BidirectionalSlicerTest {
 
     @Before
     public void setup() {
-        final SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
+        SortedSetMultimap<String, GenomeRegion> regionMap = TreeMultimap.create();
         regionMap.put("X", GenomeRegions.create("X", 100, 200));
         regionMap.put("X", GenomeRegions.create("X", 300, 400));
         regionMap.put("Y", GenomeRegions.create("Y", 500, 600));

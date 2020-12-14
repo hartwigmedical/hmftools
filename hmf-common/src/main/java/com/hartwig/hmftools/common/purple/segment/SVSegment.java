@@ -10,5 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 abstract class SVSegment implements GenomePosition {
+
+    @NotNull
     public abstract StructuralVariantType type();
 }

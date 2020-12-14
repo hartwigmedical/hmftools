@@ -25,10 +25,11 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment {
     enum GermlineGenotypeStatus {
         HET,
         HOM,
-        LOW_VAF;
+        LOW_VAF
     }
 
-    static GermlineGenotypeStatus status(AllelicDepth depth) {
+    @NotNull
+    static GermlineGenotypeStatus status(@NotNull AllelicDepth depth) {
         if (depth.alleleReadCount() == depth.totalReadCount()) {
             return GermlineGenotypeStatus.HOM;
         }
@@ -46,17 +47,18 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment {
         return GermlineGenotypeStatus.HET;
     }
 
+    @NotNull
     private final String germlineSample;
+    @NotNull
     private final Consumer<VariantContext> consumer;
 
-    public GermlineGenotypeEnrichment(final String germlineSample, final Consumer<VariantContext> consumer) {
+    public GermlineGenotypeEnrichment(@NotNull final String germlineSample, @NotNull final Consumer<VariantContext> consumer) {
         this.germlineSample = germlineSample;
         this.consumer = consumer;
     }
 
     @Override
     public void accept(@NotNull final VariantContext context) {
-
         Genotype genotype = context.getGenotype(germlineSample);
         AllelicDepth depth = AllelicDepth.fromGenotype(genotype);
 
@@ -97,12 +99,11 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment {
         return template;
     }
 
-    static double homPoisson(AllelicDepth depth) {
+    static double homPoisson(@NotNull AllelicDepth depth) {
         return new PoissonDistribution(depth.totalReadCount() / 2d).cumulativeProbability(depth.totalReadCount() - depth.alleleReadCount());
     }
 
-    static double lowVafPoisson(AllelicDepth depth) {
+    static double lowVafPoisson(@NotNull AllelicDepth depth) {
         return new PoissonDistribution(depth.totalReadCount() / 2d).cumulativeProbability(depth.alleleReadCount());
     }
-
 }

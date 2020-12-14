@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface CobaltChromosome extends Chromosome {
 
+    @NotNull
     String contig();
 
     double typicalRatio();

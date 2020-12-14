@@ -18,13 +18,12 @@ public enum GermlineAberration {
     TRISOMY_21;
 
     @NotNull
-    public static String toString(Set<GermlineAberration> aberrations) {
+    public static String toString(@NotNull Set<GermlineAberration> aberrations) {
         return aberrations.stream().map(Enum::toString).collect(Collectors.joining(","));
     }
 
     @NotNull
-    public static Set<GermlineAberration> fromString(String line) {
+    public static Set<GermlineAberration> fromString(@NotNull String line) {
         return Arrays.stream(line.split(",")).map(GermlineAberration::valueOf).collect(Collectors.toSet());
     }
-
 }

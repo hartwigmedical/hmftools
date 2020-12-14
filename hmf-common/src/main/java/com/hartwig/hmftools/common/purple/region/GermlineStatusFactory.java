@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.jetbrains.annotations.NotNull;
 
 class GermlineStatusFactory {
+
     private static final double GERMLINE_HOM_DELETION_THRESHOLD = 0.1;
     private static final double GERMLINE_HET_DELETION_THRESHOLD = 0.85;
     private static final double GERMLINE_AMPLIFICATION_THRESHOLD = 1.15;

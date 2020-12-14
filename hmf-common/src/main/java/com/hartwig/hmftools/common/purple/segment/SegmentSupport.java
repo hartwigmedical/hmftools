@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.purple.segment;
 
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
+import org.jetbrains.annotations.NotNull;
+
 public enum SegmentSupport {
     BND(true),
     INV(true),
@@ -26,7 +28,8 @@ public enum SegmentSupport {
         return isSV;
     }
 
-    public static SegmentSupport fromVariant(StructuralVariantType type) {
+    @NotNull
+    public static SegmentSupport fromVariant(@NotNull StructuralVariantType type) {
         switch (type) {
             case INF: return INF;
             case BND: return BND;
@@ -39,5 +42,4 @@ public enum SegmentSupport {
 
         throw new IllegalArgumentException("Unknown variant type: " + type);
     }
-
 }

@@ -11,8 +11,8 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum SegmentFile {
-    ;
+public final class SegmentFile {
+    
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String EXTENSION = ".purple.segment.tsv";
     private static final String DELIMITER = "\t";
