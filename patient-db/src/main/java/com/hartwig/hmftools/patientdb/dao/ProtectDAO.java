@@ -35,7 +35,7 @@ class ProtectDAO {
                     PROTECT.TREATMENT,
                     PROTECT.LEVEL,
                     PROTECT.DIRECTION,
-                    PROTECT.URL,
+                    PROTECT.URLS,
                     PROTECT.ONLABEL,
                     PROTECT.REPORTED,
                     PROTECT.MODIFIED);
@@ -50,7 +50,7 @@ class ProtectDAO {
         for (String url : evidence.urls()) {
             urlJoiner.add(url);
         }
-        // TODO Rename field to "urls"
+
         inserter.values(sample,
                 evidence.genomicEvent(),
                 evidence.source().toString(),
