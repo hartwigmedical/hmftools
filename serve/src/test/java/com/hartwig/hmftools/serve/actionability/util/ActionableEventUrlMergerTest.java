@@ -30,8 +30,8 @@ public class ActionableEventUrlMergerTest {
 
         Set<ActionableFusion> consolidated = ActionableEventUrlMerger.merge(fusions, new ActionableFusionUrlConsolidator());
         assertEquals(2, consolidated.size());
-        assertEquals(Sets.newHashSet("url1", "url2"), findByGene(consolidated, GENE_1).urls());
-        assertEquals(Sets.newHashSet("url3"), findByGene(consolidated, GENE_2).urls());
+        assertEquals(Sets.newHashSet("url1", "url2"), findByGeneUp(consolidated, GENE_1).urls());
+        assertEquals(Sets.newHashSet("url3"), findByGeneUp(consolidated, GENE_2).urls());
     }
 
     @NotNull
@@ -50,7 +50,7 @@ public class ActionableEventUrlMergerTest {
     }
 
     @NotNull
-    private static ActionableFusion findByGene(@NotNull Iterable<ActionableFusion> fusions, @NotNull String gene) {
+    private static ActionableFusion findByGeneUp(@NotNull Iterable<ActionableFusion> fusions, @NotNull String gene) {
         for (ActionableFusion fusion : fusions) {
             if (fusion.geneUp().equals(gene)) {
                 return fusion;
