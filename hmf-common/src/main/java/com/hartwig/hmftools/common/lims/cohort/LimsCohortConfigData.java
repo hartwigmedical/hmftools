@@ -12,6 +12,8 @@ public abstract class LimsCohortConfigData {
     @NotNull
     public abstract String cohortId();
 
+    public abstract boolean hospitalId();
+
     public abstract boolean reportGermline();
 
     public abstract boolean reportGermlineFlag();
@@ -23,4 +25,10 @@ public abstract class LimsCohortConfigData {
     public abstract boolean requireHospitalId();
 
     public abstract boolean requireHospitalPAId();
+
+    public abstract boolean hospitalPersonsStudy();
+
+    public abstract boolean hospitalPersonsRequester();
+
+    public abstract boolean outputFile();
 }

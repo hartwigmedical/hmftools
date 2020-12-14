@@ -279,7 +279,7 @@ public class Lims {
         HospitalContactData data = hospitalModel.queryHospitalData(sampleId,
                 requesterName(sampleBarcode),
                 requesterEmail(sampleBarcode),
-                cohort(sampleBarcode));
+                cohortConfig(sampleBarcode));
 
         if (data == null) {
             LOGGER.warn("Could not find hospital data for sample '{}' with barcode '{}'", sampleId, sampleBarcode);

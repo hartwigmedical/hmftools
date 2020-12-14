@@ -28,12 +28,16 @@ public class LimsCohortConfigFactory {
 
                 LimsCohortConfigData cohortConfig = ImmutableLimsCohortConfigData.builder()
                         .cohortId(parts[0])
-                        .reportGermline(parts[1].equals("TRUE"))
-                        .reportGermlineFlag(parts[2].equals("TRUE"))
-                        .reportConclusion(parts[3].equals("TRUE"))
-                        .reportViral(parts[4].equals("TRUE"))
-                        .requireHospitalId(parts[5].equals("TRUE"))
-                        .requireHospitalPAId(parts[6].equals("TRUE"))
+                        .hospitalId(parts[1].equals("TRUE"))
+                        .reportGermline(parts[2].equals("TRUE"))
+                        .reportGermlineFlag(parts[3].equals("TRUE"))
+                        .reportConclusion(parts[4].equals("TRUE"))
+                        .reportViral(parts[5].equals("TRUE"))
+                        .requireHospitalId(parts[6].equals("TRUE"))
+                        .requireHospitalPAId(parts[7].equals("TRUE"))
+                        .hospitalPersonsStudy(parts[8].equals("TRUE"))
+                        .hospitalPersonsRequester(parts[9].equals("TRUE"))
+                        .outputFile(parts[10].equals("TRUE"))
                         .build();
 
                 cohortConfigMap.put(parts[0], cohortConfig);
