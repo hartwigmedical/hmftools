@@ -74,8 +74,11 @@ public class GeneLevelExtractorTest {
     public void canExtractGeneLevelEvent() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("NOTCH1", "MET"));
 
-        assertEquals(GeneLevelEvent.ACTIVATION, geneLevelExtractor.extractGeneLevelEvent("KRAS", "KRAS oncogenic mutation"));
+        assertEquals(GeneLevelEvent.ACTIVATION, geneLevelExtractor.extractGeneLevelEvent("KRAS", "KRAS activating mutation"));
+        assertEquals(GeneLevelEvent.ACTIVATION, geneLevelExtractor.extractGeneLevelEvent("KRAS", "KRAS act mut"));
         assertEquals(GeneLevelEvent.INACTIVATION, geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "LOSS-OF-FUNCTION"));
+        assertEquals(GeneLevelEvent.INACTIVATION, geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "inact mut"));
+
         assertEquals(GeneLevelEvent.ACTIVATION, geneLevelExtractor.extractGeneLevelEvent("MET", "MUTATION"));
         assertEquals(GeneLevelEvent.INACTIVATION, geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "MUTATION"));
         assertEquals(GeneLevelEvent.INACTIVATION, geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "NOTCH1 "));
@@ -96,8 +99,8 @@ public class GeneLevelExtractorTest {
     private static GeneLevelExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
         return new GeneLevelExtractor(V37_GENE_CHECKER, V37_GENE_CHECKER,
                 driverGenes,
-                Sets.newHashSet("positive", "oncogenic mutation"),
-                Sets.newHashSet("negative", "LOSS-OF-FUNCTION"));
+                Sets.newHashSet("positive", "activating mutation", "act mut"),
+                Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"));
     }
 
     @NotNull

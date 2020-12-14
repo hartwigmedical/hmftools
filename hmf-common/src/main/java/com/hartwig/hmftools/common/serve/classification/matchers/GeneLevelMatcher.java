@@ -37,13 +37,13 @@ public class GeneLevelMatcher implements EventMatcher {
             }
         }
 
-        for (String keyPhrase : activatingGeneLevelKeyPhrases) {
+        for (String keyPhrase : inactivatingGeneLevelKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 return true;
             }
         }
 
-        for (String keyPhrase : inactivatingGeneLevelKeyPhrases) {
+        for (String keyPhrase : activatingGeneLevelKeyPhrases) {
             if (event.contains(keyPhrase)) {
                 return true;
             }
