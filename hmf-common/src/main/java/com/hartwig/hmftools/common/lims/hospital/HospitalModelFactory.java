@@ -119,7 +119,7 @@ public final class HospitalModelFactory {
         for (String COREDB : keyCOREDB) {
             if (!hospitalIdsInAddressList.contains(COREDB)) {
                 allCorrect = false;
-                LOGGER.warn("WIDE hospital ID is not present in hospital address list: '{}'", COREDB);
+                LOGGER.warn("COREDB hospital ID is not present in hospital address list: '{}'", COREDB);
             }
         }
 
