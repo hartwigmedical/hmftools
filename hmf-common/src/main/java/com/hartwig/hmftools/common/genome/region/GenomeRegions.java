@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class GenomeRegions {
+public class GenomeRegions {
 
     @NotNull
     public static GenomeRegion create(@NotNull final String chromosome, final long start, final long end) {
