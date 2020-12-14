@@ -12,21 +12,15 @@ public abstract class LimsCohortConfigData {
     @NotNull
     public abstract String cohortId();
 
-    @NotNull
-    public abstract String reportGermline();
+    public abstract boolean reportGermline();
 
-    @NotNull
-    public abstract String reportGermlineFlag();
+    public abstract boolean reportGermlineFlag();
 
-    @NotNull
-    public abstract String reportConclusion();
+    public abstract boolean reportConclusion();
 
-    @NotNull
-    public abstract String reportViral();
+    public abstract boolean reportViral();
 
-    @NotNull
-    public abstract String requireHospitalId();
+    public abstract boolean requireHospitalId();
 
-    @NotNull
-    public abstract String requireHospitalPAId();
+    public abstract boolean requireHospitalPAId();
 }

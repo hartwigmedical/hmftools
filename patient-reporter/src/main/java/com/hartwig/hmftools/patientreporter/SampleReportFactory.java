@@ -49,8 +49,7 @@ public final class SampleReportFactory {
 
         LimsCohortConfigData cohortdata = lims.cohortConfig(tumorSampleBarcode);
 
-        LimsCohort cohort = lims.cohort(tumorSampleBarcode);
-        LOGGER.info("Cohort type of this sample is: {}", cohort);
+        LOGGER.info("Cohort type of this sample is: {}", cohortdata.cohortId());
 
         String hospitalPatientId =
                 checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), tumorSampleId, cohortdata);
@@ -64,7 +63,7 @@ public final class SampleReportFactory {
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .shallowSeqPurityString(lims.purityShallowSeq(tumorSampleBarcode))
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
-                .cohort(cohort)
+                .cohort(lims.cohort(tumorSampleBarcode))
                 .projectName(lims.projectName(tumorSampleBarcode))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
@@ -76,7 +75,7 @@ public final class SampleReportFactory {
     @VisibleForTesting
     static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull String sampleId,
             @NotNull LimsCohortConfigData cohortdata) {
-        if (cohortdata.requireHospitalId().equals("TRUE")) {
+        if (cohortdata.requireHospitalId()) {
             if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
                 LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
             }
@@ -88,7 +87,7 @@ public final class SampleReportFactory {
     @Nullable
     static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
             @Nullable LimsCohortConfigData cohortdata) {
-        if (cohortdata.equals("TRUE")) {
+        if (cohortdata.requireHospitalPAId()) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
                     && isValidHospitalPathologySampleId(hospitalPathologySampleId)) {
                 return hospitalPathologySampleId;
