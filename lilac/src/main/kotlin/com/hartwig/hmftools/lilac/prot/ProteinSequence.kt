@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.lilac.prot
 
 import com.hartwig.hmftools.lilac.hla.HlaAllele
+import java.util.*
 
 data class ProteinSequence(val contig: String, val proteins: String) {
     val allele: HlaAllele by lazy { HlaAllele(contig) }
 
-    val fullProteinSequence: String by lazy { proteins.replace("*", "").replace(".", "") }
+    private val fullProteinSequence: String by lazy { proteins.removeSpecialCharacters() }
     val length: Int by lazy { fullProteinSequence.length }
+
 
     fun copyWithAdditionalProtein(more: String): ProteinSequence {
         return ProteinSequence(contig, proteins + more)
@@ -23,11 +25,15 @@ data class ProteinSequence(val contig: String, val proteins: String) {
             val boundary = exonicBoundaries[i]
             val start = previousBoundary + 1
             if (start < proteins.length) {
-                val end = Math.min(proteins.length, boundary)
-                result.add(proteins.substring(start, end).replace(".", "").replace("*", ""))
+                val end = proteins.length.coerceAtMost(boundary)
+                result.add(proteins.substring(start, end).removeSpecialCharacters())
             }
 
             previousBoundary = boundary
+        }
+
+        if (previousBoundary < proteins.length - 1) {
+            result.add(proteins.substring(previousBoundary + 1).removeSpecialCharacters())
         }
 
         return result
@@ -37,9 +43,13 @@ data class ProteinSequence(val contig: String, val proteins: String) {
         return fixedLengthRollingKmers(length, fullProteinSequence).toSet()
     }
 
-    fun uniqueExonicKmers(length: Int, exonicBoundaries: List<Int>): Set<String> {
+    fun uniqueExonicKmers(kmerLength: Int, exonicBoundaries: List<Int>): Set<String> {
+        return uniqueExonicKmers(kmerLength, kmerLength, exonicBoundaries)
+    }
+
+    fun uniqueExonicKmers(minKmerLength: Int, maxKmerLength: Int, exonicBoundaries: List<Int>): Set<String> {
         return exonicProteins(exonicBoundaries)
-                .flatMap { fixedLengthRollingKmers(length, it) }
+                .flatMap { variableLengthRollingKmers(minKmerLength, maxKmerLength, it) }
                 .groupBy { it }
                 .filter { it.value.size == 1 }
                 .keys
@@ -54,15 +64,16 @@ data class ProteinSequence(val contig: String, val proteins: String) {
         return result
     }
 
-    private fun variableLengthRollingKmers(minKmerSize: Int, sequence: String): List<String> {
-        val result = mutableListOf<String>()
-        for (i in 0..sequence.length - minKmerSize) {
-            for (j in i + minKmerSize..sequence.length) {
-                result.add(sequence.substring(i, j))
-            }
+    private fun variableLengthRollingKmers(minKmerLength: Int, maxKmerLength: Int, sequence: String): List<String> {
+        if (sequence.length < minKmerLength) {
+            return Collections.emptyList()
         }
 
-        return result
+        return fixedLengthRollingKmers(maxKmerLength.coerceAtMost(sequence.length), sequence);
+    }
+
+    private fun String.removeSpecialCharacters(): String {
+        return this.replace("*", "").replace(".", "");
     }
 
 }
