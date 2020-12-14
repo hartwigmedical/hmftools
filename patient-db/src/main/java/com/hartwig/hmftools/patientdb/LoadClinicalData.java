@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsAnalysisType;
 import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
@@ -201,7 +202,7 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsCohort cohort = lims.cohort(sampleBarcode);
+            LimsCohortConfigData cohort = lims.cohortConfig(sampleBarcode);
 
             if (cohort != null) {
                 String patientId = lims.patientId(sampleBarcode);
@@ -441,9 +442,9 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohort cohort = lims.cohort(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfigData cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
 
-                if (cohort == LimsCohort.WIDE) {
+                if (cohort.cohortId().equals("WIDE")) {
                     String patientId = entry.getKey();
                     Patient widePatient =
                             widePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
@@ -466,9 +467,9 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohort cohort = lims.cohort(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfigData cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
 
-                if (cohort == LimsCohort.CORE) {
+                if (cohort.cohortId().equals("CORE")) {
                     String patientId = entry.getKey();
                     Patient corePatient =
                             corePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));

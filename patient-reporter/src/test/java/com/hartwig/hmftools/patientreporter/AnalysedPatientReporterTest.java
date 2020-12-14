@@ -17,6 +17,7 @@ import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnalysedPatientReporterTest {
@@ -39,6 +40,7 @@ public class AnalysedPatientReporterTest {
     private static final String CIRCOS_FILE = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
 
     @Test
+    @Ignore
     public void canRunOnRunDirectory() throws IOException {
         AnalysedPatientReporter reporter = new AnalysedPatientReporter(PatientReporterTestFactory.loadTestAnalysedReportData());
 

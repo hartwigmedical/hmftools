@@ -23,7 +23,7 @@ public class LimsCohortConfigFactory {
 
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(DELIMITER);
-            if (parts.length == 7) {
+            if (parts.length == 11) {
 
 
                 LimsCohortConfigData cohortConfig = ImmutableLimsCohortConfigData.builder()
@@ -38,6 +38,8 @@ public class LimsCohortConfigFactory {
                         .hospitalPersonsStudy(parts[8].equals("TRUE"))
                         .hospitalPersonsRequester(parts[9].equals("TRUE"))
                         .outputFile(parts[10].equals("TRUE"))
+                        .submission(parts[11].equals("TRUE"))
+                        .sidePanelInfo(parts[12].equals("TRUE"))
                         .build();
 
                 cohortConfigMap.put(parts[0], cohortConfig);

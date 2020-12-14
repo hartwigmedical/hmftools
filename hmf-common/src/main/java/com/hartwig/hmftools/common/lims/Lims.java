@@ -241,17 +241,6 @@ public class Lims {
     }
 
     @Nullable
-    public LimsCohort cohort(@NotNull String sampleBarcode) {
-        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        if (sampleData != null) {
-            String cohortString = sampleData.cohort();
-            return cohortString != null ? LimsCohort.fromLimsCohortString(cohortString, sampleData.sampleId()) : null;
-        } else {
-            return null;
-        }
-    }
-
-    @Nullable
     public LimsCohortConfigData cohortConfig(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
@@ -323,7 +312,7 @@ public class Lims {
             return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode),
                     germlineReportingLevelString,
                     sampleId(sampleBarcode),
-                    cohort(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
+                    cohortConfig(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
         } else {
             return LimsGermlineReportingLevel.NO_REPORTING;
         }

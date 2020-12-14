@@ -11,6 +11,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsCohort;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -36,7 +37,7 @@ public final class ReportingDb {
         String sampleId = report.sampleReport().tumorSampleId();
         GenomicAnalysis analysis = report.genomicAnalysis();
 
-        LimsCohort cohort = report.sampleReport().cohort();
+        LimsCohortConfigData cohort = report.sampleReport().cohort();
 
         if (requiresSummary(report.sampleReport().cohort()) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
@@ -72,9 +73,9 @@ public final class ReportingDb {
     }
 
     @VisibleForTesting
-    static boolean requiresSummary(@Nullable LimsCohort cohort) {
+    static boolean requiresSummary(@Nullable LimsCohortConfigData cohort) {
 
-        if (cohort == LimsCohort.WIDE || cohort == LimsCohort.CORE || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.CORELR11) {
+        if (cohort.reportConclusion()) {
             return true;
         } else {
             return false;
@@ -82,7 +83,7 @@ public final class ReportingDb {
     }
 
     private static void addToReportingDb(@NotNull String reportingDbTsv, @NotNull String tumorBarcode, @NotNull String sampleId,
-            @NotNull LimsCohort cohort, @NotNull String reportType, @NotNull String reportDate, @NotNull String purity,
+            @NotNull LimsCohortConfigData cohort, @NotNull String reportType, @NotNull String reportDate, @NotNull String purity,
             boolean hasReliableQuality, boolean hasReliablePurity) throws IOException {
         boolean present = false;
         for (ReportingEntry entry : read(reportingDbTsv)) {
@@ -96,7 +97,7 @@ public final class ReportingDb {
         if (!present) {
             LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
             String stringToAppend =
-                    tumorBarcode + "\t" + sampleId + "\t" + cohort + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t"
+                    tumorBarcode + "\t" + sampleId + "\t" + cohort.cohortId() + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t"
                             + hasReliableQuality + "\t" + hasReliablePurity + "\n";
             appendToTsv(reportingDbTsv, stringToAppend);
         }
@@ -104,7 +105,7 @@ public final class ReportingDb {
 
     public static void addQCFailReportToReportingDb(@NotNull String reportingDbTsv, @NotNull QCFailReport report) throws IOException {
         String sampleId = report.sampleReport().tumorSampleId();
-        LimsCohort cohort = report.sampleReport().cohort();
+        LimsCohortConfigData cohort = report.sampleReport().cohort();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String reportDate = ReportResources.REPORT_DATE;
 
@@ -123,7 +124,7 @@ public final class ReportingDb {
             if (!present) {
                 LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
                 String stringToAppend =
-                        tumorBarcode + "\t" + sampleId + "\t" + cohort + "\t" + reportDate + "\t" + reportType + "\t" + NA_STRING + "\t"
+                        tumorBarcode + "\t" + sampleId + "\t" + cohort.cohortId() + "\t" + reportDate + "\t" + reportType + "\t" + NA_STRING + "\t"
                                 + NA_STRING + "\t" + NA_STRING + "\n";
                 appendToTsv(reportingDbTsv, stringToAppend);
             }

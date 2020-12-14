@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.lims;
 
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+
 import org.jetbrains.annotations.NotNull;
 
 public enum LimsGermlineReportingLevel {
@@ -9,9 +11,9 @@ public enum LimsGermlineReportingLevel {
 
     @NotNull
     static LimsGermlineReportingLevel fromLimsInputs(boolean reportGermlineVariants, @NotNull String germlineReportingLevelString,
-            @NotNull String sampleId, @NotNull LimsCohort cohort) {
-        if (reportGermlineVariants) {
-            if (cohort == LimsCohort.WIDE) {
+            @NotNull String sampleId, @NotNull LimsCohortConfigData cohort) {
+        if (reportGermlineVariants && cohort != null) {
+            if (cohort.cohortId().equals("WIDE")) {
                 // Cases "geen toevalsbevindingen: familie mag deze/wel niet opvragen" have been merged
                 // into a single category "geen toevalsbevindingen" per feb 1st 2020
                 switch (germlineReportingLevelString) {
@@ -26,7 +28,7 @@ public enum LimsGermlineReportingLevel {
                         throw new IllegalStateException(
                                 "Cannot resolve germline reporting choice for sample: " + sampleId + ": " + germlineReportingLevelString);
                 }
-            } else if (cohort == LimsCohort.COREDB) {
+            } else if (cohort.cohortId().equals("COREDB")) {
                 switch (germlineReportingLevelString) {
                     case "1: Yes":
                         return REPORT_WITH_NOTIFICATION;

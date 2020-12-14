@@ -31,4 +31,8 @@ public abstract class LimsCohortConfigData {
     public abstract boolean hospitalPersonsRequester();
 
     public abstract boolean outputFile();
+
+    public abstract boolean submission();
+
+    public abstract boolean sidePanelInfo();
 }
