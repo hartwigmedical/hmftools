@@ -72,6 +72,7 @@ public final class LoadClinicalData {
     private static final String PIPELINE_VERSION = "pipeline_version_file";
 
     private static final String RUNS_DIRECTORY = "runs_dir";
+    private static final String CONFIG_COHORTS_TSV = "config_cohorts_tsv";
 
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
@@ -548,7 +549,7 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV),
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV),
                 cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV),
-                cmd.getOptionValue(DOID_JSON));
+                cmd.getOptionValue(DOID_JSON), cmd.getOptionValue(CONFIG_COHORTS_TSV));
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
             allParamsPresent = allParamsPresent && DatabaseAccess.hasDatabaseConfig(cmd);
@@ -581,6 +582,8 @@ public final class LoadClinicalData {
         options.addOption(RUNS_DIRECTORY,
                 true,
                 "Path towards the folder containing patient runs that are considered part of HMF database.");
+
+        options.addOption(CONFIG_COHORTS_TSV, true, "Path towards a TSV containing the cohorts for reporting.");
 
         options.addOption(CPCT_ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the cpct form status csv file.");
