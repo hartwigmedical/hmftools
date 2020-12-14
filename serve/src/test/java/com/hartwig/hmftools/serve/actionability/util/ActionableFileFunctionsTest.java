@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.serve.actionability;
+package com.hartwig.hmftools.serve.actionability.util;
 
-import static com.hartwig.hmftools.serve.actionability.ActionableFileFunctions.FIELD_DELIMITER;
+import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
 
 import static org.junit.Assert.assertEquals;
 
@@ -8,6 +8,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
+import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
 import org.junit.Test;
 

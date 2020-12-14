@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.actionability.fusion;
+package com.hartwig.hmftools.serve.actionability.util;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,23 +9,26 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
+import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
+import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ActionableFusionConsolidationTest {
+public class ActionableEventUrlMergerTest {
 
     private static final String GENE_1 = "gene1";
     private static final String GENE_2 = "gene2";
 
     @Test
-    public void canConsolidateFusions() {
+    public void canMergeFusionUrls() {
         Set<ActionableFusion> fusions = Sets.newHashSet();
         fusions.add(createFusion(GENE_1, "url1"));
         fusions.add(createFusion(GENE_1, "url2"));
         fusions.add(createFusion(GENE_2, "url3"));
 
-        Set<ActionableFusion> consolidated = ActionableFusionConsolidation.consolidate(fusions);
+        Set<ActionableFusion> consolidated = ActionableEventUrlMerger.merge(fusions, new ActionableFusionUrlConsolidator());
         assertEquals(2, consolidated.size());
         assertEquals(Sets.newHashSet("url1", "url2"), findByGene(consolidated, GENE_1).urls());
         assertEquals(Sets.newHashSet("url3"), findByGene(consolidated, GENE_2).urls());

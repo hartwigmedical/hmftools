@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.actionability;
+package com.hartwig.hmftools.serve.actionability.util;
 
 import java.util.Set;
 import java.util.StringJoiner;
@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -104,5 +105,4 @@ public final class ActionableFileFunctions {
         }
         return joiner.toString();
     }
-
 }

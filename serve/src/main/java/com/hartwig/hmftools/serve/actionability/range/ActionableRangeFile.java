@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.actionability.range;
 
-import static com.hartwig.hmftools.serve.actionability.ActionableFileFunctions.FIELD_DELIMITER;
+import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
-import com.hartwig.hmftools.serve.actionability.ActionableFileFunctions;
+import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.jetbrains.annotations.NotNull;

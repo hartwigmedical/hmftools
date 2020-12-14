@@ -4,7 +4,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionConsolidation;
+import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureUrlConsolidator;
+import com.hartwig.hmftools.serve.actionability.util.ActionableEventUrlMerger;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionFunctions;
@@ -21,12 +26,14 @@ public final class ExtractionFunctions {
 
     @NotNull
     public static ExtractionResult consolidateActionableEvents(@NotNull ExtractionResult result) {
-        return ImmutableExtractionResult.builder().from(result)
-                .actionableHotspots(result.actionableHotspots())
-                .actionableRanges(result.actionableRanges())
-                .actionableGenes(result.actionableGenes())
-                .actionableFusions(ActionableFusionConsolidation.consolidate(result.actionableFusions()))
-                .actionableSignatures(result.actionableSignatures())
+        return ImmutableExtractionResult.builder()
+                .from(result)
+                .actionableHotspots(ActionableEventUrlMerger.merge(result.actionableHotspots(), new ActionableHotspotUrlConsolidator()))
+                .actionableRanges(ActionableEventUrlMerger.merge(result.actionableRanges(), new ActionableRangeUrlConsolidator()))
+                .actionableGenes(ActionableEventUrlMerger.merge(result.actionableGenes(), new ActionableGeneUrlConsolidator()))
+                .actionableFusions(ActionableEventUrlMerger.merge(result.actionableFusions(), new ActionableFusionUrlConsolidator()))
+                .actionableSignatures(ActionableEventUrlMerger.merge(result.actionableSignatures(),
+                        new ActionableSignatureUrlConsolidator()))
                 .build();
     }
 
