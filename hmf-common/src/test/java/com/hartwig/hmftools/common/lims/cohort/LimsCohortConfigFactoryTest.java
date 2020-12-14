@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import com.google.common.io.Resources;
 
@@ -15,8 +14,9 @@ public class LimsCohortConfigFactoryTest {
 
     @Test
     public void canReadCohortConfigFile() throws IOException {
-        List<LimsCohortConfigData> configData = LimsCohortConfigFactory.read(LIMS_DIRECTORY + File.separator + "cohort.tsv");
-        assertEquals(1, configData.size());
+        LimsCohortModel cohortModel = LimsCohortConfigFactory.read(LIMS_DIRECTORY + File.separator + "cohort.tsv");
+
+        assertNotNull(cohortModel);
 
     }
 

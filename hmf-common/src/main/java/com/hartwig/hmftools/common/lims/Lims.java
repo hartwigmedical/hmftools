@@ -5,6 +5,8 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
@@ -36,12 +38,14 @@ public class Lims {
     private final Set<String> blacklistedPatients;
     @NotNull
     private final HospitalModel hospitalModel;
+    @NotNull
+    private final LimsCohortModel limsCohortModel;
 
     public Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
             @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
             @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode,
             @NotNull final Map<String, LocalDate> preLimsArrivalDatesPerSampleId, @NotNull final Set<String> samplesIdsWithoutSamplingDate,
-            @NotNull final Set<String> blacklistedPatients, @NotNull final HospitalModel hospitalModel) {
+            @NotNull final Set<String> blacklistedPatients, @NotNull final HospitalModel hospitalModel, @NotNull final LimsCohortModel limsCohortModel) {
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
         this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
@@ -49,6 +53,7 @@ public class Lims {
         this.samplesIdsWithoutSamplingDate = samplesIdsWithoutSamplingDate;
         this.blacklistedPatients = blacklistedPatients;
         this.hospitalModel = hospitalModel;
+        this.limsCohortModel = limsCohortModel;
     }
 
     public int sampleBarcodeCount() {
@@ -246,16 +251,16 @@ public class Lims {
         }
     }
 
-//    @Nullable
-//    public LimsCohortConfigFactory cohortConfig(@NotNull String sampleBarcode) {
-//        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-//        if (sampleData != null) {
-//            String cohortString = sampleData.cohort();
-//
-//        } else {
-//            return null;
-//        }
-//    }
+    @Nullable
+    public LimsCohortConfigData cohortConfig(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        if (sampleData != null) {
+            String cohortString = sampleData.cohort();
+            return limsCohortModel.queryCohortData(cohortString);
+        } else {
+            return null;
+        }
+    }
 
     @Nullable
     public LimsAnalysisType extractAnalysisType(@NotNull String sampleBarcode) {

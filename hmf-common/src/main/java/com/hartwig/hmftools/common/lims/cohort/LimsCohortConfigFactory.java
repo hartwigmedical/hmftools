@@ -4,34 +4,44 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+
+import com.google.common.collect.Maps;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LimsCohortConfigFactory {
     private static final String DELIMITER = "\t";
+    private static final Logger LOGGER = LogManager.getLogger(LimsCohortConfigFactory.class);
 
     @NotNull
-    public static List<LimsCohortConfigData> read(@NotNull final String fileName) throws IOException {
-        return fromLines(Files.readAllLines(new File(fileName).toPath()));
-    }
+    public static LimsCohortModel read(@NotNull final String fileName) throws IOException {
+        Map<String, LimsCohortConfigData> cohortConfigMap = Maps.newHashMap();
+        List<String> lines = Files.readAllLines(new File(fileName).toPath());
 
-    @NotNull
-    static List<LimsCohortConfigData> fromLines(@NotNull final List<String> lines) {
-        return lines.stream().skip(1).map(x -> fromString(x)).collect(Collectors.toList());
-    }
+        for (String line : lines.subList(1, lines.size())) {
+            String[] parts = line.split(DELIMITER);
+            if (parts.length == 7) {
 
-    @NotNull
-    private static LimsCohortConfigData fromString(@NotNull final String line) {
-        String[] values = line.split(DELIMITER);
-        ImmutableLimsCohortConfigData.Builder builder = ImmutableLimsCohortConfigData.builder()
-                .cohortId(values[0])
-                .reportGermline(values[1])
-                .reportGermlineFlag(values[2])
-                .reportConclusion(values[3])
-                .reportViral(values[4])
-                .requireHospitalId(values[5])
-                .requireHospitalPAId(values[6]);
 
-        return builder.build();
+                LimsCohortConfigData cohortConfig = ImmutableLimsCohortConfigData.builder()
+                        .cohortId(parts[0])
+                        .reportGermline(parts[1])
+                        .reportGermlineFlag(parts[2])
+                        .reportConclusion(parts[3])
+                        .reportViral(parts[4])
+                        .requireHospitalId(parts[5])
+                        .requireHospitalPAId(parts[6])
+                        .build();
+
+                cohortConfigMap.put(parts[0], cohortConfig);
+            } else {
+                LOGGER.warn("Could not properly parse line in cohort config tsv: '{}'", line);
+            }
+        }
+
+        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortConfigMap).build();
     }
 }

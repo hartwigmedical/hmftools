@@ -163,7 +163,7 @@ public class PatientReporterApplication {
         LOGGER.info("Loaded primary tumors for {} patients from {}", patientPrimaryTumors.size(), primaryTumorTsv);
 
         String limsDirectory = config.limsDir();
-        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
+        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory, config.configCohortsTsv());
         LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
 
         return ImmutableQCFailReportData.builder()
