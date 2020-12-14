@@ -22,7 +22,7 @@ import org.junit.Test;
 
 public class GeneLevelExtractorTest {
 
-    private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
+    private static final GeneChecker V37_GENE_CHECKER = GeneCheckerTestFactory.buildForV37();
 
     @Test
     public void canExtractGeneLevelEventONCO() {
@@ -94,8 +94,7 @@ public class GeneLevelExtractorTest {
 
     @NotNull
     private static GeneLevelExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new GeneLevelExtractor(HG19_GENE_CHECKER,
-                HG19_GENE_CHECKER,
+        return new GeneLevelExtractor(V37_GENE_CHECKER, V37_GENE_CHECKER,
                 driverGenes,
                 Sets.newHashSet("positive", "oncogenic mutation"),
                 Sets.newHashSet("negative", "LOSS-OF-FUNCTION"));

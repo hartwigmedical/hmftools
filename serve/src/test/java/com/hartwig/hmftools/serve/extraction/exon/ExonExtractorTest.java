@@ -24,8 +24,8 @@ import org.junit.Test;
 
 public class ExonExtractorTest {
 
-    private static final Map<String, HmfTranscriptRegion> HG19_GENE_MAP = HmfGenePanelSupplier.allGenesMap37();
-    private static final GeneChecker HG19_GENE_CHECKER = new GeneChecker(HG19_GENE_MAP.keySet());
+    private static final Map<String, HmfTranscriptRegion> V37_GENE_MAP = HmfGenePanelSupplier.allGenesMap37();
+    private static final GeneChecker V37_GENE_CHECKER = new GeneChecker(V37_GENE_MAP.keySet());
 
     @Test
     public void canExtractExonForExonAndFusion() {
@@ -101,7 +101,7 @@ public class ExonExtractorTest {
 
     @NotNull
     private static ExonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new ExonExtractor(HG19_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), HG19_GENE_MAP);
+        return new ExonExtractor(V37_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), V37_GENE_MAP);
     }
 
     @NotNull

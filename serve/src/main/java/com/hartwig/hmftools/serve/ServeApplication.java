@@ -129,7 +129,7 @@ public class ServeApplication {
             return HmfGenePanelSupplier.allGenesMap37();
         }
 
-        LOGGER.warn("Ref genome version not supported: '{}'. Reverting to HG19.", config.refGenomeVersion());
+        LOGGER.warn("Ref genome version not supported: '{}'. Reverting to V37.", config.refGenomeVersion());
         return HmfGenePanelSupplier.allGenesMap37();
     }
 

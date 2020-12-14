@@ -26,13 +26,13 @@ import org.junit.Test;
 
 public class ViccExtractorTest {
 
-    private static final Map<String, HmfTranscriptRegion> HG19_GENE_MAP = HmfGenePanelSupplier.allGenesMap37();
+    private static final Map<String, HmfTranscriptRegion> V37_GENE_MAP = HmfGenePanelSupplier.allGenesMap37();
 
     @Test
     public void canExtractFromViccEntries() throws IOException {
         EventClassifierConfig config = ViccClassificationConfig.build();
         ViccExtractor extractor =
-                ViccExtractorFactory.buildViccExtractor(config, new TestProteinResolver(), Lists.newArrayList(), HG19_GENE_MAP);
+                ViccExtractorFactory.buildViccExtractor(config, new TestProteinResolver(), Lists.newArrayList(), V37_GENE_MAP);
 
         Association association =
                 ViccTestFactory.testActionableAssociation("drugs", "colorectal cancer", "DOID:123", "A", "Responsive", "http");

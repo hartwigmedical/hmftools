@@ -27,5 +27,4 @@ public class FusionPairComparatorTest {
         assertEquals(pair4, knownFusionPairs.get(3));
         assertEquals(pair5, knownFusionPairs.get(4));
     }
-
 }

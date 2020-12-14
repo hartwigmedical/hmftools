@@ -10,7 +10,7 @@ public final class GeneCheckerTestFactory {
     }
 
     @NotNull
-    public static GeneChecker buildForHG19() {
+    public static GeneChecker buildForV37() {
         return new GeneChecker(HmfGenePanelSupplier.allGenesMap37().keySet());
     }
 }
