@@ -19,6 +19,7 @@ import com.hartwig.hmftools.protect.GenomicAnalysis;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ReportingDb {
 
@@ -39,7 +40,7 @@ public final class ReportingDb {
 
         if (requiresSummary(report.sampleReport().cohort()) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
-        } else if (cohort != LimsCohort.NON_CANCER) {
+        } else if (cohort != null) {
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
             String reportDate = ReportResources.REPORT_DATE;
             String purity = new DecimalFormat("0.00").format(analysis.impliedPurity());
@@ -71,7 +72,7 @@ public final class ReportingDb {
     }
 
     @VisibleForTesting
-    static boolean requiresSummary(@NotNull LimsCohort cohort) {
+    static boolean requiresSummary(@Nullable LimsCohort cohort) {
 
         if (cohort == LimsCohort.WIDE || cohort == LimsCohort.CORE || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.CORELR11) {
             return true;
@@ -109,7 +110,7 @@ public final class ReportingDb {
 
         String reportType = report.isCorrectedReport() ? report.reason().identifier() + "_corrected" : report.reason().identifier();
 
-        if (cohort != LimsCohort.NON_CANCER) {
+        if (cohort != null) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())

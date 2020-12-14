@@ -72,7 +72,7 @@ public class HospitalModelTest {
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataCOREManuallyMapped.hospitalAddress());
 
         HospitalContactData dataSampleDoesNotExist =
-                model.queryHospitalData("I Don't exist", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, LimsCohort.NON_CANCER);
+                model.queryHospitalData("I Don't exist", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, null);
         assertNull(dataSampleDoesNotExist);
 
         HospitalContactData dataHospitalDoesNotExist =

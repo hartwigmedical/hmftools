@@ -202,7 +202,7 @@ public final class LoadClinicalData {
             String sampleId = lims.sampleId(sampleBarcode);
             LimsCohort cohort = lims.cohort(sampleBarcode);
 
-            if (cohort != LimsCohort.NON_CANCER) {
+            if (cohort != null) {
                 String patientId = lims.patientId(sampleBarcode);
                 SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 

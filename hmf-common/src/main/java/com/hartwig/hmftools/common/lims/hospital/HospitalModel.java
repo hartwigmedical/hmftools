@@ -34,9 +34,13 @@ public abstract class HospitalModel {
 
     @Nullable
     public HospitalContactData queryHospitalData(@NotNull String sampleId, @NotNull String coreRequesterName,
-            @NotNull String coreRequesterEmail, @NotNull LimsCohort cohort) {
+            @NotNull String coreRequesterEmail, @Nullable LimsCohort cohort) {
         String hospitalId = getHospitalIdForSample(sampleId, cohort);
         if (hospitalId == null) {
+            return null;
+        }
+
+        if (cohort == null) {
             return null;
         }
 
@@ -69,7 +73,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @NotNull LimsCohort cohort) {
+    private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @Nullable LimsCohort cohort) {
         switch (cohort) {
             case CPCT:
             case CPCT_PANCREAS:
@@ -87,7 +91,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private String getHospitalIdForSample(@NotNull String sampleId, @NotNull LimsCohort cohort) {
+    private String getHospitalIdForSample(@NotNull String sampleId, @Nullable LimsCohort cohort) {
         if (sampleToHospitalMapping().containsKey(sampleId)) {
             return sampleToHospitalMapping().get(sampleId);
         } else {

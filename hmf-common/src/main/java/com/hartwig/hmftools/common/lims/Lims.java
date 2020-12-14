@@ -235,14 +235,14 @@ public class Lims {
         return NOT_AVAILABLE_STRING;
     }
 
-    @NotNull
+    @Nullable
     public LimsCohort cohort(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String cohortString = sampleData.cohort();
-            return cohortString != null ? LimsCohort.fromLimsCohortString(cohortString, sampleData.sampleId()) : LimsCohort.NON_CANCER;
+            return cohortString != null ? LimsCohort.fromLimsCohortString(cohortString, sampleData.sampleId()) : null;
         } else {
-            return LimsCohort.NON_CANCER;
+            return null;
         }
     }
 

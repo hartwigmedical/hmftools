@@ -70,7 +70,7 @@ public final class SampleReportFactory {
     }
 
     @VisibleForTesting
-    static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull LimsCohort cohort, @NotNull String sampleId) {
+    static String checkHospitalPatientId(@NotNull String hospitalPatientId, @Nullable LimsCohort cohort, @NotNull String sampleId) {
         if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
                 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB) {
             if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
@@ -83,7 +83,7 @@ public final class SampleReportFactory {
     @VisibleForTesting
     @Nullable
     static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
-            @NotNull LimsCohort cohort) {
+            @Nullable LimsCohort cohort) {
         if (cohort == LimsCohort.CORE || cohort == LimsCohort.WIDE || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11
                 || cohort == LimsCohort.COREDB) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
