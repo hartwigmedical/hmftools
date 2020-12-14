@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionConsolidation;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionFunctions;
@@ -16,6 +17,17 @@ import org.jetbrains.annotations.NotNull;
 public final class ExtractionFunctions {
 
     private ExtractionFunctions() {
+    }
+
+    @NotNull
+    public static ExtractionResult consolidateActionableEvents(@NotNull ExtractionResult result) {
+        return ImmutableExtractionResult.builder().from(result)
+                .actionableHotspots(result.actionableHotspots())
+                .actionableRanges(result.actionableRanges())
+                .actionableGenes(result.actionableGenes())
+                .actionableFusions(ActionableFusionConsolidation.consolidate(result.actionableFusions()))
+                .actionableSignatures(result.actionableSignatures())
+                .build();
     }
 
     @NotNull
@@ -38,9 +50,11 @@ public final class ExtractionFunctions {
             mergedBuilder.addAllActionableSignatures(result.actionableSignatures());
         }
 
-        return mergedBuilder.knownHotspots(HotspotFunctions.consolidate(allHotspots))
+        ExtractionResult mergedResult = mergedBuilder.knownHotspots(HotspotFunctions.consolidate(allHotspots))
                 .knownCopyNumbers(CopyNumberFunctions.consolidate(allCopyNumbers))
                 .knownFusionPairs(FusionFunctions.consolidate(allFusionPairs))
                 .build();
+
+        return consolidateActionableEvents(mergedResult);
     }
 }
