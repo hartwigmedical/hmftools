@@ -72,5 +72,4 @@ public class ViccExtractorTest {
             return Sets.newHashSet();
         }
     }
-
 }
