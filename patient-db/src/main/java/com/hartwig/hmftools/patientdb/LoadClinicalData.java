@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsAnalysisType;
 import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientdb.context.RunContext;
@@ -483,11 +484,10 @@ public final class LoadClinicalData {
         List<SampleData> tumorSamples = Lists.newArrayList();
 
         for (SampleData sample : samples) {
-            LimsCohort cohort = lims.cohort(sample.sampleBarcode());
-            if (cohort != LimsCohort.NON_CANCER) {
-                if (sample.sampleId().substring(12).contains("T")) {
-                    tumorSamples.add(sample);
-                }
+            LimsAnalysisType analysisType = lims.extractAnalysisType(sample.sampleBarcode());
+
+            if (analysisType == LimsAnalysisType.SOMATIC_T) {
+                tumorSamples.add(sample);
             }
         }
         return tumorSamples;

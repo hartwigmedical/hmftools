@@ -9,9 +9,9 @@ public class LimsGermlineReportingChoiceTest {
     @Test
     public void canExtractGermlineLevel() {
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
-                LimsGermlineReportingLevel.fromLimsInputs(true, "Yes", "COREDB991111T", LimsCohort.COREDB));
+                LimsGermlineReportingLevel.fromLimsInputs(true, "1: Yes", "COREDB991111T", LimsCohort.COREDB));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingLevel.fromLimsInputs(true, "No", "COREDB991111T", LimsCohort.COREDB));
+                LimsGermlineReportingLevel.fromLimsInputs(true, "2: No", "COREDB991111T", LimsCohort.COREDB));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true, "1: Behandelbare toevalsbevindingen", "WIDE02991111T", LimsCohort.WIDE));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,

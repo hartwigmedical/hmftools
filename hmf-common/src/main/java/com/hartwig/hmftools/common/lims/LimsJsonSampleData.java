@@ -91,6 +91,10 @@ abstract class LimsJsonSampleData {
     public abstract String cohort();
 
     @NotNull
+    @SerializedName("analysis_type")
+    public abstract String analysisTypeSample();
+
+    @NotNull
     @Value.Derived
     public String labProcedures() {
         Pattern pattern = Pattern.compile("PREP(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");

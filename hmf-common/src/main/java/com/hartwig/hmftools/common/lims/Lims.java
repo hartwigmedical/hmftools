@@ -246,6 +246,17 @@ public class Lims {
         }
     }
 
+    @Nullable
+    public LimsAnalysisType extractAnalysisType(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        if (sampleData != null) {
+            String analysisTypeString = sampleData.analysisTypeSample();
+            return analysisTypeString != null ? LimsAnalysisType.extractAnalysisType(analysisTypeString) : null;
+        } else {
+            return null;
+        }
+    }
+
     @NotNull
     public HospitalContactData hospitalContactData(@NotNull String sampleBarcode) {
         String sampleId = sampleId(sampleBarcode);

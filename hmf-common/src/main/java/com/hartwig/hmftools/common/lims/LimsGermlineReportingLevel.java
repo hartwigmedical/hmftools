@@ -28,7 +28,7 @@ public enum LimsGermlineReportingLevel {
                 }
             } else if (cohort == LimsCohort.COREDB) {
                 switch (germlineReportingLevelString) {
-                    case "1: Yes’":
+                    case "1: Yes":
                         return REPORT_WITH_NOTIFICATION;
                     case "2: No":
                         return REPORT_WITHOUT_NOTIFICATION;
