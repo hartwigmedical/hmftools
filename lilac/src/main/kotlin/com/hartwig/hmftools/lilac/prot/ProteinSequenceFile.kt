@@ -7,14 +7,13 @@ object ProteinSequenceFile {
 
     val logger = LogManager.getLogger(this::class.java)
 
-
     fun readWrappedFile(alignment: String): List<ProteinSequence> {
-        return reduceToFourDigit(expand(readFile(alignment)))
+        return readFile(alignment).inflate().firstFourDigits()
     }
 
     fun writeUnwrappedFile(codonBoundaries: List<Int>, input: String, output: String) {
         val originalEntries = readFile(input)
-        val fourDigitEntries = reduceToFourDigit(originalEntries)
+        val fourDigitEntries = originalEntries.firstFourDigits()//.filter { it.allele.fourDigitName() == "A*01:01" || it.allele.fourDigitName() == "A*11:01" }
 
         if (fourDigitEntries.isNotEmpty()) {
             val outputFile = File(output)
@@ -25,7 +24,7 @@ object ProteinSequenceFile {
         }
     }
 
-    private fun readFile(alignment: String): List<ProteinSequence> {
+    fun readFile(alignment: String): List<ProteinSequence> {
         val entries = LinkedHashMap<String, ProteinSequence>()
         for (line in File(alignment).readLines()) {
             if (line.startsWith("*", 2)) {
@@ -66,10 +65,10 @@ object ProteinSequenceFile {
     }
 
 
-    private fun reduceToFourDigit(sequences: List<ProteinSequence>): List<ProteinSequence> {
+    fun List<ProteinSequence>.firstFourDigits(): List<ProteinSequence> {
         val map = LinkedHashMap<String, ProteinSequence>()
 
-        for (sequence in sequences) {
+        for (sequence in this) {
             val fourDigitName = sequence.allele.fourDigitName()
             if (!map.containsKey(fourDigitName)) {
                 map[fourDigitName] = sequence
@@ -86,12 +85,12 @@ object ProteinSequenceFile {
         return map.values.toList()
     }
 
-    private fun expand(sequences: List<ProteinSequence>): List<ProteinSequence> {
-        val template = sequences[0].proteins
-        return sequences.map { ProteinSequence(it.contig, expand(template, it.proteins)) }
+    fun List<ProteinSequence>.inflate(): List<ProteinSequence> {
+        val template = this[0].proteins
+        return this.map { ProteinSequence(it.contig, inflate(template, it.proteins)) }
     }
 
-    private fun expand(template: String, sequence: String): String {
+    private fun inflate(template: String, sequence: String): String {
         val joiner = StringBuilder()
         for (i in sequence.indices) {
             if (sequence[i] == '-') {

@@ -6,7 +6,7 @@ import htsjdk.samtools.SAMRecord
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 
-class KmerCount(private val codonKmers: Set<String>) : Consumer<SAMRecord> {
+class BamKmer(private val codonKmers: Set<String>) : Consumer<SAMRecord> {
     private val map = ConcurrentHashMap<String, Int>()
 
     fun kmerCount(): Map<String, Int> {

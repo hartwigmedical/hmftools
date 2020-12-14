@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac.prot
 object ProteinSequenceBoundaries {
 
     fun aBoundaries(): List<Int> {
-        val boundaries = listOf(24, 114, 206, 298, 337, 348, 365)
+        val boundaries = listOf(24, 114, 206, 298, 337, 348, 364)
         val offsets = listOf(2, 2, 20, 20, 20, 20, 20)
         return boundaries.zip(offsets) { x, y -> x + y }
     }
