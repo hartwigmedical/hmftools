@@ -2,6 +2,10 @@ package com.hartwig.hmftools.serve;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Set;
+
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -16,12 +20,17 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ServeConfig {
 
+    Set<ViccSource> DEFAULT_VICC_SOURCES = Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
+
     // Input sources to SERVE
     String VICC_JSON = "vicc_json";
     String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
     String DOCM_TSV = "docm_tsv";
     String HARTWIG_COHORT_TSV = "hartwig_cohort_tsv";
     String HARTWIG_CURATED_TSV = "hartwig_curated_tsv";
+
+    // Optional config specific for several knowledgebases
+    String VICC_SOURCES = "vicc_sources";
 
     // Additional config for knowledge generation
     String REF_GENOME_VERSION = "ref_genome_version";
@@ -40,6 +49,7 @@ public interface ServeConfig {
         Options options = new Options();
 
         options.addOption(VICC_JSON, true, "Path to the VICC JSON knowledgebase");
+        options.addOption(VICC_SOURCES, true, "Comma-separated list of VICC sources to include");
         options.addOption(ICLUSION_TRIAL_TSV, true, "Path to the iClusion input trial TSV");
         options.addOption(DOCM_TSV, true, "Path to the DoCM knowledgebase input TSV");
         options.addOption(HARTWIG_COHORT_TSV, true, "Path to the Hartwig Cohort input TSV");
@@ -59,6 +69,9 @@ public interface ServeConfig {
 
     @NotNull
     String viccJson();
+
+    @NotNull
+    Set<ViccSource> viccSources();
 
     @NotNull
     String iClusionTrialTsv();
@@ -94,6 +107,7 @@ public interface ServeConfig {
 
         return ImmutableServeConfig.builder()
                 .viccJson(nonOptionalFile(cmd, VICC_JSON))
+                .viccSources(readViccSources(cmd))
                 .iClusionTrialTsv(nonOptionalFile(cmd, ICLUSION_TRIAL_TSV))
                 .docmTsv(nonOptionalFile(cmd, DOCM_TSV))
                 .hartwigCohortTsv(nonOptionalFile(cmd, HARTWIG_COHORT_TSV))
@@ -104,6 +118,20 @@ public interface ServeConfig {
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIR))
                 .skipHotspotResolving(cmd.hasOption(SKIP_HOTSPOT_RESOLVING))
                 .build();
+    }
+
+    @NotNull
+    static Set<ViccSource> readViccSources(@NotNull CommandLine cmd) {
+        if (!cmd.hasOption(VICC_SOURCES)) {
+            return DEFAULT_VICC_SOURCES;
+        }
+
+        Set<ViccSource> viccSources = Sets.newHashSet();
+        String[] sources = cmd.getOptionValue(VICC_SOURCES).split(",");
+        for (String source : sources) {
+            viccSources.add(ViccSource.fromViccKnowledgebaseString(source));
+        }
+        return viccSources;
     }
 
     @NotNull
