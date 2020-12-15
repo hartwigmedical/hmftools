@@ -77,7 +77,7 @@ public class LimsGermlineReportingChoiceTest {
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false, "", "CPCT02991111T", cohortConfigCPCT.queryCohortData("CPCT", "CPCT02991111T")));
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
-                LimsGermlineReportingLevel.fromLimsInputs(false, "", "COLO02991111T", cohortConfigCPCT.queryCohortData("CPCT", "COLO02991111T")));
+                LimsGermlineReportingLevel.fromLimsInputs(false, "", "COLO02991111T", cohortConfigCPCT.queryCohortData("CPCT", "CPCT02991111T")));
 
         LimsCohortModel cohortConfigDRUP = buildTestCohortModel("DRUP");
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
