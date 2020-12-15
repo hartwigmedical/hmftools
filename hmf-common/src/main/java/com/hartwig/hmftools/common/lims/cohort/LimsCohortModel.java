@@ -33,7 +33,7 @@ public abstract class LimsCohortModel {
                 if (sampleId.startsWith(cohortConfigData.cohortId())) {
                     return cohortConfigData;
                 } else {
-                    LOGGER.error("Cohort '{}' does match with sampleId '{}'" + cohortConfigData.cohortId() + sampleId);
+                    LOGGER.error("Cohort " + cohortConfigData.cohortId() + " does match with sampleId " +  sampleId);
                     return null;
                 }
             }
