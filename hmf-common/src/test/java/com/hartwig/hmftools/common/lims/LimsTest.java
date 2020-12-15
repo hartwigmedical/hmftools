@@ -183,28 +183,6 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(TUMOR_SAMPLE_BARCODE));
     }
 
-    @NotNull
-    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra,
-            boolean Report_germline, boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral,
-            boolean Require_hospital_ID, boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile,
-            boolean submission, boolean sidePanelInfo) {
-        return ImmutableLimsCohortConfigData.builder()
-                .cohortId(cohortString)
-                .hospitalCentraId(hospitalIdCentra)
-                .reportGermline(Report_germline)
-                .reportGermlineFlag(Report_germline_flag)
-                .reportConclusion(Report_conclusion)
-                .reportViral(Report_viral)
-                .requireHospitalId(Require_hospital_ID)
-                .requireHospitalPAId(Require_hospital_PA_ID)
-                .requireHospitalPersonsStudy(personsStudy)
-                .requireHospitalPersonsRequester(personsrequester)
-                .requirePatientIdForPdfName(outputFile)
-                .requireSubmissionInformation(submission)
-                .requireAdditionalInfromationForSidePanel(sidePanelInfo)
-                .build();
-    }
-
     @Test
     public void canReadHospitalData() {
         LimsJsonSampleData sample =
@@ -227,7 +205,7 @@ public class LimsTest {
                 .build();
 
         LimsCohortConfigData cohortConfigTest =
-                buildTestCohortModel("HMF", true, true, false, true, true, true, true, false, true, true, true, true);
+                LimsTestUtil.buildTestCohortModel("HMF", true, true, false, true, true, true, true, false, true, true, true, true);
         LimsCohortModel cohortConfig = ImmutableLimsCohortModel.builder()
                 .putLimsCohortMap("HMF", cohortConfigTest)
                 .build();

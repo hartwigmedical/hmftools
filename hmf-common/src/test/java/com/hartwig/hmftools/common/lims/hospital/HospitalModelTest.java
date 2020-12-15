@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsTestUtil;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
@@ -39,12 +40,10 @@ public class HospitalModelTest {
         String hospitalId = "01";
         HospitalModel model = buildTestHospitalModel(hospitalId);
         LimsCohortConfigData cohortConfigCPCT =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+                LimsTestUtil.buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
 
-        HospitalContactData dataCPCT = model.queryHospitalData("CPCT02010001T",
-                CORE_REQUESTER_NAME,
-                CORE_REQUESTER_EMAIL,
-                cohortConfigCPCT);
+        HospitalContactData dataCPCT =
+                model.queryHospitalData("CPCT02010001T", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigCPCT);
         assertEquals(CPCT_PI, dataCPCT.hospitalPI());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCPCT.requesterName());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCPCT.requesterEmail());
@@ -52,11 +51,9 @@ public class HospitalModelTest {
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataCPCT.hospitalAddress());
 
         LimsCohortConfigData cohortConfigDRUP =
-                buildTestCohortModel("DRUP", true, false, false, false, false, false, false, true, false, false, false, false);
-        HospitalContactData dataDRUP = model.queryHospitalData("DRUP02010001T",
-                CORE_REQUESTER_NAME,
-                CORE_REQUESTER_EMAIL,
-                cohortConfigDRUP);
+                LimsTestUtil.buildTestCohortModel("DRUP", true, false, false, false, false, false, false, true, false, false, false, false);
+        HospitalContactData dataDRUP =
+                model.queryHospitalData("DRUP02010001T", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigDRUP);
         assertEquals(DRUP_PI, dataDRUP.hospitalPI());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataDRUP.requesterName());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataDRUP.requesterEmail());
@@ -64,11 +61,9 @@ public class HospitalModelTest {
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataDRUP.hospitalAddress());
 
         LimsCohortConfigData cohortConfigWIDE =
-                buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
-        HospitalContactData dataWIDE = model.queryHospitalData("WIDE02010001T",
-                CORE_REQUESTER_NAME,
-                CORE_REQUESTER_EMAIL,
-                cohortConfigWIDE);
+                LimsTestUtil.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+        HospitalContactData dataWIDE =
+                model.queryHospitalData("WIDE02010001T", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigWIDE);
         assertEquals(WIDE_PI, dataWIDE.hospitalPI());
         assertEquals(WIDE_REQUESTER_NAME, dataWIDE.requesterName());
         assertEquals(WIDE_REQUESTER_EMAIL, dataWIDE.requesterEmail());
@@ -76,60 +71,30 @@ public class HospitalModelTest {
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataWIDE.hospitalAddress());
 
         LimsCohortConfigData cohortConfigCORE =
-                buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
-        HospitalContactData dataCORE = model.queryHospitalData("CORE02010001T",
-                CORE_REQUESTER_NAME,
-                CORE_REQUESTER_EMAIL,
-                cohortConfigCORE);
+                LimsTestUtil.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+        HospitalContactData dataCORE =
+                model.queryHospitalData("CORE02010001T", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigCORE);
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCORE.hospitalPI());
         assertEquals(CORE_REQUESTER_NAME, dataCORE.requesterName());
         assertEquals(CORE_REQUESTER_EMAIL, dataCORE.requesterEmail());
         assertEquals(HOSPITAL_NAME, dataCORE.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataCORE.hospitalAddress());
 
-        HospitalContactData dataCOREManuallyMapped = model.queryHospitalData(MANUALLY_MAPPED_CORE_SAMPLE,
-                CORE_REQUESTER_NAME,
-                CORE_REQUESTER_EMAIL,
-                cohortConfigCORE);
+        HospitalContactData dataCOREManuallyMapped =
+                model.queryHospitalData(MANUALLY_MAPPED_CORE_SAMPLE, CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigCORE);
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCOREManuallyMapped.hospitalPI());
         assertEquals(CORE_REQUESTER_NAME, dataCOREManuallyMapped.requesterName());
         assertEquals(CORE_REQUESTER_EMAIL, dataCOREManuallyMapped.requesterEmail());
         assertEquals(HOSPITAL_NAME, dataCOREManuallyMapped.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataCOREManuallyMapped.hospitalAddress());
 
-        HospitalContactData dataSampleDoesNotExist = model.queryHospitalData("I Don't exist",
-                CORE_REQUESTER_NAME,
-                CORE_REQUESTER_EMAIL,
-                cohortConfigCORE);
+        HospitalContactData dataSampleDoesNotExist =
+                model.queryHospitalData("I Don't exist", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigCORE);
         assertNull(dataSampleDoesNotExist);
 
-        HospitalContactData dataHospitalDoesNotExist = model.queryHospitalData("CPCT02020202T",
-                CORE_REQUESTER_NAME,
-                CORE_REQUESTER_EMAIL,
-                cohortConfigCPCT);
+        HospitalContactData dataHospitalDoesNotExist =
+                model.queryHospitalData("CPCT02020202T", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigCPCT);
         assertNull(dataHospitalDoesNotExist);
-    }
-
-    @NotNull
-    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra, boolean Report_germline,
-            boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral, boolean Require_hospital_ID,
-            boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile, boolean submission,
-            boolean sidePanelInfo) {
-        return ImmutableLimsCohortConfigData.builder()
-                .cohortId(cohortString)
-                .hospitalCentraId(hospitalIdCentra)
-                .reportGermline(Report_germline)
-                .reportGermlineFlag(Report_germline_flag)
-                .reportConclusion(Report_conclusion)
-                .reportViral(Report_viral)
-                .requireHospitalId(Require_hospital_ID)
-                .requireHospitalPAId(Require_hospital_PA_ID)
-                .requireHospitalPersonsStudy(personsStudy)
-                .requireHospitalPersonsRequester(personsrequester)
-                .requirePatientIdForPdfName(outputFile)
-                .requireSubmissionInformation(submission)
-                .requireAdditionalInfromationForSidePanel(sidePanelInfo)
-                .build();
     }
 
     @NotNull
