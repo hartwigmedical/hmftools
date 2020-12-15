@@ -31,8 +31,7 @@ public abstract class LimsCohortModel {
                 if (sampleId.startsWith(cohortConfigData.cohortId())) {
                     return cohortConfigData;
                 } else {
-                    LOGGER.error("Cohort '{}' does match with sampleId '{}'", cohortConfigData.cohortId(), sampleId);
-                    return null;
+                    throw new IllegalStateException("Cohort '{}' does match with sampleId '{}'" + cohortConfigData.cohortId() + sampleId);
                 }
             }
         }
