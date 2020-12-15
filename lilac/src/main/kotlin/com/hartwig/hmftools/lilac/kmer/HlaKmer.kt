@@ -2,14 +2,34 @@ package com.hartwig.hmftools.lilac.kmer
 
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.prot.ProteinSequence
+import org.apache.logging.log4j.LogManager
 
-class HlaKmer(a: Map<ProteinSequence, Set<String>>, b: Map<ProteinSequence, Set<String>>, c: Map<ProteinSequence, Set<String>>) {
-    private val sequences = mutableMapOf<ProteinSequence, Set<String>>()
+class HlaKmer private constructor(val sequences: Map<ProteinSequence, Set<String>>) {
 
-    init {
-        sequences.putAll(a)
-        sequences.putAll(b)
-        sequences.putAll(c)
+    companion object {
+        val logger = LogManager.getLogger(this::class.java)
+
+        operator fun invoke(collection: Collection<Map<ProteinSequence, Set<String>>>): HlaKmer {
+            var excluded = 0
+            val combined = mutableMapOf<ProteinSequence, Set<String>>()
+            for (map in collection) {
+                for ((proteinSequence, kmers) in map.entries) {
+                    if (combined.containsValue(kmers)) {
+                        logger.debug("Excluding indistinguishable hla type ${proteinSequence.allele}")
+
+                        excluded++
+                    } else {
+                        combined[proteinSequence] = kmers
+                    }
+                }
+            }
+
+            if (excluded > 0) {
+                logger.warn("Excluded $excluded indistinguishable hla types")
+            }
+
+            return HlaKmer(combined)
+        }
     }
 
     val kmers = sequences.values.flatten().toSet()
