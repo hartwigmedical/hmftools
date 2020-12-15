@@ -204,7 +204,7 @@ public final class LoadClinicalData {
             String sampleId = lims.sampleId(sampleBarcode);
             LimsCohortConfigData cohort = lims.cohortConfig(sampleBarcode);
 
-            if (!cohort.cohortId().equals(Strings.EMPTY)) {
+            if (!cohort.cohortId().isEmpty()) {
                 String patientId = lims.patientId(sampleBarcode);
                 SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
