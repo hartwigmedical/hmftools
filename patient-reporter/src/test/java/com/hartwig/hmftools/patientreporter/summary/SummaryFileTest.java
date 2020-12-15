@@ -24,7 +24,7 @@ public class SummaryFileTest {
         SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
         assertEquals(1, summaryModel.summaryCount());
 
-        String summary = summaryModel.findSummaryForSample("sample", buildTestCohortModel("CORE", true).queryCohortData("CORE"));
+        String summary = summaryModel.findSummaryForSample("sample", buildTestCohortModel("CORE", true).queryCohortData("CORE", "CORE01010000T"));
 
         assertEquals(3, summary.split("\n").length);
     }

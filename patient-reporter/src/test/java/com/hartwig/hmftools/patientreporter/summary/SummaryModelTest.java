@@ -34,8 +34,8 @@ public class SummaryModelTest {
         summaryToSampleMap.put("sample", "this is a test summary");
         SummaryModel summaryModel = new SummaryModel(summaryToSampleMap);
 
-        assertEquals("this is a test summary", summaryModel.findSummaryForSample("sample", buildTestCohortModel("WIDE", true).queryCohortData("WIDE")));
-        assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("sample2", buildTestCohortModel("WIDE", true).queryCohortData("WIDE")));
+        assertEquals("this is a test summary", summaryModel.findSummaryForSample("sample", buildTestCohortModel("WIDE", true).queryCohortData("WIDE", "WIDE020000001T")));
+        assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("sample2", buildTestCohortModel("WIDE", true).queryCohortData("WIDE", "WIDE020000001T")));
     }
 
     @NotNull
