@@ -40,7 +40,7 @@ public final class ReportingDb {
 
         if (requiresSummary(report.sampleReport().cohort()) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
-        } else if (cohort != null) {
+        } else if (!cohort.cohortId().isEmpty()) {
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
             String reportDate = ReportResources.REPORT_DATE;
             String purity = new DecimalFormat("0.00").format(analysis.impliedPurity());
@@ -110,7 +110,7 @@ public final class ReportingDb {
 
         String reportType = report.isCorrectedReport() ? report.reason().identifier() + "_corrected" : report.reason().identifier();
 
-        if (cohort != null) {
+        if (!cohort.cohortId().isEmpty()) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
