@@ -55,7 +55,6 @@ public class CFReportWriterTest {
     private static final String COMMENT_STRING_QC_FAIL_CORRECTED = "This is a corrected test QC fail report";
 
     @Test
-    @Ignore
     public void canGeneratePatientReportForCOLO829() throws IOException {
         AnalysedPatientReport colo829Report =
                 ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING);
@@ -65,7 +64,6 @@ public class CFReportWriterTest {
     }
 
     @Test
-    @Ignore
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
         AnalysedPatientReport colo829Report =
                 ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED);
@@ -75,7 +73,6 @@ public class CFReportWriterTest {
     }
 
     @Test
-    @Ignore
     public void canGeneratePatientReportForCOLO829WithGermline() throws IOException {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_GERMLINE",
                 false,
@@ -92,7 +89,6 @@ public class CFReportWriterTest {
     }
 
     @Test
-    @Ignore
     public void canGeneratePatientReportForCOLO829BelowDetectionThreshold() throws IOException {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_NO_TUMOR",
                 false,
@@ -109,7 +105,6 @@ public class CFReportWriterTest {
     }
 
     @Test
-    @Ignore
     public void canGeneratePatientReportForCOLO829InsufficientTCP() throws IOException {
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_INSUFFICIENT_TUMOR",
                 false,
