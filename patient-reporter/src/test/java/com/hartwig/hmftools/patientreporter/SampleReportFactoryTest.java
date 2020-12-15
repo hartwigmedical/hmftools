@@ -3,14 +3,9 @@ package com.hartwig.hmftools.patientreporter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.util.Map;
-
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -103,28 +98,6 @@ public class SampleReportFactoryTest {
                 SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
                         wideSampleId,
                         cohortConfigWIDE));
-    }
-
-    @NotNull
-    private static LimsCohortModel buildTestCohortModelPAID(@NotNull String cohortString, boolean requirePAId) {
-        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
-        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
-                .cohortId(cohortString)
-                .hospitalCentraId(true)
-                .reportGermline(false)
-                .reportGermlineFlag(false)
-                .reportConclusion(false)
-                .reportViral(false)
-                .requireHospitalId(false)
-                .requireHospitalPAId(requirePAId)
-                .requireHospitalPersonsStudy(true)
-                .requireHospitalPersonsRequester(false)
-                .requirePatientIdForPdfName(false)
-                .requireSubmissionInformation(false)
-                .requireAdditionalInfromationForSidePanel(false)
-                .build();
-        cohortData.put(cohortString, config);
-        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
     }
 
     @NotNull
