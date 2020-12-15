@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.imuno.neo;
 
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
@@ -163,6 +164,9 @@ public class NeoEpitopeAnnotator
                     if(!positionWithin(fusion.Positions[FS_DOWN], downTransData.TransStart, downTransData.TransEnd))
                         continue;
 
+                    if(downTransData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))
+                        continue;
+
                     NeoEpitope neData = new SvNeoEpitope(fusion);
                     neDataList.add(neData);
 
@@ -191,6 +195,9 @@ public class NeoEpitopeAnnotator
                     continue;
 
                 if(!positionWithin(pointMutation.Position, transData.CodingStart, transData.CodingEnd))
+                    continue;
+
+                if(transData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))
                     continue;
 
                 NeoEpitope neData = new PmNeoEpitope(pointMutation);

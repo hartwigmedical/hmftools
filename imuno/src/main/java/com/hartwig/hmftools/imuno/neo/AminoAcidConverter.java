@@ -135,6 +135,7 @@ public class AminoAcidConverter
         return UNKNOWN;
     }
 
+    /*
     public static String convertAminoAcidToDnaCodon(final String aminoAcid)
     {
         return swapRnaToDna(convertAminoAcidToCodon(aminoAcid));
@@ -206,5 +207,6 @@ public class AminoAcidConverter
 
         return UNKNOWN;
     }
+    */
 
 }
