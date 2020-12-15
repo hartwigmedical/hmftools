@@ -328,8 +328,8 @@ public class GeneCollectionTest
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
         assertEquals(CODING, trans.codingType());
-        assertEquals(1, trans.ExonUpstreamPhase);
-        assertEquals(1, trans.ExonDownstreamPhase);
+        assertEquals(0, trans.ExonUpstreamPhase);
+        assertEquals(0, trans.ExonDownstreamPhase);
         assertEquals(28, trans.codingBases());
         assertEquals(31, trans.totalCodingBases());
 
@@ -374,8 +374,8 @@ public class GeneCollectionTest
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
         assertEquals(CODING, trans.codingType());
-        assertEquals(1, trans.ExonUpstreamPhase);
-        assertEquals(1, trans.ExonDownstreamPhase);
+        assertEquals(0, trans.ExonUpstreamPhase);
+        assertEquals(0, trans.ExonDownstreamPhase);
         assertEquals(28, trans.codingBases());
         assertEquals(31, trans.totalCodingBases());
     }

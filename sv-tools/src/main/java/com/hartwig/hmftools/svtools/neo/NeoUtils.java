@@ -3,65 +3,108 @@ package com.hartwig.hmftools.svtools.neo;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.Transcript.CODING_BASES;
+import static com.hartwig.hmftools.common.fusion.Transcript.TOTAL_CODING_BASES;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.convertDnaCodonToAminoAcid;
 import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.isStopCodon;
+import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.reverseStrandBases;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public class NeoUtils
 {
-    public static String checkTrimBases(final String bases)
+    public static void setTranscriptContext(
+            final NeoEpitope neData, final TranscriptData transData, int position, int stream)
     {
-        if(bases.length() < 50)
-            return bases;
+        // determine phasing, coding and region context
+        boolean isUpstream = stream == FS_UPSTREAM;
 
-        return bases.substring(0, 50) + "...";
+        for(ExonData exon : transData.exons())
+        {
+            if(position > exon.ExonEnd)
+                continue;
+
+            if(position < exon.ExonStart)
+            {
+                // intronic
+                neData.RegionType[stream] = INTRONIC;
+
+                // upstream pos-strand, before next exon then take the exon before's rank
+                if(transData.Strand == POS_STRAND && isUpstream)
+                    neData.ExonRank[stream] = exon.ExonRank - 1;
+                else if(transData.Strand == NEG_STRAND && isUpstream)
+                    neData.ExonRank[stream] = exon.ExonRank;
+                else if(transData.Strand == POS_STRAND && !isUpstream)
+                    neData.ExonRank[stream] = exon.ExonRank;
+                else if(transData.Strand == NEG_STRAND && !isUpstream)
+                    neData.ExonRank[stream] = exon.ExonRank - 1;
+
+                if(transData.Strand == POS_STRAND)
+                    neData.Phases[stream] = exon.ExonPhase;
+                else
+                    neData.Phases[stream] = exon.ExonPhaseEnd;
+            }
+            else if(positionWithin(position, exon.ExonStart, exon.ExonEnd))
+            {
+                neData.RegionType[stream] = EXONIC;
+                neData.ExonRank[stream] = exon.ExonRank;
+            }
+
+            break;
+        }
     }
 
-    public static String getAminoAcids(final String baseString, boolean checkStopCodon)
+    public static void setTranscriptCodingData(
+            final NeoEpitope neData, final TranscriptData transData, int position, int insSeqLength, int stream)
     {
-        if(baseString.length() < 3)
-            return "";
-
-        String aminoAcidStr = "";
-        int index = 0;
-        while(index <= baseString.length() - 3)
+        if(transData.CodingStart != null)
         {
-            String codonBases = baseString.substring(index, index + 3);
-
-            if(isStopCodon(codonBases) && checkStopCodon)
-                break;
-
-            String aminoAcid = convertDnaCodonToAminoAcid(codonBases);
-
-            aminoAcidStr += aminoAcid;
-            index += 3;
+            if(positionWithin(position, transData.CodingStart, transData.CodingEnd))
+                neData.CodingType[stream] = CODING;
+            else if(transData.Strand == POS_STRAND && position < transData.CodingStart)
+                neData.CodingType[stream] = UTR_5P;
+            else if(transData.Strand == NEG_STRAND && position > transData.CodingEnd)
+                neData.CodingType[stream] = UTR_5P;
+            else
+                neData.CodingType[stream] = UTR_3P;
+        }
+        else
+        {
+            neData.CodingType[stream] = NON_CODING;
+            neData.Phases[stream] = -1;
         }
 
-        return aminoAcidStr;
-    }
+        if(neData.CodingType[stream] == CODING && neData.RegionType[stream] == EXONIC)
+        {
+            int[] codingData = Transcript.calcCodingBases(transData.CodingStart, transData.CodingEnd, transData.exons(), position);
+            int codingBases = transData.Strand == POS_STRAND ? codingData[CODING_BASES] : codingData[TOTAL_CODING_BASES] - codingData[CODING_BASES] + 1;
 
-    public static String getCodingBases(
-            final RefGenomeInterface refGenome, final NeoEpitopeData neData, int stream,
-            int requiredAminoAcids, int phaseOffset)
-    {
-        boolean canStartInExon = stream == FS_UPSTREAM || neData.RegionType[FS_UPSTREAM] == TranscriptRegionType.EXONIC;
-        int requiredBases = requiredAminoAcids * 3 + phaseOffset;
+            codingBases -= 1;
 
-        return getCodingBases(
-                refGenome, neData.TransData[stream], neData.chromosome(stream), neData.positon(stream), neData.orientation(stream),
-                requiredBases, canStartInExon);
+            // factor in insert sequence for the upstream partner
+            codingBases += insSeqLength;
+
+            neData.Phases[stream] = codingBases % 3;
+        }
     }
 
     public static String getCodingBases(
@@ -69,6 +112,9 @@ public class NeoUtils
             final String chromosome, int nePosition, byte neOrientation,
             int requiredBases, boolean canStartInExon)
     {
+        if(requiredBases <= 0)
+            return "";
+
         int codingStart = transData.CodingStart != null ? transData.CodingStart : transData.TransStart;
         int codingEnd = transData.CodingEnd != null ? transData.CodingEnd : transData.TransEnd;
 
@@ -171,9 +217,22 @@ public class NeoUtils
         return baseString;
     }
 
+    public static void adjustCodingBasesForStrand(final NeoEpitope neData)
+    {
+        // upstream strand 1, bases will be retrieved from left to right (lower to higher), no need for any conversion
+        // downstream strand 1, bases will be retrieved from left to right (lower to higher), no need for any conversion
+        // upstream strand -1, bases will be retrieved from left to right (lower to higher), need to reverse and convert
+        // downstream strand -1, bases will be retrieved from left to right (lower to higher), need to reverse and convert
+
+        for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+        {
+            if(neData.strand(fs) == NEG_STRAND)
+                neData.CodingBases[fs] = reverseStrandBases(neData.CodingBases[fs]);
+        }
+    }
 
     public static String getBaseStringOld(
-            final RefGenomeInterface refGenome, final NeoEpitopeData neData, int stream,
+            final RefGenomeInterface refGenome, final NeoEpitope neData, int stream,
             int requiredAminoAcids, boolean collectAllBases, int phaseOffset)
     {
         final TranscriptData transData = neData.TransData[stream];
@@ -181,7 +240,7 @@ public class NeoUtils
         if(transData.CodingStart == null) // TO-DO - get bases to end of transcript anyway for 3' non-coding?
             return "";
 
-        int nePosition = neData.positon(stream);
+        int nePosition = neData.position(stream);
         final String chromosome = neData.chromosome(stream);
         int requiredBases = requiredAminoAcids * 3 + phaseOffset;
 
@@ -279,11 +338,11 @@ public class NeoUtils
         return baseString;
     }
 
-    public static int calcNonMediatedDecayBases(final NeoEpitopeData neData, int stream)
+    public static int calcNonMediatedDecayBases(final NeoEpitope neData, int stream)
     {
         final List<ExonData> exonDataList = neData.TransData[stream].exons();
 
-        int nePosition = neData.positon(stream);
+        int nePosition = neData.position(stream);
         int exonicBaseCount = 0;
 
         if(neData.orientation(stream) == -1)
@@ -320,4 +379,36 @@ public class NeoUtils
 
         return exonicBaseCount;
     }
+
+    public static String checkTrimBases(final String bases)
+    {
+        if(bases.length() < 50)
+            return bases;
+
+        return bases.substring(0, 50) + "...";
+    }
+
+    public static String getAminoAcids(final String baseString, boolean checkStopCodon)
+    {
+        if(baseString.length() < 3)
+            return "";
+
+        String aminoAcidStr = "";
+        int index = 0;
+        while(index <= baseString.length() - 3)
+        {
+            String codonBases = baseString.substring(index, index + 3);
+
+            if(isStopCodon(codonBases) && checkStopCodon)
+                break;
+
+            String aminoAcid = convertDnaCodonToAminoAcid(codonBases);
+
+            aminoAcidStr += aminoAcid;
+            index += 3;
+        }
+
+        return aminoAcidStr;
+    }
+
 }

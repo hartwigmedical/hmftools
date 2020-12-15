@@ -5,17 +5,6 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
-import static com.hartwig.hmftools.common.fusion.Transcript.CODING_BASES;
-import static com.hartwig.hmftools.common.fusion.Transcript.TOTAL_CODING_BASES;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.NON_CODING;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -27,14 +16,13 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.STOP_SYMBOL;
-import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.svtools.neo.NeoConfig.AMINO_ACID_REF_COUNT;
 import static com.hartwig.hmftools.svtools.neo.NeoConfig.COHORT_FUSION_FILE;
 import static com.hartwig.hmftools.svtools.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.svtools.neo.NeoUtils.adjustCodingBasesForStrand;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.calcNonMediatedDecayBases;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.checkTrimBases;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.getAminoAcids;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.getCodingBases;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -47,9 +35,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -109,12 +95,13 @@ public class NeoEpitopeAnnotator
             IM_LOGGER.debug("sample({}) loaded {} fusions and {} point mutations",
                     sampleId, fusions.size(), pointMutations.size());
 
-            final List<NeoEpitopeData> neDataList = Lists.newArrayList();
+            final List<NeoEpitope> neDataList = Lists.newArrayList();
 
             addSvFusions(fusions, neDataList);
             addPointMutations(pointMutations, neDataList);
 
-            neDataList.forEach(x -> setContextBases(x));
+            neDataList.forEach(x -> x.setCodingBases(mConfig.RefGenome));
+            neDataList.forEach(x -> x.setAminoAcids());
             neDataList.forEach(x -> writeData(sampleId, x));
         }
 
@@ -164,35 +151,38 @@ public class NeoEpitopeAnnotator
         return fusions != null ? fusions : Lists.newArrayList();
     }
 
-    private void addSvFusions(final List<NeoEpitopeFusion> fusions, final List<NeoEpitopeData> neDataList)
+    private void addSvFusions(final List<NeoEpitopeFusion> fusions, final List<NeoEpitope> neDataList)
     {
         for(NeoEpitopeFusion fusion : fusions)
         {
             // find all transcripts where the breakend is inside the coding region on the 5' gene
-            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+            final List<TranscriptData> upTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_UPSTREAM]);
+            final List<TranscriptData> downTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_DOWNSTREAM]);
+
+            for(TranscriptData upTransData : upTransDataList)
             {
-                final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[fs]);
+                if(upTransData.CodingStart == null)
+                    continue;
 
-                for(TranscriptData transData : transDataList)
+                if(!positionWithin(fusion.Positions[FS_UPSTREAM], upTransData.TransStart, upTransData.TransEnd))
+                    continue;
+
+                for(TranscriptData downTransData : downTransDataList)
                 {
-                    if(fs == FS_UPSTREAM && transData.CodingStart == null)
+                    if(!positionWithin(fusion.Positions[FS_DOWNSTREAM], downTransData.TransStart, downTransData.TransEnd))
                         continue;
 
-                    if(!positionWithin(fusion.Positions[fs], transData.TransStart, transData.TransEnd))
-                        continue;
+                    NeoEpitope neData = new SvNeoEpitope(fusion);
+                    neDataList.add(neData);
 
-                    NeoEpitopeData neData = new NeoEpitopeData(null, fusion);
-
-                    neData.TransData[fs] = transData;
-
-                    setTranscriptContext(neData, transData, fusion.Positions[fs], fs);
-                    setTranscriptCodingData(neData, transData, fusion.Positions[fs], fusion.InsertSequence.length(), fs);
+                    neData.setTranscriptData(upTransData, downTransData);
+                    neDataList.add(neData);
                 }
             }
         }
     }
 
-    private void addPointMutations(final List<PointMutationData> pointMutations, final List<NeoEpitopeData> neDataList)
+    private void addPointMutations(final List<PointMutationData> pointMutations, final List<NeoEpitope> neDataList)
     {
         for(PointMutationData pointMutation : pointMutations)
         {
@@ -208,199 +198,15 @@ public class NeoEpitopeAnnotator
                 if(!positionWithin(pointMutation.Position, transData.CodingStart, transData.CodingEnd))
                     continue;
 
-                NeoEpitopeData neData = new NeoEpitopeData(pointMutation, null);
+                NeoEpitope neData = new PmNeoEpitope(pointMutation);
+                neDataList.add(neData);
 
-                neData.TransData[FS_UPSTREAM] = neData.TransData[FS_DOWNSTREAM] = transData;
-
-                int indelBaseDiff = pointMutation.Alt.length() - pointMutation.Ref.length();
-                int insertedBaseLength = max(indelBaseDiff, 0);
-
-                // set the data for the lower part of the mutation
-                int lowerStream = geneData.Strand == POS_STRAND ? FS_UPSTREAM : FS_DOWNSTREAM;
-
-                setTranscriptContext(neData, transData, pointMutation.Position, lowerStream);
-
-                int insSeqLength = lowerStream == FS_UPSTREAM ? insertedBaseLength : 0;
-
-                setTranscriptCodingData(neData, transData, pointMutation.Position, insSeqLength, lowerStream);
-
-                int upperStream = switchStream(lowerStream);
-
-                // for DELs, set the downstream data as well since it can cross exon-boundaries and/or affect coding bases
-                if(indelBaseDiff != 0)
-                {
-                    int adjustedPosition = indelBaseDiff < 0 ? pointMutation.Position + abs(indelBaseDiff) : pointMutation.Position;
-                    setTranscriptContext(neData, transData, adjustedPosition, upperStream);
-
-                    insSeqLength = upperStream == FS_UPSTREAM ? insertedBaseLength : 0;
-                    setTranscriptCodingData(neData, transData, adjustedPosition, insSeqLength, upperStream);
-                }
-                else
-                {
-                    neData.RegionType[upperStream] = neData.RegionType[lowerStream];
-                    neData.CodingType[upperStream] = neData.CodingType[lowerStream];
-                    neData.Phases[upperStream] = neData.Phases[lowerStream];
-
-                    if(neData.RegionType[lowerStream] == INTRONIC)
-                    {
-                        if(lowerStream == FS_UPSTREAM)
-                            neData.ExonRank[upperStream] = neData.ExonRank[lowerStream] + 1;
-                        else
-                            neData.ExonRank[upperStream] = neData.ExonRank[lowerStream] - 1;
-                    }
-                }
+                neData.setTranscriptData(transData, transData);
             }
         }
     }
 
-    private void setTranscriptContext(
-            final NeoEpitopeData neData, final TranscriptData transData, int position, int fs)
-    {
-        // determine phasing, coding and region context
-        boolean isUpstream = fs == FS_UPSTREAM;
-
-        for(ExonData exon : transData.exons())
-        {
-            if(position > exon.ExonEnd)
-                continue;
-
-            if(position < exon.ExonStart)
-            {
-                // intronic
-                neData.RegionType[fs] = INTRONIC;
-
-                // upstream pos-strand, before next exon then take the exon before's rank
-                if(transData.Strand == POS_STRAND && isUpstream)
-                    neData.ExonRank[fs] = exon.ExonRank - 1;
-                else if(transData.Strand == NEG_STRAND && isUpstream)
-                    neData.ExonRank[fs] = exon.ExonRank;
-                else if(transData.Strand == POS_STRAND && !isUpstream)
-                    neData.ExonRank[fs] = exon.ExonRank;
-                else if(transData.Strand == NEG_STRAND && !isUpstream)
-                    neData.ExonRank[fs] = exon.ExonRank - 1;
-
-                neData.Phases[fs] = exon.ExonPhase;
-            }
-            else if(positionWithin(position, exon.ExonStart, exon.ExonEnd))
-            {
-                neData.RegionType[fs] = EXONIC;
-                neData.ExonRank[fs] = exon.ExonRank;
-            }
-        }
-    }
-
-    private void setTranscriptCodingData(
-            final NeoEpitopeData neData, final TranscriptData transData, int position, int insSeqLength, int fs)
-    {
-        if(transData.CodingStart != null)
-        {
-            if(positionWithin(position, transData.CodingStart, transData.CodingEnd))
-                neData.CodingType[fs] = CODING;
-            else if(transData.Strand == POS_STRAND && position < transData.CodingStart)
-                neData.CodingType[fs] = UTR_5P;
-            else if(transData.Strand == NEG_STRAND && position > transData.CodingEnd)
-                neData.CodingType[fs] = UTR_5P;
-            else
-                neData.CodingType[fs] = UTR_3P;
-        }
-        else
-        {
-            neData.CodingType[fs] = NON_CODING;
-            neData.Phases[fs] = -1;
-        }
-
-        if(neData.CodingType[fs] == CODING && neData.RegionType[fs] == EXONIC)
-        {
-            int[] codingData = Transcript.calcCodingBases(transData.CodingStart, transData.CodingEnd, transData.exons(), position);
-            int codingBases = transData.Strand == POS_STRAND ? codingData[CODING_BASES] : codingData[TOTAL_CODING_BASES] - codingData[CODING_BASES];
-
-            codingBases -= 1;
-
-            // factor in insert sequence for the upstream partner
-            codingBases += insSeqLength;
-
-            neData.Phases[fs] = codingBases % 3;
-        }
-    }
-
-    // public final List<NeoEpitopeFusion> getResults() { return mNeoEpitopeResults; }
-
-    private void setContextBases(final NeoEpitopeData neData)
-    {
-        boolean isPhased = neData.phaseMatched();
-
-        int upstreamPhaseOffset = neData.Phases[FS_UPSTREAM];
-        int downstreamPhaseOffset = upstreamPhaseOffset == 0 || !isPhased ? 0 : 3 - upstreamPhaseOffset;
-
-        IM_LOGGER.debug("fusion({}) phased({}) upPhaseOffset({}) downPhaseOffset({})",
-                neData.toString(), isPhased, upstreamPhaseOffset, downstreamPhaseOffset);
-
-        String upstreamBases = getCodingBases(mConfig.RefGenome, neData, FS_UPSTREAM, AMINO_ACID_REF_COUNT, upstreamPhaseOffset);
-
-        String downstreamBases = getCodingBases(mConfig.RefGenome, neData, FS_DOWNSTREAM, AMINO_ACID_REF_COUNT, downstreamPhaseOffset);
-
-        neData.DownstreamNmdBases = calcNonMediatedDecayBases(neData, FS_DOWNSTREAM);
-
-        // upstream strand 1, bases will be retrieved from left to right (lower to higher), no need for any conversion
-        // downstream strand 1, bases will be retrieved from left to right (lower to higher), no need for any conversion
-        // upstream strand -1, bases will be retrieved from left to right (lower to higher), need to reverse and convert
-        // downstream strand -1, bases will be retrieved from left to right (lower to higher), need to reverse and convert
-
-        // correct for strand
-        if(neData.strand(FS_UPSTREAM) == NEG_STRAND)
-            upstreamBases = reverseStrandBases(upstreamBases);
-
-        if(neData.strand(FS_DOWNSTREAM) == NEG_STRAND)
-            downstreamBases = reverseStrandBases(downstreamBases);
-
-        String novelCodonBases = "";
-
-        if(upstreamPhaseOffset > upstreamBases.length() || downstreamPhaseOffset > downstreamBases.length())
-        {
-            IM_LOGGER.error("ne({}) invalid upBases({} phaseOffset={}) or downBases({} phaseOffset={})",
-                    neData, upstreamBases, upstreamPhaseOffset, downstreamBases, downstreamPhaseOffset);
-            return;
-        }
-
-        // if upstream ends on a phase other than 0, need to take the bases from the downstream gene to make a novel codon
-        if(upstreamPhaseOffset > 0)
-        {
-            // take the last 1 or 2 bases from the end of upstream gene's section
-            novelCodonBases = upstreamBases.substring(upstreamBases.length() - upstreamPhaseOffset);
-            upstreamBases = upstreamBases.substring(0, upstreamBases.length() - upstreamPhaseOffset);
-        }
-
-        if(isPhased)
-        {
-            novelCodonBases += downstreamBases.substring(0, downstreamPhaseOffset);
-            downstreamBases = downstreamBases.substring(downstreamPhaseOffset);
-        }
-        else
-        {
-            novelCodonBases += downstreamBases;
-            downstreamBases = "";
-        }
-
-        IM_LOGGER.debug("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
-                neData, upstreamBases, checkTrimBases(novelCodonBases), checkTrimBases(downstreamBases), neData.DownstreamNmdBases);
-
-        final String upstreamRefAminoAcids = getAminoAcids(upstreamBases, false);
-        final String novelAminoAcids = getAminoAcids(novelCodonBases, !isPhased);
-        String downstreamRefAminoAcids = getAminoAcids(downstreamBases, !isPhased);
-
-        IM_LOGGER.debug("ne({}) upAA({}) novel({}) downAA({})",
-                neData, upstreamRefAminoAcids, checkTrimBases(novelAminoAcids), checkTrimBases(downstreamRefAminoAcids));
-
-        if(novelAminoAcids.equals(STOP_SYMBOL))
-            downstreamRefAminoAcids = "";
-
-        neData.UpstreamAcids = upstreamRefAminoAcids;
-        neData.DownstreamAcids = downstreamRefAminoAcids;
-        neData.NovelAcid = novelAminoAcids;
-
-    }
-
-    private boolean isDuplicate(final NeoEpitopeData neData)
+    private boolean isDuplicate(final NeoEpitope neData)
     {
         return false;
 
@@ -411,22 +217,7 @@ public class NeoEpitopeAnnotator
         */
     }
 
-
-
-    private TranscriptData getTranscriptData(final Transcript transcript)
-    {
-        final TranscriptData transData = mGeneTransCache.getTranscriptData(transcript.gene().StableId, transcript.StableId);
-
-        if(transData == null)
-        {
-            IM_LOGGER.error("gene({}) transcript({}) data not found", transcript.gene().GeneName, transcript.StableId);
-            return null;
-        }
-
-        return transData;
-    }
-
-    private void writeData(final String sampleId, final NeoEpitopeData neData)
+    private void writeData(final String sampleId, final NeoEpitope neData)
     {
         /*
         if(mOutputDir.isEmpty())

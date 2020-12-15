@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 
 import java.util.List;
 
@@ -147,7 +148,7 @@ public class GeneTestUtils
         boolean finishedCoding = false;
         int lastExonEndPhase = -1;
 
-        if(strand == 1)
+        if(strand == POS_STRAND)
         {
             for (int i = 0; i < exonCount; ++i)
             {
@@ -166,6 +167,7 @@ public class GeneTestUtils
                     {
                         if (codingStart <= exonEnd)
                         {
+                            // coding starts in this exon
                             inCoding = true;
                             exonPhase = 0;
                             exonStartPhase = codingStart == exonStart ? 0 : -1;
@@ -174,15 +176,15 @@ public class GeneTestUtils
                     }
                     else
                     {
-                        exonPhase = lastExonEndPhase;
-                        exonStartPhase = lastExonEndPhase;
+                        exonPhase = (lastExonEndPhase + 1) % 3; // tick forward
+                        exonStartPhase = lastExonEndPhase; // by convention
                         exonCodingStart = exonStart;
                     }
 
                     if (inCoding)
                     {
                         int exonCodingBases = min(exonEnd, codingEnd) - exonCodingStart + 1;
-                        exonEndPhase = (exonPhase + exonCodingBases) % 3;
+                        exonEndPhase = (exonPhase + exonCodingBases - 1) % 3;
                         lastExonEndPhase = exonEndPhase;
 
                         if (codingEnd <= exonEnd)
@@ -224,7 +226,7 @@ public class GeneTestUtils
                     }
                     else
                     {
-                        exonPhase = lastExonEndPhase;
+                        exonPhase = (lastExonEndPhase + 1) % 3;
                         exonStartPhase = lastExonEndPhase;
                         exonCodingEnd = exonEnd;
                     }
@@ -232,7 +234,7 @@ public class GeneTestUtils
                     if (inCoding)
                     {
                         int exonCodingBases = exonCodingEnd - max(exonStart, codingStart) + 1;
-                        exonEndPhase =  (exonPhase + exonCodingBases) % 3;
+                        exonEndPhase =  (exonPhase + exonCodingBases - 1) % 3;
                         lastExonEndPhase = exonEndPhase;
 
                         if (codingStart >= exonStart)
