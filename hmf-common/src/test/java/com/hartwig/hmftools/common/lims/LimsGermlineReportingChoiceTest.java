@@ -21,18 +21,18 @@ public class LimsGermlineReportingChoiceTest {
         Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
         LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
-                .hospitalId(true)
+                .hospitalCentraId(true)
                 .reportGermline(reportGermline)
                 .reportGermlineFlag(false)
                 .reportConclusion(false)
                 .reportViral(false)
                 .requireHospitalId(false)
                 .requireHospitalPAId(false)
-                .hospitalPersonsStudy(true)
-                .hospitalPersonsRequester(false)
-                .outputFile(false)
-                .submission(false)
-                .sidePanelInfo(false)
+                .requireHospitalPersonsStudy(true)
+                .requireHospitalPersonsRequester(false)
+                .requirePatientIdForPdfName(false)
+                .requireSubmissionInformation(false)
+                .requireAdditionalInfromationForSidePanel(false)
                 .build();
         cohortData.put(cohortString, config);
         return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();

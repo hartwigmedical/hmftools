@@ -15,18 +15,18 @@ public class LimsCohortModelTest {
     public void canExtractLimsCohortModel() {
         LimsCohortConfigData cohortConfigData = buildTestCohortModel("DRUP").queryCohortData("DRUP", "DRUP02010001T");
         assertEquals("DRUP", cohortConfigData.cohortId());
-        assertTrue(cohortConfigData.hospitalId());
+        assertTrue(cohortConfigData.hospitalCentraId());
         assertFalse(cohortConfigData.reportGermline());
         assertFalse(cohortConfigData.reportGermlineFlag());
         assertFalse(cohortConfigData.reportConclusion());
         assertFalse(cohortConfigData.reportViral());
         assertFalse(cohortConfigData.requireHospitalId());
         assertFalse(cohortConfigData.requireHospitalPAId());
-        assertFalse(cohortConfigData.hospitalPersonsStudy());
-        assertFalse(cohortConfigData.hospitalPersonsRequester());
-        assertFalse(cohortConfigData.outputFile());
-        assertFalse(cohortConfigData.submission());
-        assertFalse(cohortConfigData.sidePanelInfo());
+        assertFalse(cohortConfigData.requireHospitalPersonsStudy());
+        assertFalse(cohortConfigData.requireHospitalPersonsRequester());
+        assertFalse(cohortConfigData.requirePatientIdForPdfName());
+        assertFalse(cohortConfigData.requireSubmissionInformation());
+        assertFalse(cohortConfigData.requireAdditionalInfromationForSidePanel());
     }
 
     @NotNull
@@ -34,18 +34,18 @@ public class LimsCohortModelTest {
         Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
         LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
-                .hospitalId(true)
+                .hospitalCentraId(true)
                 .reportGermline(false)
                 .reportGermlineFlag(false)
                 .reportConclusion(false)
                 .reportViral(false)
                 .requireHospitalId(false)
                 .requireHospitalPAId(false)
-                .hospitalPersonsStudy(false)
-                .hospitalPersonsRequester(false)
-                .outputFile(false)
-                .submission(false)
-                .sidePanelInfo(false)
+                .requireHospitalPersonsStudy(false)
+                .requireHospitalPersonsRequester(false)
+                .requirePatientIdForPdfName(false)
+                .requireSubmissionInformation(false)
+                .requireAdditionalInfromationForSidePanel(false)
                 .build();
         cohortData.put(cohortString, config);
         return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();

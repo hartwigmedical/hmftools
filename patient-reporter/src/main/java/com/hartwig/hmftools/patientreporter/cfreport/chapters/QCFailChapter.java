@@ -147,7 +147,7 @@ public class QCFailChapter implements ReportChapter {
             }
         }
 
-        if (failReport.sampleReport().cohort().submission()) {
+        if (failReport.sampleReport().cohort().requireSubmissionInformation()) {
             div.add(reportIsForProjectAndSubmission());
         }
 

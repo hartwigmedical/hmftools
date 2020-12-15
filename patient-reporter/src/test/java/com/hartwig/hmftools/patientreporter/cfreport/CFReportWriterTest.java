@@ -376,18 +376,18 @@ public class CFReportWriterTest {
             boolean sidePanelInfo) {
        return ImmutableLimsCohortConfigData.builder()
                .cohortId(cohortString)
-               .hospitalId(hospitalIdCentra)
+               .hospitalCentraId(hospitalIdCentra)
                .reportGermline(Report_germline)
                .reportGermlineFlag(Report_germline_flag)
                .reportConclusion(Report_conclusion)
                .reportViral(Report_viral)
                .requireHospitalId(Require_hospital_ID)
                .requireHospitalPAId(Require_hospital_PA_ID)
-               .hospitalPersonsStudy(personsStudy)
-               .hospitalPersonsRequester(personsrequester)
-               .outputFile(outputFile)
-               .submission(submission)
-               .sidePanelInfo(sidePanelInfo)
+               .requireHospitalPersonsStudy(personsStudy)
+               .requireHospitalPersonsRequester(personsrequester)
+               .requirePatientIdForPdfName(outputFile)
+               .requireSubmissionInformation(submission)
+               .requireAdditionalInfromationForSidePanel(sidePanelInfo)
                .build();
     }
 }

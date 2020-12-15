@@ -67,47 +67,105 @@ public class ReportingDbTest {
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
+            LimsCohortConfigData cohortConfig =
+                    buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
 
             ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS",
-                            null,
-                            "CPCT"));
+                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS", null, cohortConfig));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL",
-                            QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
-                            "CPCT"));
+                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, cohortConfig));
         }
     }
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("WIDE", true).queryCohortData("WIDE", "WIDE01990001T")));
-        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CPCT", false).queryCohortData("CPCT", "CPCT01990001T")));
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE", true).queryCohortData("CORE","CORE01990000T")));
-        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CORELR02", false).queryCohortData("CORELR02", "CORELR020000T")));
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORELR11", true).queryCohortData("CORELR11", "CORELR110000T")));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("WIDE",
+                true,
+                true,
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                false,
+                false,
+                false,
+                true)));
+        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false)));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE",
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true)));
+        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CORE",
+                true,
+                true,
+                false,
+                false,
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true)));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE",
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true)));
     }
 
     @NotNull
-    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString, boolean requireConclusion) {
-        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
-        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
+    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra,
+            boolean Report_germline, boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral,
+            boolean Require_hospital_ID, boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile,
+            boolean submission, boolean sidePanelInfo) {
+        return ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
-                .hospitalId(true)
-                .reportGermline(false)
-                .reportGermlineFlag(false)
-                .reportConclusion(requireConclusion)
-                .reportViral(false)
-                .requireHospitalId(false)
-                .requireHospitalPAId(false)
-                .hospitalPersonsStudy(true)
-                .hospitalPersonsRequester(false)
-                .outputFile(false)
-                .submission(false)
-                .sidePanelInfo(false)
+                .hospitalCentraId(hospitalIdCentra)
+                .reportGermline(Report_germline)
+                .reportGermlineFlag(Report_germline_flag)
+                .reportConclusion(Report_conclusion)
+                .reportViral(Report_viral)
+                .requireHospitalId(Require_hospital_ID)
+                .requireHospitalPAId(Require_hospital_PA_ID)
+                .requireHospitalPersonsStudy(personsStudy)
+                .requireHospitalPersonsRequester(personsrequester)
+                .requirePatientIdForPdfName(outputFile)
+                .requireSubmissionInformation(submission)
+                .requireAdditionalInfromationForSidePanel(sidePanelInfo)
                 .build();
-        cohortData.put(cohortString, config);
-        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
     }
 }

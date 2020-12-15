@@ -21,17 +21,17 @@ public class LimsCohortConfigFactoryTest {
 
         LimsCohortConfigData cohortConfigData = cohortModel.limsCohortMap().get("CPCT");
         assertEquals("CPCT", cohortConfigData.cohortId());
-        assertTrue(cohortConfigData.hospitalId());
+        assertTrue(cohortConfigData.hospitalCentraId());
         assertFalse(cohortConfigData.reportGermline());
         assertFalse(cohortConfigData.reportGermlineFlag());
         assertFalse(cohortConfigData.reportConclusion());
         assertFalse(cohortConfigData.reportViral());
         assertFalse(cohortConfigData.requireHospitalId());
         assertFalse(cohortConfigData.requireHospitalPAId());
-        assertTrue(cohortConfigData.hospitalPersonsStudy());
-        assertFalse(cohortConfigData.hospitalPersonsRequester());
-        assertFalse(cohortConfigData.outputFile());
-        assertFalse(cohortConfigData.submission());
-        assertFalse(cohortConfigData.sidePanelInfo());
+        assertTrue(cohortConfigData.requireHospitalPersonsStudy());
+        assertFalse(cohortConfigData.requireHospitalPersonsRequester());
+        assertFalse(cohortConfigData.requirePatientIdForPdfName());
+        assertFalse(cohortConfigData.requireSubmissionInformation());
+        assertFalse(cohortConfigData.requireAdditionalInfromationForSidePanel());
     }
 }

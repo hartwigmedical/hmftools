@@ -99,18 +99,18 @@ public class SampleReportFactoryTest {
         Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
         LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
-                .hospitalId(true)
+                .hospitalCentraId(true)
                 .reportGermline(false)
                 .reportGermlineFlag(false)
                 .reportConclusion(false)
                 .reportViral(false)
                 .requireHospitalId(false)
                 .requireHospitalPAId(requirePAId)
-                .hospitalPersonsStudy(true)
-                .hospitalPersonsRequester(false)
-                .outputFile(false)
-                .submission(false)
-                .sidePanelInfo(false)
+                .requireHospitalPersonsStudy(true)
+                .requireHospitalPersonsRequester(false)
+                .requirePatientIdForPdfName(false)
+                .requireSubmissionInformation(false)
+                .requireAdditionalInfromationForSidePanel(false)
                 .build();
         cohortData.put(cohortString, config);
         return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
@@ -121,18 +121,18 @@ public class SampleReportFactoryTest {
         Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
         LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
-                .hospitalId(true)
+                .hospitalCentraId(true)
                 .reportGermline(false)
                 .reportGermlineFlag(false)
                 .reportConclusion(false)
                 .reportViral(false)
                 .requireHospitalId(requirePatientId)
                 .requireHospitalPAId(false)
-                .hospitalPersonsStudy(true)
-                .hospitalPersonsRequester(false)
-                .outputFile(false)
-                .submission(false)
-                .sidePanelInfo(false)
+                .requireHospitalPersonsStudy(true)
+                .requireHospitalPersonsRequester(false)
+                .requirePatientIdForPdfName(false)
+                .requireSubmissionInformation(false)
+                .requireAdditionalInfromationForSidePanel(false)
                 .build();
         cohortData.put(cohortString, config);
         return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();

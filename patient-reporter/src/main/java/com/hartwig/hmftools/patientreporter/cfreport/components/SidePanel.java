@@ -41,7 +41,7 @@ public final class SidePanel {
         LimsCohortConfigData cohort = sampleReport.cohort();
 
         if (fullHeight && fullContent) {
-            if (cohort.sidePanelInfo()) {
+            if (cohort.requireAdditionalInfromationForSidePanel()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", sampleReport.hospitalContactData().requesterName()));
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", sampleReport.hospitalContactData().requesterEmail()));
             }

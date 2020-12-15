@@ -255,18 +255,18 @@ public class Lims {
         if (data == null) {
             data = ImmutableLimsCohortConfigData.builder()
                     .cohortId(Strings.EMPTY)
-                    .hospitalId(false)
+                    .hospitalCentraId(false)
                     .reportGermline(false)
                     .reportGermlineFlag(false)
                     .reportConclusion(false)
                     .reportViral(false)
                     .requireHospitalId(false)
                     .requireHospitalPAId(false)
-                    .hospitalPersonsStudy(false)
-                    .hospitalPersonsRequester(false)
-                    .outputFile(false)
-                    .submission(false)
-                    .sidePanelInfo(false)
+                    .requireHospitalPersonsStudy(false)
+                    .requireHospitalPersonsRequester(false)
+                    .requirePatientIdForPdfName(false)
+                    .requireSubmissionInformation(false)
+                    .requireAdditionalInfromationForSidePanel(false)
                     .build();
         }
 
