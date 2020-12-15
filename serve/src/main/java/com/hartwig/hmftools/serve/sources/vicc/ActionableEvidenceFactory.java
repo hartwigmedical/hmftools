@@ -84,7 +84,7 @@ final class ActionableEvidenceFactory {
             url = info.publications().get(0);
         }
 
-        // Consider CancerType, DOID and URL to be optional.
+        // Consider CancerType, Doid and URL to be optional.
         //TODO: what todo when direction is not correct filled in?
         if (treatment != null && level != null) {
             return ImmutableActionableEvidence.builder()
@@ -193,7 +193,7 @@ final class ActionableEvidenceFactory {
                 return Strings.EMPTY;
             }
         } else {
-            LOGGER.warn("Unexpected DOID string: '{}'", doidString);
+            LOGGER.warn("Unexpected Doid string: '{}'", doidString);
             return Strings.EMPTY;
         }
     }
