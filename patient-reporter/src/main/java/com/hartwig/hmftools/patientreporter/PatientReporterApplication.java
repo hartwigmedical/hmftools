@@ -68,6 +68,7 @@ public class PatientReporterApplication {
                 config.purpleQcFile(),
                 config.comments(),
                 config.correctedReport());
+        LOGGER.info("Cohort of this sample is: {}", report.sampleReport().cohort().cohortId());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriterNoGermline();
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
