@@ -17,7 +17,21 @@ public class LimsCohortConfigFactoryTest {
         LimsCohortModel cohortModel = LimsCohortConfigFactory.read(LIMS_DIRECTORY + File.separator + "cohort.tsv");
 
         assertNotNull(cohortModel);
+        assertEquals(1, cohortModel.limsCohortMap().size());
 
+        LimsCohortConfigData cohortConfigData = cohortModel.limsCohortMap().get("CPCT");
+        assertEquals("CPCT", cohortConfigData.cohortId());
+        assertTrue(cohortConfigData.hospitalId());
+        assertFalse(cohortConfigData.reportGermline());
+        assertFalse(cohortConfigData.reportGermlineFlag());
+        assertFalse(cohortConfigData.reportConclusion());
+        assertFalse(cohortConfigData.reportViral());
+        assertFalse(cohortConfigData.requireHospitalId());
+        assertFalse(cohortConfigData.requireHospitalPAId());
+        assertTrue(cohortConfigData.hospitalPersonsStudy());
+        assertFalse(cohortConfigData.hospitalPersonsRequester());
+        assertFalse(cohortConfigData.outputFile());
+        assertFalse(cohortConfigData.submission());
+        assertFalse(cohortConfigData.sidePanelInfo());
     }
-
 }
