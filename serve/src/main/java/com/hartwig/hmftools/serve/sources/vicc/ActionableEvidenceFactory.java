@@ -27,6 +27,8 @@ class ActionableEvidenceFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
 
+    private static final String CANCER_TYPE_SEPARATOR = ";";
+
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> DIRECTIONS_TO_IGNORE = Sets.newHashSet();
@@ -66,40 +68,61 @@ class ActionableEvidenceFactory {
         this.missingDoidLookup = missingDoidLookup;
     }
 
-    @Nullable
-    public ActionableEvent toActionableEvent(@NotNull ViccEntry entry) {
+    @NotNull
+    public Set<ActionableEvent> toActionableEvents(@NotNull ViccEntry entry) {
+        Set<ActionableEvent> actionableEvents = Sets.newHashSet();
+
         String treatment = reformatDrugLabels(entry.association().drugLabels());
         EvidenceLevel level = resolveLevel(entry.association().evidenceLabel());
 
         if (treatment != null && level != null) {
-            String cancerType = resolveCancerType(entry.association().phenotype());
-            String doid = resolveDoid(entry.association().phenotype());
-
-            if (doid == null && cancerType != null) {
-                Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
-                if (doids != null && !doids.isEmpty()) {
-                    doid = doids.iterator().next();
-                    LOGGER.debug("Manually resolved doid '{}' for cancer type '{}'", doid, cancerType);
-                } else {
-                    LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
-                }
-            }
-
             EvidenceDirection direction = resolveDirection(entry.association().responseType());
             Set<String> urls = resolveUrls(entry.association().evidence().info());
 
-            return ImmutableActionableEvidence.builder()
+            ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
                     .source(fromViccSource(entry.source()))
                     .treatment(treatment)
-                    .cancerType(nullToEmpty(cancerType))
-                    .doid(nullToEmpty(doid))
                     .level(level)
                     .direction(nullToEmpty(direction))
-                    .urls(urls)
-                    .build();
-        } else {
-            return null;
+                    .urls(urls);
+
+            String cancerType = resolveCancerType(entry.association().phenotype());
+
+            if (cancerType != null) {
+                if (cancerType.contains(CANCER_TYPE_SEPARATOR)) {
+                    String[] parts = cancerType.split(CANCER_TYPE_SEPARATOR);
+                    for (String part : parts) {
+                        // We always look up the DOIDs when there is aggregate cancer type information as the DOID in this case is unreliable.
+                        Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(part);
+                        if (doids == null) {
+                            LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", part);
+                        } else {
+                            for (String doid : doids) {
+                                actionableEvents.add(builder.cancerType(part).doid(doid).build());
+                            }
+                        }
+                    }
+                } else {
+                    String doidEntry = resolveDoid(entry.association().phenotype());
+                    Set<String> doids;
+                    if (doidEntry == null) {
+                        doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
+                        if (doids == null) {
+                            LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
+                            doids = Sets.newHashSet();
+                        }
+                    } else {
+                        doids = Sets.newHashSet(doidEntry);
+                    }
+
+                    for (String doid : doids) {
+                        actionableEvents.add(builder.cancerType(cancerType).doid(doid).build());
+                    }
+                }
+            }
         }
+
+        return actionableEvents;
     }
 
     @Nullable

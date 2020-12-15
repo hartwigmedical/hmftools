@@ -138,12 +138,12 @@ public final class ViccExtractor {
         }
 
         // We only need to resolve the actionable event in case we have extracted at least one feature interpretation.
-        ActionableEvent actionableEvidence;
+        Set<ActionableEvent> actionableEvidences;
         if (hotspotsPerFeature.isEmpty() && codonsPerFeature.isEmpty() && exonsPerFeature.isEmpty() && geneLevelEventsPerFeature.isEmpty()
                 && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && signaturesPerFeature.isEmpty()) {
-            actionableEvidence = null;
+            actionableEvidences = Sets.newHashSet();
         } else {
-            actionableEvidence = actionableEvidenceFactory.toActionableEvent(entry);
+            actionableEvidences = actionableEvidenceFactory.toActionableEvents(entry);
         }
 
         return ImmutableViccExtractionResult.builder()
@@ -154,7 +154,7 @@ public final class ViccExtractor {
                 .ampsDelsPerFeature(ampsDelsPerFeature)
                 .fusionsPerFeature(fusionsPerFeature)
                 .signaturesPerFeature(signaturesPerFeature)
-                .actionableEvent(actionableEvidence)
+                .actionableEvents(actionableEvidences)
                 .build();
     }
 
@@ -217,16 +217,14 @@ public final class ViccExtractor {
         Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
 
         for (ViccExtractionResult result : results) {
-            ActionableEvent event = result.actionableEvent();
-            if (event != null) {
-                actionableHotspots.addAll(extractActionableHotspots(event, result.hotspotsPerFeature().values()));
-                actionableRanges.addAll(extractActionableRanges(event, result.codonsPerFeature().values()));
-                actionableRanges.addAll(extractActionableRanges(event, result.exonsPerFeature().values()));
-                actionableGenes.addAll(extractActionableAmpsDels(event, result.ampsDelsPerFeature().values()));
-                actionableGenes.addAll(extractActionableGeneLevelEvents(event, result.geneLevelEventsPerFeature().values()));
-                actionableFusions.addAll(extractActionableFusions(event, result.fusionsPerFeature().values()));
-                actionableSignatures.addAll(extractActionableSignatures(event, result.signaturesPerFeature().values()));
-            }
+            actionableHotspots.addAll(extractActionableHotspots(result.actionableEvents(), result.hotspotsPerFeature().values()));
+            actionableRanges.addAll(extractActionableRanges(result.actionableEvents(), result.codonsPerFeature().values()));
+            actionableRanges.addAll(extractActionableRanges(result.actionableEvents(), result.exonsPerFeature().values()));
+            actionableGenes.addAll(extractActionableAmpsDels(result.actionableEvents(), result.ampsDelsPerFeature().values()));
+            actionableGenes.addAll(extractActionableGeneLevelEvents(result.actionableEvents(),
+                    result.geneLevelEventsPerFeature().values()));
+            actionableFusions.addAll(extractActionableFusions(result.actionableEvents(), result.fusionsPerFeature().values()));
+            actionableSignatures.addAll(extractActionableSignatures(result.actionableEvents(), result.signaturesPerFeature().values()));
         }
 
         outputBuilder.actionableHotspots(actionableHotspots);
@@ -237,61 +235,73 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static Set<ActionableHotspot> extractActionableHotspots(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableHotspot> extractActionableHotspots(@NotNull Iterable<ActionableEvent> actionableEvents,
             @NotNull Iterable<List<VariantHotspot>> hotspotLists) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         for (List<VariantHotspot> hotspotList : hotspotLists) {
-            actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(actionableEvent, hotspotList));
+            for (ActionableEvent actionableEvent : actionableEvents) {
+                actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(actionableEvent, hotspotList));
+            }
         }
         return actionableHotspots;
     }
 
     @NotNull
-    private static <T extends RangeAnnotation> Set<ActionableRange> extractActionableRanges(@NotNull ActionableEvent actionableEvent,
-            @NotNull Iterable<List<T>> rangeLists) {
+    private static <T extends RangeAnnotation> Set<ActionableRange> extractActionableRanges(
+            @NotNull Iterable<ActionableEvent> actionableEvents, @NotNull Iterable<List<T>> rangeLists) {
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         for (List<T> rangeList : rangeLists) {
-            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(actionableEvent, rangeList));
+            for (ActionableEvent actionableEvent : actionableEvents) {
+                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(actionableEvent, rangeList));
+            }
         }
         return actionableRanges;
     }
 
     @NotNull
-    private static Set<ActionableGene> extractActionableAmpsDels(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableGene> extractActionableAmpsDels(@NotNull Iterable<ActionableEvent> actionableEvents,
             @NotNull Iterable<KnownCopyNumber> copyNumbers) {
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         for (KnownCopyNumber copyNumber : copyNumbers) {
-            actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(actionableEvent, copyNumber));
+            for (ActionableEvent actionableEvent : actionableEvents) {
+                actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(actionableEvent, copyNumber));
+            }
         }
         return actionableGenes;
     }
 
     @NotNull
-    private static Set<ActionableGene> extractActionableGeneLevelEvents(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableGene> extractActionableGeneLevelEvents(@NotNull Iterable<ActionableEvent> actionableEvents,
             @NotNull Iterable<GeneLevelAnnotation> geneLevelEvents) {
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         for (GeneLevelAnnotation geneLevelEvent : geneLevelEvents) {
-            actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(actionableEvent, geneLevelEvent));
+            for (ActionableEvent actionableEvent : actionableEvents) {
+                actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(actionableEvent, geneLevelEvent));
+            }
         }
         return actionableGenes;
     }
 
     @NotNull
-    private static Set<ActionableFusion> extractActionableFusions(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableFusion> extractActionableFusions(@NotNull Iterable<ActionableEvent> actionableEvents,
             @NotNull Iterable<KnownFusionPair> knownFusions) {
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
         for (KnownFusionPair fusion : knownFusions) {
-            actionableFusions.add(ActionableEventFactory.toActionableFusion(actionableEvent, fusion));
+            for (ActionableEvent actionableEvent : actionableEvents) {
+                actionableFusions.add(ActionableEventFactory.toActionableFusion(actionableEvent, fusion));
+            }
         }
         return actionableFusions;
     }
 
     @NotNull
-    private static Set<ActionableSignature> extractActionableSignatures(@NotNull ActionableEvent actionableEvent,
+    private static Set<ActionableSignature> extractActionableSignatures(@NotNull Iterable<ActionableEvent> actionableEvents,
             @NotNull Iterable<SignatureName> signatures) {
         Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
         for (SignatureName signature : signatures) {
-            actionableSignatures.add(ActionableEventFactory.toActionableSignature(actionableEvent, signature));
+            for (ActionableEvent actionableEvent : actionableEvents) {
+                actionableSignatures.add(ActionableEventFactory.toActionableSignature(actionableEvent, signature));
+            }
         }
         return actionableSignatures;
     }

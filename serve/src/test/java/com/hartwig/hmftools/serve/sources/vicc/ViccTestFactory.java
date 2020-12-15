@@ -33,11 +33,6 @@ public final class ViccTestFactory {
     }
 
     @NotNull
-    public static ViccEntry testEntryWithGeneAndEvent(@Nullable String gene, @NotNull String event) {
-        return testEntryWithGeneEventAndAssociation(gene, event, testAssociation());
-    }
-
-    @NotNull
     public static ViccEntry testEntryWithGeneEventAndAssociation(@Nullable String gene, @NotNull String event,
             @NotNull Association association) {
         List<Feature> features = Lists.newArrayList(testFeatureWithGeneAndName(gene, event));
