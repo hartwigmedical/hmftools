@@ -94,14 +94,13 @@ class ActionableEvidenceFactory {
         EvidenceLevel level = resolveLevel(entry.association().evidenceLabel());
         EvidenceDirection direction = resolveDirection(entry.association().responseType());
 
-        String url = null;
+        Set<String> urls = Sets.newHashSet();
         EvidenceInfo info = entry.association().evidence().info();
         if (info != null && !info.publications().isEmpty()) {
-            url = info.publications().get(0);
+            urls = Sets.newHashSet(info.publications());
         }
 
         // Consider CancerType, Doid and URL to be optional.
-        //TODO: what todo when direction is not correct filled in?
         if (treatment != null && level != null) {
             return ImmutableActionableEvidence.builder()
                     .source(fromViccSource(entry.source()))
@@ -110,7 +109,7 @@ class ActionableEvidenceFactory {
                     .doid(nullToEmpty(doid))
                     .level(level)
                     .direction(nullToEmpty(direction))
-                    .urls(nullToEmptySet(url))
+                    .urls(urls)
                     .build();
         } else {
             return null;
@@ -134,11 +133,6 @@ class ActionableEvidenceFactory {
             LOGGER.warn("Could not resolve evidence label '{}'", evidenceLabel);
         }
         return level;
-    }
-
-    @NotNull
-    private static Set<String> nullToEmptySet(@Nullable String string) {
-        return string != null ? Sets.newHashSet(string) : Sets.newHashSet();
     }
 
     @NotNull
