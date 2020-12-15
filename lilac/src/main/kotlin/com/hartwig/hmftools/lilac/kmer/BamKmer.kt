@@ -6,7 +6,7 @@ import htsjdk.samtools.SAMRecord
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 
-class KmerCount(private val codonKmers: Set<String>) : Consumer<SAMRecord> {
+class BamKmer(private val codonKmers: Set<String>) : Consumer<SAMRecord> {
     private val map = ConcurrentHashMap<String, Int>()
 
     fun kmerCount(): Map<String, Int> {
@@ -14,7 +14,9 @@ class KmerCount(private val codonKmers: Set<String>) : Consumer<SAMRecord> {
     }
 
     override fun accept(t: SAMRecord) {
-        for ((kmer, count) in kmerCountDna(t)) {
+
+        val counts = kmerCountDna(t)
+        for ((kmer, count) in counts) {
             map.compute(kmer) { _: String, y: Int? -> (y ?: 0) + count }
         }
     }
@@ -35,7 +37,6 @@ class KmerCount(private val codonKmers: Set<String>) : Consumer<SAMRecord> {
 
             }
         }
-
 
         return builder.toString()
     }

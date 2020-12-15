@@ -65,7 +65,7 @@ public class Codons {
                 return 'Y';
             case "TAA":
             case "TAG":
-                return '*';
+                return 'X';
             case "CAT":
             case "CAC":
                 return 'H';
@@ -90,7 +90,7 @@ public class Codons {
             case "TGC":
                 return 'C';
             case "TGA":
-                return '*';
+                return 'X';
             case "TGG":
                 return 'W';
             case "CGT":

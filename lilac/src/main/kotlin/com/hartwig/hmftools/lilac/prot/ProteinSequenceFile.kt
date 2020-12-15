@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.prot
 
+import com.hartwig.hmftools.lilac.hla.HlaAllele
 import org.apache.logging.log4j.LogManager
 import java.io.File
 
@@ -7,25 +8,64 @@ object ProteinSequenceFile {
 
     val logger = LogManager.getLogger(this::class.java)
 
-
     fun readWrappedFile(alignment: String): List<ProteinSequence> {
-        return reduceToFourDigit(expand(readFile(alignment)))
+        return readFile(alignment).inflate().firstFourDigits()
     }
 
     fun writeUnwrappedFile(codonBoundaries: List<Int>, input: String, output: String) {
+
+        val indistinguisable = setOf(
+                HlaAllele("A*01:01:01:01"),
+                HlaAllele("A*01:335"),
+                HlaAllele("A*01:338"),
+                HlaAllele("A*02:01:01:01"),
+                HlaAllele("A*02:96"),
+                HlaAllele("A*02:498"),
+                HlaAllele("A*02:716"),
+                HlaAllele("A*02:844"),
+                HlaAllele("A*02:870"),
+                HlaAllele("A*02:891")
+
+        )
+
+//        val specificSequences = setOf(HlaAllele("C*01:02:01:01"), HlaAllele("C*07:01:01:01"), HlaAllele("C*07:877"), HlaAllele("C*07:879"), HlaAllele("C*07:882"))
+        val bComplex = setOf(HlaAllele("B*07:02:01:01"), HlaAllele("B*08:01:01:01"), HlaAllele("B*56:01:01:01"), HlaAllele("B*56:68"))
+        val bComplexLong = setOf(
+                HlaAllele("B*07:02:01:01"),
+                HlaAllele("B*08:01:01:01"),
+                HlaAllele("B*08:20:01"),
+                HlaAllele("B*08:26:03"),
+                HlaAllele("B*08:39"),
+                HlaAllele("B*08:132"),
+                HlaAllele("B*08:134"),
+                HlaAllele("B*08:151"),
+                HlaAllele("B*08:221"),
+                HlaAllele("B*08:225"),
+                HlaAllele("B*08:230"),
+                HlaAllele("B*08:233"),
+                HlaAllele("B*08:248"),
+                HlaAllele("B*42:21"),
+                HlaAllele("B*55:52"),
+                HlaAllele("B*56:01:01:01"),
+                HlaAllele("B*56:68"))
+
+
         val originalEntries = readFile(input)
-        val fourDigitEntries = reduceToFourDigit(originalEntries)
+        val fourDigitEntries = originalEntries.firstFourDigits()
+//                .inflate()
+                .filter { it.allele in indistinguisable }
 
         if (fourDigitEntries.isNotEmpty()) {
             val outputFile = File(output)
             outputFile.writeText(header(codonBoundaries))
             for (entry in fourDigitEntries) {
-                outputFile.appendText("${entry.contig.padEnd(20, ' ')}\t${entry.proteins}\n")
+                val protein = entry.proteins
+                outputFile.appendText("${entry.contig.padEnd(20, ' ')}\t${protein}\n")
             }
         }
     }
 
-    private fun readFile(alignment: String): List<ProteinSequence> {
+    fun readFile(alignment: String): List<ProteinSequence> {
         val entries = LinkedHashMap<String, ProteinSequence>()
         for (line in File(alignment).readLines()) {
             if (line.startsWith("*", 2)) {
@@ -66,32 +106,32 @@ object ProteinSequenceFile {
     }
 
 
-    private fun reduceToFourDigit(sequences: List<ProteinSequence>): List<ProteinSequence> {
-        val map = LinkedHashMap<String, ProteinSequence>()
+    fun List<ProteinSequence>.firstFourDigits(): List<ProteinSequence> {
+        val resultMap = LinkedHashMap<String, ProteinSequence>()
 
-        for (sequence in sequences) {
+        for (sequence in this) {
             val fourDigitName = sequence.allele.fourDigitName()
-            if (!map.containsKey(fourDigitName)) {
-                map[fourDigitName] = sequence
+            if (!resultMap.containsKey(fourDigitName)) {
+                resultMap[fourDigitName] = sequence
             } else {
-                val existing = map[fourDigitName]!!
+                val existing = resultMap[fourDigitName]!!
                 if (existing.length < sequence.length) {
                     logger.debug("Replacing ${existing.allele} with ${sequence.allele}")
-                    map[fourDigitName] = sequence
+                    resultMap[fourDigitName] = sequence
                 }
             }
 
         }
 
-        return map.values.toList()
+        return resultMap.values.toList()
     }
 
-    private fun expand(sequences: List<ProteinSequence>): List<ProteinSequence> {
-        val template = sequences[0].proteins
-        return sequences.map { ProteinSequence(it.contig, expand(template, it.proteins)) }
+    fun List<ProteinSequence>.inflate(): List<ProteinSequence> {
+        val template = this[0].proteins
+        return this.map { ProteinSequence(it.contig, inflate(template, it.proteins)) }
     }
 
-    private fun expand(template: String, sequence: String): String {
+    private fun inflate(template: String, sequence: String): String {
         val joiner = StringBuilder()
         for (i in sequence.indices) {
             if (sequence[i] == '-') {
