@@ -5,17 +5,12 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -24,6 +19,7 @@ import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleReport;
 import com.hartwig.hmftools.patientreporter.OutputFileUtil;
 import com.hartwig.hmftools.patientreporter.PatientReport;
+import com.hartwig.hmftools.patientreporter.PatientReportUtils;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.ReportData;
@@ -37,12 +33,11 @@ import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = true;
+    private static final boolean WRITE_TO_PDF = false;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -56,10 +51,22 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
 
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING, cohortConfig);
+        AnalysedPatientReport colo829Report =
+                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", false, COLO_COMMENT_STRING, cohortConfig);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -67,9 +74,21 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED, cohortConfig);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
+        AnalysedPatientReport colo829Report =
+                ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED, cohortConfig);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -77,8 +96,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829WithGermline() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_GERMLINE",
                 false,
                 COLO_COMMENT_STRING,
@@ -95,8 +125,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829BelowDetectionThreshold() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_NO_TUMOR",
                 false,
                 COLO_COMMENT_STRING,
@@ -113,8 +154,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829InsufficientTCP() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_INSUFFICIENT_TUMOR",
                 false,
                 COLO_COMMENT_STRING,
@@ -131,8 +183,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCPCTSample() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_FULL",
                 FULL_TABLES_COMMENT_STRING,
                 cohortConfig);
@@ -144,7 +207,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCORESample() throws IOException {
         LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+                PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         AnalysedPatientReport patientReport =
                 ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CORE01_FULL", null, cohortConfig);
 
@@ -155,7 +218,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForWIDESample() throws IOException {
         LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+                PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("WIDE01_FULL",
                 FULL_TABLES_COMMENT_STRING,
                 cohortConfig);
@@ -166,8 +229,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOREDBSample() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("COREDB", true, true, true, false, true, true, true, true, false, true, false, true);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("COREDB",
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true,
+                false,
+                true,
+                false,
+                true);
         AnalysedPatientReport patientReport =
                 ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("COREDB01_FULL",
                         FULL_TABLES_COMMENT_STRING,
@@ -179,8 +253,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForBelowDetectionSample() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_NO_TUMOR",
                 FULL_TABLES_COMMENT_STRING,
                 false,
@@ -193,8 +278,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForInsufficientTCPSample() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_INSUFFICIENT_TUMOR",
                 FULL_TABLES_COMMENT_STRING,
                 true,
@@ -207,8 +303,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateInsufficientDNAReport() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
         generateQCFailCPCTReport("CPCT01",
                 Lims.NOT_PERFORMED_STRING,
                 null,
@@ -220,8 +327,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateCorrectedInsufficientDNAReport() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
         generateQCFailCPCTReport("CPCT01",
                 Lims.NOT_PERFORMED_STRING,
                 null,
@@ -233,8 +351,19 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateCorrectedInsufficientDNAReportCOREDB() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("COREDB", true, true, true, false, true, true, true, true, false, true, false, true);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("COREDB",
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true,
+                false,
+                true,
+                false,
+                true);
         generateQCFailCPCTReport("COREDB",
                 Lims.NOT_PERFORMED_STRING,
                 null,
@@ -246,44 +375,118 @@ public class CFReportWriterTest {
 
     @Test
     public void canGenerateTechnicalFailureReport() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
         generateQCFailCPCTReport("CPCT02", "60%", null, QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL, cohortConfig);
     }
 
     @Test
     public void canGenerateSufficientTCPQCFailReport() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
-        generateQCFailCPCTReport("CPCT03", "60%", "70%", QCFailReason.SUFFICIENT_TCP_QC_FAILURE, false, COMMENT_STRING_QC_FAIL, cohortConfig);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
+        generateQCFailCPCTReport("CPCT03",
+                "60%",
+                "70%",
+                QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                cohortConfig);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterDeepWGSReport() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
-        generateQCFailCPCTReport("CPCT04", "22%", "18%", QCFailReason.INSUFFICIENT_TCP_DEEP_WGS, false, COMMENT_STRING_QC_FAIL, cohortConfig);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
+        generateQCFailCPCTReport("CPCT04",
+                "22%",
+                "18%",
+                QCFailReason.INSUFFICIENT_TCP_DEEP_WGS,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                cohortConfig);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReport() throws IOException {
-        LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
-        generateQCFailCPCTReport("CPCT05", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL, cohortConfig);
+        LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
+        generateQCFailCPCTReport("CPCT05",
+                "15%",
+                null,
+                QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                cohortConfig);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReportCORE() throws IOException {
         LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
-        generateQCFailCPCTReport("CORE01", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL, cohortConfig);
+                PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+        generateQCFailCPCTReport("CORE01",
+                "15%",
+                null,
+                QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                cohortConfig);
     }
 
     @Test
     public void canGenerateInsufficientTCPAfterShallowReportWIDE() throws IOException {
         LimsCohortConfigData cohortConfig =
-                buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
-        generateQCFailCPCTReport("WIDE01", "15%", null, QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, false, COMMENT_STRING_QC_FAIL, cohortConfig);
+                PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+        generateQCFailCPCTReport("WIDE01",
+                "15%",
+                null,
+                QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                cohortConfig);
     }
 
     @NotNull
@@ -367,27 +570,5 @@ public class CFReportWriterTest {
             newFileName = fileName.substring(0, extensionStart) + "_" + System.currentTimeMillis() + fileName.substring(extensionStart);
         }
         return REPORT_BASE_DIR + File.separator + newFileName;
-    }
-
-    @NotNull
-    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra, boolean Report_germline,
-            boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral, boolean Require_hospital_ID,
-            boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile, boolean submission,
-            boolean sidePanelInfo) {
-       return ImmutableLimsCohortConfigData.builder()
-               .cohortId(cohortString)
-               .hospitalCentraId(hospitalIdCentra)
-               .reportGermline(Report_germline)
-               .reportGermlineFlag(Report_germline_flag)
-               .reportConclusion(Report_conclusion)
-               .reportViral(Report_viral)
-               .requireHospitalId(Require_hospital_ID)
-               .requireHospitalPAId(Require_hospital_PA_ID)
-               .requireHospitalPersonsStudy(personsStudy)
-               .requireHospitalPersonsRequester(personsrequester)
-               .requirePatientIdForPdfName(outputFile)
-               .requireSubmissionInformation(submission)
-               .requireAdditionalInfromationForSidePanel(sidePanelInfo)
-               .build();
     }
 }

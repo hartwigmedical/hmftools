@@ -20,8 +20,8 @@ public abstract class LimsCohortModel {
     private static final Logger LOGGER = LogManager.getLogger(LimsCohortModel.class);
 
     @Nullable
-    public LimsCohortConfigData queryCohortData(@NotNull String cohortString, @NotNull String sampleId) {
-        if (cohortString.equals(Strings.EMPTY)) {
+    public LimsCohortConfigData queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
+        if (cohortString == null) {
             LOGGER.error("Could not resolve LIMS cohort string: '" + cohortString + "'");
             return null;
         } else {
