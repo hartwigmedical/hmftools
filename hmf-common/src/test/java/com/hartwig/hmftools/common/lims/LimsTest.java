@@ -34,7 +34,6 @@ public class LimsTest {
     private static final String SUBMISSION = "ABCDEF123";
 
     @Test
-    @Ignore
     public void canReadProperlyDefinedSample() {
         String patientId = "CPCT02991111";
         String arrivalDate = "2017-05-01";
@@ -213,7 +212,6 @@ public class LimsTest {
     }
 
     @Test
-    @Ignore
     public void canExtractLimsViralInsertionsChoice() {
         LimsJsonSampleData sampleDataTrue = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .sampleId(TUMOR_SAMPLE_ID)
@@ -236,7 +234,6 @@ public class LimsTest {
     }
 
     @Test
-    @Ignore
     public void canExtractLimsReportableGermlineVariants() {
         LimsJsonSampleData sampleDataCPCTTrue = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .sampleId("CPCT02991111T")

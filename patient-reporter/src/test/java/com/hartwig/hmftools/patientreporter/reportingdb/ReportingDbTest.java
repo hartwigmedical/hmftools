@@ -83,26 +83,23 @@ public class ReportingDbTest {
     }
 
     @Test
-    @Ignore
     public void canDetermineWhetherSummaryIsRequired() {
-        LimsCohortModel cohortModel = buildTestCohortModel("CPCT");
-
-        assertTrue(ReportingDb.requiresSummary(cohortModel.queryCohortData("WIDE")));
-        assertFalse(ReportingDb.requiresSummary(cohortModel.queryCohortData("CPCT")));
-        assertTrue(ReportingDb.requiresSummary(cohortModel.queryCohortData("CORE")));
-        assertFalse(ReportingDb.requiresSummary(cohortModel.queryCohortData("CORELR02")));
-        assertTrue(ReportingDb.requiresSummary(cohortModel.queryCohortData("CORELR11")));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("WIDE", true).queryCohortData("WIDE")));
+        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CPCT", false).queryCohortData("CPCT")));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE", true).queryCohortData("CORE")));
+        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CORELR02", false).queryCohortData("CORELR02")));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORELR11", true).queryCohortData("CORELR11")));
     }
 
     @NotNull
-    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString) {
+    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString, boolean requireConclusion) {
         Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
         LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
                 .hospitalId(true)
                 .reportGermline(false)
                 .reportGermlineFlag(false)
-                .reportConclusion(false)
+                .reportConclusion(requireConclusion)
                 .reportViral(false)
                 .requireHospitalId(false)
                 .requireHospitalPAId(false)

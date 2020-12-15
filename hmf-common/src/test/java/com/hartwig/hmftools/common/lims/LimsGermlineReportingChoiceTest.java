@@ -39,62 +39,68 @@ public class LimsGermlineReportingChoiceTest {
     }
 
     @Test
-    @Ignore
     public void canExtractGermlineLevel() {
-        LimsCohortModel cohortConfig = buildTestCohortModel("CPCT");
+        LimsCohortModel cohortConfigCOREDB = buildTestCohortModel("COREDB");
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
-                LimsGermlineReportingLevel.fromLimsInputs(true, "1: Yes", "COREDB991111T", cohortConfig.queryCohortData("COREDB")));
+                LimsGermlineReportingLevel.fromLimsInputs(true, "1: Yes", "COREDB991111T", cohortConfigCOREDB.queryCohortData("COREDB")));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingLevel.fromLimsInputs(true, "2: No", "COREDB991111T", cohortConfig.queryCohortData("COREDB")));
+                LimsGermlineReportingLevel.fromLimsInputs(true, "2: No", "COREDB991111T", cohortConfigCOREDB.queryCohortData("COREDB")));
+
+        LimsCohortModel cohortConfigWIDE = buildTestCohortModel("WIDE");
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true,
                         "1: Behandelbare toevalsbevindingen",
                         "WIDE02991111T",
-                        cohortConfig.queryCohortData("WIDE")));
+                        cohortConfigWIDE.queryCohortData("WIDE")));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true,
                         "2: Alle toevalsbevindingen",
                         "WIDE02991111T",
-                        cohortConfig.queryCohortData("WIDE")));
+                        cohortConfigWIDE.queryCohortData("WIDE")));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true,
                         "3: Geen toevalsbevindingen; familie mag deze wel opvragen",
                         "WIDE02991111T",
-                        cohortConfig.queryCohortData("WIDE")));
+                        cohortConfigWIDE.queryCohortData("WIDE")));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true,
                         "3: Geen toevalsbevindingen",
                         "WIDE02991111T",
-                        cohortConfig.queryCohortData("WIDE")));
+                        cohortConfigWIDE.queryCohortData("WIDE")));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true,
                         "4: Geen toevalsbevindingen; familie mag deze niet opvragen",
                         "WIDE02991111T",
-                        cohortConfig.queryCohortData("WIDE")));
-        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
-                LimsGermlineReportingLevel.fromLimsInputs(false, "", "CPCT02991111T", cohortConfig.queryCohortData("CPCT")));
-        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
-                LimsGermlineReportingLevel.fromLimsInputs(false, "", "DRUP02991111T", cohortConfig.queryCohortData("DRUP")));
-        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
-                LimsGermlineReportingLevel.fromLimsInputs(false, "", "COLO02991111T", cohortConfig.queryCohortData("CPCT")));
-        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
-                LimsGermlineReportingLevel.fromLimsInputs(true, "", "CORE02991111T", cohortConfig.queryCohortData("CORE")));
+                        cohortConfigWIDE.queryCohortData("WIDE")));
 
+        LimsCohortModel cohortConfigCPCT = buildTestCohortModel("CPCT");
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
-                LimsGermlineReportingLevel.fromLimsInputs(false, "", "CORE02991111T", cohortConfig.queryCohortData("CORE")));
+                LimsGermlineReportingLevel.fromLimsInputs(false, "", "CPCT02991111T", cohortConfigCPCT.queryCohortData("CPCT")));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
+                LimsGermlineReportingLevel.fromLimsInputs(false, "", "COLO02991111T", cohortConfigCPCT.queryCohortData("CPCT")));
+
+        LimsCohortModel cohortConfigDRUP = buildTestCohortModel("DRUP");
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
+                LimsGermlineReportingLevel.fromLimsInputs(false, "", "DRUP02991111T", cohortConfigDRUP.queryCohortData("DRUP")));
+
+        LimsCohortModel cohortConfigCORE = buildTestCohortModel("CORE");
+        assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                LimsGermlineReportingLevel.fromLimsInputs(true, "", "CORE02991111T", cohortConfigCORE.queryCohortData("CORE")));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
+                LimsGermlineReportingLevel.fromLimsInputs(false, "", "CORE02991111T", cohortConfigCORE.queryCohortData("CORE")));
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false,
                         "3: Geen toevalsbevindingen",
                         "WIDE02991111T",
-                        cohortConfig.queryCohortData("WIDE")));
+                        cohortConfigWIDE.queryCohortData("WIDE")));
     }
 
-    @Ignore
     @Test(expected = IllegalStateException.class)
     public void hasUnknownGermlineChoice() {
-        LimsCohortModel cohortConfig = buildTestCohortModel("CPCT");
+        LimsCohortModel cohortConfigCOREDB = buildTestCohortModel("COREDB");
+        LimsCohortModel cohortConfigWIDE = buildTestCohortModel("WIDE");
 
-        LimsGermlineReportingLevel.fromLimsInputs(true, "ALL", "WIDE02991111T", cohortConfig.queryCohortData("WIDE"));
-        LimsGermlineReportingLevel.fromLimsInputs(true, "ALL", "COREDB991111T", cohortConfig.queryCohortData("COREDB"));
+        LimsGermlineReportingLevel.fromLimsInputs(true, "ALL", "WIDE02991111T", cohortConfigWIDE.queryCohortData("WIDE"));
+        LimsGermlineReportingLevel.fromLimsInputs(true, "ALL", "COREDB991111T", cohortConfigCOREDB.queryCohortData("COREDB"));
     }
 }
