@@ -136,7 +136,14 @@ public final class ViccExtractor {
             }
         }
 
-        ActionableEvent actionableEvidence = actionableEvidenceFactory.toActionableEvent(entry);
+        // We only need to resolve the actionable event in case we have extracted at least one feature interpretation.
+        ActionableEvent actionableEvidence;
+        if (hotspotsPerFeature.isEmpty() && codonsPerFeature.isEmpty() && exonsPerFeature.isEmpty() && geneLevelEventsPerFeature.isEmpty()
+                && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && signaturesPerFeature.isEmpty()) {
+            actionableEvidence = null;
+        } else {
+            actionableEvidence = actionableEvidenceFactory.toActionableEvent(entry);
+        }
 
         return ImmutableViccExtractionResult.builder()
                 .hotspotsPerFeature(hotspotsPerFeature)
