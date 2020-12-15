@@ -1,7 +1,4 @@
-package com.hartwig.hmftools.svtools.neo;
-
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
+package com.hartwig.hmftools.imuno.neo;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
@@ -13,11 +10,10 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
-import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.svtools.neo.NeoConfig.SV_FUSION_FILE;
-import static com.hartwig.hmftools.svtools.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.imuno.common.ImunoCommon.LOG_DEBUG;
+import static com.hartwig.hmftools.imuno.neo.NeoConfig.SV_FUSION_FILE;
+import static com.hartwig.hmftools.imuno.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -38,6 +34,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -45,8 +42,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Record;
@@ -54,8 +49,6 @@ import org.jooq.Result;
 
 public class NeoEpitopeAnnotator
 {
-    public static final Logger IM_LOGGER = LogManager.getLogger(NeoEpitopeAnnotator.class);
-
     private final NeoConfig mConfig;
     private final Map<String,List<NeoEpitopeFusion>> mSampleFusionMap;
 
@@ -78,7 +71,7 @@ public class NeoEpitopeAnnotator
         mGeneTransCache.load(false);
         mGeneTransCache.createGeneNameIdMap();
 
-        mDbAccess = createDatabaseAccess(cmd);
+        mDbAccess = DatabaseAccess.createDatabaseAccess(cmd);
         mCurrentSampleId = "";
 
         loadSvNeoEpitopes(cmd.getOptionValue(SV_FUSION_FILE));
@@ -108,30 +101,30 @@ public class NeoEpitopeAnnotator
     {
         final List<PointMutationData> pointMutations = Lists.newArrayList();
 
-        final Result<Record> result = mDbAccess.context().select().from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                .and(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
-                .and(SOMATICVARIANT.GENE.notEqual(""))
+        final Result<Record> result = mDbAccess.context().select().from(Tables.SOMATICVARIANT)
+                .where(Tables.SOMATICVARIANT.SAMPLEID.eq(sampleId))
+                .and(Tables.SOMATICVARIANT.FILTER.eq(PASS_FILTER))
+                .and(Tables.SOMATICVARIANT.GENE.notEqual(""))
                 .fetch();
 
         for (Record record : result)
         {
-            final String gene = record.getValue(SOMATICVARIANT.GENE);
+            final String gene = record.getValue(Tables.SOMATICVARIANT.GENE);
 
             if(gene.isEmpty() || mGeneTransCache.getGeneDataByName(gene) == null)
                 continue;
 
-            CodingEffect codingEffect = CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT));
+            CodingEffect codingEffect = CodingEffect.valueOf(record.getValue(Tables.SOMATICVARIANT.WORSTCODINGEFFECT));
 
             if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE)
                 continue;
 
-            String chromosome = record.getValue(SOMATICVARIANT.CHROMOSOME);
-            int position = record.getValue(SOMATICVARIANT.POSITION);
-            String ref = record.getValue(SOMATICVARIANT.REF);
-            String alt = record.getValue(SOMATICVARIANT.ALT);
-            double copyNumber = record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER);
-            Integer localPhaseSet = record.get(SOMATICVARIANT.LOCALPHASESET);
+            String chromosome = record.getValue(Tables.SOMATICVARIANT.CHROMOSOME);
+            int position = record.getValue(Tables.SOMATICVARIANT.POSITION);
+            String ref = record.getValue(Tables.SOMATICVARIANT.REF);
+            String alt = record.getValue(Tables.SOMATICVARIANT.ALT);
+            double copyNumber = record.getValue(Tables.SOMATICVARIANT.VARIANTCOPYNUMBER);
+            Integer localPhaseSet = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
 
             pointMutations.add(new PointMutationData(chromosome, position, ref, alt, gene,
                     codingEffect, copyNumber, localPhaseSet != null ? localPhaseSet : -1));

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svtools.neo;
+package com.hartwig.hmftools.imuno.neo;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
@@ -7,10 +7,10 @@ import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
-import static com.hartwig.hmftools.svtools.neo.NeoEpitopeAnnotator.IM_LOGGER;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.getCodingBases;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.setTranscriptCodingData;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.setTranscriptContext;
+import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getCodingBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptCodingData;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
 
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;

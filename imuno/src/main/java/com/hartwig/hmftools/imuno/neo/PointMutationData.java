@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svtools.neo;
+package com.hartwig.hmftools.imuno.neo;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 

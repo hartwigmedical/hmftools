@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svtools.neo;
+package com.hartwig.hmftools.imuno.neo;
 
 import static java.lang.Math.abs;
 
@@ -10,12 +10,12 @@ import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.STOP_SYMBOL;
-import static com.hartwig.hmftools.svtools.neo.NeoEpitopeAnnotator.IM_LOGGER;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.adjustCodingBasesForStrand;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.calcNonMediatedDecayBases;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.checkTrimBases;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.getAminoAcids;
+import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.STOP_SYMBOL;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.adjustCodingBasesForStrand;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.calcNonMediatedDecayBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.checkTrimBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.TranscriptCodingType;

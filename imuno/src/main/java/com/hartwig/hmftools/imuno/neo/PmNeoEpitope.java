@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svtools.neo;
+package com.hartwig.hmftools.imuno.neo;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -10,9 +10,9 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.getCodingBases;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.setTranscriptCodingData;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.setTranscriptContext;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getCodingBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptCodingData;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svtools.neo;
+package com.hartwig.hmftools.imuno.neo;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -19,9 +19,9 @@ import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
-import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.convertDnaCodonToAminoAcid;
-import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.isStopCodon;
-import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.convertDnaCodonToAminoAcid;
+import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.isStopCodon;
+import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.reverseStrandBases;
 
 import java.util.List;
 
