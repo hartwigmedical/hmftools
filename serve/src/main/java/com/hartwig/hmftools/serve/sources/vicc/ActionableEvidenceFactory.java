@@ -40,18 +40,12 @@ class ActionableEvidenceFactory {
 
         RESISTANT_DIRECTIONS.add("Resistant");
 
-        DIRECTIONS_TO_IGNORE.add("Positive");
-        DIRECTIONS_TO_IGNORE.add("Negative");
         DIRECTIONS_TO_IGNORE.add("Adverse response");
         DIRECTIONS_TO_IGNORE.add("No responsive");
         DIRECTIONS_TO_IGNORE.add("Not applicable");
         DIRECTIONS_TO_IGNORE.add("Conflicting");
         DIRECTIONS_TO_IGNORE.add("Na");
         DIRECTIONS_TO_IGNORE.add("N/a");
-        DIRECTIONS_TO_IGNORE.add("Uncertain significance");
-        DIRECTIONS_TO_IGNORE.add("Pathogenic");
-        DIRECTIONS_TO_IGNORE.add("Likely pathogenic");
-        DIRECTIONS_TO_IGNORE.add("Better outcome");
         DIRECTIONS_TO_IGNORE.add("No benefit");
         DIRECTIONS_TO_IGNORE.add("Increased toxicity");
         DIRECTIONS_TO_IGNORE.add("Increased toxicity (myelosupression)");
@@ -93,24 +87,15 @@ class ActionableEvidenceFactory {
                     String[] parts = cancerType.split(CANCER_TYPE_SEPARATOR);
                     for (String part : parts) {
                         // We always look up the DOIDs when there is aggregate cancer type information as the DOID in this case is unreliable.
-                        Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(part);
-                        if (doids == null) {
-                            LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", part);
-                        } else {
-                            for (String doid : doids) {
-                                actionableEvents.add(builder.cancerType(part).doid(doid).build());
-                            }
+                        for (String doid : lookupDoids(part)) {
+                            actionableEvents.add(builder.cancerType(part).doid(doid).build());
                         }
                     }
                 } else {
                     String doidEntry = resolveDoid(entry.association().phenotype());
                     Set<String> doids;
                     if (doidEntry == null) {
-                        doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
-                        if (doids == null) {
-                            LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
-                            doids = Sets.newHashSet();
-                        }
+                        doids = lookupDoids(cancerType);
                     } else {
                         doids = Sets.newHashSet(doidEntry);
                     }
@@ -123,6 +108,17 @@ class ActionableEvidenceFactory {
         }
 
         return actionableEvents;
+    }
+
+    @NotNull
+    private Set<String> lookupDoids(@NotNull String cancerType) {
+        Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
+        if (doids != null) {
+            return doids;
+        } else {
+            LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
+            return Sets.newHashSet();
+        }
     }
 
     @Nullable
