@@ -28,43 +28,49 @@ public class SampleReportFactoryTest {
         String correctIdC = "C18-00124";
         String wrongId = "BGr-12111";
 
+        LimsCohortConfigData cohortConfigWIDE =
+                buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         assertEquals(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
                         wideSampleId,
-                        buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
+                        cohortConfigWIDE));
         assertEquals(correctIdC,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC,
                         wideSampleId,
-                        buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
+                        cohortConfigWIDE));
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId,
                 wideSampleId,
-                buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
+                cohortConfigWIDE));
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Lims.NOT_AVAILABLE_STRING,
                 wideSampleId,
-                buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
+                cohortConfigWIDE));
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY,
                 wideSampleId,
-                buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
+                cohortConfigWIDE));
 
+        LimsCohortConfigData cohortConfigCORE =
+                buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY,
                 coreSampleId,
-                buildTestCohortModelPAID("CORE", true).queryCohortData("CORE", coreSampleId)));
+                cohortConfigCORE));
         assertEquals(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
                         coreSampleId,
-                        buildTestCohortModelPAID("CORE", true).queryCohortData("CORE", coreSampleId)));
+                        cohortConfigCORE));
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId,
                 coreSampleId,
-                buildTestCohortModelPAID("CORE", true).queryCohortData("CORE", coreSampleId)));
+                cohortConfigCORE));
 
+        LimsCohortConfigData cohortConfigCPCT =
+                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
         assertNull(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
                         cpctSampleId,
-                        buildTestCohortModelPAID("CPCT", false).queryCohortData("CPCT", cpctSampleId)));
+                        cohortConfigCPCT));
         assertNull(correctIdC,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC,
                         cpctSampleId,
-                        buildTestCohortModelPAID("CPCT", false).queryCohortData("CPCT", cpctSampleId)));
+                        cohortConfigCPCT));
     }
 
     @Test
@@ -76,22 +82,27 @@ public class SampleReportFactoryTest {
         String hospitalIDEmpty = Strings.EMPTY;
         String hospitalId = "1234";
 
+        LimsCohortConfigData cohortConfigCORE =
+                buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         assertEquals(hospitalIdNA,
                 SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
                         coreSampleId,
-                        buildTestCohortModelPatientId("CORE", true).queryCohortData("CORE", coreSampleId)));
+                        cohortConfigCORE));
         assertEquals(hospitalIDEmpty,
                 SampleReportFactory.checkHospitalPatientId(hospitalIDEmpty,
                         coreSampleId,
-                        buildTestCohortModelPatientId("CORE", true).queryCohortData("CORE", coreSampleId)));
+                        cohortConfigCORE));
         assertEquals(hospitalId,
                 SampleReportFactory.checkHospitalPatientId(hospitalId,
                         coreSampleId,
-                        buildTestCohortModelPatientId("CORE", true).queryCohortData("CORE", coreSampleId)));
+                        cohortConfigCORE));
+
+        LimsCohortConfigData cohortConfigWIDE =
+                buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         assertEquals(hospitalIdNA,
                 SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
                         wideSampleId,
-                        buildTestCohortModelPatientId("WIDE", true).queryCohortData("WIDE", wideSampleId)));
+                        cohortConfigWIDE));
     }
 
     @NotNull
@@ -117,24 +128,24 @@ public class SampleReportFactoryTest {
     }
 
     @NotNull
-    private static LimsCohortModel buildTestCohortModelPatientId(@NotNull String cohortString, boolean requirePatientId) {
-        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
-        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
+    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra, boolean Report_germline,
+            boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral, boolean Require_hospital_ID,
+            boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile, boolean submission,
+            boolean sidePanelInfo) {
+        return ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
-                .hospitalCentraId(true)
-                .reportGermline(false)
-                .reportGermlineFlag(false)
-                .reportConclusion(false)
-                .reportViral(false)
-                .requireHospitalId(requirePatientId)
-                .requireHospitalPAId(false)
-                .requireHospitalPersonsStudy(true)
-                .requireHospitalPersonsRequester(false)
-                .requirePatientIdForPdfName(false)
-                .requireSubmissionInformation(false)
-                .requireAdditionalInfromationForSidePanel(false)
+                .hospitalCentraId(hospitalIdCentra)
+                .reportGermline(Report_germline)
+                .reportGermlineFlag(Report_germline_flag)
+                .reportConclusion(Report_conclusion)
+                .reportViral(Report_viral)
+                .requireHospitalId(Require_hospital_ID)
+                .requireHospitalPAId(Require_hospital_PA_ID)
+                .requireHospitalPersonsStudy(personsStudy)
+                .requireHospitalPersonsRequester(personsrequester)
+                .requirePatientIdForPdfName(outputFile)
+                .requireSubmissionInformation(submission)
+                .requireAdditionalInfromationForSidePanel(sidePanelInfo)
                 .build();
-        cohortData.put(cohortString, config);
-        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
     }
 }
