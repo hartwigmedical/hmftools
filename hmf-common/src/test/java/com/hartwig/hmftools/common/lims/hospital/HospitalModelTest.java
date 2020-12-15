@@ -38,41 +38,49 @@ public class HospitalModelTest {
     public void canExtractHospitalDataFromHospitalModel() {
         String hospitalId = "01";
         HospitalModel model = buildTestHospitalModel(hospitalId);
+        LimsCohortConfigData cohortConfigCPCT =
+                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
 
         HospitalContactData dataCPCT = model.queryHospitalData("CPCT02010001T",
                 CORE_REQUESTER_NAME,
                 CORE_REQUESTER_EMAIL,
-                buildTestCohortModel("CPCT", true, false).queryCohortData("CPCT", "CPCT02010001T"));
+                cohortConfigCPCT);
         assertEquals(CPCT_PI, dataCPCT.hospitalPI());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCPCT.requesterName());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCPCT.requesterEmail());
         assertEquals(HOSPITAL_NAME, dataCPCT.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataCPCT.hospitalAddress());
 
+        LimsCohortConfigData cohortConfigDRUP =
+                buildTestCohortModel("DRUP", true, false, false, false, false, false, false, true, false, false, false, false);
         HospitalContactData dataDRUP = model.queryHospitalData("DRUP02010001T",
                 CORE_REQUESTER_NAME,
                 CORE_REQUESTER_EMAIL,
-                buildTestCohortModel("DRUP", true, false).queryCohortData("DRUP", "DRUP02010001T"));
+                cohortConfigDRUP);
         assertEquals(DRUP_PI, dataDRUP.hospitalPI());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataDRUP.requesterName());
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataDRUP.requesterEmail());
         assertEquals(HOSPITAL_NAME, dataDRUP.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataDRUP.hospitalAddress());
 
+        LimsCohortConfigData cohortConfigWIDE =
+                buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         HospitalContactData dataWIDE = model.queryHospitalData("WIDE02010001T",
                 CORE_REQUESTER_NAME,
                 CORE_REQUESTER_EMAIL,
-                buildTestCohortModel("WIDE", true, false).queryCohortData("WIDE", "WIDE02010001T"));
+                cohortConfigWIDE);
         assertEquals(WIDE_PI, dataWIDE.hospitalPI());
         assertEquals(WIDE_REQUESTER_NAME, dataWIDE.requesterName());
         assertEquals(WIDE_REQUESTER_EMAIL, dataWIDE.requesterEmail());
         assertEquals(HOSPITAL_NAME, dataWIDE.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataWIDE.hospitalAddress());
 
+        LimsCohortConfigData cohortConfigCORE =
+                buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         HospitalContactData dataCORE = model.queryHospitalData("CORE02010001T",
                 CORE_REQUESTER_NAME,
                 CORE_REQUESTER_EMAIL,
-                buildTestCohortModel("CORE", false, true).queryCohortData("CORE", "CORE02010001T"));
+                cohortConfigCORE);
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCORE.hospitalPI());
         assertEquals(CORE_REQUESTER_NAME, dataCORE.requesterName());
         assertEquals(CORE_REQUESTER_EMAIL, dataCORE.requesterEmail());
@@ -82,7 +90,7 @@ public class HospitalModelTest {
         HospitalContactData dataCOREManuallyMapped = model.queryHospitalData(MANUALLY_MAPPED_CORE_SAMPLE,
                 CORE_REQUESTER_NAME,
                 CORE_REQUESTER_EMAIL,
-                buildTestCohortModel("CORE", false, true).queryCohortData("CORE", "CORE02010001T"));
+                cohortConfigCORE);
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCOREManuallyMapped.hospitalPI());
         assertEquals(CORE_REQUESTER_NAME, dataCOREManuallyMapped.requesterName());
         assertEquals(CORE_REQUESTER_EMAIL, dataCOREManuallyMapped.requesterEmail());
@@ -92,36 +100,36 @@ public class HospitalModelTest {
         HospitalContactData dataSampleDoesNotExist = model.queryHospitalData("I Don't exist",
                 CORE_REQUESTER_NAME,
                 CORE_REQUESTER_EMAIL,
-                buildTestCohortModel("", false, true).queryCohortData("CORE", "CORE02010001T"));
+                cohortConfigCORE);
         assertNull(dataSampleDoesNotExist);
 
         HospitalContactData dataHospitalDoesNotExist = model.queryHospitalData("CPCT02020202T",
                 CORE_REQUESTER_NAME,
                 CORE_REQUESTER_EMAIL,
-                buildTestCohortModel("CPCT", true, false).queryCohortData("CPCT", "CPCT02020202T"));
+                cohortConfigCPCT);
         assertNull(dataHospitalDoesNotExist);
     }
 
     @NotNull
-    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString, boolean PI, boolean requester) {
-        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
-        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
+    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra, boolean Report_germline,
+            boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral, boolean Require_hospital_ID,
+            boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile, boolean submission,
+            boolean sidePanelInfo) {
+        return ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
-                .hospitalId(true)
-                .reportGermline(false)
-                .reportGermlineFlag(false)
-                .reportConclusion(false)
-                .reportViral(false)
-                .requireHospitalId(false)
-                .requireHospitalPAId(false)
-                .hospitalPersonsStudy(PI)
-                .hospitalPersonsRequester(requester)
-                .outputFile(false)
-                .submission(false)
-                .sidePanelInfo(false)
+                .hospitalId(hospitalIdCentra)
+                .reportGermline(Report_germline)
+                .reportGermlineFlag(Report_germline_flag)
+                .reportConclusion(Report_conclusion)
+                .reportViral(Report_viral)
+                .requireHospitalId(Require_hospital_ID)
+                .requireHospitalPAId(Require_hospital_PA_ID)
+                .hospitalPersonsStudy(personsStudy)
+                .hospitalPersonsRequester(personsrequester)
+                .outputFile(outputFile)
+                .submission(submission)
+                .sidePanelInfo(sidePanelInfo)
                 .build();
-        cohortData.put(cohortString, config);
-        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
     }
 
     @NotNull

@@ -23,60 +23,18 @@ public abstract class LimsCohortModel {
     public LimsCohortConfigData queryCohortData(@NotNull String cohortString, @NotNull String sampleId) {
         if (cohortString.equals(Strings.EMPTY)) {
             LOGGER.error("Could not resolve LIMS cohort string: '" + cohortString + "'");
-            return ImmutableLimsCohortConfigData.builder()
-                    .cohortId(Strings.EMPTY)
-                    .hospitalId(false)
-                    .reportGermline(false)
-                    .reportGermlineFlag(false)
-                    .reportConclusion(false)
-                    .reportViral(false)
-                    .requireHospitalId(false)
-                    .requireHospitalPAId(false)
-                    .hospitalPersonsStudy(false)
-                    .hospitalPersonsRequester(false)
-                    .outputFile(false)
-                    .submission(false)
-                    .sidePanelInfo(false)
-                    .build();
+            return null;
         } else {
             LimsCohortConfigData cohortConfigData = limsCohortMap().get(cohortString);
             if (cohortConfigData == null) {
                 LOGGER.warn("No cohort map is present for cohortString {}", cohortString);
-                return ImmutableLimsCohortConfigData.builder()
-                        .cohortId(Strings.EMPTY)
-                        .hospitalId(false)
-                        .reportGermline(false)
-                        .reportGermlineFlag(false)
-                        .reportConclusion(false)
-                        .reportViral(false)
-                        .requireHospitalId(false)
-                        .requireHospitalPAId(false)
-                        .hospitalPersonsStudy(false)
-                        .hospitalPersonsRequester(false)
-                        .outputFile(false)
-                        .submission(false)
-                        .sidePanelInfo(false)
-                        .build();
+                return null;
             } else {
                 if (sampleId.startsWith(cohortConfigData.cohortId())) {
                     return cohortConfigData;
                 } else {
                     LOGGER.error("Cohort '{}' does match with sampleId '{}'" + cohortConfigData.cohortId() + sampleId);
-                    return ImmutableLimsCohortConfigData.builder()
-                            .cohortId(Strings.EMPTY)
-                            .hospitalId(false)
-                            .reportGermline(false)
-                            .reportGermlineFlag(false)
-                            .reportConclusion(false)
-                            .reportViral(false)
-                            .requireHospitalId(false)
-                            .requireHospitalPAId(false)
-                            .hospitalPersonsStudy(false)
-                            .hospitalPersonsRequester(false)
-                            .outputFile(false)
-                            .submission(false)
-                            .sidePanelInfo(false)
-                            .build();
+                    return null;
                 }
             }
         }
