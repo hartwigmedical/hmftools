@@ -81,16 +81,6 @@ class ActionableEvidenceFactory {
             }
         }
 
-        if (doid == null && cancerType != null) {
-            Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
-            if (doids != null && !doids.isEmpty()) {
-                doid = doids.iterator().next();
-                LOGGER.debug("Manually resolved doid '{}' for cancer type '{}'", doid, cancerType);
-            } else {
-                LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
-            }
-        }
-
         EvidenceLevel level = resolveLevel(entry.association().evidenceLabel());
         EvidenceDirection direction = resolveDirection(entry.association().responseType());
 
@@ -100,8 +90,17 @@ class ActionableEvidenceFactory {
             urls = Sets.newHashSet(info.publications());
         }
 
-        // Consider CancerType, Doid and URL to be optional.
         if (treatment != null && level != null) {
+            if (doid == null && cancerType != null) {
+                Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
+                if (doids != null && !doids.isEmpty()) {
+                    doid = doids.iterator().next();
+                    LOGGER.debug("Manually resolved doid '{}' for cancer type '{}'", doid, cancerType);
+                } else {
+                    LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
+                }
+            }
+
             return ImmutableActionableEvidence.builder()
                     .source(fromViccSource(entry.source()))
                     .treatment(treatment)
@@ -200,11 +199,11 @@ class ActionableEvidenceFactory {
             if (parts[0].equalsIgnoreCase("doid")) {
                 return parts[1];
             } else {
-                return Strings.EMPTY;
+                return null;
             }
         } else {
             LOGGER.warn("Unexpected Doid string: '{}'", doidString);
-            return Strings.EMPTY;
+            return null;
         }
     }
 

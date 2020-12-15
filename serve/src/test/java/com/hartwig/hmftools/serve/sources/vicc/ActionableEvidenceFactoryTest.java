@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNull;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class ActionableEvidenceFactoryTest {
@@ -52,8 +51,8 @@ public class ActionableEvidenceFactoryTest {
     @Test
     public void canExtractDoid() {
         assertEquals("123", ActionableEvidenceFactory.extractDoid("DOID:123"));
-        assertEquals(Strings.EMPTY, ActionableEvidenceFactory.extractDoid("SNOMED:123"));
-        assertEquals(Strings.EMPTY, ActionableEvidenceFactory.extractDoid("DOID"));
+        assertNull(ActionableEvidenceFactory.extractDoid("SNOMED:123"));
+        assertNull(ActionableEvidenceFactory.extractDoid("DOID"));
 
         assertNull(ActionableEvidenceFactory.extractDoid(null));
     }
