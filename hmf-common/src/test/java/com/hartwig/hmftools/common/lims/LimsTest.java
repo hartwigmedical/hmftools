@@ -184,25 +184,25 @@ public class LimsTest {
     }
 
     @NotNull
-    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString) {
-        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
-        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
+    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra,
+            boolean Report_germline, boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral,
+            boolean Require_hospital_ID, boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile,
+            boolean submission, boolean sidePanelInfo) {
+        return ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
-                .hospitalCentraId(true)
-                .reportGermline(false)
-                .reportGermlineFlag(false)
-                .reportConclusion(false)
-                .reportViral(false)
-                .requireHospitalId(false)
-                .requireHospitalPAId(false)
-                .requireHospitalPersonsStudy(false)
-                .requireHospitalPersonsRequester(false)
-                .requirePatientIdForPdfName(false)
-                .requireSubmissionInformation(false)
-                .requireAdditionalInfromationForSidePanel(false)
+                .hospitalCentraId(hospitalIdCentra)
+                .reportGermline(Report_germline)
+                .reportGermlineFlag(Report_germline_flag)
+                .reportConclusion(Report_conclusion)
+                .reportViral(Report_viral)
+                .requireHospitalId(Require_hospital_ID)
+                .requireHospitalPAId(Require_hospital_PA_ID)
+                .requireHospitalPersonsStudy(personsStudy)
+                .requireHospitalPersonsRequester(personsrequester)
+                .requirePatientIdForPdfName(outputFile)
+                .requireSubmissionInformation(submission)
+                .requireAdditionalInfromationForSidePanel(sidePanelInfo)
                 .build();
-        cohortData.put(cohortString, config);
-        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
     }
 
     @Test
@@ -226,8 +226,10 @@ public class LimsTest {
                 .putSampleToHospitalMapping(TUMOR_SAMPLE_ID, "1")
                 .build();
 
+        LimsCohortConfigData cohortConfigTest =
+                buildTestCohortModel("HMF", true, true, false, true, true, true, true, false, true, true, true, true);
         LimsCohortModel cohortConfig = ImmutableLimsCohortModel.builder()
-                .putLimsCohortMap("HMF", buildTestCohortModel("HMF").queryCohortData("HMF", "HMF-Test-Sample"))
+                .putLimsCohortMap("HMF", cohortConfigTest)
                 .build();
 
         Lims withHospitalModel = buildTestLimsWithWithHospitalModel(sample, testHospitalModel, cohortConfig);
