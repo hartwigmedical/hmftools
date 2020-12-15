@@ -69,28 +69,12 @@ class ActionableEvidenceFactory {
     @Nullable
     public ActionableEvent toActionableEvent(@NotNull ViccEntry entry) {
         String treatment = reformatDrugLabels(entry.association().drugLabels());
-
-        String cancerType = null;
-        String doid = null;
-        Phenotype phenotype = entry.association().phenotype();
-        if (phenotype != null) {
-            cancerType = phenotype.description();
-            PhenotypeType type = phenotype.type();
-            if (type != null) {
-                doid = extractDoid(type.id());
-            }
-        }
-
         EvidenceLevel level = resolveLevel(entry.association().evidenceLabel());
-        EvidenceDirection direction = resolveDirection(entry.association().responseType());
-
-        Set<String> urls = Sets.newHashSet();
-        EvidenceInfo info = entry.association().evidence().info();
-        if (info != null && !info.publications().isEmpty()) {
-            urls = Sets.newHashSet(info.publications());
-        }
 
         if (treatment != null && level != null) {
+            String cancerType = resolveCancerType(entry.association().phenotype());
+            String doid = resolveDoid(entry.association().phenotype());
+
             if (doid == null && cancerType != null) {
                 Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
                 if (doids != null && !doids.isEmpty()) {
@@ -100,6 +84,9 @@ class ActionableEvidenceFactory {
                     LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
                 }
             }
+
+            EvidenceDirection direction = resolveDirection(entry.association().responseType());
+            Set<String> urls = resolveUrls(entry.association().evidence().info());
 
             return ImmutableActionableEvidence.builder()
                     .source(fromViccSource(entry.source()))
@@ -113,30 +100,6 @@ class ActionableEvidenceFactory {
         } else {
             return null;
         }
-    }
-
-    @NotNull
-    private static EvidenceDirection nullToEmpty(@Nullable EvidenceDirection evidenceDirection) {
-        return evidenceDirection != null ? evidenceDirection : EvidenceDirection.NA;
-    }
-
-    @Nullable
-    @$VisibleForTesting
-    static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
-        if (evidenceLabel == null) {
-            return null;
-        }
-
-        EvidenceLevel level = EvidenceLevel.fromString(evidenceLabel);
-        if (level == null) {
-            LOGGER.warn("Could not resolve evidence label '{}'", evidenceLabel);
-        }
-        return level;
-    }
-
-    @NotNull
-    private static String nullToEmpty(@Nullable String string) {
-        return string != null ? string : Strings.EMPTY;
     }
 
     @Nullable
@@ -153,6 +116,57 @@ class ActionableEvidenceFactory {
             joiner.add(reformatField(part));
         }
         return joiner.toString();
+    }
+
+    @Nullable
+    @$VisibleForTesting
+    static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
+        if (evidenceLabel == null) {
+            return null;
+        }
+
+        EvidenceLevel level = EvidenceLevel.fromString(evidenceLabel);
+        if (level == null) {
+            LOGGER.warn("Could not resolve evidence label '{}'", evidenceLabel);
+        }
+        return level;
+    }
+
+    @Nullable
+    private static String resolveCancerType(@Nullable Phenotype phenotype) {
+        return phenotype != null ? phenotype.description() : null;
+    }
+
+    @Nullable
+    private static String resolveDoid(@Nullable Phenotype phenotype) {
+        if (phenotype != null) {
+            PhenotypeType type = phenotype.type();
+            if (type != null) {
+                return extractDoid(type.id());
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static String extractDoid(@Nullable String doidString) {
+        if (doidString == null) {
+            return null;
+        }
+
+        String[] parts = doidString.split(":");
+        if (parts.length == 2) {
+            if (parts[0].equalsIgnoreCase("doid")) {
+                return parts[1];
+            } else {
+                return null;
+            }
+        } else {
+            LOGGER.warn("Unexpected Doid string: '{}'", doidString);
+            return null;
+        }
     }
 
     @Nullable
@@ -175,6 +189,21 @@ class ActionableEvidenceFactory {
         return null;
     }
 
+    @NotNull
+    private static Set<String> resolveUrls(@Nullable EvidenceInfo info) {
+        return info != null ? Sets.newHashSet(info.publications()) : Sets.newHashSet();
+    }
+
+    @NotNull
+    private static EvidenceDirection nullToEmpty(@Nullable EvidenceDirection evidenceDirection) {
+        return evidenceDirection != null ? evidenceDirection : EvidenceDirection.NA;
+    }
+
+    @NotNull
+    private static String nullToEmpty(@Nullable String string) {
+        return string != null ? string : Strings.EMPTY;
+    }
+
     @Nullable
     @VisibleForTesting
     static String reformatField(@Nullable String direction) {
@@ -184,26 +213,6 @@ class ActionableEvidenceFactory {
             return direction.toUpperCase();
         } else {
             return direction.substring(0, 1).toUpperCase() + direction.substring(1).toLowerCase();
-        }
-    }
-
-    @Nullable
-    @VisibleForTesting
-    static String extractDoid(@Nullable String doidString) {
-        if (doidString == null) {
-            return null;
-        }
-
-        String[] parts = doidString.split(":");
-        if (parts.length == 2) {
-            if (parts[0].equalsIgnoreCase("doid")) {
-                return parts[1];
-            } else {
-                return null;
-            }
-        } else {
-            LOGGER.warn("Unexpected Doid string: '{}'", doidString);
-            return null;
         }
     }
 
