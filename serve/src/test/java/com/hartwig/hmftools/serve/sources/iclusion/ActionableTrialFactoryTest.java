@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTumorLocation;
+import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 
 import org.junit.Test;
 
@@ -27,7 +28,8 @@ public class ActionableTrialFactoryTest {
         IclusionTumorLocation loc2 = ImmutableIclusionTumorLocation.builder().primaryTumorLocation(location2).addDoids(loc2Doid1).build();
         IclusionTrial trial = IclusionTestFactory.trialWithTumors(treatment, Lists.newArrayList(loc1, loc2));
 
-        List<ActionableTrial> actionableTrials = ActionableTrialFactory.toActionableTrials(trial);
+        ActionableTrialFactory factory = new ActionableTrialFactory(DoidLookupTestFactory.dummy());
+        List<ActionableTrial> actionableTrials = factory.toActionableTrials(trial);
         assertEquals(3, actionableTrials.size());
         assertEquals(treatment, actionableTrials.get(0).treatment());
         assertEquals(location1, actionableTrials.get(0).cancerType());

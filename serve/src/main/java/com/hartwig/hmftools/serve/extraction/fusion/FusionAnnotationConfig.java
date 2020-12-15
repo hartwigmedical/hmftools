@@ -91,4 +91,7 @@ public final class FusionAnnotationConfig {
 
         return map;
     }
+
+    private FusionAnnotationConfig() {
+    }
 }

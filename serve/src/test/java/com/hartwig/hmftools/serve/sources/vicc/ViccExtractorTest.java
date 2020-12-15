@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
@@ -31,8 +32,11 @@ public class ViccExtractorTest {
     @Test
     public void canExtractFromViccEntries() throws IOException {
         EventClassifierConfig config = ViccClassificationConfig.build();
-        ViccExtractor extractor =
-                ViccExtractorFactory.buildViccExtractor(config, new TestProteinResolver(), Lists.newArrayList(), V37_GENE_MAP);
+        ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config,
+                new TestProteinResolver(),
+                Lists.newArrayList(),
+                V37_GENE_MAP,
+                DoidLookupTestFactory.dummy());
 
         Association association =
                 ViccTestFactory.testActionableAssociation("drugs", "colorectal cancer", "DOID:123", "A", "Responsive", "http");

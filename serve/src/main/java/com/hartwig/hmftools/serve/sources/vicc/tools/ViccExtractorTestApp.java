@@ -15,7 +15,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
-import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.curation.DoidLookup;
+import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
 import com.hartwig.hmftools.serve.sources.vicc.ViccUtil;
+import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -37,8 +39,7 @@ public class ViccExtractorTestApp {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApp.class);
 
-    private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE =
-            Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
+    private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE = Sets.newHashSet(ViccSource.CIVIC, ViccSource.CGI);
     private static final Integer MAX_VICC_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {
@@ -50,6 +51,7 @@ public class ViccExtractorTestApp {
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
         String viccJsonPath;
         String driverGeneTsvPath;
+        String missingDoidMappingTsv;
         String outputDir;
         ProteinResolver proteinResolver;
 
@@ -57,6 +59,7 @@ public class ViccExtractorTestApp {
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
             driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv";
+            missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/tmp";
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion,
                     "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta",
@@ -64,6 +67,7 @@ public class ViccExtractorTestApp {
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json";
             driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv";
+            missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
             proteinResolver = ProteinResolverFactory.dummy();
         }
@@ -81,9 +85,12 @@ public class ViccExtractorTestApp {
         LOGGER.debug("Configured '{}' as the VICC feature output TSV path", featureTsv);
         LOGGER.debug("Configured '{}' as the VICC feature interpretation output TSV path", featureInterpretationTsv);
         LOGGER.debug("Configured '{}' as the driver gene TSV path", driverGeneTsvPath);
+        LOGGER.debug("Configured '{}' as the missing DOID mapping TSV path", missingDoidMappingTsv);
 
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsvPath);
         LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
+
+        DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
 
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         EventClassifierConfig config = ViccClassificationConfig.build();
@@ -91,6 +98,7 @@ public class ViccExtractorTestApp {
                 proteinResolver,
                 driverGenes,
                 allGenesMap,
+                doidLookup,
                 featureInterpretationTsv);
 
         ExtractionResult result = viccExtractor.extract(entries);

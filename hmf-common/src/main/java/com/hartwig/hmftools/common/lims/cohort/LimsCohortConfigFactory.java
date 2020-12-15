@@ -23,23 +23,23 @@ public class LimsCohortConfigFactory {
 
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(DELIMITER);
-            if (parts.length == 11) {
+            if (parts.length == 13) {
 
 
                 LimsCohortConfigData cohortConfig = ImmutableLimsCohortConfigData.builder()
                         .cohortId(parts[0])
-                        .hospitalId(parts[1].equals("TRUE"))
+                        .hospitalCentraId(parts[1].equals("TRUE"))
                         .reportGermline(parts[2].equals("TRUE"))
                         .reportGermlineFlag(parts[3].equals("TRUE"))
                         .reportConclusion(parts[4].equals("TRUE"))
                         .reportViral(parts[5].equals("TRUE"))
                         .requireHospitalId(parts[6].equals("TRUE"))
                         .requireHospitalPAId(parts[7].equals("TRUE"))
-                        .hospitalPersonsStudy(parts[8].equals("TRUE"))
-                        .hospitalPersonsRequester(parts[9].equals("TRUE"))
-                        .outputFile(parts[10].equals("TRUE"))
-                        .submission(parts[11].equals("TRUE"))
-                        .sidePanelInfo(parts[12].equals("TRUE"))
+                        .requireHospitalPersonsStudy(parts[8].equals("TRUE"))
+                        .requireHospitalPersonsRequester(parts[9].equals("TRUE"))
+                        .requirePatientIdForPdfName(parts[10].equals("TRUE"))
+                        .requireSubmissionInformation(parts[11].equals("TRUE"))
+                        .requireAdditionalInfromationForSidePanel(parts[12].equals("TRUE"))
                         .build();
 
                 cohortConfigMap.put(parts[0], cohortConfig);

@@ -247,25 +247,26 @@ public class Lims {
     public LimsCohortConfigData cohortConfig(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         LimsCohortConfigData data;
-        String cohortString = sampleData != null ? sampleData.cohort() : Strings.EMPTY;
+        String cohortString = sampleData != null ? sampleData.cohort() : null;
 
-        data = limsCohortModel.queryCohortData(cohortString);
+        String sampleId = sampleId(sampleBarcode);
+        data = limsCohortModel.queryCohortData(cohortString, sampleId);
 
         if (data == null) {
             data = ImmutableLimsCohortConfigData.builder()
                     .cohortId(Strings.EMPTY)
-                    .hospitalId(false)
+                    .hospitalCentraId(false)
                     .reportGermline(false)
                     .reportGermlineFlag(false)
                     .reportConclusion(false)
                     .reportViral(false)
                     .requireHospitalId(false)
                     .requireHospitalPAId(false)
-                    .hospitalPersonsStudy(false)
-                    .hospitalPersonsRequester(false)
-                    .outputFile(false)
-                    .submission(false)
-                    .sidePanelInfo(false)
+                    .requireHospitalPersonsStudy(false)
+                    .requireHospitalPersonsRequester(false)
+                    .requirePatientIdForPdfName(false)
+                    .requireSubmissionInformation(false)
+                    .requireAdditionalInfromationForSidePanel(false)
                     .build();
         }
 
@@ -345,13 +346,13 @@ public class Lims {
         if (sampleData != null) {
             LimsCohortConfigData cohort = cohortConfig(sampleBarcode);
             if (sampleData.reportGermlineVariants()) {
-                if (!cohort.reportGermline()) {
+                if (cohort.reportGermline()) {
                     LOGGER.warn("Consent of report germline variants is true, but must be false at study CPCT/DRUP for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return true;
             } else {
-                if (cohort.reportGermline()) {
+                if (!cohort.reportGermline()) {
                     LOGGER.warn("Consent of report germline variants is false, but must be true at study CORE/WIDE for sample '{}'",
                             sampleId(sampleBarcode));
                 }
@@ -368,13 +369,13 @@ public class Lims {
         if (sampleData != null) {
             LimsCohortConfigData cohort = cohortConfig(sampleBarcode);
             if (sampleData.reportViralInsertions()) {
-                if (!cohort.reportViral()) {
+                if (cohort.reportViral()) {
                     LOGGER.warn("Consent of viral insertions is true, but must be false at study CPCT/DRUP for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return true;
             } else {
-                if (cohort.reportViral()) {
+                if (!cohort.reportViral()) {
                     LOGGER.warn("Consent of viral insertions is false, but must be true at study CORE/WIDE for sample '{}'",
                             sampleId(sampleBarcode));
                 }

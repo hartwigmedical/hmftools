@@ -47,7 +47,6 @@ public class CodonExtractor {
                 if (codonIndex == null) {
                     LOGGER.warn("Could not extract codon index from '{}'", event);
                     return null;
-
                 }
 
                 MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);

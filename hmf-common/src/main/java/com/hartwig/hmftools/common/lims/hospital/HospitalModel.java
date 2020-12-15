@@ -47,13 +47,13 @@ public abstract class HospitalModel {
 
         HospitalAddress address = hospitalAddressMap().get(hospitalId);
         HospitalPersons persons = findPersonsForStudy(hospitalId, cohort);
-        if (address == null || (persons == null && (cohort.hospitalPersonsStudy()))) {
+        if (address == null || (persons == null && (cohort.requireHospitalPersonsStudy()))) {
             return null;
         }
 
         String requesterName = null;
         String requesterEmail = null;
-        if (cohort.hospitalPersonsRequester()) {
+        if (cohort.requireHospitalPersonsRequester()) {
             requesterName = coreRequesterName;
             requesterEmail = coreRequesterEmail;
         } else if (persons != null) {
@@ -94,7 +94,7 @@ public abstract class HospitalModel {
             return sampleToHospitalMapping().get(sampleId);
         } else {
 
-            if (cohort.hospitalId()) {
+            if (cohort.hospitalCentraId()) {
                 // We assume all these projects follow a structure like CPCT##<hospitalId><identifier>
                 return sampleId.substring(6, 8);
             } else {

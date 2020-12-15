@@ -38,7 +38,7 @@ public class QCFailReporter {
 
         LimsCohortConfigData cohort = sampleReport.cohort();
 
-        if (cohort == null) {
+        if (cohort.cohortId().isEmpty()) {
             throw new IllegalStateException("QC fail report not supported for non-cancer study samples: " + sampleMetadata.tumorSampleId());
         }
 

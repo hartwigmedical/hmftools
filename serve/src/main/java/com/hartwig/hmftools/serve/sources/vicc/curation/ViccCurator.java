@@ -55,14 +55,14 @@ public class ViccCurator {
         for (CurationKey key : CurationFactory.FEATURE_BLACKLIST) {
             if (!evaluatedCurationKeys.contains(key)) {
                 unusedKeyCount++;
-                LOGGER.warn("Key '{}' hasn't been used during VICC blacklist curation", key);
+                LOGGER.debug("Key '{}' hasn't been used during VICC blacklist curation", key);
             }
         }
 
         for (CurationKey key : CurationFactory.FEATURE_MAPPINGS.keySet()) {
             if (!evaluatedCurationKeys.contains(key)) {
                 unusedKeyCount++;
-                LOGGER.warn("Key '{}' hasn't been used during VICC name mapping curation", key);
+                LOGGER.debug("Key '{}' hasn't been used during VICC name mapping curation", key);
             }
         }
 

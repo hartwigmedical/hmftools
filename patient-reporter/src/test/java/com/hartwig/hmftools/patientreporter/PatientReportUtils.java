@@ -1,42 +1,11 @@
-package com.hartwig.hmftools.common.lims;
-
-import java.time.LocalDate;
+package com.hartwig.hmftools.patientreporter;
 
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class LimsTestUtil {
-
-    private LimsTestUtil() {
-    }
-
-    @NotNull
-    static LocalDate toDate(@NotNull String date) {
-        return LocalDate.parse(date, LimsConstants.DATE_FORMATTER);
-    }
-
-    @NotNull
-    public static ImmutableLimsJsonSampleData.Builder createLimsSampleDataBuilder() {
-        return ImmutableLimsJsonSampleData.builder()
-                .sampleId(Strings.EMPTY)
-                .patientId(Strings.EMPTY)
-                .tumorBarcode(Strings.EMPTY)
-                .refBarcode(Strings.EMPTY)
-                .arrivalDate(Strings.EMPTY)
-                .dnaConcentration(Strings.EMPTY)
-                .primaryTumor(Strings.EMPTY)
-                .labSopVersions(Strings.EMPTY)
-                .submission(Strings.EMPTY)
-                .germlineReportingLevel(Strings.EMPTY)
-                .reportGermlineVariants(false)
-                .shallowSeq(false)
-                .reportViralInsertions(false)
-                .cohort(Strings.EMPTY)
-                .analysisTypeSample(Strings.EMPTY);
-    }
+public class PatientReportUtils {
 
     @NotNull
     public static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortId, boolean hospitalCentraId, boolean reportGermline,

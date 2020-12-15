@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

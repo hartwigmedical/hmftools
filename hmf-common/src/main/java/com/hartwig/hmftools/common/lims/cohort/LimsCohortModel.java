@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,8 +20,9 @@ public abstract class LimsCohortModel {
     private static final Logger LOGGER = LogManager.getLogger(LimsCohortModel.class);
 
     @Nullable
-    public LimsCohortConfigData queryCohortData(@Nullable String cohortString) {
+    public LimsCohortConfigData queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
         if (cohortString == null) {
+            LOGGER.error("Could not resolve LIMS cohort string: '" + cohortString + "'");
             return null;
         } else {
             LimsCohortConfigData cohortConfigData = limsCohortMap().get(cohortString);
@@ -28,7 +30,12 @@ public abstract class LimsCohortModel {
                 LOGGER.warn("No cohort map is present for cohortString {}", cohortString);
                 return null;
             } else {
-                return cohortConfigData;
+                if (sampleId.startsWith(cohortConfigData.cohortId())) {
+                    return cohortConfigData;
+                } else {
+                    LOGGER.error("Cohort " + cohortConfigData.cohortId() + " does match with sampleId " +  sampleId);
+                    return null;
+                }
             }
         }
     }

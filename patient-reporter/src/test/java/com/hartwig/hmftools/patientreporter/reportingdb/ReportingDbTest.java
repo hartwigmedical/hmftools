@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
+import com.hartwig.hmftools.patientreporter.PatientReportUtils;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.jetbrains.annotations.NotNull;
@@ -67,47 +68,94 @@ public class ReportingDbTest {
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
+            LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false);
 
             ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS",
-                            null,
-                            "CPCT"));
+                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS", null, cohortConfig));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL",
-                            QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
-                            "CPCT"));
+                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, cohortConfig));
         }
     }
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("WIDE", true).queryCohortData("WIDE")));
-        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CPCT", false).queryCohortData("CPCT")));
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE", true).queryCohortData("CORE")));
-        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CORELR02", false).queryCohortData("CORELR02")));
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORELR11", true).queryCohortData("CORELR11")));
-    }
-
-    @NotNull
-    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString, boolean requireConclusion) {
-        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
-        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
-                .cohortId(cohortString)
-                .hospitalId(true)
-                .reportGermline(false)
-                .reportGermlineFlag(false)
-                .reportConclusion(requireConclusion)
-                .reportViral(false)
-                .requireHospitalId(false)
-                .requireHospitalPAId(false)
-                .hospitalPersonsStudy(true)
-                .hospitalPersonsRequester(false)
-                .outputFile(false)
-                .submission(false)
-                .sidePanelInfo(false)
-                .build();
-        cohortData.put(cohortString, config);
-        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
+        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("WIDE",
+                true,
+                true,
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                false,
+                false,
+                false,
+                true)));
+        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false)));
+        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CORE",
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true)));
+        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CORE",
+                true,
+                true,
+                false,
+                false,
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true)));
+        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CORE",
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true,
+                false,
+                true,
+                true,
+                true,
+                true)));
     }
 }

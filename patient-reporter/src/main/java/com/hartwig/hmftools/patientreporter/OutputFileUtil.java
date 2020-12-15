@@ -17,7 +17,7 @@ public final class OutputFileUtil {
         LimsCohortConfigData cohort = report.sampleReport().cohort();
 
         String filePrefix =
-                cohort.outputFile() ? sampleReport.tumorSampleId() + "_"
+                cohort.requirePatientIdForPdfName() ? sampleReport.tumorSampleId() + "_"
                         + sampleReport.hospitalPatientId().replace(" ", "_") : sampleReport.tumorSampleId();
 
         String fileSuffix = report.isCorrectedReport() ? "_corrected.pdf" : ".pdf";

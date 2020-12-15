@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.vicc;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
@@ -43,6 +44,6 @@ abstract class ViccExtractionResult {
     @NotNull
     public abstract Map<Feature, SignatureName> signaturesPerFeature();
 
-    @Nullable
-    public abstract ActionableEvent actionableEvent();
+    @NotNull
+    public abstract Set<ActionableEvent> actionableEvents();
 }

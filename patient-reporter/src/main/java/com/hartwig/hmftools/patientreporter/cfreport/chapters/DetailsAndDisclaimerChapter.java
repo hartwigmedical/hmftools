@@ -90,7 +90,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
         }
 
-        if (cohort.submission()) {
+        if (cohort.requireSubmissionInformation()) {
             div.add(createContentParagraphTwice("The project name of sample is: ",
                     sampleReport.projectName(),
                     " and the submission ID is ",
@@ -132,7 +132,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph generateHMFAndPathologySampleIDParagraph(@NotNull SampleReport sampleReport) {
-        if (sampleReport.hospitalPathologySampleId() != null) {
+        if (sampleReport.hospitalPathologySampleId() != null && sampleReport.cohort().requireHospitalPAId()) {
             return createContentParagraphTwice("The HMF sample ID is: ",
                     sampleReport.tumorSampleId(),
                     " and the pathology tissue ID is: ",

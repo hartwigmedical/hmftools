@@ -60,30 +60,7 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
-        LimsCohortConfigData cohort = failReport.sampleReport().cohort();
-
-        switch (cohort.cohortId()) {
-            case "WIDE":
-                reportDocument.add(createWIDEContentBody());
-                break;
-            case "COREDB":
-                reportDocument.add(createCOREDBContentBody());
-                break;
-            case "CORE":
-            case "CORELR02":
-            case "CORERI02":
-            case "CORESC11":
-            case "CORELR11":
-                reportDocument.add(createCOREContentBody());
-                break;
-            case "DRUP":
-            case "DRUPstage3":
-            case "CPCTpancreas":
-            case "CPCT":
-                reportDocument.add(createCPCTDRUPContentBody());
-                break;
-        }
-
+        reportDocument.add(createContentBody());
         reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(15));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
     }
@@ -143,25 +120,37 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Table createWIDEContentBody() {
+    private Table createContentBody() {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCell().add(createWIDESampleDetailsColumn()));
+        table.addCell(TableUtil.createLayoutCell().add(createSampleDetailsColumn()));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createWIDEDisclaimerColumn()));
+        table.addCell(TableUtil.createLayoutCell().add(createDisclaimerColumn()));
         return table;
     }
 
     @NotNull
-    private Div createWIDESampleDetailsColumn() {
+    private Div createSampleDetailsColumn() {
         Div div = createSampleDetailsDiv();
         div.add(samplesAreEvaluatedAtHMFAndWithSampleID());
         div.add(reportIsBasedOnTumorSampleArrivedAt());
         div.add(reportIsBasedOnBloodSampleArrivedAt());
         div.add(resultsAreObtainedBetweenDates());
-        if (failReport.sampleReport().hospitalPathologySampleId() != null) {
-            div.add(reportIsForPathologySampleID());
+        if (failReport.sampleReport().cohort().requireHospitalPAId()) {
+            if (failReport.sampleReport().hospitalPathologySampleId() != null){
+                div.add(reportIsForPathologySampleID());
+            }
         }
+        if (failReport.sampleReport().cohort().requireHospitalPAId() && failReport.sampleReport().cohort().requireHospitalId()) {
+            if (failReport.sampleReport().hospitalPathologySampleId() != null &&  failReport.sampleReport().hospitalPatientId() != null) {
+                div.add(reportHospitalPatientIDAndPathologySampleId());
+            }
+        }
+
+        if (failReport.sampleReport().cohort().requireSubmissionInformation()) {
+            div.add(reportIsForProjectAndSubmission());
+        }
+
         if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
             div.add(sampleHasMolecularTumorPercentage());
         }
@@ -170,7 +159,7 @@ public class QCFailChapter implements ReportChapter {
     }
 
     @NotNull
-    private Div createWIDEDisclaimerColumn() {
+    private Div createDisclaimerColumn() {
         Div div = createDisclaimerDiv();
         div.add(reportIsBasedOnBloodAndTumorSamples());
         div.add(testsArePerformedByAccreditedLab());
@@ -180,139 +169,12 @@ public class QCFailChapter implements ReportChapter {
         div.add(resubmitSample());
         div.add(forQuestionsPleaseContactHMF());
         return div;
-    }
-
-    @NotNull
-    private Table createCOREDBContentBody() {
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
-        table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCell().add(createCOREDBSampleDetailsColumn()));
-        table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createCOREDBDisclaimerColumn()));
-        return table;
-    }
-
-    @NotNull
-    private Div createCOREDBSampleDetailsColumn() {
-        Div div = createSampleDetailsDiv();
-        div.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        div.add(reportIsBasedOnTumorSampleArrivedAt());
-        div.add(reportIsBasedOnBloodSampleArrivedAt());
-        div.add(resultsAreObtainedBetweenDates());
-        if (failReport.sampleReport().hospitalPathologySampleId() != null && failReport.sampleReport().hospitalPatientId() != null) {
-            div.add(reportHospitalPatientIDAndPathologySampleId());
-        }
-        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
-            div.add(sampleHasMolecularTumorPercentage());
-        }
-
-        return div;
-    }
-
-    @NotNull
-    private Div createCOREDBDisclaimerColumn() {
-        Div div = createDisclaimerDiv();
-        div.add(reportIsBasedOnBloodAndTumorSamples());
-        div.add(testsArePerformedByAccreditedLab());
-        div.add(reportIsVerifiedByAndAddressedTo());
-        div.add(reportIsGeneratedByPatientReporterVersion());
-        failReport.comments().ifPresent(comments -> div.add(createContentParagraphRed("Comments: " + comments)));
-        div.add(resubmitSample());
-        div.add(forQuestionsPleaseContactHMF());
-        return div;
-    }
-
-    @NotNull
-    private Table createCOREContentBody() {
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
-        table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCell().add(createCORESampleDetailsColumn()));
-        table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createCOREDisclaimerColumn()));
-        return table;
-    }
-
-    @NotNull
-    private Div createCORESampleDetailsColumn() {
-        Div divColumn = createSampleDetailsDiv();
-        divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
-        divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(resultsAreObtainedBetweenDates());
-        divColumn.add(reportIsForHospitalPatientIDAndPathologySampleId());
-        divColumn.add(reportIsForProjectAndSubmission());
-        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
-            divColumn.add(sampleHasMolecularTumorPercentage());
-        }
-        return divColumn;
-    }
-
-    @NotNull
-    private Div createCOREDisclaimerColumn() {
-        Div divColumn = createDisclaimerDiv();
-        divColumn.add(reportIsBasedOnBloodAndTumorSamples());
-        divColumn.add(testsArePerformedByAccreditedLab());
-        divColumn.add(reportIsVerifiedByAndAddressedTo());
-        divColumn.add(reportIsGeneratedByPatientReporterVersion());
-        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraphRed("Comments: " + comments)));
-        divColumn.add(resubmitSample());
-        divColumn.add(forQuestionsPleaseContactHMF());
-        return divColumn;
-    }
-
-    @NotNull
-    private Table createCPCTDRUPContentBody() {
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
-        table.setWidth(contentWidth());
-        table.addCell(TableUtil.createLayoutCell().add(createCPCTDRUPSampleDetailsColumn()));
-        table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createCPCTDRUPDisclaimerColumn()));
-        return table;
-    }
-
-    @NotNull
-    private Div createCPCTDRUPSampleDetailsColumn() {
-        Div divColumn = createSampleDetailsDiv();
-        divColumn.add(samplesAreEvaluatedAtHMFAndWithSampleID());
-        divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
-        divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(resultsAreObtainedBetweenDates());
-        if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
-            divColumn.add(sampleHasMolecularTumorPercentage());
-        }
-
-        return divColumn;
-    }
-
-    @NotNull
-    private Div createCPCTDRUPDisclaimerColumn() {
-        Div divColumn = createDisclaimerDiv();
-        divColumn.add(reportIsBasedOnBloodAndTumorSamples());
-        divColumn.add(testsArePerformedByAccreditedLab());
-        divColumn.add(reportIsVerifiedByAndAddressedTo());
-        divColumn.add(reportIsGeneratedByPatientReporterVersion());
-        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraphRed("Comments: " + comments)));
-        divColumn.add(resubmitSample());
-        divColumn.add(forQuestionsPleaseContactHMF());
-        return divColumn;
     }
 
     @NotNull
     private Paragraph resubmitSample() {
         return createContentParagraph("If available new biomaterial(s) can be provided for a new assessment, please contact ",
                 "info@hartwigmedicalfoundation.nl");
-    }
-
-    @NotNull
-    private Paragraph reportIsForHospitalPatientIDAndPathologySampleId() {
-        if (failReport.sampleReport().hospitalPathologySampleId() != null && failReport.sampleReport().hospitalPatientId() != null) {
-            return createContentParagraphTwice("The hospital patient ID is ",
-                    failReport.sampleReport().hospitalPatientId(),
-                    " and the pathology tissue ID is: ",
-                    failReport.sampleReport().hospitalPathologySampleId());
-        } else {
-            return createContentParagraph("The hospital patient ID is ", failReport.sampleReport().hospitalPatientId());
-        }
     }
 
     @NotNull

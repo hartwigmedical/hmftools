@@ -29,9 +29,9 @@ import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
+import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;

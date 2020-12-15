@@ -12,7 +12,7 @@ public abstract class LimsCohortConfigData {
     @NotNull
     public abstract String cohortId();
 
-    public abstract boolean hospitalId();
+    public abstract boolean hospitalCentraId();
 
     public abstract boolean reportGermline();
 
@@ -26,13 +26,13 @@ public abstract class LimsCohortConfigData {
 
     public abstract boolean requireHospitalPAId();
 
-    public abstract boolean hospitalPersonsStudy();
+    public abstract boolean requireHospitalPersonsStudy();
 
-    public abstract boolean hospitalPersonsRequester();
+    public abstract boolean requireHospitalPersonsRequester();
 
-    public abstract boolean outputFile();
+    public abstract boolean requirePatientIdForPdfName();
 
-    public abstract boolean submission();
+    public abstract boolean requireSubmissionInformation();
 
-    public abstract boolean sidePanelInfo();
+    public abstract boolean requireAdditionalInfromationForSidePanel();
 }

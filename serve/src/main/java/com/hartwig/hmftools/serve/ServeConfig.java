@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.commons.cli.CommandLine;
@@ -20,17 +21,16 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ServeConfig {
 
-    Set<ViccSource> DEFAULT_VICC_SOURCES = Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
-
     // Input sources to SERVE
     String VICC_JSON = "vicc_json";
+    String VICC_SOURCES = "vicc_sources";
     String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
     String DOCM_TSV = "docm_tsv";
     String HARTWIG_COHORT_TSV = "hartwig_cohort_tsv";
     String HARTWIG_CURATED_TSV = "hartwig_curated_tsv";
 
-    // Optional config specific for several knowledgebases
-    String VICC_SOURCES = "vicc_sources";
+    // Config for curation of evidence
+    String MISSING_DOIDS_MAPPING_TSV = "missing_doids_mapping_tsv";
 
     // Additional config for knowledge generation
     String REF_GENOME_VERSION = "ref_genome_version";
@@ -49,11 +49,13 @@ public interface ServeConfig {
         Options options = new Options();
 
         options.addOption(VICC_JSON, true, "Path to the VICC JSON knowledgebase");
-        options.addOption(VICC_SOURCES, true, "Comma-separated list of VICC sources to include");
+        options.addOption(VICC_SOURCES, true, "Comma-separated list of (lowercase) VICC sources to include");
         options.addOption(ICLUSION_TRIAL_TSV, true, "Path to the iClusion input trial TSV");
         options.addOption(DOCM_TSV, true, "Path to the DoCM knowledgebase input TSV");
         options.addOption(HARTWIG_COHORT_TSV, true, "Path to the Hartwig Cohort input TSV");
         options.addOption(HARTWIG_CURATED_TSV, true, "Path to the Hartwig Curated input TSV");
+
+        options.addOption(MISSING_DOIDS_MAPPING_TSV, true, "Path to the mapping TSV containing entries for missing DOIDs");
 
         options.addOption(REF_GENOME_VERSION, true, "Ref version. Should be 'hgXX'");
         options.addOption(REF_GENOME_FASTA_FILE, true, "Path to the ref genome fasta file");
@@ -86,6 +88,9 @@ public interface ServeConfig {
     String hartwigCuratedTsv();
 
     @NotNull
+    String missingDoidsMappingTsv();
+
+    @NotNull
     RefGenomeVersion refGenomeVersion();
 
     @NotNull
@@ -112,6 +117,7 @@ public interface ServeConfig {
                 .docmTsv(nonOptionalFile(cmd, DOCM_TSV))
                 .hartwigCohortTsv(nonOptionalFile(cmd, HARTWIG_COHORT_TSV))
                 .hartwigCuratedTsv(nonOptionalFile(cmd, HARTWIG_CURATED_TSV))
+                .missingDoidsMappingTsv(nonOptionalFile(cmd, MISSING_DOIDS_MAPPING_TSV))
                 .refGenomeVersion(RefGenomeVersion.fromIdentifier(nonOptionalValue(cmd, REF_GENOME_VERSION)))
                 .refGenomeFastaFile(nonOptionalFile(cmd, REF_GENOME_FASTA_FILE))
                 .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))
@@ -121,13 +127,9 @@ public interface ServeConfig {
     }
 
     @NotNull
-    static Set<ViccSource> readViccSources(@NotNull CommandLine cmd) {
-        if (!cmd.hasOption(VICC_SOURCES)) {
-            return DEFAULT_VICC_SOURCES;
-        }
-
+    static Set<ViccSource> readViccSources(@NotNull CommandLine cmd) throws ParseException {
         Set<ViccSource> viccSources = Sets.newHashSet();
-        String[] sources = cmd.getOptionValue(VICC_SOURCES).split(",");
+        String[] sources = nonOptionalValue(cmd, VICC_SOURCES).split(",");
         for (String source : sources) {
             viccSources.add(ViccSource.fromViccKnowledgebaseString(source));
         }

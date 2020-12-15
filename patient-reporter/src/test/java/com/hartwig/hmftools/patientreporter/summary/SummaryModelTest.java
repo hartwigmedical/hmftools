@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
+import com.hartwig.hmftools.patientreporter.PatientReportUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -34,29 +35,10 @@ public class SummaryModelTest {
         summaryToSampleMap.put("sample", "this is a test summary");
         SummaryModel summaryModel = new SummaryModel(summaryToSampleMap);
 
-        assertEquals("this is a test summary", summaryModel.findSummaryForSample("sample", buildTestCohortModel("WIDE", true).queryCohortData("WIDE")));
-        assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("sample2", buildTestCohortModel("WIDE", true).queryCohortData("WIDE")));
-    }
+        LimsCohortConfigData cohortConfig =
+                PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
 
-    @NotNull
-    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString, boolean requireConclusion) {
-        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
-        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
-                .cohortId(cohortString)
-                .hospitalId(true)
-                .reportGermline(false)
-                .reportGermlineFlag(false)
-                .reportConclusion(requireConclusion)
-                .reportViral(false)
-                .requireHospitalId(false)
-                .requireHospitalPAId(false)
-                .hospitalPersonsStudy(true)
-                .hospitalPersonsRequester(false)
-                .outputFile(false)
-                .submission(false)
-                .sidePanelInfo(false)
-                .build();
-        cohortData.put(cohortString, config);
-        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
+        assertEquals("this is a test summary", summaryModel.findSummaryForSample("sample", cohortConfig));
+        assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("sample2", cohortConfig));
     }
 }

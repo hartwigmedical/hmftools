@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
@@ -22,9 +23,11 @@ import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class ActionableEvidenceFactory {
+class ActionableEvidenceFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
+
+    private static final String CANCER_TYPE_SEPARATOR = ";";
 
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
@@ -37,18 +40,12 @@ final class ActionableEvidenceFactory {
 
         RESISTANT_DIRECTIONS.add("Resistant");
 
-        DIRECTIONS_TO_IGNORE.add("Positive");
-        DIRECTIONS_TO_IGNORE.add("Negative");
         DIRECTIONS_TO_IGNORE.add("Adverse response");
         DIRECTIONS_TO_IGNORE.add("No responsive");
         DIRECTIONS_TO_IGNORE.add("Not applicable");
         DIRECTIONS_TO_IGNORE.add("Conflicting");
         DIRECTIONS_TO_IGNORE.add("Na");
         DIRECTIONS_TO_IGNORE.add("N/a");
-        DIRECTIONS_TO_IGNORE.add("Uncertain significance");
-        DIRECTIONS_TO_IGNORE.add("Pathogenic");
-        DIRECTIONS_TO_IGNORE.add("Likely pathogenic");
-        DIRECTIONS_TO_IGNORE.add("Better outcome");
         DIRECTIONS_TO_IGNORE.add("No benefit");
         DIRECTIONS_TO_IGNORE.add("Increased toxicity");
         DIRECTIONS_TO_IGNORE.add("Increased toxicity (myelosupression)");
@@ -58,76 +55,70 @@ final class ActionableEvidenceFactory {
         DIRECTIONS_TO_IGNORE.add("Unknown");
     }
 
-    private ActionableEvidenceFactory() {
+    @NotNull
+    private final DoidLookup missingDoidLookup;
+
+    public ActionableEvidenceFactory(@NotNull final DoidLookup missingDoidLookup) {
+        this.missingDoidLookup = missingDoidLookup;
     }
 
-    @Nullable
-    public static ActionableEvent toActionableEvent(@NotNull ViccEntry entry) {
+    @NotNull
+    public Set<ActionableEvent> toActionableEvents(@NotNull ViccEntry entry) {
+        Set<ActionableEvent> actionableEvents = Sets.newHashSet();
+
         String treatment = reformatDrugLabels(entry.association().drugLabels());
-
-        String cancerType = null;
-        String doid = null;
-        Phenotype phenotype = entry.association().phenotype();
-        if (phenotype != null) {
-            cancerType = phenotype.description();
-            PhenotypeType type = phenotype.type();
-            if (type != null) {
-                doid = extractDoid(type.id());
-            }
-        }
         EvidenceLevel level = resolveLevel(entry.association().evidenceLabel());
-        EvidenceDirection direction = resolveDirection(entry.association().responseType());
 
-        String url = null;
-        EvidenceInfo info = entry.association().evidence().info();
-        if (info != null && !info.publications().isEmpty()) {
-            url = info.publications().get(0);
-        }
-
-        // Consider CancerType, DOID and URL to be optional.
-        //TODO: what todo when direction is not correct filled in?
         if (treatment != null && level != null) {
-            return ImmutableActionableEvidence.builder()
+            EvidenceDirection direction = resolveDirection(entry.association().responseType());
+            Set<String> urls = resolveUrls(entry.association().evidence().info());
+
+            ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
                     .source(fromViccSource(entry.source()))
                     .treatment(treatment)
-                    .cancerType(nullToEmpty(cancerType))
-                    .doid(nullToEmpty(doid))
                     .level(level)
                     .direction(nullToEmpty(direction))
-                    .urls(nullToEmptySet(url))
-                    .build();
+                    .urls(urls);
+
+            String cancerType = resolveCancerType(entry.association().phenotype());
+
+            if (cancerType != null) {
+                if (cancerType.contains(CANCER_TYPE_SEPARATOR)) {
+                    String[] parts = cancerType.split(CANCER_TYPE_SEPARATOR);
+                    for (String part : parts) {
+                        // We always look up the DOIDs when there is aggregate cancer type information as the DOID in this case is unreliable.
+                        for (String doid : lookupDoids(part)) {
+                            actionableEvents.add(builder.cancerType(part).doid(doid).build());
+                        }
+                    }
+                } else {
+                    String doidEntry = resolveDoid(entry.association().phenotype());
+                    Set<String> doids;
+                    if (doidEntry == null) {
+                        doids = lookupDoids(cancerType);
+                    } else {
+                        doids = Sets.newHashSet(doidEntry);
+                    }
+
+                    for (String doid : doids) {
+                        actionableEvents.add(builder.cancerType(cancerType).doid(doid).build());
+                    }
+                }
+            }
+        }
+
+        return actionableEvents;
+    }
+
+    @NotNull
+    private Set<String> lookupDoids(@NotNull String cancerType) {
+        Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
+        if (doids != null) {
+            return doids;
         } else {
-            return null;
+            LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
+            return Sets.newHashSet();
         }
-    }
-
-    @NotNull
-    private static EvidenceDirection nullToEmpty(@Nullable EvidenceDirection evidenceDirection) {
-        return evidenceDirection != null ? evidenceDirection : EvidenceDirection.NA;
-    }
-
-    @Nullable
-    @$VisibleForTesting
-    static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
-        if (evidenceLabel == null) {
-            return null;
-        }
-
-        EvidenceLevel level = EvidenceLevel.fromString(evidenceLabel);
-        if (level == null) {
-            LOGGER.warn("Could not resolve evidence label '{}'", evidenceLabel);
-        }
-        return level;
-    }
-
-    @NotNull
-    private static Set<String> nullToEmptySet(@Nullable String string) {
-        return string != null ? Sets.newHashSet(string) : Sets.newHashSet();
-    }
-
-    @NotNull
-    private static String nullToEmpty(@Nullable String string) {
-        return string != null ? string : Strings.EMPTY;
     }
 
     @Nullable
@@ -144,6 +135,57 @@ final class ActionableEvidenceFactory {
             joiner.add(reformatField(part));
         }
         return joiner.toString();
+    }
+
+    @Nullable
+    @$VisibleForTesting
+    static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
+        if (evidenceLabel == null) {
+            return null;
+        }
+
+        EvidenceLevel level = EvidenceLevel.fromString(evidenceLabel);
+        if (level == null) {
+            LOGGER.warn("Could not resolve evidence label '{}'", evidenceLabel);
+        }
+        return level;
+    }
+
+    @Nullable
+    private static String resolveCancerType(@Nullable Phenotype phenotype) {
+        return phenotype != null ? phenotype.description() : null;
+    }
+
+    @Nullable
+    private static String resolveDoid(@Nullable Phenotype phenotype) {
+        if (phenotype != null) {
+            PhenotypeType type = phenotype.type();
+            if (type != null) {
+                return extractDoid(type.id());
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static String extractDoid(@Nullable String doidString) {
+        if (doidString == null) {
+            return null;
+        }
+
+        String[] parts = doidString.split(":");
+        if (parts.length == 2) {
+            if (parts[0].equalsIgnoreCase("doid")) {
+                return parts[1];
+            } else {
+                return null;
+            }
+        } else {
+            LOGGER.warn("Unexpected Doid string: '{}'", doidString);
+            return null;
+        }
     }
 
     @Nullable
@@ -166,6 +208,21 @@ final class ActionableEvidenceFactory {
         return null;
     }
 
+    @NotNull
+    private static Set<String> resolveUrls(@Nullable EvidenceInfo info) {
+        return info != null ? Sets.newHashSet(info.publications()) : Sets.newHashSet();
+    }
+
+    @NotNull
+    private static EvidenceDirection nullToEmpty(@Nullable EvidenceDirection evidenceDirection) {
+        return evidenceDirection != null ? evidenceDirection : EvidenceDirection.NA;
+    }
+
+    @NotNull
+    private static String nullToEmpty(@Nullable String string) {
+        return string != null ? string : Strings.EMPTY;
+    }
+
     @Nullable
     @VisibleForTesting
     static String reformatField(@Nullable String direction) {
@@ -175,26 +232,6 @@ final class ActionableEvidenceFactory {
             return direction.toUpperCase();
         } else {
             return direction.substring(0, 1).toUpperCase() + direction.substring(1).toLowerCase();
-        }
-    }
-
-    @Nullable
-    @VisibleForTesting
-    static String extractDoid(@Nullable String doidString) {
-        if (doidString == null) {
-            return null;
-        }
-
-        String[] parts = doidString.split(":");
-        if (parts.length == 2) {
-            if (parts[0].equalsIgnoreCase("doid")) {
-                return parts[1];
-            } else {
-                return Strings.EMPTY;
-            }
-        } else {
-            LOGGER.warn("Unexpected DOID string: '{}'", doidString);
-            return Strings.EMPTY;
         }
     }
 

@@ -64,7 +64,7 @@ public class ViccFilter {
         for (String keyword : FilterFactory.FEATURE_KEYWORDS_TO_FILTER) {
             if (!filteredKeywords.contains(keyword)) {
                 unusedKeywordCount++;
-                LOGGER.warn("Keyword '{}' hasn't been used for VICC filtering", keyword);
+                LOGGER.debug("Keyword '{}' hasn't been used for VICC filtering", keyword);
             }
         }
 
@@ -72,7 +72,7 @@ public class ViccFilter {
         for (String feature : FilterFactory.FEATURES_TO_FILTER) {
             if (!filteredFeatures.contains(feature)) {
                 unusedFeatureCount++;
-                LOGGER.warn("Feature '{}' hasn't been used for VICC filtering", feature);
+                LOGGER.debug("Feature '{}' hasn't been used for VICC filtering", feature);
             }
         }
 
@@ -80,7 +80,7 @@ public class ViccFilter {
         for (FilterKey key : FilterFactory.FEATURE_KEYS_TO_FILTER) {
             if (!filteredKeys.contains(key)) {
                 unusedKeyCount++;
-                LOGGER.warn("Key '{}' hasn't been used for VICC filtering", key);
+                LOGGER.debug("Key '{}' hasn't been used for VICC filtering", key);
             }
         }
 

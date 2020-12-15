@@ -2,7 +2,6 @@ package com.hartwig.hmftools.serve.extraction;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
@@ -11,6 +10,7 @@ import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFil
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumberFile;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPairFile;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspotFile;
+import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

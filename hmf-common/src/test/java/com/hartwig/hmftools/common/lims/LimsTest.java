@@ -14,7 +14,9 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
@@ -182,10 +184,9 @@ public class LimsTest {
     }
 
     @Test
-    @Ignore
     public void canReadHospitalData() {
         LimsJsonSampleData sample =
-                createLimsSampleDataBuilder().sampleId(TUMOR_SAMPLE_ID).tumorBarcode(TUMOR_SAMPLE_BARCODE).cohort("CPCT").build();
+                createLimsSampleDataBuilder().sampleId(TUMOR_SAMPLE_ID).tumorBarcode(TUMOR_SAMPLE_BARCODE).cohort("HMF").build();
 
         Lims emptyHospitalModel = buildTestLimsWithWithHospitalModel(sample,
                 ImmutableHospitalModel.builder().build(),
@@ -203,12 +204,16 @@ public class LimsTest {
                 .putSampleToHospitalMapping(TUMOR_SAMPLE_ID, "1")
                 .build();
 
-        LimsCohortModel cohortModel = ImmutableLimsCohortModel.builder().build();
+        LimsCohortConfigData cohortConfigTest =
+                LimsTestUtil.buildTestCohortModel("HMF", true, true, false, true, true, true, true, false, true, true, true, true);
+        LimsCohortModel cohortConfig = ImmutableLimsCohortModel.builder()
+                .putLimsCohortMap("HMF", cohortConfigTest)
+                .build();
 
-        Lims withHospitalModel = buildTestLimsWithWithHospitalModel(sample, testHospitalModel, cohortModel);
+        Lims withHospitalModel = buildTestLimsWithWithHospitalModel(sample, testHospitalModel, cohortConfig);
         HospitalContactData contact = withHospitalModel.hospitalContactData(TUMOR_SAMPLE_BARCODE);
-        assertEquals("Name", contact.hospitalName()); //TODO fix
-        assertEquals("Zip City", contact.hospitalAddress()); //TODO fix
+        assertEquals("Name", contact.hospitalName());
+        assertEquals("Zip City", contact.hospitalAddress());
     }
 
     @Test
@@ -445,6 +450,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                hospitalModel, cohortModel);
+                hospitalModel,
+                cohortModel);
     }
 }
