@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
+import com.hartwig.hmftools.patientreporter.PatientReportUtils;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.jetbrains.annotations.NotNull;
@@ -67,8 +68,19 @@ public class ReportingDbTest {
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
-            LimsCohortConfigData cohortConfig =
-                    buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+            LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    false);
 
             ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
                     ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS", null, cohortConfig));
@@ -80,7 +92,7 @@ public class ReportingDbTest {
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("WIDE",
+        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("WIDE",
                 true,
                 true,
                 true,
@@ -93,7 +105,7 @@ public class ReportingDbTest {
                 false,
                 false,
                 true)));
-        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CPCT",
+        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CPCT",
                 true,
                 false,
                 false,
@@ -106,7 +118,7 @@ public class ReportingDbTest {
                 false,
                 false,
                 false)));
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE",
+        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CORE",
                 true,
                 true,
                 false,
@@ -119,7 +131,7 @@ public class ReportingDbTest {
                 true,
                 true,
                 true)));
-        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CORE",
+        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CORE",
                 true,
                 true,
                 false,
@@ -132,7 +144,7 @@ public class ReportingDbTest {
                 true,
                 true,
                 true)));
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE",
+        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CORE",
                 true,
                 true,
                 false,
@@ -145,27 +157,5 @@ public class ReportingDbTest {
                 true,
                 true,
                 true)));
-    }
-
-    @NotNull
-    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra,
-            boolean Report_germline, boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral,
-            boolean Require_hospital_ID, boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile,
-            boolean submission, boolean sidePanelInfo) {
-        return ImmutableLimsCohortConfigData.builder()
-                .cohortId(cohortString)
-                .hospitalCentraId(hospitalIdCentra)
-                .reportGermline(Report_germline)
-                .reportGermlineFlag(Report_germline_flag)
-                .reportConclusion(Report_conclusion)
-                .reportViral(Report_viral)
-                .requireHospitalId(Require_hospital_ID)
-                .requireHospitalPAId(Require_hospital_PA_ID)
-                .requireHospitalPersonsStudy(personsStudy)
-                .requireHospitalPersonsRequester(personsrequester)
-                .requirePatientIdForPdfName(outputFile)
-                .requireSubmissionInformation(submission)
-                .requireAdditionalInfromationForSidePanel(sidePanelInfo)
-                .build();
     }
 }

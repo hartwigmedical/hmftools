@@ -4,11 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class SampleReportFactoryTest {
@@ -24,7 +22,7 @@ public class SampleReportFactoryTest {
         String wrongId = "BGr-12111";
 
         LimsCohortConfigData cohortConfigWIDE =
-                buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+                PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         assertEquals(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
                         wideSampleId,
@@ -44,7 +42,7 @@ public class SampleReportFactoryTest {
                 cohortConfigWIDE));
 
         LimsCohortConfigData cohortConfigCORE =
-                buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+                PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY,
                 coreSampleId,
                 cohortConfigCORE));
@@ -57,7 +55,7 @@ public class SampleReportFactoryTest {
                 cohortConfigCORE));
 
         LimsCohortConfigData cohortConfigCPCT =
-                buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+                PatientReportUtils.buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
         assertNull(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
                         cpctSampleId,
@@ -78,7 +76,7 @@ public class SampleReportFactoryTest {
         String hospitalId = "1234";
 
         LimsCohortConfigData cohortConfigCORE =
-                buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+                PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         assertEquals(hospitalIdNA,
                 SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
                         coreSampleId,
@@ -93,32 +91,12 @@ public class SampleReportFactoryTest {
                         cohortConfigCORE));
 
         LimsCohortConfigData cohortConfigWIDE =
-                buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+                PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         assertEquals(hospitalIdNA,
                 SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
                         wideSampleId,
                         cohortConfigWIDE));
     }
 
-    @NotNull
-    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra, boolean Report_germline,
-            boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral, boolean Require_hospital_ID,
-            boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile, boolean submission,
-            boolean sidePanelInfo) {
-        return ImmutableLimsCohortConfigData.builder()
-                .cohortId(cohortString)
-                .hospitalCentraId(hospitalIdCentra)
-                .reportGermline(Report_germline)
-                .reportGermlineFlag(Report_germline_flag)
-                .reportConclusion(Report_conclusion)
-                .reportViral(Report_viral)
-                .requireHospitalId(Require_hospital_ID)
-                .requireHospitalPAId(Require_hospital_PA_ID)
-                .requireHospitalPersonsStudy(personsStudy)
-                .requireHospitalPersonsRequester(personsrequester)
-                .requirePatientIdForPdfName(outputFile)
-                .requireSubmissionInformation(submission)
-                .requireAdditionalInfromationForSidePanel(sidePanelInfo)
-                .build();
-    }
+
 }
