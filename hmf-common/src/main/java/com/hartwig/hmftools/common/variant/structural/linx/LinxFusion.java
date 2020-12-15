@@ -224,6 +224,8 @@ public abstract class LinxFusion
         switch (transcript.regionType()) {
             case UPSTREAM:
                 return "Promoter Region";
+            case DOWNSTREAM:
+                return "Post-coding";
             case IG:
                 return "IG";
             case EXONIC:
