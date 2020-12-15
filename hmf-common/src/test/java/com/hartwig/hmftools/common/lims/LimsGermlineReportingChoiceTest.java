@@ -17,12 +17,12 @@ import org.junit.Test;
 public class LimsGermlineReportingChoiceTest {
 
     @NotNull
-    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString) {
+    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString, boolean reportGermline, boolean reportGermlineFlag) {
         Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
         LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
                 .hospitalId(true)
-                .reportGermline(false)
+                .reportGermline(reportGermline)
                 .reportGermlineFlag(false)
                 .reportConclusion(false)
                 .reportViral(false)
@@ -40,7 +40,7 @@ public class LimsGermlineReportingChoiceTest {
 
     @Test
     public void canExtractGermlineLevel() {
-        LimsCohortModel cohortConfigCOREDB = buildTestCohortModel("COREDB");
+        LimsCohortModel cohortConfigCOREDB = buildTestCohortModel("COREDB", true, true);
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true,
                         "1: Yes",
@@ -52,7 +52,7 @@ public class LimsGermlineReportingChoiceTest {
                         "COREDB991111T",
                         cohortConfigCOREDB.queryCohortData("COREDB", "COREDB991111T")));
 
-        LimsCohortModel cohortConfigWIDE = buildTestCohortModel("WIDE");
+        LimsCohortModel cohortConfigWIDE = buildTestCohortModel("WIDE", true, true);
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true,
                         "1: Behandelbare toevalsbevindingen",
@@ -79,7 +79,7 @@ public class LimsGermlineReportingChoiceTest {
                         "WIDE02991111T",
                         cohortConfigWIDE.queryCohortData("WIDE", "WIDE02991111T")));
 
-        LimsCohortModel cohortConfigCPCT = buildTestCohortModel("CPCT");
+        LimsCohortModel cohortConfigCPCT = buildTestCohortModel("CPCT", false, false);
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false,
                         "",
@@ -91,14 +91,14 @@ public class LimsGermlineReportingChoiceTest {
                         "COLO02991111T",
                         cohortConfigCPCT.queryCohortData("CPCT", "CPCT02991111T")));
 
-        LimsCohortModel cohortConfigDRUP = buildTestCohortModel("DRUP");
+        LimsCohortModel cohortConfigDRUP = buildTestCohortModel("DRUP", false, false);
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false,
                         "",
                         "DRUP02991111T",
                         cohortConfigDRUP.queryCohortData("DRUP", "DRUP02991111T")));
 
-        LimsCohortModel cohortConfigCORE = buildTestCohortModel("CORE");
+        LimsCohortModel cohortConfigCORE = buildTestCohortModel("CORE", false, true);
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false,
                         "",
@@ -113,9 +113,9 @@ public class LimsGermlineReportingChoiceTest {
 
     @Test(expected = IllegalStateException.class)
     public void hasUnknownGermlineChoice() {
-        LimsCohortModel cohortConfigCOREDB = buildTestCohortModel("COREDB");
-        LimsCohortModel cohortConfigWIDE = buildTestCohortModel("WIDE");
-        LimsCohortModel cohortConfigCORE = buildTestCohortModel("CORE");
+        LimsCohortModel cohortConfigCOREDB = buildTestCohortModel("COREDB", true, true);
+        LimsCohortModel cohortConfigWIDE = buildTestCohortModel("WIDE", true, true);
+        LimsCohortModel cohortConfigCORE = buildTestCohortModel("CORE", true, false);
 
         LimsGermlineReportingLevel.fromLimsInputs(true, "ALL", "WIDE02991111T", cohortConfigWIDE.queryCohortData("WIDE", "WIDE02991111T"));
         LimsGermlineReportingLevel.fromLimsInputs(true,
