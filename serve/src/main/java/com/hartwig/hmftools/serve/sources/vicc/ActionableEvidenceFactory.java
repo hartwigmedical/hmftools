@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
@@ -22,7 +23,7 @@ import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class ActionableEvidenceFactory {
+class ActionableEvidenceFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
 
@@ -58,11 +59,15 @@ final class ActionableEvidenceFactory {
         DIRECTIONS_TO_IGNORE.add("Unknown");
     }
 
-    private ActionableEvidenceFactory() {
+    @NotNull
+    private final DoidLookup missingDoidLookup;
+
+    public ActionableEvidenceFactory(@NotNull final DoidLookup missingDoidLookup) {
+        this.missingDoidLookup = missingDoidLookup;
     }
 
     @Nullable
-    public static ActionableEvent toActionableEvent(@NotNull ViccEntry entry) {
+    public ActionableEvent toActionableEvent(@NotNull ViccEntry entry) {
         String treatment = reformatDrugLabels(entry.association().drugLabels());
 
         String cancerType = null;
@@ -75,6 +80,17 @@ final class ActionableEvidenceFactory {
                 doid = extractDoid(type.id());
             }
         }
+
+        if (doid == null && cancerType != null) {
+            Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
+            if (doids != null && !doids.isEmpty()) {
+                doid = doids.iterator().next();
+                LOGGER.debug("Manually resolved doid '{}' for cancer type '{}'", doid, cancerType);
+            } else {
+                LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
+            }
+        }
+
         EvidenceLevel level = resolveLevel(entry.association().evidenceLabel());
         EvidenceDirection direction = resolveDirection(entry.association().responseType());
 

@@ -31,9 +31,12 @@ public class IclusionExtractor {
 
     @NotNull
     private final EventExtractor eventExtractor;
+    @NotNull
+    private final ActionableTrialFactory actionableTrialFactory;
 
-    IclusionExtractor(@NotNull final EventExtractor eventExtractor) {
+    IclusionExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableTrialFactory actionableTrialFactory) {
         this.eventExtractor = eventExtractor;
+        this.actionableTrialFactory = actionableTrialFactory;
     }
 
     @NotNull
@@ -43,7 +46,7 @@ public class IclusionExtractor {
         ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
         for (IclusionTrial trial : trials) {
-            List<ActionableTrial> actionableTrials = ActionableTrialFactory.toActionableTrials(trial);
+            List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial);
             for (ActionableTrial actionableTrial : actionableTrials) {
                 LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
             }

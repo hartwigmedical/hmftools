@@ -51,11 +51,15 @@ public final class ViccExtractor {
 
     @NotNull
     private final EventExtractor eventExtractor;
+    @NotNull
+    private final ActionableEvidenceFactory actionableEvidenceFactory;
     @Nullable
     private final String featureInterpretationTsv;
 
-    ViccExtractor(@NotNull final EventExtractor eventExtractor, @Nullable final String featureInterpretationTsv) {
+    public ViccExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory,
+            @Nullable final String featureInterpretationTsv) {
         this.eventExtractor = eventExtractor;
+        this.actionableEvidenceFactory = actionableEvidenceFactory;
         this.featureInterpretationTsv = featureInterpretationTsv;
     }
 
@@ -132,7 +136,7 @@ public final class ViccExtractor {
             }
         }
 
-        ActionableEvent actionableEvidence = ActionableEvidenceFactory.toActionableEvent(entry);
+        ActionableEvent actionableEvidence = actionableEvidenceFactory.toActionableEvent(entry);
 
         return ImmutableViccExtractionResult.builder()
                 .hotspotsPerFeature(hotspotsPerFeature)

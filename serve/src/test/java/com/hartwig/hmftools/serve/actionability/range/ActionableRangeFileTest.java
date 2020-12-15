@@ -5,8 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
+import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.junit.Test;
 

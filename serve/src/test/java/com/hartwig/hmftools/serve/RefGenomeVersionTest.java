@@ -2,6 +2,8 @@ package com.hartwig.hmftools.serve;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.serve.util.RefGenomeVersion;
+
 import org.junit.Test;
 
 public class RefGenomeVersionTest {

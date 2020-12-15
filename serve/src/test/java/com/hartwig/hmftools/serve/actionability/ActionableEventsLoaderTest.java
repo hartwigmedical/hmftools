@@ -4,7 +4,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.junit.Test;
 
