@@ -2,10 +2,6 @@ package com.hartwig.hmftools.common.lims.cohort;
 
 import static org.junit.Assert.*;
 
-import java.util.Map;
-
-import com.google.common.collect.Maps;
-
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -13,7 +9,8 @@ public class LimsCohortModelTest {
 
     @Test
     public void canExtractLimsCohortModel() {
-        LimsCohortConfigData cohortConfigData = buildTestCohortModel("DRUP").queryCohortData("DRUP", "DRUP02010001T");
+        LimsCohortConfigData cohortConfigData =
+                buildTestCohortModel("DRUP", true, false, false, false, false, false, false, true, false, false, false, false);
         assertEquals("DRUP", cohortConfigData.cohortId());
         assertTrue(cohortConfigData.hospitalCentraId());
         assertFalse(cohortConfigData.reportGermline());
@@ -22,7 +19,7 @@ public class LimsCohortModelTest {
         assertFalse(cohortConfigData.reportViral());
         assertFalse(cohortConfigData.requireHospitalId());
         assertFalse(cohortConfigData.requireHospitalPAId());
-        assertFalse(cohortConfigData.requireHospitalPersonsStudy());
+        assertTrue(cohortConfigData.requireHospitalPersonsStudy());
         assertFalse(cohortConfigData.requireHospitalPersonsRequester());
         assertFalse(cohortConfigData.requirePatientIdForPdfName());
         assertFalse(cohortConfigData.requireSubmissionInformation());
@@ -30,25 +27,25 @@ public class LimsCohortModelTest {
     }
 
     @NotNull
-    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString) {
-        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
-        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
+    private static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortString, boolean hospitalIdCentra, boolean Report_germline,
+            boolean Report_germline_flag, boolean Report_conclusion, boolean Report_viral, boolean Require_hospital_ID,
+            boolean Require_hospital_PA_ID, boolean personsStudy, boolean personsrequester, boolean outputFile, boolean submission,
+            boolean sidePanelInfo) {
+        return ImmutableLimsCohortConfigData.builder()
                 .cohortId(cohortString)
-                .hospitalCentraId(true)
-                .reportGermline(false)
-                .reportGermlineFlag(false)
-                .reportConclusion(false)
-                .reportViral(false)
-                .requireHospitalId(false)
-                .requireHospitalPAId(false)
-                .requireHospitalPersonsStudy(false)
-                .requireHospitalPersonsRequester(false)
-                .requirePatientIdForPdfName(false)
-                .requireSubmissionInformation(false)
-                .requireAdditionalInfromationForSidePanel(false)
+                .hospitalCentraId(hospitalIdCentra)
+                .reportGermline(Report_germline)
+                .reportGermlineFlag(Report_germline_flag)
+                .reportConclusion(Report_conclusion)
+                .reportViral(Report_viral)
+                .requireHospitalId(Require_hospital_ID)
+                .requireHospitalPAId(Require_hospital_PA_ID)
+                .requireHospitalPersonsStudy(personsStudy)
+                .requireHospitalPersonsRequester(personsrequester)
+                .requirePatientIdForPdfName(outputFile)
+                .requireSubmissionInformation(submission)
+                .requireAdditionalInfromationForSidePanel(sidePanelInfo)
                 .build();
-        cohortData.put(cohortString, config);
-        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
     }
 
 }
