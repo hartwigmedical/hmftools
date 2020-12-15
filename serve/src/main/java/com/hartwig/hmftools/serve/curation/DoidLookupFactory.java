@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 public final class DoidLookupFactory {
 
     private static final String FIELD_DELIMITER = "\t";
-    private static final String DOID_DELIMITER = ",";
+    private static final String DOID_DELIMITER = ";";
 
     private DoidLookupFactory() {
     }
