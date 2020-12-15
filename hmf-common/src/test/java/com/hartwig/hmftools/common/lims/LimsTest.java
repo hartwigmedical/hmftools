@@ -14,7 +14,9 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
@@ -181,11 +183,32 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(TUMOR_SAMPLE_BARCODE));
     }
 
+    @NotNull
+    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString) {
+        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
+        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
+                .cohortId(cohortString)
+                .hospitalId(true)
+                .reportGermline(false)
+                .reportGermlineFlag(false)
+                .reportConclusion(false)
+                .reportViral(false)
+                .requireHospitalId(false)
+                .requireHospitalPAId(false)
+                .hospitalPersonsStudy(false)
+                .hospitalPersonsRequester(false)
+                .outputFile(false)
+                .submission(false)
+                .sidePanelInfo(false)
+                .build();
+        cohortData.put(cohortString, config);
+        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
+    }
+
     @Test
-    @Ignore
     public void canReadHospitalData() {
         LimsJsonSampleData sample =
-                createLimsSampleDataBuilder().sampleId(TUMOR_SAMPLE_ID).tumorBarcode(TUMOR_SAMPLE_BARCODE).cohort("CPCT").build();
+                createLimsSampleDataBuilder().sampleId(TUMOR_SAMPLE_ID).tumorBarcode(TUMOR_SAMPLE_BARCODE).cohort("HMF").build();
 
         Lims emptyHospitalModel = buildTestLimsWithWithHospitalModel(sample,
                 ImmutableHospitalModel.builder().build(),
@@ -203,12 +226,14 @@ public class LimsTest {
                 .putSampleToHospitalMapping(TUMOR_SAMPLE_ID, "1")
                 .build();
 
-        LimsCohortModel cohortModel = ImmutableLimsCohortModel.builder().build();
+        LimsCohortModel cohortConfig = ImmutableLimsCohortModel.builder()
+                .putLimsCohortMap("HMF", buildTestCohortModel("HMF").queryCohortData("HMF", "HMF-Test-Sample"))
+                .build();
 
-        Lims withHospitalModel = buildTestLimsWithWithHospitalModel(sample, testHospitalModel, cohortModel);
+        Lims withHospitalModel = buildTestLimsWithWithHospitalModel(sample, testHospitalModel, cohortConfig);
         HospitalContactData contact = withHospitalModel.hospitalContactData(TUMOR_SAMPLE_BARCODE);
-        assertEquals("Name", contact.hospitalName()); //TODO fix
-        assertEquals("Zip City", contact.hospitalAddress()); //TODO fix
+        assertEquals("Name", contact.hospitalName());
+        assertEquals("Zip City", contact.hospitalAddress());
     }
 
     @Test
@@ -445,6 +470,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                hospitalModel, cohortModel);
+                hospitalModel,
+                cohortModel);
     }
 }

@@ -23,7 +23,7 @@ public class LimsCohortConfigFactory {
 
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(DELIMITER);
-            if (parts.length == 11) {
+            if (parts.length == 13) {
 
 
                 LimsCohortConfigData cohortConfig = ImmutableLimsCohortConfigData.builder()
