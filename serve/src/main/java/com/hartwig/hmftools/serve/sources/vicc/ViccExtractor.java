@@ -33,6 +33,7 @@ import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
 import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
@@ -219,9 +220,8 @@ public final class ViccExtractor {
             ActionableEvent event = result.actionableEvent();
             if (event != null) {
                 actionableHotspots.addAll(extractActionableHotspots(event, result.hotspotsPerFeature().values()));
-                actionableRanges.addAll(extractActionableRanges(event,
-                        result.codonsPerFeature().values(),
-                        result.exonsPerFeature().values()));
+                actionableRanges.addAll(extractActionableRanges(event, result.codonsPerFeature().values()));
+                actionableRanges.addAll(extractActionableRanges(event, result.exonsPerFeature().values()));
                 actionableGenes.addAll(extractActionableAmpsDels(event, result.ampsDelsPerFeature().values()));
                 actionableGenes.addAll(extractActionableGeneLevelEvents(event, result.geneLevelEventsPerFeature().values()));
                 actionableFusions.addAll(extractActionableFusions(event, result.fusionsPerFeature().values()));
@@ -247,15 +247,11 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static Set<ActionableRange> extractActionableRanges(@NotNull ActionableEvent actionableEvent,
-            @NotNull Iterable<List<CodonAnnotation>> codonLists, @NotNull Iterable<List<ExonAnnotation>> exonLists) {
+    private static <T extends RangeAnnotation> Set<ActionableRange> extractActionableRanges(@NotNull ActionableEvent actionableEvent,
+            @NotNull Iterable<List<T>> rangeLists) {
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
-        for (List<CodonAnnotation> codonList : codonLists) {
-            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(actionableEvent, codonList));
-        }
-
-        for (List<ExonAnnotation> exonList : exonLists) {
-            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(actionableEvent, exonList));
+        for (List<T> rangeList : rangeLists) {
+            actionableRanges.addAll(ActionableEventFactory.toActionableRanges(actionableEvent, rangeList));
         }
         return actionableRanges;
     }
