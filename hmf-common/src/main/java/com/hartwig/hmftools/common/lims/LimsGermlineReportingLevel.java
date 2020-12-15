@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.lims;
 
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public enum LimsGermlineReportingLevel {
@@ -12,35 +13,24 @@ public enum LimsGermlineReportingLevel {
     @NotNull
     static LimsGermlineReportingLevel fromLimsInputs(boolean reportGermlineVariants, @NotNull String germlineReportingLevelString,
             @NotNull String sampleId, @NotNull LimsCohortConfigData cohort) {
-        if (reportGermlineVariants && cohort != null) {
-            if (cohort.cohortId().equals("WIDE")) {
-                // Cases "geen toevalsbevindingen: familie mag deze/wel niet opvragen" have been merged
-                // into a single category "geen toevalsbevindingen" per feb 1st 2020
-                switch (germlineReportingLevelString) {
-                    case "1: Behandelbare toevalsbevindingen":
-                    case "2: Alle toevalsbevindingen":
-                        return REPORT_WITH_NOTIFICATION;
-                    case "3: Geen toevalsbevindingen":
-                    case "3: Geen toevalsbevindingen; familie mag deze wel opvragen":
-                    case "4: Geen toevalsbevindingen; familie mag deze niet opvragen":
-                        return REPORT_WITHOUT_NOTIFICATION;
-                    default:
-                        throw new IllegalStateException(
-                                "Cannot resolve germline reporting choice for sample: " + sampleId + ": " + germlineReportingLevelString);
-                }
-            } else if (cohort.cohortId().equals("COREDB")) {
-                switch (germlineReportingLevelString) {
-                    case "1: Yes":
-                        return REPORT_WITH_NOTIFICATION;
-                    case "2: No":
-                        return REPORT_WITHOUT_NOTIFICATION;
-                    default:
-                        throw new IllegalStateException(
-                                "Cannot resolve germline reporting choice for sample: " + sampleId + ": " + germlineReportingLevelString);
-                }
+        if (reportGermlineVariants && !cohort.cohortId().equals(Strings.EMPTY)) {
 
+            // Cases "geen toevalsbevindingen: familie mag deze/wel niet opvragen" have been merged
+            // into a single category "geen toevalsbevindingen" per feb 1st 2020
+            switch (germlineReportingLevelString) {
+                case "1: Behandelbare toevalsbevindingen":
+                case "2: Alle toevalsbevindingen":
+                case "1: Yes":
+                    return REPORT_WITH_NOTIFICATION;
+                case "3: Geen toevalsbevindingen":
+                case "3: Geen toevalsbevindingen; familie mag deze wel opvragen":
+                case "4: Geen toevalsbevindingen; familie mag deze niet opvragen":
+                case "2: No":
+                    return REPORT_WITHOUT_NOTIFICATION;
+                default:
+                    throw new IllegalStateException(
+                            "Cannot resolve germline reporting choice " + germlineReportingLevelString + " for sample " + sampleId );
             }
-            return REPORT_WITHOUT_NOTIFICATION;
         }
         return NO_REPORTING;
     }
