@@ -40,6 +40,7 @@ public class AnalysedPatientReporterTest {
     private static final String CIRCOS_FILE = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
 
     @Test
+    @Ignore
     public void canRunOnRunDirectory() throws IOException {
         AnalysedPatientReporter reporter = new AnalysedPatientReporter(PatientReporterTestFactory.loadTestAnalysedReportData());
 

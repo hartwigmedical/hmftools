@@ -247,9 +247,9 @@ public class Lims {
     public LimsCohortConfigData cohortConfig(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         LimsCohortConfigData data;
-        String cohortString = sampleData != null ? sampleData.cohort() : Strings.EMPTY;
-
-        data = limsCohortModel.queryCohortData(cohortString);
+        String cohortString = sampleData != null ? sampleData.cohort() : null;
+        String sampleId = sampleId(sampleBarcode);
+        data = limsCohortModel.queryCohortData(cohortString, sampleId);
 
         if (data == null) {
             data = ImmutableLimsCohortConfigData.builder()

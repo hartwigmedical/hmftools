@@ -31,40 +31,40 @@ public class SampleReportFactoryTest {
         assertEquals(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
                         wideSampleId,
-                        buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE")));
+                        buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
         assertEquals(correctIdC,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC,
                         wideSampleId,
-                        buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE")));
+                        buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId,
                 wideSampleId,
-                buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE")));
+                buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Lims.NOT_AVAILABLE_STRING,
                 wideSampleId,
-                buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE")));
+                buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY,
                 wideSampleId,
-                buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE")));
+                buildTestCohortModelPAID("WIDE", true).queryCohortData("WIDE", wideSampleId)));
 
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY,
                 coreSampleId,
-                buildTestCohortModelPAID("CORE", true).queryCohortData("CORE")));
+                buildTestCohortModelPAID("CORE", true).queryCohortData("CORE", coreSampleId)));
         assertEquals(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
                         coreSampleId,
-                        buildTestCohortModelPAID("CORE", true).queryCohortData("CORE")));
+                        buildTestCohortModelPAID("CORE", true).queryCohortData("CORE", coreSampleId)));
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId,
                 coreSampleId,
-                buildTestCohortModelPAID("CORE", true).queryCohortData("CORE")));
+                buildTestCohortModelPAID("CORE", true).queryCohortData("CORE", coreSampleId)));
 
         assertNull(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
                         cpctSampleId,
-                        buildTestCohortModelPAID("CPCT", false).queryCohortData("CPCT")));
+                        buildTestCohortModelPAID("CPCT", false).queryCohortData("CPCT", cpctSampleId)));
         assertNull(correctIdC,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC,
                         cpctSampleId,
-                        buildTestCohortModelPAID("CPCT", false).queryCohortData("CPCT")));
+                        buildTestCohortModelPAID("CPCT", false).queryCohortData("CPCT", cpctSampleId)));
     }
 
     @Test
@@ -79,19 +79,19 @@ public class SampleReportFactoryTest {
         assertEquals(hospitalIdNA,
                 SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
                         coreSampleId,
-                        buildTestCohortModelPatientId("CORE", true).queryCohortData("CORE")));
+                        buildTestCohortModelPatientId("CORE", true).queryCohortData("CORE", coreSampleId)));
         assertEquals(hospitalIDEmpty,
                 SampleReportFactory.checkHospitalPatientId(hospitalIDEmpty,
                         coreSampleId,
-                        buildTestCohortModelPatientId("CORE", true).queryCohortData("CORE")));
+                        buildTestCohortModelPatientId("CORE", true).queryCohortData("CORE", coreSampleId)));
         assertEquals(hospitalId,
                 SampleReportFactory.checkHospitalPatientId(hospitalId,
                         coreSampleId,
-                        buildTestCohortModelPatientId("CORE", true).queryCohortData("CORE")));
+                        buildTestCohortModelPatientId("CORE", true).queryCohortData("CORE", coreSampleId)));
         assertEquals(hospitalIdNA,
                 SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
                         wideSampleId,
-                        buildTestCohortModelPatientId("WIDE", true).queryCohortData("WIDE")));
+                        buildTestCohortModelPatientId("WIDE", true).queryCohortData("WIDE", wideSampleId)));
     }
 
     @NotNull

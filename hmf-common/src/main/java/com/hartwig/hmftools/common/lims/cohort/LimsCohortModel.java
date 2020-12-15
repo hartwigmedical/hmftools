@@ -19,16 +19,21 @@ public abstract class LimsCohortModel {
     private static final Logger LOGGER = LogManager.getLogger(LimsCohortModel.class);
 
     @Nullable
-    public LimsCohortConfigData queryCohortData(@Nullable String cohortString) {
+    public LimsCohortConfigData queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
         if (cohortString == null) {
-            return null;
+            throw new IllegalStateException("Could not resolve LIMS cohort string: '" + cohortString + "'");
         } else {
             LimsCohortConfigData cohortConfigData = limsCohortMap().get(cohortString);
             if (cohortConfigData == null) {
                 LOGGER.warn("No cohort map is present for cohortString {}", cohortString);
                 return null;
             } else {
-                return cohortConfigData;
+                if (sampleId.startsWith(cohortConfigData.cohortId())) {
+                    return cohortConfigData;
+                } else {
+                    LOGGER.error("Cohort '{}' does match with sampleId '{}'", cohortConfigData.cohortId(), sampleId);
+                    return null;
+                }
             }
         }
     }

@@ -82,11 +82,11 @@ public class ReportingDbTest {
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("WIDE", true).queryCohortData("WIDE")));
-        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CPCT", false).queryCohortData("CPCT")));
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE", true).queryCohortData("CORE")));
-        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CORELR02", false).queryCohortData("CORELR02")));
-        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORELR11", true).queryCohortData("CORELR11")));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("WIDE", true).queryCohortData("WIDE", "WIDE01990001T")));
+        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CPCT", false).queryCohortData("CPCT", "CPCT01990001T")));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE", true).queryCohortData("CORE","CORE01990000T")));
+        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CORELR02", false).queryCohortData("CORELR02", "CORELR020000T")));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORELR11", true).queryCohortData("CORELR11", "CORELR110000T")));
     }
 
     @NotNull
