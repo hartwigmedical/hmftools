@@ -13,11 +13,11 @@ import org.junit.Test;
 
 public class FusionExtractorTest {
 
-    private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
+    private static final GeneChecker V37_GENE_CHECKER = GeneCheckerTestFactory.buildForV37();
 
     @Test
     public void canExtractSimpleFusionPair() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        FusionExtractor fusionExtractor = new FusionExtractor(V37_GENE_CHECKER);
         KnownFusionPair fusion = fusionExtractor.extract("PDGFRA", EventType.FUSION_PAIR, "BCR-PDGFRA Fusion");
 
         assertNotNull(fusion);
@@ -27,7 +27,7 @@ public class FusionExtractorTest {
 
     @Test
     public void ignoresFusionsOnUnknownGenes() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        FusionExtractor fusionExtractor = new FusionExtractor(V37_GENE_CHECKER);
         KnownFusionPair fusion = fusionExtractor.extract("IG", EventType.FUSION_PAIR, "IG-BCL2");
 
         assertNull(fusion);
@@ -35,7 +35,7 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsWithExonsUpDown() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        FusionExtractor fusionExtractor = new FusionExtractor(V37_GENE_CHECKER);
         KnownFusionPair fusion = fusionExtractor.extract("EGFR", EventType.FUSION_PAIR, "EGFRvII");
 
         assertNotNull(fusion);
@@ -59,7 +59,7 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsWithExons() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        FusionExtractor fusionExtractor = new FusionExtractor(V37_GENE_CHECKER);
         KnownFusionPair fusion = fusionExtractor.extract("MET", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION");
 
         assertNotNull(fusion);
@@ -73,13 +73,13 @@ public class FusionExtractorTest {
 
     @Test
     public void canFilterFusionPairsWithExonsOnWrongGenes() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        FusionExtractor fusionExtractor = new FusionExtractor(V37_GENE_CHECKER);
         assertNull(fusionExtractor.extract("BRAF", EventType.FUSION_PAIR_AND_EXON, "EXON 14 SKIPPING MUTATION"));
     }
 
     @Test
     public void canFilterNonConfiguredFusionPairsWithExons() {
-        FusionExtractor fusionExtractor = new FusionExtractor(HG19_GENE_CHECKER);
+        FusionExtractor fusionExtractor = new FusionExtractor(V37_GENE_CHECKER);
         assertNull(fusionExtractor.extract("MET", EventType.FUSION_PAIR_AND_EXON, "Does not exist"));
     }
 }

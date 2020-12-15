@@ -31,6 +31,7 @@ final class LimsTestUtil {
                 .reportGermlineVariants(false)
                 .shallowSeq(false)
                 .reportViralInsertions(false)
-                .cohort(Strings.EMPTY);
+                .cohort(Strings.EMPTY)
+                .analysisTypeSample(Strings.EMPTY);
     }
 }

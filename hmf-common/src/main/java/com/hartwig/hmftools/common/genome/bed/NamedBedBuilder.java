@@ -57,7 +57,6 @@ public class NamedBedBuilder implements Consumer<NamedBed> {
         }
 
         public boolean addBed(@NotNull final NamedBed bed) {
-
             if (regions.isEmpty()) {
                 regions.add(bed);
                 return true;

@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.bamslicer.slicing.Slicer;
+import com.hartwig.hmftools.bamslicer.slicing.SlicerFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.slicing.Slicer;
-import com.hartwig.hmftools.common.genome.slicing.SlicerFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

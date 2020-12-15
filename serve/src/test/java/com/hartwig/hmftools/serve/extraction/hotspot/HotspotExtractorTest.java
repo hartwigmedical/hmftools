@@ -20,7 +20,7 @@ import org.junit.Test;
 
 public class HotspotExtractorTest {
 
-    private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
+    private static final GeneChecker V37_GENE_CHECKER = GeneCheckerTestFactory.buildForV37();
 
     private static final VariantHotspot TEST_HOTSPOT =
             ImmutableVariantHotspotImpl.builder().chromosome("1").position(10).ref("A").alt("T").build();
@@ -47,7 +47,7 @@ public class HotspotExtractorTest {
 
     @NotNull
     private static HotspotExtractor createWithProtein(@NotNull String protein) {
-        return new HotspotExtractor(HG19_GENE_CHECKER, new TestProteinResolver(protein), event -> event);
+        return new HotspotExtractor(V37_GENE_CHECKER, new TestProteinResolver(protein), event -> event);
     }
 
     private static class TestProteinResolver implements ProteinResolver {

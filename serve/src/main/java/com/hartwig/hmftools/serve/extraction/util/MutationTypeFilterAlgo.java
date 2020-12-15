@@ -24,18 +24,18 @@ public class MutationTypeFilterAlgo {
         if (formattedEvent.contains("skipping") || formattedEvent.contains("splice")) {
             return MutationTypeFilter.SPLICE;
         } else if (formattedEvent.contains("deletion/insertion") || formattedEvent.contains("insertions/deletions")) {
-            return MutationTypeFilter.MISSENSE_INFRAME_ANY;
+            return MutationTypeFilter.INFRAME;
         } else if (formattedEvent.contains("deletion")) {
-            return MutationTypeFilter.MISSENSE_INFRAME_DELETION;
+            return MutationTypeFilter.INFRAME_DELETION;
         } else if (formattedEvent.contains("insertion")) {
-            return MutationTypeFilter.MISSENSE_INFRAME_INSERTION;
+            return MutationTypeFilter.INFRAME_INSERTION;
         } else if (formattedEvent.contains("frameshift")) {
             return MutationTypeFilter.NONSENSE_OR_FRAMESHIFT;
         } else {
             DriverGene driverGene = findByGene(gene);
             if (driverGene != null) {
                 if (driverGene.likelihoodType() == DriverCategory.ONCO) {
-                    return MutationTypeFilter.MISSENSE_ANY;
+                    return MutationTypeFilter.MISSENSE;
                 } else if (driverGene.likelihoodType() == DriverCategory.TSG) {
                     return MutationTypeFilter.ANY;
                 }

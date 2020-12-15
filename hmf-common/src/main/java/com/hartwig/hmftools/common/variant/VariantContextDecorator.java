@@ -49,7 +49,7 @@ public class VariantContextDecorator implements GenomePosition {
         this.ref = context.getReference().getBaseString();
         this.alt = context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
         this.tier = VariantTier.fromContext(context);
-        this.snpEffSummary = SnpEffSummaryFactory.fromSage(context);
+        this.snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
     }
 
     @NotNull

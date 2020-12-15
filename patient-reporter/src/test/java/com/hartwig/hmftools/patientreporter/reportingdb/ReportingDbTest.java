@@ -9,12 +9,18 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.lims.LimsCohort;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ReportingDbTest {
@@ -65,22 +71,43 @@ public class ReportingDbTest {
             ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
                     ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS",
                             null,
-                            LimsCohort.CPCT));
+                            "CPCT"));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
                     ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL",
                             QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
-                            LimsCohort.CPCT));
+                            "CPCT"));
         }
     }
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(LimsCohort.WIDE));
-        assertFalse(ReportingDb.requiresSummary(LimsCohort.CPCT));
-        assertTrue(ReportingDb.requiresSummary(LimsCohort.CORE));
-        assertFalse(ReportingDb.requiresSummary(LimsCohort.CORELR02));
-        assertTrue(ReportingDb.requiresSummary(LimsCohort.CORELR11));
-        assertFalse(ReportingDb.requiresSummary(LimsCohort.COREDB));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("WIDE", true).queryCohortData("WIDE")));
+        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CPCT", false).queryCohortData("CPCT")));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORE", true).queryCohortData("CORE")));
+        assertFalse(ReportingDb.requiresSummary(buildTestCohortModel("CORELR02", false).queryCohortData("CORELR02")));
+        assertTrue(ReportingDb.requiresSummary(buildTestCohortModel("CORELR11", true).queryCohortData("CORELR11")));
+    }
+
+    @NotNull
+    private static LimsCohortModel buildTestCohortModel(@NotNull String cohortString, boolean requireConclusion) {
+        Map<String, LimsCohortConfigData> cohortData = Maps.newHashMap();
+        LimsCohortConfigData config = ImmutableLimsCohortConfigData.builder()
+                .cohortId(cohortString)
+                .hospitalId(true)
+                .reportGermline(false)
+                .reportGermlineFlag(false)
+                .reportConclusion(requireConclusion)
+                .reportViral(false)
+                .requireHospitalId(false)
+                .requireHospitalPAId(false)
+                .hospitalPersonsStudy(true)
+                .hospitalPersonsRequester(false)
+                .outputFile(false)
+                .submission(false)
+                .sidePanelInfo(false)
+                .build();
+        cohortData.put(cohortString, config);
+        return ImmutableLimsCohortModel.builder().limsCohortMap(cohortData).build();
     }
 }

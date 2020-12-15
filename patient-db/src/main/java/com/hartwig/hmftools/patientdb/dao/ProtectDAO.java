@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PROTECT
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
@@ -34,7 +35,7 @@ class ProtectDAO {
                     PROTECT.TREATMENT,
                     PROTECT.LEVEL,
                     PROTECT.DIRECTION,
-                    PROTECT.URL,
+                    PROTECT.URLS,
                     PROTECT.ONLABEL,
                     PROTECT.REPORTED,
                     PROTECT.MODIFIED);
@@ -45,6 +46,10 @@ class ProtectDAO {
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep10 inserter, @NotNull String sample,
             @NotNull ProtectEvidenceItem evidence) {
+        StringJoiner urlJoiner = new StringJoiner(",");
+        for (String url : evidence.urls()) {
+            urlJoiner.add(url);
+        }
 
         inserter.values(sample,
                 evidence.genomicEvent(),
@@ -52,7 +57,7 @@ class ProtectDAO {
                 evidence.treatment(),
                 evidence.level().toString(),
                 evidence.direction().toString(),
-                evidence.url(),
+                urlJoiner.toString(),
                 evidence.onLabel(),
                 evidence.reported(),
                 timestamp);

@@ -33,7 +33,6 @@ public final class ChordFileReader {
 
     @NotNull
     public static ChordAnalysis read(@NotNull String filePath) throws IOException {
-
         String[] values = findValuesLine(filePath).split(VALUE_SEPARATOR);
 
         String remarksHrStatus = values.length > REMARKS_HR_STATUS_COLUMN ? values[REMARKS_HR_STATUS_COLUMN] : Strings.EMPTY;

@@ -21,6 +21,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigFactory;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
@@ -46,7 +49,7 @@ public final class LimsFactory {
     }
 
     @NotNull
-    public static Lims fromLimsDirectory(@NotNull String limsDirectory) throws IOException {
+    public static Lims fromLimsDirectory(@NotNull String limsDirectory, @NotNull String cohortConfig) throws IOException {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
@@ -59,13 +62,15 @@ public final class LimsFactory {
 
         HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(limsDirectory);
 
+        LimsCohortModel cohortModel = LimsCohortConfigFactory.read(cohortConfig);
+
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
                 shallowSeqPerSampleBarcode,
                 preLimsArrivalDates,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                hospitalModel);
+                hospitalModel, cohortModel);
     }
 
     @NotNull
@@ -76,7 +81,12 @@ public final class LimsFactory {
                 Maps.newHashMap(),
                 Sets.newHashSet(),
                 Sets.newHashSet(),
-                ImmutableHospitalModel.of(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap()));
+                ImmutableHospitalModel.of(Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap(),
+                        Maps.newHashMap()), ImmutableLimsCohortModel.of(Maps.newHashMap()));
     }
 
     @NotNull

@@ -111,7 +111,6 @@ public class SomaticStream {
             @NotNull final List<FittedRegion> fittedRegions, @NotNull final List<PeakModel> somaticPeaks) throws IOException {
         final Consumer<VariantContext> driverConsumer =
                 x -> somaticVariantFactory.createVariant(commonConfig.tumorSample(), x).ifPresent(somatic -> {
-                    tumorMutationalLoad.accept(somatic);
                     boolean reported = drivers.add(somatic);
                     if (reported) {
                         x.getCommonInfo().putAttribute(REPORTED_FLAG, true);
@@ -126,7 +125,7 @@ public class SomaticStream {
                             .build()) {
 
                 final Consumer<VariantContext> consumer =
-                        microsatelliteIndels.andThen(driverConsumer).andThen(writer::add).andThen(rChartData);
+                        tumorMutationalLoad.andThen(microsatelliteIndels).andThen(driverConsumer).andThen(writer::add).andThen(rChartData);
 
                 final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(driverCatalogConfig.enabled(),
                         somaticFitConfig.clonalityMaxPloidy(),

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.slicing;
+package com.hartwig.hmftools.bamslicer.slicing;
 
 import java.util.Collection;
 
@@ -19,11 +19,11 @@ class BidirectionalSlicer implements Slicer {
 
     @Override
     public boolean test(@NotNull GenomePosition variant) {
-        final Collection<? extends GenomeRegion> regionsForChrom = regions.get(variant.chromosome());
+        Collection<? extends GenomeRegion> regionsForChrom = regions.get(variant.chromosome());
         if (regionsForChrom == null) {
             return false;
         } else {
-            for (final GenomeRegion region : regionsForChrom) {
+            for (GenomeRegion region : regionsForChrom) {
                 if (variant.position() >= region.start() && variant.position() <= region.end()) {
                     return true;
                 } else if (region.start() > variant.position()) {

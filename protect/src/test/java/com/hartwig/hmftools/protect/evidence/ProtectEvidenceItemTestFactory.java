@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidenceItem;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
@@ -7,7 +8,10 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ProtectEvidenceItemTest {
+public final class ProtectEvidenceItemTestFactory {
+
+    private ProtectEvidenceItemTestFactory() {
+    }
 
     @NotNull
     public static ImmutableProtectEvidenceItem.Builder createDefault(boolean onLabel, EvidenceDirection direction, EvidenceLevel level) {
@@ -19,7 +23,6 @@ public class ProtectEvidenceItemTest {
                 .onLabel(onLabel)
                 .genomicEvent("event")
                 .reported(true)
-                .url("url");
+                .urls(Sets.newHashSet("url"));
     }
-
 }

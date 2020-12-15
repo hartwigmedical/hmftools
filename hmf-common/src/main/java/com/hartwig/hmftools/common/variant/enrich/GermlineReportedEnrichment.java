@@ -50,7 +50,6 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
     }
 
     private boolean report(@NotNull final VariantContext context) {
-
         final boolean isPass = !context.isFiltered() || (context.getFilters().size() == 1 && context.getFilters().contains("PASS"));
 
         if (!isPass) {
@@ -58,7 +57,7 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         }
 
         final PathogenicSummary pathogenicSummary = PathogenicSummaryFactory.fromContext(context);
-        final SnpEffSummary snpEffSummary = SnpEffSummaryFactory.fromSage(context);
+        final SnpEffSummary snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
         final String gene = snpEffSummary.gene();
         final boolean inHotspotGenes = reportableHotspotGenes.contains(gene);
         final boolean isHotspot = HotspotEnrichment.fromVariant(context).equals(Hotspot.HOTSPOT);

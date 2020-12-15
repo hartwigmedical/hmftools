@@ -1,19 +1,17 @@
 package com.hartwig.hmftools.common.variant.tml;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-public class TumorMutationalLoad  {
+public class TumorMutationalLoad implements Consumer<VariantContext> {
 
     private static final VariantContextFilter PASS = new PassingVariantFilter();
 
@@ -28,32 +26,14 @@ public class TumorMutationalLoad  {
         return burden / MicrosatelliteIndels.NUMBER_OF_MB_PER_GENOME;
     }
 
-    public void accept(final SomaticVariant variant) {
-        if (!variant.isFiltered()) {
-            burden++;
-
-            if (variant.worstCodingEffect() == CodingEffect.MISSENSE) {
-                load++;
-            }
-        }
-    }
-
+    @Override
     public void accept(final VariantContext context) {
-        //TODO: Don't use this version until after NEAR_INDEL_PON incorporated into VCF
-
         if (PASS.test(context)) {
             burden++;
 
-            final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
-            final List<SnpEffAnnotation> transcriptAnnotations =
-                    allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
-
-            if (!transcriptAnnotations.isEmpty()) {
-                final SnpEffAnnotation worstAnnotation = transcriptAnnotations.get(0);
-                final CodingEffect codingEffect = CodingEffect.effect(worstAnnotation.gene(), worstAnnotation.consequences());
-                if (codingEffect == CodingEffect.MISSENSE) {
-                    load++;
-                }
+            final SnpEffSummary snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
+            if (snpEffSummary.worstCodingEffect().equals(CodingEffect.MISSENSE)) {
+                load++;
             }
         }
     }

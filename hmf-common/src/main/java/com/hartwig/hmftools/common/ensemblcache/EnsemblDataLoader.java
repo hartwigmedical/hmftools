@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class EnsemblDataLoader
+public final class EnsemblDataLoader
 {
     public static final String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
     public static final String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";

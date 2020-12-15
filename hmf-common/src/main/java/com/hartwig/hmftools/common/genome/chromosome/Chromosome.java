@@ -5,5 +5,4 @@ public interface Chromosome {
     boolean isAutosome();
 
     boolean isAllosome();
-
 }

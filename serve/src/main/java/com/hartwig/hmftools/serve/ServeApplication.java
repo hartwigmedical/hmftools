@@ -49,9 +49,6 @@ public class ServeApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ServeApplication.class);
 
-    private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE =
-            Sets.newHashSet(ViccSource.CIVIC, ViccSource.JAX, ViccSource.ONCOKB, ViccSource.CGI);
-
     private static final String VERSION = ServeApplication.class.getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws IOException {
@@ -73,7 +70,7 @@ public class ServeApplication {
         ProteinResolver proteinResolver = buildProteinResolver(config, allGenesMap);
 
         List<ExtractionResult> extractions = Lists.newArrayList();
-        extractions.add(extractViccKnowledge(config.viccJson(), proteinResolver, driverGenes, allGenesMap));
+        extractions.add(extractViccKnowledge(config.viccJson(), config.viccSources(), proteinResolver, driverGenes, allGenesMap));
         extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv(), proteinResolver, driverGenes, allGenesMap));
         extractions.add(extractDocmKnowledge(config.docmTsv(), proteinResolver));
         extractions.add(extractHartwigCohortKnowledge(config.hartwigCohortTsv(), proteinResolver, !config.skipHotspotResolving()));
@@ -129,14 +126,15 @@ public class ServeApplication {
             return HmfGenePanelSupplier.allGenesMap37();
         }
 
-        LOGGER.warn("Ref genome version not supported: '{}'. Reverting to HG19.", config.refGenomeVersion());
+        LOGGER.warn("Ref genome version not supported: '{}'. Reverting to V37.", config.refGenomeVersion());
         return HmfGenePanelSupplier.allGenesMap37();
     }
 
     @NotNull
-    private static ExtractionResult extractViccKnowledge(@NotNull String viccJson, @NotNull ProteinResolver proteinResolver,
-            @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap) throws IOException {
-        List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJson, VICC_SOURCES_TO_INCLUDE, null);
+    private static ExtractionResult extractViccKnowledge(@NotNull String viccJson, @NotNull Set<ViccSource> viccSources,
+            @NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes,
+            @NotNull Map<String, HmfTranscriptRegion> allGenesMap) throws IOException {
+        List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJson, viccSources, null);
 
         EventClassifierConfig config = ViccClassificationConfig.build();
         ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config, proteinResolver, driverGenes, allGenesMap);

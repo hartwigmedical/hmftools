@@ -13,7 +13,7 @@ public class GeneLevelMatcherTest {
 
     private static final Set<String> BLACKLIST_KEY_PHRASES = Sets.newHashSet("Exon");
     private static final Set<String> GENERIC_GENE_LEVEL_KEY_PHRASES = Sets.newHashSet("ALTERATION");
-    private static final Set<String> INACTIVATING_GENE_LEVEL_KEY_PHRASES = Sets.newHashSet("biallelic inactivation");
+    private static final Set<String> INACTIVATING_GENE_LEVEL_KEY_PHRASES = Sets.newHashSet("biallelic inactivation", "inact mut");
     private static final Set<String> ACTIVATING_GENE_LEVEL_KEY_PHRASES = Sets.newHashSet("act mut");
 
     @Test

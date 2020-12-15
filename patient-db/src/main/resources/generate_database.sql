@@ -23,7 +23,7 @@ CREATE TABLE protect
     direction varchar(255) NOT NULL,
     onLabel BOOLEAN NOT NULL,
     reported BOOLEAN NOT NULL,
-    url varchar(255) NOT NULL,
+    urls varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

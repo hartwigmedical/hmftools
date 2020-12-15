@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.actionability.gene;
 
+import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,19 +10,15 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableGeneFile {
 
     private static final String ACTIONABLE_GENE_TSV = "ActionableGenes.tsv";
-    private static final String DELIMITER = "\t";
 
     private ActionableGeneFile() {
     }
@@ -46,16 +44,7 @@ public final class ActionableGeneFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER).add("gene")
-                .add("event")
-                .add("source")
-                .add("treatment")
-                .add("cancerType")
-                .add("doid")
-                .add("level")
-                .add("direction")
-                .add("url")
-                .toString();
+        return new StringJoiner(FIELD_DELIMITER).add("gene").add("event").add(ActionableFileFunctions.header()).toString();
     }
 
     @NotNull
@@ -70,19 +59,12 @@ public final class ActionableGeneFile {
 
     @NotNull
     private static ActionableGene fromLine(@NotNull String line) {
-        String[] values = line.split(DELIMITER);
-        String url = values.length > 8 ? values[8] : Strings.EMPTY;
+        String[] values = line.split(FIELD_DELIMITER);
 
         return ImmutableActionableGene.builder()
+                .from(ActionableFileFunctions.fromLine(values, 2))
                 .gene(values[0])
                 .event(GeneLevelEvent.valueOf(values[1]))
-                .source(Knowledgebase.valueOf(values[2]))
-                .treatment(values[3])
-                .cancerType(values[4])
-                .doid(values[5])
-                .level(EvidenceLevel.valueOf(values[6]))
-                .direction(EvidenceDirection.valueOf(values[7]))
-                .url(url)
                 .build();
     }
 
@@ -107,15 +89,9 @@ public final class ActionableGeneFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableGene gene) {
-        return new StringJoiner(DELIMITER).add(gene.gene())
+        return new StringJoiner(FIELD_DELIMITER).add(gene.gene())
                 .add(gene.event().toString())
-                .add(gene.source().toString())
-                .add(gene.treatment())
-                .add(gene.cancerType())
-                .add(gene.doid())
-                .add(gene.level().toString())
-                .add(gene.direction().toString())
-                .add(gene.url())
+                .add(ActionableFileFunctions.toLine(gene))
                 .toString();
     }
 }

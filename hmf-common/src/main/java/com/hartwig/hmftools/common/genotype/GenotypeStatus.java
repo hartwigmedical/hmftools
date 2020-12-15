@@ -10,9 +10,10 @@ public enum GenotypeStatus {
     HOM_ALT("HOM"),
     UNKNOWN("UNKNOWN");
 
+    @NotNull
     private final String simpleDisplay;
 
-    GenotypeStatus(final String simpleDisplay) {
+    GenotypeStatus(@NotNull final String simpleDisplay) {
         this.simpleDisplay = simpleDisplay;
     }
 
@@ -34,5 +35,4 @@ public enum GenotypeStatus {
 
         return UNKNOWN;
     }
-
 }

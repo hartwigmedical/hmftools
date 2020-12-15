@@ -17,7 +17,10 @@ import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ProtectEvidenceItems {
+public final class ProtectEvidenceItems {
+
+    private ProtectEvidenceItems() {
+    }
 
     @NotNull
     public static ProtectEvidenceItem create(@NotNull String genomicEvent, @NotNull Set<String> doid, @NotNull ActionableEvent actionable) {
@@ -33,7 +36,7 @@ public class ProtectEvidenceItems {
                 .treatment(actionable.treatment())
                 .onLabel(doid.contains(actionable.doid()))
                 .direction(actionable.direction())
-                .url(actionable.url());
+                .urls(actionable.urls());
     }
 
     @NotNull

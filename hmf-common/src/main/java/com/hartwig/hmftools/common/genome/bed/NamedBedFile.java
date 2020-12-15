@@ -22,7 +22,8 @@ import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.readers.LineIterator;
 
-public class NamedBedFile {
+public final class NamedBedFile {
+
     private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
     private static final String DELIMITER = "\t";
 
@@ -77,5 +78,4 @@ public class NamedBedFile {
                 .add(region.name())
                 .toString();
     }
-
 }

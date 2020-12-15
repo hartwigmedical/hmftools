@@ -64,7 +64,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactCPCT() throws IOException {
         Map<String, HospitalPersons> hospitalContactCPCT =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv", 2);
+                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv", 2, "CPCT");
 
         assertEquals(2, hospitalContactCPCT.size());
 
@@ -82,7 +82,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactDRUP() throws IOException {
         Map<String, HospitalPersons> hospitalContactDRUP =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv", 2);
+                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv", 2, "DRUP");
         assertEquals(2, hospitalContactDRUP.size());
 
         HospitalPersons drup1 = hospitalContactDRUP.get("01");
@@ -99,7 +99,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactWIDE() throws IOException {
         Map<String, HospitalPersons> hospitalContactWIDE =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4);
+                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");
         assertEquals(2, hospitalContactWIDE.size());
 
         HospitalPersons wide1 = hospitalContactWIDE.get("01");
@@ -111,6 +111,18 @@ public class HospitalModelFactoryTest {
         assertEquals("Someone", wide2.hospitalPI());
         assertEquals("Someone1", wide2.requesterName());
         assertEquals("my@email.com", wide2.requesterEmail());
+    }
+
+    @Test
+    public void canReadHospitalContactCOREDB() throws IOException {
+        Map<String, HospitalPersons> hospitalContactCOREDB =
+                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_coredb.tsv", 4, "COREDB");
+        assertEquals(1, hospitalContactCOREDB.size());
+
+        HospitalPersons coredb01 = hospitalContactCOREDB.get("01");
+        assertEquals("Someone1", coredb01.hospitalPI());
+        assertEquals("Someone1", coredb01.requesterName());
+        assertEquals("my@email.com", coredb01.requesterEmail());
     }
 
     @Test

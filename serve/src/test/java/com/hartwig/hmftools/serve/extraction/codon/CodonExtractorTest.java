@@ -22,8 +22,8 @@ import org.junit.Test;
 
 public class CodonExtractorTest {
 
-    private static final Map<String, HmfTranscriptRegion> HG19_GENE_MAP = HmfGenePanelSupplier.allGenesMap37();
-    private static final GeneChecker HG19_GENE_CHECKER = new GeneChecker(HG19_GENE_MAP.keySet());
+    private static final Map<String, HmfTranscriptRegion> V37_GENE_MAP = HmfGenePanelSupplier.allGenesMap37();
+    private static final GeneChecker V37_GENE_CHECKER = new GeneChecker(V37_GENE_MAP.keySet());
 
     @Test
     public void canExtractSimpleCodon() {
@@ -50,13 +50,13 @@ public class CodonExtractorTest {
         assertEquals(25378707, codons.get(0).start());
         assertEquals(25378707, codons.get(0).end());
         assertEquals("KRAS", codons.get(0).gene());
-        assertEquals(MutationTypeFilter.MISSENSE_ANY, codons.get(0).mutationType());
+        assertEquals(MutationTypeFilter.MISSENSE, codons.get(0).mutationType());
 
         assertEquals("12", codons.get(1).chromosome());
         assertEquals(25380168, codons.get(1).start());
         assertEquals(25380169, codons.get(1).end());
         assertEquals("KRAS", codons.get(1).gene());
-        assertEquals(MutationTypeFilter.MISSENSE_ANY, codons.get(1).mutationType());
+        assertEquals(MutationTypeFilter.MISSENSE, codons.get(1).mutationType());
     }
 
     @Test
@@ -89,7 +89,7 @@ public class CodonExtractorTest {
 
     @NotNull
     private static CodonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new CodonExtractor(HG19_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), HG19_GENE_MAP);
+        return new CodonExtractor(V37_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), V37_GENE_MAP);
     }
 
     @NotNull

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.iclusion;
 
 import java.util.List;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -23,7 +24,7 @@ public final class ActionableTrialFactory {
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .url("https://iclusion.org/hmf/" + trial.id());
+                .urls(Sets.newHashSet("https://iclusion.org/hmf/" + trial.id()));
 
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
         for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {

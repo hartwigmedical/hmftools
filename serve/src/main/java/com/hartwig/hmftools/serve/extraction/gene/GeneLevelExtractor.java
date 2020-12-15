@@ -50,19 +50,27 @@ public class GeneLevelExtractor {
     @NotNull
     @VisibleForTesting
     GeneLevelEvent extractGeneLevelEvent(@NotNull String gene, @NotNull String event) {
+        int longestActivationMatchLength = -1;
         for (String keyPhrase : activationKeyPhrases) {
-            if (event.contains(keyPhrase)) {
-                return GeneLevelEvent.ACTIVATION;
+            if (event.contains(keyPhrase) && keyPhrase.length() > longestActivationMatchLength) {
+                longestActivationMatchLength = keyPhrase.length();
             }
         }
 
+        int longestInactivatingMatchLength = -1;
         for (String keyPhrase : inactivationKeyPhrases) {
-            if (event.contains(keyPhrase)) {
-                return GeneLevelEvent.INACTIVATION;
+            if (event.contains(keyPhrase) && keyPhrase.length() > longestInactivatingMatchLength) {
+                longestInactivatingMatchLength = keyPhrase.length();
             }
         }
 
-        return determineGeneLevelEventFromDriverGenes(driverGenes, gene);
+        // If we find both an activating and inactivating event, we assume the longest event is the most important.
+        // This is to support cases where an activating keyphrase is a substring of inactivating keyphrase (eg "act mut" vs "inact mut".
+        if (longestActivationMatchLength > 0 || longestInactivatingMatchLength > 0) {
+            return longestActivationMatchLength >= longestInactivatingMatchLength ? GeneLevelEvent.ACTIVATION : GeneLevelEvent.INACTIVATION;
+        } else {
+            return determineGeneLevelEventFromDriverGenes(driverGenes, gene);
+        }
     }
 
     @NotNull

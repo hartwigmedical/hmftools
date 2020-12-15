@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -38,7 +39,7 @@ public class ActionableEventComparatorTest {
     @NotNull
     private static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String treatment, @NotNull String cancerType,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction) {
-        return ActionabilityTestUtil.create(source, treatment, cancerType, Strings.EMPTY, level, direction, Strings.EMPTY);
+        return ActionabilityTestUtil.create(source, treatment, cancerType, Strings.EMPTY, level, direction, Sets.newHashSet());
     }
 
 }

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsCohort;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
@@ -60,26 +60,26 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
-        LimsCohort cohort = failReport.sampleReport().cohort();
+        LimsCohortConfigData cohort = failReport.sampleReport().cohort();
 
-        switch (cohort) {
-            case WIDE:
+        switch (cohort.cohortId()) {
+            case "WIDE":
                 reportDocument.add(createWIDEContentBody());
                 break;
-            case COREDB:
+            case "COREDB":
                 reportDocument.add(createCOREDBContentBody());
                 break;
-            case CORE:
-            case CORELR02:
-            case CORERI02:
-            case CORESC11:
-            case CORELR11:
+            case "CORE":
+            case "CORELR02":
+            case "CORERI02":
+            case "CORESC11":
+            case "CORELR11":
                 reportDocument.add(createCOREContentBody());
                 break;
-            case DRUP:
-            case DRUP_STAGE3:
-            case CPCT_PANCREAS:
-            case CPCT:
+            case "DRUP":
+            case "DRUPstage3":
+            case "CPCTpancreas":
+            case "CPCT":
                 reportDocument.add(createCPCTDRUPContentBody());
                 break;
         }

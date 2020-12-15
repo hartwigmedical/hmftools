@@ -10,6 +10,7 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 public final class PGXGenotypeFile {
+
     private static final String DELIMITER = "\t";
 
     private PGXGenotypeFile() {

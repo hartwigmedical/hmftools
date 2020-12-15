@@ -14,11 +14,11 @@ public class BEDFileLoaderTest {
 
     private static final String BED_FILE_BASE_PATH = Resources.getResource("bed").getPath();
 
-    private static final String VALID_BED = "valid.bed";
+    private static final String EXAMPLE_BED_FILE = "example.bed";
 
     @Test
     public void verifyStartIsOneBased() throws IOException {
-        final String bedFile = BED_FILE_BASE_PATH + File.separator + VALID_BED;
+        final String bedFile = BED_FILE_BASE_PATH + File.separator + EXAMPLE_BED_FILE;
         final SortedSetMultimap<String, GenomeRegion> regions = BEDFileLoader.fromBedFile(bedFile);
         assertEquals(1, regions.get("1").first().start());
         assertEquals(1, regions.get("1").first().end());

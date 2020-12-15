@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.actionability.signature;
 
+import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,19 +10,15 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
 import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableSignatureFile {
 
     private static final String ACTIONABLE_SIGNATURE_TSV = "ActionableSignatures.tsv";
-    private static final String DELIMITER = "\t";
 
     private ActionableSignatureFile() {
     }
@@ -47,15 +45,7 @@ public final class ActionableSignatureFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER).add("name")
-                .add("source")
-                .add("treatment")
-                .add("cancerType")
-                .add("doid")
-                .add("level")
-                .add("direction")
-                .add("url")
-                .toString();
+        return new StringJoiner(FIELD_DELIMITER).add("name").add(ActionableFileFunctions.header()).toString();
     }
 
     @NotNull
@@ -70,18 +60,11 @@ public final class ActionableSignatureFile {
 
     @NotNull
     private static ActionableSignature fromLine(@NotNull String line) {
-        String[] values = line.split(DELIMITER);
-        String url = values.length > 7 ? values[7] : Strings.EMPTY;
+        String[] values = line.split(FIELD_DELIMITER);
 
         return ImmutableActionableSignature.builder()
+                .from(ActionableFileFunctions.fromLine(values, 1))
                 .name(SignatureName.valueOf(values[0]))
-                .source(Knowledgebase.valueOf(values[1]))
-                .treatment(values[2])
-                .cancerType(values[3])
-                .doid(values[4])
-                .level(EvidenceLevel.valueOf(values[5]))
-                .direction(EvidenceDirection.valueOf(values[6]))
-                .url(url)
                 .build();
     }
 
@@ -106,14 +89,6 @@ public final class ActionableSignatureFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableSignature signature) {
-        return new StringJoiner(DELIMITER).add(signature.name().toString())
-                .add(signature.source().toString())
-                .add(signature.treatment())
-                .add(signature.cancerType())
-                .add(signature.doid())
-                .add(signature.level().toString())
-                .add(signature.direction().toString())
-                .add(signature.url())
-                .toString();
+        return new StringJoiner(FIELD_DELIMITER).add(signature.name().toString()).add(ActionableFileFunctions.toLine(signature)).toString();
     }
 }

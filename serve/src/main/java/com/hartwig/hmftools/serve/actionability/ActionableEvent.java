@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.actionability;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -27,5 +29,5 @@ public interface ActionableEvent {
     EvidenceDirection direction();
 
     @NotNull
-    String url();
+    Set<String> urls();
 }

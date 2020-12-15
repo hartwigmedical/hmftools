@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.actionability.range;
 
+import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,19 +10,15 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionableRangeFile {
 
     private static final String ACTIONABLE_RANGE_TSV = "ActionableRanges.tsv";
-    private static final String DELIMITER = "\t";
 
     private ActionableRangeFile() {
     }
@@ -46,18 +44,12 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER).add("gene")
+        return new StringJoiner(FIELD_DELIMITER).add("gene")
                 .add("chromosome")
                 .add("start")
                 .add("end")
                 .add("mutationType")
-                .add("source")
-                .add("treatment")
-                .add("cancerType")
-                .add("doid")
-                .add("level")
-                .add("direction")
-                .add("url")
+                .add(ActionableFileFunctions.header())
                 .toString();
     }
 
@@ -73,22 +65,15 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static ActionableRange fromLine(@NotNull String line) {
-        String[] values = line.split(DELIMITER);
-        String url = values.length > 11 ? values[11] : Strings.EMPTY;
+        String[] values = line.split(FIELD_DELIMITER);
 
         return ImmutableActionableRange.builder()
+                .from(ActionableFileFunctions.fromLine(values, 5))
                 .gene(values[0])
                 .chromosome(values[1])
                 .start(Long.parseLong(values[2]))
                 .end(Long.parseLong(values[3]))
                 .mutationType(MutationTypeFilter.valueOf(values[4]))
-                .source(Knowledgebase.valueOf(values[5]))
-                .treatment(values[6])
-                .cancerType(values[7])
-                .doid(values[8])
-                .level(EvidenceLevel.valueOf(values[9]))
-                .direction(EvidenceDirection.valueOf(values[10]))
-                .url(url)
                 .build();
     }
 
@@ -113,18 +98,12 @@ public final class ActionableRangeFile {
 
     @NotNull
     private static String toLine(@NotNull ActionableRange range) {
-        return new StringJoiner(DELIMITER).add(range.gene())
+        return new StringJoiner(FIELD_DELIMITER).add(range.gene())
                 .add(range.chromosome())
                 .add(Long.toString(range.start()))
                 .add(Long.toString(range.end()))
                 .add(range.mutationType().toString())
-                .add(range.source().toString())
-                .add(range.treatment())
-                .add(range.cancerType())
-                .add(range.doid())
-                .add(range.level().toString())
-                .add(range.direction().toString())
-                .add(range.url())
+                .add(ActionableFileFunctions.toLine(range))
                 .toString();
     }
 }

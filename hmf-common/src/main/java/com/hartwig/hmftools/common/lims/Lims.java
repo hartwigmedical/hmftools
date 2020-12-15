@@ -5,12 +5,16 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,12 +40,15 @@ public class Lims {
     private final Set<String> blacklistedPatients;
     @NotNull
     private final HospitalModel hospitalModel;
+    @NotNull
+    private final LimsCohortModel limsCohortModel;
 
     public Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
             @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
             @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode,
             @NotNull final Map<String, LocalDate> preLimsArrivalDatesPerSampleId, @NotNull final Set<String> samplesIdsWithoutSamplingDate,
-            @NotNull final Set<String> blacklistedPatients, @NotNull final HospitalModel hospitalModel) {
+            @NotNull final Set<String> blacklistedPatients, @NotNull final HospitalModel hospitalModel,
+            @NotNull final LimsCohortModel limsCohortModel) {
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
         this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
@@ -49,6 +56,7 @@ public class Lims {
         this.samplesIdsWithoutSamplingDate = samplesIdsWithoutSamplingDate;
         this.blacklistedPatients = blacklistedPatients;
         this.hospitalModel = hospitalModel;
+        this.limsCohortModel = limsCohortModel;
     }
 
     public int sampleBarcodeCount() {
@@ -236,13 +244,42 @@ public class Lims {
     }
 
     @NotNull
-    public LimsCohort cohort(@NotNull String sampleBarcode) {
+    public LimsCohortConfigData cohortConfig(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        LimsCohortConfigData data;
+        String cohortString = sampleData != null ? sampleData.cohort() : Strings.EMPTY;
+
+        data = limsCohortModel.queryCohortData(cohortString);
+
+        if (data == null) {
+            data = ImmutableLimsCohortConfigData.builder()
+                    .cohortId(Strings.EMPTY)
+                    .hospitalId(false)
+                    .reportGermline(false)
+                    .reportGermlineFlag(false)
+                    .reportConclusion(false)
+                    .reportViral(false)
+                    .requireHospitalId(false)
+                    .requireHospitalPAId(false)
+                    .hospitalPersonsStudy(false)
+                    .hospitalPersonsRequester(false)
+                    .outputFile(false)
+                    .submission(false)
+                    .sidePanelInfo(false)
+                    .build();
+        }
+
+        return data;
+    }
+
+    @Nullable
+    public LimsAnalysisType extractAnalysisType(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
-            String cohortString = sampleData.cohort();
-            return cohortString != null ? LimsCohort.fromCohort(cohortString) : LimsCohort.NON_CANCER;
+            String analysisTypeString = sampleData.analysisTypeSample();
+            return analysisTypeString != null ? LimsAnalysisType.extractAnalysisType(analysisTypeString) : null;
         } else {
-            return LimsCohort.NON_CANCER;
+            return null;
         }
     }
 
@@ -252,7 +289,7 @@ public class Lims {
         HospitalContactData data = hospitalModel.queryHospitalData(sampleId,
                 requesterName(sampleBarcode),
                 requesterEmail(sampleBarcode),
-                cohort(sampleBarcode));
+                cohortConfig(sampleBarcode));
 
         if (data == null) {
             LOGGER.warn("Could not find hospital data for sample '{}' with barcode '{}'", sampleId, sampleBarcode);
@@ -296,7 +333,7 @@ public class Lims {
             return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode),
                     germlineReportingLevelString,
                     sampleId(sampleBarcode),
-                    cohort(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
+                    cohortConfig(sampleBarcode)) : LimsGermlineReportingLevel.NO_REPORTING;
         } else {
             return LimsGermlineReportingLevel.NO_REPORTING;
         }
@@ -306,18 +343,15 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
 
         if (sampleData != null) {
-            LimsCohort cohort = cohort(sampleBarcode);
+            LimsCohortConfigData cohort = cohortConfig(sampleBarcode);
             if (sampleData.reportGermlineVariants()) {
-                if (cohort == LimsCohort.CPCT || cohort == LimsCohort.CPCT_PANCREAS || cohort == LimsCohort.DRUP
-                        || cohort == LimsCohort.DRUP_STAGE3) {
+                if (!cohort.reportGermline()) {
                     LOGGER.warn("Consent of report germline variants is true, but must be false at study CPCT/DRUP for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return true;
             } else {
-                if (cohort == LimsCohort.WIDE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02
-                        || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB
-                        || cohort == LimsCohort.CORE) {
+                if (cohort.reportGermline()) {
                     LOGGER.warn("Consent of report germline variants is false, but must be true at study CORE/WIDE for sample '{}'",
                             sampleId(sampleBarcode));
                 }
@@ -332,18 +366,15 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
 
         if (sampleData != null) {
-            LimsCohort cohort = cohort(sampleBarcode);
+            LimsCohortConfigData cohort = cohortConfig(sampleBarcode);
             if (sampleData.reportViralInsertions()) {
-                if (cohort == LimsCohort.CPCT || cohort == LimsCohort.CPCT_PANCREAS || cohort == LimsCohort.DRUP
-                        || cohort == LimsCohort.DRUP_STAGE3) {
+                if (!cohort.reportViral()) {
                     LOGGER.warn("Consent of viral insertions is true, but must be false at study CPCT/DRUP for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return true;
             } else {
-                if (cohort == LimsCohort.WIDE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02
-                        || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB
-                        || cohort == LimsCohort.CORE) {
+                if (cohort.reportViral()) {
                     LOGGER.warn("Consent of viral insertions is false, but must be true at study CORE/WIDE for sample '{}'",
                             sampleId(sampleBarcode));
                 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.slicing;
+package com.hartwig.hmftools.bamslicer.slicing;
 
 import java.util.Collection;
 import java.util.function.Predicate;

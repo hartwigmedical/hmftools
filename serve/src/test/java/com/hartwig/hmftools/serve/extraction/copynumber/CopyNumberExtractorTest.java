@@ -11,11 +11,11 @@ import org.junit.Test;
 
 public class CopyNumberExtractorTest {
 
-    private static final GeneChecker HG19_GENE_CHECKER = GeneCheckerTestFactory.buildForHG19();
+    private static final GeneChecker V37_GENE_CHECKER = GeneCheckerTestFactory.buildForV37();
 
     @Test
     public void canExtractCopyNumbersAmp() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(V37_GENE_CHECKER);
         KnownCopyNumber amp = copyNumberExtractor.extract("AKT1", EventType.AMPLIFICATION);
 
         assertEquals("AKT1", amp.gene());
@@ -24,13 +24,13 @@ public class CopyNumberExtractorTest {
 
     @Test
     public void canFilterAmpOnUnknownGene() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(V37_GENE_CHECKER);
         assertNull(copyNumberExtractor.extract("NOT-A-GENE", EventType.AMPLIFICATION));
     }
 
     @Test
     public void canExtractCopyNumbersDel() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(V37_GENE_CHECKER);
         KnownCopyNumber del = copyNumberExtractor.extract("PTEN", EventType.DELETION);
 
         assertEquals("PTEN", del.gene());
@@ -39,7 +39,7 @@ public class CopyNumberExtractorTest {
 
     @Test
     public void canFilterDelOnUnknownGene() {
-        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(HG19_GENE_CHECKER);
+        CopyNumberExtractor copyNumberExtractor = new CopyNumberExtractor(V37_GENE_CHECKER);
         assertNull(copyNumberExtractor.extract("NOT-A-GENE", EventType.DELETION));
     }
 }

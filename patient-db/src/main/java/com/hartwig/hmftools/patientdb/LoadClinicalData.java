@@ -25,8 +25,9 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsCohort;
+import com.hartwig.hmftools.common.lims.LimsAnalysisType;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
@@ -61,6 +62,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -71,6 +73,7 @@ public final class LoadClinicalData {
     private static final String PIPELINE_VERSION = "pipeline_version_file";
 
     private static final String RUNS_DIRECTORY = "runs_dir";
+    private static final String CONFIG_COHORTS_TSV = "config_cohorts_tsv";
 
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
@@ -122,7 +125,7 @@ public final class LoadClinicalData {
                 toUniqueSampleIds(sequencedSamplesPerPatient).size());
 
         LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
-        Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
+        Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY), cmd.getOptionValue(CONFIG_COHORTS_TSV));
         Map<String, List<SampleData>> sampleDataPerPatient =
                 extractAllSamplesFromLims(lims, sampleToSetNameMap, sequencedSamplesPerPatient);
         LOGGER.info(" Loaded samples for {} patient IDs ({} samples)",
@@ -199,9 +202,9 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsCohort cohort = lims.cohort(sampleBarcode);
+            LimsCohortConfigData cohort = lims.cohortConfig(sampleBarcode);
 
-            if (cohort != LimsCohort.NON_CANCER) {
+            if (!cohort.cohortId().equals(Strings.EMPTY)) {
                 String patientId = lims.patientId(sampleBarcode);
                 SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
@@ -379,14 +382,12 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull EcrfModels ecrfModels, @NotNull PrimaryTumorCurator primaryTumorCurator,
-            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull TreatmentCurator treatmentCurator, @NotNull Lims lims) {
+            @NotNull EcrfModels ecrfModels, @NotNull PrimaryTumorCurator primaryTumorCurator, @NotNull BiopsySiteCurator biopsySiteCurator,
+            @NotNull TreatmentCurator treatmentCurator, @NotNull Lims lims) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
-        EcrfPatientReader cpctPatientReader = new CpctPatientReader(primaryTumorCurator,
-                CpctUtil.extractHospitalMap(cpctEcrfModel),
-                biopsySiteCurator,
-                treatmentCurator);
+        EcrfPatientReader cpctPatientReader =
+                new CpctPatientReader(primaryTumorCurator, CpctUtil.extractHospitalMap(cpctEcrfModel), biopsySiteCurator, treatmentCurator);
 
         Map<String, Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), sampleDataPerPatient);
         LOGGER.info(" Finished curation of {} CPCT patients", cpctPatients.size());
@@ -441,9 +442,9 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohort cohort = lims.cohort(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfigData cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
 
-                if (cohort == LimsCohort.WIDE) {
+                if (cohort.cohortId().equals("WIDE")) {
                     String patientId = entry.getKey();
                     Patient widePatient =
                             widePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
@@ -466,9 +467,9 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohort cohort = LimsCohort.fromCohort(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfigData cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
 
-                if (cohort == LimsCohort.CORE) {
+                if (cohort.cohortId().equals("CORE")) {
                     String patientId = entry.getKey();
                     Patient corePatient =
                             corePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
@@ -485,11 +486,10 @@ public final class LoadClinicalData {
         List<SampleData> tumorSamples = Lists.newArrayList();
 
         for (SampleData sample : samples) {
-            LimsCohort cohort = lims.cohort(sample.sampleBarcode());
-            if (cohort != LimsCohort.NON_CANCER) {
-                if (sample.sampleId().substring(12).contains("T")) {
-                    tumorSamples.add(sample);
-                }
+            LimsAnalysisType analysisType = lims.extractAnalysisType(sample.sampleBarcode());
+
+            if (analysisType == LimsAnalysisType.SOMATIC_T) {
+                tumorSamples.add(sample);
             }
         }
         return tumorSamples;
@@ -550,7 +550,7 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV),
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV),
                 cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV),
-                cmd.getOptionValue(DOID_JSON));
+                cmd.getOptionValue(DOID_JSON), cmd.getOptionValue(CONFIG_COHORTS_TSV));
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
             allParamsPresent = allParamsPresent && DatabaseAccess.hasDatabaseConfig(cmd);
@@ -583,6 +583,8 @@ public final class LoadClinicalData {
         options.addOption(RUNS_DIRECTORY,
                 true,
                 "Path towards the folder containing patient runs that are considered part of HMF database.");
+
+        options.addOption(CONFIG_COHORTS_TSV, true, "Path towards a TSV containing the cohorts for reporting.");
 
         options.addOption(CPCT_ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the cpct form status csv file.");

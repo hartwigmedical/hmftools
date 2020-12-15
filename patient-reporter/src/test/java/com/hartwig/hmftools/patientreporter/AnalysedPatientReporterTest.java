@@ -17,6 +17,7 @@ import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnalysedPatientReporterTest {

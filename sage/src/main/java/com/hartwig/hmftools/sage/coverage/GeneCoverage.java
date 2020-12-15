@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.coverage;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -8,6 +9,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
+import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneCoverage implements Consumer<GenomeRegion> {
@@ -52,7 +54,13 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
 
     @NotNull
     public GeneDepth geneDepth() {
-        return ImmutableGeneDepth.builder().gene(gene).depthCounts(baseCoverageSummary(exonCoverage)).build();
+        int[] depthCounts = baseCoverageSummary(exonCoverage);
+
+        return ImmutableGeneDepth.builder()
+                .gene(gene)
+                .depthCounts(depthCounts)
+                .missedVariantLikelihood(missedVariantLikelihood(depthCounts))
+                .build();
     }
 
     static int[] baseCoverageSummary(Collection<ExonCoverage> exons) {
@@ -64,6 +72,44 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
         }
 
         return geneDepth;
+    }
+
+    static double missedVariantLikelihood(int[] baseCoverage) {
+
+        int totalCoverage = Arrays.stream(baseCoverage).sum();
+        double totalLikelihood = 0;
+
+        for (int i = 0; i < baseCoverage.length; i++) {
+            int depth = depth(i);
+            int coverage = baseCoverage[i];
+
+            if (coverage > 0) {
+                final double proportion = 1d * coverage / totalCoverage;
+                final double likelihoodOfMissing;
+                if (depth == 0) {
+                    likelihoodOfMissing = 1;
+                } else {
+                    final PoissonDistribution distribution = new PoissonDistribution(depth / 2d);
+                    likelihoodOfMissing = distribution.cumulativeProbability(2);
+                }
+
+                totalLikelihood += proportion * likelihoodOfMissing;
+            }
+        }
+
+        return totalLikelihood;
+    }
+
+    static int depth(int bucket) {
+        if (bucket < 30) {
+            return bucket;
+        }
+
+        if (bucket <= 36) {
+            return (bucket - 30) * 10 + 35;
+        }
+
+        return 100;
     }
 
     static int bucket(int depth) {

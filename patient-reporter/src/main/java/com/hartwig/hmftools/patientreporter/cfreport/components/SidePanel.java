@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
-import com.hartwig.hmftools.common.lims.LimsCohort;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -38,24 +38,21 @@ public final class SidePanel {
         cv.add(createSidePanelDiv(++sideTextIndex, "HMF sample id", sampleReport.tumorSampleId()));
         cv.add(createSidePanelDiv(++sideTextIndex, "Report date", ReportResources.REPORT_DATE));
 
-        LimsCohort cohort = sampleReport.cohort();
+        LimsCohortConfigData cohort = sampleReport.cohort();
 
         if (fullHeight && fullContent) {
-            if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
-                    || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.WIDE || cohort == LimsCohort.COREDB) {
+            if (cohort.sidePanelInfo()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", sampleReport.hospitalContactData().requesterName()));
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", sampleReport.hospitalContactData().requesterEmail()));
             }
 
             cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", sampleReport.hospitalContactData().hospitalName()));
 
-            if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR11 || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB
-                    || cohort == LimsCohort.WIDE && !sampleReport.hospitalPatientId().isEmpty()) {
+            if (cohort.requireHospitalId() && !sampleReport.hospitalPatientId().isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
 
-            if (cohort == LimsCohort.CORE || cohort == LimsCohort.CORELR02 || cohort == LimsCohort.CORERI02 || cohort == LimsCohort.CORELR11
-                    || cohort == LimsCohort.CORESC11 || cohort == LimsCohort.COREDB && !sampleReport.hospitalPatientId().isEmpty()) {
+            if (cohort.requireHospitalPAId() && !sampleReport.hospitalPatientId().isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital pathology id", sampleReport.hospitalPathologySampleId()));
             }
         }

@@ -35,7 +35,6 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts,
             @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots, @NotNull final Consumer<VariantContext> consumer) {
-
         final Set<String> germlineGenes =
                 genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
 

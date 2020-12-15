@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.actionability;
 
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -18,8 +19,8 @@ public final class ActionabilityTestUtil {
 
     @NotNull
     public static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String treatment, @NotNull String cancerType,
-            @NotNull String doid, @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @NotNull String url) {
-        return new ActionableEventImpl(source, treatment, cancerType, doid, level, direction, url);
+            @NotNull String doid, @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @NotNull Set<String> urls) {
+        return new ActionableEventImpl(source, treatment, cancerType, doid, level, direction, urls);
     }
 
     private static class ActionableEventImpl implements ActionableEvent {
@@ -37,18 +38,18 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final EvidenceDirection direction;
         @NotNull
-        private final String url;
+        private final Set<String> urls;
 
         public ActionableEventImpl(@NotNull final Knowledgebase source, @NotNull final String treatment, @NotNull final String cancerType,
                 @NotNull final String doid, @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
-                @NotNull final String url) {
+                @NotNull final Set<String> urls) {
             this.source = source;
             this.treatment = treatment;
             this.cancerType = cancerType;
             this.doid = doid;
             this.level = level;
             this.direction = direction;
-            this.url = url;
+            this.urls = urls;
         }
 
         @NotNull
@@ -89,8 +90,8 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
-        public String url() {
-            return url;
+        public Set<String> urls() {
+            return urls;
         }
 
         @Override
@@ -103,18 +104,18 @@ public final class ActionabilityTestUtil {
             }
             final ActionableEventImpl that = (ActionableEventImpl) o;
             return source == that.source && treatment.equals(that.treatment) && cancerType.equals(that.cancerType) && doid.equals(that.doid)
-                    && level == that.level && direction == that.direction && url.equals(that.url);
+                    && level == that.level && direction == that.direction && urls.equals(that.urls);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(source, treatment, cancerType, doid, level, direction, url);
+            return Objects.hash(source, treatment, cancerType, doid, level, direction, urls);
         }
 
         @Override
         public String toString() {
             return "ActionableEventImpl{" + "source=" + source + ", treatment='" + treatment + '\'' + ", cancerType='" + cancerType + '\''
-                    + ", doid='" + doid + '\'' + ", level=" + level + ", direction=" + direction + ", url='" + url + '\'' + '}';
+                    + ", doid='" + doid + '\'' + ", level=" + level + ", direction=" + direction + ", urls=" + urls + '}';
         }
     }
 }

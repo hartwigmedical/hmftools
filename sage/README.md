@@ -198,7 +198,7 @@ Flanked read context:              <b>GATACCAACATAACA</b>
 
 In the following table we match the read context against bam reads in numerous ways. 
 A `FULL` match includes both flanks, a `PARTIAL` match is if the read is truncated over one of the flanks but matches what is remaining, and a `CORE` match is only the core. 
-A `REALIGNED` match must include both flanks but just be offset. All types of matches contribute to the VAF but only `FULL` and `PARTIAL` matches contribute to the `QUAL` score.
+A `REALIGNED` match must include both flanks but just be offset. An `ALT` match matches only the variant. All types of matches contribute to the VAF but only `FULL` and `PARTIAL` matches contribute to the `QUAL` score.
 
 <pre>
 Reference:                ...ACCATGGATACCATCATAACATACGA...
@@ -208,9 +208,9 @@ Full Match:               ...ACCATG<b>GATACCAACATAACA</b>TACGA...
 Partial Match:                       <b>TACCAACATAACA</b>TACGA...
 Core Match:               ...ACCATGGAC<b>ACCAACATAACA</b>TAACATACGA...
 Realigned Match:          ...ACCCATG<b>GATACCAACATAACA</b>TACG...
+Alt Match:                                <b>A</b>
 </pre>
 
-If the core does not match a read it does not add support for the variant. 
 If the variant itself is the ref (regardless of whatever else happens in the core), the read supports the ref.
  
 <pre>
@@ -385,11 +385,11 @@ The outputs of this stage are found in the VCF as:
 
 Field | Description
 ---|---
-RC_CNT\[0,1,2,3,4,5\] | Read Context Count \[`FULL`, `PARTIAL`, `CORE`, `REALIGNED`, `REFERENCE`, `TOTAL`\]
-RC_QUAL\[0,1,2,3,4,5\] | Read Context Quality \[`FULL`, `PARTIAL`, `CORE`, `REALIGNED`, `REFERENCE`, `TOTAL`\]
+RC_CNT\[0,1,2,3,4,5,6\] | Read Context Count \[`FULL`, `PARTIAL`, `CORE`, `REALIGNED`, `ALT`, `REFERENCE`, `TOTAL`\]
+RC_QUAL\[0,1,2,3,4,5,6\] | Read Context Quality \[`FULL`, `PARTIAL`, `CORE`, `REALIGNED`, `ALT`,`REFERENCE`, `TOTAL`\]
 RC_JIT\[0,1,2\] | Read Context Jitter \[`SHORTENED`, `LENGTHENED`, `JITTER_PENALTY`\]
-AD\[0,1\] | Allelic Depth  (=\[RC_CNT\[4\], RC_CNT\[0\] + RC_CNT\[1\] + RC_CNT\[2\] + RC_CNT\[3\]\] )
-DP | Read Depth (=RC_CNT\[5\])
+AD\[0,1\] | Allelic Depth  (=\[RC_CNT\[5\], RC_CNT\[0\] + RC_CNT\[1\] + RC_CNT\[2\] + RC_CNT\[3\] + RC_CNT\[4\]\] )
+DP | Read Depth (=RC_CNT\[6\])
 AF | Allelic Frequency (=AD\[1\] / DP)
 QUAL | Variant Quality (=RC_QUAL\[0\] + RC_QUAL\[1\] - RC_JIT\[2\])
 
@@ -627,9 +627,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 # Version History and Download Links
 - Upcoming
-  - Gene panel coverage
+  - Gene panel coverage including estimate of missed variant likelihood 
   - Changed default value of max_germline_rel_raw_base_qual for HOTSPOTS to 50% (from 100%)
-  - Improved VAF estimation
+  - Improved VAF estimation by including alt match type 
 - [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.4)
   - Added SageAppendApplication to [append additional reference samples](#append-reference-samples) to existing SAGE output. 
   - Do not hard filter germline variants in the same local phase set as passing somatic variants

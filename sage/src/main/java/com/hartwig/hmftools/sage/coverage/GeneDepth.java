@@ -11,5 +11,7 @@ public interface GeneDepth {
     @NotNull
     String gene();
 
+    double missedVariantLikelihood();
+
     int[] depthCounts();
 }

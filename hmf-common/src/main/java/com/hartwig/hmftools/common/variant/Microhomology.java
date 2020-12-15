@@ -8,6 +8,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class Microhomology {
+
     private static final Logger LOGGER = LogManager.getLogger(Microhomology.class);
 
     private Microhomology() {
@@ -56,7 +57,6 @@ public final class Microhomology {
 
     @NotNull
     private static MicrohomologyContext leftAlignedMicrohomology(int position, int altLength, @NotNull final byte[] sequence) {
-
         // Left align
         if (position > 0 && position + altLength - 1 < sequence.length) {
             byte ref = sequence[position];

@@ -131,6 +131,8 @@ public final class ViccClassificationConfig {
         set.add("FRAMESHIFT TRUNCATION");
         set.add("FRAMESHIFT MUTATION");
         set.add("ALTERATION");
+        set.add("Oncogenic Mutations");
+        set.add("oncogenic mutation");
         return set;
     }
 
@@ -141,10 +143,8 @@ public final class ViccClassificationConfig {
         set.add("Gain-of-Function");
         set.add("act mut");
         set.add("ACTIVATING MUTATION");
-        set.add("Oncogenic Mutations");
         set.add("pos");
         set.add("positive");
-        set.add("oncogenic mutation");
         return set;
     }
 

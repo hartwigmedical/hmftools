@@ -18,6 +18,7 @@ import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
+import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
@@ -82,7 +83,7 @@ public final class ViccExtractor {
 
         addActionability(outputBuilder, resultsPerEntry.values());
 
-        return outputBuilder.build();
+        return ExtractionFunctions.consolidateActionableEvents(outputBuilder.build());
     }
 
     @NotNull

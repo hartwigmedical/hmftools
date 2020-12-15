@@ -94,7 +94,7 @@ final class ActionableEvidenceFactory {
                     .doid(nullToEmpty(doid))
                     .level(level)
                     .direction(nullToEmpty(direction))
-                    .url(nullToEmpty(url))
+                    .urls(nullToEmptySet(url))
                     .build();
         } else {
             return null;
@@ -118,6 +118,11 @@ final class ActionableEvidenceFactory {
             LOGGER.warn("Could not resolve evidence label '{}'", evidenceLabel);
         }
         return level;
+    }
+
+    @NotNull
+    private static Set<String> nullToEmptySet(@Nullable String string) {
+        return string != null ? Sets.newHashSet(string) : Sets.newHashSet();
     }
 
     @NotNull
