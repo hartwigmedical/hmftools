@@ -9,7 +9,7 @@ class ProteinSequenceTest {
     @Test
     fun testExonicBoundaryInMiddle() {
         val victim = ProteinSequence("A*Test", "ABCDEFG")
-        val exonicKmers = victim.uniqueExonicKmers(3, listOf(3))
+        val exonicKmers = victim.exonicKmers(3, listOf(3))
         assertEquals(2, exonicKmers.size)
         assertTrue("ABC" in exonicKmers)
         assertTrue("EFG" in exonicKmers)
@@ -19,7 +19,7 @@ class ProteinSequenceTest {
     fun testExonicBoundaryAtEnd() {
         val proteins = "ABCDEFG"
         val victim = ProteinSequence("A*Test", "ABCDEFG")
-        val exonicKmers = victim.uniqueExonicKmers(5, listOf(proteins.length - 1))
+        val exonicKmers = victim.exonicKmers(5, listOf(proteins.length - 1))
         assertEquals(2, exonicKmers.size)
         assertTrue("ABCDE" in exonicKmers)
         assertTrue("BCDEF" in exonicKmers)
@@ -29,7 +29,7 @@ class ProteinSequenceTest {
     fun testExonicBoundaryPastEnd() {
         val proteins = "ABCDEFG"
         val victim = ProteinSequence("A*Test", proteins)
-        val exonicKmers = victim.uniqueExonicKmers(6, listOf(proteins.length))
+        val exonicKmers = victim.exonicKmers(6, listOf(proteins.length))
         assertEquals(2, exonicKmers.size)
         assertTrue("ABCDEF" in exonicKmers)
         assertTrue("BCDEFG" in exonicKmers)
@@ -38,7 +38,7 @@ class ProteinSequenceTest {
     @Test
     fun testExonicBoundaryAtStart() {
         val victim = ProteinSequence("A*Test", "ABCDEFG")
-        val exonicKmers = victim.uniqueExonicKmers(6, listOf(0))
+        val exonicKmers = victim.exonicKmers(6, listOf(0))
         assertEquals(1, exonicKmers.size)
         assertTrue("BCDEFG" in exonicKmers)
     }
@@ -46,7 +46,7 @@ class ProteinSequenceTest {
     @Test
     fun testRollingKmers4() {
         val victim = ProteinSequence("A*Test", "ABCDEFG")
-        val exonicKmers = victim.uniqueExonicKmers(4, listOf())
+        val exonicKmers = victim.exonicKmers(4, listOf())
         assertEquals(4, exonicKmers.size)
         assertTrue("ABCD" in exonicKmers)
         assertTrue("BCDE" in exonicKmers)
@@ -57,7 +57,7 @@ class ProteinSequenceTest {
     @Test
     fun testRollingKmers6() {
         val victim = ProteinSequence("A*Test", "ABCDEFG")
-        val exonicKmers = victim.uniqueExonicKmers(6, listOf())
+        val exonicKmers = victim.exonicKmers(6, listOf())
         assertEquals(2, exonicKmers.size)
         assertTrue("ABCDEF" in exonicKmers)
         assertTrue("BCDEFG" in exonicKmers)
@@ -67,7 +67,7 @@ class ProteinSequenceTest {
     @Test
     fun testRollingKmersMinLength() {
         val victim = ProteinSequence("A*Test", "ABCDEFG")
-        val exonicKmers = victim.uniqueExonicKmers(7, 20, listOf())
+        val exonicKmers = victim.exonicKmers(7, 20, listOf())
         assertEquals(1, exonicKmers.size)
         assertTrue("ABCDEFG" in exonicKmers)
     }
@@ -75,7 +75,7 @@ class ProteinSequenceTest {
     @Test
     fun testRollingKmersInsufficientMinLength() {
         val victim = ProteinSequence("A*Test", "ABCDEFG")
-        val exonicKmers = victim.uniqueExonicKmers(8, 20, listOf())
+        val exonicKmers = victim.exonicKmers(8, 20, listOf())
         assertEquals(0, exonicKmers.size)
     }
 

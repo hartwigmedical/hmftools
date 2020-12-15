@@ -12,6 +12,13 @@ public class CodonsTest {
     }
 
     @Test
+    public void testStopCodon() {
+        assertEquals('X', Codons.asCondon("TAA"));
+        assertEquals('X', Codons.asCondon("TAG"));
+        assertEquals('X', Codons.asCondon("TGA"));
+    }
+
+    @Test
     public void testAsCodonString() {
         assertEquals("Y", Codons.asCodonString("TAT"));
         assertEquals("Y", Codons.asCodonString("TATG"));

@@ -6,7 +6,7 @@ import java.util.*
 data class ProteinSequence(val contig: String, val proteins: String) {
     val allele: HlaAllele by lazy { HlaAllele(contig) }
 
-    private val fullProteinSequence: String by lazy { proteins.removeSpecialCharacters() }
+    val fullProteinSequence: String by lazy { proteins.removeSpecialCharacters() }
     val length: Int by lazy { fullProteinSequence.length }
 
 
@@ -14,7 +14,7 @@ data class ProteinSequence(val contig: String, val proteins: String) {
         return ProteinSequence(contig, proteins + more)
     }
 
-    fun exonicProteins(exonicBoundaries: List<Int>): List<String> {
+    private fun exonicProteins(exonicBoundaries: List<Int>): List<String> {
         if (exonicBoundaries.isEmpty()) {
             return listOf(fullProteinSequence)
         }
@@ -43,16 +43,17 @@ data class ProteinSequence(val contig: String, val proteins: String) {
         return fixedLengthRollingKmers(length, fullProteinSequence).toSet()
     }
 
-    fun uniqueExonicKmers(kmerLength: Int, exonicBoundaries: List<Int>): Set<String> {
-        return uniqueExonicKmers(kmerLength, kmerLength, exonicBoundaries)
+    fun exonicKmers(kmerLength: Int, exonicBoundaries: List<Int>): Set<String> {
+        return exonicKmers(kmerLength, kmerLength, exonicBoundaries)
     }
 
-    fun uniqueExonicKmers(minKmerLength: Int, maxKmerLength: Int, exonicBoundaries: List<Int>): Set<String> {
+    fun exonicKmers(minKmerLength: Int, maxKmerLength: Int, exonicBoundaries: List<Int>): Set<String> {
         return exonicProteins(exonicBoundaries)
                 .flatMap { variableLengthRollingKmers(minKmerLength, maxKmerLength, it) }
-                .groupBy { it }
-                .filter { it.value.size == 1 }
-                .keys
+                .toSet()
+//                .groupBy { it }
+//                .filter { it.value.size == 1 }
+//                .keys
     }
 
     private fun fixedLengthRollingKmers(kmerSize: Int, sequence: String): List<String> {
