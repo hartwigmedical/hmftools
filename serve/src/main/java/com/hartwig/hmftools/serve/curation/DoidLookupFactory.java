@@ -22,13 +22,15 @@ public final class DoidLookupFactory {
 
     @NotNull
     public static DoidLookup buildFromConfigTsv(@NotNull String configTsvPath) throws IOException {
+        Map<String, Set<String>> cancerTypeToDoidsMapping = Maps.newHashMap();
+
         List<String> lines = Files.readAllLines(new File(configTsvPath).toPath());
         // Skip header
-        Map<String, Set<String>> cancerTypeToDoidsMapping = Maps.newHashMap();
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_DELIMITER);
             cancerTypeToDoidsMapping.put(parts[0], Sets.newHashSet(parts[1].split(DOID_DELIMITER)));
         }
+
         return new DoidLookup(cancerTypeToDoidsMapping);
     }
 }
