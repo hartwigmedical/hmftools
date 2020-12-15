@@ -3,9 +3,8 @@ package com.hartwig.hmftools.svtools.neo;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
@@ -28,8 +27,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.Transcript;
-import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public class NeoUtils
@@ -38,7 +35,7 @@ public class NeoUtils
             final NeoEpitope neData, final TranscriptData transData, int position, int stream)
     {
         // determine phasing, coding and region context
-        boolean isUpstream = stream == FS_UPSTREAM;
+        boolean isUpstream = stream == FS_UP;
 
         for(ExonData exon : transData.exons())
         {
@@ -224,7 +221,7 @@ public class NeoUtils
         // upstream strand -1, bases will be retrieved from left to right (lower to higher), need to reverse and convert
         // downstream strand -1, bases will be retrieved from left to right (lower to higher), need to reverse and convert
 
-        for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             if(neData.strand(fs) == NEG_STRAND)
                 neData.CodingBases[fs] = reverseStrandBases(neData.CodingBases[fs]);

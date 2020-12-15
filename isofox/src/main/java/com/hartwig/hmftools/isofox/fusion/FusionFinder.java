@@ -2,8 +2,8 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
@@ -772,8 +772,8 @@ public class FusionFinder implements Callable
                 boolean isSpliced = fusion1.isKnownSpliced();
                 boolean isUnspliced = fusion1.isUnspliced();
 
-                final List<TransExonRef> upRefs1 = fusion1.getTransExonRefsByStream(FS_UPSTREAM);
-                final List<TransExonRef> downRefs1 = fusion1.getTransExonRefsByStream(FS_DOWNSTREAM);
+                final List<TransExonRef> upRefs1 = fusion1.getTransExonRefsByStream(FS_UP);
+                final List<TransExonRef> downRefs1 = fusion1.getTransExonRefsByStream(FS_DOWN);
 
                 for(int j = i + 1; j < fusions.size() - 1; ++j)
                 {
@@ -781,8 +781,8 @@ public class FusionFinder implements Callable
 
                     if(isSpliced && fusion2.isUnspliced())
                     {
-                        if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UPSTREAM))
-                        && hasTranscriptExonMatch(downRefs1, fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), -1))
+                        if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UP))
+                        && hasTranscriptExonMatch(downRefs1, fusion2.getTransExonRefsByStream(FS_DOWN), -1))
                         {
                             fusion2.addRelatedFusion(fusion1.id(), true);
                             continue;
@@ -790,8 +790,8 @@ public class FusionFinder implements Callable
                     }
                     else if(isUnspliced && fusion2.isKnownSpliced())
                     {
-                        if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UPSTREAM))
-                        && hasTranscriptExonMatch(fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), downRefs1, -1))
+                        if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UP))
+                        && hasTranscriptExonMatch(fusion2.getTransExonRefsByStream(FS_DOWN), downRefs1, -1))
                         {
                             fusion1.addRelatedFusion(fusion2.id(), true);
                             continue;

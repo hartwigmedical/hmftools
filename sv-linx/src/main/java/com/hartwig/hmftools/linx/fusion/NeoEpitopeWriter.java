@@ -3,20 +3,18 @@ package com.hartwig.hmftools.linx.fusion;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.fusion.FusionReportability.allowSuspectChains;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 
@@ -142,7 +140,7 @@ public class NeoEpitopeWriter
     {
         for(final NeoEpitopeFusion fusion : mFusions)
         {
-            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+            for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
             {
                 if(fusion.SvIds[fs] == gene1.id() && fusion.SvIds[switchStream(fs)] == gene2.id()
                 && fusion.Chromosomes[fs].equals(gene1.chromosome()) && fusion.Chromosomes[switchStream(fs)].equals(gene2.chromosome())

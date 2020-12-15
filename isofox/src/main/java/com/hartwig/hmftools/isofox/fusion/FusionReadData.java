@@ -4,9 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
@@ -45,7 +44,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -208,7 +206,7 @@ public class FusionReadData
     public boolean isKnownSpliced() { return getInitialFragment().isSpliced(); }
     public boolean isUnspliced() { return getInitialFragment().isUnspliced() && getInitialFragment().type() == MATCHED_JUNCTION; }
 
-    public boolean hasViableGenes() { return mFusionGenes[FS_UPSTREAM] != null && mFusionGenes[FS_DOWNSTREAM] != null; }
+    public boolean hasViableGenes() { return mFusionGenes[FS_UP] != null && mFusionGenes[FS_DOWN] != null; }
 
     public void setJunctionBases(final RefGenomeInterface refGenome)
     {
@@ -343,22 +341,22 @@ public class FusionReadData
     {
         if(!upstreamGenes.isEmpty())
         {
-            mStreamIndices[FS_UPSTREAM] = startIsUpstream ? SE_START : SE_END;
+            mStreamIndices[FS_UP] = startIsUpstream ? SE_START : SE_END;
 
             if(downstreamGenes.isEmpty())
-                mStreamIndices[FS_DOWNSTREAM] = switchStream(mStreamIndices[FS_UPSTREAM]);
+                mStreamIndices[FS_DOWN] = switchStream(mStreamIndices[FS_UP]);
 
-            mFusionGenes[FS_UPSTREAM] = upstreamGenes.get(0);
+            mFusionGenes[FS_UP] = upstreamGenes.get(0);
         }
 
         if(!downstreamGenes.isEmpty())
         {
-            mStreamIndices[FS_DOWNSTREAM] = startIsUpstream ? SE_END : SE_START;
+            mStreamIndices[FS_DOWN] = startIsUpstream ? SE_END : SE_START;
 
             if(upstreamGenes.isEmpty())
-                mStreamIndices[FS_UPSTREAM] = switchStream(mStreamIndices[FS_DOWNSTREAM]);
+                mStreamIndices[FS_UP] = switchStream(mStreamIndices[FS_DOWN]);
 
-            mFusionGenes[FS_DOWNSTREAM] = downstreamGenes.get(0);
+            mFusionGenes[FS_DOWN] = downstreamGenes.get(0);
         }
     }
 
@@ -367,7 +365,7 @@ public class FusionReadData
         if(!hasViableGenes())
             return null;
 
-        if(mStreamIndices[FS_UPSTREAM] == SE_START)
+        if(mStreamIndices[FS_UP] == SE_START)
             return new byte[] { mFusionGenes[SE_START].Strand, mFusionGenes[SE_END].Strand };
         else
             return new byte[] { mFusionGenes[SE_END].Strand, mFusionGenes[SE_START].Strand };
@@ -419,7 +417,7 @@ public class FusionReadData
             if(fragment.orientations()[se] != mJunctionOrientations[se])
                 return false;
 
-            boolean isUpstream = (mStreamIndices[FS_UPSTREAM] == se);
+            boolean isUpstream = (mStreamIndices[FS_UP] == se);
 
             int permittedExonDiff;
 
@@ -628,7 +626,7 @@ public class FusionReadData
         return String.format("%d: chr(%s-%s) junc(%d-%d %d/%d %s) genes(%s-%s) frags(%d)",
                 mId, mChromosomes[SE_START], mChromosomes[SE_END], mJunctionPositions[SE_START], mJunctionPositions[SE_END],
                 mJunctionOrientations[SE_START], mJunctionOrientations[SE_END], getImpliedSvType(),
-                getGeneName(FS_UPSTREAM), getGeneName(FS_DOWNSTREAM), mFragmentCounts.values().stream().mapToInt(x -> x).sum());
+                getGeneName(FS_UP), getGeneName(FS_DOWN), mFragmentCounts.values().stream().mapToInt(x -> x).sum());
     }
 
     public static String csvHeader()
@@ -654,7 +652,7 @@ public class FusionReadData
 
         final FusionFragment sampleFragment = getInitialFragment();
 
-        for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             final EnsemblGeneData geneData = mFusionGenes[fs];
 
@@ -694,13 +692,13 @@ public class FusionReadData
         csvData.add(String.valueOf(discordantFragments));
 
         // since depth of 1 may have been discarded from the BaseDepth, correct for this
-        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UPSTREAM]], splitFragments)));
-        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_DOWNSTREAM]], splitFragments)));
+        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UP]], splitFragments)));
+        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_DOWN]], splitFragments)));
 
-        csvData.add(String.valueOf(mMaxSplitLengths[mStreamIndices[FS_UPSTREAM]]));
-        csvData.add(String.valueOf(mMaxSplitLengths[mStreamIndices[FS_DOWNSTREAM]]));
+        csvData.add(String.valueOf(mMaxSplitLengths[mStreamIndices[FS_UP]]));
+        csvData.add(String.valueOf(mMaxSplitLengths[mStreamIndices[FS_DOWN]]));
 
-        for (int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+        for (int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             final List<TransExonRef> transExonRefs = getTransExonRefsByStream(fs);
             if(transExonRefs.isEmpty())

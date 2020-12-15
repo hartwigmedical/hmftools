@@ -2,8 +2,8 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
@@ -479,7 +479,7 @@ public class FusionFinder
         if(kfData != null)
         {
             // a known IG-partner gene
-            if(kfData.downstreamDistance(FS_DOWNSTREAM) > 0)
+            if(kfData.downstreamDistance(FS_DOWN) > 0)
             {
                 candidateTranscripts.addAll(downGene.transcripts().stream().filter(x -> x.postCoding()).collect(Collectors.toList()));
             }
@@ -678,8 +678,8 @@ public class FusionFinder
 
     private void setKnownFusionType(GeneFusion geneFusion)
     {
-        final String upGene = geneFusion.transcripts()[FS_UPSTREAM].gene().GeneName;
-        final String downGene = geneFusion.transcripts()[FS_DOWNSTREAM].gene().GeneName;
+        final String upGene = geneFusion.transcripts()[FS_UP].gene().GeneName;
+        final String downGene = geneFusion.transcripts()[FS_DOWN].gene().GeneName;
 
         if(mKnownFusionCache.hasKnownFusion(upGene, downGene))
         {
@@ -690,7 +690,7 @@ public class FusionFinder
         if(upGene.equals(downGene))
         {
             if(mKnownFusionCache.withinKnownExonRanges(
-                    EXON_DEL_DUP, geneFusion.transcripts()[FS_UPSTREAM].StableId,
+                    EXON_DEL_DUP, geneFusion.transcripts()[FS_UP].StableId,
                     geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true),
                     geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
             {
@@ -707,10 +707,10 @@ public class FusionFinder
         if(mKnownFusionCache.hasPromiscuousThreeGene(downGene))
         {
             geneFusion.setKnownType(PROMISCUOUS_3);
-            geneFusion.isPromiscuous()[FS_DOWNSTREAM] = true;
+            geneFusion.isPromiscuous()[FS_DOWN] = true;
 
             if(mKnownFusionCache.withinPromiscuousExonRange(
-                    PROMISCUOUS_3, geneFusion.transcripts()[FS_DOWNSTREAM].StableId,
+                    PROMISCUOUS_3, geneFusion.transcripts()[FS_DOWN].StableId,
                     geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownExons();
@@ -721,10 +721,10 @@ public class FusionFinder
         {
             // will override promiscuous 3 but will show as PROM_BOTH in subsequent output
             geneFusion.setKnownType(PROMISCUOUS_5);
-            geneFusion.isPromiscuous()[FS_UPSTREAM] = true;
+            geneFusion.isPromiscuous()[FS_UP] = true;
 
             if(mKnownFusionCache.withinPromiscuousExonRange(
-                    PROMISCUOUS_5, geneFusion.transcripts()[FS_UPSTREAM].StableId,
+                    PROMISCUOUS_5, geneFusion.transcripts()[FS_UP].StableId,
                     geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true)))
             {
                 geneFusion.setKnownExons();
@@ -733,7 +733,7 @@ public class FusionFinder
 
         if(geneFusion.knownType() == PROMISCUOUS_5 || geneFusion.knownType() == PROMISCUOUS_3)
         {
-            if(mKnownFusionCache.isHighImpactPromiscuous(geneFusion.knownType(), geneFusion.geneName(FS_UPSTREAM), geneFusion.geneName(FS_DOWNSTREAM)))
+            if(mKnownFusionCache.isHighImpactPromiscuous(geneFusion.knownType(), geneFusion.geneName(FS_UP), geneFusion.geneName(FS_DOWN)))
             {
                 geneFusion.setHighImpactPromiscuous();
             }

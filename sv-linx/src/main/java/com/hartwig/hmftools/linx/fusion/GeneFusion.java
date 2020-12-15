@@ -4,8 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.fsIndex;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
@@ -67,21 +67,21 @@ public class GeneFusion
     public String name()
     {
         if(mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS) // form like @IGH-MYC
-            return mTranscripts[FS_UPSTREAM].StableId + "_" + mTranscripts[FS_DOWNSTREAM].geneName();
+            return mTranscripts[FS_UP].StableId + "_" + mTranscripts[FS_DOWN].geneName();
         else
-            return mTranscripts[FS_UPSTREAM].geneName() + "_" + mTranscripts[FS_DOWNSTREAM].geneName();
+            return mTranscripts[FS_UP].geneName() + "_" + mTranscripts[FS_DOWN].geneName();
     }
 
     public int svId(boolean isUpstream) { return mTranscripts[fsIndex(isUpstream)].gene().id(); }
 
     public Transcript[] transcripts() { return mTranscripts; }
-    public Transcript upstreamTrans() { return mTranscripts[FS_UPSTREAM]; }
-    public Transcript downstreamTrans() { return mTranscripts[FS_DOWNSTREAM]; }
+    public Transcript upstreamTrans() { return mTranscripts[FS_UP]; }
+    public Transcript downstreamTrans() { return mTranscripts[FS_DOWN]; }
 
     public String geneName(int fs)
     {
-        if(fs == FS_UPSTREAM && (mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS))
-            return mTranscripts[FS_UPSTREAM].StableId;
+        if(fs == FS_UP && (mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS))
+            return mTranscripts[FS_UP].StableId;
         else
             return mTranscripts[fs].geneName();
     }
@@ -98,7 +98,7 @@ public class GeneFusion
     {
         if(mKnownFusionType == PROMISCUOUS_5 || mKnownFusionType == PROMISCUOUS_3)
         {
-            if(mIsPromiscuous[FS_UPSTREAM] && mIsPromiscuous[FS_DOWNSTREAM])
+            if(mIsPromiscuous[FS_UP] && mIsPromiscuous[FS_DOWN])
                 return PROMISCUOUS_BOTH;
         }
 
@@ -117,7 +117,7 @@ public class GeneFusion
         if(!mPhaseMatched)
             return OUT_OF_FRAME;
 
-        return mExonsSkipped[FS_UPSTREAM] > 0 || mExonsSkipped[FS_DOWNSTREAM] > 0 ? SKIPPED_EXONS : INFRAME;
+        return mExonsSkipped[FS_UP] > 0 || mExonsSkipped[FS_DOWN] > 0 ? SKIPPED_EXONS : INFRAME;
     }
 
     public FusionLikelihoodType likelihoodType()
@@ -139,7 +139,7 @@ public class GeneFusion
 
     public boolean sameChromosome()
     {
-        return mTranscripts[FS_UPSTREAM].gene().chromosome().equals(mTranscripts[FS_DOWNSTREAM].gene().chromosome());
+        return mTranscripts[FS_UP].gene().chromosome().equals(mTranscripts[FS_DOWN].gene().chromosome());
     }
 
     public int distance()
@@ -147,13 +147,13 @@ public class GeneFusion
         if(!sameChromosome())
             return 0;
 
-        return abs(mTranscripts[FS_UPSTREAM].gene().position() - mTranscripts[FS_DOWNSTREAM].gene().position());
+        return abs(mTranscripts[FS_UP].gene().position() - mTranscripts[FS_DOWN].gene().position());
     }
 
     public void setExonsSkipped(int exonsUp, int exonsDown)
     {
-        mExonsSkipped[FS_UPSTREAM] = exonsUp;
-        mExonsSkipped[FS_DOWNSTREAM] = exonsDown;
+        mExonsSkipped[FS_UP] = exonsUp;
+        mExonsSkipped[FS_DOWN] = exonsDown;
     }
 
     public int getExonsSkipped(boolean isUpstream) { return mExonsSkipped[fsIndex(isUpstream)]; }
@@ -163,16 +163,16 @@ public class GeneFusion
     {
         if(isExonic())
         {
-            return isUpstream ? mTranscripts[FS_UPSTREAM].ExonUpstream : mTranscripts[FS_DOWNSTREAM].ExonDownstream;
+            return isUpstream ? mTranscripts[FS_UP].ExonUpstream : mTranscripts[FS_DOWN].ExonDownstream;
         }
 
         if(isUpstream)
         {
-            return max(mTranscripts[FS_UPSTREAM].nextSpliceExonRank() - mExonsSkipped[FS_UPSTREAM], 1);
+            return max(mTranscripts[FS_UP].nextSpliceExonRank() - mExonsSkipped[FS_UP], 1);
         }
         else
         {
-            return min(mTranscripts[FS_DOWNSTREAM].nextSpliceExonRank() + mExonsSkipped[FS_DOWNSTREAM], mTranscripts[FS_DOWNSTREAM].ExonMax);
+            return min(mTranscripts[FS_DOWN].nextSpliceExonRank() + mExonsSkipped[FS_DOWN], mTranscripts[FS_DOWN].ExonMax);
         }
     }
 
@@ -180,15 +180,15 @@ public class GeneFusion
     {
         if(isExonic())
         {
-            return isUpstream ? mTranscripts[FS_UPSTREAM].ExonUpstream : mTranscripts[FS_DOWNSTREAM].ExonDownstream;
+            return isUpstream ? mTranscripts[FS_UP].ExonUpstream : mTranscripts[FS_DOWN].ExonDownstream;
         }
 
-        return isUpstream ? mTranscripts[FS_UPSTREAM].nextSpliceExonRank() : mTranscripts[FS_DOWNSTREAM].nextSpliceExonRank();
+        return isUpstream ? mTranscripts[FS_UP].nextSpliceExonRank() : mTranscripts[FS_DOWN].nextSpliceExonRank();
     }
 
     public boolean isExonic()
     {
-        return mTranscripts[FS_UPSTREAM].isExonic() && mTranscripts[FS_DOWNSTREAM].isExonic();
+        return mTranscripts[FS_UP].isExonic() && mTranscripts[FS_DOWN].isExonic();
     }
 
     public final FusionAnnotations getAnnotations() { return mAnnotations; }
@@ -223,17 +223,17 @@ public class GeneFusion
 
     public String svIdPair()
     {
-        return String.format("%d_%d", mTranscripts[FS_UPSTREAM].gene().id(), mTranscripts[FS_DOWNSTREAM].gene().id());
+        return String.format("%d_%d", mTranscripts[FS_UP].gene().id(), mTranscripts[FS_DOWN].gene().id());
     }
 
     public final String toString()
     {
         return String.format("%d: %s type(%s) reportable(%s reason=%s) phased(%s) SVs(%d & %d) up(%s:%d:%d exon=%d) down(%s:%d:%d exon=%d)",
                 mId, name(), knownTypeStr(), mIsReportable, mReportableReason, mPhaseMatched,
-                mTranscripts[FS_UPSTREAM].gene().id(), mTranscripts[FS_DOWNSTREAM].gene().id(),
-                mTranscripts[FS_UPSTREAM].gene().chromosome(), mTranscripts[FS_UPSTREAM].gene().orientation(),
-                mTranscripts[FS_UPSTREAM].gene().position(), getFusedExon(true),
-                mTranscripts[FS_DOWNSTREAM].gene().chromosome(), mTranscripts[FS_DOWNSTREAM].gene().orientation(),
-                mTranscripts[FS_DOWNSTREAM].gene().position(), getFusedExon(false));
+                mTranscripts[FS_UP].gene().id(), mTranscripts[FS_DOWN].gene().id(),
+                mTranscripts[FS_UP].gene().chromosome(), mTranscripts[FS_UP].gene().orientation(),
+                mTranscripts[FS_UP].gene().position(), getFusedExon(true),
+                mTranscripts[FS_DOWN].gene().chromosome(), mTranscripts[FS_DOWN].gene().orientation(),
+                mTranscripts[FS_DOWN].gene().position(), getFusedExon(false));
     }
 }

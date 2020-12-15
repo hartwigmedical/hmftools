@@ -2,8 +2,8 @@ package com.hartwig.hmftools.linx.fusion.rna;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -100,17 +100,17 @@ public class RnaFusionAnnotator
 
     public static void checkRnaPhasedTranscripts(RnaFusionData rnaFusion)
     {
-        if(rnaFusion.getTransExonData(FS_UPSTREAM).isEmpty() || rnaFusion.getTransExonData(FS_DOWNSTREAM).isEmpty())
+        if(rnaFusion.getTransExonData(FS_UP).isEmpty() || rnaFusion.getTransExonData(FS_DOWN).isEmpty())
             return;
 
-        for (RnaExonMatchData exonDataUp : rnaFusion.getTransExonData(FS_UPSTREAM))
+        for (RnaExonMatchData exonDataUp : rnaFusion.getTransExonData(FS_UP))
         {
-            if(rnaFusion.JunctionTypes[FS_UPSTREAM] == KNOWN && !exonDataUp.BoundaryMatch)
+            if(rnaFusion.JunctionTypes[FS_UP] == KNOWN && !exonDataUp.BoundaryMatch)
                 continue;
 
-            for(RnaExonMatchData exonDataDown : rnaFusion.getTransExonData(FS_DOWNSTREAM))
+            for(RnaExonMatchData exonDataDown : rnaFusion.getTransExonData(FS_DOWN))
             {
-                if(rnaFusion.JunctionTypes[FS_DOWNSTREAM] == KNOWN && !exonDataDown.BoundaryMatch)
+                if(rnaFusion.JunctionTypes[FS_DOWN] == KNOWN && !exonDataDown.BoundaryMatch)
                     continue;
 
                 boolean phaseMatched = exonDataUp.ExonPhase == exonDataDown.ExonPhase;
@@ -118,7 +118,7 @@ public class RnaFusionAnnotator
                 if(phaseMatched && !rnaFusion.hasRnaPhasedFusion())
                 {
                     LNX_LOGGER.debug("rnaFusion({}) juncTypes(up={} down={}) transUp({}) transDown({} phase({}) matched({})",
-                            rnaFusion.name(), rnaFusion.JunctionTypes[FS_UPSTREAM], rnaFusion.JunctionTypes[FS_DOWNSTREAM],
+                            rnaFusion.name(), rnaFusion.JunctionTypes[FS_UP], rnaFusion.JunctionTypes[FS_DOWN],
                             exonDataUp.TransName, exonDataDown.TransName, exonDataUp.ExonPhase, phaseMatched);
 
                     rnaFusion.setRnaPhasedFusionData(exonDataUp, exonDataDown);
@@ -132,7 +132,7 @@ public class RnaFusionAnnotator
         // take the first gene where multiple are listed unless one features in the known or promiscuous lists
         final String[] geneNames = rnaFusion.GeneNames;
 
-        for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             if(!rnaFusion.GeneIds[fs].isEmpty())
                 continue;
@@ -274,15 +274,15 @@ public class RnaFusionAnnotator
             return;
         }
 
-        if(refFusionData.hasKnownFusion(rnaFusion.GeneNames[FS_UPSTREAM], rnaFusion.GeneNames[FS_DOWNSTREAM]))
+        if(refFusionData.hasKnownFusion(rnaFusion.GeneNames[FS_UP], rnaFusion.GeneNames[FS_DOWN]))
         {
             rnaFusion.setKnownType(KNOWN_PAIR.toString());
             return;
         }
 
-        boolean fivePrimeProm = refFusionData.hasPromiscuousFiveGene(rnaFusion.GeneNames[FS_UPSTREAM]);
+        boolean fivePrimeProm = refFusionData.hasPromiscuousFiveGene(rnaFusion.GeneNames[FS_UP]);
 
-        boolean threePrimeProm = refFusionData.hasPromiscuousThreeGene(rnaFusion.GeneNames[FS_DOWNSTREAM]);
+        boolean threePrimeProm = refFusionData.hasPromiscuousThreeGene(rnaFusion.GeneNames[FS_DOWN]);
 
         if(fivePrimeProm && threePrimeProm)
         {

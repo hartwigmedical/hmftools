@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -99,10 +99,10 @@ public class FusionWriter
                     .skippedExonsDown(geneFusion.getExonsSkipped(false))
                     .fusedExonUp(geneFusion.getFusedExon(true))
                     .fusedExonDown(geneFusion.getFusedExon(false))
-                    .geneStart(geneFusion.geneName(FS_UPSTREAM))
+                    .geneStart(geneFusion.geneName(FS_UP))
                     .geneTranscriptStart(geneFusion.upstreamTrans().StableId)
                     .geneContextStart(context(geneFusion.upstreamTrans(), geneFusion.getFusedExon(true)))
-                    .geneEnd(geneFusion.geneName(FS_DOWNSTREAM))
+                    .geneEnd(geneFusion.geneName(FS_DOWN))
                     .geneTranscriptEnd(geneFusion.downstreamTrans().StableId)
                     .geneContextEnd(context(geneFusion.downstreamTrans(), geneFusion.getFusedExon(false)))
                     .junctionCopyNumber(fusionJcn(geneFusion.upstreamTrans().gene().jcn(), geneFusion.downstreamTrans().gene().jcn()))
@@ -208,9 +208,9 @@ public class FusionWriter
                     annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));
 
             // write upstream SV, transcript and exon info
-            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+            for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
             {
-                boolean isUpstream = (fs == FS_UPSTREAM);
+                boolean isUpstream = (fs == FS_UP);
                 final Transcript trans = fusion.transcripts()[fs];
                 final GeneAnnotation gene = trans.gene();
 

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -199,21 +199,21 @@ public class FusionDisruptionAnalyser
     {
         for(final KnownFusionData kfData : mFusionFinder.getKnownFusionCache().getData())
         {
-            if(kfData.downstreamDistance(FS_UPSTREAM) > 0)
+            if(kfData.downstreamDistance(FS_UP) > 0)
             {
                 final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(kfData.FiveGene);
                 if(geneData != null)
                 {
-                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_UPSTREAM));
+                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_UP));
                 }
             }
 
-            if(kfData.downstreamDistance(FS_DOWNSTREAM) > 0)
+            if(kfData.downstreamDistance(FS_DOWN) > 0)
             {
                 final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(kfData.ThreeGene);
                 if(geneData != null)
                 {
-                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_DOWNSTREAM));
+                    mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_DOWN));
                 }
             }
 

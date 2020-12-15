@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.linx.fusion.rna;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -124,25 +124,25 @@ public class RnaFusionData
     public static final String NO_CLUSTER_INFO = "0;0;0;0";
     public static final String NO_CHAIN_INFO = "0;0";
 
-    public String name() { return GeneNames[FS_UPSTREAM] + "_" + GeneNames[FS_DOWNSTREAM]; }
+    public String name() { return GeneNames[FS_UP] + "_" + GeneNames[FS_DOWN]; }
 
     public boolean isValid() { return mIsValid; }
     public void setValid(boolean toggle) { mIsValid = toggle; }
 
     public StructuralVariantType rnaSvType()
     {
-        if(!Chromosomes[FS_UPSTREAM].equals(Chromosomes[FS_DOWNSTREAM]))
+        if(!Chromosomes[FS_UP].equals(Chromosomes[FS_DOWN]))
             return BND;
-        if(Orientations[FS_UPSTREAM] == Orientations[FS_DOWNSTREAM])
+        if(Orientations[FS_UP] == Orientations[FS_DOWN])
             return INV;
 
-        if(Positions[FS_UPSTREAM] < Positions[FS_DOWNSTREAM])
-            return Orientations[FS_UPSTREAM] == 1 ? DEL : DUP;
+        if(Positions[FS_UP] < Positions[FS_DOWN])
+            return Orientations[FS_UP] == 1 ? DEL : DUP;
         else
-            return Orientations[FS_UPSTREAM] == -1 ? DEL : DUP;
+            return Orientations[FS_UP] == -1 ? DEL : DUP;
     }
 
-    public boolean matchesKnownSpliceSites() { return JunctionTypes[FS_UPSTREAM] == KNOWN && JunctionTypes[FS_DOWNSTREAM] == KNOWN; }
+    public boolean matchesKnownSpliceSites() { return JunctionTypes[FS_UP] == KNOWN && JunctionTypes[FS_DOWN] == KNOWN; }
 
     public List<RnaExonMatchData> getTransExonData(int seIndex) { return mTransExonData.get(seIndex); }
 
@@ -167,13 +167,13 @@ public class RnaFusionData
 
     public void setRnaPhasedFusionData(final RnaExonMatchData up, final RnaExonMatchData down)
     {
-        mRnaPhasedTranscriptExons[FS_UPSTREAM] = up;
-        mRnaPhasedTranscriptExons[FS_DOWNSTREAM] = down;
+        mRnaPhasedTranscriptExons[FS_UP] = up;
+        mRnaPhasedTranscriptExons[FS_DOWN] = down;
     }
 
     public boolean hasRnaPhasedFusion()
     {
-        return mRnaPhasedTranscriptExons[FS_UPSTREAM] != null && mRnaPhasedTranscriptExons[FS_DOWNSTREAM] != null;
+        return mRnaPhasedTranscriptExons[FS_UP] != null && mRnaPhasedTranscriptExons[FS_DOWN] != null;
     }
 
     public void setViableFusion(boolean viable, boolean phaseMatched)
@@ -232,14 +232,14 @@ public class RnaFusionData
 
     public void setFusionClusterChainInfo()
     {
-        if(mBreakends[FS_UPSTREAM] == null && mBreakends[FS_DOWNSTREAM] == null)
+        if(mBreakends[FS_UP] == null && mBreakends[FS_DOWN] == null)
             return;
 
-        if(mBreakends[FS_UPSTREAM] != null && mBreakends[FS_DOWNSTREAM] != null)
+        if(mBreakends[FS_UP] != null && mBreakends[FS_DOWN] != null)
         {
-            SvVarData varUp = mBreakends[FS_UPSTREAM].getSV();
+            SvVarData varUp = mBreakends[FS_UP].getSV();
             SvCluster clusterUp = varUp.getCluster();
-            SvVarData varDown = mBreakends[FS_DOWNSTREAM].getSV();
+            SvVarData varDown = mBreakends[FS_DOWN].getSV();
             SvCluster clusterDown = varDown.getCluster();
 
             SvChain matchingChain = null;
@@ -252,19 +252,19 @@ public class RnaFusionData
                 if (matchingChain != null)
                 {
                     final int chainData[] = breakendsAreChained(
-                            matchingChain, varUp, !mBreakends[FS_UPSTREAM].usesStart(), varDown, !mBreakends[FS_DOWNSTREAM].usesStart());
+                            matchingChain, varUp, !mBreakends[FS_UP].usesStart(), varDown, !mBreakends[FS_DOWN].usesStart());
 
                     mChainInfo = String.format("%d;%d", chainData[CHAIN_LINK_COUNT], chainData[CHAIN_LENGTH]);
                 }
             }
 
-            setFusionClusterInfo(mBreakends[FS_UPSTREAM], true, matchingChain);
-            setFusionClusterInfo(mBreakends[FS_DOWNSTREAM], false, matchingChain);
+            setFusionClusterInfo(mBreakends[FS_UP], true, matchingChain);
+            setFusionClusterInfo(mBreakends[FS_DOWN], false, matchingChain);
         }
         else
         {
-            SvBreakend breakend = mBreakends[FS_UPSTREAM] != null ? mBreakends[FS_UPSTREAM] : mBreakends[FS_DOWNSTREAM];
-            setFusionClusterInfo(breakend, mBreakends[FS_UPSTREAM] != null, null);
+            SvBreakend breakend = mBreakends[FS_UP] != null ? mBreakends[FS_UP] : mBreakends[FS_DOWN];
+            setFusionClusterInfo(breakend, mBreakends[FS_UP] != null, null);
         }
     }
 

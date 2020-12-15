@@ -2,9 +2,9 @@ package com.hartwig.hmftools.svtools.neo;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
@@ -59,17 +59,17 @@ public abstract class NeoEpitope
 
     public byte orientation(int fs)
     {
-        return (fs == FS_UPSTREAM) == (TransData[fs].Strand == POS_STRAND) ? POS_ORIENT : NEG_ORIENT;
+        return (fs == FS_UP) == (TransData[fs].Strand == POS_STRAND) ? POS_ORIENT : NEG_ORIENT;
     }
 
     public byte strand(int stream) { return TransData[stream].Strand; }
 
     public boolean phaseMatched()
     {
-        if(RegionType[FS_UPSTREAM] == EXONIC && RegionType[FS_DOWNSTREAM] == EXONIC)
-            return tickPhaseForward(Phases[FS_UPSTREAM]) == Phases[FS_DOWNSTREAM];
+        if(RegionType[FS_UP] == EXONIC && RegionType[FS_DOWN] == EXONIC)
+            return tickPhaseForward(Phases[FS_UP]) == Phases[FS_DOWN];
         else
-            return Phases[FS_UPSTREAM] == Phases[FS_DOWNSTREAM];
+            return Phases[FS_UP] == Phases[FS_DOWN];
     }
 
     public static int getUpstreamOpenCodonBases(int phase)
@@ -82,7 +82,7 @@ public abstract class NeoEpitope
             return 0;
     }
 
-    public int getUpstreamOpenCodonBases() { return getUpstreamOpenCodonBases(Phases[FS_UPSTREAM]); }
+    public int getUpstreamOpenCodonBases() { return getUpstreamOpenCodonBases(Phases[FS_UP]); }
 
     public int getDownstreamPhaseOffset()
     {
@@ -108,13 +108,13 @@ public abstract class NeoEpitope
 
         adjustCodingBasesForStrand(this);
 
-        DownstreamNmdBases = calcNonMediatedDecayBases(this, FS_DOWNSTREAM);
+        DownstreamNmdBases = calcNonMediatedDecayBases(this, FS_DOWN);
 
         // if upstream ends on a phase other than 2, need to take the bases from the downstream gene to make a novel codon
         if(upPhaseOffset > 0 || !isPhased)
         {
-            String upstreamBases = CodingBases[FS_UPSTREAM];
-            String downstreamBases = CodingBases[FS_DOWNSTREAM];
+            String upstreamBases = CodingBases[FS_UP];
+            String downstreamBases = CodingBases[FS_DOWN];
 
             if(upPhaseOffset > upstreamBases.length() || downPhaseOffset > downstreamBases.length())
             {
@@ -150,21 +150,21 @@ public abstract class NeoEpitope
             if(NovelCodonBases.length() > requiredLength + 3)
                 NovelCodonBases = NovelCodonBases.substring(0, requiredLength + 3);
 
-            CodingBases[FS_UPSTREAM] = upstreamBases;
-            CodingBases[FS_DOWNSTREAM] = downstreamBases;
+            CodingBases[FS_UP] = upstreamBases;
+            CodingBases[FS_DOWN] = downstreamBases;
         }
 
         IM_LOGGER.trace("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
-                this, CodingBases[FS_UPSTREAM], checkTrimBases(NovelCodonBases),
-                checkTrimBases(CodingBases[FS_DOWNSTREAM]), DownstreamNmdBases);
+                this, CodingBases[FS_UP], checkTrimBases(NovelCodonBases),
+                checkTrimBases(CodingBases[FS_DOWN]), DownstreamNmdBases);
     }
 
     public void setAminoAcids()
     {
         boolean isPhased = phaseMatched();
-        UpstreamAcids = getAminoAcids(CodingBases[FS_UPSTREAM], false);
+        UpstreamAcids = getAminoAcids(CodingBases[FS_UP], false);
         NovelAcid = getAminoAcids(NovelCodonBases, !isPhased);
-        DownstreamAcids = getAminoAcids(CodingBases[FS_DOWNSTREAM], !isPhased);
+        DownstreamAcids = getAminoAcids(CodingBases[FS_DOWN], !isPhased);
 
         IM_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",
                 this, UpstreamAcids, checkTrimBases(NovelAcid), checkTrimBases(DownstreamAcids));

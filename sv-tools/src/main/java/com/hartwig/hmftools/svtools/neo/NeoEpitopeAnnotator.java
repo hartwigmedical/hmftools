@@ -3,8 +3,8 @@ package com.hartwig.hmftools.svtools.neo;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -154,20 +154,20 @@ public class NeoEpitopeAnnotator
             final List<NeoEpitope> neDataList = Lists.newArrayList();
 
             // find all transcripts where the breakend is inside the coding region on the 5' gene
-            final List<TranscriptData> upTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_UPSTREAM]);
-            final List<TranscriptData> downTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_DOWNSTREAM]);
+            final List<TranscriptData> upTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_UP]);
+            final List<TranscriptData> downTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_DOWN]);
 
             for(TranscriptData upTransData : upTransDataList)
             {
                 if(upTransData.CodingStart == null)
                     continue;
 
-                if(!positionWithin(fusion.Positions[FS_UPSTREAM], upTransData.TransStart, upTransData.TransEnd))
+                if(!positionWithin(fusion.Positions[FS_UP], upTransData.TransStart, upTransData.TransEnd))
                     continue;
 
                 for(TranscriptData downTransData : downTransDataList)
                 {
-                    if(!positionWithin(fusion.Positions[FS_DOWNSTREAM], downTransData.TransStart, downTransData.TransEnd))
+                    if(!positionWithin(fusion.Positions[FS_DOWN], downTransData.TransStart, downTransData.TransEnd))
                         continue;
 
                     NeoEpitope neData = new SvNeoEpitope(fusion);
@@ -224,8 +224,8 @@ public class NeoEpitopeAnnotator
             final NeoEpitope neData = neDataList.get(i);
 
             final Set<String> transNames = Sets.newHashSet();
-            transNames.add(neData.TransData[FS_UPSTREAM].TransName);
-            transNames.add(neData.TransData[FS_DOWNSTREAM].TransName);
+            transNames.add(neData.TransData[FS_UP].TransName);
+            transNames.add(neData.TransData[FS_DOWN].TransName);
 
             if(!mConfig.WriteTransData)
             {
@@ -237,8 +237,8 @@ public class NeoEpitopeAnnotator
                     if(neData.matchesAminoAcids(otherNeData))
                     {
                         neDataList.remove(j);
-                        transNames.add(otherNeData.TransData[FS_UPSTREAM].TransName);
-                        transNames.add(otherNeData.TransData[FS_DOWNSTREAM].TransName);
+                        transNames.add(otherNeData.TransData[FS_UP].TransName);
+                        transNames.add(otherNeData.TransData[FS_DOWN].TransName);
                     }
                     else
                     {
@@ -282,7 +282,7 @@ public class NeoEpitopeAnnotator
 
             mWriter.write(String.format("%s,%s,%s,%.2f,%s,%s",
                     mCurrentSampleId, neData.variantType(), neData.variantInfo(), neData.copyNumber(),
-                    neData.TransData[FS_UPSTREAM].GeneId, neData.TransData[FS_DOWNSTREAM].GeneId));
+                    neData.TransData[FS_UP].GeneId, neData.TransData[FS_DOWN].GeneId));
 
             mWriter.write(String.format(",%s,%s,%s,%d",
                     neData.UpstreamAcids, neData.DownstreamAcids, neData.NovelAcid, neData.DownstreamNmdBases));

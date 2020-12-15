@@ -2,8 +2,8 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -271,7 +271,7 @@ public class ExternalFusionCompare
         {
             // look up geneId data in Ensembl cache, including in synonymns if not found
             final String[] geneIds = {"", ""};
-            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+            for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
             {
                 EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(extFusion.GeneNames[fs]);
 

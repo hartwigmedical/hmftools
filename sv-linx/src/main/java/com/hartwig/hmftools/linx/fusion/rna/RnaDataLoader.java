@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.fusion.rna;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
@@ -154,11 +154,11 @@ public class RnaDataLoader
 
         final RnaJunctionType[] junctionTypes = new RnaJunctionType[] { RnaJunctionType.NOT_SET, RnaJunctionType.NOT_SET };
 
-        if(spliceSites[FS_UPSTREAM].equals("splice-site"))
-            junctionTypes[FS_UPSTREAM] = KNOWN;
+        if(spliceSites[FS_UP].equals("splice-site"))
+            junctionTypes[FS_UP] = KNOWN;
 
-        if(spliceSites[FS_DOWNSTREAM].equals("splice-site"))
-            junctionTypes[FS_DOWNSTREAM] = KNOWN;
+        if(spliceSites[FS_DOWN].equals("splice-site"))
+            junctionTypes[FS_DOWN] = KNOWN;
 
         final String otherData = "";
 
@@ -192,8 +192,8 @@ public class RnaDataLoader
 
         if(items[fieldIndexMap.get("SpliceType")].equals("ONLY_REF_SPLICE"))
         {
-            junctionTypes[FS_UPSTREAM] = KNOWN;
-            junctionTypes[FS_DOWNSTREAM] = KNOWN;
+            junctionTypes[FS_UP] = KNOWN;
+            junctionTypes[FS_DOWN] = KNOWN;
         }
 
         int junctionCount = Integer.parseInt(items[fieldIndexMap.get("JunctionReadCount")]);

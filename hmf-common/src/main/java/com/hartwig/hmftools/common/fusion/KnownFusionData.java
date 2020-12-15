@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.fusion;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KF_LOGGER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -153,11 +153,11 @@ public class KnownFusionData
 
             if(overrideName.equals(OVERRIDE_UP_DISTANCE))
             {
-               mDownstreamDistance[FS_UPSTREAM] = Integer.parseInt(overrideData);
+               mDownstreamDistance[FS_UP] = Integer.parseInt(overrideData);
             }
             else if(overrideName.equals(OVERRIDE_DOWN_DISTANCE))
             {
-                mDownstreamDistance[FS_DOWNSTREAM] = Integer.parseInt(overrideData);
+                mDownstreamDistance[FS_DOWN] = Integer.parseInt(overrideData);
             }
             else if(overrideName.equals(OVERRIDE_ALTS))
             {

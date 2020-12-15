@@ -3,11 +3,10 @@ package com.hartwig.hmftools.svtools.neo;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
@@ -32,7 +31,7 @@ public class PmNeoEpitope extends NeoEpitope
 
     public byte orientation(int fs)
     {
-        return (fs == FS_UPSTREAM) == (TransData[fs].Strand == POS_STRAND) ? POS_ORIENT : NEG_ORIENT;
+        return (fs == FS_UP) == (TransData[fs].Strand == POS_STRAND) ? POS_ORIENT : NEG_ORIENT;
     }
 
     public int position(int stream)
@@ -43,20 +42,20 @@ public class PmNeoEpitope extends NeoEpitope
 
         if(mIndelBaseDiff >= 0)
         {
-            if(stream == FS_UPSTREAM)
+            if(stream == FS_UP)
                 return pmPosition;
             else
-                return TransData[FS_UPSTREAM].Strand == POS_STRAND ? pmPosition + 1 : pmPosition - 1;
+                return TransData[FS_UP].Strand == POS_STRAND ? pmPosition + 1 : pmPosition - 1;
         }
 
         // handle the DEL scenario - shift the downstream position by the delete length
-        if(stream == FS_UPSTREAM)
+        if(stream == FS_UP)
         {
             return pmPosition;
         }
         else
         {
-            if(TransData[FS_UPSTREAM].Strand == POS_STRAND)
+            if(TransData[FS_UP].Strand == POS_STRAND)
                 return pmPosition + abs(mIndelBaseDiff) + 1;
             else
                 return pmPosition - 1;
@@ -96,17 +95,17 @@ public class PmNeoEpitope extends NeoEpitope
     {
         final TranscriptData transData = upTransData;
 
-        TransData[FS_UPSTREAM] = TransData[FS_DOWNSTREAM] = transData;
+        TransData[FS_UP] = TransData[FS_DOWN] = transData;
 
         int indelBaseDiff = mPointMutation.Alt.length() - mPointMutation.Ref.length();
         int insertedBaseLength = max(indelBaseDiff, 0);
 
         // set the data for the lower part of the mutation
-        int lowerStream = transData.Strand == POS_STRAND ? FS_UPSTREAM : FS_DOWNSTREAM;
+        int lowerStream = transData.Strand == POS_STRAND ? FS_UP : FS_DOWN;
 
         setTranscriptContext(this, transData, position(lowerStream), lowerStream);
 
-        int insSeqLength = lowerStream == FS_UPSTREAM ? insertedBaseLength : 0;
+        int insSeqLength = lowerStream == FS_UP ? insertedBaseLength : 0;
 
         setTranscriptCodingData(this, transData, position(lowerStream), insSeqLength, lowerStream);
 
@@ -115,7 +114,7 @@ public class PmNeoEpitope extends NeoEpitope
         // for DELs, set the downstream data as well since it can cross exon-boundaries and/or affect coding bases
         setTranscriptContext(this, transData, position(upperStream), upperStream);
 
-        insSeqLength = upperStream == FS_UPSTREAM ? insertedBaseLength : 0;
+        insSeqLength = upperStream == FS_UP ? insertedBaseLength : 0;
         setTranscriptCodingData(this, transData, position(upperStream), insSeqLength, upperStream);
     }
 
@@ -143,7 +142,7 @@ public class PmNeoEpitope extends NeoEpitope
         int upPosition;
         int downPosition;
 
-        if(TransData[FS_UPSTREAM].Strand == POS_STRAND)
+        if(TransData[FS_UP].Strand == POS_STRAND)
         {
             upPosition = mPointMutation.Position - 1;
             downPosition = mPointMutation.Position + deletedBases + 1;
@@ -155,11 +154,11 @@ public class PmNeoEpitope extends NeoEpitope
         }
 
         upCodingBases = getCodingBases(
-                refGenome, TransData[FS_UPSTREAM], chromosome(FS_UPSTREAM), upPosition, orientation(FS_UPSTREAM),
+                refGenome, TransData[FS_UP], chromosome(FS_UP), upPosition, orientation(FS_UP),
                 upRequiredBases, true);
 
         // the ref bases was excluded and is now replaced by the alt
-        if(TransData[FS_UPSTREAM].Strand == POS_STRAND)
+        if(TransData[FS_UP].Strand == POS_STRAND)
         {
             upCodingBases += mPointMutation.Alt;
         }
@@ -172,11 +171,11 @@ public class PmNeoEpitope extends NeoEpitope
         int downRequiredBases = requiredAminoAcids * 3 + downPhaseOffset;
 
         downCodingBases = getCodingBases(
-                refGenome, TransData[FS_DOWNSTREAM], chromosome(FS_DOWNSTREAM), downPosition, orientation(FS_DOWNSTREAM),
+                refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
                 downRequiredBases, canStartInExon);
 
-        CodingBases[FS_UPSTREAM] = upCodingBases;
-        CodingBases[FS_DOWNSTREAM] = downCodingBases;
+        CodingBases[FS_UP] = upCodingBases;
+        CodingBases[FS_DOWN] = downCodingBases;
     }
 
     public String toString()

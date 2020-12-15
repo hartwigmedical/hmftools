@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.fusion.rna;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -41,9 +41,9 @@ public class RnaMatchWriter
                 mWriter.write(",PhaseMatched,DnaFusionMatchType,Reportable,KnownType,RnaPhaseMatched");
                 mWriter.write(",RnaSvType,JunctionFrags,DiscordantFrags");
 
-                for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+                for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
                 {
-                    String upDown = fs == FS_UPSTREAM ? "Up" : "Down";
+                    String upDown = fs == FS_UP ? "Up" : "Down";
                     StringJoiner fieldsStr = new StringJoiner(",");
 
                     fieldsStr.add("GeneId" + upDown);
@@ -101,7 +101,7 @@ public class RnaMatchWriter
             mWriter.write(String.format(",%s,%d,%d",
                     rnaFusion.rnaSvType(), rnaFusion.JunctionFragments, rnaFusion.DiscordantFragments));
 
-            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+            for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
             {
                 boolean isUpstream = (fs == SE_START);
 

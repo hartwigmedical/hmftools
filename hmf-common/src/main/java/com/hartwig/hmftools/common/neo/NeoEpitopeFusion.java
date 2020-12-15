@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.neo;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 
 import java.io.File;
 import java.io.IOException;
@@ -111,7 +111,7 @@ public class NeoEpitopeFusion
     {
         StringJoiner sj = new StringJoiner(DELIMITER);
 
-        for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             sj.add(String.valueOf(fusion.GeneIds[fs]));
             sj.add(String.valueOf(fusion.GeneNames[fs]));

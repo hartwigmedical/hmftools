@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx.fusion.rna;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MIN;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.streamStr;
@@ -154,9 +154,9 @@ public class RnaFusionMapper
         final StartEndPair<List<Transcript>> nearTranscriptPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
         final StartEndPair<List<SvBreakend>> nearBreakendPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
 
-        boolean requireExactMatch = rnaFusion.JunctionTypes[FS_UPSTREAM] == UNKNOWN || rnaFusion.JunctionTypes[FS_DOWNSTREAM] == UNKNOWN;
+        boolean requireExactMatch = rnaFusion.JunctionTypes[FS_UP] == UNKNOWN || rnaFusion.JunctionTypes[FS_DOWN] == UNKNOWN;
 
-        for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM ; ++fs)
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             boolean isUpstream = (fs == 0);
             final String chromosome = rnaFusion.Chromosomes[fs];
@@ -247,29 +247,29 @@ public class RnaFusionMapper
         }
 
         LNX_LOGGER.debug("rna fusion({}) breakend matches: upstream(viable={} near={}) downstream(viable={} near={})",
-                rnaFusion.name(), viableBreakendPair.get(FS_UPSTREAM).size(), nearBreakendPair.get(FS_UPSTREAM).size(),
-                viableBreakendPair.get(FS_DOWNSTREAM).size(), nearBreakendPair.get(FS_DOWNSTREAM).size());
+                rnaFusion.name(), viableBreakendPair.get(FS_UP).size(), nearBreakendPair.get(FS_UP).size(),
+                viableBreakendPair.get(FS_DOWN).size(), nearBreakendPair.get(FS_DOWN).size());
 
         // run them through fusion logic (ie a pair of breakend lists), but don't require phase matching
-        if(!viableBreakendPair.get(FS_UPSTREAM).isEmpty() && !viableBreakendPair.get(FS_DOWNSTREAM).isEmpty())
+        if(!viableBreakendPair.get(FS_UP).isEmpty() && !viableBreakendPair.get(FS_DOWN).isEmpty())
         {
             GeneFusion topCandidateFusion = null;
             SvBreakend topUpBreakend = null;
             SvBreakend topDownBreakend = null;
             boolean topCandidateFusionViable = false;
 
-            for (int i = 0; i < viableBreakendPair.get(FS_UPSTREAM).size(); ++i)
+            for (int i = 0; i < viableBreakendPair.get(FS_UP).size(); ++i)
             {
-                final SvBreakend upBreakend = viableBreakendPair.get(FS_UPSTREAM).get(i);
-                final Transcript upTrans = viableTranscriptPair.get(FS_UPSTREAM).get(i);
+                final SvBreakend upBreakend = viableBreakendPair.get(FS_UP).get(i);
+                final Transcript upTrans = viableTranscriptPair.get(FS_UP).get(i);
 
                 if(upBreakend.getSV().isSglBreakend())
                     continue;
 
-                for (int j = 0; j < viableBreakendPair.get(FS_DOWNSTREAM).size(); ++j)
+                for (int j = 0; j < viableBreakendPair.get(FS_DOWN).size(); ++j)
                 {
-                    final SvBreakend downBreakend = viableBreakendPair.get(FS_DOWNSTREAM).get(j);
-                    final Transcript downTrans = viableTranscriptPair.get(FS_DOWNSTREAM).get(j);
+                    final SvBreakend downBreakend = viableBreakendPair.get(FS_DOWN).get(j);
+                    final Transcript downTrans = viableTranscriptPair.get(FS_DOWN).get(j);
 
                     if(downBreakend.getSV().isSglBreakend())
                         continue;
@@ -300,11 +300,11 @@ public class RnaFusionMapper
             if(topCandidateFusion != null)
             {
                 rnaFusion.setTranscriptData(
-                        FS_UPSTREAM, topCandidateFusion.upstreamTrans(), topUpBreakend,
+                        FS_UP, topCandidateFusion.upstreamTrans(), topUpBreakend,
                         true, true,  0);
 
                 rnaFusion.setTranscriptData(
-                        FS_DOWNSTREAM, topCandidateFusion.downstreamTrans(), topDownBreakend,
+                        FS_DOWN, topCandidateFusion.downstreamTrans(), topDownBreakend,
                         true, true,0);
 
                 rnaFusion.setViableFusion(topCandidateFusionViable, topCandidateFusion.phaseMatched());
@@ -313,7 +313,7 @@ public class RnaFusionMapper
         else
         {
             // select the closest breakend's transcript
-            for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM ; ++fs)
+            for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
             {
                 boolean isUpstream = (fs == 0);
                 int rnaPosition = rnaFusion.Positions[fs];
@@ -390,10 +390,10 @@ public class RnaFusionMapper
         DnaRnaMatchType matchType = DnaRnaMatchType.NONE;
         boolean reportableFusion = false;
 
-        boolean isUnspliced = rnaFusion.JunctionTypes[FS_UPSTREAM] == UNKNOWN && rnaFusion.JunctionTypes[FS_DOWNSTREAM] == UNKNOWN;
+        boolean isUnspliced = rnaFusion.JunctionTypes[FS_UP] == UNKNOWN && rnaFusion.JunctionTypes[FS_DOWN] == UNKNOWN;
 
-        final Transcript transUp = rnaFusion.getMatchedTranscripts()[FS_UPSTREAM];
-        final Transcript transDown = rnaFusion.getMatchedTranscripts()[FS_DOWNSTREAM];
+        final Transcript transUp = rnaFusion.getMatchedTranscripts()[FS_UP];
+        final Transcript transDown = rnaFusion.getMatchedTranscripts()[FS_DOWN];
 
         for(final GeneFusion dnaFusion : mDnaFusions)
         {
@@ -403,25 +403,25 @@ public class RnaFusionMapper
                 matchType = DnaRnaMatchType.SVS;
                 reportableFusion = dnaFusion.reportable();
 
-                if(!rnaFusion.GeneNames[FS_UPSTREAM].isEmpty() && !rnaFusion.GeneNames[FS_DOWNSTREAM].isEmpty()
-                && (!dnaFusion.upstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_UPSTREAM])
-                || !dnaFusion.downstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_DOWNSTREAM])))
+                if(!rnaFusion.GeneNames[FS_UP].isEmpty() && !rnaFusion.GeneNames[FS_DOWN].isEmpty()
+                && (!dnaFusion.upstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_UP])
+                || !dnaFusion.downstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_DOWN])))
                 {
                     LNX_LOGGER.debug("genePair rna({}-{}) differs from dna({}-{}) for same SVs({} & {})",
-                            rnaFusion.GeneNames[FS_UPSTREAM], rnaFusion.GeneNames[FS_DOWNSTREAM],
+                            rnaFusion.GeneNames[FS_UP], rnaFusion.GeneNames[FS_DOWN],
                             dnaFusion.upstreamTrans().geneName(), dnaFusion.downstreamTrans().geneName(),
                             transUp.gene().id(), transDown.gene().id());
 
                     // override the gene selection for downstream analysis
-                    rnaFusion.GeneNames[FS_UPSTREAM] = dnaFusion.upstreamTrans().geneName();
-                    rnaFusion.GeneNames[FS_DOWNSTREAM] = dnaFusion.downstreamTrans().geneName();
+                    rnaFusion.GeneNames[FS_UP] = dnaFusion.upstreamTrans().geneName();
+                    rnaFusion.GeneNames[FS_DOWN] = dnaFusion.downstreamTrans().geneName();
                 }
 
                 break;
             }
 
-            if(!dnaFusion.upstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_UPSTREAM])
-            || !dnaFusion.downstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_DOWNSTREAM]))
+            if(!dnaFusion.upstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_UP])
+            || !dnaFusion.downstreamTrans().geneName().equals(rnaFusion.GeneNames[FS_DOWN]))
             {
                 continue;
             }
@@ -532,11 +532,11 @@ public class RnaFusionMapper
         // otherwise revert to whichever positions are closest to the RNA breakends
 
         // lastly the nearest to the RNA positions
-        double currentPosDiff = (abs(rnaFusion.Positions[FS_UPSTREAM] - beCurrentStart.position())
-                + abs(rnaFusion.Positions[FS_DOWNSTREAM] - beCurrentEnd.position())) * 0.5;
+        double currentPosDiff = (abs(rnaFusion.Positions[FS_UP] - beCurrentStart.position())
+                + abs(rnaFusion.Positions[FS_DOWN] - beCurrentEnd.position())) * 0.5;
 
-        double candidatePosDiff = (abs(rnaFusion.Positions[FS_UPSTREAM] - beCandidateStart.position())
-                + abs(rnaFusion.Positions[FS_DOWNSTREAM] - beCandidateEnd.position())) * 0.5;
+        double candidatePosDiff = (abs(rnaFusion.Positions[FS_UP] - beCandidateStart.position())
+                + abs(rnaFusion.Positions[FS_DOWN] - beCandidateEnd.position())) * 0.5;
 
         return candidatePosDiff < currentPosDiff;
     }
@@ -547,7 +547,7 @@ public class RnaFusionMapper
         mAnnotator.correctGeneNames(mFusionFinder.getKnownFusionCache(), rnaFusion);
 
         // find transcripts which match the RNA positions
-        for(int fs = FS_UPSTREAM; fs <= 1; ++fs)
+        for(int fs = FS_UP; fs <= 1; ++fs)
         {
             int rnaPosition = rnaFusion.Positions[fs];
 
