@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.summary;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 
 import org.apache.logging.log4j.LogManager;

@@ -3,9 +3,9 @@ package com.hartwig.hmftools.common.lims.hospital;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,13 +35,13 @@ public abstract class HospitalModel {
 
     @Nullable
     public HospitalContactData queryHospitalData(@NotNull String sampleId, @NotNull String coreRequesterName,
-            @NotNull String coreRequesterEmail, @Nullable LimsCohortConfigData cohort) {
+            @NotNull String coreRequesterEmail, @NotNull LimsCohortConfigData cohort) {
         String hospitalId = getHospitalIdForSample(sampleId, cohort);
         if (hospitalId == null) {
             return null;
         }
 
-        if (cohort == null) {
+        if (cohort.cohortId().equals(Strings.EMPTY)) {
             return null;
         }
 
@@ -71,7 +71,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @Nullable LimsCohortConfigData cohort) {
+    private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @NotNull LimsCohortConfigData cohort) {
         switch (cohort.cohortId()) {
             case "CPCT":
             case "CPCTpancreas":
@@ -89,7 +89,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private String getHospitalIdForSample(@NotNull String sampleId, @Nullable LimsCohortConfigData cohort) {
+    private String getHospitalIdForSample(@NotNull String sampleId, @NotNull LimsCohortConfigData cohort) {
         if (sampleToHospitalMapping().containsKey(sampleId)) {
             return sampleToHospitalMapping().get(sampleId);
         } else {

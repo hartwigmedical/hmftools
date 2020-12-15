@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter;
 
-import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 

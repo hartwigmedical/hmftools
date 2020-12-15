@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsCohort;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 
 import org.apache.logging.log4j.LogManager;
@@ -86,7 +85,7 @@ public final class SampleReportFactory {
     @VisibleForTesting
     @Nullable
     static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
-            @Nullable LimsCohortConfigData cohortdata) {
+            @NotNull LimsCohortConfigData cohortdata) {
         if (cohortdata.requireHospitalPAId()) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
                     && isValidHospitalPathologySampleId(hospitalPathologySampleId)) {

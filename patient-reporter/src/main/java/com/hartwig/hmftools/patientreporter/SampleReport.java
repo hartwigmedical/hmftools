@@ -42,7 +42,7 @@ public abstract class SampleReport {
     @NotNull
     public abstract String labProcedures();
 
-    @Nullable
+    @NotNull
     public abstract LimsCohortConfigData cohort();
 
     @NotNull
