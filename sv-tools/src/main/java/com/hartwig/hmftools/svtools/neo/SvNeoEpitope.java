@@ -38,6 +38,20 @@ public class SvNeoEpitope extends NeoEpitope
         return mSvFusion.Chromosomes[stream];
     }
 
+    public String variantType()
+    {
+        return phaseMatched() ? "INFRAME_FUSION" : "OUT_OF_FRAME_FUSION";
+    }
+
+    public String variantInfo()
+    {
+        return String.format("%s:%d:%d-%s:%d:%d",
+            mSvFusion.Chromosomes[FS_UPSTREAM], mSvFusion.Positions[FS_UPSTREAM], mSvFusion.Orientations[FS_UPSTREAM],
+            mSvFusion.Chromosomes[FS_DOWNSTREAM], mSvFusion.Positions[FS_DOWNSTREAM], mSvFusion.Orientations[FS_DOWNSTREAM]);
+    }
+
+    public double copyNumber() { return mSvFusion.JunctionCopyNumber; }
+
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {
         TransData[FS_UPSTREAM] = upTransData;
@@ -107,7 +121,7 @@ public class SvNeoEpitope extends NeoEpitope
                 refGenome, TransData[FS_DOWNSTREAM], chromosome(FS_DOWNSTREAM), position(FS_DOWNSTREAM), orientation(FS_DOWNSTREAM),
                 downRequiredBases, canStartInExon);
 
-        IM_LOGGER.debug("ne({}) phased({} up={} down={}) reqBases(up={} down={}) insSeqLen({})",
+        IM_LOGGER.trace("ne({}) phased({} up={} down={}) reqBases(up={} down={}) insSeqLen({})",
                 toString(), phaseMatched(), upPhaseOffset, downPhaseOffset, upRequiredBases, downRequiredBases, codingInsSequence.length());
     }
 

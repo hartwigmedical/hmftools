@@ -94,6 +94,9 @@ public abstract class NeoEpitope
     public abstract String chromosome(int stream);
     public abstract void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData);
     public abstract void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids);
+    public abstract String variantType();
+    public abstract String variantInfo();
+    public abstract double copyNumber();
 
     public void setCodingBases(final RefGenomeInterface refGenome, int reqAminoAcids)
     {
@@ -151,7 +154,7 @@ public abstract class NeoEpitope
             CodingBases[FS_DOWNSTREAM] = downstreamBases;
         }
 
-        IM_LOGGER.debug("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
+        IM_LOGGER.trace("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
                 this, CodingBases[FS_UPSTREAM], checkTrimBases(NovelCodonBases),
                 checkTrimBases(CodingBases[FS_DOWNSTREAM]), DownstreamNmdBases);
     }
@@ -163,10 +166,15 @@ public abstract class NeoEpitope
         NovelAcid = getAminoAcids(NovelCodonBases, !isPhased);
         DownstreamAcids = getAminoAcids(CodingBases[FS_DOWNSTREAM], !isPhased);
 
-        IM_LOGGER.debug("ne({}) upAA({}) novel({}) downAA({})",
+        IM_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",
                 this, UpstreamAcids, checkTrimBases(NovelAcid), checkTrimBases(DownstreamAcids));
 
         if(NovelAcid.equals(STOP_SYMBOL))
             DownstreamAcids = "";
+    }
+
+    public boolean matchesAminoAcids(final NeoEpitope other)
+    {
+        return UpstreamAcids.equals(other.UpstreamAcids) && DownstreamAcids.equals(other.DownstreamAcids) && NovelAcid.equals(other.NovelAcid);
     }
 }

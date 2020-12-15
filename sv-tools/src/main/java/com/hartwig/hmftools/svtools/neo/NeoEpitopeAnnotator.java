@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
@@ -15,7 +16,7 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.svtools.neo.NeoConfig.COHORT_FUSION_FILE;
+import static com.hartwig.hmftools.svtools.neo.NeoConfig.SV_FUSION_FILE;
 import static com.hartwig.hmftools.svtools.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
 
 import java.io.BufferedReader;
@@ -24,9 +25,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
@@ -58,6 +62,7 @@ public class NeoEpitopeAnnotator
     private final EnsemblDataCache mGeneTransCache;
     private final DatabaseAccess mDbAccess;
 
+    private String mCurrentSampleId;
     private BufferedWriter mWriter;
 
     public NeoEpitopeAnnotator(final CommandLine cmd)
@@ -74,8 +79,9 @@ public class NeoEpitopeAnnotator
         mGeneTransCache.createGeneNameIdMap();
 
         mDbAccess = createDatabaseAccess(cmd);
+        mCurrentSampleId = "";
 
-        loadSvNeoepitopes(cmd.getOptionValue(COHORT_FUSION_FILE));
+        loadSvNeoEpitopes(cmd.getOptionValue(SV_FUSION_FILE));
     }
 
     public void run()
@@ -83,20 +89,16 @@ public class NeoEpitopeAnnotator
         // check required inputs and config
         for(final String sampleId : mConfig.SampleIds)
         {
+            mCurrentSampleId = sampleId;
+
             final List<NeoEpitopeFusion> fusions = getSvFusions(sampleId);
             final List<PointMutationData> pointMutations = getSomaticVariants(sampleId);
 
             IM_LOGGER.debug("sample({}) loaded {} fusions and {} point mutations",
                     sampleId, fusions.size(), pointMutations.size());
 
-            final List<NeoEpitope> neDataList = Lists.newArrayList();
-
-            addSvFusions(fusions, neDataList);
-            addPointMutations(pointMutations, neDataList);
-
-            neDataList.forEach(x -> x.setCodingBases(mConfig.RefGenome, mConfig.RequiredAminoAcids));
-            neDataList.forEach(x -> x.setAminoAcids());
-            neDataList.forEach(x -> writeData(sampleId, x));
+            addSvFusions(fusions);
+            addPointMutations(pointMutations);
         }
 
         closeBufferedWriter(mWriter);
@@ -145,10 +147,12 @@ public class NeoEpitopeAnnotator
         return fusions != null ? fusions : Lists.newArrayList();
     }
 
-    private void addSvFusions(final List<NeoEpitopeFusion> fusions, final List<NeoEpitope> neDataList)
+    private void addSvFusions(final List<NeoEpitopeFusion> fusions)
     {
         for(NeoEpitopeFusion fusion : fusions)
         {
+            final List<NeoEpitope> neDataList = Lists.newArrayList();
+
             // find all transcripts where the breakend is inside the coding region on the 5' gene
             final List<TranscriptData> upTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_UPSTREAM]);
             final List<TranscriptData> downTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_DOWNSTREAM]);
@@ -173,14 +177,18 @@ public class NeoEpitopeAnnotator
                     neDataList.add(neData);
                 }
             }
+
+            processNeoEpitopes(neDataList);
         }
     }
 
-    private void addPointMutations(final List<PointMutationData> pointMutations, final List<NeoEpitope> neDataList)
+    private void addPointMutations(final List<PointMutationData> pointMutations)
     {
         for(PointMutationData pointMutation : pointMutations)
         {
             final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(pointMutation.Gene);
+
+            final List<NeoEpitope> neDataList = Lists.newArrayList();
 
             final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
@@ -197,6 +205,49 @@ public class NeoEpitopeAnnotator
 
                 neData.setTranscriptData(transData, transData);
             }
+
+            processNeoEpitopes(neDataList);
+        }
+    }
+
+    private void processNeoEpitopes(final List<NeoEpitope> neDataList)
+    {
+        if(neDataList.isEmpty())
+            return;
+
+        neDataList.forEach(x -> x.setCodingBases(mConfig.RefGenome, mConfig.RequiredAminoAcids));
+        neDataList.forEach(x -> x.setAminoAcids());
+
+        // consolidate duplicates
+        for(int i = 0; i < neDataList.size(); ++i)
+        {
+            final NeoEpitope neData = neDataList.get(i);
+
+            final Set<String> transNames = Sets.newHashSet();
+            transNames.add(neData.TransData[FS_UPSTREAM].TransName);
+            transNames.add(neData.TransData[FS_DOWNSTREAM].TransName);
+
+            if(!mConfig.WriteTransData)
+            {
+                int j = i + 1;
+                while(j < neDataList.size())
+                {
+                    final NeoEpitope otherNeData = neDataList.get(j);
+
+                    if(neData.matchesAminoAcids(otherNeData))
+                    {
+                        neDataList.remove(j);
+                        transNames.add(otherNeData.TransData[FS_UPSTREAM].TransName);
+                        transNames.add(otherNeData.TransData[FS_DOWNSTREAM].TransName);
+                    }
+                    else
+                    {
+                        ++j;
+                    }
+                }
+            }
+
+            writeData(neData, transNames);
         }
     }
 
@@ -211,74 +262,45 @@ public class NeoEpitopeAnnotator
         */
     }
 
-    private void writeData(final String sampleId, final NeoEpitope neData)
+    private void writeData(final NeoEpitope neData, final Set<String> transNames)
     {
-        /*
-        if(mOutputDir.isEmpty())
+        if(mConfig.OutputDir.isEmpty())
             return;
 
         try
         {
-            if(mFileWriter == null)
+            if(mWriter == null)
             {
-                String outputFileName = mOutputDir + "LNX_NEO_EPITOPES.csv";
+                String outputFileName = mConfig.OutputDir + "LNX_NEO_EPITOPES.csv";
 
-                mFileWriter = createBufferedWriter(outputFileName, false);
+                mWriter = createBufferedWriter(outputFileName, false);
 
-                mFileWriter.write("SampleId,Fusion,SameGene");
-                mFileWriter.write(",UpstreamAminoAcids,DownstreamAminoAcids,NovelAminoAcid,NMDBases");
-
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    String upDown = se == SE_START ? "Up" : "Down";
-
-                    String fieldsStr = ",SvId" + upDown;
-                    fieldsStr += ",Chr" + upDown;
-                    fieldsStr += ",Pos" + upDown;
-                    fieldsStr += ",Orient" + upDown;
-                    fieldsStr += ",Trans" + upDown;
-                    fieldsStr += ",Strand" + upDown;
-                    fieldsStr += ",RegionType" + upDown;
-                    fieldsStr += ",CodingType" + upDown;
-                    fieldsStr += ",Exon" + upDown;
-                    fieldsStr += ",Phase" + upDown;
-                    mFileWriter.write(fieldsStr);
-                }
-
-                mFileWriter.newLine();
+                mWriter.write("SampleId,VariantType,VariantInfo,CopyNumber,GeneIdUp,GeneIdDown,");
+                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NMDBases,Transcripts");
+                mWriter.newLine();
             }
 
-            mFileWriter.write(String.format("%s,%s,%s",
-                    sampleId, fusion.name(), fusion.upstreamTrans().geneName().equals(fusion.downstreamTrans().geneName())));
+            mWriter.write(String.format("%s,%s,%s,%.2f,%s,%s",
+                    mCurrentSampleId, neData.variantType(), neData.variantInfo(), neData.copyNumber(),
+                    neData.TransData[FS_UPSTREAM].GeneId, neData.TransData[FS_DOWNSTREAM].GeneId));
 
-            mFileWriter.write(String.format(",%s,%s,%s,%d",
-                    data.upstreamAcids(), data.downstreamAcids(), data.novelAcid(), data.downstreamNmdBases()));
+            mWriter.write(String.format(",%s,%s,%s,%d",
+                    neData.UpstreamAcids, neData.DownstreamAcids, neData.NovelAcid, neData.DownstreamNmdBases));
 
-            for(int se = SE_START; se <= SE_END; ++se)
-            {
-                boolean isUpstream = (se == SE_START);
-                final Transcript trans = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                final GeneAnnotation gene = trans.gene();
+            final StringJoiner transStr = new StringJoiner(";");
+            transNames.forEach(x -> transStr.add(x));
 
-                mFileWriter.write(String.format(",%d,%s,%d,%d",
-                        gene.id(), gene.chromosome(), gene.position(), gene.orientation()));
+            mWriter.write(String.format(",%s", transStr.toString()));
 
-                mFileWriter.write(String.format(",%s,%d,%s,%s,%d,%d",
-                        trans.StableId, gene.Strand, trans.regionType(), trans.codingType(),
-                        trans.nextSpliceExonRank(), trans.nextSpliceExonPhase()));
-            }
-
-            mFileWriter.newLine();
+            mWriter.newLine();
         }
         catch (final IOException e)
         {
-            IM_LOGGER.error("error writing kataegis output file: {}", e.toString());
+            IM_LOGGER.error("error writing neo-epitope output file: {}", e.toString());
         }
-
-        */
     }
 
-    private void loadSvNeoepitopes(final String filename)
+    private void loadSvNeoEpitopes(final String filename)
     {
         if(filename == null || filename.isEmpty())
             return;
@@ -296,6 +318,7 @@ public class NeoEpitopeAnnotator
             }
 
             boolean hasSampleId = line.contains(NE_SAMPLE_ID);
+            final String singleSampleId = mConfig.SampleIds.size() == 1 ? mConfig.SampleIds.get(0) : "";
 
             int neCount = 0;
             String currentSampleId = "";
@@ -304,7 +327,7 @@ public class NeoEpitopeAnnotator
             while ((line = fileReader.readLine()) != null)
             {
                 final String[] items = line.split(DELIMITER, -1);
-                final String sampleId = hasSampleId ? items[0] : "";
+                final String sampleId = hasSampleId ? items[0] : singleSampleId;
 
                 if(!mConfig.SampleIds.contains(sampleId))
                     continue;

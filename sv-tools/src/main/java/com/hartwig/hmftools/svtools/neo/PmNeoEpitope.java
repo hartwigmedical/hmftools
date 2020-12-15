@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.getCodingBases;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.setTranscriptCodingData;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.setTranscriptContext;
@@ -66,6 +67,30 @@ public class PmNeoEpitope extends NeoEpitope
     {
         return mPointMutation.Chromosome;
     }
+
+    public String variantType()
+    {
+        // missense, inframe insertion, inframe deletion, frameshift,
+        if(mPointMutation.Effect == MISSENSE || mIndelBaseDiff == 0)
+            return MISSENSE.toString();
+
+        if((mIndelBaseDiff % 3) == 0)
+        {
+            if(mIndelBaseDiff > 0)
+                return "INFRAME_INSERTION";
+            else
+                return "INFRAME_DELETION";
+        }
+
+        return "FRAMESHIFT";
+    }
+
+    public String variantInfo()
+    {
+        return String.format("%s:%d:%s:%s", mPointMutation.Chromosome,  mPointMutation.Position, mPointMutation.Ref, mPointMutation.Alt);
+    }
+
+    public double copyNumber() { return mPointMutation.CopyNumber; }
 
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {
