@@ -7,10 +7,10 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.STOP_SYMBOL;
-import static com.hartwig.hmftools.svtools.neo.NeoConfig.AMINO_ACID_REF_COUNT;
 import static com.hartwig.hmftools.svtools.neo.NeoEpitopeAnnotator.IM_LOGGER;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.adjustCodingBasesForStrand;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.calcNonMediatedDecayBases;
@@ -67,14 +67,27 @@ public abstract class NeoEpitope
     public boolean phaseMatched()
     {
         if(RegionType[FS_UPSTREAM] == EXONIC && RegionType[FS_DOWNSTREAM] == EXONIC)
-            return ((Phases[FS_UPSTREAM] + 1) % 3) == (Phases[FS_DOWNSTREAM] % 3);
+            return tickPhaseForward(Phases[FS_UPSTREAM]) == Phases[FS_DOWNSTREAM];
         else
             return Phases[FS_UPSTREAM] == Phases[FS_DOWNSTREAM];
     }
 
+    public static int getUpstreamOpenCodonBases(int phase)
+    {
+        if(phase == 0)
+            return 1;
+        else if(phase == 1)
+            return 2;
+        else
+            return 0;
+    }
+
+    public int getUpstreamOpenCodonBases() { return getUpstreamOpenCodonBases(Phases[FS_UPSTREAM]); }
+
     public int getDownstreamPhaseOffset()
     {
-        return Phases[FS_UPSTREAM] == 0 || !phaseMatched() ? 0 : 3 - Phases[FS_UPSTREAM];
+        int upOpenBases = getUpstreamOpenCodonBases();
+        return upOpenBases == 0 ? 0 : 3 - upOpenBases;
     }
 
     public abstract int position(int stream);
@@ -82,56 +95,65 @@ public abstract class NeoEpitope
     public abstract void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData);
     public abstract void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids);
 
-    public void setCodingBases(final RefGenomeInterface refGenome)
+    public void setCodingBases(final RefGenomeInterface refGenome, int reqAminoAcids)
     {
         boolean isPhased = phaseMatched();
+        int upPhaseOffset = getUpstreamOpenCodonBases();
+        int downPhaseOffset = getDownstreamPhaseOffset();
 
-        int upstreamPhaseOffset = Phases[FS_UPSTREAM];
-        int downstreamPhaseOffset = getDownstreamPhaseOffset();
-
-        IM_LOGGER.debug("ne({}) phased({}) upPhaseOffset({}) downPhaseOffset({})",
-                toString(), isPhased, upstreamPhaseOffset, downstreamPhaseOffset);
-
-        extractCodingBases(refGenome, AMINO_ACID_REF_COUNT);
+        extractCodingBases(refGenome, reqAminoAcids);
 
         adjustCodingBasesForStrand(this);
 
         DownstreamNmdBases = calcNonMediatedDecayBases(this, FS_DOWNSTREAM);
 
-        String upstreamBases = CodingBases[FS_UPSTREAM];
-        String downstreamBases = CodingBases[FS_DOWNSTREAM];
-
-        if(upstreamPhaseOffset > upstreamBases.length() || downstreamPhaseOffset > downstreamBases.length())
+        // if upstream ends on a phase other than 2, need to take the bases from the downstream gene to make a novel codon
+        if(upPhaseOffset > 0 || !isPhased)
         {
-            IM_LOGGER.error("ne({}) invalid upBases({} phaseOffset={}) or downBases({} phaseOffset={})",
-                    this, upstreamBases, upstreamPhaseOffset, downstreamBases, downstreamPhaseOffset);
-            return;
-        }
+            String upstreamBases = CodingBases[FS_UPSTREAM];
+            String downstreamBases = CodingBases[FS_DOWNSTREAM];
 
-        // if upstream ends on a phase other than 0, need to take the bases from the downstream gene to make a novel codon
-        if(upstreamPhaseOffset > 0)
-        {
+            if(upPhaseOffset > upstreamBases.length() || downPhaseOffset > downstreamBases.length())
+            {
+                IM_LOGGER.error("ne({}) invalid upBases({} phaseOffset={}) or downBases({} phaseOffset={})",
+                        this, upstreamBases, upPhaseOffset, downstreamBases, downPhaseOffset);
+                return;
+            }
+
             // take the last 1 or 2 bases from the end of upstream gene's section
-            NovelCodonBases = upstreamBases.substring(upstreamBases.length() - upstreamPhaseOffset);
-            upstreamBases = upstreamBases.substring(0, upstreamBases.length() - upstreamPhaseOffset);
-        }
+            NovelCodonBases = upstreamBases.substring(upstreamBases.length() - upPhaseOffset);
+            upstreamBases = upstreamBases.substring(0, upstreamBases.length() - upPhaseOffset);
 
-        if(isPhased)
-        {
-            NovelCodonBases += downstreamBases.substring(0, downstreamPhaseOffset);
-            downstreamBases = downstreamBases.substring(downstreamPhaseOffset);
-        }
-        else
-        {
-            NovelCodonBases += downstreamBases;
-            downstreamBases = "";
-        }
+            if(isPhased)
+            {
+                NovelCodonBases += downstreamBases.substring(0, downPhaseOffset);
+                downstreamBases = downstreamBases.substring(downPhaseOffset);
+            }
+            else
+            {
+                NovelCodonBases += downstreamBases;
+                downstreamBases = "";
+            }
 
-        CodingBases[FS_UPSTREAM] = upstreamBases;
-        CodingBases[FS_DOWNSTREAM] = downstreamBases;
+            // check superflous bases from longer inserts
+            int requiredLength = reqAminoAcids * 3;
+
+            if(upstreamBases.length() > requiredLength)
+                upstreamBases = upstreamBases.substring(upstreamBases.length() - requiredLength);
+
+            if(downstreamBases.length() > requiredLength)
+                downstreamBases = downstreamBases.substring(0, requiredLength);
+
+            if(NovelCodonBases.length() > requiredLength + 3)
+                NovelCodonBases = NovelCodonBases.substring(0, requiredLength + 3);
+
+            CodingBases[FS_UPSTREAM] = upstreamBases;
+            CodingBases[FS_DOWNSTREAM] = downstreamBases;
+        }
 
         IM_LOGGER.debug("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
-                this, upstreamBases, checkTrimBases(NovelCodonBases), checkTrimBases(downstreamBases), DownstreamNmdBases);
+                this, CodingBases[FS_UPSTREAM], checkTrimBases(NovelCodonBases),
+                checkTrimBases(CodingBases[FS_DOWNSTREAM]), DownstreamNmdBases);
     }
 
     public void setAminoAcids()

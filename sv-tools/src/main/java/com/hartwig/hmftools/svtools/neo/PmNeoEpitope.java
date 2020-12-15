@@ -99,8 +99,11 @@ public class PmNeoEpitope extends NeoEpitope
         // get the number of bases from the mutation or junction as required by the required amino acid count
         // the downstream bases start directly after the mutation (ie after any insert, or deleted bases)
 
+        // if the upstream phase is not 2 (ie the end of a codon) then additionally extract enough bases to cover the required amino
+        // acids plus the bases of the partial codon - the downstream bases will provide the remainder to complete the codon
+
         // phasing already takes any inserted bases (ie from an INDEL) into account, so just adjust for the number of bases required
-        int upPhaseOffset = Phases[FS_UPSTREAM];
+        int upPhaseOffset = getUpstreamOpenCodonBases();
         int downPhaseOffset = getDownstreamPhaseOffset();
 
         int upRequiredBases = requiredAminoAcids * 3 + upPhaseOffset;
@@ -108,10 +111,7 @@ public class PmNeoEpitope extends NeoEpitope
         String upCodingBases = "";
         String downCodingBases = "";
 
-        if(mIndelBaseDiff > 0)
-        {
-            upRequiredBases -= mIndelBaseDiff;
-        }
+        upRequiredBases -= mPointMutation.Alt.length();
 
         int deletedBases = mIndelBaseDiff < 0 ? abs(mIndelBaseDiff) : 0;
 

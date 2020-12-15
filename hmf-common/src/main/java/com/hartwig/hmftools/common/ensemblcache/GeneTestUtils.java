@@ -5,6 +5,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 
 import java.util.List;
 
@@ -176,7 +178,7 @@ public class GeneTestUtils
                     }
                     else
                     {
-                        exonPhase = (lastExonEndPhase + 1) % 3; // tick forward
+                        exonPhase = tickPhaseForward(lastExonEndPhase); // tick forward
                         exonStartPhase = lastExonEndPhase; // by convention
                         exonCodingStart = exonStart;
                     }
@@ -184,7 +186,7 @@ public class GeneTestUtils
                     if (inCoding)
                     {
                         int exonCodingBases = min(exonEnd, codingEnd) - exonCodingStart + 1;
-                        exonEndPhase = (exonPhase + exonCodingBases - 1) % 3;
+                        exonEndPhase = codingBasesToPhase(exonPhase + exonCodingBases);
                         lastExonEndPhase = exonEndPhase;
 
                         if (codingEnd <= exonEnd)
@@ -226,7 +228,7 @@ public class GeneTestUtils
                     }
                     else
                     {
-                        exonPhase = (lastExonEndPhase + 1) % 3;
+                        exonPhase = tickPhaseForward(lastExonEndPhase);
                         exonStartPhase = lastExonEndPhase;
                         exonCodingEnd = exonEnd;
                     }
@@ -234,7 +236,7 @@ public class GeneTestUtils
                     if (inCoding)
                     {
                         int exonCodingBases = exonCodingEnd - max(exonStart, codingStart) + 1;
-                        exonEndPhase =  (exonPhase + exonCodingBases - 1) % 3;
+                        exonEndPhase = codingBasesToPhase(exonPhase + exonCodingBases);
                         lastExonEndPhase = exonEndPhase;
 
                         if (codingStart >= exonStart)

@@ -49,6 +49,7 @@ public class AminoAcidConverter
 
     public static String reverseStrandBases(final String bases)
     {
+        // reverse and swap base pairs
         String newBases = "";
         for(int i = 0; i < bases.length(); ++i)
         {

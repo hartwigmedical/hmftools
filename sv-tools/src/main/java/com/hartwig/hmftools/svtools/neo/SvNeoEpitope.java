@@ -4,12 +4,15 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.svtools.neo.NeoConfig.AMINO_ACID_REF_COUNT;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.svtools.neo.NeoEpitopeAnnotator.IM_LOGGER;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.getCodingBases;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.setTranscriptCodingData;
 import static com.hartwig.hmftools.svtools.neo.NeoUtils.setTranscriptContext;
 
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -38,13 +41,28 @@ public class SvNeoEpitope extends NeoEpitope
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {
         TransData[FS_UPSTREAM] = upTransData;
+        setTranscriptContext(this, TransData[FS_UPSTREAM], position(FS_UPSTREAM), FS_UPSTREAM);
+        int insSeqLength = mSvFusion.InsertSequence.length();
+        setTranscriptCodingData(this, TransData[FS_UPSTREAM], position(FS_UPSTREAM), insSeqLength, FS_UPSTREAM);
+
         TransData[FS_DOWNSTREAM] = downTransData;
 
-        for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+        // if the upstream context is intronic, then skip past any downstream exonic section
+
+        setTranscriptContext(this, TransData[FS_DOWNSTREAM], position(FS_DOWNSTREAM), FS_DOWNSTREAM);
+        setTranscriptCodingData(this, TransData[FS_DOWNSTREAM], position(FS_DOWNSTREAM), 0, FS_DOWNSTREAM);
+
+        if(RegionType[FS_UPSTREAM] == INTRONIC && RegionType[FS_DOWNSTREAM] == EXONIC)
         {
-            setTranscriptContext(this, TransData[fs], position(fs), fs);
-            int insSeqLength = fs == FS_UPSTREAM ? mSvFusion.InsertSequence.length() : 0;
-            setTranscriptCodingData(this, TransData[fs], position(fs), insSeqLength, fs);
+            final ExonData exon = downTransData.exons().stream()
+                    .filter(x -> positionWithin(position(FS_DOWNSTREAM), x.ExonStart, x.ExonEnd))
+                    .findFirst().orElse(null);
+
+            if(exon != null)
+            {
+                Phases[FS_DOWNSTREAM] = exon.ExonPhaseEnd;
+                ExonRank[FS_DOWNSTREAM] = exon.ExonRank + 1;
+            }
         }
     }
 
@@ -55,17 +73,20 @@ public class SvNeoEpitope extends NeoEpitope
         // for fusions, the upstream bases include any inserted bases if the region is exonic
         // phasing already takes insert sequence into account, so just adjust for the number of bases required
 
-        int upPhaseOffset = Phases[FS_UPSTREAM];
+        int upPhaseOffset = getUpstreamOpenCodonBases();
+
         int downPhaseOffset = getDownstreamPhaseOffset();
 
-        int upRequiredBases = requiredAminoAcids * 3 + upPhaseOffset;
         String codingInsSequence = "";
 
         if(RegionType[FS_UPSTREAM] == TranscriptRegionType.EXONIC && !mSvFusion.InsertSequence.isEmpty())
         {
-            upRequiredBases -= mSvFusion.InsertSequence.length();
             codingInsSequence = mSvFusion.InsertSequence;
+            int upstreamPhase = codingBasesToPhase(Phases[FS_UPSTREAM] + 1 - codingInsSequence.length());
+            upPhaseOffset = getUpstreamOpenCodonBases(upstreamPhase);
         }
+
+        int upRequiredBases = requiredAminoAcids * 3 + upPhaseOffset;
 
         CodingBases[FS_UPSTREAM] = getCodingBases(
                 refGenome, TransData[FS_UPSTREAM], chromosome(FS_UPSTREAM), position(FS_UPSTREAM), orientation(FS_UPSTREAM),

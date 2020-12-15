@@ -8,14 +8,16 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.Transcript.CODING_BASES;
-import static com.hartwig.hmftools.common.fusion.Transcript.TOTAL_CODING_BASES;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.CODING_BASES;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.TOTAL_CODING_BASES;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.convertDnaCodonToAminoAcid;
@@ -95,15 +97,13 @@ public class NeoUtils
 
         if(neData.CodingType[stream] == CODING && neData.RegionType[stream] == EXONIC)
         {
-            int[] codingData = Transcript.calcCodingBases(transData.CodingStart, transData.CodingEnd, transData.exons(), position);
+            int[] codingData = calcCodingBases(transData.CodingStart, transData.CodingEnd, transData.exons(), position);
             int codingBases = transData.Strand == POS_STRAND ? codingData[CODING_BASES] : codingData[TOTAL_CODING_BASES] - codingData[CODING_BASES] + 1;
-
-            codingBases -= 1;
 
             // factor in insert sequence for the upstream partner
             codingBases += insSeqLength;
 
-            neData.Phases[stream] = codingBases % 3;
+            neData.Phases[stream] = codingBasesToPhase(codingBases);
         }
     }
 

@@ -8,9 +8,10 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTra
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.Transcript.CODING_BASES;
-import static com.hartwig.hmftools.common.fusion.Transcript.TOTAL_CODING_BASES;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.CODING_BASES;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.TOTAL_CODING_BASES;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -234,7 +235,7 @@ public class EnsemblDataCache
                     int codingBases = 0;
                     if(trans.CodingStart != null && trans.CodingEnd != null)
                     {
-                        int[] codingData = Transcript.calcCodingBases(trans.CodingStart, trans.CodingEnd, trans.exons(), position);
+                        int[] codingData = calcCodingBases(trans.CodingStart, trans.CodingEnd, trans.exons(), position);
                         totalCodingBases = codingData[TOTAL_CODING_BASES];
                     }
 
@@ -280,7 +281,7 @@ public class EnsemblDataCache
                 int codingBases = 0;
                 if(trans.CodingStart != null && trans.CodingEnd != null)
                 {
-                    int[] codingData = Transcript.calcCodingBases(trans.CodingStart, trans.CodingEnd, trans.exons(), position);
+                    int[] codingData = calcCodingBases(trans.CodingStart, trans.CodingEnd, trans.exons(), position);
                     totalCodingBases = codingData[TOTAL_CODING_BASES];
                 }
 
@@ -614,7 +615,7 @@ public class EnsemblDataCache
 
         if(transData.CodingStart != null && transData.CodingEnd != null)
         {
-            int[] codingData = Transcript.calcCodingBases(transData.CodingStart, transData.CodingEnd, exonList, position);
+            int[] codingData = calcCodingBases(transData.CodingStart, transData.CodingEnd, exonList, position);
             totalCodingBases = codingData[TOTAL_CODING_BASES];
             codingBases = isForwardStrand ? codingData[CODING_BASES] : totalCodingBases - codingData[CODING_BASES];
         }

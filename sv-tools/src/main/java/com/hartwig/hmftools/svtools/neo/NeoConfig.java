@@ -28,14 +28,17 @@ public class NeoConfig
 
     public final List<String> RestrictedGeneIds;
 
+    public final int RequiredAminoAcids;
+
     public static final String SAMPLE = "sample";
 
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String COHORT_FUSION_FILE = "cohort_fusion_file";
     public static final String GENE_ID_FILE = "gene_id_file";
     public static final String REF_GENOME = "ref_genome";
+    public static final String REQ_AMINO_ACIDS = "req_amino_acids";
 
-    public static final int AMINO_ACID_REF_COUNT = 18;
+    public static final int DEFAULT_AMINO_ACID_REF_COUNT = 18;
 
     public NeoConfig(final CommandLine cmd)
     {
@@ -46,10 +49,22 @@ public class NeoConfig
 
         RestrictedGeneIds = Lists.newArrayList();
 
+        RequiredAminoAcids = Integer.parseInt(cmd.getOptionValue(REQ_AMINO_ACIDS, String.valueOf(DEFAULT_AMINO_ACID_REF_COUNT)));
+
         if(cmd.hasOption(GENE_ID_FILE))
         {
             loadGeneIdsFile(cmd.getOptionValue(GENE_ID_FILE), RestrictedGeneIds);
         }
+    }
+
+    public NeoConfig(
+            final List<String> sampleIds, final RefGenomeInterface refGenome, final List<String> restrictedGeneIds,
+            final int requiredAminoAcids)
+    {
+        SampleIds = sampleIds;
+        RefGenome = refGenome;
+        RestrictedGeneIds = restrictedGeneIds;
+        RequiredAminoAcids = requiredAminoAcids;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -59,6 +74,7 @@ public class NeoConfig
         options.addOption(GENE_ID_FILE, true, "Path to write results");
         options.addOption(REF_GENOME, false, "Log verbose");
         options.addOption(COHORT_FUSION_FILE, false, "Log verbose");
+        options.addOption(REQ_AMINO_ACIDS, true, "Number of amino acids in neo-epitopes (default: 18)");
         options.addOption(OUTPUT_DIR, false, "Log verbose");
         addDatabaseCmdLineArgs(options);
     }

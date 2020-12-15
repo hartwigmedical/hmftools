@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
@@ -446,7 +447,7 @@ public class FusionFinder
         if(upPhase == -1 && downPhase == -1)
             return true;
 
-        return ((upPhase + 1) % 3) == (downPhase % 3);
+        return codingBasesToPhase(upPhase + 1) == codingBasesToPhase(downPhase);
     }
 
     private void checkIgFusion(final GeneAnnotation startGene, final GeneAnnotation endGene, final List<GeneFusion> potentialFusions)

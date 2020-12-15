@@ -15,14 +15,8 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.svtools.neo.AminoAcidConverter.STOP_SYMBOL;
-import static com.hartwig.hmftools.svtools.neo.NeoConfig.AMINO_ACID_REF_COUNT;
 import static com.hartwig.hmftools.svtools.neo.NeoConfig.COHORT_FUSION_FILE;
 import static com.hartwig.hmftools.svtools.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.adjustCodingBasesForStrand;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.calcNonMediatedDecayBases;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.checkTrimBases;
-import static com.hartwig.hmftools.svtools.neo.NeoUtils.getAminoAcids;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -100,7 +94,7 @@ public class NeoEpitopeAnnotator
             addSvFusions(fusions, neDataList);
             addPointMutations(pointMutations, neDataList);
 
-            neDataList.forEach(x -> x.setCodingBases(mConfig.RefGenome));
+            neDataList.forEach(x -> x.setCodingBases(mConfig.RefGenome, mConfig.RequiredAminoAcids));
             neDataList.forEach(x -> x.setAminoAcids());
             neDataList.forEach(x -> writeData(sampleId, x));
         }
