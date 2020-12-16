@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
@@ -48,6 +49,7 @@ public class ServeApplication {
         Map<String, HmfTranscriptRegion> allGenesMap = selectAllGeneMap(config.refGenomeVersion());
 
         ServeAlgo algo = new ServeAlgo(readDriverGenesFromFile(config.driverGeneTsv()),
+                buildKnownFusionCacheFromFile(config.knownFusionFile()),
                 allGenesMap,
                 buildProteinResolver(config, allGenesMap),
                 buildDoidLookup(config.missingDoidsMappingTsv()));
@@ -59,6 +61,25 @@ public class ServeApplication {
     }
 
     @NotNull
+    private static List<DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
+        LOGGER.info("Reading driver genes from {}", driverGeneTsv);
+        List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsv);
+        LOGGER.info(" Read {} driver gene entries", driverGenes.size());
+        return driverGenes;
+    }
+
+    @NotNull
+    private static KnownFusionCache buildKnownFusionCacheFromFile(@NotNull String knownFusionFile) throws IOException {
+        LOGGER.info("Reading known fusions from {}", knownFusionFile);
+        KnownFusionCache cache = new KnownFusionCache();
+        if (!cache.loadFile(knownFusionFile)) {
+            throw new IOException("Could not load known fusions from " + knownFusionFile);
+        }
+        LOGGER.info(" Read {} kwown fusion entries", cache.getData().size());
+        return cache;
+    }
+
+    @NotNull
     private static Map<String, HmfTranscriptRegion> selectAllGeneMap(@NotNull RefGenomeVersion refGenomeVersion) {
         if (refGenomeVersion == RefGenomeVersion.V37) {
             return HmfGenePanelSupplier.allGenesMap37();
@@ -66,14 +87,6 @@ public class ServeApplication {
 
         LOGGER.warn("Ref genome version not supported: '{}'. Reverting to V37.", refGenomeVersion);
         return HmfGenePanelSupplier.allGenesMap37();
-    }
-
-    @NotNull
-    private static List<DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
-        LOGGER.info("Reading driver genes from {}", driverGeneTsv);
-        List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsv);
-        LOGGER.info(" Read {} driver gene entries", driverGenes.size());
-        return driverGenes;
     }
 
     @NotNull

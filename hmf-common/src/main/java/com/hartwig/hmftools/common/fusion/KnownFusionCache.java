@@ -214,7 +214,7 @@ public class KnownFusionCache
             mHighImpactPromiscuousData.add(data);
     }
 
-    private boolean loadFile(final String filename)
+    public boolean loadFile(final String filename)
     {
         if (!Files.exists(Paths.get(filename)))
         {

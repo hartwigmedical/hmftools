@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
@@ -43,15 +44,19 @@ public class ServeAlgo {
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
+    private final KnownFusionCache knownFusionCache;
+    @NotNull
     private Map<String, HmfTranscriptRegion> allGenesMap;
     @NotNull
     private final ProteinResolver proteinResolver;
     @NotNull
     private final DoidLookup missingDoidLookup;
 
-    public ServeAlgo(@NotNull final List<DriverGene> driverGenes, @NotNull final Map<String, HmfTranscriptRegion> allGenesMap,
-            @NotNull final ProteinResolver proteinResolver, @NotNull final DoidLookup missingDoidLookup) {
+    public ServeAlgo(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache,
+            @NotNull final Map<String, HmfTranscriptRegion> allGenesMap, @NotNull final ProteinResolver proteinResolver,
+            @NotNull final DoidLookup missingDoidLookup) {
         this.driverGenes = driverGenes;
+        this.knownFusionCache = knownFusionCache;
         this.allGenesMap = allGenesMap;
         this.proteinResolver = proteinResolver;
         this.missingDoidLookup = missingDoidLookup;
@@ -77,8 +82,13 @@ public class ServeAlgo {
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJson, viccSources, null);
 
         EventClassifierConfig config = ViccClassificationConfig.build();
-        ViccExtractor extractor =
-                ViccExtractorFactory.buildViccExtractor(config, proteinResolver, driverGenes, allGenesMap, missingDoidLookup);
+        ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config,
+                proteinResolver,
+                driverGenes,
+                knownFusionCache,
+                allGenesMap,
+                missingDoidLookup);
+
         LOGGER.info("Running VICC knowledge extraction");
         return extractor.extract(entries);
     }
@@ -88,8 +98,13 @@ public class ServeAlgo {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv);
 
         EventClassifierConfig config = IclusionClassificationConfig.build();
-        IclusionExtractor extractor =
-                IclusionExtractorFactory.buildIclusionExtractor(config, proteinResolver, driverGenes, allGenesMap, missingDoidLookup);
+        IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(config,
+                proteinResolver,
+                driverGenes,
+                knownFusionCache,
+                allGenesMap,
+                missingDoidLookup);
+
         LOGGER.info("Running iClusion knowledge extraction");
         return extractor.extract(trials);
     }
