@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.extraction.fusion;
 import static com.hartwig.hmftools.serve.extraction.fusion.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
 import static com.hartwig.hmftools.serve.extraction.fusion.FusionAnnotationConfig.ODDLY_NAMED_GENES_MAP;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
@@ -17,9 +18,12 @@ public class FusionExtractor {
 
     @NotNull
     private final GeneChecker geneChecker;
+    @NotNull
+    private final KnownFusionCache knownFusionCache;
 
-    public FusionExtractor(@NotNull final GeneChecker geneChecker) {
+    public FusionExtractor(@NotNull final GeneChecker geneChecker, @NotNull final KnownFusionCache knownFusionCache) {
         this.geneChecker = geneChecker;
+        this.knownFusionCache = knownFusionCache;
     }
 
     @Nullable
@@ -31,12 +35,9 @@ public class FusionExtractor {
                 return fromConfiguredPair(ODDLY_NAMED_GENES_MAP.get(event), gene);
             } else {
                 String[] fusionArray = event.split("-");
-                KnownFusionPair pair =
-                        ImmutableKnownFusionPair.builder().geneUp(fusionArray[0]).geneDown(fusionArray[1].split(" ")[0]).build();
-
-                if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
-                    return pair;
-                }
+                String geneUp = fusionArray[0];
+                String geneDown = fusionArray[1].split(" ")[0];
+                return validate(ImmutableKnownFusionPair.builder().geneUp(geneUp).geneDown(geneDown).build());
             }
         } else if (type == EventType.FUSION_PAIR_AND_EXON) {
             if (EXONIC_FUSIONS_MAP.containsKey(event)) {
@@ -56,6 +57,18 @@ public class FusionExtractor {
         }
 
         LOGGER.warn("Preconfigured fusion '{}' does not match on gene level: {}", configuredPair, gene);
+        return null;
+    }
+
+    @Nullable
+    private KnownFusionPair validate(@NotNull KnownFusionPair pair) {
+        if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
+            if (!(knownFusionCache.hasPromiscuousFiveGene(pair.geneUp()) || knownFusionCache.hasPromiscuousThreeGene(pair.geneDown())
+                    || knownFusionCache.hasKnownFusion(pair.geneUp(), pair.geneDown()))) {
+                LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
+            }
+            return pair;
+        }
         return null;
     }
 }

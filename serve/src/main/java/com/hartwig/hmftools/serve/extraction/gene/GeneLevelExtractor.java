@@ -6,6 +6,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
@@ -25,16 +26,19 @@ public class GeneLevelExtractor {
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
+    private final KnownFusionCache knownFusionCache;
+    @NotNull
     private final Set<String> activationKeyPhrases;
     @NotNull
     private final Set<String> inactivationKeyPhrases;
 
     public GeneLevelExtractor(@NotNull final GeneChecker exomeGeneChecker, @NotNull final GeneChecker fusionGeneChecker,
-            @NotNull final List<DriverGene> driverGenes, @NotNull final Set<String> activationKeyPhrases,
-            @NotNull final Set<String> inactivationKeyPhrases) {
+            @NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache,
+            @NotNull final Set<String> activationKeyPhrases, @NotNull final Set<String> inactivationKeyPhrases) {
         this.exomeGeneChecker = exomeGeneChecker;
         this.fusionGeneChecker = fusionGeneChecker;
         this.driverGenes = driverGenes;
+        this.knownFusionCache = knownFusionCache;
         this.activationKeyPhrases = activationKeyPhrases;
         this.inactivationKeyPhrases = inactivationKeyPhrases;
     }
@@ -45,6 +49,10 @@ public class GeneLevelExtractor {
             GeneLevelEvent geneLevelEvent = extractGeneLevelEvent(gene, event);
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
         } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene)) {
+            if (!(knownFusionCache.hasKnownPairGene(gene) || knownFusionCache.hasPromiscuousFiveGene(gene)
+                    || knownFusionCache.hasPromiscuousThreeGene(gene))) {
+                LOGGER.warn("Promiscuous fusion '{}' is not part of the known fusion cache", gene);
+            }
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
         }
 

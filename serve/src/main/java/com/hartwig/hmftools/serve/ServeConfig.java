@@ -62,7 +62,7 @@ public interface ServeConfig {
         options.addOption(REF_GENOME_VERSION, true, "Ref version. Should be 'hgXX'");
         options.addOption(REF_GENOME_FASTA_FILE, true, "Path to the ref genome fasta file");
         options.addOption(DRIVER_GENE_TSV, true, "Path to driver gene TSV");
-        options.addOption(KNOWN_FUSION_FILE, "Path to the known fusion file");
+        options.addOption(KNOWN_FUSION_FILE, true, "Path to the known fusion file");
 
         options.addOption(OUTPUT_DIR, true, "Dir which will hold all SERVE output files");
 

@@ -75,7 +75,7 @@ public class ServeApplication {
         if (!cache.loadFile(knownFusionFile)) {
             throw new IOException("Could not load known fusions from " + knownFusionFile);
         }
-        LOGGER.info(" Read {} kwown fusion entries", cache.getData().size());
+        LOGGER.info(" Read {} known fusion entries", cache.getData().size());
         return cache;
     }
 

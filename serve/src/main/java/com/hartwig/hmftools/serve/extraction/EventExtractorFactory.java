@@ -48,10 +48,11 @@ public final class EventExtractorFactory {
                 new GeneLevelExtractor(exomeGeneChecker,
                         fusionGeneChecker,
                         driverGenes,
+                        knownFusionCache,
                         config.activatingGeneLevelKeyPhrases(),
                         config.inactivatingGeneLevelKeyPhrases()),
                 new CopyNumberExtractor(exomeGeneChecker),
-                new FusionExtractor(fusionGeneChecker),
+                new FusionExtractor(fusionGeneChecker, knownFusionCache),
                 new SignatureExtractor(config.microsatelliteUnstableEvents(),
                         config.highTumorMutationalLoadEvents(),
                         config.hrDeficiencyEvents()));

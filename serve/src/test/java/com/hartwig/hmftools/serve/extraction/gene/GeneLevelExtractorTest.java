@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.GeneCheckerTestFactory;
@@ -110,6 +111,7 @@ public class GeneLevelExtractorTest {
         return new GeneLevelExtractor(V37_GENE_CHECKER,
                 V37_GENE_CHECKER,
                 driverGenes,
+                new KnownFusionCache(),
                 Sets.newHashSet("positive", "activating mutation", "act mut"),
                 Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"));
     }
