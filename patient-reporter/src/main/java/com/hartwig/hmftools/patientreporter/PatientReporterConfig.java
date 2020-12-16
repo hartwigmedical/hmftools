@@ -58,7 +58,6 @@ public interface PatientReporterConfig {
     String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
-    String COHORT_CONFIG_TSV = "cohort_config_tsv";
 
     // Some additional optional params and flags
     String COMMENTS = "comments";
@@ -106,7 +105,6 @@ public interface PatientReporterConfig {
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
-        options.addOption(COHORT_CONFIG_TSV, true, "Path towards a TSV containing the cohorts config for reporting.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
@@ -199,9 +197,6 @@ public interface PatientReporterConfig {
     @NotNull
     String sampleSummaryTsv();
 
-    @NotNull
-    String cohortsConfigTsv();
-
     @Nullable
     String comments();
 
@@ -289,7 +284,6 @@ public interface PatientReporterConfig {
                 .knowledgebaseDir(knowledgebaseDirectory)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
-                .cohortsConfigTsv(nonOptionalFile(cmd, COHORT_CONFIG_TSV))
                 .comments(cmd.getOptionValue(COMMENTS))
                 .correctedReport(cmd.hasOption(CORRECTED_REPORT))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))

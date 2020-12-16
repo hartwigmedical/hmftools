@@ -20,7 +20,6 @@ import org.junit.Test;
 public class LimsFactoryTest {
 
     private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
-    private static final String COHORT_DIRECTORY = Resources.getResource("lims/cohort").getPath();
 
     @Test
     public void canCreateEmptyLims() {
@@ -29,12 +28,12 @@ public class LimsFactoryTest {
 
     @Test
     public void canBuildLimsFromTestData() throws IOException {
-        assertNotNull(LimsFactory.fromLimsDirectory(LIMS_DIRECTORY, COHORT_DIRECTORY + File.separator + "cohort.tsv"));
+        assertNotNull(LimsFactory.fromLimsDirectory(LIMS_DIRECTORY));
     }
 
     @Test(expected = IOException.class)
     public void exceptionWhenJsonFileDoesNotExist() throws IOException {
-        LimsFactory.fromLimsDirectory("Does not exist", "File not exist");
+        LimsFactory.fromLimsDirectory("Does not exist");
     }
 
     @Test

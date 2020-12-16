@@ -45,13 +45,15 @@ public final class LimsFactory {
     private static final String LIMS_SHALLOW_SEQ_TSV = "shallow_seq_purity.tsv";
     private static final String PATIENT_BLACKLIST_TSV = "patient_blacklist.tsv";
 
+    private static final String COHORT_CONFIG_TSV = "cohort_config.tsv";
+
     private static final String FIELD_SEPARATOR = "\t";
 
     private LimsFactory() {
     }
 
     @NotNull
-    public static Lims fromLimsDirectory(@NotNull String limsDirectory, @NotNull String cohortConfig) throws IOException {
+    public static Lims fromLimsDirectory(@NotNull String limsDirectory) throws IOException {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
@@ -64,7 +66,7 @@ public final class LimsFactory {
 
         HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(limsDirectory);
 
-        LimsCohortModel cohortModel = LimsCohortModelFactory.read(cohortConfig);
+        LimsCohortModel cohortModel = LimsCohortModelFactory.read(limsDirectory + File.separator + COHORT_CONFIG_TSV);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,

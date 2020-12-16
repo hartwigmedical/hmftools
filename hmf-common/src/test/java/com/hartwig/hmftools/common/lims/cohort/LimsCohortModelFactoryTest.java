@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class LimsCohortModelFactoryTest {
 
-    private static final String COHORT_MODEL_TSV = Resources.getResource("lims/cohort/cohort.tsv").getPath();
+    private static final String COHORT_MODEL_TSV = Resources.getResource("lims/cohort_config.tsv").getPath();
 
     @Test
     public void canReadCohortConfigFile() throws IOException {
