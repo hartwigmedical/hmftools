@@ -68,16 +68,16 @@ class ActionableEvidenceFactory {
 
         String treatment = reformatDrugLabels(entry.association().drugLabels());
         EvidenceLevel level = resolveLevel(entry.association().evidenceLabel());
+        EvidenceDirection direction = resolveDirection(entry.association().responseType());
 
-        if (treatment != null && level != null) {
-            EvidenceDirection direction = resolveDirection(entry.association().responseType());
+        if (treatment != null && level != null && direction != null) {
             Set<String> urls = resolveUrls(entry.association().evidence().info());
 
             ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
                     .source(fromViccSource(entry.source()))
                     .treatment(treatment)
                     .level(level)
-                    .direction(nullToEmpty(direction))
+                    .direction(direction)
                     .urls(urls);
 
             String cancerType = resolveCancerType(entry.association().phenotype());
@@ -211,11 +211,6 @@ class ActionableEvidenceFactory {
     @NotNull
     private static Set<String> resolveUrls(@Nullable EvidenceInfo info) {
         return info != null ? Sets.newHashSet(info.publications()) : Sets.newHashSet();
-    }
-
-    @NotNull
-    private static EvidenceDirection nullToEmpty(@Nullable EvidenceDirection evidenceDirection) {
-        return evidenceDirection != null ? evidenceDirection : EvidenceDirection.NA;
     }
 
     @NotNull
