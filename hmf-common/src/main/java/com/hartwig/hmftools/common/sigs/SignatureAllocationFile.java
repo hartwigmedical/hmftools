@@ -65,8 +65,8 @@ public final class SignatureAllocationFile
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(sigAllocation.signature()))
-                .add(String.format("%.1f", sigAllocation.allocation()))
-                .add(String.format("%.3f", sigAllocation.percent()))
+                .add(String.format("%.3f", sigAllocation.allocation()))
+                .add(String.format("%.5f", sigAllocation.percent()))
                 .toString();
     }
 

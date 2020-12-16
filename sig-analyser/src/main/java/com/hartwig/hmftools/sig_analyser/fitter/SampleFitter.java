@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
+import static com.hartwig.hmftools.common.sigs.VectorUtils.vectorMultiply;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -67,6 +68,7 @@ public class SampleFitter
 
     private final int mPositionBucketSize;
     private final int mMaxSampleCount;
+    private final boolean mFitToTotal;
 
     private final DatabaseAccess mDbAccess;
     private final String mVcfFile;
@@ -74,11 +76,16 @@ public class SampleFitter
     private boolean mUploadToDb;
     private BufferedWriter mFitWriter;
 
-    private static final double MIN_ALLOCATION = 1;
-    private static final double MIN_ALLOCATION_PERC = 0.005;
+    private static double MIN_ALLOCATION = 1;
+    private static double MIN_ALLOCATION_PERC = 0.005;
+    private static final int ALLOC_ROUND = 3;
+    private static final int PERC_ROUND = 5;
 
     private static final String UPLOAD_TO_DB = "upload_to_db";
     private static final String SOMATIC_VCF_FILE = "somatic_vcf_file";
+    private static final String MIN_ALLOC = "min_alloc";
+    private static final String MIN_ALLOC_PERC = "min_alloc_perc";
+    private static final String FIT_TO_TOTAL = "fit_to_total";
 
     public SampleFitter(final CommandLine cmd)
     {
@@ -97,9 +104,13 @@ public class SampleFitter
         mDbAccess = createDatabaseAccess(cmd);
         mVcfFile = cmd.getOptionValue(SOMATIC_VCF_FILE);
         mUploadToDb = Boolean.parseBoolean(cmd.getOptionValue(UPLOAD_TO_DB, "true"));
+        mFitToTotal = Boolean.parseBoolean(cmd.getOptionValue(FIT_TO_TOTAL, "true"));
 
         mPositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "0"));
         mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
+
+        MIN_ALLOCATION = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC, "0.01"));
+        MIN_ALLOCATION_PERC = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC_PERC, "0.0005"));
 
         mSnvLoader = new SigSnvLoader(null);
 
@@ -242,6 +253,13 @@ public class SampleFitter
 
         double allocTotal = 0;
 
+        if(mFitToTotal)
+        {
+            double fitTotal = sumVector(sigAllocs);
+            double adjustFactor = sampleTotal / fitTotal;
+            vectorMultiply(sigAllocs, adjustFactor);
+        }
+
         for(int s = 0; s < sigAllocs.length; ++s)
         {
             double sigAlloc = sigAllocs[s];
@@ -256,8 +274,8 @@ public class SampleFitter
 
             sigAllocations.add(ImmutableSignatureAllocation.builder()
                     .signature(sigName)
-                    .allocation(round(sigAlloc,1))
-                    .percent(round(allocPerc, 3))
+                    .allocation(round(sigAlloc, ALLOC_ROUND))
+                    .percent(round(allocPerc, PERC_ROUND))
                     .build());
         }
 
@@ -272,14 +290,14 @@ public class SampleFitter
 
         sigAllocations.add(ImmutableSignatureAllocation.builder()
                 .signature(SIG_UNALLOCATED)
-                .allocation(round(residualsUnalloc,1))
-                .percent(round(residualsUnalloc/sampleTotal, 3))
+                .allocation(round(residualsUnalloc,ALLOC_ROUND))
+                .percent(round(residualsUnalloc/sampleTotal, PERC_ROUND))
                 .build());
 
         sigAllocations.add(ImmutableSignatureAllocation.builder()
                 .signature(SIG_EXCESS)
-                .allocation(round(residuals.Excess,1))
-                .percent(round(residuals.Excess/sampleTotal, 3))
+                .allocation(round(residuals.Excess,ALLOC_ROUND))
+                .percent(round(residuals.Excess/sampleTotal, PERC_ROUND))
                 .build());
 
         writeSigAllocations(sampleId, sigAllocations);
@@ -325,7 +343,7 @@ public class SampleFitter
             {
                 for(final SignatureAllocation sigAlloc : sigAllocations)
                 {
-                    mFitWriter.write(String.format("%s,%s,%.1f,%.3f",
+                    mFitWriter.write(String.format("%s,%s,%g,%g",
                             sampleId, sigAlloc.signature(), sigAlloc.allocation(), sigAlloc.percent()));
                     mFitWriter.newLine();
                 }
@@ -346,6 +364,8 @@ public class SampleFitter
         options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count, default = 20K");
         options.addOption(UPLOAD_TO_DB, true, "Upload results to database (default: true)");
         options.addOption(SOMATIC_VCF_FILE, true, "Somatic variant VCF file");
+        options.addOption(MIN_ALLOC_PERC, true, "Min signature allocation as percentage (default=0.5%)");
+        options.addOption(MIN_ALLOC, true, "Min signature allocation (default=1)");
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
