@@ -626,7 +626,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
-- Upcoming
+- [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.5)
   - Gene panel coverage including estimate of missed variant likelihood 
   - Changed default value of max_germline_rel_raw_base_qual for HOTSPOTS to 50% (from 100%)
   - Improved VAF estimation by including alt match type 
