@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.lims.cohort;
 
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,24 +14,20 @@ public abstract class LimsCohortModel {
     @NotNull
     protected abstract Map<String, LimsCohortConfig> limsCohortMap();
 
-    private static final Logger LOGGER = LogManager.getLogger(LimsCohortModel.class);
-
     @Nullable
     public LimsCohortConfig queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
         if (cohortString == null) {
-            LOGGER.error("No cohort string present in LIMS for sample '{}'", sampleId);
-            return null;
+            throw new IllegalStateException("No cohort string present in LIMS for sample '{}'" + sampleId);
         } else {
             LimsCohortConfig cohortConfigData = limsCohortMap().get(cohortString);
             if (cohortConfigData == null) {
-                LOGGER.error("No cohort config present for cohort '{}'", cohortString);
-                return null;
+                throw new IllegalStateException("No cohort config present for cohort '{}'" + cohortString);
             } else {
                 if (sampleId.startsWith(cohortConfigData.cohortId())) {
                     return cohortConfigData;
                 } else {
-                    LOGGER.error("Cohort '{}' does not seem to match with sample '{}'", cohortConfigData.cohortId(), sampleId);
-                    return null;
+                    throw new IllegalStateException(
+                            "Cohort '{}' does not seem to match with sample '{}'" + cohortConfigData.cohortId() + sampleId);
                 }
             }
         }

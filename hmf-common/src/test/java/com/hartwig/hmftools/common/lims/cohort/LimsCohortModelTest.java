@@ -19,9 +19,18 @@ public class LimsCohortModelTest {
         cohortMap.put("DRUP", cohortConfigData);
 
         LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
+        assertEquals(cohortConfigData, model.queryCohortData("DRUP", "DRUP01"));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void canQueryLimsCohortModelException() {
+        LimsCohortConfig cohortConfigData = LimsTestUtil.createAllDisabledCohortConfig("DRUP");
+        Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
+        cohortMap.put("DRUP", cohortConfigData);
+
+        LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
         assertNull(model.queryCohortData(null, "DRUP01"));
         assertNull(model.queryCohortData("CPCT", "DRUP01"));
         assertNull(model.queryCohortData("DRUP", "CPCT01"));
-        assertEquals(cohortConfigData, model.queryCohortData("DRUP", "DRUP01"));
     }
 }
