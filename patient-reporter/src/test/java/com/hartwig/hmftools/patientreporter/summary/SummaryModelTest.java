@@ -32,7 +32,7 @@ public class SummaryModelTest {
         SummaryModel summaryModel = new SummaryModel(summaryToSampleMap);
 
         LimsCohortConfig cohortConfig =
-                PatientReportUtils.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+                PatientReportUtils.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
 
         assertEquals("this is a test summary", summaryModel.findSummaryForSample("sample", cohortConfig));
         assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("sample2", cohortConfig));

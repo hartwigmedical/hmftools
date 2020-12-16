@@ -90,7 +90,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
         }
 
-        if (cohort.requireSubmissionInformation()) {
+        if (cohort.requireHospitalPersonsRequester()) {
             div.add(createContentParagraphTwice("The project name of sample is: ",
                     sampleReport.projectName(),
                     " and the submission ID is ",

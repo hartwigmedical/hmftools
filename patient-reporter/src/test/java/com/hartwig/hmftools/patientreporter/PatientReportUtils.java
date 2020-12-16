@@ -14,7 +14,7 @@ public final class PatientReportUtils {
     public static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
             boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
             boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
-            boolean requirePatientIdForPdfName, boolean requireSubmissionInformation, boolean requireAdditionalInformationForSidePanel) {
+            boolean requireAdditionalInformationForSidePanel) {
         return ImmutableLimsCohortConfig.builder()
                 .cohortId(cohortId)
                 .sampleContainsHospitalCenterId(sampleContainsHospitalCenterId)
@@ -26,8 +26,6 @@ public final class PatientReportUtils {
                 .requireHospitalPAId(requireHospitalPAId)
                 .requireHospitalPersonsStudy(requireHospitalPersonsStudy)
                 .requireHospitalPersonsRequester(requireHospitalPersonsRequester)
-                .requirePatientIdForPdfName(requirePatientIdForPdfName)
-                .requireSubmissionInformation(requireSubmissionInformation)
                 .requireAdditionalInformationForSidePanel(requireAdditionalInformationForSidePanel)
                 .build();
     }

@@ -72,8 +72,6 @@ public class ReportingDbTest {
                     false,
                     true,
                     false,
-                    false,
-                    false,
                     false);
 
             ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
@@ -96,8 +94,6 @@ public class ReportingDbTest {
                 true,
                 true,
                 false,
-                false,
-                false,
                 true)));
         assertFalse(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CPCT",
                 true,
@@ -108,8 +104,6 @@ public class ReportingDbTest {
                 false,
                 false,
                 true,
-                false,
-                false,
                 false,
                 false)));
         assertTrue(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CORE",
@@ -122,8 +116,6 @@ public class ReportingDbTest {
                 true,
                 false,
                 true,
-                true,
-                true,
                 true)));
         assertFalse(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CORE",
                 true,
@@ -135,8 +127,6 @@ public class ReportingDbTest {
                 true,
                 false,
                 true,
-                true,
-                true,
                 true)));
         assertTrue(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CORE",
                 true,
@@ -147,8 +137,6 @@ public class ReportingDbTest {
                 true,
                 true,
                 false,
-                true,
-                true,
                 true,
                 true)));
     }

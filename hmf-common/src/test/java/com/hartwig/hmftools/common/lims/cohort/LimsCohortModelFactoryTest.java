@@ -31,8 +31,6 @@ public class LimsCohortModelFactoryTest {
         assertFalse(cohortConfigData.requireHospitalPAId());
         assertTrue(cohortConfigData.requireHospitalPersonsStudy());
         assertFalse(cohortConfigData.requireHospitalPersonsRequester());
-        assertFalse(cohortConfigData.requirePatientIdForPdfName());
-        assertFalse(cohortConfigData.requireSubmissionInformation());
         assertFalse(cohortConfigData.requireAdditionalInformationForSidePanel());
     }
 }

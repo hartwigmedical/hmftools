@@ -61,8 +61,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
 
         AnalysedPatientReport colo829Report =
@@ -84,8 +82,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
         AnalysedPatientReport colo829Report =
                 ExampleAnalysisTestFactory.buildCOLO829("PNT00012345T", true, COLO_COMMENT_STRING_CORRECTED, cohortConfig);
@@ -105,8 +101,6 @@ public class CFReportWriterTest {
                 false,
                 false,
                 true,
-                false,
-                false,
                 false,
                 false);
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_GERMLINE",
@@ -135,8 +129,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_NO_TUMOR",
                 false,
@@ -163,8 +155,6 @@ public class CFReportWriterTest {
                 false,
                 false,
                 true,
-                false,
-                false,
                 false,
                 false);
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.buildWithCOLO829Data("PNT00012345T_INSUFFICIENT_TUMOR",
@@ -193,8 +183,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_FULL",
                 FULL_TABLES_COMMENT_STRING,
@@ -207,7 +195,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCORESample() throws IOException {
         LimsCohortConfig cohortConfig =
-                PatientReportUtils.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+                PatientReportUtils.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
         AnalysedPatientReport patientReport =
                 ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CORE01_FULL", null, cohortConfig);
 
@@ -218,7 +206,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForWIDESample() throws IOException {
         LimsCohortConfig cohortConfig =
-                PatientReportUtils.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+                PatientReportUtils.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("WIDE01_FULL",
                 FULL_TABLES_COMMENT_STRING,
                 cohortConfig);
@@ -237,8 +225,6 @@ public class CFReportWriterTest {
                 true,
                 true,
                 true,
-                true,
-                false,
                 true,
                 false,
                 true);
@@ -263,8 +249,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_NO_TUMOR",
                 FULL_TABLES_COMMENT_STRING,
@@ -287,8 +271,6 @@ public class CFReportWriterTest {
                 false,
                 false,
                 true,
-                false,
-                false,
                 false,
                 false);
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_INSUFFICIENT_TUMOR",
@@ -313,8 +295,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
         generateQCFailCPCTReport("CPCT01",
                 Lims.NOT_PERFORMED_STRING,
@@ -337,8 +317,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
         generateQCFailCPCTReport("CPCT01",
                 Lims.NOT_PERFORMED_STRING,
@@ -359,8 +337,6 @@ public class CFReportWriterTest {
                 true,
                 true,
                 true,
-                true,
-                false,
                 true,
                 false,
                 true);
@@ -385,8 +361,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
         generateQCFailCPCTReport("CPCT02", "60%", null, QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL, cohortConfig);
     }
@@ -402,8 +376,6 @@ public class CFReportWriterTest {
                 false,
                 false,
                 true,
-                false,
-                false,
                 false,
                 false);
         generateQCFailCPCTReport("CPCT03",
@@ -427,8 +399,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
         generateQCFailCPCTReport("CPCT04",
                 "22%",
@@ -451,8 +421,6 @@ public class CFReportWriterTest {
                 false,
                 true,
                 false,
-                false,
-                false,
                 false);
         generateQCFailCPCTReport("CPCT05",
                 "15%",
@@ -466,7 +434,7 @@ public class CFReportWriterTest {
     @Test
     public void canGenerateInsufficientTCPAfterShallowReportCORE() throws IOException {
         LimsCohortConfig cohortConfig =
-                PatientReportUtils.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+                PatientReportUtils.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
         generateQCFailCPCTReport("CORE01",
                 "15%",
                 null,
@@ -479,7 +447,7 @@ public class CFReportWriterTest {
     @Test
     public void canGenerateInsufficientTCPAfterShallowReportWIDE() throws IOException {
         LimsCohortConfig cohortConfig =
-                PatientReportUtils.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+                PatientReportUtils.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
         generateQCFailCPCTReport("WIDE01",
                 "15%",
                 null,

@@ -71,8 +71,6 @@ public final class LimsTestUtil {
                 .requireHospitalPAId(false)
                 .requireHospitalPersonsStudy(false)
                 .requireHospitalPersonsRequester(false)
-                .requirePatientIdForPdfName(false)
-                .requireSubmissionInformation(false)
                 .requireAdditionalInformationForSidePanel(false);
     }
 }

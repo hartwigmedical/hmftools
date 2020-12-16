@@ -101,8 +101,6 @@ public final class LimsFactory {
                         .requireHospitalPAId(false)
                         .requireHospitalPersonsStudy(false)
                         .requireHospitalPersonsRequester(false)
-                        .requirePatientIdForPdfName(false)
-                        .requireSubmissionInformation(false)
                         .requireAdditionalInformationForSidePanel(false)
                         .build();
             }

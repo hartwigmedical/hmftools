@@ -30,9 +30,5 @@ public abstract class LimsCohortConfig {
 
     public abstract boolean requireHospitalPersonsRequester();
 
-    public abstract boolean requirePatientIdForPdfName();
-
-    public abstract boolean requireSubmissionInformation();
-
     public abstract boolean requireAdditionalInformationForSidePanel();
 }
