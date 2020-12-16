@@ -15,7 +15,10 @@ public abstract class LimsCohortModel {
     protected abstract Map<String, LimsCohortConfig> limsCohortMap();
 
     @Nullable
-    public LimsCohortConfig queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
+    public LimsCohortConfig queryCohortData(@Nullable String cohortString, @NotNull String sampleId, @NotNull String sampleIdMetadata) {
+        if (sampleIdMetadata.startsWith("COLO")) {
+            cohortString = "COLO";
+        }
         if (cohortString == null) {
             throw new IllegalStateException("No cohort string present in LIMS for sample '{}'" + sampleId);
         } else {
@@ -23,7 +26,7 @@ public abstract class LimsCohortModel {
             if (cohortConfigData == null) {
                 throw new IllegalStateException("No cohort config present for cohort '{}'" + cohortString);
             } else {
-                if (sampleId.startsWith(cohortConfigData.cohortId())) {
+                if (sampleId.startsWith(cohortConfigData.cohortId()) || sampleIdMetadata.startsWith(cohortConfigData.cohortId())) {
                     return cohortConfigData;
                 } else {
                     throw new IllegalStateException(

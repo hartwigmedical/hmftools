@@ -89,7 +89,8 @@ public final class LimsFactory {
 
             @Nullable
             @Override
-            public LimsCohortConfig queryCohortData(@Nullable final String cohortString, @NotNull final String sampleId) {
+            public LimsCohortConfig queryCohortData(@Nullable final String cohortString, @NotNull final String sampleId,
+                    @NotNull final String tumorSampleId) {
                 return ImmutableLimsCohortConfig.builder()
                         .cohortId(sampleId)
                         .sampleContainsHospitalCenterId(false)

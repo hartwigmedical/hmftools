@@ -46,7 +46,7 @@ public final class SampleReportFactory {
 
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
-        LimsCohortConfig cohortConfig = lims.cohortConfig(tumorSampleBarcode);
+        LimsCohortConfig cohortConfig = lims.cohortConfig(tumorSampleBarcode, tumorSampleId);
         if (cohortConfig == null) {
             throw new IllegalStateException(
                     "Cohort not configured in LIMS for sample '" + tumorSampleId + "' with barcode " + tumorSampleBarcode);

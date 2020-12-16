@@ -8,6 +8,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.LimsTestUtil;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class LimsCohortModelTest {
@@ -19,7 +20,7 @@ public class LimsCohortModelTest {
         cohortMap.put("DRUP", cohortConfigData);
 
         LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
-        assertEquals(cohortConfigData, model.queryCohortData("DRUP", "DRUP01"));
+        assertEquals(cohortConfigData, model.queryCohortData("DRUP", "DRUP01", Strings.EMPTY));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -29,8 +30,8 @@ public class LimsCohortModelTest {
         cohortMap.put("DRUP", cohortConfigData);
 
         LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
-        assertNull(model.queryCohortData(null, "DRUP01"));
-        assertNull(model.queryCohortData("CPCT", "DRUP01"));
-        assertNull(model.queryCohortData("DRUP", "CPCT01"));
+        assertNull(model.queryCohortData(null, "DRUP01", Strings.EMPTY));
+        assertNull(model.queryCohortData("CPCT", "DRUP01", Strings.EMPTY));
+        assertNull(model.queryCohortData("DRUP", "CPCT01", Strings.EMPTY));
     }
 }

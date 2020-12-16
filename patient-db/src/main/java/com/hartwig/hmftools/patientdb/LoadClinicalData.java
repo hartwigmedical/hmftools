@@ -62,6 +62,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -200,7 +201,7 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsCohortConfig cohort = lims.cohortConfig(sampleBarcode);
+            LimsCohortConfig cohort = lims.cohortConfig(sampleBarcode, Strings.EMPTY);
 
             if (cohort != null) {
                 String patientId = lims.patientId(sampleBarcode);
@@ -440,7 +441,7 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode(), Strings.EMPTY);
                 assert cohort != null;
 
                 if (cohort.cohortId().equals("WIDE")) {
@@ -466,7 +467,7 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode(), Strings.EMPTY);
                 assert cohort != null;
 
                 if (cohort.cohortId().equals("CORE")) {
