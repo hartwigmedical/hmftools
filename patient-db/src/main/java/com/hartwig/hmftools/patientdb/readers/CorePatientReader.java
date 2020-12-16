@@ -13,10 +13,14 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CorePatientReader {
+
+    private static final Logger LOGGER = LogManager.getLogger(CorePatientReader.class);
 
     @NotNull
     private final PrimaryTumorCurator primaryTumorCurator;
@@ -29,7 +33,7 @@ public class CorePatientReader {
     public Patient read(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
         return new Patient(patientIdentifier,
-                toBaselineData(primaryTumorCurator.search(limsPrimaryTumorLocation)),
+                toBaselineData(limsPrimaryTumorLocation),
                 noPreTreatmentData(),
                 sequencedSamples,
                 Lists.newArrayList(),
@@ -41,7 +45,14 @@ public class CorePatientReader {
     }
 
     @NotNull
-    private static BaselineData toBaselineData(@NotNull CuratedPrimaryTumor curatedPrimaryTumor) {
+    private BaselineData toBaselineData(@Nullable String limsPrimaryTumorLocation) {
+
+        CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(limsPrimaryTumorLocation);
+        if (curatedPrimaryTumor.location() == null && limsPrimaryTumorLocation != null
+                && !limsPrimaryTumorLocation.isEmpty()) {
+            LOGGER.warn("Could not curate CORE primary tumor '{}'", limsPrimaryTumorLocation);
+        }
+
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)

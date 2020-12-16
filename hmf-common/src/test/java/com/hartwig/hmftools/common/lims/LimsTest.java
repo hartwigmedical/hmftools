@@ -116,11 +116,11 @@ public class LimsTest {
 
         assertEquals(hospitalPatientId, lims.hospitalPatientId(TUMOR_SAMPLE_BARCODE));
         assertEquals(hospitalPathologySampleId, lims.hospitalPathologySampleId(TUMOR_SAMPLE_BARCODE));
-        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
 
-        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE));
-        assertEquals(reportGermlineVariants, lims.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
-        assertEquals(reportViralInsertions, lims.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
+        assertEquals(reportGermlineVariants, lims.reportGermlineVariants(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
+        assertEquals(reportViralInsertions, lims.reportViralInsertions(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
     }
 
     @Test
@@ -144,9 +144,9 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPatientId(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPathologySampleId(doesNotExistSample));
-        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(doesNotExistSample));
-        assertFalse(lims.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
-        assertFalse(lims.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+        assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(doesNotExistSample, Strings.EMPTY));
+        assertFalse(lims.reportGermlineVariants(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
+        assertFalse(lims.reportViralInsertions(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
     }
 
     @Test
@@ -189,7 +189,7 @@ public class LimsTest {
 
         Lims emptyHospitalModel = buildTestLimsWithWithHospitalModel(sample, ImmutableHospitalModel.builder().build());
 
-        HospitalContactData emptyContact = emptyHospitalModel.hospitalContactData(TUMOR_SAMPLE_BARCODE);
+        HospitalContactData emptyContact = emptyHospitalModel.hospitalContactData(TUMOR_SAMPLE_BARCODE, Strings.EMPTY);
         assertEquals(Lims.NOT_AVAILABLE_STRING, emptyContact.hospitalPI());
         assertEquals(Lims.NOT_AVAILABLE_STRING, emptyContact.requesterName());
         assertEquals(Lims.NOT_AVAILABLE_STRING, emptyContact.requesterEmail());
@@ -202,7 +202,7 @@ public class LimsTest {
                 .build();
 
         Lims withHospitalModel = buildTestLimsWithWithHospitalModel(sample, testHospitalModel);
-        HospitalContactData contact = withHospitalModel.hospitalContactData(TUMOR_SAMPLE_BARCODE);
+        HospitalContactData contact = withHospitalModel.hospitalContactData(TUMOR_SAMPLE_BARCODE, Strings.EMPTY);
         assertEquals("Name", contact.hospitalName());
         assertEquals("Zip City", contact.hospitalAddress());
     }
@@ -223,9 +223,9 @@ public class LimsTest {
         Lims limsTrue = buildTestLimsWithSample(sampleDataTrue);
         Lims limsFalse = buildTestLimsWithSample(sampleDataFalse);
 
-        assertTrue(limsTrue.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+        assertTrue(limsTrue.reportViralInsertions(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
 
-        assertFalse(limsFalse.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+        assertFalse(limsFalse.reportViralInsertions(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -237,7 +237,7 @@ public class LimsTest {
                 .build();
         Lims limsTrue = buildTestLimsWithSample(sampleDataTrue);
 
-        limsTrue.reportViralInsertions("does not exist");
+        limsTrue.reportViralInsertions("does not exist", Strings.EMPTY);
 
     }
 
@@ -271,10 +271,10 @@ public class LimsTest {
         Lims limsWIDEFalse = buildTestLimsWithSample(sampleDataWIDEFalse);
 
 
-        assertTrue(limsCPCTTrue.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
-        assertFalse(limsCPCTFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
-        assertTrue(limsWIDETrue.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
-        assertFalse(limsWIDEFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
+        assertTrue(limsCPCTTrue.reportGermlineVariants(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
+        assertFalse(limsCPCTFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
+        assertTrue(limsWIDETrue.reportGermlineVariants(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
+        assertFalse(limsWIDEFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE, Strings.EMPTY));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -286,7 +286,7 @@ public class LimsTest {
                 .build();
         Lims limsCPCTTrue = buildTestLimsWithSample(sampleDataCPCTTrue);
 
-        limsCPCTTrue.reportGermlineVariants("does not exist");
+        limsCPCTTrue.reportGermlineVariants("does not exist", Strings.EMPTY);
     }
 
     @Test

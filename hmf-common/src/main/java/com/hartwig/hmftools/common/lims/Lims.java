@@ -263,10 +263,10 @@ public class Lims {
     }
 
     @NotNull
-    public HospitalContactData hospitalContactData(@NotNull String sampleBarcode) {
+    public HospitalContactData hospitalContactData(@NotNull String sampleBarcode, @NotNull String tumorSampleId) {
         String sampleId = sampleId(sampleBarcode);
         HospitalContactData data = hospitalModel.queryHospitalData(sampleId,
-                cohortConfig(sampleBarcode, Strings.EMPTY),
+                cohortConfig(sampleBarcode, tumorSampleId),
                 requesterName(sampleBarcode),
                 requesterEmail(sampleBarcode));
 
@@ -305,23 +305,23 @@ public class Lims {
     }
 
     @NotNull
-    public LimsGermlineReportingLevel germlineReportingChoice(@NotNull String sampleBarcode) {
+    public LimsGermlineReportingLevel germlineReportingChoice(@NotNull String sampleBarcode, @NotNull String sampleId) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String germlineReportingLevelString = sampleData.germlineReportingLevel();
-            return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode),
+            return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode, sampleId),
                     germlineReportingLevelString,
                     sampleId(sampleBarcode),
-                    cohortConfig(sampleBarcode, Strings.EMPTY)) : LimsGermlineReportingLevel.NO_REPORTING;
+                    cohortConfig(sampleBarcode, sampleId)) : LimsGermlineReportingLevel.NO_REPORTING;
         } else {
             return LimsGermlineReportingLevel.NO_REPORTING;
         }
     }
 
     @VisibleForTesting
-    boolean reportGermlineVariants(@NotNull String sampleBarcode) {
+    boolean reportGermlineVariants(@NotNull String sampleBarcode, @NotNull String sampleId) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        LimsCohortConfig cohort = cohortConfig(sampleBarcode, Strings.EMPTY);
+        LimsCohortConfig cohort = cohortConfig(sampleBarcode, sampleId);
 
         if (sampleData != null && cohort != null) {
             if (sampleData.reportGermlineVariants()) {
@@ -342,9 +342,9 @@ public class Lims {
         }
     }
 
-    public boolean reportViralInsertions(@NotNull String sampleBarcode) {
+    public boolean reportViralInsertions(@NotNull String sampleBarcode, @NotNull String sampleId) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        LimsCohortConfig cohort = cohortConfig(sampleBarcode, Strings.EMPTY);
+        LimsCohortConfig cohort = cohortConfig(sampleBarcode, sampleId);
 
         if (sampleData != null && cohort != null) {
             if (sampleData.reportViralInsertions()) {
