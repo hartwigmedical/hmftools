@@ -100,4 +100,25 @@ public enum HumanChromosome implements Chromosome {
         }
         return true;
     }
+
+    public static boolean lowerChromosome(final String chr, final String otherChr)
+    {
+        return chromosomeRank(chr) < chromosomeRank(otherChr);
+    }
+
+    public static int chromosomeRank(final String chromosome)
+    {
+        if(!HumanChromosome.contains(chromosome))
+            return -1;
+
+        if(chromosome.equalsIgnoreCase("X") || chromosome.equalsIgnoreCase("chrX"))
+            return 23;
+        else if(chromosome.equalsIgnoreCase("Y") || chromosome.equalsIgnoreCase("chrY"))
+            return 24;
+        else if(chromosome.equalsIgnoreCase("MT") || chromosome.equalsIgnoreCase("chrMT"))
+            return 25;
+        else
+            return Integer.parseInt(chromosome);
+    }
+
 }

@@ -304,7 +304,7 @@ public class SampleFitter
 
         if(mDbAccess != null && mUploadToDb)
         {
-            SIG_LOGGER.info("sample({}) writing {} allocations to database", sampleId, sigAllocations.size());
+            SIG_LOGGER.debug("sample({}) writing {} allocations to database", sampleId, sigAllocations.size());
             mDbAccess.writeSignatures(sampleId, sigAllocations);
         }
     }

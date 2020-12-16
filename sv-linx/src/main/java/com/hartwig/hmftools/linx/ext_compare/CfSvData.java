@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.lowerChromosome;
 import static com.hartwig.hmftools.linx.ext_compare.CfBreakendData.NO_ID;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.CF_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.DIFF;

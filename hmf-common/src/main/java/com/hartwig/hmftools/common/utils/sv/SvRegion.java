@@ -67,6 +67,4 @@ public class SvRegion
     {
         return (innerStart < innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
     }
-
-
 }
