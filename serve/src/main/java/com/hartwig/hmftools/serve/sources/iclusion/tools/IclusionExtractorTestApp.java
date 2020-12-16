@@ -91,6 +91,7 @@ public class IclusionExtractorTestApp {
         if (!fusionCache.loadFile(knownFusionFilePath)) {
             throw new IllegalStateException("Could not load known fusion cache from " + knownFusionFilePath);
         }
+        LOGGER.debug("Read {} known fusions from {}", fusionCache.getData().size(), knownFusionFilePath);
 
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iclusionTrialTsv);
 

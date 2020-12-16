@@ -86,6 +86,23 @@ final class FilterFactory {
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_K558del"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_W557del"));
 
+        // Not sure if this fusion should be swapped, but if not then it would never be reported so can filter.
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "RET", "RET-TPCN1 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "TPCN1", "RET-TPCN1 fusion"));
+
+        // Fusions that are not part of fusion knowledgebase can be filtered out.
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "ERBB4", "ERBB4 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "NOTCH1", "NOTCH1 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "NOTCH2", "NOTCH2 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "AKT3", "AKT3 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "ESR1", "ESR1-YAP1 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "YAP1", "ESR1-YAP1 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "FOS", "TRUNCATING FUSION"));
+
+        // Evidence that is inconsistent with driver gene panel
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "UGT1A1", "UGT1A1 biallelic inactivation"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "TPMT", "TPMT biallelic inactivation"));
+
         // exon 12 does not exist in canonical transcript of NPM1
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NPM1", "EXON 12 MUTATION"));
 
