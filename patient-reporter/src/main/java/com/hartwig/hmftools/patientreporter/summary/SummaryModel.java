@@ -26,7 +26,7 @@ public class SummaryModel {
         boolean sampleHasSummary = samplePresentInSummaries(sample);
 
         if (!sampleHasSummary && cohort.reportConclusion()) {
-            LOGGER.warn("Could not find a summary for WIDE/CORE sample: {}", sample);
+            LOGGER.warn("Could not find a summary for sample: {}", sample);
         }
         return sampleHasSummary ? sampleToSummaryMap.get(sample) : Strings.EMPTY;
     }
