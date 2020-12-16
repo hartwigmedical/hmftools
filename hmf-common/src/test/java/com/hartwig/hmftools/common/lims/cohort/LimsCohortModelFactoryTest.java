@@ -2,10 +2,8 @@ package com.hartwig.hmftools.common.lims.cohort;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
@@ -14,18 +12,17 @@ import org.junit.Test;
 
 public class LimsCohortModelFactoryTest {
 
-    private static final String LIMS_DIRECTORY = Resources.getResource("lims/cohort").getPath();
+    private static final String COHORT_MODEL_TSV = Resources.getResource("lims/cohort/cohort.tsv").getPath();
 
     @Test
     public void canReadCohortConfigFile() throws IOException {
-        LimsCohortModel cohortModel = LimsCohortModelFactory.read(LIMS_DIRECTORY + File.separator + "cohort.tsv");
+        LimsCohortModel cohortModel = LimsCohortModelFactory.read(COHORT_MODEL_TSV);
 
-        assertNotNull(cohortModel);
         assertEquals(1, cohortModel.limsCohortMap().size());
 
-        LimsCohortConfig cohortConfigData = cohortModel.limsCohortMap().get("CPCT");
-        assertEquals("CPCT", cohortConfigData.cohortId());
-        assertTrue(cohortConfigData.hospitalCenterId());
+        LimsCohortConfig cohortConfigData = cohortModel.limsCohortMap().get("TEST");
+        assertEquals("TEST", cohortConfigData.cohortId());
+        assertTrue(cohortConfigData.sampleContainsHospitalCenterId());
         assertFalse(cohortConfigData.reportGermline());
         assertFalse(cohortConfigData.reportGermlineFlag());
         assertFalse(cohortConfigData.reportConclusion());

@@ -5,7 +5,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -243,34 +242,12 @@ public class Lims {
         return NOT_AVAILABLE_STRING;
     }
 
-    @NotNull
+    @Nullable
     public LimsCohortConfig cohortConfig(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        LimsCohortConfig data;
         String cohortString = sampleData != null ? sampleData.cohort() : null;
 
-        String sampleId = sampleId(sampleBarcode);
-        data = limsCohortModel.queryCohortData(cohortString, sampleId);
-
-        if (data == null) {
-            data = ImmutableLimsCohortConfig.builder()
-                    .cohortId(Strings.EMPTY)
-                    .hospitalCenterId(false)
-                    .reportGermline(false)
-                    .reportGermlineFlag(false)
-                    .reportConclusion(false)
-                    .reportViral(false)
-                    .requireHospitalId(false)
-                    .requireHospitalPAId(false)
-                    .requireHospitalPersonsStudy(false)
-                    .requireHospitalPersonsRequester(false)
-                    .requirePatientIdForPdfName(false)
-                    .requireSubmissionInformation(false)
-                    .requireAdditionalInformationForSidePanel(false)
-                    .build();
-        }
-
-        return data;
+        return limsCohortModel.queryCohortData(cohortString, sampleId(sampleBarcode));
     }
 
     @Nullable
@@ -288,9 +265,9 @@ public class Lims {
     public HospitalContactData hospitalContactData(@NotNull String sampleBarcode) {
         String sampleId = sampleId(sampleBarcode);
         HospitalContactData data = hospitalModel.queryHospitalData(sampleId,
+                cohortConfig(sampleBarcode),
                 requesterName(sampleBarcode),
-                requesterEmail(sampleBarcode),
-                cohortConfig(sampleBarcode));
+                requesterEmail(sampleBarcode));
 
         if (data == null) {
             LOGGER.warn("Could not find hospital data for sample '{}' with barcode '{}'", sampleId, sampleBarcode);
@@ -340,11 +317,12 @@ public class Lims {
         }
     }
 
-    public boolean reportGermlineVariants(@NotNull String sampleBarcode) {
+    @VisibleForTesting
+    boolean reportGermlineVariants(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        LimsCohortConfig cohort = cohortConfig(sampleBarcode);
 
-        if (sampleData != null) {
-            LimsCohortConfig cohort = cohortConfig(sampleBarcode);
+        if (sampleData != null && cohort != null) {
             if (sampleData.reportGermlineVariants()) {
                 if (cohort.reportGermline()) {
                     LOGGER.warn("Consent of report germline variants is true, but must be false at study CPCT/DRUP for sample '{}'",
@@ -365,9 +343,9 @@ public class Lims {
 
     public boolean reportViralInsertions(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        LimsCohortConfig cohort = cohortConfig(sampleBarcode);
 
-        if (sampleData != null) {
-            LimsCohortConfig cohort = cohortConfig(sampleBarcode);
+        if (sampleData != null && cohort != null) {
             if (sampleData.reportViralInsertions()) {
                 if (cohort.reportViral()) {
                     LOGGER.warn("Consent of viral insertions is true, but must be false at study CPCT/DRUP for sample '{}'",

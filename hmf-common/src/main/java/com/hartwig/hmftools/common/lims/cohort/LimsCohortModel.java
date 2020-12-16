@@ -14,25 +14,25 @@ import org.jetbrains.annotations.Nullable;
 public abstract class LimsCohortModel {
 
     @NotNull
-    abstract Map<String, LimsCohortConfig> limsCohortMap();
+    protected abstract Map<String, LimsCohortConfig> limsCohortMap();
 
     private static final Logger LOGGER = LogManager.getLogger(LimsCohortModel.class);
 
     @Nullable
     public LimsCohortConfig queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
         if (cohortString == null) {
-            LOGGER.error("Could not resolve LIMS cohort string: '" + cohortString + "'");
+            LOGGER.error("No cohort string present in LIMS for sample '{}'", sampleId);
             return null;
         } else {
             LimsCohortConfig cohortConfigData = limsCohortMap().get(cohortString);
             if (cohortConfigData == null) {
-                LOGGER.warn("No cohort map is present for cohortString {}", cohortString);
+                LOGGER.warn("No cohort config present for cohort '{}'", cohortString);
                 return null;
             } else {
                 if (sampleId.startsWith(cohortConfigData.cohortId())) {
                     return cohortConfigData;
                 } else {
-                    LOGGER.error("Cohort " + cohortConfigData.cohortId() + " does match with sampleId " +  sampleId);
+                    LOGGER.error("Cohort '{}' does not seem to match with sample '{}'", cohortConfigData.cohortId(), sampleId);
                     return null;
                 }
             }

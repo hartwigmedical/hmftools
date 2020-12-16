@@ -1,2 +1,2 @@
-Cohort ID	hospitalIdCentra	Report_germline	Report_germline_flag	Report_conclusion	Report_viral	Require_hospital_ID	Require_hospital_PA_ID	personsStudy	personsrequester	outputFile	submission	sidePanelInfo
-CPCT	TRUE	FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	TRUE	FALSE	FALSE	FALSE	FALSE
+cohortId	sampleContainsHospitalCenterId	reportGermline	reportGermlineFlag	reportConclusion	reportViral	requireHospitalId	requireHospitalPAId	requireHospitalPersonsStudy	requireHospitalPersonsRequester	requirePatientIdForPdfName	requireSubmissionInformation	requireAdditionalInformationForSidePanel
+TEST	TRUE	FALSE	FALSE	FALSE	FALSE	FALSE	FALSE	TRUE	FALSE	FALSE	FALSE	FALSE

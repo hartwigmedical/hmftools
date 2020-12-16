@@ -203,7 +203,7 @@ public final class LoadClinicalData {
             String sampleId = lims.sampleId(sampleBarcode);
             LimsCohortConfig cohort = lims.cohortConfig(sampleBarcode);
 
-            if (!cohort.cohortId().isEmpty()) {
+            if (cohort != null) {
                 String patientId = lims.patientId(sampleBarcode);
                 SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
@@ -442,6 +442,7 @@ public final class LoadClinicalData {
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
                 LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
+                assert cohort != null;
 
                 if (cohort.cohortId().equals("WIDE")) {
                     String patientId = entry.getKey();
@@ -467,6 +468,7 @@ public final class LoadClinicalData {
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
                 LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
+                assert cohort != null;
 
                 if (cohort.cohortId().equals("CORE")) {
                     String patientId = entry.getKey();

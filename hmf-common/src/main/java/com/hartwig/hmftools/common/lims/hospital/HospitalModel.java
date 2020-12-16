@@ -5,7 +5,6 @@ import java.util.Map;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,14 +33,14 @@ public abstract class HospitalModel {
     abstract Map<String, String> sampleToHospitalMapping();
 
     @Nullable
-    public HospitalContactData queryHospitalData(@NotNull String sampleId, @NotNull String coreRequesterName,
-            @NotNull String coreRequesterEmail, @NotNull LimsCohortConfig cohort) {
-        String hospitalId = getHospitalIdForSample(sampleId, cohort);
-        if (hospitalId == null) {
+    public HospitalContactData queryHospitalData(@NotNull String sampleId, @Nullable LimsCohortConfig cohort,
+            @NotNull String coreRequesterName, @NotNull String coreRequesterEmail) {
+        if (cohort == null) {
             return null;
         }
 
-        if (cohort.cohortId().equals(Strings.EMPTY)) {
+        String hospitalId = getHospitalIdForSample(sampleId, cohort);
+        if (hospitalId == null) {
             return null;
         }
 
@@ -93,8 +92,7 @@ public abstract class HospitalModel {
         if (sampleToHospitalMapping().containsKey(sampleId)) {
             return sampleToHospitalMapping().get(sampleId);
         } else {
-
-            if (cohort.hospitalCenterId()) {
+            if (cohort.sampleContainsHospitalCenterId()) {
                 // We assume all these projects follow a structure like CPCT##<hospitalId><identifier>
                 return sampleId.substring(6, 8);
             } else {

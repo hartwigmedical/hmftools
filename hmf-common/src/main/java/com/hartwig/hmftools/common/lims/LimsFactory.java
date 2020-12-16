@@ -21,7 +21,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModelFactory;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
@@ -31,6 +32,7 @@ import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class LimsFactory {
 
@@ -70,23 +72,48 @@ public final class LimsFactory {
                 preLimsArrivalDates,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                hospitalModel, cohortModel);
+                hospitalModel,
+                cohortModel);
     }
 
     @NotNull
     public static Lims empty() {
+        LimsCohortModel alwaysDisabledCohortModel = new LimsCohortModel() {
+            @NotNull
+            @Override
+            protected Map<String, LimsCohortConfig> limsCohortMap() {
+                return Maps.newHashMap();
+            }
+
+            @Nullable
+            @Override
+            public LimsCohortConfig queryCohortData(@Nullable final String cohortString, @NotNull final String sampleId) {
+                return ImmutableLimsCohortConfig.builder()
+                        .cohortId(sampleId)
+                        .sampleContainsHospitalCenterId(false)
+                        .reportGermline(false)
+                        .reportGermlineFlag(false)
+                        .reportConclusion(false)
+                        .reportViral(false)
+                        .requireHospitalId(false)
+                        .requireHospitalPAId(false)
+                        .requireHospitalPersonsStudy(false)
+                        .requireHospitalPersonsRequester(false)
+                        .requirePatientIdForPdfName(false)
+                        .requireSubmissionInformation(false)
+                        .requireAdditionalInformationForSidePanel(false)
+                        .build();
+            }
+        };
+
         return new Lims(Maps.newHashMap(),
                 Maps.newHashMap(),
                 Maps.newHashMap(),
                 Maps.newHashMap(),
                 Sets.newHashSet(),
                 Sets.newHashSet(),
-                ImmutableHospitalModel.of(Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap()), ImmutableLimsCohortModel.of(Maps.newHashMap()));
+                ImmutableHospitalModel.builder().build(),
+                alwaysDisabledCohortModel);
     }
 
     @NotNull

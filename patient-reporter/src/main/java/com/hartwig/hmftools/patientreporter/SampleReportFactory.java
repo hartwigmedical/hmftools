@@ -46,12 +46,15 @@ public final class SampleReportFactory {
 
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
-        LimsCohortConfig cohortdata = lims.cohortConfig(tumorSampleBarcode);
+        LimsCohortConfig cohortConfig = lims.cohortConfig(tumorSampleBarcode);
+        if (cohortConfig == null) {
+            throw new IllegalStateException(
+                    "Cohort not configured in LIMS for sample '" + tumorSampleId + "' with barcode " + tumorSampleBarcode);
+        }
 
-        LOGGER.info("Cohort type of this sample is: {}", cohortdata.cohortId());
+        LOGGER.info("Cohort ID of this sample is: {}", cohortConfig.cohortId());
 
-        String hospitalPatientId =
-                checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), tumorSampleId, cohortdata);
+        String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), tumorSampleId, cohortConfig);
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
@@ -62,19 +65,19 @@ public final class SampleReportFactory {
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .shallowSeqPurityString(lims.purityShallowSeq(tumorSampleBarcode))
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
-                .cohort(lims.cohortConfig(tumorSampleBarcode))
+                .cohort(cohortConfig)
                 .projectName(lims.projectName(tumorSampleBarcode))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
                 .hospitalPatientId(hospitalPatientId)
-                .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohortdata))
+                .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohortConfig))
                 .build();
     }
 
     @VisibleForTesting
     static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull String sampleId,
-            @NotNull LimsCohortConfig cohortdata) {
-        if (cohortdata.requireHospitalId()) {
+            @NotNull LimsCohortConfig cohortConfig) {
+        if (cohortConfig.requireHospitalId()) {
             if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
                 LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
             }

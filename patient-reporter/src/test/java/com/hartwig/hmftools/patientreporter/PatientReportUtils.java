@@ -11,13 +11,13 @@ public final class PatientReportUtils {
     }
 
     @NotNull
-    public static LimsCohortConfig buildTestCohortModel(@NotNull String cohortId, boolean hospitalCenterId, boolean reportGermline,
-            boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
+    public static LimsCohortConfig buildTestCohortModel(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
+            boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
             boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
             boolean requirePatientIdForPdfName, boolean requireSubmissionInformation, boolean requireAdditionalInformationForSidePanel) {
         return ImmutableLimsCohortConfig.builder()
                 .cohortId(cohortId)
-                .hospitalCenterId(hospitalCenterId)
+                .sampleContainsHospitalCenterId(sampleContainsHospitalCenterId)
                 .reportGermline(reportGermline)
                 .reportGermlineFlag(reportGermlineFlag)
                 .reportConclusion(reportConclusion)

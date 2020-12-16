@@ -12,7 +12,7 @@ public abstract class LimsCohortConfig {
     @NotNull
     public abstract String cohortId();
 
-    public abstract boolean hospitalCenterId();
+    public abstract boolean sampleContainsHospitalCenterId();
 
     public abstract boolean reportGermline();
 
