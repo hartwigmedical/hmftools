@@ -45,6 +45,16 @@ public class GeneLevelExtractorTest {
     }
 
     @Test
+    public void pickEventClassificationOnConflict() {
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "KIT"));
+
+        GeneLevelAnnotation conflictingGeneLevelEvent = geneLevelExtractor.extract("STK11", EventType.GENE_LEVEL, "STK11 positive");
+        assertNotNull(conflictingGeneLevelEvent);
+        assertEquals("STK11", conflictingGeneLevelEvent.gene());
+        assertEquals(GeneLevelEvent.ACTIVATION, conflictingGeneLevelEvent.event());
+    }
+
+    @Test
     public void canExtractGeneLevelEventGeneral() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET"));
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("STK11", EventType.GENE_LEVEL, "Truncating Mutations");
@@ -97,7 +107,8 @@ public class GeneLevelExtractorTest {
 
     @NotNull
     private static GeneLevelExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new GeneLevelExtractor(V37_GENE_CHECKER, V37_GENE_CHECKER,
+        return new GeneLevelExtractor(V37_GENE_CHECKER,
+                V37_GENE_CHECKER,
                 driverGenes,
                 Sets.newHashSet("positive", "activating mutation", "act mut"),
                 Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"));

@@ -43,6 +43,7 @@ final class FilterFactory {
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("NOTCH3", "ACTIVATING MUTATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("NOTCH4", "ACTIVATING MUTATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("NRG1", "ACTIVATING MUTATION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("FGFR4", "FUSION"));
     }
 
     private FilterFactory() {

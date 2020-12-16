@@ -9,10 +9,14 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class GeneLevelExtractor {
+
+    private static final Logger LOGGER = LogManager.getLogger(GeneLevelExtractor.class);
 
     @NotNull
     private final GeneChecker exomeGeneChecker;
@@ -64,12 +68,22 @@ public class GeneLevelExtractor {
             }
         }
 
+        GeneLevelEvent driverBasedEvent = determineGeneLevelEventFromDriverGenes(driverGenes, gene);
         // If we find both an activating and inactivating event, we assume the longest event is the most important.
         // This is to support cases where an activating keyphrase is a substring of inactivating keyphrase (eg "act mut" vs "inact mut".
         if (longestActivationMatchLength > 0 || longestInactivatingMatchLength > 0) {
-            return longestActivationMatchLength >= longestInactivatingMatchLength ? GeneLevelEvent.ACTIVATION : GeneLevelEvent.INACTIVATION;
+            GeneLevelEvent geneLevelEvent = longestActivationMatchLength >= longestInactivatingMatchLength
+                    ? GeneLevelEvent.ACTIVATION
+                    : GeneLevelEvent.INACTIVATION;
+            if (geneLevelEvent != driverBasedEvent && driverBasedEvent != GeneLevelEvent.ANY_MUTATION) {
+                LOGGER.warn("Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
+                        gene,
+                        geneLevelEvent,
+                        driverBasedEvent);
+            }
+            return geneLevelEvent;
         } else {
-            return determineGeneLevelEventFromDriverGenes(driverGenes, gene);
+            return driverBasedEvent;
         }
     }
 
