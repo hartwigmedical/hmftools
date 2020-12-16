@@ -30,8 +30,8 @@ public class LimsTest {
 
     private static final String REF_SAMPLE_BARCODE = "FR1234";
     private static final String TUMOR_SAMPLE_BARCODE = "FR1";
-    private static final String TUMOR_SAMPLE_ID = "HMF-Test-Sample";
-    private static final String TEST_COHORT = "HMF-Test";
+    private static final String TUMOR_SAMPLE_ID = "CPCT-HMF-Test-Sample";
+    private static final String TEST_COHORT = "CPCT";
     private static final String SUBMISSION = "ABCDEF123";
 
     @Test
@@ -224,9 +224,21 @@ public class LimsTest {
         Lims limsFalse = buildTestLimsWithSample(sampleDataFalse);
 
         assertTrue(limsTrue.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
-        assertFalse(limsTrue.reportViralInsertions("does not exist"));
 
         assertFalse(limsFalse.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void canExtractLimsViralInsertionsChoiceException() {
+        LimsJsonSampleData sampleDataTrue = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId(TUMOR_SAMPLE_ID)
+                .cohort(TEST_COHORT)
+                .reportViralInsertions(true)
+                .build();
+        Lims limsTrue = buildTestLimsWithSample(sampleDataTrue);
+
+        limsTrue.reportViralInsertions("does not exist");
+
     }
 
     @Test
@@ -258,12 +270,23 @@ public class LimsTest {
         Lims limsWIDETrue = buildTestLimsWithSample(sampleDataWIDETrue);
         Lims limsWIDEFalse = buildTestLimsWithSample(sampleDataWIDEFalse);
 
-        assertFalse(limsCPCTTrue.reportGermlineVariants("does not exist"));
 
         assertTrue(limsCPCTTrue.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
         assertFalse(limsCPCTFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
         assertTrue(limsWIDETrue.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
         assertFalse(limsWIDEFalse.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void canExtractLimsReportableGermlineVariantsException() {
+        LimsJsonSampleData sampleDataCPCTTrue = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId("CPCT02991111T")
+                .reportGermlineVariants(true)
+                .cohort("CPCT")
+                .build();
+        Lims limsCPCTTrue = buildTestLimsWithSample(sampleDataCPCTTrue);
+
+        limsCPCTTrue.reportGermlineVariants("does not exist");
     }
 
     @Test
