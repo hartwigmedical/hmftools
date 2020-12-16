@@ -53,6 +53,14 @@ class ActionableEvidenceFactory {
         DIRECTIONS_TO_IGNORE.add("Increased toxicity (hyperbilirubinemia)");
         DIRECTIONS_TO_IGNORE.add("Increased toxicity (haemolytic anemia)");
         DIRECTIONS_TO_IGNORE.add("Unknown");
+
+        // These directions only appear in evidence which lacks either level or drugs
+        DIRECTIONS_TO_IGNORE.add("Pathogenic");
+        DIRECTIONS_TO_IGNORE.add("Likely pathogenic");
+        DIRECTIONS_TO_IGNORE.add("Positive");
+        DIRECTIONS_TO_IGNORE.add("Negative");
+        DIRECTIONS_TO_IGNORE.add("Uncertain significance");
+        DIRECTIONS_TO_IGNORE.add("Better outcome");
     }
 
     @NotNull
