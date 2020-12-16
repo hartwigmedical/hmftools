@@ -51,7 +51,7 @@ public final class EventExtractorFactory {
                         knownFusionCache,
                         config.activatingGeneLevelKeyPhrases(),
                         config.inactivatingGeneLevelKeyPhrases()),
-                new CopyNumberExtractor(exomeGeneChecker),
+                new CopyNumberExtractor(exomeGeneChecker, driverGenes),
                 new FusionExtractor(fusionGeneChecker, knownFusionCache),
                 new SignatureExtractor(config.microsatelliteUnstableEvents(),
                         config.highTumorMutationalLoadEvents(),

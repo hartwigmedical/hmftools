@@ -100,8 +100,20 @@ final class FilterFactory {
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "FOS", "TRUNCATING FUSION"));
 
         // Evidence that is inconsistent with driver gene panel
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "CDK12", "CDK12 amplification"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "EPHA2", "EPHA2 amplification"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "FLT1", "FLT1 overexpression"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "RB1", "RB1 overexpression"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "UGT1A1", "UGT1A1 biallelic inactivation"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "TPMT", "TPMT biallelic inactivation"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "CCND3", "LOSS"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "FOXP1", "AMPLIFICATION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NOTCH1", "AMPLIFICATION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "TYMS", "UNDEREXPRESSION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VEGFA", "UNDEREXPRESSION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "JAK1", "OVEREXPRESSION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "RB1", "OVEREXPRESSION"));
 
         // exon 12 does not exist in canonical transcript of NPM1
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NPM1", "EXON 12 MUTATION"));
