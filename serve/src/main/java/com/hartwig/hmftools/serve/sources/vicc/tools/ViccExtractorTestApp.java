@@ -40,7 +40,8 @@ public class ViccExtractorTestApp {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccExtractorTestApp.class);
 
-    private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE = Sets.newHashSet(ViccSource.CIVIC, ViccSource.CGI);
+    private static final Set<ViccSource> VICC_SOURCES_TO_INCLUDE =
+            Sets.newHashSet(ViccSource.CIVIC, ViccSource.CGI, ViccSource.ONCOKB, ViccSource.JAX);
     private static final Integer MAX_VICC_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {

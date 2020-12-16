@@ -115,6 +115,11 @@ final class FilterFactory {
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "JAK1", "OVEREXPRESSION"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "RB1", "OVEREXPRESSION"));
 
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "MET", "MET  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "GATA1", "GATA1  over exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "NOTCH1", "NOTCH1  act mut"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "RB1", "RB1  positive"));
+
         // exon 12 does not exist in canonical transcript of NPM1
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NPM1", "EXON 12 MUTATION"));
 
