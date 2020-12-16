@@ -6,6 +6,8 @@ public enum RefGenomeVersion {
     V37("37"),
     V38("38");
 
+    private static final String GZIP_EXTENSION = ".gz";
+
     @NotNull
     private final String identifier;
 
@@ -26,11 +28,23 @@ public enum RefGenomeVersion {
 
     @NotNull
     public String addVersionToFilePath(@NotNull String filePath) {
-        if (!filePath.contains(".")) {
-            throw new IllegalStateException("Cannot include ref genome version in file path that has no extension: " + filePath);
+        String modifiedFilePath = filePath;
+        if (filePath.endsWith(GZIP_EXTENSION)) {
+            modifiedFilePath = filePath.substring(0, filePath.indexOf(GZIP_EXTENSION));
         }
 
-        int extensionStart = filePath.lastIndexOf(".");
-        return filePath.substring(0, extensionStart) + "." + this.identifier + filePath.substring(extensionStart);
+        if (!modifiedFilePath.contains(".")) {
+            throw new IllegalStateException("Cannot include ref genome version in file path that has no proper extension: " + filePath);
+        }
+
+        int extensionStart = modifiedFilePath.lastIndexOf(".");
+        String versionedFilePath =
+                modifiedFilePath.substring(0, extensionStart) + "." + this.identifier + modifiedFilePath.substring(extensionStart);
+
+        if (filePath.endsWith(GZIP_EXTENSION)) {
+            versionedFilePath = versionedFilePath + GZIP_EXTENSION;
+        }
+
+        return versionedFilePath;
     }
 }

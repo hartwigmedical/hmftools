@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.serve;
+package com.hartwig.hmftools.serve.util;
 
 import static org.junit.Assert.assertEquals;
-
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.junit.Test;
 
@@ -15,10 +13,18 @@ public class RefGenomeVersionTest {
 
         String path2 = "file.testing.tsv";
         assertEquals("file.testing.37.tsv", RefGenomeVersion.V37.addVersionToFilePath(path2));
+
+        String path3 = "file.vcf.gz";
+        assertEquals("file.37.vcf.gz", RefGenomeVersion.V37.addVersionToFilePath(path3));
     }
 
     @Test(expected = IllegalStateException.class)
     public void cannotHandlePathsWithNoExtension() {
         RefGenomeVersion.V37.addVersionToFilePath("path");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void cannotHandlePathWithJustGzipExtension() {
+        RefGenomeVersion.V37.addVersionToFilePath("path.gz");
     }
 }
