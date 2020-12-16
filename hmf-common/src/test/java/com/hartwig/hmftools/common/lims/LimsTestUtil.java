@@ -54,25 +54,9 @@ public final class LimsTestUtil {
     }
 
     @NotNull
-    public static LimsCohortConfig createTestCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
-            boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
-            boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
-            boolean requirePatientIdForPdfName, boolean requireSubmissionInformation, boolean requireAdditionalInformationForSidePanel) {
-        return ImmutableLimsCohortConfig.builder()
-                .cohortId(cohortId)
-                .sampleContainsHospitalCenterId(sampleContainsHospitalCenterId)
-                .reportGermline(reportGermline)
-                .reportGermlineFlag(reportGermlineFlag)
-                .reportConclusion(reportConclusion)
-                .reportViral(reportViral)
-                .requireHospitalId(requireHospitalId)
-                .requireHospitalPAId(requireHospitalPAId)
-                .requireHospitalPersonsStudy(requireHospitalPersonsStudy)
-                .requireHospitalPersonsRequester(requireHospitalPersonsRequester)
-                .requirePatientIdForPdfName(requirePatientIdForPdfName)
-                .requireSubmissionInformation(requireSubmissionInformation)
-                .requireAdditionalInformationForSidePanel(requireAdditionalInformationForSidePanel)
-                .build();
+    public static LimsCohortConfig createConfigForGermlineReporting(@NotNull String cohortId, boolean reportGermline,
+            boolean reportGermlineFlag) {
+        return allDisabledBuilder().cohortId(cohortId).reportGermline(reportGermline).reportGermlineFlag(reportGermlineFlag).build();
     }
 
     @NotNull

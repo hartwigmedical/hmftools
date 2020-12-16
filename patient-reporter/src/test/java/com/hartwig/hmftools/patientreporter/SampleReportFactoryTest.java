@@ -22,48 +22,34 @@ public class SampleReportFactoryTest {
         String wrongId = "BGr-12111";
 
         LimsCohortConfig cohortConfigWIDE =
-                PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
-        assertEquals(correctIdT,
-                SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
-                        wideSampleId,
-                        cohortConfigWIDE));
-        assertEquals(correctIdC,
-                SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC,
-                        wideSampleId,
-                        cohortConfigWIDE));
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId,
-                wideSampleId,
-                cohortConfigWIDE));
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Lims.NOT_AVAILABLE_STRING,
-                wideSampleId,
-                cohortConfigWIDE));
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY,
-                wideSampleId,
-                cohortConfigWIDE));
+                PatientReportUtils.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+        assertEquals(correctIdT, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, wideSampleId, cohortConfigWIDE));
+        assertEquals(correctIdC, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC, wideSampleId, cohortConfigWIDE));
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId, wideSampleId, cohortConfigWIDE));
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Lims.NOT_AVAILABLE_STRING, wideSampleId, cohortConfigWIDE));
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY, wideSampleId, cohortConfigWIDE));
 
         LimsCohortConfig cohortConfigCORE =
-                PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY,
-                coreSampleId,
-                cohortConfigCORE));
-        assertEquals(correctIdT,
-                SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
-                        coreSampleId,
-                        cohortConfigCORE));
-        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId,
-                coreSampleId,
-                cohortConfigCORE));
+                PatientReportUtils.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY, coreSampleId, cohortConfigCORE));
+        assertEquals(correctIdT, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, coreSampleId, cohortConfigCORE));
+        assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(wrongId, coreSampleId, cohortConfigCORE));
 
-        LimsCohortConfig cohortConfigCPCT =
-                PatientReportUtils.buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
-        assertNull(correctIdT,
-                SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
-                        cpctSampleId,
-                        cohortConfigCPCT));
-        assertNull(correctIdC,
-                SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC,
-                        cpctSampleId,
-                        cohortConfigCPCT));
+        LimsCohortConfig cohortConfigCPCT = PatientReportUtils.createCohortConfig("CPCT",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                false,
+                false);
+        assertNull(correctIdT, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT, cpctSampleId, cohortConfigCPCT));
+        assertNull(correctIdC, SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdC, cpctSampleId, cohortConfigCPCT));
     }
 
     @Test
@@ -76,27 +62,14 @@ public class SampleReportFactoryTest {
         String hospitalId = "1234";
 
         LimsCohortConfig cohortConfigCORE =
-                PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
-        assertEquals(hospitalIdNA,
-                SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
-                        coreSampleId,
-                        cohortConfigCORE));
-        assertEquals(hospitalIDEmpty,
-                SampleReportFactory.checkHospitalPatientId(hospitalIDEmpty,
-                        coreSampleId,
-                        cohortConfigCORE));
-        assertEquals(hospitalId,
-                SampleReportFactory.checkHospitalPatientId(hospitalId,
-                        coreSampleId,
-                        cohortConfigCORE));
+                PatientReportUtils.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+        assertEquals(hospitalIdNA, SampleReportFactory.checkHospitalPatientId(hospitalIdNA, coreSampleId, cohortConfigCORE));
+        assertEquals(hospitalIDEmpty, SampleReportFactory.checkHospitalPatientId(hospitalIDEmpty, coreSampleId, cohortConfigCORE));
+        assertEquals(hospitalId, SampleReportFactory.checkHospitalPatientId(hospitalId, coreSampleId, cohortConfigCORE));
 
         LimsCohortConfig cohortConfigWIDE =
-                PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
-        assertEquals(hospitalIdNA,
-                SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
-                        wideSampleId,
-                        cohortConfigWIDE));
+                PatientReportUtils.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+        assertEquals(hospitalIdNA, SampleReportFactory.checkHospitalPatientId(hospitalIdNA, wideSampleId, cohortConfigWIDE));
     }
-
 
 }

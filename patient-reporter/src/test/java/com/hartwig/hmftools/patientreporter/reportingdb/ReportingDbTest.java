@@ -62,7 +62,7 @@ public class ReportingDbTest {
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
-            LimsCohortConfig cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+            LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("CPCT",
                     true,
                     false,
                     false,
@@ -86,7 +86,7 @@ public class ReportingDbTest {
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("WIDE",
+        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("WIDE",
                 true,
                 true,
                 true,
@@ -99,7 +99,7 @@ public class ReportingDbTest {
                 false,
                 false,
                 true)));
-        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CPCT",
+        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CPCT",
                 true,
                 false,
                 false,
@@ -112,7 +112,7 @@ public class ReportingDbTest {
                 false,
                 false,
                 false)));
-        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CORE",
+        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CORE",
                 true,
                 true,
                 false,
@@ -125,7 +125,7 @@ public class ReportingDbTest {
                 true,
                 true,
                 true)));
-        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CORE",
+        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CORE",
                 true,
                 true,
                 false,
@@ -138,7 +138,7 @@ public class ReportingDbTest {
                 true,
                 true,
                 true)));
-        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.buildTestCohortModel("CORE",
+        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CORE",
                 true,
                 true,
                 false,

@@ -10,15 +10,13 @@ public class LimsGermlineReportingChoiceTest {
 
     @Test
     public void canExtractGermlineLevel() {
-        LimsCohortConfig cohortConfigCOREDB =
-                LimsTestUtil.createTestCohortConfig("COREDB", true, true, true, false, true, true, true, true, false, true, false, true);
+        LimsCohortConfig cohortConfigCOREDB = LimsTestUtil.createConfigForGermlineReporting("COREDB", true, true);
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true, "1: Yes", "COREDB991111T", cohortConfigCOREDB));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true, "2: No", "COREDB991111T", cohortConfigCOREDB));
 
-        LimsCohortConfig cohortConfigWIDE =
-                LimsTestUtil.createTestCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+        LimsCohortConfig cohortConfigWIDE = LimsTestUtil.createConfigForGermlineReporting("WIDE", true, true);
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true, "1: Behandelbare toevalsbevindingen", "WIDE02991111T", cohortConfigWIDE));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
@@ -36,20 +34,17 @@ public class LimsGermlineReportingChoiceTest {
                         "WIDE02991111T",
                         cohortConfigWIDE));
 
-        LimsCohortConfig cohortConfigCPCT =
-                LimsTestUtil.createTestCohortConfig("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfig cohortConfigCPCT = LimsTestUtil.createConfigForGermlineReporting("CPCT", false, false);
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false, "", "CPCT02991111T", cohortConfigCPCT));
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false, "", "COLO02991111T", cohortConfigCPCT));
 
-        LimsCohortConfig cohortConfigDRUP =
-                LimsTestUtil.createTestCohortConfig("DRUP", true, false, false, false, false, false, false, true, false, false, false, false);
+        LimsCohortConfig cohortConfigDRUP = LimsTestUtil.createConfigForGermlineReporting("DRUP", false, false);
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false, "", "DRUP02991111T", cohortConfigDRUP));
 
-        LimsCohortConfig cohortConfigCORE =
-                LimsTestUtil.createTestCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+        LimsCohortConfig cohortConfigCORE = LimsTestUtil.createConfigForGermlineReporting("CORE", true, false);
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false, "", "CORE02991111T", cohortConfigCORE));
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
@@ -58,12 +53,9 @@ public class LimsGermlineReportingChoiceTest {
 
     @Test(expected = IllegalStateException.class)
     public void hasUnknownGermlineChoice() {
-        LimsCohortConfig cohortConfigCOREDB =
-                LimsTestUtil.createTestCohortConfig("COREDB", true, true, true, false, true, true, true, true, false, true, false, true);
-        LimsCohortConfig cohortConfigWIDE =
-                LimsTestUtil.createTestCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
-        LimsCohortConfig cohortConfigCORE =
-                LimsTestUtil.createTestCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+        LimsCohortConfig cohortConfigCOREDB = LimsTestUtil.createConfigForGermlineReporting("COREDB", true, true);
+        LimsCohortConfig cohortConfigWIDE = LimsTestUtil.createConfigForGermlineReporting("WIDE", true, true);
+        LimsCohortConfig cohortConfigCORE = LimsTestUtil.createConfigForGermlineReporting("CORE", true, false);
 
         LimsGermlineReportingLevel.fromLimsInputs(true, "ALL", "WIDE02991111T", cohortConfigWIDE);
         LimsGermlineReportingLevel.fromLimsInputs(true, "ALL", "COREDB991111T", cohortConfigCOREDB);

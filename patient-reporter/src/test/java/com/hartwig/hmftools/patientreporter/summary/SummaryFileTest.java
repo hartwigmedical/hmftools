@@ -20,7 +20,7 @@ public class SummaryFileTest {
         assertEquals(1, summaryModel.summaryCount());
 
         LimsCohortConfig cohortConfig =
-                PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
+                PatientReportUtils.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
 
         String summary = summaryModel.findSummaryForSample("sample", cohortConfig);
 

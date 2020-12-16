@@ -11,7 +11,7 @@ public final class PatientReportUtils {
     }
 
     @NotNull
-    public static LimsCohortConfig buildTestCohortModel(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
+    public static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
             boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
             boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
             boolean requirePatientIdForPdfName, boolean requireSubmissionInformation, boolean requireAdditionalInformationForSidePanel) {
