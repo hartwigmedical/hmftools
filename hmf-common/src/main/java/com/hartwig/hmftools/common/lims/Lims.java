@@ -325,13 +325,13 @@ public class Lims {
         if (sampleData != null && cohort != null) {
             if (sampleData.reportGermlineVariants()) {
                 if (!cohort.reportGermline()) {
-                    LOGGER.warn("Consent of report germline variants is true, but must be false at study CPCT/DRUP for sample '{}'",
+                    LOGGER.warn("Consent of report germline variants is true, but must be false for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return true;
             } else {
                 if (cohort.reportGermline()) {
-                    LOGGER.warn("Consent of report germline variants is false, but must be true at study CORE/WIDE for sample '{}'",
+                    LOGGER.warn("Consent of report germline variants is false, but must be true for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return false;
@@ -348,13 +348,13 @@ public class Lims {
         if (sampleData != null && cohort != null) {
             if (sampleData.reportViralInsertions()) {
                 if (!cohort.reportViral()) {
-                    LOGGER.warn("Consent of viral insertions is true, but must be false at study CPCT/DRUP for sample '{}'",
+                    LOGGER.warn("Consent of viral insertions is true, but must be false for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return true;
             } else {
                 if (cohort.reportViral()) {
-                    LOGGER.warn("Consent of viral insertions is false, but must be true at study CORE/WIDE for sample '{}'",
+                    LOGGER.warn("Consent of viral insertions is false, but must be true for sample '{}'",
                             sampleId(sampleBarcode));
                 }
                 return false;
