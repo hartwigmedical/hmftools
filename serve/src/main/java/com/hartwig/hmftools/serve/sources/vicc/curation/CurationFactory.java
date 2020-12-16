@@ -56,6 +56,20 @@ final class CurationFactory {
         // Variants that probably exist on another transcript
         FEATURE_MAPPINGS.put(cgi("FGFR3", null, "FGFR3 (K650)"), curation("FGFR3", "FGFR3 (K652)"));
         FEATURE_MAPPINGS.put(cgi("GNAS", null, "GNAS (R201)"), curation("GNAS", "GNAS (R844)"));
+
+        // Not sure if this fusion should be swapped, but if not then it would never be reported so can filter.
+        FEATURE_BLACKLIST.add(cgi("RET", null, "RET-TPCN1 fusion"));
+
+        // Fusions that are not part of fusion knowledgebase can be filtered out.
+        FEATURE_BLACKLIST.add(cgi("ERBB4", null, "ERBB4 fusion"));
+        FEATURE_BLACKLIST.add(cgi("NOTCH1", null, "NOTCH1 fusion"));
+        FEATURE_BLACKLIST.add(cgi("NOTCH2", null, "NOTCH2 fusion"));
+        FEATURE_BLACKLIST.add(cgi("AKT3", null, "AKT3 fusion"));
+        FEATURE_BLACKLIST.add(cgi("ESR1", null, "ESR1-YAP1 fusion"));
+
+        // Evidence that is inconsistent with driver gene panel
+        FEATURE_BLACKLIST.add(cgi("UGT1A1", null, "UGT1A1 biallelic inactivation"));
+        FEATURE_BLACKLIST.add(cgi("TPMT", null, "TPMT biallelic inactivation"));
     }
 
     private static void populateCIViCCuration() {
@@ -111,6 +125,9 @@ final class CurationFactory {
 
         // Variant has an inconsistent formatting. Not sure how to correct
         FEATURE_BLACKLIST.add(civic("PDGFRA", "ENST00000257290", "DI842-843VM"));
+
+        // Fusion doesn't appear in our fusion knowledgebase
+        FEATURE_BLACKLIST.add(civic("FOS", "ENST00000303562", "TRUNCATING FUSION"));
     }
 
     private static void populateJaxCuration() {
