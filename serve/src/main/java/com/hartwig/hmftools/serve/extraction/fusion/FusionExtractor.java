@@ -64,7 +64,8 @@ public class FusionExtractor {
     private KnownFusionPair validate(@NotNull KnownFusionPair pair) {
         if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
             if (!(knownFusionCache.hasPromiscuousFiveGene(pair.geneUp()) || knownFusionCache.hasPromiscuousThreeGene(pair.geneDown())
-                    || knownFusionCache.hasKnownFusion(pair.geneUp(), pair.geneDown()))) {
+                    || knownFusionCache.hasKnownFusion(pair.geneUp(), pair.geneDown()) || knownFusionCache.hasKnownIgFusion(pair.geneUp(), pair.geneDown()) ||
+                    knownFusionCache.hasPromiscuousIgFusion(pair.geneUp()))) {
                 LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
             }
             return pair;

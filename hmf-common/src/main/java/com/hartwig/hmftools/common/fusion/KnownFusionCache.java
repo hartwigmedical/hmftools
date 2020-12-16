@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
@@ -62,6 +63,11 @@ public class KnownFusionCache
         return mDataByType.get(KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
     }
 
+    public boolean hasKnownIgFusion(final String fiveGene, final String threeGene)
+    {
+        return mDataByType.get(IG_KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
+    }
+
     public boolean hasKnownUnmappable3Fusion(final String fiveGene, final String threeGene)
     {
         return mKnownPairData.stream()
@@ -86,6 +92,11 @@ public class KnownFusionCache
         }
 
         return false;
+    }
+
+    public boolean hasPromiscuousIgFusion(final String gene)
+    {
+        return mDataByType.get(IG_PROMISCUOUS).stream().anyMatch(x -> x.FiveGene.equals(gene));
     }
 
     public boolean hasPromiscuousFiveGene(final String gene)
