@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsAnalysisType;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
@@ -62,7 +62,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -202,7 +201,7 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsCohortConfigData cohort = lims.cohortConfig(sampleBarcode);
+            LimsCohortConfig cohort = lims.cohortConfig(sampleBarcode);
 
             if (!cohort.cohortId().isEmpty()) {
                 String patientId = lims.patientId(sampleBarcode);
@@ -442,7 +441,7 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohortConfigData cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
 
                 if (cohort.cohortId().equals("WIDE")) {
                     String patientId = entry.getKey();
@@ -467,7 +466,7 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohortConfigData cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
 
                 if (cohort.cohortId().equals("CORE")) {
                     String patientId = entry.getKey();

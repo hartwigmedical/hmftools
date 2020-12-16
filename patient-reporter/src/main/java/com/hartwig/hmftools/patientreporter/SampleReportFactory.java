@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,7 +46,7 @@ public final class SampleReportFactory {
 
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
-        LimsCohortConfigData cohortdata = lims.cohortConfig(tumorSampleBarcode);
+        LimsCohortConfig cohortdata = lims.cohortConfig(tumorSampleBarcode);
 
         LOGGER.info("Cohort type of this sample is: {}", cohortdata.cohortId());
 
@@ -73,7 +73,7 @@ public final class SampleReportFactory {
 
     @VisibleForTesting
     static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull String sampleId,
-            @NotNull LimsCohortConfigData cohortdata) {
+            @NotNull LimsCohortConfig cohortdata) {
         if (cohortdata.requireHospitalId()) {
             if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
                 LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
@@ -85,7 +85,7 @@ public final class SampleReportFactory {
     @VisibleForTesting
     @Nullable
     static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
-            @NotNull LimsCohortConfigData cohortdata) {
+            @NotNull LimsCohortConfig cohortdata) {
         if (cohortdata.requireHospitalPAId()) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
                     && isValidHospitalPathologySampleId(hospitalPathologySampleId)) {

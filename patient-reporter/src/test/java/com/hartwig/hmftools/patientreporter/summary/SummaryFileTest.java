@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.PatientReportUtils;
 
 import org.junit.Test;
@@ -19,7 +19,7 @@ public class SummaryFileTest {
         SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
         assertEquals(1, summaryModel.summaryCount());
 
-        LimsCohortConfigData cohortConfig =
+        LimsCohortConfig cohortConfig =
                 PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
 
         String summary = summaryModel.findSummaryForSample("sample", cohortConfig);

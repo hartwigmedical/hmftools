@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -53,7 +53,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     @NotNull
     private static Div createSampleDetailsDiv(@NotNull AnalysedPatientReport patientReport) {
         SampleReport sampleReport = patientReport.sampleReport();
-        LimsCohortConfigData cohort = sampleReport.cohort();
+        LimsCohortConfig cohort = sampleReport.cohort();
 
         Div div = new Div();
 

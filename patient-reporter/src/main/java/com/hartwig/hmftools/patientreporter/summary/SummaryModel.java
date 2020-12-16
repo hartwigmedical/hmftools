@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.summary;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +22,7 @@ public class SummaryModel {
     }
 
     @NotNull
-    public String findSummaryForSample(@NotNull String sample, @NotNull LimsCohortConfigData cohort) {
+    public String findSummaryForSample(@NotNull String sample, @NotNull LimsCohortConfig cohort) {
         boolean sampleHasSummary = samplePresentInSummaries(sample);
 
         if (!sampleHasSummary && cohort.reportConclusion()) {

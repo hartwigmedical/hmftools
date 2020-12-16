@@ -9,19 +9,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.PatientReportUtils;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ReportingDbTest {
@@ -68,7 +62,7 @@ public class ReportingDbTest {
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
-            LimsCohortConfigData cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
+            LimsCohortConfig cohortConfig = PatientReportUtils.buildTestCohortModel("CPCT",
                     true,
                     false,
                     false,

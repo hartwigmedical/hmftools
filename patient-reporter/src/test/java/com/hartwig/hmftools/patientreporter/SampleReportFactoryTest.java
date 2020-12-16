@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -21,7 +21,7 @@ public class SampleReportFactoryTest {
         String correctIdC = "C18-00124";
         String wrongId = "BGr-12111";
 
-        LimsCohortConfigData cohortConfigWIDE =
+        LimsCohortConfig cohortConfigWIDE =
                 PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         assertEquals(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
@@ -41,7 +41,7 @@ public class SampleReportFactoryTest {
                 wideSampleId,
                 cohortConfigWIDE));
 
-        LimsCohortConfigData cohortConfigCORE =
+        LimsCohortConfig cohortConfigCORE =
                 PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         assertNull(SampleReportFactory.toHospitalPathologySampleIdForReport(Strings.EMPTY,
                 coreSampleId,
@@ -54,7 +54,7 @@ public class SampleReportFactoryTest {
                 coreSampleId,
                 cohortConfigCORE));
 
-        LimsCohortConfigData cohortConfigCPCT =
+        LimsCohortConfig cohortConfigCPCT =
                 PatientReportUtils.buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
         assertNull(correctIdT,
                 SampleReportFactory.toHospitalPathologySampleIdForReport(correctIdT,
@@ -75,7 +75,7 @@ public class SampleReportFactoryTest {
         String hospitalIDEmpty = Strings.EMPTY;
         String hospitalId = "1234";
 
-        LimsCohortConfigData cohortConfigCORE =
+        LimsCohortConfig cohortConfigCORE =
                 PatientReportUtils.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         assertEquals(hospitalIdNA,
                 SampleReportFactory.checkHospitalPatientId(hospitalIdNA,
@@ -90,7 +90,7 @@ public class SampleReportFactoryTest {
                         coreSampleId,
                         cohortConfigCORE));
 
-        LimsCohortConfigData cohortConfigWIDE =
+        LimsCohortConfig cohortConfigWIDE =
                 PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         assertEquals(hospitalIdNA,
                 SampleReportFactory.checkHospitalPatientId(hospitalIdNA,

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -38,10 +38,10 @@ public final class SidePanel {
         cv.add(createSidePanelDiv(++sideTextIndex, "HMF sample id", sampleReport.tumorSampleId()));
         cv.add(createSidePanelDiv(++sideTextIndex, "Report date", ReportResources.REPORT_DATE));
 
-        LimsCohortConfigData cohort = sampleReport.cohort();
+        LimsCohortConfig cohort = sampleReport.cohort();
 
         if (fullHeight && fullContent) {
-            if (cohort.requireAdditionalInfromationForSidePanel()) {
+            if (cohort.requireAdditionalInformationForSidePanel()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", sampleReport.hospitalContactData().requesterName()));
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", sampleReport.hospitalContactData().requesterEmail()));
             }

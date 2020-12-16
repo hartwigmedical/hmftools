@@ -14,9 +14,8 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
@@ -25,7 +24,6 @@ import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class LimsTest {
@@ -204,7 +202,7 @@ public class LimsTest {
                 .putSampleToHospitalMapping(TUMOR_SAMPLE_ID, "1")
                 .build();
 
-        LimsCohortConfigData cohortConfigTest =
+        LimsCohortConfig cohortConfigTest =
                 LimsTestUtil.buildTestCohortModel("HMF", true, true, false, true, true, true, true, false, true, true, true, true);
         LimsCohortModel cohortConfig = ImmutableLimsCohortModel.builder()
                 .putLimsCohortMap("HMF", cohortConfigTest)

@@ -8,13 +8,9 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsTestUtil;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class HospitalModelTest {
@@ -39,7 +35,7 @@ public class HospitalModelTest {
     public void canExtractHospitalDataFromHospitalModel() {
         String hospitalId = "01";
         HospitalModel model = buildTestHospitalModel(hospitalId);
-        LimsCohortConfigData cohortConfigCPCT =
+        LimsCohortConfig cohortConfigCPCT =
                 LimsTestUtil.buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
 
         HospitalContactData dataCPCT =
@@ -50,7 +46,7 @@ public class HospitalModelTest {
         assertEquals(HOSPITAL_NAME, dataCPCT.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataCPCT.hospitalAddress());
 
-        LimsCohortConfigData cohortConfigDRUP =
+        LimsCohortConfig cohortConfigDRUP =
                 LimsTestUtil.buildTestCohortModel("DRUP", true, false, false, false, false, false, false, true, false, false, false, false);
         HospitalContactData dataDRUP =
                 model.queryHospitalData("DRUP02010001T", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigDRUP);
@@ -60,7 +56,7 @@ public class HospitalModelTest {
         assertEquals(HOSPITAL_NAME, dataDRUP.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataDRUP.hospitalAddress());
 
-        LimsCohortConfigData cohortConfigWIDE =
+        LimsCohortConfig cohortConfigWIDE =
                 LimsTestUtil.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         HospitalContactData dataWIDE =
                 model.queryHospitalData("WIDE02010001T", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigWIDE);
@@ -70,7 +66,7 @@ public class HospitalModelTest {
         assertEquals(HOSPITAL_NAME, dataWIDE.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataWIDE.hospitalAddress());
 
-        LimsCohortConfigData cohortConfigCORE =
+        LimsCohortConfig cohortConfigCORE =
                 LimsTestUtil.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         HospitalContactData dataCORE =
                 model.queryHospitalData("CORE02010001T", CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL, cohortConfigCORE);

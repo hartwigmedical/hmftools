@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.lims;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.junit.Test;
 
@@ -10,14 +10,14 @@ public class LimsGermlineReportingChoiceTest {
 
     @Test
     public void canExtractGermlineLevel() {
-        LimsCohortConfigData cohortConfigCOREDB =
+        LimsCohortConfig cohortConfigCOREDB =
                 LimsTestUtil.buildTestCohortModel("COREDB", true, true, true, false, true, true, true, true, false, true, false, true);
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true, "1: Yes", "COREDB991111T", cohortConfigCOREDB));
         assertEquals(LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true, "2: No", "COREDB991111T", cohortConfigCOREDB));
 
-        LimsCohortConfigData cohortConfigWIDE =
+        LimsCohortConfig cohortConfigWIDE =
                 LimsTestUtil.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
         assertEquals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 LimsGermlineReportingLevel.fromLimsInputs(true, "1: Behandelbare toevalsbevindingen", "WIDE02991111T", cohortConfigWIDE));
@@ -36,19 +36,19 @@ public class LimsGermlineReportingChoiceTest {
                         "WIDE02991111T",
                         cohortConfigWIDE));
 
-        LimsCohortConfigData cohortConfigCPCT =
+        LimsCohortConfig cohortConfigCPCT =
                 LimsTestUtil.buildTestCohortModel("CPCT", true, false, false, false, false, false, false, true, false, false, false, false);
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false, "", "CPCT02991111T", cohortConfigCPCT));
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false, "", "COLO02991111T", cohortConfigCPCT));
 
-        LimsCohortConfigData cohortConfigDRUP =
+        LimsCohortConfig cohortConfigDRUP =
                 LimsTestUtil.buildTestCohortModel("DRUP", true, false, false, false, false, false, false, true, false, false, false, false);
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false, "", "DRUP02991111T", cohortConfigDRUP));
 
-        LimsCohortConfigData cohortConfigCORE =
+        LimsCohortConfig cohortConfigCORE =
                 LimsTestUtil.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING,
                 LimsGermlineReportingLevel.fromLimsInputs(false, "", "CORE02991111T", cohortConfigCORE));
@@ -58,11 +58,11 @@ public class LimsGermlineReportingChoiceTest {
 
     @Test(expected = IllegalStateException.class)
     public void hasUnknownGermlineChoice() {
-        LimsCohortConfigData cohortConfigCOREDB =
+        LimsCohortConfig cohortConfigCOREDB =
                 LimsTestUtil.buildTestCohortModel("COREDB", true, true, true, false, true, true, true, true, false, true, false, true);
-        LimsCohortConfigData cohortConfigWIDE =
+        LimsCohortConfig cohortConfigWIDE =
                 LimsTestUtil.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
-        LimsCohortConfigData cohortConfigCORE =
+        LimsCohortConfig cohortConfigCORE =
                 LimsTestUtil.buildTestCohortModel("CORE", true, true, false, true, true, true, true, false, true, true, true, true);
 
         LimsGermlineReportingLevel.fromLimsInputs(true, "ALL", "WIDE02991111T", cohortConfigWIDE);

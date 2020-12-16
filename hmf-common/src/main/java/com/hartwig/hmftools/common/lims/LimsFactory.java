@@ -22,8 +22,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigFactory;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortModelFactory;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
@@ -62,7 +62,7 @@ public final class LimsFactory {
 
         HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(limsDirectory);
 
-        LimsCohortModel cohortModel = LimsCohortConfigFactory.read(cohortConfig);
+        LimsCohortModel cohortModel = LimsCohortModelFactory.read(cohortConfig);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,

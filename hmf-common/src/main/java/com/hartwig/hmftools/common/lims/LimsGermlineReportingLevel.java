@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.lims;
 
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +16,7 @@ public enum LimsGermlineReportingLevel {
 
     @NotNull
     static LimsGermlineReportingLevel fromLimsInputs(boolean reportGermlineVariants, @NotNull String germlineReportingLevelString,
-            @NotNull String sampleId, @NotNull LimsCohortConfigData cohort) {
+            @NotNull String sampleId, @NotNull LimsCohortConfig cohort) {
         if (reportGermlineVariants && !cohort.cohortId().equals(Strings.EMPTY)) {
             // Cases "geen toevalsbevindingen: familie mag deze/wel niet opvragen" have been merged
             // into a single category "geen toevalsbevindingen" per feb 1st 2020

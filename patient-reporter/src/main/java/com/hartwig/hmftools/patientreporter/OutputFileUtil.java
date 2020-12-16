@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter;
 
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.util.Strings;
@@ -14,7 +14,7 @@ public final class OutputFileUtil {
     @NotNull
     public static String generateOutputFileNameForReport(@NotNull PatientReport report) {
         SampleReport sampleReport = report.sampleReport();
-        LimsCohortConfigData cohort = report.sampleReport().cohort();
+        LimsCohortConfig cohort = report.sampleReport().cohort();
 
         String filePrefix =
                 cohort.requirePatientIdForPdfName() ? sampleReport.tumorSampleId() + "_"

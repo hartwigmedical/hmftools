@@ -1,20 +1,23 @@
 package com.hartwig.hmftools.patientreporter;
 
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PatientReportUtils {
+public final class PatientReportUtils {
+
+    private PatientReportUtils() {
+    }
 
     @NotNull
-    public static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortId, boolean hospitalCentraId, boolean reportGermline,
+    public static LimsCohortConfig buildTestCohortModel(@NotNull String cohortId, boolean hospitalCenterId, boolean reportGermline,
             boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
             boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
-            boolean requirePatientIdForPdfName, boolean requireSubmissionInformation, boolean requireAdditionalInfromationForSidePanel) {
-        return ImmutableLimsCohortConfigData.builder()
+            boolean requirePatientIdForPdfName, boolean requireSubmissionInformation, boolean requireAdditionalInformationForSidePanel) {
+        return ImmutableLimsCohortConfig.builder()
                 .cohortId(cohortId)
-                .hospitalCentraId(hospitalCentraId)
+                .hospitalCenterId(hospitalCenterId)
                 .reportGermline(reportGermline)
                 .reportGermlineFlag(reportGermlineFlag)
                 .reportConclusion(reportConclusion)
@@ -25,7 +28,7 @@ public class PatientReportUtils {
                 .requireHospitalPersonsRequester(requireHospitalPersonsRequester)
                 .requirePatientIdForPdfName(requirePatientIdForPdfName)
                 .requireSubmissionInformation(requireSubmissionInformation)
-                .requireAdditionalInfromationForSidePanel(requireAdditionalInfromationForSidePanel)
+                .requireAdditionalInformationForSidePanel(requireAdditionalInformationForSidePanel)
                 .build();
     }
 }
