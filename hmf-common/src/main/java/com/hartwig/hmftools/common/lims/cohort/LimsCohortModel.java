@@ -26,7 +26,7 @@ public abstract class LimsCohortModel {
         } else {
             LimsCohortConfig cohortConfigData = limsCohortMap().get(cohortString);
             if (cohortConfigData == null) {
-                LOGGER.warn("No cohort map is present for cohortString {}", cohortString);
+                LOGGER.error("No cohort map is present for cohortString {}", cohortString);
                 return null;
             } else {
                 if (sampleId.startsWith(cohortConfigData.cohortId())) {
