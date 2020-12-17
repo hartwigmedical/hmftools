@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.extraction.EventExtractorFactory;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.sources.vicc.curation.ViccDrugCurator;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +39,7 @@ public final class ViccExtractorFactory {
             @NotNull Map<String, HmfTranscriptRegion> allGenesMap, @NotNull DoidLookup missingDoidLookup,
             @Nullable String featureInterpretationTsv) {
         return new ViccExtractor(EventExtractorFactory.create(config, proteinResolver, driverGenes, knownFusionCache, allGenesMap),
-                new ActionableEvidenceFactory(missingDoidLookup),
+                new ActionableEvidenceFactory(missingDoidLookup, new ViccDrugCurator()),
                 featureInterpretationTsv);
     }
 }
