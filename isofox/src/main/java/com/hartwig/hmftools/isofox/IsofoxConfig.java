@@ -192,7 +192,7 @@ public class IsofoxConfig
 
         if(cmd.hasOption(REF_GENOME_VERSION))
         {
-            RefGenVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION));
+            RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
         }
         else
         {
