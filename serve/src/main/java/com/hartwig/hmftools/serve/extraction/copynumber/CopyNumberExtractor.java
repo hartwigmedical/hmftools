@@ -39,6 +39,8 @@ public class CopyNumberExtractor {
                         && type == EventType.DELETION)) {
                     LOGGER.warn("Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
                 }
+            } else {
+                LOGGER.debug("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
             }
             return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
         }

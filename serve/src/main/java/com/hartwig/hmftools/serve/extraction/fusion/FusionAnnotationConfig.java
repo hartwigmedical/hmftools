@@ -10,18 +10,6 @@ public final class FusionAnnotationConfig {
 
     public static final Map<String, KnownFusionPair> EXONIC_FUSIONS_MAP = exonicFusionMap();
 
-    public static final Map<String, KnownFusionPair> ODDLY_NAMED_GENES_MAP = oddlyNamedGenesMap();
-
-    @NotNull
-    private static Map<String, KnownFusionPair> oddlyNamedGenesMap() {
-        Map<String, KnownFusionPair> map = Maps.newHashMap();
-        KnownFusionPair fusionIGH_NKX2_1 = ImmutableKnownFusionPair.builder().geneUp("IGH").geneDown("NKX2-1").build();
-
-        map.put("IGH-NKX2-1 Fusion", fusionIGH_NKX2_1);
-
-        return map;
-    }
-
     @NotNull
     private static Map<String, KnownFusionPair> exonicFusionMap() {
         Map<String, KnownFusionPair> map = Maps.newHashMap();
