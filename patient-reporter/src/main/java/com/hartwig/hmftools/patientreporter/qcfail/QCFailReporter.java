@@ -33,7 +33,7 @@ public class QCFailReporter {
 
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(),
-                        sampleMetadata.tumorSampleId());
+                        sampleMetadata.patientId());
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         LimsCohortConfig cohort = sampleReport.cohort();
