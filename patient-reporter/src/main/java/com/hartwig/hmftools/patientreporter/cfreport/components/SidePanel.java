@@ -52,8 +52,7 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", sampleReport.hospitalPatientId()));
             }
 
-            if (cohort.requireHospitalPAId() && (!sampleReport.hospitalPathologySampleId().isEmpty()
-                    || sampleReport.hospitalPathologySampleId() != null)) {
+            if (cohort.requireHospitalPAId() && sampleReport.hospitalPathologySampleId() != null) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital pathology id", sampleReport.hospitalPathologySampleId()));
             }
         }
