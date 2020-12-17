@@ -22,11 +22,11 @@ final class DrugCurationFactory {
     }
 
     static {
-        populateOrMappings();
-        populateAndMappings();
-        populateRenames();
-
         populateBlacklist();
+
+        populateRenames();
+        populateAndMappings();
+        populateOrMappings();
     }
 
     private static void populateBlacklist() {
