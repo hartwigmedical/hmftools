@@ -2,18 +2,18 @@ package com.hartwig.hmftools.common.codon;
 
 public class Codons {
 
-    public static String asCodonString(String dna) {
+    public static String aminoAcids(String dna) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < dna.length() - 2; i += 3) {
-            builder.append(asCondon(dna.substring(i, i + 3)));
+            builder.append(aminoAcid(dna.substring(i, i + 3)));
         }
 
         return builder.toString();
     }
 
-    public static char asCondon(String dna) {
-        assert (dna.length() == 3);
-        switch (dna) {
+    public static char aminoAcid(String codon) {
+        assert (codon.length() == 3);
+        switch (codon) {
             // SECOND BASE T
             case "TTT":
             case "TTC":

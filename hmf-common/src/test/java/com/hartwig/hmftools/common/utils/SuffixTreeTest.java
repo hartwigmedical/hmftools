@@ -21,7 +21,7 @@ public class SuffixTreeTest {
     public void testRealExample() {
 
         final String dna = "AATGTAGGTGCTGCTGTGAAGGGATTTAGCAGATATAATTAAGGGTCTCAATTAGTTGACTTTATGCTGCGTTTATCCTGCTTGGACTGTCCTAATCAGGTGAGCCCTTGAAAGGACTGGGTTCTTCATGAGCATAGAGACTTACAGTGTG";
-        final String aminoAcids = Codons.asCodonString(dna);
+        final String aminoAcids = Codons.aminoAcids(dna);
 
         SuffixTree tree = new SuffixTree(aminoAcids);
         for (int i = 0; i < aminoAcids.length() - 10; i++) {
@@ -48,6 +48,21 @@ public class SuffixTreeTest {
         assertEquals(4, tree.endsWith("NGAATAF"));
         assertEquals(0, tree.endsWith("TEN"));
         assertEquals(0, tree.endsWith("AXA"));
+    }
+
+    @Test
+    public void testExamples() {
+        SuffixTree tree = new SuffixTree("GGGGRNS");
+        assertEquals(0, tree.endsWith("RCGLGWSGVGRAGQ"));
+        assertEquals(3, tree.endsWith("RNSLGWSGVGRAGQ"));
+    }
+
+    @Test
+    public void testExamples2() {
+        SuffixTree tree = new SuffixTree("GGGGRNST");
+        assertEquals(0, tree.endsWith("RCGLGWSGVGRAGQ"));
+        assertEquals(0, tree.endsWith("RNSLGWSGVGRAGQ"));
+        assertEquals(4, tree.endsWith("RNSTGWSGVGRAGQ"));
     }
 
 }

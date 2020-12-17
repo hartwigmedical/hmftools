@@ -80,6 +80,14 @@ public class SuffixTree {
             }
         }
 
+        int remainingLength = Math.min(lastNodeText.length(), pattern.length() - parentLength);
+        for (int lastNodeIndex = 0; lastNodeIndex < remainingLength; lastNodeIndex++) {
+            int patternIndex = lastNodeIndex + parentLength;
+            if (pattern.charAt(patternIndex) != lastNodeText.charAt(lastNodeIndex)) {
+                return 0;
+            }
+        }
+
         return parentLength + lastNodeText.length();
     }
 

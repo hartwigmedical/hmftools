@@ -3,15 +3,15 @@ package com.hartwig.hmftools.lilac.prot
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import java.util.*
 
-data class ProteinSequence(val contig: String, val proteins: String) {
+data class ProteinSequence(val contig: String, val protein: String) {
     val allele: HlaAllele by lazy { HlaAllele(contig) }
 
-    val fullProteinSequence: String by lazy { proteins.removeSpecialCharacters() }
+    val fullProteinSequence: String by lazy { protein.removeSpecialCharacters() }
     val length: Int by lazy { fullProteinSequence.length }
 
 
     fun copyWithAdditionalProtein(more: String): ProteinSequence {
-        return ProteinSequence(contig, proteins + more)
+        return ProteinSequence(contig, protein + more)
     }
 
     private fun exonicProteins(exonicBoundaries: List<Int>): List<String> {
@@ -24,16 +24,16 @@ data class ProteinSequence(val contig: String, val proteins: String) {
         for (i in exonicBoundaries.indices) {
             val boundary = exonicBoundaries[i]
             val start = previousBoundary + 1
-            if (start < proteins.length) {
-                val end = proteins.length.coerceAtMost(boundary)
-                result.add(proteins.substring(start, end).removeSpecialCharacters())
+            if (start < protein.length) {
+                val end = protein.length.coerceAtMost(boundary)
+                result.add(protein.substring(start, end).removeSpecialCharacters())
             }
 
             previousBoundary = boundary
         }
 
-        if (previousBoundary < proteins.length - 1) {
-            result.add(proteins.substring(previousBoundary + 1).removeSpecialCharacters())
+        if (previousBoundary < protein.length - 1) {
+            result.add(protein.substring(previousBoundary + 1).removeSpecialCharacters())
         }
 
         return result
