@@ -85,7 +85,7 @@ public class ServeApplication {
             return HmfGenePanelSupplier.allGenesMap37();
         }
 
-        LOGGER.warn("Ref genome version not supported: '{}'. Reverting to V37.", refGenomeVersion);
+        LOGGER.warn("Ref genome version not supported: '{}'. Reverting to V37 Gene Map.", refGenomeVersion);
         return HmfGenePanelSupplier.allGenesMap37();
     }
 
