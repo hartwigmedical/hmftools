@@ -49,9 +49,8 @@ public class GeneLevelExtractor {
             GeneLevelEvent geneLevelEvent = extractGeneLevelEvent(gene, event);
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
         } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene)) {
-            if (!(knownFusionCache.hasKnownPairGene(gene) || knownFusionCache.hasPromiscuousFiveGene(gene)
-                    || knownFusionCache.hasPromiscuousThreeGene(gene) || knownFusionCache.hasAnyIgFusion(gene))) {
-                LOGGER.warn("Promiscuous fusion '{}' is not part of the known fusion cache", gene);
+            if (!geneIsPresentInFusionCache(gene)) {
+                LOGGER.warn("Promiscuous fusion '{}' is not present in the known fusion cache", gene);
             }
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
         }
@@ -108,5 +107,10 @@ public class GeneLevelExtractor {
             }
         }
         return GeneLevelEvent.ANY_MUTATION;
+    }
+
+    private boolean geneIsPresentInFusionCache(@NotNull String gene) {
+        return knownFusionCache.hasKnownPairGene(gene) || knownFusionCache.hasPromiscuousFiveGene(gene)
+                || knownFusionCache.hasPromiscuousThreeGene(gene) || knownFusionCache.hasAnyIgFusion(gene);
     }
 }
