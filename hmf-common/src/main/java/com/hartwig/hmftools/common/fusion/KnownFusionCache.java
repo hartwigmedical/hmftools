@@ -109,6 +109,11 @@ public class KnownFusionCache
         return mDataByType.get(PROMISCUOUS_3).stream().anyMatch(x -> x.ThreeGene.equals(gene));
     }
 
+    public boolean hasAnyIgFusion(final String gene)
+    {
+        return mDataByType.get(IG_KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(gene) || x.ThreeGene.equals(gene));
+    }
+
     public boolean hasKnownPairGene(final String gene)
     {
         return mKnownPairData.stream().anyMatch(x -> x.FiveGene.equals(gene) || x.ThreeGene.equals(gene));

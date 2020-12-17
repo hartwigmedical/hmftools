@@ -28,17 +28,15 @@ import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionUtil;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 public class IclusionExtractorTestApp {
 
     private static final Logger LOGGER = LogManager.getLogger(IclusionExtractorTestApp.class);
 
     public static void main(String[] args) throws IOException {
-        Configurator.setRootLevel(Level.DEBUG);
+//        Configurator.setRootLevel(Level.DEBUG);
 
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
@@ -91,7 +89,7 @@ public class IclusionExtractorTestApp {
         if (!fusionCache.loadFile(knownFusionFilePath)) {
             throw new IllegalStateException("Could not load known fusion cache from " + knownFusionFilePath);
         }
-        LOGGER.debug("Read {} known fusions from {}", fusionCache.getData().size(), knownFusionFilePath);
+        LOGGER.debug(" Read {} known fusions from {}", fusionCache.getData().size(), knownFusionFilePath);
 
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iclusionTrialTsv);
 
@@ -107,5 +105,4 @@ public class IclusionExtractorTestApp {
 
         new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);
     }
-
 }
