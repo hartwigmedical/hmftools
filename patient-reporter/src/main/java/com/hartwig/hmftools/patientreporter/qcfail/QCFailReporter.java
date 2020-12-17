@@ -31,9 +31,11 @@ public class QCFailReporter {
     public QCFailReport run(@NotNull QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
             @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport) throws IOException {
 
+        String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
+
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(),
-                        sampleMetadata.patientId());
+                        patientId);
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         LimsCohortConfig cohort = sampleReport.cohort();
