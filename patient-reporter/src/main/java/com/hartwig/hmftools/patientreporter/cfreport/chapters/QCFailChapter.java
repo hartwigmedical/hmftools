@@ -135,7 +135,7 @@ public class QCFailChapter implements ReportChapter {
         div.add(reportIsBasedOnTumorSampleArrivedAt());
         div.add(reportIsBasedOnBloodSampleArrivedAt());
         div.add(resultsAreObtainedBetweenDates());
-        if (failReport.sampleReport().cohort().requireHospitalPAId()) {
+        if (failReport.sampleReport().cohort().requireHospitalPAId() && !failReport.sampleReport().cohort().requireHospitalId()) {
             if (failReport.sampleReport().hospitalPathologySampleId() != null){
                 div.add(reportIsForPathologySampleID());
             }
