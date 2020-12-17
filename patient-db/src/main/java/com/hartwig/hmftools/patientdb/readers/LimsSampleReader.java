@@ -89,6 +89,7 @@ public class LimsSampleReader {
 
         return ImmutableSampleData.builder()
                 .sampleId(sampleId)
+                .sampleBarcode(Strings.EMPTY)
                 .sequenced(true)
                 .setName(setName != null ? setName : Strings.EMPTY)
                 .arrivalDate(arrivalDate)

@@ -25,7 +25,14 @@ public abstract class LimsCohortModel {
             if (cohortConfigData == null) {
                 throw new IllegalStateException("No cohort config present for cohort '{}'" + cohortStringNew);
             } else {
-                if (sampleId.startsWith(cohortConfigData.cohortId()) ||  sampleIdMetadata.startsWith(cohortConfigData.cohortId())) {
+                if (cohortConfigData.cohortId().contains("CPCT") || cohortConfigData.cohortId().contains("DRUP")) {
+                    if (sampleId.startsWith(cohortConfigData.cohortId().substring(0, 4))
+                            || sampleIdMetadata.startsWith(cohortConfigData.cohortId().substring(0, 4))) {
+                        return cohortConfigData;
+                    } else {
+                        throw new IllegalStateException("No matching for DRUP/CPCT");
+                    }
+                } else if (!cohortConfigData.cohortId().contains("CPCT") || !cohortConfigData.cohortId().contains("DRUP")) {
                     return cohortConfigData;
                 } else {
                     throw new IllegalStateException(
