@@ -76,7 +76,7 @@ public class IclusionExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        String iclusionMutationTsv = outputDir + "/iclusionMutations.tsv";
+        String iclusionMutationTsv = outputDir + "/IclusionMutations.tsv";
 
         LOGGER.debug("Configured '{}' as the iClusion trial TSV path", iclusionTrialTsv);
         LOGGER.debug("Configured '{}' as the driver gene TSV path", driverGeneTsvPath);
