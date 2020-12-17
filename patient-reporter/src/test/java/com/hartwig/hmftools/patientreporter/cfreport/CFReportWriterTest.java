@@ -51,7 +51,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
-        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("CPCT",
+        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("COLO",
                 true,
                 false,
                 false,
@@ -72,7 +72,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829Corrected() throws IOException {
-        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("CPCT",
+        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("COLO",
                 true,
                 false,
                 false,
@@ -92,7 +92,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829WithGermline() throws IOException {
-        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("CPCT",
+        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("COLO",
                 true,
                 false,
                 false,
@@ -119,7 +119,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829BelowDetectionThreshold() throws IOException {
-        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("CPCT",
+        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("COLO",
                 true,
                 false,
                 false,
@@ -146,7 +146,7 @@ public class CFReportWriterTest {
 
     @Test
     public void canGeneratePatientReportForCOLO829InsufficientTCP() throws IOException {
-        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("CPCT",
+        LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("COLO",
                 true,
                 false,
                 false,
