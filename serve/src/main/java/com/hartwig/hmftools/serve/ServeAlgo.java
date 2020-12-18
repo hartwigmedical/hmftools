@@ -13,6 +13,8 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.serve.checkertool.CheckCodonRanges;
+import com.hartwig.hmftools.serve.checkertool.CheckExons;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -63,10 +65,11 @@ public class ServeAlgo {
     }
 
     @NotNull
-    public ExtractionResult run(@NotNull ServeConfig config) throws IOException {
+    public ExtractionResult run(@NotNull ServeConfig config, @NotNull CheckExons checkExons, @NotNull CheckCodonRanges checkCodonRanges)
+            throws IOException {
         List<ExtractionResult> extractions = Lists.newArrayList();
-        extractions.add(extractViccKnowledge(config.viccJson(), config.viccSources()));
-        extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
+        extractions.add(extractViccKnowledge(config.viccJson(), config.viccSources(), checkExons, checkCodonRanges));
+        extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv(), checkExons, checkCodonRanges));
         extractions.add(extractDocmKnowledge(config.docmTsv()));
         extractions.add(extractHartwigCohortKnowledge(config.hartwigCohortTsv(), !config.skipHotspotResolving()));
         extractions.add(extractHartwigCuratedKnowledge(config.hartwigCuratedTsv(), !config.skipHotspotResolving()));
@@ -78,7 +81,8 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractViccKnowledge(@NotNull String viccJson, @NotNull Set<ViccSource> viccSources) throws IOException {
+    private ExtractionResult extractViccKnowledge(@NotNull String viccJson, @NotNull Set<ViccSource> viccSources,
+            @NotNull CheckExons checkExons, @NotNull CheckCodonRanges checkCodonRanges) throws IOException {
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJson, viccSources, null);
 
         EventClassifierConfig config = ViccClassificationConfig.build();
@@ -90,11 +94,12 @@ public class ServeAlgo {
                 missingDoidLookup);
 
         LOGGER.info("Running VICC knowledge extraction");
-        return extractor.extract(entries);
+        return extractor.extract(entries, checkExons, checkCodonRanges);
     }
 
     @NotNull
-    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv) throws IOException {
+    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv, @NotNull CheckExons checkExons,
+            @NotNull CheckCodonRanges checkCodonRanges) throws IOException {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv);
 
         EventClassifierConfig config = IclusionClassificationConfig.build();
@@ -106,7 +111,7 @@ public class ServeAlgo {
                 missingDoidLookup);
 
         LOGGER.info("Running iClusion knowledge extraction");
-        return extractor.extract(trials);
+        return extractor.extract(trials, checkExons, checkCodonRanges);
     }
 
     @NotNull

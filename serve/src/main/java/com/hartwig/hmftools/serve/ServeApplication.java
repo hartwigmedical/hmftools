@@ -56,13 +56,11 @@ public class ServeApplication {
                 buildProteinResolver(config, allGenesMap),
                 buildDoidLookup(config.missingDoidsMappingTsv()));
 
-        ExtractionResult result = algo.run(config);
-
         CheckExons checkExons = new CheckExons();
-        checkExons.run(result);
-
         CheckCodonRanges checkCodonRanges = new CheckCodonRanges();
-        checkCodonRanges.run(result);
+        ExtractionResult result = algo.run(config, checkExons, checkCodonRanges);
+
+
 
         new ExtractionResultWriter(config.outputDir(), config.refGenomeVersion()).write(result);
 

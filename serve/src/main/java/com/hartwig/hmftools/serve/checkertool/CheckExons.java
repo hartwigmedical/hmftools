@@ -13,7 +13,7 @@ public class CheckExons {
 
     }
 
-    public void run(@NotNull ExtractionResult result) {
+    public void run() {
 
     }
 }

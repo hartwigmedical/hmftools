@@ -13,7 +13,7 @@ public class CheckCodonRanges {
 
     }
 
-    public void run(@NotNull ExtractionResult result) {
+    public void run() {
 
     }
 }

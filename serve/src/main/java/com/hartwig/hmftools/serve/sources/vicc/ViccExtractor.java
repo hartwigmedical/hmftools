@@ -8,6 +8,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -15,6 +16,8 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
+import com.hartwig.hmftools.serve.checkertool.CheckCodonRanges;
+import com.hartwig.hmftools.serve.checkertool.CheckExons;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
@@ -65,7 +68,8 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    public ExtractionResult extract(@NotNull List<ViccEntry> entries) throws IOException {
+    public ExtractionResult extract(@NotNull List<ViccEntry> entries, @NotNull CheckExons checkExons,
+            @NotNull CheckCodonRanges checkCodonRanges) throws IOException {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
 
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
@@ -80,6 +84,18 @@ public final class ViccExtractor {
 
         if (featureInterpretationTsv != null) {
             ViccUtil.writeInterpretationToTsv(featureInterpretationTsv, resultsPerEntry);
+        }
+
+        for (Map.Entry<ViccEntry, ViccExtractionResult> resultPerEntry : resultsPerEntry.entrySet()) {
+            ViccEntry entry = resultPerEntry.getKey();
+            ViccExtractionResult result = resultPerEntry.getValue();
+            for (Feature feature : entry.features()) {
+                if (feature.type() == EventType.CODON  ) {
+                    checkCodonRanges.run();
+                } else if (feature.type() == EventType.EXON) {
+                    checkExons.run();
+                }
+            }
         }
 
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
