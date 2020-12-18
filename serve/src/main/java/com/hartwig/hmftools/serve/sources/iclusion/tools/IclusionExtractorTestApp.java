@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.serve.checkertool.CheckCodonRanges;
+import com.hartwig.hmftools.serve.checkertool.CheckExons;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -100,7 +102,10 @@ public class IclusionExtractorTestApp {
         EventClassifierConfig config = IclusionClassificationConfig.build();
         IclusionExtractor extractor =
                 IclusionExtractorFactory.buildIclusionExtractor(config, proteinResolver, driverGenes, fusionCache, allGenesMap, doidLookup);
-        ExtractionResult result = extractor.extract(trials);
+
+        CheckExons checkExons = new CheckExons();
+        CheckCodonRanges checkCodonRanges = new CheckCodonRanges();
+        ExtractionResult result = extractor.extract(trials, checkExons, checkCodonRanges);
 
         IclusionUtil.printIclusionResult(result);
         IclusionUtil.writeIclusionMutationTypes(iclusionMutationTsv, trials);
