@@ -11,8 +11,8 @@ public class CheckCodonRanges {
 
     }
 
-    public void run(@NotNull String event) {
-        LOGGER.info("Event check codon ranges: {}", event);
+    public void run(@NotNull String event, @NotNull String gene) {
+        LOGGER.info("Event check codon ranges {} of gene {}", event, gene);
 
     }
 }

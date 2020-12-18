@@ -11,8 +11,8 @@ public class CheckExons {
 
     }
 
-    public void run(@NotNull String event) {
-        LOGGER.info("Event check exons: ", event);
+    public void run(@NotNull String event, @NotNull String geneSymbol) {
+        LOGGER.info("Event check exons {} of gene {}", event, geneSymbol);
 
     }
 }

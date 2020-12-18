@@ -90,9 +90,9 @@ public final class ViccExtractor {
             ViccEntry entry = resultPerEntry.getKey();
             for (Feature feature : entry.features()) {
                 if (feature.type() == EventType.CODON  ) {
-                    checkCodonRanges.run(feature.name());
+                    checkCodonRanges.run(feature.name(), feature.geneSymbol());
                 } else if (feature.type() == EventType.EXON) {
-                    checkExons.run(feature.name());
+                    checkExons.run(feature.name(), feature.geneSymbol());
                 }
             }
         }

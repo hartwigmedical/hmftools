@@ -62,9 +62,9 @@ public class IclusionExtractor {
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name()));
 
                     if (mutation.type() == EventType.CODON) {
-                        checkCodonRanges.run(mutation.name());
+                        checkCodonRanges.run(mutation.name(), mutation.gene());
                     } else if (mutation.type() == EventType.EXON) {
-                        checkExons.run(mutation.name());
+                        checkExons.run(mutation.name(), mutation.gene());
                     }
                 }
             }
