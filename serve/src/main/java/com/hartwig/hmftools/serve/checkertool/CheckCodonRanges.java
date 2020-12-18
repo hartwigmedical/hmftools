@@ -13,7 +13,8 @@ public class CheckCodonRanges {
 
     }
 
-    public void run() {
+    public void run(@NotNull String event) {
+        LOGGER.info("Event: {}", event);
 
     }
 }

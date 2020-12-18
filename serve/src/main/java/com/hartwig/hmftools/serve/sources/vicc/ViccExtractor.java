@@ -88,12 +88,11 @@ public final class ViccExtractor {
 
         for (Map.Entry<ViccEntry, ViccExtractionResult> resultPerEntry : resultsPerEntry.entrySet()) {
             ViccEntry entry = resultPerEntry.getKey();
-            ViccExtractionResult result = resultPerEntry.getValue();
             for (Feature feature : entry.features()) {
                 if (feature.type() == EventType.CODON  ) {
-                    checkCodonRanges.run();
+                    checkCodonRanges.run(feature.name());
                 } else if (feature.type() == EventType.EXON) {
-                    checkExons.run();
+                    checkExons.run(feature.name());
                 }
             }
         }
