@@ -10,6 +10,8 @@ public final class FusionAnnotationConfig {
 
     public static final Map<String, KnownFusionPair> EXONIC_FUSIONS_MAP = exonicFusionMap();
 
+    public static final Map<String, ExonicDelDupType> DEL_DUP_TYPE_PER_GENE = exonicDelDupTypes();
+
     @NotNull
     private static Map<String, KnownFusionPair> exonicFusionMap() {
         Map<String, KnownFusionPair> map = Maps.newHashMap();
@@ -43,7 +45,6 @@ public final class FusionAnnotationConfig {
                 .maxExonDown(8)
                 .build();
         map.put("EGFRvIII", fusionEGFRvIII);
-        map.put("VIII", fusionEGFRvIII);
 
         KnownFusionPair fusionEGFRvV = ImmutableKnownFusionPair.builder()
                 .geneUp("EGFR")
@@ -55,29 +56,15 @@ public final class FusionAnnotationConfig {
                 .build();
         map.put("EGFRvV", fusionEGFRvV);
 
-        KnownFusionPair fusionKITExon11 = ImmutableKnownFusionPair.builder()
-                .geneUp("KIT")
-                .minExonUp(11)
-                .maxExonUp(11)
-                .geneDown("KIT")
-                .minExonDown(11)
-                .maxExonDown(11)
-                .build();
-        map.put("EXON 11 MUTATION", fusionKITExon11);
-        map.put("Exon 11 mutations", fusionKITExon11);
-        map.put("Exon 11 deletions", fusionKITExon11);
-
-        KnownFusionPair fusionMETExon14 = ImmutableKnownFusionPair.builder()
-                .geneUp("MET")
-                .minExonUp(13)
-                .maxExonUp(13)
-                .geneDown("MET")
-                .minExonDown(15)
-                .maxExonDown(15)
-                .build();
-        map.put("EXON 14 SKIPPING MUTATION", fusionMETExon14);
-
         return map;
+    }
+
+    @NotNull
+    private static Map<String, ExonicDelDupType> exonicDelDupTypes() {
+        Map<String, ExonicDelDupType> exonicDelDupTypeMap = Maps.newHashMap();
+        exonicDelDupTypeMap.put("KIT", ExonicDelDupType.PARTIAL_EXONIC_DELETION);
+        exonicDelDupTypeMap.put("MET", ExonicDelDupType.FULL_EXONIC_DELETION);
+        return exonicDelDupTypeMap;
     }
 
     private FusionAnnotationConfig() {

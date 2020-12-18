@@ -114,6 +114,11 @@ public class KnownFusionCache
         return mDataByType.get(IG_KNOWN_PAIR).stream().anyMatch(x -> x.FiveGene.equals(gene) || x.ThreeGene.equals(gene));
     }
 
+    public boolean hasExonDelDup(final String gene)
+    {
+        return mDataByType.get(EXON_DEL_DUP).stream().anyMatch(x -> x.FiveGene.equals(gene) && x.ThreeGene.equals(gene));
+    }
+
     public boolean hasKnownPairGene(final String gene)
     {
         return mKnownPairData.stream().anyMatch(x -> x.FiveGene.equals(gene) || x.ThreeGene.equals(gene));
