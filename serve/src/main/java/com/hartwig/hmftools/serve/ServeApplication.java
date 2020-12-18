@@ -10,6 +10,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.serve.checkertool.CheckCodonRanges;
+import com.hartwig.hmftools.serve.checkertool.CheckExons;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -55,6 +57,13 @@ public class ServeApplication {
                 buildDoidLookup(config.missingDoidsMappingTsv()));
 
         ExtractionResult result = algo.run(config);
+
+        CheckExons checkExons = new CheckExons();
+        checkExons.run(result);
+
+        CheckCodonRanges checkCodonRanges = new CheckCodonRanges();
+        checkCodonRanges.run(result);
+
         new ExtractionResultWriter(config.outputDir(), config.refGenomeVersion()).write(result);
 
         LOGGER.info("Done!");
