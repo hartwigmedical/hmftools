@@ -14,7 +14,7 @@ public class CheckExons {
     }
 
     public void run(@NotNull String event) {
-        LOGGER.info("Event: ", event);
+        LOGGER.info("Event check exons: ", event);
 
     }
 }
