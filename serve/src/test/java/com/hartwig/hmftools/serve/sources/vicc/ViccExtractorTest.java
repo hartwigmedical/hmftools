@@ -15,8 +15,6 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.checkertool.CheckCodonRanges;
-import com.hartwig.hmftools.serve.checkertool.CheckExons;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
@@ -54,10 +52,7 @@ public class ViccExtractorTest {
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("ALK", "EML4-ALK Fusion", association));
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("-", "Microsatellite Instability-High", association));
 
-        CheckExons checkExons = new CheckExons();
-        CheckCodonRanges checkCodonRanges = new CheckCodonRanges();
-
-        ExtractionResult result = extractor.extract(entries, checkExons, checkCodonRanges);
+        ExtractionResult result = extractor.extract(entries);
         assertEquals(1, result.knownHotspots().size());
         assertEquals(1, result.knownCopyNumbers().size());
         assertEquals(1, result.knownFusionPairs().size());

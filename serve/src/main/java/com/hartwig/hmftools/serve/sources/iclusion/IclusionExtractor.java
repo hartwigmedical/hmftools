@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
@@ -14,8 +13,6 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
-import com.hartwig.hmftools.serve.checkertool.CheckCodonRanges;
-import com.hartwig.hmftools.serve.checkertool.CheckExons;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
@@ -43,8 +40,7 @@ public class IclusionExtractor {
     }
 
     @NotNull
-    public ExtractionResult extract(@NotNull List<IclusionTrial> trials, @NotNull CheckExons checkExons,
-            @NotNull CheckCodonRanges checkCodonRanges) {
+    public ExtractionResult extract(@NotNull List<IclusionTrial> trials) {
         // We assume filtered trials (no empty acronyms, only OR mutations, and no negated mutations
 
         ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
@@ -60,12 +56,6 @@ public class IclusionExtractor {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name()));
-
-                    if (mutation.type() == EventType.CODON) {
-                        checkCodonRanges.run(mutation.name(), mutation.gene());
-                    } else if (mutation.type() == EventType.EXON) {
-                        checkExons.run(mutation.name(), mutation.gene());
-                    }
                 }
             }
 

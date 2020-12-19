@@ -16,8 +16,6 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
-import com.hartwig.hmftools.serve.checkertool.CheckCodonRanges;
-import com.hartwig.hmftools.serve.checkertool.CheckExons;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -116,9 +114,7 @@ public class ViccExtractorTestApp {
                 doidLookup,
                 featureInterpretationTsv);
 
-        CheckExons checkExons = new CheckExons();
-        CheckCodonRanges checkCodonRanges = new CheckCodonRanges();
-        ExtractionResult result = viccExtractor.extract(entries, checkExons, checkCodonRanges);
+        ExtractionResult result = viccExtractor.extract(entries);
 
         ViccUtil.writeFeaturesToTsv(featureTsv, entries);
 
