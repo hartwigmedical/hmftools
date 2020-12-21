@@ -111,7 +111,7 @@ public abstract class NeoEpitope
         DownstreamNmdBases = calcNonMediatedDecayBases(this, FS_DOWN);
 
         // if upstream ends on a phase other than 2, need to take the bases from the downstream gene to make a novel codon
-        if(upPhaseOffset > 0 || !isPhased)
+        if(upPhaseOffset > 0 || downPhaseOffset > 0 || !isPhased)
         {
             String upstreamBases = CodingBases[FS_UP];
             String downstreamBases = CodingBases[FS_DOWN];

@@ -133,7 +133,7 @@ public class NeoEpitopeWriter
     private boolean isCandidateUpstreamGene(final GeneAnnotation gene)
     {
         // must have at least 1 coding transcript
-        return gene.transcripts().stream().anyMatch(x -> x.isCoding());
+        return gene.transcripts().stream().anyMatch(x -> x.isCoding() && x.isDisruptive());
     }
 
     private boolean isDuplicate(final GeneAnnotation gene1, final GeneAnnotation gene2)

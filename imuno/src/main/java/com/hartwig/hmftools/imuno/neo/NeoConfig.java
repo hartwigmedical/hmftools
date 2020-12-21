@@ -74,6 +74,8 @@ public class NeoConfig
         }
     }
 
+    public boolean isMultiSample() { return SampleIds.size() > 1; }
+
     public NeoConfig(
             final List<String> sampleIds, final RefGenomeInterface refGenome, final List<String> restrictedGeneIds,
             final int requiredAminoAcids)

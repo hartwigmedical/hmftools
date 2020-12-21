@@ -197,6 +197,10 @@ public class NeoEpitopeAnnotator
                 if(!positionWithin(pointMutation.Position, transData.CodingStart, transData.CodingEnd))
                     continue;
 
+                // must be exonic
+                if(transData.exons().stream().noneMatch(x -> positionWithin(pointMutation.Position, x.ExonStart, x.ExonEnd)))
+                    continue;
+
                 if(transData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))
                     continue;
 
@@ -271,7 +275,8 @@ public class NeoEpitopeAnnotator
         {
             if(mWriter == null)
             {
-                String outputFileName = mConfig.OutputDir + "LNX_NEO_EPITOPES.csv";
+                String outputFileName = mConfig.isMultiSample() ?
+                        mConfig.OutputDir + "LNX_NEO_EPITOPES.csv" : mConfig.OutputDir + mCurrentSampleId + ".imu.neo_epitopes.csv";
 
                 mWriter = createBufferedWriter(outputFileName, false);
 

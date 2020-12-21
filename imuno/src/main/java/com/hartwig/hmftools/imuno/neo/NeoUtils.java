@@ -230,14 +230,15 @@ public class NeoUtils
 
     public static int calcNonMediatedDecayBases(final NeoEpitope neData, int stream)
     {
-        final List<ExonData> exonDataList = neData.TransData[stream].exons();
+        final TranscriptData transData = neData.TransData[stream];
+        final List<ExonData> exonDataList = transData.exons();
 
-        int nePosition = neData.position(stream);
         int exonicBaseCount = 0;
 
-        if(neData.orientation(stream) == -1)
+        if(neData.orientation(stream) == NEG_STRAND)
         {
-            // walk forwards through the exons, collecting up the required positions and bases
+            int refPosition = transData.CodingEnd != null ? transData.CodingEnd : neData.position(stream);
+
             for (int i = 0; i < exonDataList.size(); ++i)
             {
                 final ExonData exon = exonDataList.get(i);
@@ -245,14 +246,16 @@ public class NeoUtils
                 if(i == exonDataList.size() - 1)
                     break;
 
-                if (nePosition > exon.ExonEnd)
+                if (refPosition > exon.ExonEnd)
                     continue;
 
-                exonicBaseCount += exon.ExonEnd - max(nePosition, exon.ExonStart) + 1;
+                exonicBaseCount += exon.ExonEnd - max(refPosition, exon.ExonStart) + 1;
             }
         }
         else
         {
+            int refPosition = transData.CodingStart != null ? transData.CodingStart : neData.position(stream);
+
             for(int i = exonDataList.size() - 1; i >= 0; --i)
             {
                 final ExonData exon = exonDataList.get(i);
@@ -260,10 +263,10 @@ public class NeoUtils
                 if(i == 0)
                     break;
 
-                if(nePosition < exon.ExonStart)
+                if(refPosition < exon.ExonStart)
                     continue;
 
-                exonicBaseCount += min(nePosition, exon.ExonEnd) - exon.ExonStart + 1;
+                exonicBaseCount += min(refPosition, exon.ExonEnd) - exon.ExonStart + 1;
             }
         }
 

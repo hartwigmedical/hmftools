@@ -118,6 +118,21 @@ public class PmNeoEpitope extends NeoEpitope
         setTranscriptCodingData(this, transData, position(upperStream), insSeqLength, upperStream);
     }
 
+    public int getDownstreamPhaseOffset()
+    {
+        int upOpenBases = getUpstreamOpenCodonBases();
+
+        if(upOpenBases == 0)
+        {
+            if(mPointMutation.Effect == MISSENSE)
+                return 3;
+            else
+                return 0;
+        }
+
+        return 3 - upOpenBases;
+    }
+
     public void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids)
     {
         // get the number of bases from the mutation or junction as required by the required amino acid count
