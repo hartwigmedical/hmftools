@@ -7,6 +7,7 @@ import java.util.Random;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class SnpEffSummarySerialiserTest {
@@ -28,6 +29,7 @@ public class SnpEffSummarySerialiserTest {
         assertEquals("multiple_effects&with_spaces", worst.get(2));
     }
 
+    @NotNull
     static ImmutableSnpEffSummary.Builder createRandom(Random random) {
         return ImmutableSnpEffSummary.builder()
                 .genesAffected(random.nextInt())

@@ -20,7 +20,6 @@ public class KataegisQueueTest {
 
     @Test
     public void testExpectedBehaviour() {
-
         final List<VariantContext> input = Lists.newArrayList();
         for (int i = 0; i < KataegisQueue.MIN_COUNT; i++) {
             input.add(create("1", 100 + i, true));
@@ -73,7 +72,6 @@ public class KataegisQueueTest {
 
     @Test
     public void testMaxDepthAcceptable() {
-
         final List<VariantContext> input = Lists.newArrayList();
         int i;
         for (i = 0; i < KataegisQueue.MIN_COUNT; i++) {
