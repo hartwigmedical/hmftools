@@ -22,9 +22,9 @@ public class VariantEvidence {
             Sets.newHashSet(CodingEffect.SPLICE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE);
 
     @NotNull
-    private final List<ActionableRange> ranges;
-    @NotNull
     private final List<ActionableHotspot> hotspots;
+    @NotNull
+    private final List<ActionableRange> ranges;
 
     public VariantEvidence(@NotNull final List<ActionableHotspot> hotspots, @NotNull final List<ActionableRange> ranges) {
         this.hotspots = hotspots;

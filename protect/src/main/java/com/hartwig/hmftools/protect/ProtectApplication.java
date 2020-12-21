@@ -87,7 +87,7 @@ public class ProtectApplication implements AutoCloseable {
         final DoidParents doidParent = new DoidParents(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
 
         final Set<String> initialDoids = config.primaryTumorDoids();
-        LOGGER.info( "Starting with initial primary tumor doids '{}'", initialDoids);
+        LOGGER.info("Starting with initial primary tumor doids '{}'", initialDoids);
         for (String initialDoid : initialDoids) {
             result.add(initialDoid);
             result.addAll(doidParent.parents(initialDoid));
@@ -102,8 +102,7 @@ public class ProtectApplication implements AutoCloseable {
         final Set<String> doids = doids(config);
 
         // Serve Data
-        final String serveActionabilityDir = config.serveActionabilityDir();
-        final ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(serveActionabilityDir, REF_GENOME_VERSION);
+        final ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), REF_GENOME_VERSION);
         final VariantEvidence variantEvidenceFactory = new VariantEvidence(actionableEvents.hotspots(), actionableEvents.ranges());
         final CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(actionableEvents.genes());
         final FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());
