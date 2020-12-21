@@ -23,12 +23,15 @@ public abstract class LimsCohortModel {
         String effectiveCohortString = cohortString;
         if (cohortString == null || cohortString.isEmpty()) {
             effectiveCohortString = resolveFromSampleId(sampleId);
-            LOGGER.warn("No cohort string present in LIMS for {}. Cohort has been set to {}", sampleId, effectiveCohortString);
+            if (effectiveCohortString != null) {
+                LOGGER.warn("No cohort string present in LIMS for sample '{}'. Cohort has been set to {}", sampleId, effectiveCohortString);
+            }
         }
 
         LimsCohortConfig cohortConfigData = limsCohortMap().get(effectiveCohortString);
         if (cohortConfigData == null) {
-            throw new IllegalStateException("No cohort config present for cohort '{}'" + effectiveCohortString);
+            LOGGER.warn("Could not resolve cohort config for sample '{}' based on LIMS cohort '{}'", sampleId, cohortString);
+            return null;
         } else {
             if (cohortConfigData.cohortId().contains("CPCT") || cohortConfigData.cohortId().contains("DRUP")) {
                 if (sampleId.startsWith(cohortConfigData.cohortId().substring(0, 4))) {

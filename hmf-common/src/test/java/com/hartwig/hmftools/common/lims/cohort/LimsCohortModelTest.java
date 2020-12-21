@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.lims.cohort;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.Map;
 
@@ -42,12 +43,12 @@ public class LimsCohortModelTest {
         model.queryCohortData("DRUP", "CPCT01");
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void crashWhenCohortConfigIsNotPresent() {
+    @Test
+    public void nullWhenCohortConfigIsNotPresent() {
         Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
         cohortMap.put("DRUP", LimsTestUtil.createAllDisabledCohortConfig("DRUP"));
 
         LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
-        model.queryCohortData("NON-DRUP", "NON-DRUP01");
+        assertNull(model.queryCohortData("NON-DRUP", "NON-DRUP01"));
     }
 }
