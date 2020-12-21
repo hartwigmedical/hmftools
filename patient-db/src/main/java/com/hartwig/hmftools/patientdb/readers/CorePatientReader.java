@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.CuratedPrimaryTumor;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.Patient;
@@ -46,19 +45,13 @@ public class CorePatientReader {
 
     @NotNull
     private BaselineData toBaselineData(@Nullable String limsPrimaryTumorLocation) {
-        CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(limsPrimaryTumorLocation);
-        if (curatedPrimaryTumor.location() == null && limsPrimaryTumorLocation != null
-                && !limsPrimaryTumorLocation.isEmpty()) {
-            LOGGER.warn("Could not curate CORE primary tumor '{}'", limsPrimaryTumorLocation);
-        }
-
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)
                 .gender(null)
                 .hospital(null)
                 .birthYear(null)
-                .curatedPrimaryTumor(curatedPrimaryTumor)
+                .curatedPrimaryTumor(primaryTumorCurator.search(limsPrimaryTumorLocation))
                 .deathDate(null)
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())
