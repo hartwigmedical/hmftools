@@ -433,13 +433,13 @@ public final class LoadClinicalData {
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
 
-            assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
                 LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
-                assert cohort != null;
 
-                if (cohort.cohortId().equals("WIDE")) {
+                if (cohort == null) {
+                    LOGGER.warn("Could not resolve cohort config for sample with barcode {}", tumorSamples.get(0).sampleBarcode());
+                } else if (cohort.cohortId().equals("WIDE")) {
                     String patientId = entry.getKey();
                     Patient widePatient =
                             widePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
@@ -458,14 +458,13 @@ public final class LoadClinicalData {
 
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
-
-            assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
                 LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
-                assert cohort != null;
 
-                if (cohort.cohortId().equals("CORE")) {
+                if (cohort == null) {
+                    LOGGER.warn("Could not resolve cohort config for sample with barcode {}", tumorSamples.get(0).sampleBarcode());
+                } else if (cohort.cohortId().equals("CORE")) {
                     String patientId = entry.getKey();
                     Patient corePatient =
                             corePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
