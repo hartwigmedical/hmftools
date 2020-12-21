@@ -7,6 +7,7 @@ public enum ClassifierType
     EXPRESSION_PAIRWISE,
     EXPRESSION_COHORT,
     FEATURE,
+    ALT_SJ,
     COMBINED;
 
     public static boolean isDna(final ClassifierType type)
@@ -16,6 +17,6 @@ public enum ClassifierType
 
     public static boolean isRna(final ClassifierType type)
     {
-        return type == EXPRESSION_COHORT || type == EXPRESSION_PAIRWISE;
+        return type == EXPRESSION_COHORT || type == EXPRESSION_PAIRWISE || type == ALT_SJ;
     }
 }

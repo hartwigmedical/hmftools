@@ -25,6 +25,8 @@ public class CupCalcs
     private static final int PERCENTILE_LOW = 5;
     private static final int PERCENTILE_HIGH = 95;
 
+    public static final double LOW_PROB_THRESHOLD = 1e-20;
+
     public static Map<String,Double> calcPercentilePrevalence(
             final SampleData sample, int sampleCancerCount, int cancerTypeCount,
             final Map<String,double[]> cancerPercentiles, double value,  boolean useLowThreshold)
@@ -128,6 +130,18 @@ public class CupCalcs
             double percentage = entry.getValue() / totalPrevalence;
             dataMap.put(entry.getKey(), percentage);
         }
+    }
+
+    public static void adjustLowProbabilities(final Map<String,Double> probabilityMap)
+    {
+        double maxProbability = probabilityMap.values().stream().mapToDouble(x -> x).max().orElse(0);
+
+        if(maxProbability <= 0)
+            return;
+
+        // prevent values getting too small and dropping out
+        if(maxProbability < LOW_PROB_THRESHOLD)
+            convertToPercentages(probabilityMap);
     }
 
     public static void dampenProbabilities(final Map<String,Double> cancerProbabilities)

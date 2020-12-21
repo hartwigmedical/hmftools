@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.CupCalcs.adjustLowProbabilities;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
@@ -399,13 +400,7 @@ public class RnaExpression implements CuppaClassifier
                     summaryCancerPrevs.put(entry.getKey(), prev * entry.getValue());
             }
 
-            double maxProbability = summaryCancerPrevs.values().stream().mapToDouble(x -> x).max().orElse(0);
-
-            if(maxProbability <= 0)
-                break;
-
-            if(maxProbability < 1e-20)
-                convertToPercentages(summaryCancerPrevs); // prevent values getting too small and dropping out
+            adjustLowProbabilities(summaryCancerPrevs);
         }
 
         // form a likelihood value from all gene entries

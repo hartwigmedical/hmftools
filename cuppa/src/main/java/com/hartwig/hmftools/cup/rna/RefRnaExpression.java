@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
+import com.hartwig.hmftools.cup.ref.RefClassifier;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
 import org.apache.commons.cli.CommandLine;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.rna;
+package com.hartwig.hmftools.cup.ref;
 
 import com.hartwig.hmftools.cup.common.CategoryType;
 

@@ -151,7 +151,7 @@ public class FeatureClassifier implements CuppaClassifier
             final List<FeaturePrevData> driverPrevalences = entry.getValue();
 
             // only count at most one AMP or DEL per chromosome to avoid the effects of a single event impacting more than 1 gene
-            final List<SampleFeatureData> sampleFeatures = allSampleFeatures; // cullMultiChromosomalEvents(allSampleFeatures, cancerType);
+            final List<SampleFeatureData> sampleFeatures = allSampleFeatures;
 
             final Set<String> genes = Sets.newHashSet();
             sampleFeatures.forEach(x -> genes.add(x.Name));
@@ -252,7 +252,6 @@ public class FeatureClassifier implements CuppaClassifier
                     double noPrevValue = isDriverType ? noDriverPrevalence : noNonDriverPrevalence;
                     featurePrevData.Prevalence += noPrevValue;
                     genePrevTotals.PositiveTotal += featurePrevData.Prevalence;
-                    genePrevTotals.NegativeTotal += 1 - featurePrevData.Prevalence;
                 }
                 else
                 {

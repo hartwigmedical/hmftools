@@ -50,6 +50,11 @@ public class SvRegion
         return Chromosome.equals(chromosome) && positionWithin(position, start(), end());
     }
 
+    public boolean matches(final SvRegion other)
+    {
+        return Chromosome.equals(other.Chromosome) && start() == other.start() && end() == other.end();
+    }
+
     public String toString() { return String.format("%s:%d-%d", Chromosome, Positions[SE_START], Positions[SE_END]); }
 
     // utility methods relating to position comparisons
@@ -67,4 +72,5 @@ public class SvRegion
     {
         return (innerStart < innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
     }
+
 }

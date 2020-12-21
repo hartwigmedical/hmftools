@@ -29,7 +29,7 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
-import com.hartwig.hmftools.cup.rna.RefClassifier;
+import com.hartwig.hmftools.cup.ref.RefClassifier;
 
 public class RefSampleTraits implements RefClassifier
 {

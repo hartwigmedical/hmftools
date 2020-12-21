@@ -7,6 +7,7 @@ public enum CategoryType
     SAMPLE_TRAIT,
     FEATURE,
     GENE_EXP,
+    ALT_SJ,
     CLASSIFIER;
 
     public static boolean isDna(final CategoryType type)
@@ -16,7 +17,7 @@ public enum CategoryType
 
     public static boolean isRna(final CategoryType type)
     {
-        return type == GENE_EXP;
+        return type == GENE_EXP || type == ALT_SJ;
     }
 
 }

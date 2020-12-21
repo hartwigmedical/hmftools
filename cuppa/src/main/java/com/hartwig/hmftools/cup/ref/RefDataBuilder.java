@@ -6,10 +6,8 @@ import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 
 import java.util.List;
 
-import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
-import com.hartwig.hmftools.cup.rna.RefClassifier;
 import com.hartwig.hmftools.cup.rna.RefRnaExpression;
 import com.hartwig.hmftools.cup.sample.RefSampleTraits;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;

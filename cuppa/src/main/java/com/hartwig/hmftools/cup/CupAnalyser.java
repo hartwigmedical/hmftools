@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cup;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
@@ -12,6 +11,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
+import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.ClassifierType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
+import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.RnaExpression;
 import com.hartwig.hmftools.cup.sample.SampleTraits;
 import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
@@ -81,6 +83,9 @@ public class CupAnalyser
 
         if(mConfig.runClassifier(GENE_EXP))
             mClassifiers.add(new RnaExpression(mConfig, mSampleDataCache, cmd));
+
+        if(mConfig.runClassifier(CategoryType.ALT_SJ))
+            mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache));
 
         mSampleDataWriter = null;
         mSampleSimilarityWriter = null;

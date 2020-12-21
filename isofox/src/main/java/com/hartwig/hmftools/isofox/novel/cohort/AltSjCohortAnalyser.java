@@ -42,7 +42,8 @@ public class AltSjCohortAnalyser
     private final double mProbabilityThreshold;
     private final boolean mRewriteCohortFile;
 
-    private BufferedWriter mSampleDataWriter;
+    private BufferedWriter mCombinedDataWriter;
+    private BufferedWriter mCohortDataWriter;
 
     private final AltSjFilter mAltSjFilter;
     private final Map<String,Integer> mFieldsMap;
@@ -73,7 +74,8 @@ public class AltSjCohortAnalyser
 
         mAltSjFilter = new AltSjFilter(mConfig.RestrictedGeneIds, mConfig.ExcludedGeneIds, mMinFragments);
 
-        mSampleDataWriter = null;
+        mCombinedDataWriter = null;
+        mCohortDataWriter = null;
     }
 
     public static void addCmdLineOptions(final Options options)
@@ -92,48 +94,85 @@ public class AltSjCohortAnalyser
         if(!formSampleFilenames(mConfig, ALT_SPLICE_JUNCTION, filenames))
             return;
 
-        int totalProcessed = 0;
-        int nextLog = 10000;
-
-        // load each sample's alt SJs and consolidate into a single list
-        for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
+        if(mConfig.SampleData.CancerTypeSamples.size() > 1 && mMinCancerSampleThreshold > 0)
         {
-            final String sampleId = mConfig.SampleData.SampleIds.get(i);
-            final Path altSJFile = filenames.get(i);
+            int sampleCount = 0;
 
-            final List<AltSpliceJunction> altSJs = loadFile(altSJFile, mFieldsMap, mAltSjFilter);
-
-            ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", i, sampleId, altSJs.size());
-            totalProcessed += altSJs.size();
-
-            final String cancerType = mConfig.SampleData.SampleCancerType.get(sampleId);
-
-            altSJs.forEach(x -> addAltSpliceJunction(x, sampleId, cancerType));
-
-            int totalAltSJs = mAltSpliceJunctions.values().stream().mapToInt(x -> x.values().size()).sum();
-
-            if(totalAltSJs >= nextLog)
+            // load and process samples by cancer type rather than just in order
+            for(Map.Entry<String,List<String>> entry : mConfig.SampleData.CancerTypeSamples.entrySet())
             {
-                ISF_LOGGER.debug("cached alt-SJ count({})", totalAltSJs);
-                nextLog += 10000;
+                final String cancerType = entry.getKey();
+                final List<String> sampleIds = entry.getValue();
+
+                ISF_LOGGER.info("cancerType({}) loading alt-SJs for {} samples", cancerType, sampleIds.size());
+
+                for(final String sampleId : sampleIds)
+                {
+                    final Path altSJFile = filenames.stream().filter(x -> x.toString().contains(sampleId)).findFirst().orElse(null);
+
+                    if(altSJFile == null)
+                        continue;
+
+                    final List<AltSpliceJunction> altSJs = loadFile(altSJFile, mFieldsMap, mAltSjFilter);
+                    ++sampleCount;
+
+                    ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", sampleCount, sampleId, altSJs.size());
+
+                    altSJs.forEach(x -> addAltSpliceJunction(x, sampleId, cancerType));
+                }
+
+                // write out alt-SJs for this cancer type
+                ISF_LOGGER.info("cancerType({}) writing alt-SJs for {} samples", cancerType, sampleIds.size());
+                writeCancerTypeAltSpliceJunctions();
+                mAltSpliceJunctions.clear();
+            }
+        }
+        else
+        {
+            int totalProcessed = 0;
+            int nextLog = 10000;
+
+            // load each sample's alt SJs and consolidate into a single list
+            for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
+            {
+                final String sampleId = mConfig.SampleData.SampleIds.get(i);
+                final Path altSJFile = filenames.get(i);
+
+                final List<AltSpliceJunction> altSJs = loadFile(altSJFile, mFieldsMap, mAltSjFilter);
+
+                ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", i, sampleId, altSJs.size());
+                totalProcessed += altSJs.size();
+
+                final String cancerType = mConfig.SampleData.SampleCancerType.get(sampleId);
+
+                altSJs.forEach(x -> addAltSpliceJunction(x, sampleId, cancerType));
+
+                int totalAltSJs = mAltSpliceJunctions.values().stream().mapToInt(x -> x.values().size()).sum();
+
+                if(totalAltSJs >= nextLog)
+                {
+                    ISF_LOGGER.debug("cached alt-SJ count({})", totalAltSJs);
+                    nextLog += 10000;
+                }
+
+                if(mRewriteCohortFile)
+                    altSJs.forEach(x -> writeAltSpliceJunctionData(sampleId, x));
             }
 
-            if(mRewriteCohortFile)
-                altSJs.forEach(x -> writeAltSpliceJunctionData(sampleId, x));
+            ISF_LOGGER.info("loaded {} alt-SJ records", totalProcessed);
+
+            if(mProbabilityThreshold < 1)
+            {
+                // write a report for any re-occurring alt SJ
+                writeReoccurringAltSpliceJunctions();
+            }
+
+            // write a cohort file
+            writeCohortAltSpliceJunctions();
         }
 
-        ISF_LOGGER.info("loaded {} alt-SJ records", totalProcessed);
-
-        if(mProbabilityThreshold < 1)
-        {
-            // write a report for any re-occurring alt SJ
-            writeReoccurringAltSpliceJunctions();
-        }
-
-        // write a cohort file
-        writeCombinedAltSpliceJunctions();
-
-        closeBufferedWriter(mSampleDataWriter);
+        closeBufferedWriter(mCombinedDataWriter);
+        closeBufferedWriter(mCohortDataWriter);
     }
 
     public static List<AltSpliceJunction> loadFile(final Path filename, final Map<String,Integer> fieldsIndexMap, final AltSjFilter filter)
@@ -206,26 +245,26 @@ public class AltSjCohortAnalyser
 
         try
         {
-            if(mSampleDataWriter == null)
+            if(mCombinedDataWriter == null)
             {
                 final String outputFileName = mConfig.formCohortFilename("alt_sj_cohort_sample_data.csv");
-                mSampleDataWriter = createBufferedWriter(outputFileName, false);
+                mCombinedDataWriter = createBufferedWriter(outputFileName, false);
 
-                mSampleDataWriter.write("SampleId,GeneId,Chromosome,Type,SjStart,SjEnd");
-                mSampleDataWriter.write(",FragCount,StartDepth,EndDepth,StartContext,EndContext,TransStart,TransEnd");
-                mSampleDataWriter.newLine();
+                mCombinedDataWriter.write("SampleId,GeneId,Chromosome,Type,SjStart,SjEnd");
+                mCombinedDataWriter.write(",FragCount,StartDepth,EndDepth,StartContext,EndContext,TransStart,TransEnd");
+                mCombinedDataWriter.newLine();
             }
 
-            mSampleDataWriter.write(String.format("%s,%s,%s,%s,%d,%d",
+            mCombinedDataWriter.write(String.format("%s,%s,%s,%s,%d,%d",
                     sampleId, altSJ.getGeneId(), altSJ.Chromosome, altSJ.type(),
                     altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]));
 
-            mSampleDataWriter.write(String.format(",%d,%d,%d,%s,%s,%s,%s",
+            mCombinedDataWriter.write(String.format(",%d,%d,%d,%s,%s,%s,%s",
                     altSJ.getFragmentCount(), altSJ.getPositionCount(SE_START), altSJ.getPositionCount(SE_END),
                     altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
                     altSJ.getTranscriptNames()[SE_START], altSJ.getTranscriptNames()[SE_END]));
 
-            mSampleDataWriter.newLine();
+            mCombinedDataWriter.newLine();
         }
         catch(IOException e)
         {
@@ -233,16 +272,19 @@ public class AltSjCohortAnalyser
         }
     }
 
-    private void writeCombinedAltSpliceJunctions()
+    private void writeCohortAltSpliceJunctions()
     {
         try
         {
-            final String outputFileName = mConfig.formCohortFilename("alt_sj_cohort.csv");
-            final BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            if(mCohortDataWriter == null)
+            {
+                final String outputFileName = mConfig.formCohortFilename("alt_sj_cohort.csv");
+                mCohortDataWriter = createBufferedWriter(outputFileName, false);
 
-            writer.write("GeneId,CancerType,SampleCount,Chromosome,Type,SjStart,SjEnd");
-            writer.write(",StartContext,EndContext,BaseMotif,AvgFrags,MaxFrags,AvgStartDepth,AvgEndDepth,SampleIds");
-            writer.newLine();
+                mCohortDataWriter.write("GeneId,SampleCount,Chromosome,Type,SjStart,SjEnd");
+                mCohortDataWriter.write(",StartContext,EndContext,BaseMotif,AvgFrags,MaxFrags,AvgStartDepth,AvgEndDepth,SampleIds");
+                mCohortDataWriter.newLine();
+            }
 
             for(Map.Entry<String,Map<String,List<AltSjCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
             {
@@ -262,49 +304,81 @@ public class AltSjCohortAnalyser
                         if(sampleCount < mMinSampleThreshold)
                             continue;
 
-                        Map<String,List<String>> cancerSamples = Maps.newHashMap();
+                        mCohortDataWriter.write(String.format("%s,%d,%s,%s,%d,%d",
+                                geneId, sampleCount, chromosome, altSJ.type(), altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]));
 
-                        if(mMinCancerSampleThreshold > 0)
+                        mCohortDataWriter.write(String.format(",%s,%s,%s",
+                                altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END], altSJ.getDonorAcceptorBases()));
+
+                        mCohortDataWriter.write(String.format(",%.0f,%d,%.0f,%.0f",
+                                altSjData.getAvgFragmentCount(), altSjData.getMaxFragmentCount(),
+                                altSjData.getPositionCount(SE_START) / (double) sampleCount,
+                                altSjData.getPositionCount(SE_END) / (double) sampleCount));
+
+                        mCohortDataWriter.write(String.format(",%s",
+                                appendStrList(altSjData.getSampleIds(), ITEM_DELIM.charAt(0))));
+
+                        mCohortDataWriter.newLine();
+                    }
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write alt-SJ cohort file: {}", e.toString());
+        }
+    }
+
+    private void writeCancerTypeAltSpliceJunctions()
+    {
+        try
+        {
+            if(mCohortDataWriter == null)
+            {
+                final String outputFileName = mConfig.formCohortFilename("alt_sj_cohort.csv");
+                mCohortDataWriter = createBufferedWriter(outputFileName, false);
+
+                mCohortDataWriter.write("GeneId,CancerType,Chromosome,Type,SjStart,SjEnd,SampleCount,Prevalence,SampleIds");
+                mCohortDataWriter.newLine();
+            }
+
+            for(Map.Entry<String,Map<String,List<AltSjCohortData>>> chrEntry : mAltSpliceJunctions.entrySet())
+            {
+                final String chromosome = chrEntry.getKey();
+                final Map<String,List<AltSjCohortData>> geneMap = chrEntry.getValue();
+
+                for(Map.Entry<String,List<AltSjCohortData>> geneEntry : geneMap.entrySet())
+                {
+                    final String geneId = geneEntry.getKey();
+
+                    for (AltSjCohortData altSjData : geneEntry.getValue())
+                    {
+                        final AltSpliceJunction altSJ = altSjData.AltSJ;
+
+                        for(Map.Entry<String,List<String>> entry : altSjData.cancerSampleIds().entrySet())
                         {
-                            for(Map.Entry<String,List<String>> entry : altSjData.cancerSampleIds().entrySet())
-                            {
-                                if(entry.getValue().size() < mMinCancerSampleThreshold)
-                                    continue;
+                            int sampleCount = entry.getValue().size();
 
-                                cancerSamples.put(entry.getKey(), entry.getValue());
-                            }
-                        }
-                        else
-                        {
-                            cancerSamples.put("ALL", altSjData.getSampleIds());
-                        }
+                            if(sampleCount < mMinCancerSampleThreshold)
+                                continue;
 
-                        for(Map.Entry<String,List<String>> entry : cancerSamples.entrySet())
-                        {
-                            sampleCount = entry.getValue().size();
+                            final String cancerType = entry.getKey();
 
-                            writer.write(String.format("%s,%s,%d,%s,%s,%d,%d",
-                                    geneId, entry.getKey(), sampleCount,
-                                    chromosome, altSJ.type(), altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]));
+                            int cancerSampleCount = mConfig.SampleData.CancerTypeSamples.get(cancerType).size();
+                            double prevalence = sampleCount / (double)cancerSampleCount;
 
-                            writer.write(String.format(",%s,%s,%s",
-                                    altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END], altSJ.getDonorAcceptorBases()));
+                            mCohortDataWriter.write(String.format("%s,%s,%s,%s,%d,%d",
+                                    geneId, cancerType, chromosome, altSJ.type(),
+                                    altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]));
 
-                            writer.write(String.format(",%.0f,%d,%.0f,%.0f",
-                                    altSjData.getAvgFragmentCount(), altSjData.getMaxFragmentCount(),
-                                    altSjData.getPositionCount(SE_START) / (double) sampleCount,
-                                    altSjData.getPositionCount(SE_END) / (double) sampleCount));
+                            mCohortDataWriter.write(String.format(",%d,%.4f,%s",
+                                    sampleCount, prevalence, appendStrList(entry.getValue(), ITEM_DELIM.charAt(0))));
 
-                            writer.write(String.format(",%s",
-                                    appendStrList(entry.getValue(), ITEM_DELIM.charAt(0))));
-
-                            writer.newLine();
+                            mCohortDataWriter.newLine();
                         }
                     }
                 }
             }
-
-            closeBufferedWriter(writer);
         }
         catch(IOException e)
         {
