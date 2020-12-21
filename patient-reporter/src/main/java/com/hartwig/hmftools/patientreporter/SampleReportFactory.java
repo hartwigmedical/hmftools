@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,10 +47,13 @@ public final class SampleReportFactory {
 
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
-        LimsCohortConfig cohortConfig = lims.cohortConfig(tumorSampleBarcode, tumorSampleId);
+        LimsCohortConfig cohortConfig = lims.cohortConfig(tumorSampleBarcode);
         if (cohortConfig == null) {
-            throw new IllegalStateException(
-                    "Cohort not configured in LIMS for sample '" + tumorSampleId + "' with barcode " + tumorSampleBarcode);
+            if (tumorSampleId.startsWith("COLO")) {
+                cohortConfig = buildCOLOConfig();
+            } else {
+                throw new IllegalStateException("Cohort not configured in LIMS for sample '" + tumorSampleId + "' with barcode " + tumorSampleBarcode);
+            }
         }
 
         LOGGER.info("Cohort ID of this sample is: {}", cohortConfig.cohortId());
@@ -59,8 +63,8 @@ public final class SampleReportFactory {
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientPrimaryTumor(patientPrimaryTumor)
-                .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode, tumorSampleId))
-                .reportViralInsertions(lims.reportViralInsertions(tumorSampleBarcode, tumorSampleId))
+                .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode))
+                .reportViralInsertions(lims.reportViralInsertions(tumorSampleBarcode))
                 .refArrivalDate(arrivalDateRefSample)
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .shallowSeqPurityString(lims.purityShallowSeq(tumorSampleBarcode))
@@ -68,7 +72,7 @@ public final class SampleReportFactory {
                 .cohort(cohortConfig)
                 .projectName(lims.projectName(tumorSampleBarcode))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
-                .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode, tumorSampleId))
+                .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
                 .hospitalPatientId(hospitalPatientId)
                 .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohortConfig))
                 .build();
@@ -88,8 +92,8 @@ public final class SampleReportFactory {
     @VisibleForTesting
     @Nullable
     static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
-            @NotNull LimsCohortConfig cohortdata) {
-        if (cohortdata.requireHospitalPAId()) {
+            @NotNull LimsCohortConfig cohortConfig) {
+        if (cohortConfig.requireHospitalPAId()) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
                     && isValidHospitalPathologySampleId(hospitalPathologySampleId)) {
                 return hospitalPathologySampleId;
@@ -118,5 +122,22 @@ public final class SampleReportFactory {
                 && hospitalPathologySampleId.substring(3, 4).equals("-") && hospitalPathologySampleId.substring(4, 9).matches("[0-9]+");
 
         return tMatch || cMatch;
+    }
+
+    @NotNull
+    private static LimsCohortConfig buildCOLOConfig() {
+        return ImmutableLimsCohortConfig.builder()
+                .cohortId("COLO")
+                .sampleContainsHospitalCenterId(false)
+                .reportGermline(true)
+                .reportGermlineFlag(true)
+                .reportConclusion(false)
+                .reportViral(true)
+                .requireHospitalId(false)
+                .requireHospitalPAId(false)
+                .requireHospitalPersonsStudy(false)
+                .requireHospitalPersonsRequester(false)
+                .requireAdditionalInformationForSidePanel(false)
+                .build();
     }
 }

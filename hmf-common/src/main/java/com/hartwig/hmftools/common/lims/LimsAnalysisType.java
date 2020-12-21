@@ -16,6 +16,5 @@ public enum LimsAnalysisType {
             default:
                 throw new IllegalStateException("Cannot resolve analysis type '{}' " + analysisType);
         }
-
     }
 }

@@ -3,6 +3,9 @@ package com.hartwig.hmftools.protect;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Set;
+
+import com.google.common.collect.Sets;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -19,13 +22,12 @@ public interface ProtectConfig {
 
     // General params needed for every report
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
+    String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     String OUTPUT_DIRECTORY = "output_dir";
 
-    String DEPRECATED_ACTIONABILITY_DIRECTORY = "deprecated_actionability_dir";
+    // Input files used by the algorithm
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
     String DOID_JSON = "doid_json";
-
-    String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
 
     // Files containing the actual genomic results for this sample.
@@ -48,13 +50,11 @@ public interface ProtectConfig {
         Options options = new Options();
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
+        options.addOption(PRIMARY_TUMOR_DOIDS, true, "A comma-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
-        options.addOption(DOID_JSON, true, "Path to where the DOID definitions.");
 
-        options.addOption(DEPRECATED_ACTIONABILITY_DIRECTORY, true, "Path towards the deprecated pre-SERVE actionability directory.");
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
-
-        options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
+        options.addOption(DOID_JSON, true, "Path to where the DOID definitions.");
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
@@ -74,22 +74,19 @@ public interface ProtectConfig {
     }
 
     @NotNull
-    String doidJsonFile();
+    String tumorSampleId();
 
     @NotNull
-    String tumorSampleId();
+    Set<String> primaryTumorDoids();
 
     @NotNull
     String outputDir();
 
     @NotNull
-    String deprecatedActionabilityDir();
-
-    @NotNull
     String serveActionabilityDir();
 
     @NotNull
-    String primaryTumorTsv();
+    String doidJsonFile();
 
     @NotNull
     String germlineReportingTsv();
@@ -132,10 +129,10 @@ public interface ProtectConfig {
 
         return ImmutableProtectConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
+                .primaryTumorDoids(extractStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS)))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
-                .deprecatedActionabilityDir(nonOptionalDir(cmd, DEPRECATED_ACTIONABILITY_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
-                .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
+                .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .germlineReportingTsv(nonOptionalFile(cmd, GERMLINE_REPORTING_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
@@ -147,8 +144,12 @@ public interface ProtectConfig {
                 .linxViralInsertionTsv(nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV))
                 .linxDriversTsv(nonOptionalFile(cmd, LINX_DRIVERS_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
-                .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .build();
+    }
+
+    @NotNull
+    static Iterable<String> extractStringSet(@NotNull String paramValue) {
+        return Sets.newHashSet(paramValue.split(","));
     }
 
     @NotNull

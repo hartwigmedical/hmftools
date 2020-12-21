@@ -48,7 +48,6 @@ public class RecoveredVariantFactoryTest {
             final String ineligible = ponFiltered.replace("PON", filter);
             assertFalse(RecoveredVariantFactory.isAppropriatelyFiltered(codec.decode(ineligible)));
         }
-
     }
 
     @NotNull

@@ -23,7 +23,6 @@ public class WeightedPloidyHistogramTest {
         victim.histogram(Lists.newArrayList(create(max, 20, 40)));
     }
 
-
     @Test
     public void testBucketWithOffset() {
         final WeightedPloidyHistogram negativeOffset = new WeightedPloidyHistogram(10, 0.05, -0.02);
@@ -43,7 +42,6 @@ public class WeightedPloidyHistogramTest {
 
     @Test
     public void testBucketNoOffset() {
-
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
         assertEquals(0, victim.bucket(0.00499));
         assertEquals(1, victim.bucket(0.00500));
@@ -76,7 +74,6 @@ public class WeightedPloidyHistogramTest {
         assertEquals(2, histogram[victim.bucket(0.20)], 0.1);
         assertEquals(6, histogram[victim.bucket(0.25)], 0.1);
         assertEquals(38, histogram[victim.bucket(0.3)], 0.1);
-
     }
 
     @Test
@@ -128,6 +125,7 @@ public class WeightedPloidyHistogramTest {
         return result;
     }
 
+    @NotNull
     static WeightedPloidy create(double ploidy, int alleleReadCount, int totalReadCount) {
         return ModifiableWeightedPloidy.create()
                 .setPloidy(ploidy)
@@ -135,5 +133,4 @@ public class WeightedPloidyHistogramTest {
                 .setAlleleReadCount(alleleReadCount)
                 .setTotalReadCount(totalReadCount);
     }
-
 }

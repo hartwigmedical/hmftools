@@ -21,8 +21,10 @@ public class VariantEvidence {
     private static final Set<CodingEffect> RANGE_CODING_EFFECTS =
             Sets.newHashSet(CodingEffect.SPLICE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE);
 
-    private final List<ActionableRange> ranges;
+    @NotNull
     private final List<ActionableHotspot> hotspots;
+    @NotNull
+    private final List<ActionableRange> ranges;
 
     public VariantEvidence(@NotNull final List<ActionableHotspot> hotspots, @NotNull final List<ActionableRange> ranges) {
         this.hotspots = hotspots;
@@ -57,12 +59,12 @@ public class VariantEvidence {
         return ProtectEvidenceItems.reportHighest(result);
     }
 
-    private static boolean rangeMatch(ActionableRange range, ReportableVariant variant) {
+    private static boolean rangeMatch(@NotNull ActionableRange range, @NotNull ReportableVariant variant) {
         return RANGE_CODING_EFFECTS.contains(variant.canonicalCodingEffect()) && variant.chromosome().equals(range.chromosome())
                 && range.gene().equals(range.gene()) && variant.position() >= range.start() && variant.position() <= range.end();
     }
 
-    private static boolean hotspotMatch(ActionableHotspot hotspot, ReportableVariant variant) {
+    private static boolean hotspotMatch(@NotNull ActionableHotspot hotspot, @NotNull ReportableVariant variant) {
         return variant.chromosome().equals(hotspot.chromosome()) && hotspot.alt().equals(hotspot.alt())
                 && hotspot.position() == variant.position() && hotspot.ref().equals(variant.ref());
     }
@@ -72,5 +74,4 @@ public class VariantEvidence {
             @NotNull ActionableEvent actionable) {
         return ProtectEvidenceItems.builder(doid, actionable).genomicEvent(reportable.genomicEvent()).reported(report).build();
     }
-
 }

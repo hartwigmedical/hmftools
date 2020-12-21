@@ -46,8 +46,18 @@ public final class XMLPatientReader extends EcrfReader {
     private static final String ITEM_OID_ATTRIBUTE = "ItemOID";
     private static final String ITEM_VALUE_ATTRIBUTE = "Value";
 
-    // See DEV-491
-    private static final List DROPDOWN_ITEMS_TO_IGNORE_FOR_WARNING = Lists.newArrayList("FLD.DDELINV", "FLD.DDELINST");
+    // TODO See DEV-491, DEV-1304, DEV-1724
+    private static final List DROPDOWN_ITEMS_TO_IGNORE_FOR_WARNING = Lists.newArrayList("FLD.DDELINV",
+            "FLD.DDELINST",
+            "FLD.CS.CSRTYPE",
+            "FLD.CS.CSRSTYPE",
+            "FLD.CARCINOMA.ENTRYSTAGE",
+            "FLD.TRTAFTER.PLANNEDTRT",
+            "FLD.TRTAFTER.ENDTRTREAS",
+            "FLD.TRTAFTER.CPCTTRIALNR",
+            "FLD.INFORMEDCONSENT.ADDNA",
+            "FLD.INFORMEDCONSENT.ADPID",
+            "FLD.INFORMEDCONSENT.ADGEN");
 
     private XMLPatientReader() {
     }

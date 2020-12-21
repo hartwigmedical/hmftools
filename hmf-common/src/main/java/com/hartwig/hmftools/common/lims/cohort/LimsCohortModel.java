@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.lims.cohort;
 
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,34 +13,60 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class LimsCohortModel {
 
+    private static final Logger LOGGER = LogManager.getLogger(LimsCohortModel.class);
+
     @NotNull
     protected abstract Map<String, LimsCohortConfig> limsCohortMap();
 
     @Nullable
-    public LimsCohortConfig queryCohortData(@Nullable String cohortString, @NotNull String sampleId, @NotNull String sampleIdMetadata) {
-        String cohortStringNew = !sampleIdMetadata.startsWith("COLO") ? cohortString : "COLO";
+    public LimsCohortConfig queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
+        String effectiveCohortString = cohortString;
+        if (cohortString == null || cohortString.isEmpty()) {
+            effectiveCohortString = resolveFromSampleId(sampleId);
+            if (effectiveCohortString != null) {
+                LOGGER.warn("No cohort string present in LIMS for sample '{}'. Cohort has been set to {}", sampleId, effectiveCohortString);
+            }
+        }
 
-        if (cohortStringNew == null) {
-            throw new IllegalStateException("No cohort string present in LIMS for sample '{}'" + sampleId);
+        LimsCohortConfig cohortConfigData = limsCohortMap().get(effectiveCohortString);
+        if (cohortConfigData == null) {
+            LOGGER.warn("Could not resolve cohort config for sample '{}' based on LIMS cohort '{}'", sampleId, cohortString);
+            return null;
         } else {
-            LimsCohortConfig cohortConfigData = limsCohortMap().get(cohortStringNew);
-            if (cohortConfigData == null) {
-                throw new IllegalStateException("No cohort config present for cohort '{}'" + cohortStringNew);
-            } else {
-                if (cohortConfigData.cohortId().contains("CPCT") || cohortConfigData.cohortId().contains("DRUP")) {
-                    if (sampleId.startsWith(cohortConfigData.cohortId().substring(0, 4))
-                            || sampleIdMetadata.startsWith(cohortConfigData.cohortId().substring(0, 4))) {
-                        return cohortConfigData;
-                    } else {
-                        throw new IllegalStateException("No matching for DRUP/CPCT");
-                    }
-                } else if (!cohortConfigData.cohortId().contains("CPCT") || !cohortConfigData.cohortId().contains("DRUP")) {
+            if (cohortConfigData.cohortId().contains("CPCT") || cohortConfigData.cohortId().contains("DRUP")) {
+                if (sampleId.startsWith(cohortConfigData.cohortId().substring(0, 4))) {
                     return cohortConfigData;
                 } else {
-                    throw new IllegalStateException(
-                            "Cohort '{}' does not seem to match with sample '{}'" + cohortConfigData.cohortId() + sampleId);
+                    throw new IllegalStateException("Sample '" + sampleId + "' does not seem to be part of CPCT/DRUP cohort");
                 }
+            } else {
+                return cohortConfigData;
             }
+        }
+    }
+
+    @Nullable
+    private static String resolveFromSampleId(@NotNull String sampleId) {
+        if (sampleId.startsWith("CPCT")) {
+            return "CPCT";
+        } else if (sampleId.startsWith("DRUP")) {
+            return "DRUP";
+        } else if (sampleId.startsWith("WIDE")) {
+            return "WIDE";
+        } else if (sampleId.startsWith("COREDB")) {
+            return "COREDB";
+        } else if (sampleId.startsWith("CORESC11")) {
+            return "CORESC11";
+        } else if (sampleId.startsWith("CORELR11")) {
+            return "CORELR11";
+        } else if (sampleId.startsWith("CORELR02")) {
+            return "CORELR02";
+        } else if (sampleId.startsWith("CORERI02")) {
+            return "CORERI02";
+        } else if (sampleId.startsWith("CORE")) {
+            return "CORE";
+        } else {
+            return null;
         }
     }
 }

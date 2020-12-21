@@ -62,7 +62,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -201,23 +200,19 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsCohortConfig cohort = lims.cohortConfig(sampleBarcode, Strings.EMPTY);
+            SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
-            if (cohort != null) {
+            if (sampleData != null) {
                 String patientId = lims.patientId(sampleBarcode);
-                SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
-
-                if (sampleData != null) {
-                    List<SampleData> currentSamples = samplesPerPatient.get(patientId);
-                    if (currentSamples == null) {
-                        currentSamples = Lists.newArrayList(sampleData);
-                    } else if (!sampleIdExistsInSampleDataList(currentSamples, sampleId)) {
-                        // Ideally if a single sample exists in LIMS with multiple barcodes we pick "the most relevant one".
-                        // Currently just picking a random one - sampleId has to be unique in this list.
-                        currentSamples.add(sampleData);
-                    }
-                    samplesPerPatient.put(patientId, currentSamples);
+                List<SampleData> currentSamples = samplesPerPatient.get(patientId);
+                if (currentSamples == null) {
+                    currentSamples = Lists.newArrayList(sampleData);
+                } else if (!sampleIdExistsInSampleDataList(currentSamples, sampleId)) {
+                    // Ideally if a single sample exists in LIMS with multiple barcodes we pick "the most relevant one".
+                    // Currently just picking a random one - sampleId has to be unique in this list.
+                    currentSamples.add(sampleData);
                 }
+                samplesPerPatient.put(patientId, currentSamples);
             }
         }
 
@@ -438,13 +433,13 @@ public final class LoadClinicalData {
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
 
-            assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode(), Strings.EMPTY);
-                assert cohort != null;
+                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
 
-                if (cohort.cohortId().equals("WIDE")) {
+                if (cohort == null) {
+                    LOGGER.warn("Could not resolve cohort config for sample with barcode {}", tumorSamples.get(0).sampleBarcode());
+                } else if (cohort.cohortId().equals("WIDE")) {
                     String patientId = entry.getKey();
                     Patient widePatient =
                             widePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
@@ -463,14 +458,13 @@ public final class LoadClinicalData {
 
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
-
-            assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode(), Strings.EMPTY);
-                assert cohort != null;
+                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
 
-                if (cohort.cohortId().equals("CORE")) {
+                if (cohort == null) {
+                    LOGGER.warn("Could not resolve cohort config for sample with barcode {}", tumorSamples.get(0).sampleBarcode());
+                } else if (cohort.cohortId().equals("CORE")) {
                     String patientId = entry.getKey();
                     Patient corePatient =
                             corePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
@@ -585,29 +579,29 @@ public final class LoadClinicalData {
                 true,
                 "Path towards the folder containing patient runs that are considered part of HMF database.");
 
-        options.addOption(CPCT_ECRF_FILE, true, "Path towards the cpct ecrf file.");
-        options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the cpct form status csv file.");
-        options.addOption(DRUP_ECRF_FILE, true, "Path towards the drup ecrf file.");
-        options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database");
+        options.addOption(CPCT_ECRF_FILE, true, "Path towards the CPCT ecrf file.");
+        options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the CPCT form status csv file.");
+        options.addOption(DRUP_ECRF_FILE, true, "Path towards the DRUP ecrf file.");
+        options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database.");
 
-        options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, clinical data will be loaded into the database");
-        options.addOption(CURATED_PRIMARY_TUMOR_TSV, true, "Path towards to the TSV of curated primary tumor.");
+        options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, clinical data will be loaded into the database.");
+        options.addOption(CURATED_PRIMARY_TUMOR_TSV, true, "Path towards to the curated primary tumor TSV.");
 
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,
-                "if set, creates clinical timeline for wide patients and persists to database");
-        options.addOption(WIDE_AVL_TREATMENT_CSV, true, "Path towards the wide avl treatment csv");
-        options.addOption(WIDE_PRE_AVL_TREATMENT_CSV, true, "Path towards the wide pre avl treatment csv.");
-        options.addOption(WIDE_BIOPSY_CSV, true, "Path towards the wide biopsy csv.");
-        options.addOption(WIDE_RESPONSE_CSV, true, "Path towards the wide response csv.");
-        options.addOption(WIDE_FIVE_DAYS_CSV, true, "Path towards the wide five days csv.");
+                "if set, creates clinical timeline for WIDE patients and persists to database.");
+        options.addOption(WIDE_AVL_TREATMENT_CSV, true, "Path towards the WIDE avl treatment csv");
+        options.addOption(WIDE_PRE_AVL_TREATMENT_CSV, true, "Path towards the WIDE pre avl treatment csv.");
+        options.addOption(WIDE_BIOPSY_CSV, true, "Path towards the WIDE biopsy csv.");
+        options.addOption(WIDE_RESPONSE_CSV, true, "Path towards the WIDE response csv.");
+        options.addOption(WIDE_FIVE_DAYS_CSV, true, "Path towards the WIDE five days csv.");
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
 
         options.addOption(DOID_JSON, true, "Path towards to the json file of the doid ID of primary tumors.");
-        options.addOption(TUMOR_LOCATION_MAPPING_TSV, true, "Path towards to the TSV of mapping the tumor location.");
-        options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the CSV of mapping the treatments.");
-        options.addOption(BIOPSY_MAPPING_CSV, true, "Path towards to the CSV of mapping of biopsies.");
+        options.addOption(TUMOR_LOCATION_MAPPING_TSV, true, "Path towards to the tumor location mapping TSV.");
+        options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the treatment mapping CSV.");
+        options.addOption(BIOPSY_MAPPING_CSV, true, "Path towards to the biopsy mapping CSV.");
 
         options.addOption(PIPELINE_VERSION, true, "Path towards the pipeline version");
 

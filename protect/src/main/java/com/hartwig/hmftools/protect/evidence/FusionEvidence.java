@@ -16,10 +16,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class FusionEvidence {
 
+    @NotNull
     private final List<ActionableGene> actionableGenes;
+    @NotNull
     private final List<ActionableFusion> actionableFusions;
 
-    public FusionEvidence(final List<ActionableGene> actionableGenes, final List<ActionableFusion> actionableFusions) {
+    public FusionEvidence(@NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions) {
         this.actionableGenes = actionableGenes.stream().filter(x -> x.event().equals(GeneLevelEvent.FUSION)).collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
     }
@@ -48,11 +50,11 @@ public class FusionEvidence {
         return ProtectEvidenceItems.reportHighest(result);
     }
 
-    private static boolean match(ActionableGene actionable, LinxFusion victim) {
+    private static boolean match(@NotNull ActionableGene actionable, @NotNull LinxFusion victim) {
         return actionable.gene().equals(victim.geneStart()) || actionable.gene().equals(victim.geneEnd());
     }
 
-    private static boolean match(ActionableFusion actionable, LinxFusion victim) {
+    private static boolean match(@NotNull ActionableFusion actionable, @NotNull LinxFusion victim) {
         if (!actionable.geneDown().equals(victim.geneStart())) {
             return false;
         }
@@ -61,15 +63,27 @@ public class FusionEvidence {
             return false;
         }
 
-        // TODO implement min/max
-        Integer actionableExonDown = actionable.minExonDown();
-        if (actionableExonDown != null && actionableExonDown != victim.fusedExonDown()) {
+        Integer actionableMinExonDown = actionable.minExonDown();
+        if (actionableMinExonDown != null && victim.fusedExonDown() < actionableMinExonDown) {
             return false;
         }
 
-        // TODO implement min/max
-        Integer actionableExonUp = actionable.minExonUp();
-        return actionableExonUp == null || actionableExonUp == victim.fusedExonUp();
+        Integer actionableMaxExonDown = actionable.maxExonDown();
+        if (actionableMaxExonDown != null && victim.fusedExonDown() > actionableMaxExonDown) {
+            return false;
+        }
+
+        Integer actionableMinExonUp = actionable.minExonUp();
+        if (actionableMinExonUp != null && victim.fusedExonUp() < actionableMinExonUp) {
+            return false;
+        }
+
+        Integer actionableMaxExonUp = actionable.maxExonUp();
+        if (actionableMaxExonUp != null && victim.fusedExonUp() > actionableMaxExonUp) {
+            return false;
+        }
+
+        return true;
     }
 
     @NotNull

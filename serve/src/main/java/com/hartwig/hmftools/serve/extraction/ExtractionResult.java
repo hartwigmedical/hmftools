@@ -7,7 +7,9 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 
@@ -22,6 +24,12 @@ public abstract class ExtractionResult {
 
     @NotNull
     public abstract Set<KnownHotspot> knownHotspots();
+
+    @NotNull
+    public abstract Set<KnownCodon> knownCodons();
+
+    @NotNull
+    public abstract Set<KnownExon> knownExons();
 
     @NotNull
     public abstract Set<KnownCopyNumber> knownCopyNumbers();

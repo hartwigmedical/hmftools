@@ -6,7 +6,9 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeTestFactory;
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 
@@ -27,6 +29,16 @@ public class ExtractionFunctionsTest {
         KnownHotspot hotspot = merged.knownHotspots().iterator().next();
         assertTrue(hotspot.sources().contains(source1));
         assertTrue(hotspot.sources().contains(source2));
+
+        assertEquals(1, merged.knownCodons().size());
+        KnownCodon codon = merged.knownCodons().iterator().next();
+        assertTrue(codon.sources().contains(source1));
+        assertTrue(codon.sources().contains(source2));
+
+        assertEquals(1, merged.knownExons().size());
+        KnownExon exon = merged.knownExons().iterator().next();
+        assertTrue(exon.sources().contains(source1));
+        assertTrue(exon.sources().contains(source2));
 
         assertEquals(1, merged.knownCopyNumbers().size());
         KnownCopyNumber copyNumber = merged.knownCopyNumbers().iterator().next();

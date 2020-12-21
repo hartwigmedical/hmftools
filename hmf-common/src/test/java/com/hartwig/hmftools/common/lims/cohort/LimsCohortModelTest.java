@@ -15,23 +15,40 @@ public class LimsCohortModelTest {
 
     @Test
     public void canQueryLimsCohortModel() {
-        LimsCohortConfig cohortConfigData = LimsTestUtil.createAllDisabledCohortConfig("DRUP");
+        LimsCohortConfig cohortConfig = LimsTestUtil.createAllDisabledCohortConfig("DRUP");
         Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
-        cohortMap.put("DRUP", cohortConfigData);
+        cohortMap.put("DRUP", cohortConfig);
 
         LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
-        assertEquals(cohortConfigData, model.queryCohortData("DRUP", "DRUP01", Strings.EMPTY));
+        assertEquals(cohortConfig, model.queryCohortData("DRUP", "DRUP01"));
+    }
+
+    @Test
+    public void fallbackToSampleIdWhenCohortIsEmpty() {
+        LimsCohortConfig cohortConfig = LimsTestUtil.createAllDisabledCohortConfig("DRUP");
+        Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
+        cohortMap.put("DRUP", cohortConfig);
+
+        LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
+        assertEquals(cohortConfig, model.queryCohortData(null, "DRUP01"));
+        assertEquals(cohortConfig, model.queryCohortData(Strings.EMPTY, "DRUP01"));
     }
 
     @Test(expected = IllegalStateException.class)
-    public void canQueryLimsCohortModelException() {
-        LimsCohortConfig cohortConfigData = LimsTestUtil.createAllDisabledCohortConfig("DRUP");
+    public void crashWhenSampleIdIsNotAsExpected() {
         Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
-        cohortMap.put("DRUP", cohortConfigData);
+        cohortMap.put("DRUP", LimsTestUtil.createAllDisabledCohortConfig("DRUP"));
 
         LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
-        assertNull(model.queryCohortData(null, "DRUP01", Strings.EMPTY));
-        assertNull(model.queryCohortData("CPCT", "DRUP01", Strings.EMPTY));
-        assertNull(model.queryCohortData("DRUP", "CPCT01", Strings.EMPTY));
+        model.queryCohortData("DRUP", "CPCT01");
+    }
+
+    @Test
+    public void nullWhenCohortConfigIsNotPresent() {
+        Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
+        cohortMap.put("DRUP", LimsTestUtil.createAllDisabledCohortConfig("DRUP"));
+
+        LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
+        assertNull(model.queryCohortData("NON-DRUP", "NON-DRUP01"));
     }
 }

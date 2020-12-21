@@ -22,30 +22,34 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class BachelorDataLoader {
+public final class BachelorDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(BachelorDataLoader.class);
+
+    private BachelorDataLoader() {
+    }
 
     @NotNull
     public static BachelorData load(@NotNull String bachelorTsv, @NotNull PurpleData purpleData, @NotNull LinxData linxData,
             @NotNull GermlineReportingModel germlineReportingModel) throws IOException {
+        LOGGER.info("Loading BACHELOR data from {}", new File(bachelorTsv).getParent());
         List<ReportableGermlineVariant> germlineVariants = ReportableGermlineVariantFile.read(bachelorTsv);
 
-        Set<String> somaticGenes = Sets.newHashSet();
-        linxData.homozygousDisruptions().stream().map(ReportableHomozygousDisruption::gene).forEach(somaticGenes::add);
-        linxData.geneDisruptions().stream().map(ReportableGeneDisruption::gene).forEach(somaticGenes::add);
-        purpleData.somaticVariants().stream().map(ReportableVariant::gene).forEach(somaticGenes::add);
+        Set<String> genesWithInactivationEvent = Sets.newHashSet();
+        linxData.homozygousDisruptions().stream().map(ReportableHomozygousDisruption::gene).forEach(genesWithInactivationEvent::add);
+        linxData.geneDisruptions().stream().map(ReportableGeneDisruption::gene).forEach(genesWithInactivationEvent::add);
+        purpleData.somaticVariants().stream().map(ReportableVariant::gene).forEach(genesWithInactivationEvent::add);
         purpleData.copyNumberAlterations()
                 .stream()
                 .filter(x -> !x.interpretation().equals(CopyNumberInterpretation.GAIN))
                 .map(ReportableGainLoss::gene)
-                .forEach(somaticGenes::add);
+                .forEach(genesWithInactivationEvent::add);
 
-        List<ReportableVariant> reportableVariants =
-                ReportableVariantFactory.reportableGermlineVariants(germlineVariants, somaticGenes, germlineReportingModel);
+        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableGermlineVariants(germlineVariants,
+                genesWithInactivationEvent,
+                germlineReportingModel);
 
-        LOGGER.info("Loaded BACHELOR data from {}", new File(bachelorTsv).getParent());
-        LOGGER.info(" Reportable germline variants: {}", reportableVariants.size());
+        LOGGER.info(" Loaded {} reportable germline variants from {}", reportableVariants.size(), bachelorTsv);
         return ImmutableBachelorData.builder().addAllGermlineVariants(reportableVariants).build();
     }
 }

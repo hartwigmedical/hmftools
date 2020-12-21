@@ -65,7 +65,6 @@ public class RepeatContextFactoryTest {
         assertNone(6, refGenome);
     }
 
-
     @Test
     public void testMatchRepeatInBytes() {
         final String sequence = "AAGATCATC";
@@ -113,5 +112,4 @@ public class RepeatContextFactoryTest {
         Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
         assertFalse(optRepeatContextGATC.isPresent());
     }
-
 }

@@ -84,11 +84,9 @@ public class ViccExtractorTestApp {
         }
 
         String featureTsv = outputDir + "/ViccFeatures.tsv";
-        String featureInterpretationTsv = outputDir + "/ViccFeatureInterpretation.tsv";
 
         LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
         LOGGER.debug("Configured '{}' as the VICC feature output TSV path", featureTsv);
-        LOGGER.debug("Configured '{}' as the VICC feature interpretation output TSV path", featureInterpretationTsv);
         LOGGER.debug("Configured '{}' as the driver gene TSV path", driverGeneTsvPath);
         LOGGER.debug("Configured '{}' as the known fusion file path", knownFusionFilePath);
         LOGGER.debug("Configured '{}' as the missing DOID mapping TSV path", missingDoidMappingTsv);
@@ -106,13 +104,8 @@ public class ViccExtractorTestApp {
 
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         EventClassifierConfig config = ViccClassificationConfig.build();
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractorWithInterpretationTsv(config,
-                proteinResolver,
-                driverGenes,
-                fusionCache,
-                allGenesMap,
-                doidLookup,
-                featureInterpretationTsv);
+        ViccExtractor viccExtractor =
+                ViccExtractorFactory.buildViccExtractor(config, proteinResolver, driverGenes, fusionCache, allGenesMap, doidLookup);
 
         ExtractionResult result = viccExtractor.extract(entries);
 

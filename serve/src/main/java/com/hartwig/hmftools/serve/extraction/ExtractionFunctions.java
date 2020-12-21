@@ -10,8 +10,12 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlCons
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.util.ActionableEventUrlMerger;
+import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.exon.ExonFunctions;
+import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionFunctions;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
@@ -42,11 +46,15 @@ public final class ExtractionFunctions {
         ImmutableExtractionResult.Builder mergedBuilder = ImmutableExtractionResult.builder();
 
         Set<KnownHotspot> allHotspots = Sets.newHashSet();
+        Set<KnownCodon> allCodons = Sets.newHashSet();
+        Set<KnownExon> allExons = Sets.newHashSet();
         Set<KnownCopyNumber> allCopyNumbers = Sets.newHashSet();
         Set<KnownFusionPair> allFusionPairs = Sets.newHashSet();
 
         for (ExtractionResult result : results) {
             allHotspots.addAll(result.knownHotspots());
+            allCodons.addAll(result.knownCodons());
+            allExons.addAll(result.knownExons());
             allCopyNumbers.addAll(result.knownCopyNumbers());
             allFusionPairs.addAll(result.knownFusionPairs());
 
@@ -58,6 +66,8 @@ public final class ExtractionFunctions {
         }
 
         ExtractionResult mergedResult = mergedBuilder.knownHotspots(HotspotFunctions.consolidate(allHotspots))
+                .knownCodons(CodonFunctions.consolidate(allCodons))
+                .knownExons(ExonFunctions.consolidate(allExons))
                 .knownCopyNumbers(CopyNumberFunctions.consolidate(allCopyNumbers))
                 .knownFusionPairs(FusionFunctions.consolidate(allFusionPairs))
                 .build();

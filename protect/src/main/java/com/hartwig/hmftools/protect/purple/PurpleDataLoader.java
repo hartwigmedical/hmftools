@@ -25,7 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class PurpleDataLoader {
+public final class PurpleDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
 
@@ -42,10 +42,11 @@ public class PurpleDataLoader {
     }
 
     @NotNull
-    public static PurpleData load(String sample, String qcFile, String purityFile, String driverCatalogFile, String somaticVcf)
-            throws IOException {
+    private static PurpleData load(@NotNull String sample, @NotNull String qcFile, @NotNull String purityFile,
+            @NotNull String driverCatalogFile, @NotNull String somaticVcf) throws IOException {
+        LOGGER.info("Loading PURPLE data from {}", new File(purityFile).getParent());
+
         final PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityFile);
-        LOGGER.info("Loaded PURPLE data from {}", new File(purityFile).getParent());
         LOGGER.info(" Purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
         LOGGER.info(" Average tumor ploidy: {}", purityContext.bestFit().ploidy());
         LOGGER.info(" Fit method: {}", purityContext.method());
@@ -56,15 +57,17 @@ public class PurpleDataLoader {
 
         //TODO: Move remainder into purple
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogFile);
+        LOGGER.info(" Loaded {} driver catalog entries from {}", driverCatalog.size(), driverCatalogFile);
+
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVcf);
         List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableSomaticVariants(variants, driverCatalog);
-        LOGGER.info(" Reportable somatic variants: {}", reportableVariants.size());
+        LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableVariants.size(), somaticVcf);
 
         List<ReportableGainLoss> copyNumberAlterations = driverCatalog.stream()
                 .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.DEL)
                 .map(PurpleDataLoader::copyNumberAlteration)
                 .collect(Collectors.toList());
-        LOGGER.info(" Reportable copy number alterations: {}", copyNumberAlterations.size());
+        LOGGER.info(" Extracted {} reportable copy number alterations from driver catalog", copyNumberAlterations.size());
 
         return ImmutablePurpleData.builder()
                 .purity(purityContext.bestFit().purity())
