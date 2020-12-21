@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -53,7 +53,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     @NotNull
     private static Div createSampleDetailsDiv(@NotNull AnalysedPatientReport patientReport) {
         SampleReport sampleReport = patientReport.sampleReport();
-        LimsCohortConfigData cohort = sampleReport.cohort();
+        LimsCohortConfig cohort = sampleReport.cohort();
 
         Div div = new Div();
 
@@ -90,7 +90,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
         }
 
-        if (cohort.requireSubmissionInformation()) {
+        if (cohort.requireHospitalPersonsRequester()) {
             div.add(createContentParagraphTwice("The project name of sample is: ",
                     sampleReport.projectName(),
                     " and the submission ID is ",
@@ -121,8 +121,9 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 + " and the received tumor type. Other patient/tumor characteristics that might influence the interpretation of "
                 + "these results, are not considered. Final interpretation of the clinical consequence of this report should therefore "
                 + "always be performed by the treating physician."));
-        div.add(createContentParagraph("Based on a tumor purity of at least 20%, the test has a sensitivity of >95% for detection of "
-                + "somatic variants and >95% for detection of translocations and gene copy number changes"));
+        div.add(createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection of "
+                + "somatic variants and >95% for detection of translocations and gene copy number changes. For samples with a purity "
+                + "above 20%, the test has a sensitivity of >90%"));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
         div.add(createContentParagraph("For questions regarding the results described in this report, please contact ",
                 ReportResources.CONTACT_EMAIL_GENERAL));

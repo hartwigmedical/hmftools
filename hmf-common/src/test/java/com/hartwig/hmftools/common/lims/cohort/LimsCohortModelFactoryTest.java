@@ -1,27 +1,28 @@
 package com.hartwig.hmftools.common.lims.cohort;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class LimsCohortConfigFactoryTest {
-    private static final String LIMS_DIRECTORY = Resources.getResource("lims/cohort").getPath();
+public class LimsCohortModelFactoryTest {
+
+    private static final String COHORT_MODEL_TSV = Resources.getResource("lims/cohort_config.tsv").getPath();
 
     @Test
     public void canReadCohortConfigFile() throws IOException {
-        LimsCohortModel cohortModel = LimsCohortConfigFactory.read(LIMS_DIRECTORY + File.separator + "cohort.tsv");
+        LimsCohortModel cohortModel = LimsCohortModelFactory.read(COHORT_MODEL_TSV);
 
-        assertNotNull(cohortModel);
         assertEquals(1, cohortModel.limsCohortMap().size());
 
-        LimsCohortConfigData cohortConfigData = cohortModel.limsCohortMap().get("CPCT");
-        assertEquals("CPCT", cohortConfigData.cohortId());
-        assertTrue(cohortConfigData.hospitalCentraId());
+        LimsCohortConfig cohortConfigData = cohortModel.limsCohortMap().get("TEST");
+        assertEquals("TEST", cohortConfigData.cohortId());
+        assertTrue(cohortConfigData.sampleContainsHospitalCenterId());
         assertFalse(cohortConfigData.reportGermline());
         assertFalse(cohortConfigData.reportGermlineFlag());
         assertFalse(cohortConfigData.reportConclusion());
@@ -30,8 +31,6 @@ public class LimsCohortConfigFactoryTest {
         assertFalse(cohortConfigData.requireHospitalPAId());
         assertTrue(cohortConfigData.requireHospitalPersonsStudy());
         assertFalse(cohortConfigData.requireHospitalPersonsRequester());
-        assertFalse(cohortConfigData.requirePatientIdForPdfName());
-        assertFalse(cohortConfigData.requireSubmissionInformation());
-        assertFalse(cohortConfigData.requireAdditionalInfromationForSidePanel());
+        assertFalse(cohortConfigData.requireAdditionalInformationForSidePanel());
     }
 }

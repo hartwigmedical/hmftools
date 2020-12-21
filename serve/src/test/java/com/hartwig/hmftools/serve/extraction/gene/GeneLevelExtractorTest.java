@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.GeneCheckerTestFactory;
@@ -42,6 +43,16 @@ public class GeneLevelExtractorTest {
         assertNotNull(geneLevelEvent);
         assertEquals("TP53", geneLevelEvent.gene());
         assertEquals(GeneLevelEvent.INACTIVATION, geneLevelEvent.event());
+    }
+
+    @Test
+    public void pickEventClassificationOnConflict() {
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "KIT"));
+
+        GeneLevelAnnotation conflictingGeneLevelEvent = geneLevelExtractor.extract("STK11", EventType.GENE_LEVEL, "STK11 positive");
+        assertNotNull(conflictingGeneLevelEvent);
+        assertEquals("STK11", conflictingGeneLevelEvent.gene());
+        assertEquals(GeneLevelEvent.ACTIVATION, conflictingGeneLevelEvent.event());
     }
 
     @Test
@@ -97,8 +108,10 @@ public class GeneLevelExtractorTest {
 
     @NotNull
     private static GeneLevelExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new GeneLevelExtractor(V37_GENE_CHECKER, V37_GENE_CHECKER,
+        return new GeneLevelExtractor(V37_GENE_CHECKER,
+                V37_GENE_CHECKER,
                 driverGenes,
+                new KnownFusionCache(),
                 Sets.newHashSet("positive", "activating mutation", "act mut"),
                 Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"));
     }

@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
@@ -36,6 +37,7 @@ public interface ServeConfig {
     String REF_GENOME_VERSION = "ref_genome_version";
     String REF_GENOME_FASTA_FILE = "ref_genome_fasta_file";
     String DRIVER_GENE_TSV = "driver_gene_tsv";
+    String KNOWN_FUSION_FILE = KnownFusionCache.KNOWN_FUSIONS_FILE;
 
     // All output from SERVE will be written to this dir
     String OUTPUT_DIR = "output_dir";
@@ -60,6 +62,7 @@ public interface ServeConfig {
         options.addOption(REF_GENOME_VERSION, true, "Ref version. Should be 'hgXX'");
         options.addOption(REF_GENOME_FASTA_FILE, true, "Path to the ref genome fasta file");
         options.addOption(DRIVER_GENE_TSV, true, "Path to driver gene TSV");
+        options.addOption(KNOWN_FUSION_FILE, true, "Path to the known fusion file");
 
         options.addOption(OUTPUT_DIR, true, "Dir which will hold all SERVE output files");
 
@@ -100,6 +103,9 @@ public interface ServeConfig {
     String driverGeneTsv();
 
     @NotNull
+    String knownFusionFile();
+
+    @NotNull
     String outputDir();
 
     boolean skipHotspotResolving();
@@ -121,6 +127,7 @@ public interface ServeConfig {
                 .refGenomeVersion(RefGenomeVersion.fromIdentifier(nonOptionalValue(cmd, REF_GENOME_VERSION)))
                 .refGenomeFastaFile(nonOptionalFile(cmd, REF_GENOME_FASTA_FILE))
                 .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))
+                .knownFusionFile(nonOptionalFile(cmd, KNOWN_FUSION_FILE))
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIR))
                 .skipHotspotResolving(cmd.hasOption(SKIP_HOTSPOT_RESOLVING))
                 .build();

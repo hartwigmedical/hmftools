@@ -66,25 +66,9 @@ final class FilterFactory {
     }
 
     private static void populateFeatureKeysToFilter() {
-        // Variants implying stop lost. They are real but not handled yet in SERVE
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VHL", "*214W (c.642A>G)"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "MLH1", "*757L"));
-
-        // Synonymous variant, unlikely to have an impact
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VHL", "R161R (c.481C>A)"));
-
-        // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned delete is fine but the left-aligned insert lies outside of exon range
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "KIT", "KIT K550_W557del "));
-
-        // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "BRAF", "R506_K507insVLR"));
-
-        // Variant is fine, but interpretation currently not supported by SERVE
-        // The unaligned delete is fine but the left-aligned insert lies outside of exon range
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_K558del"));
-        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_W557del"));
+        populateFilterForHotspotsThatCannotYetBeInterpreted();
+        populateFilterForEventsInconsistentWithDriverCatalog();
+        populateFilterForNonReportableFusions();
 
         // exon 12 does not exist in canonical transcript of NPM1
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NPM1", "EXON 12 MUTATION"));
@@ -117,6 +101,123 @@ final class FilterFactory {
         // We ignore generic "expression"
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "CYP17A1", "CYP17A1 expression"));
         FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "CDKN2A", "p16 EXPRESSION"));
+    }
+
+    private static void populateFilterForHotspotsThatCannotYetBeInterpreted() {
+        // Variants implying stop lost. They are real but not handled yet in SERVE
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VHL", "*214W (c.642A>G)"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "MLH1", "*757L"));
+
+        // Synonymous variant, unlikely to have an impact
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VHL", "R161R (c.481C>A)"));
+
+        // Variant is fine, but interpretation currently not supported by SERVE
+        // The unaligned delete is fine but the left-aligned insert lies outside of exon range
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "KIT", "KIT K550_W557del "));
+
+        // Variant is fine, but interpretation currently not supported by SERVE
+        // The unaligned insert lies outside of exonic range, but the left-aligned insert is fine
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "BRAF", "R506_K507insVLR"));
+
+        // Variant is fine, but interpretation currently not supported by SERVE
+        // The unaligned delete is fine but the left-aligned insert lies outside of exon range
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_K558del"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KIT", "K550_W557del"));
+
+        // Not sure if this fusion should be swapped, but if not then it would never be reported so can filter.
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "RET", "RET-TPCN1 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "TPCN1", "RET-TPCN1 fusion"));
+    }
+
+    private static void populateFilterForNonReportableFusions() {
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "AKT3", "AKT3 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "ERBB4", "ERBB4 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "ESR1", "ESR1-YAP1 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "NOTCH1", "NOTCH1 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "NOTCH2", "NOTCH2 fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "YAP1", "ESR1-YAP1 fusion"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "FOS", "TRUNCATING FUSION"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "AKT2", "Fusions"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "AKT2", "BCAM-AKT2 Fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "AKT3", "Fusions"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "AKT3", "MAGI3-AKT3 Fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "ERBB4", "Fusions"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "ERBB4", "EZR-ERBB4 Fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "ESR1", "ESR1-CCDC170 Fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "ESR1", "ESR1-YAP1 Fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "ESR1", "Fusions"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "NKX2-1", "Fusions"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "NOTCH1", "Fusions"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "NOTCH1", "MIR143-NOTCH1 Fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "PIK3CB", "ACPP-PIK3CB Fusion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "PIK3CB", "Fusions"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "SEC16A", "SEC16A-NOTCH1 Fusion"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "EGFR", "EGFR-PURB"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "NOTCH1", "NOTCH1  rearrange"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "PURB", "EGFR-PURB"));
+    }
+
+    private static void populateFilterForEventsInconsistentWithDriverCatalog() {
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "CDK12", "CDK12 amplification"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "EPHA2", "EPHA2 amplification"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "FLT1", "FLT1 overexpression"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "RB1", "RB1 overexpression"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "UGT1A1", "UGT1A1 biallelic inactivation"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CGI, "TPMT", "TPMT biallelic inactivation"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "CCND3", "LOSS"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "FOXP1", "AMPLIFICATION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "NOTCH1", "AMPLIFICATION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "TYMS", "UNDEREXPRESSION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "VEGFA", "UNDEREXPRESSION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "JAK1", "OVEREXPRESSION"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.CIVIC, "RB1", "OVEREXPRESSION"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "CBL", "CBL  del"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "CBL", "CBL  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "BRAF", "BRAF  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "ERBB2", "ERBB2  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "EGFR", "EGFR  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "FGFR1", "FGFR1  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "FGFR2", "FGFR2  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "FGFR3", "FGFR3  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "MET", "MET  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "PTPN11", "PTPN11  dec exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "SMO", "SMO  dec exp"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "HRAS", "HRAS  inact mut"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "JAK2", "JAK2  inact mut"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "MET", "MET  negative"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "CDKN2A", "CDKN2A  pos"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "CEBPA", "CEBPA  positive"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "NOTCH1", "NOTCH1  positive"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "PTEN", "PTEN  pos"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "PTEN", "PTEN  positive"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "RB1", "RB1  positive"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "TP53", "TP53  positive"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "ATM", "ATM  over exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "CDH1", "CDH1  over exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "CDKN2A", "CDKN2A  over exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "GATA1", "GATA1  over exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "NOTCH1", "NOTCH1  act mut"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "NOTCH1", "NOTCH1  over exp"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.JAX, "VHL", "VHL  over exp"));
+
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "KDM5C", "Overexpression"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "ERCC2", "Amplification"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "GATA3", "Amplification"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "RUNX1", "Amplification"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "NOTCH1", "Gain-of-function Mutations"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "FOXA1", "Deletion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "RAD21", "Deletion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "PTPN11", "Deletion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "CBL", "Deletion"));
+        FEATURE_KEYS_TO_FILTER.add(new FilterKey(ViccSource.ONCOKB, "NPM1", "Deletion"));
     }
 
     private FilterFactory() {

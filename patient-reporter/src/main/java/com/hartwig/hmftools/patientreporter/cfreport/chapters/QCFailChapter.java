@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
@@ -136,7 +135,7 @@ public class QCFailChapter implements ReportChapter {
         div.add(reportIsBasedOnTumorSampleArrivedAt());
         div.add(reportIsBasedOnBloodSampleArrivedAt());
         div.add(resultsAreObtainedBetweenDates());
-        if (failReport.sampleReport().cohort().requireHospitalPAId()) {
+        if (failReport.sampleReport().cohort().requireHospitalPAId() && !failReport.sampleReport().cohort().requireHospitalId()) {
             if (failReport.sampleReport().hospitalPathologySampleId() != null){
                 div.add(reportIsForPathologySampleID());
             }
@@ -147,7 +146,7 @@ public class QCFailChapter implements ReportChapter {
             }
         }
 
-        if (failReport.sampleReport().cohort().requireSubmissionInformation()) {
+        if (failReport.sampleReport().cohort().requireHospitalPersonsRequester()) {
             div.add(reportIsForProjectAndSubmission());
         }
 

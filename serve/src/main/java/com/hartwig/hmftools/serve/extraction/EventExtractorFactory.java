@@ -6,6 +6,9 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
@@ -23,20 +26,19 @@ import org.jetbrains.annotations.NotNull;
 
 public final class EventExtractorFactory {
 
-    private static final Set<String> VALID_FUSION_GENES = Sets.newHashSet("IGH", "IGK", "IGL");
-
     private EventExtractorFactory() {
     }
 
     @NotNull
     public static EventExtractor create(@NotNull EventClassifierConfig config, @NotNull ProteinResolver proteinResolver,
-            @NotNull List<DriverGene> driverGenes, @NotNull Map<String, HmfTranscriptRegion> allGenesMap) {
+            @NotNull List<DriverGene> driverGenes, @NotNull KnownFusionCache knownFusionCache,
+            @NotNull Map<String, HmfTranscriptRegion> allGenesMap) {
         Set<String> genesInExome = allGenesMap.keySet();
         GeneChecker exomeGeneChecker = new GeneChecker(genesInExome);
 
         Set<String> fusionGeneSet = Sets.newHashSet();
         fusionGeneSet.addAll(genesInExome);
-        fusionGeneSet.addAll(VALID_FUSION_GENES);
+        fusionGeneSet.addAll(extractAllGenesInvolvedInFusions(knownFusionCache));
         GeneChecker fusionGeneChecker = new GeneChecker(fusionGeneSet);
 
         MutationTypeFilterAlgo mutationTypeFilterAlgo = new MutationTypeFilterAlgo(driverGenes);
@@ -46,12 +48,30 @@ public final class EventExtractorFactory {
                 new GeneLevelExtractor(exomeGeneChecker,
                         fusionGeneChecker,
                         driverGenes,
+                        knownFusionCache,
                         config.activatingGeneLevelKeyPhrases(),
                         config.inactivatingGeneLevelKeyPhrases()),
-                new CopyNumberExtractor(exomeGeneChecker),
-                new FusionExtractor(fusionGeneChecker),
+                new CopyNumberExtractor(exomeGeneChecker, driverGenes),
+                new FusionExtractor(fusionGeneChecker, knownFusionCache),
                 new SignatureExtractor(config.microsatelliteUnstableEvents(),
                         config.highTumorMutationalLoadEvents(),
                         config.hrDeficiencyEvents()));
+    }
+
+    @NotNull
+    private static Set<String> extractAllGenesInvolvedInFusions(@NotNull KnownFusionCache knownFusionCache) {
+        Set<String> genes = Sets.newHashSet();
+        for (KnownFusionData fusion : knownFusionCache.getData()) {
+            if (fusion.Type == KnownFusionType.KNOWN_PAIR || fusion.Type == KnownFusionType.IG_KNOWN_PAIR
+                    || fusion.Type == KnownFusionType.EXON_DEL_DUP) {
+                genes.add(fusion.FiveGene);
+                genes.add(fusion.ThreeGene);
+            } else if (fusion.Type == KnownFusionType.PROMISCUOUS_5 || fusion.Type == KnownFusionType.IG_PROMISCUOUS) {
+                genes.add(fusion.FiveGene);
+            } else if (fusion.Type == KnownFusionType.PROMISCUOUS_3) {
+                genes.add(fusion.ThreeGene);
+            }
+        }
+        return genes;
     }
 }

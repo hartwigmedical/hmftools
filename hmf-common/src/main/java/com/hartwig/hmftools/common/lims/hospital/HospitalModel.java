@@ -3,9 +3,8 @@ package com.hartwig.hmftools.common.lims.hospital;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,14 +33,14 @@ public abstract class HospitalModel {
     abstract Map<String, String> sampleToHospitalMapping();
 
     @Nullable
-    public HospitalContactData queryHospitalData(@NotNull String sampleId, @NotNull String coreRequesterName,
-            @NotNull String coreRequesterEmail, @NotNull LimsCohortConfigData cohort) {
-        String hospitalId = getHospitalIdForSample(sampleId, cohort);
-        if (hospitalId == null) {
+    public HospitalContactData queryHospitalData(@NotNull String sampleId, @Nullable LimsCohortConfig cohort,
+            @NotNull String coreRequesterName, @NotNull String coreRequesterEmail) {
+        if (cohort == null) {
             return null;
         }
 
-        if (cohort.cohortId().equals(Strings.EMPTY)) {
+        String hospitalId = getHospitalIdForSample(sampleId, cohort);
+        if (hospitalId == null) {
             return null;
         }
 
@@ -71,7 +70,7 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @NotNull LimsCohortConfigData cohort) {
+    private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @NotNull LimsCohortConfig cohort) {
         switch (cohort.cohortId()) {
             case "CPCT":
             case "CPCTpancreas":
@@ -89,12 +88,11 @@ public abstract class HospitalModel {
     }
 
     @Nullable
-    private String getHospitalIdForSample(@NotNull String sampleId, @NotNull LimsCohortConfigData cohort) {
+    private String getHospitalIdForSample(@NotNull String sampleId, @NotNull LimsCohortConfig cohort) {
         if (sampleToHospitalMapping().containsKey(sampleId)) {
             return sampleToHospitalMapping().get(sampleId);
         } else {
-
-            if (cohort.hospitalCentraId()) {
+            if (cohort.sampleContainsHospitalCenterId()) {
                 // We assume all these projects follow a structure like CPCT##<hospitalId><identifier>
                 return sampleId.substring(6, 8);
             } else {

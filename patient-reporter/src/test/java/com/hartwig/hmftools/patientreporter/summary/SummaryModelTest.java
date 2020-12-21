@@ -8,13 +8,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.PatientReportUtils;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class SummaryModelTest {
@@ -35,8 +31,8 @@ public class SummaryModelTest {
         summaryToSampleMap.put("sample", "this is a test summary");
         SummaryModel summaryModel = new SummaryModel(summaryToSampleMap);
 
-        LimsCohortConfigData cohortConfig =
-                PatientReportUtils.buildTestCohortModel("WIDE", true, true, true, true, true, false, true, true, false, false, false, true);
+        LimsCohortConfig cohortConfig =
+                PatientReportUtils.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
 
         assertEquals("this is a test summary", summaryModel.findSummaryForSample("sample", cohortConfig));
         assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("sample2", cohortConfig));

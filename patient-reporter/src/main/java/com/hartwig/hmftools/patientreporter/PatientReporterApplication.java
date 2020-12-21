@@ -33,7 +33,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using CFReportWriterTest
-    //                public static final String VERSION = "7.19";
+    //                public static final String VERSION = "7.20";
 
     public static void main(@NotNull String[] args) throws IOException {
         LOGGER.info("Running patient reporter v{}", VERSION);
@@ -164,7 +164,7 @@ public class PatientReporterApplication {
         LOGGER.info("Loaded primary tumors for {} patients from {}", patientPrimaryTumors.size(), primaryTumorTsv);
 
         String limsDirectory = config.limsDir();
-        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory, config.configCohortsTsv());
+        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
         LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
 
         return ImmutableQCFailReportData.builder()

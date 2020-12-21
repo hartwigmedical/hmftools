@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
@@ -35,6 +36,7 @@ public class ViccExtractorTest {
         ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config,
                 new TestProteinResolver(),
                 Lists.newArrayList(),
+                new KnownFusionCache(),
                 V37_GENE_MAP,
                 DoidLookupTestFactory.dummy());
 

@@ -10,13 +10,13 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class CurationFactory {
+final class FeatureCurationFactory {
 
-    static final Map<CurationKey, CurationValues> FEATURE_MAPPINGS = Maps.newHashMap();
+    static final Map<FeatureCurationKey, FeatureCurationValues> FEATURE_MAPPINGS = Maps.newHashMap();
 
-    static final Set<CurationKey> FEATURE_BLACKLIST = Sets.newHashSet();
+    static final Set<FeatureCurationKey> FEATURE_BLACKLIST = Sets.newHashSet();
 
-    private CurationFactory() {
+    private FeatureCurationFactory() {
     }
 
     static {
@@ -73,6 +73,9 @@ final class CurationFactory {
         // Fusions where gene is a synonym of our gene
         FEATURE_MAPPINGS.put(civic("FGFR1", null, "ZNF198-FGFR1"), curation("ZMYM2", "ZMYM2-FGFR1"));
         FEATURE_MAPPINGS.put(civic("KMT2A", null, "MLL-MLLT3"), curation("KMT2A", "KMT2A-MLLT3"));
+
+        // Map specific EGFR fusion do a different name to be consistent with other sources.
+        FEATURE_MAPPINGS.put(civic("EGFR", "ENST00000275493", "VIII"), curation("EGFR", "EGFRvIII"));
 
         // These genes are on synonym genes
         FEATURE_MAPPINGS.put(civic("MRE11", "ENST00000323929", "LOSS"), curation("MRE11A", "LOSS"));
@@ -323,27 +326,27 @@ final class CurationFactory {
     }
 
     @NotNull
-    private static CurationKey civic(@NotNull String gene, @Nullable String transcript, @NotNull String featureName) {
-        return new CurationKey(ViccSource.CIVIC, gene, transcript, featureName);
+    private static FeatureCurationKey civic(@NotNull String gene, @Nullable String transcript, @NotNull String featureName) {
+        return new FeatureCurationKey(ViccSource.CIVIC, gene, transcript, featureName);
     }
 
     @NotNull
-    private static CurationKey cgi(@NotNull String gene, @Nullable String transcript, @NotNull String featureName) {
-        return new CurationKey(ViccSource.CGI, gene, transcript, featureName);
+    private static FeatureCurationKey cgi(@NotNull String gene, @Nullable String transcript, @NotNull String featureName) {
+        return new FeatureCurationKey(ViccSource.CGI, gene, transcript, featureName);
     }
 
     @NotNull
-    private static CurationKey jax(@NotNull String gene, @Nullable String transcript, @NotNull String featureName) {
-        return new CurationKey(ViccSource.JAX, gene, transcript, featureName);
+    private static FeatureCurationKey jax(@NotNull String gene, @Nullable String transcript, @NotNull String featureName) {
+        return new FeatureCurationKey(ViccSource.JAX, gene, transcript, featureName);
     }
 
     @NotNull
-    private static CurationKey oncoKb(@NotNull String gene, @Nullable String transcript, @NotNull String featureName) {
-        return new CurationKey(ViccSource.ONCOKB, gene, transcript, featureName);
+    private static FeatureCurationKey oncoKb(@NotNull String gene, @Nullable String transcript, @NotNull String featureName) {
+        return new FeatureCurationKey(ViccSource.ONCOKB, gene, transcript, featureName);
     }
 
     @NotNull
-    private static CurationValues curation(@NotNull String geneSymbol, @NotNull String featureName) {
-        return ImmutableCurationValues.builder().geneSymbol(geneSymbol).featureName(featureName).build();
+    private static FeatureCurationValues curation(@NotNull String geneSymbol, @NotNull String featureName) {
+        return ImmutableFeatureCurationValues.builder().geneSymbol(geneSymbol).featureName(featureName).build();
     }
 }

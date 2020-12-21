@@ -1,46 +1,37 @@
 package com.hartwig.hmftools.common.lims.cohort;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.LimsTestUtil;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class LimsCohortModelTest {
 
     @Test
-    public void canExtractLimsCohortModel() {
-        LimsCohortConfigData cohortConfigData =
-                LimsTestUtil.buildTestCohortModel("DRUP", true, false, false, false, false, false, false, true, false, false, false, false);
-        assertEquals("DRUP", cohortConfigData.cohortId());
-        assertTrue(cohortConfigData.hospitalCentraId());
-        assertFalse(cohortConfigData.reportGermline());
-        assertFalse(cohortConfigData.reportGermlineFlag());
-        assertFalse(cohortConfigData.reportConclusion());
-        assertFalse(cohortConfigData.reportViral());
-        assertFalse(cohortConfigData.requireHospitalId());
-        assertFalse(cohortConfigData.requireHospitalPAId());
-        assertTrue(cohortConfigData.requireHospitalPersonsStudy());
-        assertFalse(cohortConfigData.requireHospitalPersonsRequester());
-        assertFalse(cohortConfigData.requirePatientIdForPdfName());
-        assertFalse(cohortConfigData.requireSubmissionInformation());
-        assertFalse(cohortConfigData.requireAdditionalInfromationForSidePanel());
+    public void canQueryLimsCohortModel() {
+        LimsCohortConfig cohortConfigData = LimsTestUtil.createAllDisabledCohortConfig("DRUP");
+        Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
+        cohortMap.put("DRUP", cohortConfigData);
+
+        LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
+        assertEquals(cohortConfigData, model.queryCohortData("DRUP", "DRUP01", Strings.EMPTY));
     }
 
-    @Test
-    public void canQueryLimsCohortModel() {
-        LimsCohortConfigData cohortConfigData =
-                LimsTestUtil.buildTestCohortModel("DRUP", true, false, false, false, false, false, false, true, false, false, false, false);
-        Map<String, LimsCohortConfigData> cohortMap = Maps.newHashMap();
+    @Test(expected = IllegalStateException.class)
+    public void canQueryLimsCohortModelException() {
+        LimsCohortConfig cohortConfigData = LimsTestUtil.createAllDisabledCohortConfig("DRUP");
+        Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
         cohortMap.put("DRUP", cohortConfigData);
-        LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
-        assertNull(model.queryCohortData(null, "DRUP01"));
-        assertNull(model.queryCohortData("CPCT", "DRUP01"));
-        assertNull(model.queryCohortData("DRUP", "CPCT01"));
-        assertEquals(cohortConfigData, model.queryCohortData("DRUP", "DRUP01"));
 
+        LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
+        assertNull(model.queryCohortData(null, "DRUP01", Strings.EMPTY));
+        assertNull(model.queryCohortData("CPCT", "DRUP01", Strings.EMPTY));
+        assertNull(model.queryCohortData("DRUP", "CPCT01", Strings.EMPTY));
     }
 }

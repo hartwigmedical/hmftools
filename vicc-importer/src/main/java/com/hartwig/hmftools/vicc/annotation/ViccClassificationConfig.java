@@ -219,10 +219,9 @@ public final class ViccClassificationConfig {
     @NotNull
     private static Set<String> exonicDelDupFusionEvents() {
         Set<String> set = Sets.newHashSet();
+        set.add("EGFRvII");
         set.add("EGFRvIII");
         set.add("EGFRvV");
-        set.add("EGFRvII");
-        set.add("VIII");
         set.add("EGFR-KDD");
         return set;
     }

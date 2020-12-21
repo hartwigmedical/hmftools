@@ -30,7 +30,7 @@ public class PathogenicSummaryFactory {
 
     @NotNull
     public static String clnSig(@NotNull VariantContext context) {
-        return context.getAttributeAsString(CLNSIG, Strings.EMPTY);
+        return String.join(",", context.getAttributeAsStringList(CLNSIG, Strings.EMPTY));
     }
 
     @NotNull

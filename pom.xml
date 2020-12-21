@@ -58,7 +58,7 @@
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
-        <patient-db.version>3.52</patient-db.version>
+        <patient-db.version>3.53</patient-db.version>
         <id-generator.version>2.6</id-generator.version>
         <sage.version>2.5</sage.version>
         <amber.version>3.5</amber.version>
@@ -70,7 +70,7 @@
         <lilac.version>0.1</lilac.version>
         <sv-linx.version>1.13</sv-linx.version>
         <health-checker.version>3.2</health-checker.version>
-        <patient-reporter.version>7.19</patient-reporter.version>
+        <patient-reporter.version>7.20</patient-reporter.version>
         <sv-tools.version>1.0</sv-tools.version>
         <imuno.version>1.0</imuno.version>
         <sig-analyser.version>1.0</sig-analyser.version>

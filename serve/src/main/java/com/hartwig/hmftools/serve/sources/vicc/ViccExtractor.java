@@ -71,9 +71,10 @@ public final class ViccExtractor {
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
         for (ViccEntry entry : entries) {
             resultsPerEntry.put(entry, extractSingleEntry(entry));
-
             tracker.update();
         }
+
+        actionableEvidenceFactory.evaluateCuration();
 
         ViccUtil.printExtractionResults(resultsPerEntry);
 

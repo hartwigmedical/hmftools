@@ -1,20 +1,23 @@
 package com.hartwig.hmftools.patientreporter;
 
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PatientReportUtils {
+public final class PatientReportUtils {
+
+    private PatientReportUtils() {
+    }
 
     @NotNull
-    public static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortId, boolean hospitalCentraId, boolean reportGermline,
-            boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
+    public static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
+            boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
             boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
-            boolean requirePatientIdForPdfName, boolean requireSubmissionInformation, boolean requireAdditionalInfromationForSidePanel) {
-        return ImmutableLimsCohortConfigData.builder()
+            boolean requireAdditionalInformationForSidePanel) {
+        return ImmutableLimsCohortConfig.builder()
                 .cohortId(cohortId)
-                .hospitalCentraId(hospitalCentraId)
+                .sampleContainsHospitalCenterId(sampleContainsHospitalCenterId)
                 .reportGermline(reportGermline)
                 .reportGermlineFlag(reportGermlineFlag)
                 .reportConclusion(reportConclusion)
@@ -23,9 +26,7 @@ public class PatientReportUtils {
                 .requireHospitalPAId(requireHospitalPAId)
                 .requireHospitalPersonsStudy(requireHospitalPersonsStudy)
                 .requireHospitalPersonsRequester(requireHospitalPersonsRequester)
-                .requirePatientIdForPdfName(requirePatientIdForPdfName)
-                .requireSubmissionInformation(requireSubmissionInformation)
-                .requireAdditionalInfromationForSidePanel(requireAdditionalInfromationForSidePanel)
+                .requireAdditionalInformationForSidePanel(requireAdditionalInformationForSidePanel)
                 .build();
     }
 }

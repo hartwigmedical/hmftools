@@ -2,9 +2,6 @@ package com.hartwig.hmftools.common.lims.cohort;
 
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,26 +12,31 @@ import org.jetbrains.annotations.Nullable;
 public abstract class LimsCohortModel {
 
     @NotNull
-    abstract Map<String, LimsCohortConfigData> limsCohortMap();
-
-    private static final Logger LOGGER = LogManager.getLogger(LimsCohortModel.class);
+    protected abstract Map<String, LimsCohortConfig> limsCohortMap();
 
     @Nullable
-    public LimsCohortConfigData queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
-        if (cohortString == null) {
-            LOGGER.error("Could not resolve LIMS cohort string: '" + cohortString + "'");
-            return null;
+    public LimsCohortConfig queryCohortData(@Nullable String cohortString, @NotNull String sampleId, @NotNull String sampleIdMetadata) {
+        String cohortStringNew = !sampleIdMetadata.startsWith("COLO") ? cohortString : "COLO";
+
+        if (cohortStringNew == null) {
+            throw new IllegalStateException("No cohort string present in LIMS for sample '{}'" + sampleId);
         } else {
-            LimsCohortConfigData cohortConfigData = limsCohortMap().get(cohortString);
+            LimsCohortConfig cohortConfigData = limsCohortMap().get(cohortStringNew);
             if (cohortConfigData == null) {
-                LOGGER.warn("No cohort map is present for cohortString {}", cohortString);
-                return null;
+                throw new IllegalStateException("No cohort config present for cohort '{}'" + cohortStringNew);
             } else {
-                if (sampleId.startsWith(cohortConfigData.cohortId())) {
+                if (cohortConfigData.cohortId().contains("CPCT") || cohortConfigData.cohortId().contains("DRUP")) {
+                    if (sampleId.startsWith(cohortConfigData.cohortId().substring(0, 4))
+                            || sampleIdMetadata.startsWith(cohortConfigData.cohortId().substring(0, 4))) {
+                        return cohortConfigData;
+                    } else {
+                        throw new IllegalStateException("No matching for DRUP/CPCT");
+                    }
+                } else if (!cohortConfigData.cohortId().contains("CPCT") || !cohortConfigData.cohortId().contains("DRUP")) {
                     return cohortConfigData;
                 } else {
-                    LOGGER.error("Cohort " + cohortConfigData.cohortId() + " does match with sampleId " +  sampleId);
-                    return null;
+                    throw new IllegalStateException(
+                            "Cohort '{}' does not seem to match with sample '{}'" + cohortConfigData.cohortId() + sampleId);
                 }
             }
         }

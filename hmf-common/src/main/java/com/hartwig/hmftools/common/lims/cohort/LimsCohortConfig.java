@@ -7,12 +7,12 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class LimsCohortConfigData {
+public abstract class LimsCohortConfig {
 
     @NotNull
     public abstract String cohortId();
 
-    public abstract boolean hospitalCentraId();
+    public abstract boolean sampleContainsHospitalCenterId();
 
     public abstract boolean reportGermline();
 
@@ -30,9 +30,5 @@ public abstract class LimsCohortConfigData {
 
     public abstract boolean requireHospitalPersonsRequester();
 
-    public abstract boolean requirePatientIdForPdfName();
-
-    public abstract boolean requireSubmissionInformation();
-
-    public abstract boolean requireAdditionalInfromationForSidePanel();
+    public abstract boolean requireAdditionalInformationForSidePanel();
 }

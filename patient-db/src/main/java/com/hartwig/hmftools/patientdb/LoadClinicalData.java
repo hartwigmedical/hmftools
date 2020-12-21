@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsAnalysisType;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
@@ -73,7 +73,6 @@ public final class LoadClinicalData {
     private static final String PIPELINE_VERSION = "pipeline_version_file";
 
     private static final String RUNS_DIRECTORY = "runs_dir";
-    private static final String CONFIG_COHORTS_TSV = "config_cohorts_tsv";
 
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
@@ -125,7 +124,7 @@ public final class LoadClinicalData {
                 toUniqueSampleIds(sequencedSamplesPerPatient).size());
 
         LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
-        Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY), cmd.getOptionValue(CONFIG_COHORTS_TSV));
+        Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
         Map<String, List<SampleData>> sampleDataPerPatient =
                 extractAllSamplesFromLims(lims, sampleToSetNameMap, sequencedSamplesPerPatient);
         LOGGER.info(" Loaded samples for {} patient IDs ({} samples)",
@@ -202,9 +201,9 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsCohortConfigData cohort = lims.cohortConfig(sampleBarcode);
+            LimsCohortConfig cohort = lims.cohortConfig(sampleBarcode, Strings.EMPTY);
 
-            if (!cohort.cohortId().isEmpty()) {
+            if (cohort != null) {
                 String patientId = lims.patientId(sampleBarcode);
                 SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
@@ -442,7 +441,8 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohortConfigData cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode(), Strings.EMPTY);
+                assert cohort != null;
 
                 if (cohort.cohortId().equals("WIDE")) {
                     String patientId = entry.getKey();
@@ -467,7 +467,8 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
             if (!tumorSamples.isEmpty()) {
-                LimsCohortConfigData cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
+                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode(), Strings.EMPTY);
+                assert cohort != null;
 
                 if (cohort.cohortId().equals("CORE")) {
                     String patientId = entry.getKey();
@@ -550,7 +551,7 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV),
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV),
                 cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV),
-                cmd.getOptionValue(DOID_JSON), cmd.getOptionValue(CONFIG_COHORTS_TSV));
+                cmd.getOptionValue(DOID_JSON));
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
             allParamsPresent = allParamsPresent && DatabaseAccess.hasDatabaseConfig(cmd);
@@ -583,8 +584,6 @@ public final class LoadClinicalData {
         options.addOption(RUNS_DIRECTORY,
                 true,
                 "Path towards the folder containing patient runs that are considered part of HMF database.");
-
-        options.addOption(CONFIG_COHORTS_TSV, true, "Path towards a TSV containing the cohorts for reporting.");
 
         options.addOption(CPCT_ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the cpct form status csv file.");

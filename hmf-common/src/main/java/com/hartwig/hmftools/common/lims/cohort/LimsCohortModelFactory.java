@@ -12,23 +12,26 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LimsCohortConfigFactory {
+public final class LimsCohortModelFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(LimsCohortModelFactory.class);
     private static final String DELIMITER = "\t";
-    private static final Logger LOGGER = LogManager.getLogger(LimsCohortConfigFactory.class);
+
+    private LimsCohortModelFactory() {
+    }
 
     @NotNull
-    public static LimsCohortModel read(@NotNull final String fileName) throws IOException {
-        Map<String, LimsCohortConfigData> cohortConfigMap = Maps.newHashMap();
+    public static LimsCohortModel read(@NotNull String fileName) throws IOException {
+        Map<String, LimsCohortConfig> cohortConfigMap = Maps.newHashMap();
         List<String> lines = Files.readAllLines(new File(fileName).toPath());
 
+        // Skip header
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(DELIMITER);
-            if (parts.length == 13) {
-
-
-                LimsCohortConfigData cohortConfig = ImmutableLimsCohortConfigData.builder()
+            if (parts.length == 11) {
+                LimsCohortConfig cohortConfig = ImmutableLimsCohortConfig.builder()
                         .cohortId(parts[0])
-                        .hospitalCentraId(parts[1].equals("TRUE"))
+                        .sampleContainsHospitalCenterId(parts[1].equals("TRUE"))
                         .reportGermline(parts[2].equals("TRUE"))
                         .reportGermlineFlag(parts[3].equals("TRUE"))
                         .reportConclusion(parts[4].equals("TRUE"))
@@ -37,9 +40,7 @@ public class LimsCohortConfigFactory {
                         .requireHospitalPAId(parts[7].equals("TRUE"))
                         .requireHospitalPersonsStudy(parts[8].equals("TRUE"))
                         .requireHospitalPersonsRequester(parts[9].equals("TRUE"))
-                        .requirePatientIdForPdfName(parts[10].equals("TRUE"))
-                        .requireSubmissionInformation(parts[11].equals("TRUE"))
-                        .requireAdditionalInfromationForSidePanel(parts[12].equals("TRUE"))
+                        .requireAdditionalInformationForSidePanel(parts[10].equals("TRUE"))
                         .build();
 
                 cohortConfigMap.put(parts[0], cohortConfig);

@@ -12,51 +12,51 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ViccCuratorTest {
+public class ViccFeatureCuratorTest {
 
     @Test
     public void canCurateFeatures() {
-        CurationKey firstOncoKbKey = firstOncoKbMappingKey();
-        String firstMappedFeature = CurationFactory.FEATURE_MAPPINGS.get(firstOncoKbKey).featureName();
+        FeatureCurationKey firstOncoKbKey = firstOncoKbMappingKey();
+        String firstMappedFeature = FeatureCurationFactory.FEATURE_MAPPINGS.get(firstOncoKbKey).featureName();
 
         ViccEntry entry = ViccTestFactory.testEntryWithSourceAndTranscript(ViccSource.ONCOKB, firstOncoKbKey.transcript());
 
         Feature feature = ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(), firstOncoKbKey.featureName());
 
-        assertEquals(firstMappedFeature, new ViccCurator().curate(entry, feature).name());
+        assertEquals(firstMappedFeature, new ViccFeatureCurator().curate(entry, feature).name());
     }
 
     @Test
     public void canBlacklistFeatures() {
-        CurationKey firstOncoKbKey = firstOncoKbBlacklistKey();
+        FeatureCurationKey firstOncoKbKey = firstOncoKbBlacklistKey();
         ViccEntry entry = ViccTestFactory.testEntryWithSourceAndTranscript(ViccSource.ONCOKB, firstOncoKbKey.transcript());
 
         Feature feature = ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(), firstOncoKbKey.featureName());
-        assertNull(new ViccCurator().curate(entry, feature));
+        assertNull(new ViccFeatureCurator().curate(entry, feature));
     }
 
     @Test
     public void canKeepTrackOfFeatures() {
-        ViccCurator curator = new ViccCurator();
+        ViccFeatureCurator curator = new ViccFeatureCurator();
 
         ViccEntry entry = ViccTestFactory.testEntryWithSourceAndTranscript(ViccSource.ONCOKB, "any");
         Feature feature = ViccTestFactory.testFeatureWithGeneAndName("any", "any");
 
         assertNotNull(curator.curate(entry, feature));
 
-        CurationKey blacklistKey = firstOncoKbBlacklistKey();
+        FeatureCurationKey blacklistKey = firstOncoKbBlacklistKey();
         ViccEntry blacklistEntry = ViccTestFactory.testEntryWithSourceAndTranscript(ViccSource.ONCOKB, blacklistKey.transcript());
 
         Feature blacklistFeature = ViccTestFactory.testFeatureWithGeneAndName(blacklistKey.gene(), blacklistKey.featureName());
 
         assertNull(curator.curate(blacklistEntry, blacklistFeature));
 
-        curator.reportUnusedCurationEntries();
+        curator.reportUnusedCurationKeys();
     }
 
     @NotNull
-    private static CurationKey firstOncoKbMappingKey() {
-        for (CurationKey key : CurationFactory.FEATURE_MAPPINGS.keySet()) {
+    private static FeatureCurationKey firstOncoKbMappingKey() {
+        for (FeatureCurationKey key : FeatureCurationFactory.FEATURE_MAPPINGS.keySet()) {
             if (key.source() == ViccSource.ONCOKB) {
                 return key;
             }
@@ -65,8 +65,8 @@ public class ViccCuratorTest {
     }
 
     @NotNull
-    private static CurationKey firstOncoKbBlacklistKey() {
-        for (CurationKey key : CurationFactory.FEATURE_BLACKLIST) {
+    private static FeatureCurationKey firstOncoKbBlacklistKey() {
+        for (FeatureCurationKey key : FeatureCurationFactory.FEATURE_BLACKLIST) {
             if (key.source() == ViccSource.ONCOKB) {
                 return key;
             }

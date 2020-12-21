@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.lims;
 
 import java.time.LocalDate;
 
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfigData;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -39,24 +39,38 @@ public final class LimsTestUtil {
     }
 
     @NotNull
-    public static LimsCohortConfigData buildTestCohortModel(@NotNull String cohortId, boolean hospitalCentraId, boolean reportGermline,
-            boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
-            boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
-            boolean requirePatientIdForPdfName, boolean requireSubmissionInformation, boolean requireAdditionalInfromationForSidePanel) {
-        return ImmutableLimsCohortConfigData.builder()
-                .cohortId(cohortId)
-                .hospitalCentraId(hospitalCentraId)
-                .reportGermline(reportGermline)
-                .reportGermlineFlag(reportGermlineFlag)
-                .reportConclusion(reportConclusion)
-                .reportViral(reportViral)
-                .requireHospitalId(requireHospitalId)
-                .requireHospitalPAId(requireHospitalPAId)
+    public static LimsCohortConfig createAllDisabledCohortConfig(@NotNull String cohortId) {
+        return allDisabledBuilder().cohortId(cohortId).build();
+    }
+
+    @NotNull
+    public static LimsCohortConfig createConfigForHospitalModel(@NotNull String cohortId, boolean requireHospitalPersonsStudy,
+            boolean requireHospitalPersonsRequester) {
+        return allDisabledBuilder().cohortId(cohortId)
+                .sampleContainsHospitalCenterId(true)
                 .requireHospitalPersonsStudy(requireHospitalPersonsStudy)
                 .requireHospitalPersonsRequester(requireHospitalPersonsRequester)
-                .requirePatientIdForPdfName(requirePatientIdForPdfName)
-                .requireSubmissionInformation(requireSubmissionInformation)
-                .requireAdditionalInfromationForSidePanel(requireAdditionalInfromationForSidePanel)
                 .build();
+    }
+
+    @NotNull
+    public static LimsCohortConfig createConfigForGermlineReporting(@NotNull String cohortId, boolean reportGermline,
+            boolean reportGermlineFlag) {
+        return allDisabledBuilder().cohortId(cohortId).reportGermline(reportGermline).reportGermlineFlag(reportGermlineFlag).build();
+    }
+
+    @NotNull
+    private static ImmutableLimsCohortConfig.Builder allDisabledBuilder() {
+        return ImmutableLimsCohortConfig.builder()
+                .sampleContainsHospitalCenterId(false)
+                .reportGermline(false)
+                .reportGermlineFlag(false)
+                .reportConclusion(false)
+                .reportViral(false)
+                .requireHospitalId(false)
+                .requireHospitalPAId(false)
+                .requireHospitalPersonsStudy(false)
+                .requireHospitalPersonsRequester(false)
+                .requireAdditionalInformationForSidePanel(false);
     }
 }

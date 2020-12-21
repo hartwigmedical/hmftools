@@ -8,7 +8,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class CurationKey {
+class FeatureCurationKey {
 
     @NotNull
     private final ViccSource source;
@@ -19,7 +19,7 @@ class CurationKey {
     @NotNull
     private final String featureName;
 
-    public CurationKey(@NotNull final ViccSource source, @NotNull final String gene, @Nullable final String transcript,
+    public FeatureCurationKey(@NotNull final ViccSource source, @NotNull final String gene, @Nullable final String transcript,
             @NotNull final String featureName) {
         this.source = source;
         this.gene = gene;
@@ -59,7 +59,7 @@ class CurationKey {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final CurationKey that = (CurationKey) o;
+        final FeatureCurationKey that = (FeatureCurationKey) o;
         return source == that.source && gene.equals(that.gene) && Objects.equals(transcript, that.transcript)
                 && featureName.equals(that.featureName);
     }
@@ -71,7 +71,7 @@ class CurationKey {
 
     @Override
     public String toString() {
-        return "CurationKey{" + "source=" + source + ", gene='" + gene + '\'' + ", transcript='" + transcript + '\'' + ", featureName='"
-                + featureName + '\'' + '}';
+        return "FeatureCurationKey{" + "source=" + source + ", gene='" + gene + '\'' + ", transcript='" + transcript + '\''
+                + ", featureName='" + featureName + '\'' + '}';
     }
 }

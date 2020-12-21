@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigData;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,35 +46,38 @@ public final class SampleReportFactory {
 
         String hospitalPathologySampleId = lims.hospitalPathologySampleId(tumorSampleBarcode);
 
-        LimsCohortConfigData cohortdata = lims.cohortConfig(tumorSampleBarcode);
+        LimsCohortConfig cohortConfig = lims.cohortConfig(tumorSampleBarcode, tumorSampleId);
+        if (cohortConfig == null) {
+            throw new IllegalStateException(
+                    "Cohort not configured in LIMS for sample '" + tumorSampleId + "' with barcode " + tumorSampleBarcode);
+        }
 
-        LOGGER.info("Cohort type of this sample is: {}", cohortdata.cohortId());
+        LOGGER.info("Cohort ID of this sample is: {}", cohortConfig.cohortId());
 
-        String hospitalPatientId =
-                checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), tumorSampleId, cohortdata);
+        String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), tumorSampleId, cohortConfig);
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientPrimaryTumor(patientPrimaryTumor)
-                .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode))
-                .reportViralInsertions(lims.reportViralInsertions(tumorSampleBarcode))
+                .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode, tumorSampleId))
+                .reportViralInsertions(lims.reportViralInsertions(tumorSampleBarcode, tumorSampleId))
                 .refArrivalDate(arrivalDateRefSample)
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .shallowSeqPurityString(lims.purityShallowSeq(tumorSampleBarcode))
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
-                .cohort(lims.cohortConfig(tumorSampleBarcode))
+                .cohort(cohortConfig)
                 .projectName(lims.projectName(tumorSampleBarcode))
                 .submissionId(lims.submissionId(tumorSampleBarcode))
-                .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
+                .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode, tumorSampleId))
                 .hospitalPatientId(hospitalPatientId)
-                .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohortdata))
+                .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohortConfig))
                 .build();
     }
 
     @VisibleForTesting
     static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull String sampleId,
-            @NotNull LimsCohortConfigData cohortdata) {
-        if (cohortdata.requireHospitalId()) {
+            @NotNull LimsCohortConfig cohortConfig) {
+        if (cohortConfig.requireHospitalId()) {
             if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
                 LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
             }
@@ -85,7 +88,7 @@ public final class SampleReportFactory {
     @VisibleForTesting
     @Nullable
     static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
-            @NotNull LimsCohortConfigData cohortdata) {
+            @NotNull LimsCohortConfig cohortdata) {
         if (cohortdata.requireHospitalPAId()) {
             if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
                     && isValidHospitalPathologySampleId(hospitalPathologySampleId)) {

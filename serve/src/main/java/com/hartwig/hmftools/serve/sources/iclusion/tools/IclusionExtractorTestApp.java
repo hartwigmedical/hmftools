@@ -10,6 +10,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
@@ -44,6 +45,7 @@ public class IclusionExtractorTestApp {
 
         String iclusionTrialTsv;
         String driverGeneTsvPath;
+        String knownFusionFilePath;
         String missingDoidMappingTsv;
         String outputDir;
         ProteinResolver proteinResolver;
@@ -53,6 +55,7 @@ public class IclusionExtractorTestApp {
         if (hostname.toLowerCase().contains("datastore")) {
             iclusionTrialTsv = "/data/common/dbs/iclusion/iclusion_trials_prod.tsv";
             driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv";
+            knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.csv";
             missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/tmp";
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion,
@@ -61,6 +64,7 @@ public class IclusionExtractorTestApp {
         } else {
             iclusionTrialTsv = System.getProperty("user.home") + "/hmf/projects/serve/iclusion/iclusion_trials_prod.tsv";
             driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv";
+            knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.csv";
             missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
             proteinResolver = ProteinResolverFactory.dummy();
@@ -72,15 +76,22 @@ public class IclusionExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        String iclusionMutationTsv = outputDir + "/iclusionMutations.tsv";
+        String iclusionMutationTsv = outputDir + "/IclusionMutations.tsv";
 
         LOGGER.debug("Configured '{}' as the iClusion trial TSV path", iclusionTrialTsv);
         LOGGER.debug("Configured '{}' as the driver gene TSV path", driverGeneTsvPath);
+        LOGGER.debug("Configured '{}' as the known fusion file path", knownFusionFilePath);
         LOGGER.debug("Configured '{}' as the missing DOID mapping TSV path", missingDoidMappingTsv);
         LOGGER.debug("Configured '{}' as the iClusion mutation TSV path", iclusionMutationTsv);
 
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsvPath);
         LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
+
+        KnownFusionCache fusionCache = new KnownFusionCache();
+        if (!fusionCache.loadFile(knownFusionFilePath)) {
+            throw new IllegalStateException("Could not load known fusion cache from " + knownFusionFilePath);
+        }
+        LOGGER.debug(" Read {} known fusions from {}", fusionCache.getData().size(), knownFusionFilePath);
 
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iclusionTrialTsv);
 
@@ -88,7 +99,8 @@ public class IclusionExtractorTestApp {
 
         EventClassifierConfig config = IclusionClassificationConfig.build();
         IclusionExtractor extractor =
-                IclusionExtractorFactory.buildIclusionExtractor(config, proteinResolver, driverGenes, allGenesMap, doidLookup);
+                IclusionExtractorFactory.buildIclusionExtractor(config, proteinResolver, driverGenes, fusionCache, allGenesMap, doidLookup);
+
         ExtractionResult result = extractor.extract(trials);
 
         IclusionUtil.printIclusionResult(result);
@@ -96,5 +108,4 @@ public class IclusionExtractorTestApp {
 
         new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);
     }
-
 }

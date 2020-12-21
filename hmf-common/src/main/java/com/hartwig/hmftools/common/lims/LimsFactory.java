@@ -21,9 +21,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfigFactory;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortModelFactory;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
@@ -31,6 +32,7 @@ import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class LimsFactory {
 
@@ -43,13 +45,15 @@ public final class LimsFactory {
     private static final String LIMS_SHALLOW_SEQ_TSV = "shallow_seq_purity.tsv";
     private static final String PATIENT_BLACKLIST_TSV = "patient_blacklist.tsv";
 
+    private static final String COHORT_CONFIG_TSV = "cohort_config.tsv";
+
     private static final String FIELD_SEPARATOR = "\t";
 
     private LimsFactory() {
     }
 
     @NotNull
-    public static Lims fromLimsDirectory(@NotNull String limsDirectory, @NotNull String cohortConfig) throws IOException {
+    public static Lims fromLimsDirectory(@NotNull String limsDirectory) throws IOException {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
@@ -62,7 +66,7 @@ public final class LimsFactory {
 
         HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(limsDirectory);
 
-        LimsCohortModel cohortModel = LimsCohortConfigFactory.read(cohortConfig);
+        LimsCohortModel cohortModel = LimsCohortModelFactory.read(limsDirectory + File.separator + COHORT_CONFIG_TSV);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
@@ -70,23 +74,47 @@ public final class LimsFactory {
                 preLimsArrivalDates,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
-                hospitalModel, cohortModel);
+                hospitalModel,
+                cohortModel);
     }
 
     @NotNull
     public static Lims empty() {
+        LimsCohortModel alwaysDisabledCohortModel = new LimsCohortModel() {
+            @NotNull
+            @Override
+            protected Map<String, LimsCohortConfig> limsCohortMap() {
+                return Maps.newHashMap();
+            }
+
+            @Nullable
+            @Override
+            public LimsCohortConfig queryCohortData(@Nullable final String cohortString, @NotNull final String sampleId,
+                    @NotNull final String tumorSampleId) {
+                return ImmutableLimsCohortConfig.builder()
+                        .cohortId(sampleId)
+                        .sampleContainsHospitalCenterId(false)
+                        .reportGermline(false)
+                        .reportGermlineFlag(false)
+                        .reportConclusion(false)
+                        .reportViral(false)
+                        .requireHospitalId(false)
+                        .requireHospitalPAId(false)
+                        .requireHospitalPersonsStudy(false)
+                        .requireHospitalPersonsRequester(false)
+                        .requireAdditionalInformationForSidePanel(false)
+                        .build();
+            }
+        };
+
         return new Lims(Maps.newHashMap(),
                 Maps.newHashMap(),
                 Maps.newHashMap(),
                 Maps.newHashMap(),
                 Sets.newHashSet(),
                 Sets.newHashSet(),
-                ImmutableHospitalModel.of(Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap(),
-                        Maps.newHashMap()), ImmutableLimsCohortModel.of(Maps.newHashMap()));
+                ImmutableHospitalModel.builder().build(),
+                alwaysDisabledCohortModel);
     }
 
     @NotNull

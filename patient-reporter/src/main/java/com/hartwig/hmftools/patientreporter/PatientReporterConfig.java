@@ -58,7 +58,6 @@ public interface PatientReporterConfig {
     String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
-    String CONFIG_COHORTS_TSV = "config_cohorts_tsv";
 
     // Some additional optional params and flags
     String COMMENTS = "comments";
@@ -106,7 +105,6 @@ public interface PatientReporterConfig {
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
-        options.addOption(CONFIG_COHORTS_TSV, true, "Path towards a TSV containing the cohorts for reporting.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
@@ -199,9 +197,6 @@ public interface PatientReporterConfig {
     @NotNull
     String sampleSummaryTsv();
 
-    @NotNull
-    String configCohortsTsv();
-
     @Nullable
     String comments();
 
@@ -239,7 +234,6 @@ public interface PatientReporterConfig {
         String knowledgebaseDirectory = Strings.EMPTY;
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
-        String configCohortsTsv = Strings.EMPTY;
 
         if (qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
@@ -259,7 +253,6 @@ public interface PatientReporterConfig {
             knowledgebaseDirectory = nonOptionalDir(cmd, KNOWLEDGEBASE_DIRECTORY);
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
-            configCohortsTsv = nonOptionalFile(cmd, CONFIG_COHORTS_TSV);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -291,7 +284,6 @@ public interface PatientReporterConfig {
                 .knowledgebaseDir(knowledgebaseDirectory)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
-                .configCohortsTsv(configCohortsTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .correctedReport(cmd.hasOption(CORRECTED_REPORT))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
