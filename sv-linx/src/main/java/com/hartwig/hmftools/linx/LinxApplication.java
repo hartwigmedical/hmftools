@@ -219,6 +219,7 @@ public class LinxApplication
             final List<SvVarData> svDataList = createSvData(svRecords, config);
 
             sampleAnalyser.setSampleId(sampleId);
+            sampleAnalyser.setSampleSVs(svDataList);
 
             if(svDataList.isEmpty())
             {
@@ -233,8 +234,6 @@ public class LinxApplication
 
             if(!config.IsGermline)
                 cnDataLoader.loadSampleData(sampleId, svRecords);
-
-            sampleAnalyser.setSampleSVs(svDataList);
 
             if(ensemblDataCache != null)
             {
