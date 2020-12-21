@@ -72,7 +72,6 @@ public final class ProtectEvidenceItems {
         return evidence.stream()
                 .map(x -> ImmutableProtectEvidenceItem.builder().from(x).reported(report.test(x)).build())
                 .collect(Collectors.toList());
-
     }
 
     @NotNull
