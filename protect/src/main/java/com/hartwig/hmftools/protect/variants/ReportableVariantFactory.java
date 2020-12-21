@@ -43,9 +43,9 @@ public final class ReportableVariantFactory {
                         }
                     }
 
-                    boolean filterSomaticVariantInSameGene = genesWithSomaticInactivationEvent.contains(variant.gene());
+                    boolean filterSomaticEventInSameGene = genesWithSomaticInactivationEvent.contains(variant.gene());
 
-                    includeVariant = filterBiallelic || filterGermlineVariantInSameGene || filterSomaticVariantInSameGene;
+                    includeVariant = filterBiallelic || filterGermlineVariantInSameGene || filterSomaticEventInSameGene;
                 } else {
                     includeVariant = true;
                 }
@@ -62,18 +62,20 @@ public final class ReportableVariantFactory {
     @NotNull
     public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog) {
-        Map<String, DriverCatalog> driverCatalogMap = Maps.newHashMap();
+        Map<String, DriverCatalog> mutationDriverMap = Maps.newHashMap();
 
         for (DriverCatalog entry : driverCatalog) {
             if (entry.driver() == DriverType.MUTATION) {
-                driverCatalogMap.put(entry.gene(), entry);
+                mutationDriverMap.put(entry.gene(), entry);
             }
         }
 
         List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
-                DriverCatalog geneDriver = driverCatalogMap.get(variant.gene());
+                DriverCatalog geneDriver = mutationDriverMap.get(variant.gene());
+                assert geneDriver != null;
+
                 ReportableVariant reportable = fromSomaticVariant(variant).driverLikelihood(geneDriver.driverLikelihood()).build();
                 result.add(reportable);
             }

@@ -21,9 +21,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LinxDataLoader {
+public final class LinxDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
+
+    private LinxDataLoader() {
+    }
 
     @NotNull
     public static LinxData load(ProtectConfig config) throws IOException {
@@ -31,24 +34,24 @@ public class LinxDataLoader {
     }
 
     @NotNull
-    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
+    private static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv) throws IOException {
-        LOGGER.info("Loaded LINX data from {}", new File(linxFusionTsv).getParent());
+        LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
         List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv).stream().filter(LinxFusion::reported).collect(Collectors.toList());
-        LOGGER.info(" Reportable fusions: {}", linxFusions.size());
+        LOGGER.info(" Loaded {} reportable fusions from {}", linxFusions.size(), linxFusionTsv);
 
         List<LinxBreakend> linxBreakends =
                 LinxBreakend.read(linxBreakendTsv).stream().filter(LinxBreakend::reportedDisruption).collect(Collectors.toList());
         List<ReportableGeneDisruption> reportableGeneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends);
-        LOGGER.info(" Reportable disruptions: {}", reportableGeneDisruptions.size());
+        LOGGER.info(" Loaded {} reportable disruptions from {}", reportableGeneDisruptions.size(), linxBreakendTsv);
 
         List<LinxViralInsertion> viralInsertionList = LinxViralInsertion.read(linxViralInsertionTsv);
         List<ViralInsertion> reportableViralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(viralInsertionList);
-        LOGGER.info(" Reportable viral insertions: {}", reportableViralInsertions.size());
+        LOGGER.info(" Loaded {} reportable viral insertions from {}", reportableViralInsertions.size(), linxViralInsertionTsv);
 
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions =
                 HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(linxDriversTsv);
-        LOGGER.info(" Reportable homozygous disruptions: {}", reportableHomozygousDisruptions.size());
+        LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", reportableHomozygousDisruptions.size(), linxDriversTsv);
 
         return ImmutableLinxData.builder()
                 .addAllFusions(linxFusions)

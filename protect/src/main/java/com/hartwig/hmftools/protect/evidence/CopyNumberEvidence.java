@@ -13,9 +13,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class CopyNumberEvidence {
 
+    @NotNull
     private final List<ActionableGene> actionableGenes;
 
-    public CopyNumberEvidence(final List<ActionableGene> actionableGenes) {
+    public CopyNumberEvidence(@NotNull final List<ActionableGene> actionableGenes) {
         this.actionableGenes = actionableGenes;
     }
 

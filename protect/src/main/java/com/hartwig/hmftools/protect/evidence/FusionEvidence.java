@@ -16,10 +16,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class FusionEvidence {
 
+    @NotNull
     private final List<ActionableGene> actionableGenes;
+    @NotNull
     private final List<ActionableFusion> actionableFusions;
 
-    public FusionEvidence(final List<ActionableGene> actionableGenes, final List<ActionableFusion> actionableFusions) {
+    public FusionEvidence(@NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions) {
         this.actionableGenes = actionableGenes.stream().filter(x -> x.event().equals(GeneLevelEvent.FUSION)).collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
     }
