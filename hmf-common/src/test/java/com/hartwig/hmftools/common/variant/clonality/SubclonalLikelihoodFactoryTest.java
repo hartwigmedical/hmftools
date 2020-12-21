@@ -26,7 +26,6 @@ public class SubclonalLikelihoodFactoryTest {
         assertEquals(0.5, victim.subclonalLikelihood(0.025), 0.01);
         assertEquals(0.5, victim.subclonalLikelihood(0.05), 0.01);
         assertEquals(0.5, victim.subclonalLikelihood(0.0749), 0.01);
-
     }
 
     @Test
