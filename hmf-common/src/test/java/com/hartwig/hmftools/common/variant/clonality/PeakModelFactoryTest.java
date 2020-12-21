@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class PealModelFactoryTest {
+public class PeakModelFactoryTest {
 
     @Test
     public void testOffset() {
