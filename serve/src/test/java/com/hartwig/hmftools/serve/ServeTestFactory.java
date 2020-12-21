@@ -18,9 +18,15 @@ import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
+import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.exon.ImmutableExonAnnotation;
+import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
+import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
@@ -41,6 +47,8 @@ public final class ServeTestFactory {
     public static ExtractionResult createResultForSource(@NotNull Knowledgebase source) {
         return ImmutableExtractionResult.builder()
                 .addKnownHotspots(createTestKnownHotspotForSource(source))
+                .addKnownCodons(createTestKnownCodonForSource(source))
+                .addKnownExons(createTestKnownExonForSource(source))
                 .addKnownCopyNumbers(createTestKnownCopyNumberForSource(source))
                 .addKnownFusionPairs(createTestKnownFusionPairForSource(source))
                 .addActionableHotspots(createTestActionableHotspotForSource(source))
@@ -60,6 +68,37 @@ public final class ServeTestFactory {
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .proteinAnnotation(Strings.EMPTY)
+                .addSources(source)
+                .build();
+    }
+
+    @NotNull
+    public static KnownCodon createTestKnownCodonForSource(@NotNull Knowledgebase source) {
+        return ImmutableKnownCodon.builder()
+                .annotation(ImmutableCodonAnnotation.builder()
+                        .gene(Strings.EMPTY)
+                        .chromosome(Strings.EMPTY)
+                        .start(0)
+                        .end(0)
+                        .mutationType(MutationTypeFilter.ANY)
+                        .codonIndex(0)
+                        .build())
+                .addSources(source)
+                .build();
+    }
+
+    @NotNull
+    public static KnownExon createTestKnownExonForSource(@NotNull Knowledgebase source) {
+        return ImmutableKnownExon.builder()
+                .annotation(ImmutableExonAnnotation.builder()
+                        .gene(Strings.EMPTY)
+                        .chromosome(Strings.EMPTY)
+                        .start(0)
+                        .end(0)
+                        .mutationType(MutationTypeFilter.ANY)
+                        .exonEnsemblId(Strings.EMPTY)
+                        .exonIndex(0)
+                        .build())
                 .addSources(source)
                 .build();
     }

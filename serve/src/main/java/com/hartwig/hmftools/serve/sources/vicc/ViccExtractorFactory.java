@@ -13,7 +13,6 @@ import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.sources.vicc.curation.ViccDrugCurator;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractorFactory {
 
@@ -24,22 +23,7 @@ public final class ViccExtractorFactory {
     public static ViccExtractor buildViccExtractor(@NotNull EventClassifierConfig config, @NotNull ProteinResolver proteinResolver,
             @NotNull List<DriverGene> driverGenes, @NotNull KnownFusionCache knownFusionCache,
             @NotNull Map<String, HmfTranscriptRegion> allGenesMap, @NotNull DoidLookup missingDoidLookup) {
-        return buildViccExtractorWithInterpretationTsv(config,
-                proteinResolver,
-                driverGenes,
-                knownFusionCache,
-                allGenesMap,
-                missingDoidLookup,
-                null);
-    }
-
-    @NotNull
-    public static ViccExtractor buildViccExtractorWithInterpretationTsv(@NotNull EventClassifierConfig config,
-            @NotNull ProteinResolver proteinResolver, @NotNull List<DriverGene> driverGenes, @NotNull KnownFusionCache knownFusionCache,
-            @NotNull Map<String, HmfTranscriptRegion> allGenesMap, @NotNull DoidLookup missingDoidLookup,
-            @Nullable String featureInterpretationTsv) {
         return new ViccExtractor(EventExtractorFactory.create(config, proteinResolver, driverGenes, knownFusionCache, allGenesMap),
-                new ActionableEvidenceFactory(missingDoidLookup, new ViccDrugCurator()),
-                featureInterpretationTsv);
+                new ActionableEvidenceFactory(missingDoidLookup, new ViccDrugCurator()));
     }
 }

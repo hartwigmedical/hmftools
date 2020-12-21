@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.serve.extraction.hotspot;
 
-import java.util.Set;
-
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.extraction.KnownEvent;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -12,10 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class KnownHotspot implements VariantHotspot {
-
-    @NotNull
-    public abstract Set<Knowledgebase> sources();
+public abstract class KnownHotspot implements VariantHotspot, KnownEvent {
 
     @NotNull
     public abstract String gene();

@@ -7,7 +7,9 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
 import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumberFile;
+import com.hartwig.hmftools.serve.extraction.exon.KnownExonFile;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPairFile;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspotFile;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
@@ -36,6 +38,14 @@ public class ExtractionResultWriter {
         String hotspotVcf = KnownHotspotFile.knownHotspotVcfPath(outputDir, refGenomeVersion);
         LOGGER.info(" Writing {} known hotspots to {}", result.knownHotspots().size(), hotspotVcf);
         KnownHotspotFile.write(hotspotVcf, result.knownHotspots());
+
+        String codonTsv = KnownCodonFile.knownCodonTsvPath(outputDir, refGenomeVersion);
+        LOGGER.info(" Writing {} known codons to {}", result.knownCodons().size(), codonTsv);
+        KnownCodonFile.write(codonTsv, result.knownCodons());
+
+        String exonTsv = KnownExonFile.knownExonTsvPath(outputDir, refGenomeVersion);
+        LOGGER.info(" Writing {} known exons to {}", result.knownExons().size(), exonTsv);
+        KnownExonFile.write(exonTsv, result.knownExons());
 
         String copyNumberTsv = KnownCopyNumberFile.knownCopyNumberTsvPath(outputDir, refGenomeVersion);
         LOGGER.info(" Writing {} known copy numbers to {}", result.knownCopyNumbers().size(), copyNumberTsv);

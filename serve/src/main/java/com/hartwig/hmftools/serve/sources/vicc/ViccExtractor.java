@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.sources.vicc;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,10 +21,16 @@ import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
+import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
+import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
+import com.hartwig.hmftools.serve.extraction.exon.ExonFunctions;
+import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
+import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionFunctions;
 import com.hartwig.hmftools.serve.extraction.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
@@ -44,7 +49,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ViccExtractor {
 
@@ -54,18 +58,14 @@ public final class ViccExtractor {
     private final EventExtractor eventExtractor;
     @NotNull
     private final ActionableEvidenceFactory actionableEvidenceFactory;
-    @Nullable
-    private final String featureInterpretationTsv;
 
-    public ViccExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory,
-            @Nullable final String featureInterpretationTsv) {
+    public ViccExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory) {
         this.eventExtractor = eventExtractor;
         this.actionableEvidenceFactory = actionableEvidenceFactory;
-        this.featureInterpretationTsv = featureInterpretationTsv;
     }
 
     @NotNull
-    public ExtractionResult extract(@NotNull List<ViccEntry> entries) throws IOException {
+    public ExtractionResult extract(@NotNull List<ViccEntry> entries) {
         Map<ViccEntry, ViccExtractionResult> resultsPerEntry = Maps.newHashMap();
 
         ProgressTracker tracker = new ProgressTracker("VICC", entries.size());
@@ -78,12 +78,10 @@ public final class ViccExtractor {
 
         ViccUtil.printExtractionResults(resultsPerEntry);
 
-        if (featureInterpretationTsv != null) {
-            ViccUtil.writeInterpretationToTsv(featureInterpretationTsv, resultsPerEntry);
-        }
-
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
                 .knownHotspots(convertToHotspots(resultsPerEntry))
+                .knownCodons(convertToCodons(resultsPerEntry))
+                .knownExons(convertToExons(resultsPerEntry))
                 .knownCopyNumbers(convertToKnownAmpsDels(resultsPerEntry))
                 .knownFusionPairs(convertToKnownFusions(resultsPerEntry));
 
@@ -181,6 +179,36 @@ public final class ViccExtractor {
         }
 
         return HotspotFunctions.consolidate(hotspots);
+    }
+
+    @NotNull
+    private static Set<KnownCodon> convertToCodons(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        Set<KnownCodon> codons = Sets.newHashSet();
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+            Knowledgebase source = ViccSource.toKnowledgebase(entry.getKey().source());
+            for (List<CodonAnnotation> annotations : entry.getValue().codonsPerFeature().values()) {
+                for (CodonAnnotation annotation : annotations) {
+                    codons.add(ImmutableKnownCodon.builder().annotation(annotation).addSources(source).build());
+                }
+            }
+        }
+
+        return CodonFunctions.consolidate(codons);
+    }
+
+    @NotNull
+    private static Set<KnownExon> convertToExons(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
+        Set<KnownExon> exons = Sets.newHashSet();
+        for (Map.Entry<ViccEntry, ViccExtractionResult> entry : resultsPerEntry.entrySet()) {
+            Knowledgebase source = ViccSource.toKnowledgebase(entry.getKey().source());
+            for (List<ExonAnnotation> annotations : entry.getValue().exonsPerFeature().values()) {
+                for (ExonAnnotation annotation : annotations) {
+                    exons.add(ImmutableKnownExon.builder().annotation(annotation).addSources(source).build());
+                }
+            }
+        }
+
+        return ExonFunctions.consolidate(exons);
     }
 
     @NotNull
