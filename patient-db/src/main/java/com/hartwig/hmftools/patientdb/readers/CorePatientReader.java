@@ -46,7 +46,6 @@ public class CorePatientReader {
 
     @NotNull
     private BaselineData toBaselineData(@Nullable String limsPrimaryTumorLocation) {
-
         CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(limsPrimaryTumorLocation);
         if (curatedPrimaryTumor.location() == null && limsPrimaryTumorLocation != null
                 && !limsPrimaryTumorLocation.isEmpty()) {

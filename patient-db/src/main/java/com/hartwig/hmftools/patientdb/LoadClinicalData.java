@@ -200,23 +200,19 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsCohortConfig cohort = lims.cohortConfig(sampleBarcode);
+            SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
-            if (cohort != null) {
-                SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
-
-                if (sampleData != null) {
-                    String patientId = lims.patientId(sampleBarcode);
-                    List<SampleData> currentSamples = samplesPerPatient.get(patientId);
-                    if (currentSamples == null) {
-                        currentSamples = Lists.newArrayList(sampleData);
-                    } else if (!sampleIdExistsInSampleDataList(currentSamples, sampleId)) {
-                        // Ideally if a single sample exists in LIMS with multiple barcodes we pick "the most relevant one".
-                        // Currently just picking a random one - sampleId has to be unique in this list.
-                        currentSamples.add(sampleData);
-                    }
-                    samplesPerPatient.put(patientId, currentSamples);
+            if (sampleData != null) {
+                String patientId = lims.patientId(sampleBarcode);
+                List<SampleData> currentSamples = samplesPerPatient.get(patientId);
+                if (currentSamples == null) {
+                    currentSamples = Lists.newArrayList(sampleData);
+                } else if (!sampleIdExistsInSampleDataList(currentSamples, sampleId)) {
+                    // Ideally if a single sample exists in LIMS with multiple barcodes we pick "the most relevant one".
+                    // Currently just picking a random one - sampleId has to be unique in this list.
+                    currentSamples.add(sampleData);
                 }
+                samplesPerPatient.put(patientId, currentSamples);
             }
         }
 

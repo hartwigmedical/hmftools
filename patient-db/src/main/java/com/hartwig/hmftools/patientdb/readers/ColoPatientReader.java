@@ -15,6 +15,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class ColoPatientReader {
 
+    public ColoPatientReader() {
+    }
+
     @NotNull
     public Patient read(@NotNull String coloSampleId) {
         boolean isColo829 = coloSampleId.equals("COLO829T");

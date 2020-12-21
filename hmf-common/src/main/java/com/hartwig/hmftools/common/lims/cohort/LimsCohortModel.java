@@ -21,7 +21,7 @@ public abstract class LimsCohortModel {
     @Nullable
     public LimsCohortConfig queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
         String effectiveCohortString = cohortString;
-        if (cohortString == null) {
+        if (cohortString == null || cohortString.isEmpty()) {
             effectiveCohortString = resolveFromSampleId(sampleId);
             LOGGER.warn("No cohort string present in LIMS for {}. Cohort has been set to {}", sampleId, effectiveCohortString);
         }

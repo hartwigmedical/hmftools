@@ -7,6 +7,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.LimsTestUtil;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class LimsCohortModelTest {
@@ -29,6 +30,7 @@ public class LimsCohortModelTest {
 
         LimsCohortModel model = ImmutableLimsCohortModel.builder().limsCohortMap(cohortMap).build();
         assertEquals(cohortConfig, model.queryCohortData(null, "DRUP01"));
+        assertEquals(cohortConfig, model.queryCohortData(Strings.EMPTY, "DRUP01"));
     }
 
     @Test(expected = IllegalStateException.class)
