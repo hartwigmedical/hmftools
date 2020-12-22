@@ -93,7 +93,7 @@ public class ProtectApplication implements AutoCloseable {
             result.addAll(doidParent.parents(initialDoid));
         }
 
-        LOGGER.info(" Resolved doid tree: {}", String.join(";", result));
+        LOGGER.info(" Resolved doid tree: {}", result);
         return result;
     }
 
