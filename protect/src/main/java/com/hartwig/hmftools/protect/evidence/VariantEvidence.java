@@ -32,25 +32,28 @@ public class VariantEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<ReportableVariant> germline,
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull List<ReportableVariant> germline,
             @NotNull List<ReportableVariant> somatic) {
         List<ReportableVariant> variants = ReportableVariantFactory.mergeVariantLists(germline, somatic);
-        return variants.stream().flatMap(x -> evidence(doid, x).stream()).collect(Collectors.toList());
+        return variants.stream().flatMap(x -> evidence(doids, x).stream()).collect(Collectors.toList());
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull ReportableVariant reportable) {
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull ReportableVariant reportable) {
         boolean report = reportable.driverLikelihoodInterpretation().equals(DriverInterpretation.HIGH);
 
         List<ProtectEvidenceItem> hotspotEvidence = hotspots.stream()
                 .filter(x -> hotspotMatch(x, reportable))
-                .map(x -> evidence(report, doid, reportable, x))
+                .map(x -> evidence(true, doids, reportable, x))
                 .collect(Collectors.toList());
 
+        // TODO (DEV-642) Match mutation type against actionable mutation type filter
         List<ProtectEvidenceItem> rangeEvidence = ranges.stream()
                 .filter(x -> rangeMatch(x, reportable))
-                .map(x -> evidence(report, doid, reportable, x))
+                .map(x -> evidence(report, doids, reportable, x))
                 .collect(Collectors.toList());
+
+        // TODO (DEV-642) Include match for INACTIVATION/ACTIVATION/ANY_MUTATION
 
         Set<ProtectEvidenceItem> result = Sets.newHashSet();
         result.addAll(hotspotEvidence);
@@ -70,8 +73,8 @@ public class VariantEvidence {
     }
 
     @NotNull
-    private static ProtectEvidenceItem evidence(boolean report, @NotNull Set<String> doid, @NotNull ReportableVariant reportable,
+    private static ProtectEvidenceItem evidence(boolean report, @NotNull Set<String> doids, @NotNull ReportableVariant reportable,
             @NotNull ActionableEvent actionable) {
-        return ProtectEvidenceItems.builder(doid, actionable).genomicEvent(reportable.genomicEvent()).reported(report).build();
+        return ProtectEvidenceItems.builder(doids, actionable).genomicEvent(reportable.genomicEvent()).reported(report).build();
     }
 }

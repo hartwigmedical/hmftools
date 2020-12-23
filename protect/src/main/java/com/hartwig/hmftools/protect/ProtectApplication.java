@@ -84,13 +84,13 @@ public class ProtectApplication implements AutoCloseable {
     private static Set<String> doids(@NotNull ProtectConfig config) throws IOException {
         final Set<String> result = Sets.newHashSet();
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
-        final DoidParents doidParent = new DoidParents(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
+        final DoidParents doidParentModel = new DoidParents(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
 
         final Set<String> initialDoids = config.primaryTumorDoids();
         LOGGER.info("Starting with initial primary tumor doids '{}'", initialDoids);
         for (String initialDoid : initialDoids) {
             result.add(initialDoid);
-            result.addAll(doidParent.parents(initialDoid));
+            result.addAll(doidParentModel.parents(initialDoid));
         }
 
         LOGGER.info(" Resolved doid tree: {}", result);

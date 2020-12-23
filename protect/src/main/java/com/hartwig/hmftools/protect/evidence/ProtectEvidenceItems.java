@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidenceItem;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
@@ -23,19 +24,18 @@ public final class ProtectEvidenceItems {
     }
 
     @NotNull
-    public static ProtectEvidenceItem create(@NotNull String genomicEvent, @NotNull Set<String> doid, @NotNull ActionableEvent actionable) {
-        return builder(doid, actionable).genomicEvent(genomicEvent).reported(true).build();
+    public static ProtectEvidenceItem create(@NotNull String genomicEvent, @NotNull Set<String> doids, @NotNull ActionableEvent actionable) {
+        return builder(doids, actionable).genomicEvent(genomicEvent).reported(true).build();
     }
 
     @NotNull
-    public static ImmutableProtectEvidenceItem.Builder builder(@NotNull Set<String> doid, @NotNull ActionableEvent actionable) {
+    public static ImmutableProtectEvidenceItem.Builder builder(@NotNull Set<String> doids, @NotNull ActionableEvent actionable) {
         return ImmutableProtectEvidenceItem.builder()
                 .source(actionable.source())
-                .direction(actionable.direction())
-                .level(actionable.level())
                 .treatment(actionable.treatment())
-                .onLabel(doid.contains(actionable.doid()))
+                .level(actionable.level())
                 .direction(actionable.direction())
+                .onLabel(doids.contains(actionable.doid()))
                 .urls(actionable.urls());
     }
 
@@ -75,6 +75,7 @@ public final class ProtectEvidenceItems {
     }
 
     @NotNull
+    @VisibleForTesting
     static Optional<EvidenceLevel> highestReportableLevel(boolean isOnLabel,
             @NotNull Collection<? extends ProtectEvidenceItem> actionable) {
         return actionable.stream()
