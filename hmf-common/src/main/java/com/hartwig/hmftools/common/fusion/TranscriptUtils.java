@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.fusion;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
@@ -41,23 +43,29 @@ public class TranscriptUtils
     public static int tickPhaseForward(int phase, int increment) { return (phase + increment) % 3; }
     public static int tickPhaseForward(int phase) { return (phase + 1) % 3; }
 
-    /*
-    public static int calcPositionPhasing(final Transcript transcript, boolean isUpstream)
+    public static int calcExonicCodingPhase(final ExonData exon, int codingStart, int codingEnd, byte strand, int position)
     {
-        int codingBases = transcript.codingBases();
+        // if coding has started in an earlier exon, then take the exon start phase and process new coding bases
+        // if coding begins with the first base, then if phase is not specified, then assume '1',
+        // otherwise use the starting phase to adjust the exonic phase ie:
+        // PredEndPhase = if ExonPhase < 0 then CodingBases %% 3 else ExonPhase+CodingBases %% 3
+        int codingBases = strand == POS_STRAND ? position - max(exon.Start, codingStart) + 1 : min(exon.End, codingEnd) - position + 1;
 
-        // factor in insert sequence for the upstream partner
-        if(isUpstream && !transcript.gene().insertSequence().isEmpty())
+        if((strand == POS_STRAND && codingStart <= exon.Start) || (strand == NEG_STRAND && codingEnd >= exon.End))
         {
-            codingBases += transcript.gene().insertSequence().length();
+            int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
+            return (startPhase + codingBases) % 3;
         }
-
-        return codingBasesToPhase(codingBases);
+        else
+        {
+            return codingBases % 3;
+        }
     }
-    */
 
     public static CodingBaseData calcCodingBases(final TranscriptData transData, int position)
     {
+        // intronic phase can read from the preceding exon end phase (regardless of whether coding has begun
+        // exonic phase depends on where coding begins - see function for details
         boolean inCodingRegion = false;
         boolean codingRegionEnded = false;
 
@@ -69,17 +77,36 @@ public class TranscriptUtils
         int codingStart = transData.CodingStart;
         int codingEnd = transData.CodingEnd;
 
-        // by convention unless coding starts in the first base of an exon
+        boolean posInCodingRegion = positionWithin(position, codingStart, codingEnd);
+
         int startPhase = PHASE_1;
         boolean isExonic = false;
 
-        for (ExonData exon : transData.exons())
+        for (int i = 0; i < transData.exons().size(); ++i)
         {
+            final ExonData exon = transData.exons().get(i);
+            final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
+
             int exonStart = exon.Start;
             int exonEnd = exon.End;
 
-            if(!isExonic)
-                isExonic = positionWithin(position, exonStart, exonEnd);
+            if(!isExonic && positionWithin(position, exonStart, exonEnd))
+            {
+                isExonic = true;
+
+                // set phase
+                if(posInCodingRegion)
+                    cbData.Phase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, position);
+            }
+
+            // set phase for intronic positions
+            if(position > exonEnd && nextExon != null && position < nextExon.Start)
+            {
+                if(transData.Strand == POS_STRAND)
+                    cbData.Phase = exon.PhaseEnd;
+                else
+                    cbData.Phase = nextExon.PhaseEnd;
+            }
 
             if (!inCodingRegion)
             {
@@ -87,9 +114,6 @@ public class TranscriptUtils
                 {
                     // coding region begins in this exon
                     inCodingRegion = true;
-
-                    if(transData.Strand == POS_STRAND && exon.Start == codingStart)
-                        startPhase = tickPhaseForward(exon.PhaseStart);
 
                     cbData.TotalCodingBases += exonEnd - codingStart + 1;
 
@@ -114,9 +138,6 @@ public class TranscriptUtils
                     // coding region ends in this exon
                     codingRegionEnded = true;
 
-                    if(transData.Strand == NEG_STRAND && exonEnd == codingEnd)
-                        startPhase = tickPhaseForward(exon.PhaseStart);
-
                     cbData.TotalCodingBases += codingEnd - exonStart + 1;
 
                     if (position >= exonStart)
@@ -140,11 +161,13 @@ public class TranscriptUtils
                             cbData.CodingBases += exonEnd - exonStart + 1;
                     }
                 }
+
+                if(codingRegionEnded)
+                    break;
             }
         }
 
         // adjust for strand of the gene
-        boolean posInCodingRegion = positionWithin(position, codingStart, codingEnd);
 
         if(transData.Strand == NEG_STRAND)
         {
@@ -154,9 +177,7 @@ public class TranscriptUtils
                 cbData.CodingBases = cbData.TotalCodingBases - cbData.CodingBases;
         }
 
-        if(posInCodingRegion)
-            cbData.Phase = codingBasesToPhase(cbData.CodingBases, startPhase);
-        else
+        if(!posInCodingRegion)
             cbData.Phase = PHASE_NONE;
 
         return cbData;

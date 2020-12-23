@@ -450,7 +450,6 @@ public class EnsemblDataCache
         int nextUpDistance = -1;
         int nextDownDistance = -1;
         boolean isCodingTypeOverride = false;
-        int intronicPhase = PHASE_NONE;
 
         // first check for a position outside the exon boundaries
         final ExonData firstExon = exonList.get(0);
@@ -549,7 +548,6 @@ public class EnsemblDataCache
                         downExonRank = exonData.Rank;
                         nextDownDistance = exonData.Start - position;
                         nextUpDistance = position - prevExonData.End;
-                        intronicPhase = prevExonData.PhaseEnd;
                     }
                     else
                     {
@@ -560,7 +558,6 @@ public class EnsemblDataCache
                         downExonRank = prevExonData.Rank;
                         nextUpDistance = exonData.Start - position;
                         nextDownDistance = position - prevExonData.End;
-                        intronicPhase = exonData.PhaseEnd;
                     }
 
                     break;
@@ -573,21 +570,9 @@ public class EnsemblDataCache
         // in the direction of the transcript
 
         final CodingBaseData cbData = calcCodingBases(transData, position);
-        int phase = cbData.Phase;
-
-        if(upExonRank != downExonRank)
-        {
-            // use the intronic phase from the exons rather than calculating it
-            if(phase != intronicPhase)
-            {
-                LOGGER.warn("intronic phase({}) vs calc phase({}) mismatch", intronicPhase, phase);
-            }
-
-            phase = intronicPhase;
-        }
 
         BreakendTransData transcript = new BreakendTransData(geneAnnotation, transData,
-                upExonRank, downExonRank, phase, cbData.CodingBases, cbData.TotalCodingBases);
+                upExonRank, downExonRank, cbData.Phase, cbData.CodingBases, cbData.TotalCodingBases);
 
         // if not set, leave the previous exon null and it will be taken from the closest upstream gene
         transcript.setSpliceAcceptorDistance(true, nextUpDistance >= 0 ? nextUpDistance : null);
