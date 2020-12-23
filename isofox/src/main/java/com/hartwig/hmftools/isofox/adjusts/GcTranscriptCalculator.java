@@ -229,7 +229,7 @@ public class GcTranscriptCalculator implements Callable
         boolean endOfTrans = false;
         for (final ExonData exon : transData.exons())
         {
-            for (int startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
+            for (int startPos = exon.Start; startPos <= exon.End; ++startPos)
             {
                 final List<int[]> readRegions = generateReadRegions(transData, startPos, readLength);
 
@@ -261,7 +261,7 @@ public class GcTranscriptCalculator implements Callable
         int exonCount = transData.exons().size();
         final ExonData lastExon = transData.exons().get(exonCount - 1);
 
-        if(startPos + readLength - 1 > lastExon.ExonEnd)
+        if(startPos + readLength - 1 > lastExon.End)
             return readRegions;
 
         int remainingReadBases = readLength;
@@ -271,17 +271,17 @@ public class GcTranscriptCalculator implements Callable
         {
             final ExonData exon = transData.exons().get(i);
 
-            if(nextRegionStart > exon.ExonEnd)
+            if(nextRegionStart > exon.End)
                 continue;
 
-            if(nextRegionStart + remainingReadBases - 1 <= exon.ExonEnd)
+            if(nextRegionStart + remainingReadBases - 1 <= exon.End)
             {
                 int regionEnd = nextRegionStart + remainingReadBases - 1;
                 readRegions.add(new int[] {nextRegionStart, regionEnd});
                 return readRegions;
             }
 
-            int regionEnd = exon.ExonEnd;
+            int regionEnd = exon.End;
             int regionLength = (int)(regionEnd - nextRegionStart + 1);
             remainingReadBases -= regionLength;
             readRegions.add(new int[] {nextRegionStart, regionEnd});
@@ -293,7 +293,7 @@ public class GcTranscriptCalculator implements Callable
                 return readRegions;
             }
 
-            nextRegionStart = transData.exons().get(i + 1).ExonStart;
+            nextRegionStart = transData.exons().get(i + 1).Start;
         }
 
         return readRegions;

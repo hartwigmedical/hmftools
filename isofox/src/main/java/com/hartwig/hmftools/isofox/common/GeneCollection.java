@@ -3,7 +3,6 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
@@ -157,9 +156,9 @@ public class GeneCollection
                     for(ExonData exonData : transData.exons())
                     {
                         mEnrichedRegion[SE_START] = mEnrichedRegion[SE_START] > 0
-                                ? min(mEnrichedRegion[SE_START], exonData.ExonStart) : exonData.ExonStart;
+                                ? min(mEnrichedRegion[SE_START], exonData.Start) : exonData.Start;
 
-                        mEnrichedRegion[SE_END] = max(mEnrichedRegion[SE_END], exonData.ExonEnd);
+                        mEnrichedRegion[SE_END] = max(mEnrichedRegion[SE_END], exonData.End);
                     }
                 }
             }
@@ -176,9 +175,9 @@ public class GeneCollection
             for(ExonData exonData : transData.exons())
             {
                 mEnrichedRegion[SE_START] = mEnrichedRegion[SE_START] > 0
-                        ? min(mEnrichedRegion[SE_START], exonData.ExonStart) : exonData.ExonStart;
+                        ? min(mEnrichedRegion[SE_START], exonData.Start) : exonData.Start;
 
-                mEnrichedRegion[SE_END] = max(mEnrichedRegion[SE_END], exonData.ExonEnd);
+                mEnrichedRegion[SE_END] = max(mEnrichedRegion[SE_END], exonData.End);
             }
         }
     }
@@ -230,7 +229,7 @@ public class GeneCollection
             {
                 for (final ExonData exon : transData.exons())
                 {
-                    final RegionReadData exonReadData = findExonRegion(mExonRegions, exon.ExonStart, exon.ExonEnd);
+                    final RegionReadData exonReadData = findExonRegion(mExonRegions, exon.Start, exon.End);
                     if (exonReadData == null)
                     {
                         ISF_LOGGER.error("genes({}) failed to create exonic regions", geneNames());

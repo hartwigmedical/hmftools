@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExo
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 
@@ -81,7 +83,7 @@ public class RnaFusionTest
         // test positive strand
 
         int svPos1 = 12700;
-        GeneAnnotation geneAnnot1 = createGeneAnnotation(0, true, geneName, geneId, 1, chromosome, svPos1, 1);
+        GeneAnnotation geneAnnot1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, chromosome, svPos1, 1);
 
         transData = geneTransCache.getTranscriptData(geneId, transName);
         assertEquals(4, transData.exons().size());
@@ -155,7 +157,7 @@ public class RnaFusionTest
         // now test the negative strand
 
         int svPos2 = 12700;
-        GeneAnnotation geneAnnot2 = createGeneAnnotation(1, true, geneName2, geneId2, -1, chromosome, svPos2, -1);
+        GeneAnnotation geneAnnot2 = createGeneAnnotation(1, true, geneName2, geneId2, NEG_STRAND, chromosome, svPos2, -1);
 
         transData = geneTransCache.getTranscriptData(geneId2, transName2);
         assertEquals(4, transData.exons().size());

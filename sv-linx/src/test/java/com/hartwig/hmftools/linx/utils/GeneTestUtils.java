@@ -6,7 +6,11 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExo
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateExonStarts;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 
 import java.util.List;
 
@@ -16,6 +20,10 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.Transcript;
+
+import org.jetbrains.annotations.NotNull;
 
 public class GeneTestUtils
 {
@@ -46,9 +54,6 @@ public class GeneTestUtils
     public static final String GENE_NAME_6 = "GENE6"; // -ve strand
     public static final String GENE_ID_6 = "ENSG0006";
     public static final int GENE_START_6 = 10400; // will overlap with previous gene and share some exons
-
-    public static final byte POS_STRAND = 1;
-    public static final byte NEG_STRAND = -1;
 
     public static final int EXON_LENGTH = 100;
 
@@ -160,6 +165,19 @@ public class GeneTestUtils
                 .reportGermlineHotspot(false)
                 .likelihoodType(TSG)
                 .build();
+    }
+
+    public static Transcript createTranscript(
+            final GeneAnnotation gene, int transId, boolean isCanonical,
+            int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType,
+            final int exonUpstream, final int exonDownstream, int phase, int codingBases, int totalCodingBases
+    )
+    {
+        final String transName = String.format("TRANS%03d", transId);
+        TranscriptData transData = new TranscriptData(
+                transId, transName, gene.StableId, isCanonical, gene.Strand, transStart, transEnd, codingStart, codingEnd, bioType);
+
+        return new Transcript(gene, transData, exonUpstream, exonDownstream, phase, codingBases, totalCodingBases);
     }
 
 }

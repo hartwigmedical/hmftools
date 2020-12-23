@@ -122,7 +122,7 @@ public class RnaMatchWriter
                     // transcript info and viability
                     mWriter.write(String.format(",%s,%s,%s,%d,%s,%s,%d,%s,%d",
                             rnaFusion.isTransViable()[fs], rnaFusion.isTransCorrectLocation()[fs],
-                            trans.StableId, rnaFusion.getExonsSkipped()[fs],
+                            trans.transName(), rnaFusion.getExonsSkipped()[fs],
                             trans.regionType(), trans.codingType(),
                             isUpstream ? trans.ExonUpstream : trans.ExonDownstream,
                             trans.isDisruptive(), trans.prevSpliceAcceptorDistance()));

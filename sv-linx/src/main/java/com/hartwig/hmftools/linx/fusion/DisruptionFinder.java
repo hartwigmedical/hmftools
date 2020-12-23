@@ -359,7 +359,7 @@ public class DisruptionFinder
         for (final Transcript trans1 : transList1)
         {
             final Transcript trans2 = transList2.stream()
-                    .filter(x -> x.StableId.equals(trans1.StableId)).findFirst().orElse(null);
+                    .filter(x -> x.transName().equals(trans1.transName())).findFirst().orElse(null);
 
             if(trans2 == null)
                 continue;
@@ -384,7 +384,7 @@ public class DisruptionFinder
         for (final Transcript upTrans : upstreamTransList)
         {
             final Transcript downTrans = downstreamTransList.stream()
-                    .filter(x -> x.StableId.equals(upTrans.StableId)).findFirst().orElse(null);
+                    .filter(x -> x.transName().equals(upTrans.transName())).findFirst().orElse(null);
 
             if(downTrans == null)
                 continue;
@@ -453,14 +453,14 @@ public class DisruptionFinder
                 {
                     for (final ExonData exonData : transData.exons())
                     {
-                        if (exonData.ExonRank == 1)
+                        if (exonData.Rank == 1)
                             continue;
 
-                        if ((geneData.Strand == 1 && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonStart)
-                        || (geneData.Strand == -1 && lowerPos <= exonData.ExonEnd && upperPos >= exonData.ExonEnd))
+                        if ((geneData.Strand == 1 && lowerPos <= exonData.Start && upperPos >= exonData.Start)
+                        || (geneData.Strand == -1 && lowerPos <= exonData.End && upperPos >= exonData.End))
                         {
                             // allow an exon to be fully traversed if the upstream transcript is pre-coding
-                            if (isPrecodingUpstream && lowerPos <= exonData.ExonStart && upperPos >= exonData.ExonEnd)
+                            if (isPrecodingUpstream && lowerPos <= exonData.Start && upperPos >= exonData.End)
                             {
                                 if (geneData.Strand == 1 && (transData.CodingStart == null || upperPos < transData.CodingStart))
                                     continue;
@@ -470,7 +470,7 @@ public class DisruptionFinder
 
                             LNX_LOGGER.trace("pair({}) direction({}) traverses splice acceptor({} {}) exon(rank{} pos={})",
                                     pair.toString(), fusionDirection, geneData.GeneName, transData.TransName,
-                                    exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd);
+                                    exonData.Rank, exonData.Start, exonData.End);
 
                             return true;
                         }
@@ -509,7 +509,7 @@ public class DisruptionFinder
                     for(Transcript transcript : reportableDisruptions)
                     {
                         LNX_LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
-                                var.id(), var.getBreakend(be), gene.GeneName, transcript.StableId,
+                                var.id(), var.getBreakend(be), gene.GeneName, transcript.transName(),
                                 formatJcn(transcript.undisruptedCopyNumber()));
 
                         transcript.setReportableDisruption(true);
@@ -573,7 +573,7 @@ public class DisruptionFinder
                         gene.chromosome(), gene.position(), gene.orientation()));
 
                 mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,,",
-                        gene.StableId, gene.GeneName, gene.Strand, transcript.StableId,
+                        gene.StableId, gene.GeneName, gene.Strand, transcript.transName(),
                         transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(), transcript.regionType(),
                         transcript.undisruptedCopyNumber()));
 
@@ -609,7 +609,7 @@ public class DisruptionFinder
                 }
 
                 mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,%s,%s",
-                        gene.StableId, gene.GeneName, gene.Strand, transcript.StableId,
+                        gene.StableId, gene.GeneName, gene.Strand, transcript.transName(),
                         transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(),
                         transcript.regionType(), transcript.undisruptedCopyNumber(), exclusionReason, extraInfo));
 

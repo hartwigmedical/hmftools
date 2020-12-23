@@ -229,7 +229,7 @@ public class RnaFusionMapper
                 {
                     for(final Transcript trans : gene.transcripts())
                     {
-                        if(isKnownJunction && !rnaFusion.getExactMatchTransIds(fs).contains(trans.StableId))
+                        if(isKnownJunction && !rnaFusion.getExactMatchTransIds(fs).contains(trans.transName()))
                             continue;
 
                         nearBreakendPair.get(fs).add(breakend);

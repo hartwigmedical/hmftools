@@ -168,9 +168,9 @@ public class PseudoGeneFinder
 
                         for (final ExonData exonData : transData.exons())
                         {
-                            boolean hasPosOffsets = geneData.ExonPositionOffsets.containsKey(exonData.ExonRank);
+                            boolean hasPosOffsets = geneData.ExonPositionOffsets.containsKey(exonData.Rank);
 
-                            int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.ExonRank);
+                            int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.Rank);
 
                             if(hasPosOffsets && exonsLost == null)
                                 continue;
@@ -178,17 +178,17 @@ public class PseudoGeneFinder
                             // every exon will have an entry to show the full set of exons
                             if(!hasPosOffsets)
                             {
-                                geneData.ExonPositionOffsets.put(exonData.ExonRank, new int[] { 0, 0 });
+                                geneData.ExonPositionOffsets.put(exonData.Rank, new int[] { 0, 0 });
                             }
 
                             // now work out position adjustments for the exons lost
                             if(exonsLost == null)
                             {
-                                geneData.ExonsLostOffsets.put(exonData.ExonRank, new int[] { 0, 0});
+                                geneData.ExonsLostOffsets.put(exonData.Rank, new int[] { 0, 0});
                             }
                             else
                             {
-                                int exonLength = exonData.ExonEnd - exonData.ExonStart;
+                                int exonLength = exonData.End - exonData.Start;
 
                                 // if say X bases have been lost from the start, then set the end to factor this in
                                 if(exonsLost[SE_START] < 0)
@@ -226,8 +226,8 @@ public class PseudoGeneFinder
             {
                 final ExonData exonData = transData.exons().get(i);
 
-                boolean startWithinHomology = abs(exonData.ExonStart - posStart) <= startHomologyLength;
-                boolean endWithinHomology = abs(exonData.ExonEnd - posEnd) <= endHomologyLength;
+                boolean startWithinHomology = abs(exonData.Start - posStart) <= startHomologyLength;
+                boolean endWithinHomology = abs(exonData.End - posEnd) <= endHomologyLength;
 
                 if(!startWithinHomology && !endWithinHomology)
                     continue;
@@ -240,25 +240,25 @@ public class PseudoGeneFinder
                     continue;
 
                 PseudoGeneMatch pseudoMatch = new PseudoGeneMatch(
-                        gene.GeneName, transData.TransId, transData.TransName, exonData.ExonRank, exonData.length());
+                        gene.GeneName, transData.TransId, transData.TransName, exonData.Rank, exonData.length());
 
                 if(startWithinHomology)
                 {
-                    pseudoMatch.HomologyOffset[SE_START] = posStart - exonData.ExonStart;
+                    pseudoMatch.HomologyOffset[SE_START] = posStart - exonData.Start;
                 }
                 else
                 {
                     // record a position within the exon as negative
-                    pseudoMatch.PositionMismatch[SE_START] = exonData.ExonStart - posStart;
+                    pseudoMatch.PositionMismatch[SE_START] = exonData.Start - posStart;
                 }
 
                 if(endWithinHomology)
                 {
-                    pseudoMatch.HomologyOffset[SE_END] = posEnd - exonData.ExonEnd;
+                    pseudoMatch.HomologyOffset[SE_END] = posEnd - exonData.End;
                 }
                 else
                 {
-                    pseudoMatch.PositionMismatch[SE_END] = posEnd - exonData.ExonEnd;
+                    pseudoMatch.PositionMismatch[SE_END] = posEnd - exonData.End;
                 }
 
                 pseudoMatches.add(pseudoMatch);
@@ -411,13 +411,13 @@ public class PseudoGeneFinder
             for(final TranscriptData transData : transDataList)
             {
                 if(!transData.exons().stream().anyMatch(x ->
-                        abs(x.ExonStart - posStart) <= startHomologyLength || abs(x.ExonEnd - posStart) <= startHomologyLength))
+                        abs(x.Start - posStart) <= startHomologyLength || abs(x.End - posStart) <= startHomologyLength))
                 {
                     continue;
                 }
 
                 if(transData.exons().stream().anyMatch(x ->
-                        abs(x.ExonStart - posEnd) <= endHomologyLength || abs(x.ExonEnd - posEnd) <= endHomologyLength))
+                        abs(x.Start - posEnd) <= endHomologyLength || abs(x.End - posEnd) <= endHomologyLength))
                 {
                     return true;
                 }

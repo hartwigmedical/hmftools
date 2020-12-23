@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getCodingBases;
@@ -69,13 +70,13 @@ public class SvNeoEpitope extends NeoEpitope
         if(RegionType[FS_UP] == INTRONIC && RegionType[FS_DOWN] == EXONIC)
         {
             final ExonData exon = downTransData.exons().stream()
-                    .filter(x -> positionWithin(position(FS_DOWN), x.ExonStart, x.ExonEnd))
+                    .filter(x -> positionWithin(position(FS_DOWN), x.Start, x.End))
                     .findFirst().orElse(null);
 
             if(exon != null)
             {
-                Phases[FS_DOWN] = exon.ExonPhaseEnd;
-                ExonRank[FS_DOWN] = exon.ExonRank + 1;
+                Phases[FS_DOWN] = exon.PhaseEnd;
+                ExonRank[FS_DOWN] = exon.Rank + 1;
             }
         }
     }
@@ -96,7 +97,9 @@ public class SvNeoEpitope extends NeoEpitope
         if(RegionType[FS_UP] == TranscriptRegionType.EXONIC && !mSvFusion.InsertSequence.isEmpty())
         {
             codingInsSequence = mSvFusion.InsertSequence;
-            int upstreamPhase = codingBasesToPhase(Phases[FS_UP] + 1 - codingInsSequence.length());
+
+            int upstreamPhase = tickPhaseForward(Phases[FS_UP], codingInsSequence.length());
+            // int upstreamPhase = codingBasesToPhase(Phases[FS_UP] + 1 - codingInsSequence.length());
             upPhaseOffset = getUpstreamOpenCodonBases(upstreamPhase);
         }
 

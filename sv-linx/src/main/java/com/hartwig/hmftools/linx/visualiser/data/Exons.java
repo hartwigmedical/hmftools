@@ -131,9 +131,9 @@ public class Exons
                     .clusterId(clusterId)
                     .gene(geneData.GeneName)
                     .chromosome(geneData.Chromosome)
-                    .rank(exonData.ExonRank)
-                    .start(exonData.ExonStart)
-                    .end(exonData.ExonEnd)
+                    .rank(exonData.Rank)
+                    .start(exonData.Start)
+                    .end(exonData.End)
                     .transcript(transcript.TransName)
                     .build();
 

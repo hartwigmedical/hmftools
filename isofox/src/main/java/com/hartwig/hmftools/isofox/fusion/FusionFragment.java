@@ -247,11 +247,11 @@ public class FusionFragment
             }
 
             ExonData exon = transData.exons().stream()
-                    .filter(x -> (junctionOrientation == 1 && x.ExonEnd == junctionPosition)
-                            || (junctionOrientation == -1 && x.ExonStart == junctionPosition))
+                    .filter(x -> (junctionOrientation == 1 && x.End == junctionPosition)
+                            || (junctionOrientation == -1 && x.Start == junctionPosition))
                     .findFirst().orElse(null);
 
-            if(exon == null || transExonRef.ExonRank != exon.ExonRank)
+            if(exon == null || transExonRef.ExonRank != exon.Rank)
             {
                 mTransExonRefs[seIndex].remove(index);
                 continue;

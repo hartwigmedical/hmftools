@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.imuno.neo;
 
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
@@ -548,8 +550,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(INTRONIC, neData.RegionType[FS_UP]);
         assertEquals(INTRONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(2, neData.Phases[FS_UP]);
-        assertEquals(1, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_0, neData.Phases[FS_UP]);
+        assertEquals(PHASE_2, neData.Phases[FS_DOWN]);
         assertEquals(2, neData.ExonRank[FS_UP]);
         assertEquals(4, neData.ExonRank[FS_DOWN]);
         assertFalse(neData.phaseMatched());

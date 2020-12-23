@@ -4,6 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
@@ -16,7 +19,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public final class GeneTestUtils
 {
-    public static GeneAnnotation createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, int strand,
+    public static GeneAnnotation createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, byte strand,
             final String chromosome, int position, int orientation)
     {
         String karyotypeBand = "";
@@ -74,8 +77,8 @@ public final class GeneTestUtils
 
     public static String generateTransName(int transId) { return String.format("TRAN%04d", transId); }
 
-    public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
-            int[] exonStarts, int[] exonEndPhases, int exonLength, boolean isCanonical)
+    public static TranscriptData createTransExons(
+            final String geneId, int transId, byte strand, int[] exonStarts, int[] exonEndPhases, int exonLength, boolean isCanonical)
     {
         if(exonStarts.length == 0 || exonStarts.length != exonEndPhases.length)
             return null;
@@ -112,6 +115,9 @@ public final class GeneTestUtils
             }
         }
 
+        if(codingStart != null && codingEnd == null)
+            codingEnd = transEnd;
+
         TranscriptData transData = new TranscriptData(transId, generateTransName(transId), geneId, isCanonical, strand, transStart, transEnd,
                 codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
 
@@ -131,7 +137,8 @@ public final class GeneTestUtils
         return transData;
     }
 
-    public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
+    public static TranscriptData createTransExons(
+            final String geneId, int transId, byte strand,
             int[] exonStarts, int exonLength, Integer codingStart, Integer codingEnd, boolean isCanonical, final String biotype)
     {
         if(exonStarts.length == 0 || exonLength <= 0)
@@ -148,7 +155,7 @@ public final class GeneTestUtils
         // work out phases based on coding start & end
         boolean inCoding = false;
         boolean finishedCoding = false;
-        int lastExonEndPhase = -1;
+        int lastExonEndPhase = PHASE_NONE;
 
         if(strand == POS_STRAND)
         {
@@ -158,9 +165,9 @@ public final class GeneTestUtils
                 int exonEnd = exonStart + exonLength;
                 int exonRank = i + 1;
 
-                int exonPhase = 0;
-                int exonStartPhase = -1;
-                int exonEndPhase = -1;
+                int exonPhase = PHASE_0;
+                int exonStartPhase = PHASE_NONE;
+                int exonEndPhase = PHASE_NONE;
                 int exonCodingStart = 0;
 
                 if (hasCodingBases && !finishedCoding)
@@ -171,8 +178,8 @@ public final class GeneTestUtils
                         {
                             // coding starts in this exon
                             inCoding = true;
-                            exonPhase = 0;
-                            exonStartPhase = codingStart == exonStart ? 0 : -1;
+                            exonPhase = PHASE_1;
+                            exonStartPhase = codingStart == exonStart ? exonPhase : PHASE_NONE;
                             exonCodingStart = codingStart;
                         }
                     }
@@ -186,14 +193,14 @@ public final class GeneTestUtils
                     if (inCoding)
                     {
                         int exonCodingBases = min(exonEnd, codingEnd) - exonCodingStart + 1;
-                        exonEndPhase = codingBasesToPhase(exonPhase + exonCodingBases);
+                        exonEndPhase = codingBasesToPhase(exonCodingBases, exonPhase);
                         lastExonEndPhase = exonEndPhase;
 
                         if (codingEnd <= exonEnd)
                         {
                             finishedCoding = true;
                             inCoding = false;
-                            exonEndPhase = -1;
+                            exonEndPhase = PHASE_NONE;
                         }
                     }
                 }
@@ -209,9 +216,9 @@ public final class GeneTestUtils
                 int exonEnd = exonStart + exonLength;
                 int exonRank = exonCount - i;
 
-                int exonPhase = 0;
-                int exonStartPhase = -1;
-                int exonEndPhase = -1;
+                int exonPhase = PHASE_0;
+                int exonStartPhase = PHASE_NONE;
+                int exonEndPhase = PHASE_NONE;
                 int exonCodingEnd = 0;
 
                 if (hasCodingBases && !finishedCoding)
@@ -221,8 +228,8 @@ public final class GeneTestUtils
                         if (codingEnd >= exonStart)
                         {
                             inCoding = true;
-                            exonPhase = 0;
-                            exonStartPhase = codingStart == exonStart ? 0 : -1;
+                            exonPhase = PHASE_1;
+                            exonStartPhase = codingStart == exonStart ? exonPhase : PHASE_NONE;
                             exonCodingEnd = codingEnd;
                         }
                     }
@@ -236,14 +243,14 @@ public final class GeneTestUtils
                     if (inCoding)
                     {
                         int exonCodingBases = exonCodingEnd - max(exonStart, codingStart) + 1;
-                        exonEndPhase = codingBasesToPhase(exonPhase + exonCodingBases);
+                        exonEndPhase = codingBasesToPhase(exonCodingBases, exonPhase);
                         lastExonEndPhase = exonEndPhase;
 
                         if (codingStart >= exonStart)
                         {
                             finishedCoding = false;
                             inCoding = false;
-                            exonEndPhase = -1;
+                            exonEndPhase = PHASE_NONE;
                         }
                     }
                 }

@@ -180,15 +180,15 @@ public class GenerateEnsemblDataCache
                 for (final ExonData exonData : transData.exons())
                 {
                     // find the closest exon fully before the transcript start, and then record its splice acceptor position
-                    if (strand == 1 && exonData.ExonEnd < transStartPos)
+                    if (strand == 1 && exonData.End < transStartPos)
                     {
-                        if (closestPosition == -1 || exonData.ExonStart > closestPosition)
-                            closestPosition = exonData.ExonStart;
+                        if (closestPosition == -1 || exonData.Start > closestPosition)
+                            closestPosition = exonData.Start;
                     }
-                    else if (strand == -1 && exonData.ExonStart > transStartPos)
+                    else if (strand == -1 && exonData.Start > transStartPos)
                     {
-                        if (closestPosition == -1 || exonData.ExonEnd < closestPosition)
-                            closestPosition = exonData.ExonEnd;
+                        if (closestPosition == -1 || exonData.End < closestPosition)
+                            closestPosition = exonData.End;
                     }
                 }
             }

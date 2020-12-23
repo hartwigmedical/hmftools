@@ -328,7 +328,7 @@ public class FragmentSizeCalcs implements Callable
 
         for(final TranscriptData transData : mCurrentTransDataList)
         {
-            if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.ExonStart, x.ExonEnd)))
+            if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.Start, x.End)))
                 return false;
         }
 

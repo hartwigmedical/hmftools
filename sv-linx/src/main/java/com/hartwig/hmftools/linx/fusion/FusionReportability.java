@@ -191,7 +191,7 @@ public class FusionReportability
 
         factor /= 100;
 
-        int length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
+        int length = downTrans.isCoding() ? downTrans.CodingBases : downTrans.exonCount();
 
         // will be a range between 1-99 * current factor
         length = min(round(length/10), 99);
@@ -210,7 +210,7 @@ public class FusionReportability
 
         factor /= 100;
 
-        length = upTrans.isCoding() ? upTrans.calcCodingBases() : upTrans.ExonMax;
+        length = upTrans.isCoding() ? upTrans.CodingBases : upTrans.exonCount();
         length = min(round(length/10), 99);
         fusionPriorityScore += length * factor;
 

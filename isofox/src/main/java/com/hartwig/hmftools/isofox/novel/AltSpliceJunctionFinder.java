@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.CIRCULAR;
@@ -169,8 +168,8 @@ public class AltSpliceJunctionFinder
 
                 for (int i = 0; i < transData.exons().size() - 1; ++i)
                 {
-                    if (transData.exons().get(i).ExonEnd == spliceJunction[SE_START]
-                    && transData.exons().get(i + 1).ExonStart == spliceJunction[SE_END])
+                    if (transData.exons().get(i).End == spliceJunction[SE_START]
+                    && transData.exons().get(i + 1).Start == spliceJunction[SE_END])
                         return true;
                 }
             }

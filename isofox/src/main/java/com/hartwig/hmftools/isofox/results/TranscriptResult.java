@@ -3,8 +3,6 @@ package com.hartwig.hmftools.isofox.results;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_FREQUENCY;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
@@ -61,21 +59,21 @@ public class TranscriptResult
         {
             ExonData exon = exons.get(i);
 
-            final RegionReadData exonReadData = findExonRegion(geneReadData.getExonRegions(), exon.ExonStart, exon.ExonEnd);
+            final RegionReadData exonReadData = findExonRegion(geneReadData.getExonRegions(), exon.Start, exon.End);
             if(exonReadData == null)
                 continue;
 
             int exonCoverage = exonReadData.baseCoverage(1);
             exonicBaseCoverage += exonCoverage;
 
-            exonicBases += exon.ExonEnd - exon.ExonStart + 1;
+            exonicBases += exon.End - exon.Start + 1;
 
             if(i > 0)
             {
                 int[] sjReads = exonReadData.getTranscriptJunctionMatchCount(transData.TransId, SE_START);
 
                 final ExonData prevExon = exons.get(i - 1);
-                boolean sjUnique = isSpliceJunctionUnique(transData.TransName, geneReadData.getTranscripts(), prevExon.ExonEnd, exon.ExonStart);
+                boolean sjUnique = isSpliceJunctionUnique(transData.TransName, geneReadData.getTranscripts(), prevExon.End, exon.Start);
 
                 if(sjReads[TRANS_COUNT] > 0)
                 {
@@ -159,7 +157,7 @@ public class TranscriptResult
 
             for (int i = 1; i < transData.exons().size(); ++i)
             {
-                if(transData.exons().get(i-1).ExonEnd == exonEnd && transData.exons().get(i).ExonStart == exonStart)
+                if(transData.exons().get(i-1).End == exonEnd && transData.exons().get(i).Start == exonStart)
                     return false;
             }
         }

@@ -67,7 +67,7 @@ public class GeneFusion
     public String name()
     {
         if(mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS) // form like @IGH-MYC
-            return mTranscripts[FS_UP].StableId + "_" + mTranscripts[FS_DOWN].geneName();
+            return mTranscripts[FS_UP].transName() + "_" + mTranscripts[FS_DOWN].geneName();
         else
             return mTranscripts[FS_UP].geneName() + "_" + mTranscripts[FS_DOWN].geneName();
     }
@@ -81,7 +81,7 @@ public class GeneFusion
     public String geneName(int fs)
     {
         if(fs == FS_UP && (mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS))
-            return mTranscripts[FS_UP].StableId;
+            return mTranscripts[FS_UP].transName();
         else
             return mTranscripts[fs].geneName();
     }
@@ -172,7 +172,7 @@ public class GeneFusion
         }
         else
         {
-            return min(mTranscripts[FS_DOWN].nextSpliceExonRank() + mExonsSkipped[FS_DOWN], mTranscripts[FS_DOWN].ExonMax);
+            return min(mTranscripts[FS_DOWN].nextSpliceExonRank() + mExonsSkipped[FS_DOWN], mTranscripts[FS_DOWN].exonCount());
         }
     }
 

@@ -226,15 +226,15 @@ public class FusionUtils
 
             for(ExonData exonData : transData.exons())
             {
-                if(!positionsOverlap(upperCoords[SE_START], upperCoords[SE_END], exonData.ExonStart, exonData.ExonEnd))
+                if(!positionsOverlap(upperCoords[SE_START], upperCoords[SE_END], exonData.Start, exonData.End))
                     continue;
 
                 RegionMatchType matchType;
-                if(upperCoords[SE_START] == exonData.ExonStart || upperCoords[SE_END] == exonData.ExonEnd)
+                if(upperCoords[SE_START] == exonData.Start || upperCoords[SE_END] == exonData.End)
                 {
                     matchType = RegionMatchType.EXON_BOUNDARY;
                 }
-                else if(positionsWithin(upperCoords[SE_START], upperCoords[SE_END], exonData.ExonStart, exonData.ExonEnd))
+                else if(positionsWithin(upperCoords[SE_START], upperCoords[SE_END], exonData.Start, exonData.End))
                 {
                     matchType = RegionMatchType.WITHIN_EXON;
                 }
@@ -243,7 +243,7 @@ public class FusionUtils
                     matchType = RegionMatchType.EXON_INTRON;
                 }
 
-                TransExonRef teRef = new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exonData.ExonRank);
+                TransExonRef teRef = new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exonData.Rank);
 
                 final List<TransExonRef> transExonRefs = transExonRefMap.get(matchType);
 

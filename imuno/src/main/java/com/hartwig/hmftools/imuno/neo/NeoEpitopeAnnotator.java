@@ -198,7 +198,7 @@ public class NeoEpitopeAnnotator
                     continue;
 
                 // must be exonic
-                if(transData.exons().stream().noneMatch(x -> positionWithin(pointMutation.Position, x.ExonStart, x.ExonEnd)))
+                if(transData.exons().stream().noneMatch(x -> positionWithin(pointMutation.Position, x.Start, x.End)))
                     continue;
 
                 if(transData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))

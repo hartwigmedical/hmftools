@@ -841,9 +841,9 @@ public class ReadRecord
                 final ExonData exon = transData.exons().get(i);
                 final ExonData nextExon = transData.exons().get(i + 1);
 
-                if(mMappedCoords.stream().anyMatch(x -> positionsWithin(x[SE_START], x[SE_END], exon.ExonEnd, nextExon.ExonStart)))
+                if(mMappedCoords.stream().anyMatch(x -> positionsWithin(x[SE_START], x[SE_END], exon.End, nextExon.Start)))
                 {
-                    int minExonRank = min(exon.ExonRank, nextExon.ExonRank);
+                    int minExonRank = min(exon.Rank, nextExon.Rank);
                     transRefList.add(new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, minExonRank));
                     break;
                 }

@@ -297,15 +297,15 @@ public class RegionReadData implements Comparable< RegionReadData>
             {
                 ExonData exon = transData.exons().get(i);
 
-                RegionReadData exonReadData = findExonRegion(regions, exon.ExonStart, exon.ExonEnd);
+                RegionReadData exonReadData = findExonRegion(regions, exon.Start, exon.End);
 
                 if (exonReadData == null)
                 {
-                    exonReadData = new RegionReadData(chromosome, exon.ExonStart, exon.ExonEnd);
+                    exonReadData = new RegionReadData(chromosome, exon.Start, exon.End);
                     regions.add(exonReadData);
                 }
 
-                exonReadData.addExonRef(geneId, transData.TransId, transData.TransName, exon.ExonRank);
+                exonReadData.addExonRef(geneId, transData.TransId, transData.TransName, exon.Rank);
 
                 if(prevRegionReadData != null)
                 {

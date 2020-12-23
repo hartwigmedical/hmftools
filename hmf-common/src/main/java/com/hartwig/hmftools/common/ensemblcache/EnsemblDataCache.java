@@ -6,11 +6,10 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptProteinData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.CODING_BASES;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.TOTAL_CODING_BASES;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -25,6 +24,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.fusion.CodingBaseData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.Transcript;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -227,24 +227,14 @@ public class EnsemblDataCache
             if(currentGene.transcripts().isEmpty() && mDownstreamGeneAnnotations.containsKey(geneData))
             {
                 // generate a canonical transcript record for the downstream SV position
-                final TranscriptData trans = transcriptDataList.stream().filter(x -> x.IsCanonical).findAny().orElse(null);
+                final TranscriptData transData = transcriptDataList.stream().filter(x -> x.IsCanonical).findAny().orElse(null);
 
-                if(trans != null)
+                if(transData != null)
                 {
-                    int totalCodingBases = 0;
-                    int codingBases = 0;
-                    if(trans.CodingStart != null && trans.CodingEnd != null)
-                    {
-                        int[] codingData = calcCodingBases(trans.CodingStart, trans.CodingEnd, trans.exons(), position);
-                        totalCodingBases = codingData[TOTAL_CODING_BASES];
-                    }
+                    final CodingBaseData cbData = calcCodingBases(transData, position);
 
                     final Transcript postGeneTrans = new Transcript(
-                            currentGene, trans.TransId, trans.TransName, trans.exons().size(), -1, trans.exons().size(),
-                            -1, codingBases, totalCodingBases, trans.exons().size(), true,
-                            trans.TransStart, trans.TransEnd, trans.CodingStart, trans.CodingEnd);
-
-                    postGeneTrans.setBioType(trans.BioType);
+                            currentGene, transData, 1, 1, PHASE_NONE, cbData.CodingBases, cbData.TotalCodingBases);
 
                     currentGene.addTranscript(postGeneTrans);
                 }
@@ -277,20 +267,10 @@ public class EnsemblDataCache
 
             if(trans != null)
             {
-                int totalCodingBases = 0;
-                int codingBases = 0;
-                if(trans.CodingStart != null && trans.CodingEnd != null)
-                {
-                    int[] codingData = calcCodingBases(trans.CodingStart, trans.CodingEnd, trans.exons(), position);
-                    totalCodingBases = codingData[TOTAL_CODING_BASES];
-                }
+                final CodingBaseData cbData = calcCodingBases(trans, position);
 
                 final Transcript altGeneTrans = new Transcript(
-                        geneAnnotation, trans.TransId, trans.TransName, 1, -1, 1,
-                        -1, codingBases, totalCodingBases, trans.exons().size(), true,
-                        trans.TransStart, trans.TransEnd, trans.CodingStart, trans.CodingEnd);
-
-                altGeneTrans.setBioType(trans.BioType);
+                        geneAnnotation, trans, 1, 1, PHASE_NONE, cbData.CodingBases, cbData.TotalCodingBases);
 
                 geneAnnotation.addTranscript(altGeneTrans);
             }
@@ -344,7 +324,7 @@ public class EnsemblDataCache
     private void setPrecedingGeneDistance(Transcript transcript, int position)
     {
         // annotate with preceding gene info if the up distance isn't set
-        int precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(transcript.TransId);
+        int precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(transcript.transId());
 
         if(precedingGeneSAPos >= 0)
         {
@@ -457,14 +437,10 @@ public class EnsemblDataCache
         if(exonList.isEmpty())
             return null;
 
-        int exonMax = exonList.size();
-
-        boolean isForwardStrand = geneAnnotation.Strand == 1;
+        boolean isForwardStrand = geneAnnotation.Strand == POS_STRAND;
 
         int upExonRank = -1;
-        int upExonPhase = -1;
         int downExonRank = -1;
-        int downExonPhase = -1;
         int nextUpDistance = -1;
         int nextDownDistance = -1;
         boolean isCodingTypeOverride = false;
@@ -482,24 +458,18 @@ public class EnsemblDataCache
         // for each exon, the 'phase' is always the phase at the start of the exon in the direction of transcription
         // regardless of strand direction, and 'end_phase' is the phase at the end of the exon
 
-        if(position < firstExon.ExonStart)
+        if(position < firstExon.Start)
         {
             if(isForwardStrand)
             {
                 // proceed to the next exon assuming its splice acceptor is required
                 final ExonData firstSpaExon = exonList.size() > 1 ? exonList.get(1) : firstExon;
-                downExonRank = firstSpaExon.ExonRank;
-                downExonPhase = firstSpaExon.ExonPhase;
-                nextDownDistance = firstSpaExon.ExonStart - position;
+                downExonRank = firstSpaExon.Rank;
+                nextDownDistance = firstSpaExon.Start - position;
 
-                // correct the phasing if the next exon starts the coding region
-                if(transData.CodingStart != null && firstSpaExon.ExonStart == transData.CodingStart)
-                    downExonPhase = -1;
-
-                isCodingTypeOverride = transData.CodingStart != null && firstSpaExon.ExonStart > transData.CodingStart;
+                isCodingTypeOverride = transData.CodingStart != null && firstSpaExon.Start > transData.CodingStart;
 
                 upExonRank = 0;
-                upExonPhase = -1;
             }
             else
             {
@@ -507,22 +477,17 @@ public class EnsemblDataCache
                 return null;
             }
         }
-        else if(position > lastExon.ExonEnd)
+        else if(position > lastExon.End)
         {
             if(!isForwardStrand)
             {
                 final ExonData firstSpaExon = exonList.size() > 1 ? exonList.get(exonList.size()-2) : lastExon;
-                downExonRank = firstSpaExon.ExonRank;
-                downExonPhase = firstSpaExon.ExonPhase;
-                nextDownDistance = position - lastExon.ExonEnd;
+                downExonRank = firstSpaExon.Rank;
+                nextDownDistance = position - lastExon.End;
 
-                if(transData.CodingEnd != null && firstSpaExon.ExonEnd == transData.CodingEnd)
-                    downExonPhase = -1;
-
-                isCodingTypeOverride = transData.CodingEnd != null && firstSpaExon.ExonEnd < transData.CodingEnd;
+                isCodingTypeOverride = transData.CodingEnd != null && firstSpaExon.End < transData.CodingEnd;
 
                 upExonRank = 0;
-                upExonPhase = -1;
             }
             else
             {
@@ -535,39 +500,37 @@ public class EnsemblDataCache
             {
                 final ExonData exonData = exonList.get(index);
 
-                if (position >= exonData.ExonStart && position <= exonData.ExonEnd)
+                if (position >= exonData.Start && position <= exonData.End)
                 {
                     // falls within an exon
-                    upExonRank = downExonRank = exonData.ExonRank;
-                    upExonPhase = exonData.ExonPhase;
-                    downExonPhase = exonData.ExonPhaseEnd;
+                    upExonRank = downExonRank = exonData.Rank;
 
                     // set distance to next and previous splice acceptor
                     if(isForwardStrand)
                     {
-                        nextUpDistance = position - exonData.ExonStart;
+                        nextUpDistance = position - exonData.Start;
 
                         if(index < exonList.size() - 1)
                         {
                             final ExonData nextExonData = exonList.get(index + 1);
-                            nextDownDistance = nextExonData.ExonStart - position;
+                            nextDownDistance = nextExonData.Start - position;
                         }
                     }
                     else
                     {
-                        nextUpDistance = exonData.ExonEnd - position;
+                        nextUpDistance = exonData.End - position;
 
                         if(index > 1)
                         {
                             // first splice acceptor is the second exon (or later on)
                             final ExonData prevExonData = exonList.get(index - 1);
-                            nextDownDistance = position - prevExonData.ExonEnd;
+                            nextDownDistance = position - prevExonData.End;
                         }
                     }
 
                     break;
                 }
-                else if(position < exonData.ExonStart)
+                else if(position < exonData.Start)
                 {
                     // position falls between this exon and the previous one
                     final ExonData prevExonData = exonList.get(index-1);
@@ -575,30 +538,20 @@ public class EnsemblDataCache
                     if(isForwardStrand)
                     {
                         // the current exon is downstream, the previous one is upstream
-                        upExonRank = prevExonData.ExonRank;
-                        upExonPhase = prevExonData.ExonPhaseEnd;
-                        downExonRank = exonData.ExonRank;
-                        downExonPhase = exonData.ExonPhase;
-                        nextDownDistance = exonData.ExonStart - position;
-                        nextUpDistance = position - prevExonData.ExonEnd;
-
-                        if(transData.CodingStart != null && exonData.ExonStart == transData.CodingStart)
-                            downExonPhase = -1;
+                        upExonRank = prevExonData.Rank;
+                        downExonRank = exonData.Rank;
+                        nextDownDistance = exonData.Start - position;
+                        nextUpDistance = position - prevExonData.End;
                     }
                     else
                     {
                         // the current exon is earlier in rank
                         // the previous exon in the list has the higher rank and is downstream
                         // the start of the next exon (ie previous here) uses 'phase' for the downstream as normal
-                        upExonRank = exonData.ExonRank;
-                        upExonPhase = exonData.ExonPhaseEnd;
-                        downExonRank = prevExonData.ExonRank;
-                        downExonPhase = prevExonData.ExonPhase;
-                        nextUpDistance = exonData.ExonStart - position;
-                        nextDownDistance = position - prevExonData.ExonEnd;
-
-                        if(transData.CodingEnd != null && prevExonData.ExonEnd == transData.CodingEnd)
-                            downExonPhase = -1;
+                        upExonRank = exonData.Rank;
+                        downExonRank = prevExonData.Rank;
+                        nextUpDistance = exonData.Start - position;
+                        nextDownDistance = position - prevExonData.End;
                     }
 
                     break;
@@ -610,22 +563,10 @@ public class EnsemblDataCache
         // for the given position, determine how many coding bases occur prior to the position
         // in the direction of the transcript
 
-        int codingBases = 0;
-        int totalCodingBases = 0;
+        final CodingBaseData cbData = calcCodingBases(transData, position);
 
-        if(transData.CodingStart != null && transData.CodingEnd != null)
-        {
-            int[] codingData = calcCodingBases(transData.CodingStart, transData.CodingEnd, exonList, position);
-            totalCodingBases = codingData[TOTAL_CODING_BASES];
-            codingBases = isForwardStrand ? codingData[CODING_BASES] : totalCodingBases - codingData[CODING_BASES];
-        }
-
-        Transcript transcript = new Transcript(geneAnnotation, transData.TransId, transData.TransName,
-                upExonRank, upExonPhase, downExonRank, downExonPhase,
-                codingBases, totalCodingBases,
-                exonMax, transData.IsCanonical, transData.TransStart, transData.TransEnd, transData.CodingStart, transData.CodingEnd);
-
-        transcript.setBioType(transData.BioType);
+        Transcript transcript = new Transcript(geneAnnotation, transData,
+                upExonRank, downExonRank, cbData.Phase, cbData.CodingBases, cbData.TotalCodingBases);
 
         // if not set, leave the previous exon null and it will be taken from the closest upstream gene
         transcript.setSpliceAcceptorDistance(true, nextUpDistance >= 0 ? nextUpDistance : null);
@@ -663,21 +604,21 @@ public class EnsemblDataCache
         final ExonData firstExon = exonDataList.get(0);
         final ExonData lastExon = exonDataList.get(exonDataList.size() - 1);
 
-        if((position < firstExon.ExonStart && strand == 1) || (position > lastExon.ExonEnd && strand == -1))
+        if((position < firstExon.Start && strand == POS_STRAND) || (position > lastExon.End && strand == NEG_STRAND))
         {
             // before the start of the transcript
             exonData[EXON_RANK_MIN] = 0;
             exonData[EXON_RANK_MAX] = 1;
-            exonData[EXON_PHASE_MIN] = -1;
-            exonData[EXON_PHASE_MAX] = -1;
+            exonData[EXON_PHASE_MIN] = PHASE_NONE;
+            exonData[EXON_PHASE_MAX] = PHASE_NONE;
         }
-        else if((position < firstExon.ExonStart && strand == -1) || (position > lastExon.ExonEnd && strand == 1))
+        else if((position < firstExon.Start && strand == NEG_STRAND) || (position > lastExon.End && strand == POS_STRAND))
         {
             // past the end of the transcript
             exonData[EXON_RANK_MIN] = exonDataList.size();
             exonData[EXON_RANK_MAX] = -1;
-            exonData[EXON_PHASE_MIN] = -1;
-            exonData[EXON_PHASE_MAX] = -1;
+            exonData[EXON_PHASE_MIN] = PHASE_NONE;
+            exonData[EXON_PHASE_MAX] = PHASE_NONE;
         }
         else
         {
@@ -686,50 +627,50 @@ public class EnsemblDataCache
                 final ExonData transExonData = exonDataList.get(i);
                 final ExonData nextTransExonData = i < exonDataList.size() - 1 ? exonDataList.get(i+1) : null;
 
-                if(position == transExonData.ExonEnd || position == transExonData.ExonStart)
+                if(position == transExonData.End || position == transExonData.Start)
                 {
                     // position matches the bounds of an exon
-                    exonData[EXON_RANK_MIN] = transExonData.ExonRank;
-                    exonData[EXON_RANK_MAX] = transExonData.ExonRank;
+                    exonData[EXON_RANK_MIN] = transExonData.Rank;
+                    exonData[EXON_RANK_MAX] = transExonData.Rank;
 
-                    if((strand == 1) == (position == transExonData.ExonStart))
+                    if((strand == 1) == (position == transExonData.Start))
                     {
-                        exonData[EXON_PHASE_MIN] = transExonData.ExonPhase;
-                        exonData[EXON_PHASE_MAX] = transExonData.ExonPhase;
+                        exonData[EXON_PHASE_MIN] = transExonData.PhaseStart;
+                        exonData[EXON_PHASE_MAX] = transExonData.PhaseStart;
                     }
                     else
                     {
-                        exonData[EXON_PHASE_MIN] = transExonData.ExonPhaseEnd;
-                        exonData[EXON_PHASE_MAX] = transExonData.ExonPhaseEnd;
+                        exonData[EXON_PHASE_MIN] = transExonData.PhaseEnd;
+                        exonData[EXON_PHASE_MAX] = transExonData.PhaseEnd;
                     }
                     break;
                 }
 
-                if(position >= transExonData.ExonStart && position <= transExonData.ExonEnd)
+                if(position >= transExonData.Start && position <= transExonData.End)
                 {
                     // position matches within or at the bounds of an exon
-                    exonData[EXON_RANK_MIN] = transExonData.ExonRank;
-                    exonData[EXON_RANK_MAX] = transExonData.ExonRank;
-                    exonData[EXON_PHASE_MIN] = transExonData.ExonPhase;
-                    exonData[EXON_PHASE_MAX] = transExonData.ExonPhase;
+                    exonData[EXON_RANK_MIN] = transExonData.Rank;
+                    exonData[EXON_RANK_MAX] = transExonData.Rank;
+                    exonData[EXON_PHASE_MIN] = transExonData.PhaseStart;
+                    exonData[EXON_PHASE_MAX] = transExonData.PhaseStart;
                     break;
                 }
 
-                if(nextTransExonData != null && position > transExonData.ExonEnd && position < nextTransExonData.ExonStart)
+                if(nextTransExonData != null && position > transExonData.End && position < nextTransExonData.Start)
                 {
                     if(strand == 1)
                     {
-                        exonData[EXON_RANK_MIN] = transExonData.ExonRank;
-                        exonData[EXON_RANK_MAX] = nextTransExonData.ExonRank;
-                        exonData[EXON_PHASE_MIN] = transExonData.ExonPhase;
-                        exonData[EXON_PHASE_MAX] = nextTransExonData.ExonPhase;
+                        exonData[EXON_RANK_MIN] = transExonData.Rank;
+                        exonData[EXON_RANK_MAX] = nextTransExonData.Rank;
+                        exonData[EXON_PHASE_MIN] = transExonData.PhaseStart;
+                        exonData[EXON_PHASE_MAX] = nextTransExonData.PhaseStart;
                     }
                     else
                     {
-                        exonData[EXON_RANK_MIN] = nextTransExonData.ExonRank;
-                        exonData[EXON_RANK_MAX] = transExonData.ExonRank;
-                        exonData[EXON_PHASE_MIN] = nextTransExonData.ExonPhase;
-                        exonData[EXON_PHASE_MAX] = transExonData.ExonPhase;
+                        exonData[EXON_RANK_MIN] = nextTransExonData.Rank;
+                        exonData[EXON_RANK_MAX] = transExonData.Rank;
+                        exonData[EXON_PHASE_MIN] = nextTransExonData.PhaseStart;
+                        exonData[EXON_PHASE_MAX] = transExonData.PhaseStart;
                     }
 
                     break;
@@ -749,32 +690,32 @@ public class EnsemblDataCache
         Map<Integer,Integer> alternativePhasing = transcript.getAlternativePhasing();
         alternativePhasing.clear();
 
-        int transPhase = isUpstream ? transcript.ExonUpstreamPhase : transcript.ExonDownstreamPhase;
+        int transPhase = isUpstream ? transcript.Phase : transcript.Phase;
         int transRank = isUpstream ? transcript.ExonUpstream : transcript.ExonDownstream;
 
         for (ExonData exonData : exonDataList)
         {
             if(isUpstream == forwardStrand)
             {
-                if (exonData.ExonStart > position || transRank == exonData.ExonRank)
+                if (exonData.Start > position || transRank == exonData.Rank)
                     break;
             }
             else
             {
-                if (position > exonData.ExonEnd || transRank == exonData.ExonRank)
+                if (position > exonData.End || transRank == exonData.Rank)
                     continue;
             }
 
-            int exonPhase = isUpstream ? exonData.ExonPhaseEnd : exonData.ExonPhase;
+            int exonPhase = isUpstream ? exonData.PhaseEnd : exonData.PhaseStart;
             int exonsSkipped;
 
             if(isUpstream)
             {
-                exonsSkipped = max(transRank - exonData.ExonRank, 0);
+                exonsSkipped = max(transRank - exonData.Rank, 0);
             }
             else
             {
-                exonsSkipped = max(exonData.ExonRank - transRank, 0);
+                exonsSkipped = max(exonData.Rank - transRank, 0);
             }
 
             if(exonPhase != transPhase)
@@ -864,13 +805,13 @@ public class EnsemblDataCache
             {
                 final ExonData exonData = transData.exons().get(i);
 
-                if(exonData.ExonEnd < codingStart)
+                if(exonData.End < codingStart)
                     continue;
 
                 if(preProteinBases > 0)
                 {
-                    int refStartPos = max(codingStart, exonData.ExonStart);
-                    int exonCodingBases = exonData.ExonEnd - refStartPos;
+                    int refStartPos = max(codingStart, exonData.Start);
+                    int exonCodingBases = exonData.End - refStartPos;
 
                     if(exonCodingBases >= preProteinBases)
                     {
@@ -884,8 +825,8 @@ public class EnsemblDataCache
                     }
                 }
 
-                int startPos = max(exonData.ExonStart, proteinStart);
-                int exonBases = exonData.ExonEnd - startPos;
+                int startPos = max(exonData.Start, proteinStart);
+                int exonBases = exonData.End - startPos;
 
                 if(exonBases >= proteinBases)
                 {
@@ -904,13 +845,13 @@ public class EnsemblDataCache
             {
                 final ExonData exonData = transData.exons().get(i);
 
-                if(exonData.ExonStart > codingEnd)
+                if(exonData.Start > codingEnd)
                     continue;
 
                 if(preProteinBases > 0)
                 {
-                    int refStartPos = min(codingEnd, exonData.ExonEnd);
-                    int exonCodingBases = refStartPos - exonData.ExonStart;
+                    int refStartPos = min(codingEnd, exonData.End);
+                    int exonCodingBases = refStartPos - exonData.Start;
 
                     if(exonCodingBases >= preProteinBases)
                     {
@@ -924,8 +865,8 @@ public class EnsemblDataCache
                     }
                 }
 
-                int startPos = min(exonData.ExonEnd, proteinEnd);
-                int exonBases = startPos - exonData.ExonStart;
+                int startPos = min(exonData.End, proteinEnd);
+                int exonBases = startPos - exonData.Start;
 
                 if(exonBases >= proteinBases)
                 {

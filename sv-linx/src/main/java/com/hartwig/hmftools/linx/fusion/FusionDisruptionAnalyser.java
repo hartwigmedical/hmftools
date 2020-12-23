@@ -800,10 +800,10 @@ public class FusionDisruptionAnalyser
             if(newFusion.downstreamTrans().gene().id() != fusion.downstreamTrans().gene().id())
                 continue;
 
-            if(!newFusion.upstreamTrans().StableId.equals(fusion.upstreamTrans().StableId))
+            if(!newFusion.upstreamTrans().transName().equals(fusion.upstreamTrans().transName()))
                 continue;
 
-            if(!newFusion.downstreamTrans().StableId.equals(fusion.downstreamTrans().StableId))
+            if(!newFusion.downstreamTrans().transName().equals(fusion.downstreamTrans().transName()))
                 continue;
 
             return true;
@@ -849,16 +849,16 @@ public class FusionDisruptionAnalyser
             // exit if the next breakend is now past the end of the transcript or if the breakend is down-stream of coding
             if(nextBreakend.orientation() == 1)
             {
-                if(nextBreakend.position() > transcript.TranscriptEnd)
+                if(nextBreakend.position() > transcript.transEnd())
                     break;
-                else if(!isUpstream && transcript.CodingEnd != null && nextBreakend.position() > transcript.CodingEnd)
+                else if(!isUpstream && transcript.codingEnd() > 0 && nextBreakend.position() > transcript.codingEnd())
                     break;
             }
             else
             {
-                if(nextBreakend.position() < transcript.TranscriptStart)
+                if(nextBreakend.position() < transcript.transStart())
                     break;
-                else if(!isUpstream && transcript.CodingStart != null && nextBreakend.position() < transcript.CodingStart)
+                else if(!isUpstream && transcript.codingStart() > 0 && nextBreakend.position() < transcript.codingStart())
                     break;
             }
 
@@ -970,9 +970,6 @@ public class FusionDisruptionAnalyser
                 transcripts.add(fusion.downstreamTrans());
         }
 
-        // transcripts not used in fusions won't have the exact exonic base set
-        transcripts.stream().filter(Transcript::isExonic).forEach(x -> x.setExonicCodingBase());
-
         return transcripts;
     }
 
@@ -993,16 +990,16 @@ public class FusionDisruptionAnalyser
                 final Transcript transDown = fusion.downstreamTrans();
 
                 mVisWriter.addGeneExonData(clusterId, transUp.gene().StableId, transUp.gene().GeneName,
-                        transUp.StableId, transUp.TransId, transUp.gene().chromosome(), GENE_TYPE_FUSION);
+                        transUp.transName(), transUp.transId(), transUp.gene().chromosome(), GENE_TYPE_FUSION);
 
                 mVisWriter.addGeneExonData(clusterId, transDown.gene().StableId, transDown.gene().GeneName,
-                        transDown.StableId, transDown.TransId, transDown.gene().chromosome(), GENE_TYPE_FUSION);
+                        transDown.transName(), transDown.transId(), transDown.gene().chromosome(), GENE_TYPE_FUSION);
 
                 visFusions.add(new VisFusionFile(
                         mSampleId, clusterId, fusion.reportable(),
-                        transUp.geneName(), transUp.StableId, transUp.gene().chromosome(), transUp.gene().position(),
+                        transUp.geneName(), transUp.transName(), transUp.gene().chromosome(), transUp.gene().position(),
                         transUp.gene().Strand, transUp.regionType().toString(), fusion.getFusedExon(true),
-                        transDown.geneName(), transDown.StableId, transDown.gene().chromosome(), transDown.gene().position(),
+                        transDown.geneName(), transDown.transName(), transDown.gene().chromosome(), transDown.gene().position(),
                         transDown.gene().Strand, transDown.regionType().toString(), fusion.getFusedExon(false)));
             }
         }

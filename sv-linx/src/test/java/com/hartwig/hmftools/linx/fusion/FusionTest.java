@@ -6,12 +6,19 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsem
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTranscript;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -20,6 +27,8 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import static junit.framework.TestCase.assertNotNull;
 
 import java.util.List;
 
@@ -55,11 +64,9 @@ public class FusionTest
         // first a gene on the forward strand
         String geneName = "GENE1";
         String geneId1 = "ENSG0001";
-        String chromosome = "1";
-        byte strand = 1;
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
-        geneList.add(createEnsemblGeneData(geneId1, geneName, chromosome, strand, 100, 1000));
+        geneList.add(createEnsemblGeneData(geneId1, geneName, CHR_1, POS_STRAND, 100, 1000));
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
@@ -68,7 +75,7 @@ public class FusionTest
         int[] exonStarts = new int[]{100, 300, 500, 700, 900};
         int[] exonPhases = new int[]{-1, 1, 2, 0, -1};
 
-        TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);
+        TranscriptData transData = createTransExons(geneId1, transId++, POS_STRAND, exonStarts, exonPhases, 100, true);
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId1, transDataList);
@@ -76,46 +83,41 @@ public class FusionTest
         geneName = "GENE2";
         String geneId2 = "ENSG0002";
 
-        // GeneAnnotation geneDown = createGeneAnnotation(0, true, geneName, geneId1, strand, chromosome, 0, -1);
+        geneList.add(createEnsemblGeneData(geneId2, geneName, CHR_1, 1, 10000, 12000));
 
-        geneList.add(createEnsemblGeneData(geneId2, geneName, chromosome, 1, 10000, 12000));
-
-        addGeneData(geneTransCache, chromosome, geneList);
+        addGeneData(geneTransCache, CHR_1, geneList);
 
         transDataList = Lists.newArrayList();
 
         exonStarts = new int[]{10100, 10300, 10500, 10700, 10900};
         exonPhases = new int[]{1, 2, 0, -1, -1};
 
-        transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);
+        transData = createTransExons(geneId1, transId++, POS_STRAND, exonStarts, exonPhases, 100, true);
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId2, transDataList);
 
-        byte POS_ORIENT = 1;
-        byte negOrient = -1;
-
         // add upstream breakends
         List<GeneAnnotation> upGenes = Lists.newArrayList();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome, 250, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, chromosome, 450, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, true, chromosome, 650, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(3, true, chromosome, 850, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.get(0).setPositionalData(chromosome, 250, POS_ORIENT);
-        upGenes.get(1).setPositionalData(chromosome, 450, POS_ORIENT);
-        upGenes.get(2).setPositionalData(chromosome, 650, POS_ORIENT);
-        upGenes.get(3).setPositionalData(chromosome, 850, POS_ORIENT);
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, 250, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, CHR_1, 450, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, true, CHR_1, 650, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(3, true, CHR_1, 850, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, 250, POS_ORIENT);
+        upGenes.get(1).setPositionalData(CHR_1, 450, POS_ORIENT);
+        upGenes.get(2).setPositionalData(CHR_1, 650, POS_ORIENT);
+        upGenes.get(3).setPositionalData(CHR_1, 850, POS_ORIENT);
 
         // add downstream breakends
         List<GeneAnnotation> downGenes = Lists.newArrayList();
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome, 10250, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, chromosome, 10450, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, false, chromosome, 10650, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(3, false, chromosome, 10850, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.get(0).setPositionalData(chromosome, 10250, negOrient);
-        downGenes.get(1).setPositionalData(chromosome, 10450, negOrient);
-        downGenes.get(2).setPositionalData(chromosome, 10650, negOrient);
-        downGenes.get(3).setPositionalData(chromosome, 10850, negOrient);
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, 10250, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, CHR_1, 10450, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(3, false, CHR_1, 10850, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, 10250, NEG_ORIENT);
+        downGenes.get(1).setPositionalData(CHR_1, 10450, NEG_ORIENT);
+        downGenes.get(2).setPositionalData(CHR_1, 10650, NEG_ORIENT);
+        downGenes.get(3).setPositionalData(CHR_1, 10850, NEG_ORIENT);
 
         FusionParameters params = new FusionParameters();
         params.RequirePhaseMatch = true;
@@ -126,18 +128,22 @@ public class FusionTest
         tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
 
         assertEquals(9, fusions.size());
-        final GeneFusion fusion = fusions.get(0);
+        final GeneFusion reportedFusion = fusions.stream().filter(x -> x.reportable()).findFirst().orElse(null);
+        assertNotNull(reportedFusion);
 
         // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(450, fusion.upstreamTrans().gene().position());
-        assertEquals(10250, fusion.downstreamTrans().gene().position());
-        assertEquals(0, fusion.getExonsSkipped(true));
-        assertEquals(0, fusion.getExonsSkipped(false));
-        assertTrue(fusion.reportable());
+        assertEquals(850, reportedFusion.upstreamTrans().gene().position());
+        assertEquals(10650, reportedFusion.downstreamTrans().gene().position());
+        assertEquals(0, reportedFusion.getExonsSkipped(true));
+        assertEquals(0, reportedFusion.getExonsSkipped(false));
+        assertTrue(reportedFusion.reportable());
 
-        for(int i = 1; i < fusions.size(); ++i)
+        for(GeneFusion fusion: fusions)
         {
-            assertTrue(!fusions.get(i).reportable());
+            if(fusion == reportedFusion)
+                continue;
+
+            assertTrue(!fusion.reportable());
         }
     }
 
@@ -145,27 +151,25 @@ public class FusionTest
     public void testFusionPrioritisation()
     {
         // create a set of valid fusions and successively invalidate the top one to test prioritisation logic
-        String chromosome = "1";
-
         String geneId1 = "ENSG0001";
 
-        GeneAnnotation upGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
+        GeneAnnotation upGene = createGeneAnnotation(0, true, geneId1, geneId1, POS_STRAND, CHR_1, 450, 1);
 
         Integer codingStart = 350;
         Integer codingEnd = 950;
 
-        Transcript upTrans1 = new Transcript(upGene, 1, "TRANS01", 2, 1, 3, 1,
-                50, 300,5, true, 100, 1000, codingStart, codingEnd);
-        upTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
+        Transcript upTrans1 = createTranscript(
+                upGene, 1, true, 100, 1000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
+                2, 3, PHASE_1, 50, 300);;
 
-        GeneAnnotation downGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
+        GeneAnnotation downGene = createGeneAnnotation(0, true, geneId1, geneId1, POS_STRAND, CHR_1, 450, 1);
 
         codingStart = 10350;
         codingEnd = 10950;
 
-        Transcript downTrans1 = new Transcript(downGene, 11, "TRANS11", 2, 1, 3, 1,
-                50, 300,5, true, 10000, 11000, codingStart, codingEnd);
-        downTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
+        Transcript downTrans1 = createTranscript(
+                downGene, 11, true, 10000, 11000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
+                2, 3, PHASE_1, 50, 300);
 
         GeneFusion fusion1 = new GeneFusion(upTrans1, downTrans1, true);
         GeneFusion fusion2 = new GeneFusion(upTrans1, downTrans1, false);
@@ -192,9 +196,9 @@ public class FusionTest
         assertEquals(fusion2, topFusion);
 
         // 3. down protein coding
-        Transcript downTrans2 = new Transcript(downGene, 12, "TRANS12", 2, 1, 3, 1,
-                50, 300,5, true, 10000, 11000, codingStart, codingEnd);
-        downTrans2.setBioType(BIOTYPE_PROCESSED_TRANS);
+        Transcript downTrans2 = createTranscript(
+                downGene, 12, true, 10000, 11000, codingStart, codingEnd, BIOTYPE_PROCESSED_TRANS,
+                2, 3, PHASE_1, 50, 300);
 
         fusion1.setAnnotations(null);
         fusion2 = new GeneFusion(upTrans1, downTrans2, true);
@@ -211,9 +215,9 @@ public class FusionTest
         assertEquals(fusion2, topFusion);
 
         // 5. 3P partner canonical
-        Transcript downTrans3 = new Transcript(downGene, 13, "TRANS13", 2, 1, 3, 1,
-                50, 300,5, false, 10000, 11000, codingStart, codingEnd);
-        downTrans3.setBioType(BIOTYPE_PROTEIN_CODING);
+        Transcript downTrans3 = createTranscript(
+                downGene, 13, false, 10000, 11000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
+                2, 3, PHASE_1, 50, 300);
 
         fusion1 = new GeneFusion(upTrans1, downTrans3, true);
         fusions = Lists.newArrayList(fusion1, fusion2);
@@ -221,9 +225,9 @@ public class FusionTest
         assertEquals(fusion2, topFusion);
 
         // 6. 5P partner canonical
-        Transcript upTrans2 = new Transcript(upGene, 2, "TRANS02", 2, 1, 3, 1,
-                50, 300,5, false, 100, 1000, codingStart, codingEnd);
-        upTrans2.setBioType(BIOTYPE_PROTEIN_CODING);
+        Transcript upTrans2 = createTranscript(
+                upGene, 2, false, 100, 1000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
+                2, 3, PHASE_1, 50, 300);
 
         fusion1 = new GeneFusion(upTrans2, downTrans1, true);
         fusions = Lists.newArrayList(fusion1, fusion2);
@@ -231,9 +235,9 @@ public class FusionTest
         assertEquals(fusion2, topFusion);
 
         // 7. 5P partner less coding bases
-        Transcript upTrans3 = new Transcript(upGene, 3, "TRANS03", 2, 1, 3, 1,
-                40, 200,5, true, 100, 1000, codingStart, codingEnd);
-        upTrans3.setBioType(BIOTYPE_PROTEIN_CODING);
+        Transcript upTrans3 = createTranscript(
+                upGene, 3, true, 100, 1000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
+                2, 3, PHASE_1, 40, 200);
 
         fusion1 = new GeneFusion(upTrans3, downTrans1, true);
         fusions = Lists.newArrayList(fusion1, fusion2);
@@ -252,24 +256,22 @@ public class FusionTest
 
         String geneName1 = "GENE1";
         String geneId1 = "ENSG0001";
-        String chromosome = "1";
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
-        geneList.add(createEnsemblGeneData(geneId1, geneName1, chromosome, 1, 1000, 2000));
+        geneList.add(createEnsemblGeneData(geneId1, geneName1, CHR_1, 1, 1000, 2000));
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
         String transName1 = "ENST0001";
         int transId1 = 1;
 
-        byte strand = POS_STRAND;
         boolean isCanonical = true;
         int transStart = 1000;
         int transEnd = 2000;
-        int codingStart = 1400;
+        int codingStart = 1401;
         int codingEnd = 1900;
 
-        TranscriptData transData = new TranscriptData(transId1, transName1, geneId1, isCanonical, strand, transStart, transEnd,
+        TranscriptData transData = new TranscriptData(transId1, transName1, geneId1, isCanonical, POS_STRAND, transStart, transEnd,
                 codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
 
         List<ExonData> exons = Lists.newArrayList();
@@ -289,26 +291,26 @@ public class FusionTest
         String geneName2 = "GENE2";
         String geneId2 = "ENSG0002";
 
-        geneList.add(createEnsemblGeneData(geneId2, geneName2, chromosome, strand, 10000, 12000));
-        addGeneData(geneTransCache, chromosome, geneList);
+        geneList.add(createEnsemblGeneData(geneId2, geneName2, CHR_1, POS_STRAND, 10000, 12000));
+        addGeneData(geneTransCache, CHR_1, geneList);
 
         String transName2 = "ENST0002";
         int transId2 = 2;
 
         transStart = 11000;
         transEnd = 12000;
-        codingStart = 11050;
+        codingStart = 11049;
         codingEnd = 11980;
 
-        transData = new TranscriptData(transId2, transName2, geneId2, isCanonical, strand, transStart, transEnd,
+        transData = new TranscriptData(transId2, transName2, geneId2, isCanonical, POS_STRAND, transStart, transEnd,
                 codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
 
         exons = Lists.newArrayList();
 
         exons.add(new ExonData(transId1, 11000, 11100, 1, -1, 1));
-        exons.add(new ExonData(transId1, 11300, 11500, 2, 1, 2));
-        exons.add(new ExonData(transId1, 11600, 11700, 3, 2, 0));
-        exons.add(new ExonData(transId1, 11950, 12000, 4, 2, -1));
+        exons.add(new ExonData(transId1, 11300, 11501, 2, 1, 2));
+        exons.add(new ExonData(transId1, 11600, 11699, 3, 2, 0));
+        exons.add(new ExonData(transId1, 11950, 12000, 4, 0, -1));
 
         transData.setExons(exons);
         transDataList.add(transData);
@@ -324,16 +326,16 @@ public class FusionTest
         // test 1: create a chain of DELs with a single-SV fusion which link between exon 2-3 of upstream to 2-3 of downstream
 
         // pre-gene
-        SvVarData var1 = createDel(0, chromosome, 300,400);
+        SvVarData var1 = createDel(0, CHR_1, 300,400);
 
         // pre-gene (just to keep the cluster big enough to not resolve into simple SVs
-        SvVarData var2 = createDel(1, chromosome, 500,600);
+        SvVarData var2 = createDel(1, CHR_1, 500,600);
 
         // fusing del
-        SvVarData var3 = createDel(2, chromosome, 1550,11200);
+        SvVarData var3 = createDel(2, CHR_1, 1550,11200);
 
         // intronic del which then runs out remainder of transcript
-        SvVarData var4 = createDel(3, chromosome, 15000,16000);
+        SvVarData var4 = createDel(3, CHR_1, 15000,16000);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -365,15 +367,15 @@ public class FusionTest
         tester.clearClustersAndSVs();
 
         // upstream trans
-        var1 = createDel(0, chromosome, 1550,50000);
+        var1 = createDel(0, CHR_1, 1550,50000);
 
-        var2 = createDel(1, chromosome, 50100,51000);
+        var2 = createDel(1, CHR_1, 50100,51000);
 
         // fusing del
-        var3 = createDel(2, chromosome, 55000,56000);
+        var3 = createDel(2, CHR_1, 55000,56000);
 
         // intronic del which then runs out remainder of transcript
-        var4 = createDup(3, chromosome, 10900, 56500);
+        var4 = createDup(3, CHR_1, 10900, 56500);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -405,16 +407,16 @@ public class FusionTest
         tester.clearClustersAndSVs();
 
         // del starting in an exon
-        var1 = createDel(0, chromosome, 1150,1250);
+        var1 = createDel(0, CHR_1, 1150,1250);
 
         // intronic dup
-        var2 = createDup(1, chromosome, 1350,1575);
+        var2 = createDup(1, CHR_1, 1350,1575);
 
         // fusion the 2 genes
-        var3 = createDel(2, chromosome, 1750,11525);
+        var3 = createDel(2, CHR_1, 1750,11525);
 
         // del skips an exon
-        var4 = createDel(3, chromosome, 11575, 111800);
+        var4 = createDel(3, CHR_1, 11575, 111800);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -457,7 +459,7 @@ public class FusionTest
         int transId3 = 3;
         int[] exonStarts = new int[]{1000, 2000, 3000};
         int[] exonPhases = new int[]{0, 0, 0,};
-        TranscriptData transData3 = createTransExons(geneId3, transId3, strand, exonStarts, exonPhases, 100);
+        TranscriptData transData3 = createTransExons(geneId3, transId3, POS_STRAND, exonStarts, exonPhases, 100);
         transDataList.add(transData3);
 
         addTransExonData(geneTransCache, geneId3, transDataList);
@@ -469,14 +471,14 @@ public class FusionTest
         var1 = createBnd(1, "1", 51000, 1, "2", 1000, -1);
 
         // runs into start of gene
-        var2 = createInv(2, chromosome, 500, 50000, -1);
+        var2 = createInv(2, CHR_1, 500, 50000, -1);
 
         // fuses the genes with a DEL but which goes through a few remote TIs in between including one which goes through gene 3
-        var3 = createBnd(3, chromosome, 1750, 1, "2", 10000, -1);
-        var4 = createBnd(4, chromosome, 61000, 1, "2", 11000, 1);
-        SvVarData var5 = createBnd(5, chromosome, 60000, -1, remoteChromosome, 1200, -1);
+        var3 = createBnd(3, CHR_1, 1750, 1, "2", 10000, -1);
+        var4 = createBnd(4, CHR_1, 61000, 1, "2", 11000, 1);
+        SvVarData var5 = createBnd(5, CHR_1, 60000, -1, remoteChromosome, 1200, -1);
         SvVarData var6 = createBnd(6, remoteChromosome, 2500, 1, "5", 1000, -1);
-        SvVarData var7 = createBnd(7, chromosome, 11525, -1, "5", 2000, 1);
+        SvVarData var7 = createBnd(7, CHR_1, 11525, -1, "5", 2000, 1);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -500,11 +502,11 @@ public class FusionTest
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
-        assertEquals(2, tester.FusionAnalyser.getFusions().size());
-        assertEquals(1, tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).count());
+        assertEquals(3, tester.FusionAnalyser.getFusions().size());
+        assertEquals(2, tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).count());
 
         fusion = tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).findFirst().orElse(null);
-        assertTrue(!fusion.phaseMatched());
+        assertTrue(fusion.phaseMatched());
         assertEquals(var3.id(), fusion.upstreamTrans().gene().id());
         assertEquals(var5.id(), fusion.downstreamTrans().gene().id());
 
@@ -514,7 +516,7 @@ public class FusionTest
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
-        assertEquals(2, tester.FusionAnalyser.getFusions().size());
+        assertEquals(3, tester.FusionAnalyser.getFusions().size());
 
         final int varId3 = var3.id();
         final int varId7 = var7.id();
@@ -522,7 +524,7 @@ public class FusionTest
         fusion = tester.FusionAnalyser.getFusions().stream()
                 .filter(x -> x.upstreamTrans().gene().id() == varId3 && x.downstreamTrans().gene().id() == varId7).findFirst().orElse(null);
 
-        assertTrue(fusion != null);
+        assertNotNull(fusion);
         assertEquals(KNOWN_PAIR, fusion.knownType());
         assertFalse(fusion.validChainTraversal());
     }

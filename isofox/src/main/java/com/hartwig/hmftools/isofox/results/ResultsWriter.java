@@ -312,7 +312,7 @@ public class ResultsWriter
             {
                 ExonData exon = exons.get(i);
 
-                final RegionReadData exonReadData = findExonRegion(geneReadData.getExonRegions(), exon.ExonStart, exon.ExonEnd);
+                final RegionReadData exonReadData = findExonRegion(geneReadData.getExonRegions(), exon.Start, exon.End);
                 if (exonReadData == null)
                     continue;
 
@@ -320,7 +320,7 @@ public class ResultsWriter
                         geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, transData.TransId, transData.TransName));
 
                 mExonDataWriter.write(String.format(",%d,%d,%d,%d",
-                        exon.ExonRank, exon.ExonStart, exon.ExonEnd, exonReadData.getTransExonRefs().size()));
+                        exon.Rank, exon.Start, exon.End, exonReadData.getTransExonRefs().size()));
 
                 int[] matchCounts = exonReadData.getTranscriptReadCount(transData.TransId);
                 int[] startSjCounts = exonReadData.getTranscriptJunctionMatchCount(transData.TransId, SE_START);

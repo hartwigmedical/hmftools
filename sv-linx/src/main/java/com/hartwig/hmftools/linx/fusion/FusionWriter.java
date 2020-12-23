@@ -53,7 +53,7 @@ public class FusionWriter
                     .isStart(transcript.gene().isStart())
                     .type(gene.type().toString())
                     .gene(transcript.geneName())
-                    .transcriptId(transcript.StableId)
+                    .transcriptId(transcript.transName())
                     .canonical(transcript.isCanonical())
                     .geneOrientation(transcript.isUpstream() ? "Upstream" : "Downstream")
                     .disruptive(transcript.isDisruptive())
@@ -63,11 +63,11 @@ public class FusionWriter
                     .regionType(transcript.regionType().toString())
                     .codingContext(transcript.codingType().toString())
                     .biotype(transcript.bioType())
-                    .exonicBasePhase(transcript.exonicBasePhase())
+                    .exonicBasePhase(transcript.Phase)
                     .nextSpliceExonRank(transcript.nextSpliceExonRank())
-                    .nextSpliceExonPhase(transcript.nextSpliceExonPhase())
+                    .nextSpliceExonPhase(transcript.Phase)
                     .nextSpliceDistance(transcript.isUpstream() ? transcript.prevSpliceAcceptorDistance() : transcript.nextSpliceAcceptorDistance())
-                    .totalExonCount(transcript.ExonMax)
+                    .totalExonCount(transcript.TransData.exons().size())
                     .chromosome(gene.chromosome())
                     .orientation(gene.orientation())
                     .strand(gene.Strand)
@@ -100,10 +100,10 @@ public class FusionWriter
                     .fusedExonUp(geneFusion.getFusedExon(true))
                     .fusedExonDown(geneFusion.getFusedExon(false))
                     .geneStart(geneFusion.geneName(FS_UP))
-                    .geneTranscriptStart(geneFusion.upstreamTrans().StableId)
+                    .geneTranscriptStart(geneFusion.upstreamTrans().transName())
                     .geneContextStart(context(geneFusion.upstreamTrans(), geneFusion.getFusedExon(true)))
                     .geneEnd(geneFusion.geneName(FS_DOWN))
-                    .geneTranscriptEnd(geneFusion.downstreamTrans().StableId)
+                    .geneTranscriptEnd(geneFusion.downstreamTrans().transName())
                     .geneContextEnd(context(geneFusion.downstreamTrans(), geneFusion.getFusedExon(false)))
                     .junctionCopyNumber(fusionJcn(geneFusion.upstreamTrans().gene().jcn(), geneFusion.downstreamTrans().gene().jcn()))
                     .build());
@@ -160,7 +160,6 @@ public class FusionWriter
                     fieldsStr += ",Phase" + upDown;
                     fieldsStr += ",ExonMax" + upDown;
                     fieldsStr += ",Disruptive" + upDown;
-                    fieldsStr += ",ExonicPhase" + upDown;
                     fieldsStr += ",CodingBases" + upDown;
                     fieldsStr += ",TotalCoding" + upDown;
                     fieldsStr += ",CodingStart" + upDown;
@@ -219,18 +218,17 @@ public class FusionWriter
                         gene.type(), gene.jcn()));
 
                 writer.write(String.format(",%s,%s,%s,%d,%s,%s",
-                        gene.StableId, fusion.geneName(fs), trans.StableId,
+                        gene.StableId, fusion.geneName(fs), trans.transName(),
                         gene.Strand, trans.regionType(), trans.codingType()));
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%s",
                         isUpstream ? trans.ExonUpstream : trans.ExonDownstream,
                         fusion.getFusedExon(isUpstream), fusion.getExonsSkipped()[fs],
-                        isUpstream ? trans.ExonUpstreamPhase : trans.ExonDownstreamPhase,
-                        trans.ExonMax, trans.isDisruptive()));
+                        trans.Phase, trans.exonCount(), trans.isDisruptive()));
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s",
-                        trans.exonicBasePhase(), trans.codingBases(), trans.totalCodingBases(),
-                        trans.codingStart(), trans.codingEnd(), trans.TranscriptStart, trans.TranscriptEnd,
+                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%s,%s",
+                        trans.CodingBases, trans.TotalCodingBases,
+                        trans.codingStart(), trans.codingEnd(), trans.transStart(), trans.transEnd(),
                         trans.prevSpliceAcceptorDistance(), trans.isCanonical(), trans.bioType()));
             }
 

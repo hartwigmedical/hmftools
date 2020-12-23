@@ -13,10 +13,9 @@ import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.CODING_BASES;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.TOTAL_CODING_BASES;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.convertDnaCodonToAminoAcid;
@@ -27,6 +26,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.fusion.CodingBaseData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public class NeoUtils
@@ -39,33 +39,33 @@ public class NeoUtils
 
         for(ExonData exon : transData.exons())
         {
-            if(position > exon.ExonEnd)
+            if(position > exon.End)
                 continue;
 
-            if(position < exon.ExonStart)
+            if(position < exon.Start)
             {
                 // intronic
                 neData.RegionType[stream] = INTRONIC;
 
                 // upstream pos-strand, before next exon then take the exon before's rank
                 if(transData.Strand == POS_STRAND && isUpstream)
-                    neData.ExonRank[stream] = exon.ExonRank - 1;
+                    neData.ExonRank[stream] = exon.Rank - 1;
                 else if(transData.Strand == NEG_STRAND && isUpstream)
-                    neData.ExonRank[stream] = exon.ExonRank;
+                    neData.ExonRank[stream] = exon.Rank;
                 else if(transData.Strand == POS_STRAND && !isUpstream)
-                    neData.ExonRank[stream] = exon.ExonRank;
+                    neData.ExonRank[stream] = exon.Rank;
                 else if(transData.Strand == NEG_STRAND && !isUpstream)
-                    neData.ExonRank[stream] = exon.ExonRank - 1;
+                    neData.ExonRank[stream] = exon.Rank - 1;
 
                 if(transData.Strand == POS_STRAND)
-                    neData.Phases[stream] = exon.ExonPhase;
+                    neData.Phases[stream] = exon.PhaseStart;
                 else
-                    neData.Phases[stream] = exon.ExonPhaseEnd;
+                    neData.Phases[stream] = exon.PhaseEnd;
             }
-            else if(positionWithin(position, exon.ExonStart, exon.ExonEnd))
+            else if(positionWithin(position, exon.Start, exon.End))
             {
                 neData.RegionType[stream] = EXONIC;
-                neData.ExonRank[stream] = exon.ExonRank;
+                neData.ExonRank[stream] = exon.Rank;
             }
 
             break;
@@ -94,13 +94,8 @@ public class NeoUtils
 
         if(neData.CodingType[stream] == CODING && neData.RegionType[stream] == EXONIC)
         {
-            int[] codingData = calcCodingBases(transData.CodingStart, transData.CodingEnd, transData.exons(), position);
-            int codingBases = transData.Strand == POS_STRAND ? codingData[CODING_BASES] : codingData[TOTAL_CODING_BASES] - codingData[CODING_BASES] + 1;
-
-            // factor in insert sequence for the upstream partner
-            codingBases += insSeqLength;
-
-            neData.Phases[stream] = codingBasesToPhase(codingBases);
+            final CodingBaseData cbData = calcCodingBases(transData, position);
+            neData.Phases[stream] = tickPhaseForward(cbData.Phase, insSeqLength);
         }
     }
 
@@ -126,21 +121,21 @@ public class NeoUtils
             {
                 final ExonData exon = exonDataList.get(i);
 
-                if(nePosition > exon.ExonEnd)
+                if(nePosition > exon.End)
                     continue;
 
-                if(codingStart > exon.ExonEnd) // no coding bases reached yet
+                if(codingStart > exon.End) // no coding bases reached yet
                     continue;
 
-                if(positionWithin(nePosition, exon.ExonStart, exon.ExonEnd) && !canStartInExon)
+                if(positionWithin(nePosition, exon.Start, exon.End) && !canStartInExon)
                     continue; // will start at the next exon
 
-                if(exon.ExonStart > codingEnd)
+                if(exon.Start > codingEnd)
                     break; // no more coding bases
 
-                int exonCodingStart = max(codingStart, exon.ExonStart);
+                int exonCodingStart = max(codingStart, exon.Start);
                 exonCodingStart = max(exonCodingStart, nePosition);
-                int exonCodingEnd = min(codingEnd, exon.ExonEnd);
+                int exonCodingEnd = min(codingEnd, exon.End);
                 int exonCodingBases = exonCodingEnd - exonCodingStart + 1;
 
                 int baseStart, baseEnd;
@@ -171,21 +166,21 @@ public class NeoUtils
             {
                 final ExonData exon = exonDataList.get(i);
 
-                if(nePosition < exon.ExonStart)
+                if(nePosition < exon.Start)
                     continue;
 
-                if(codingEnd < exon.ExonStart)
+                if(codingEnd < exon.Start)
                     continue;
 
-                if(positionWithin(nePosition, exon.ExonStart, exon.ExonEnd) && !canStartInExon)
+                if(positionWithin(nePosition, exon.Start, exon.End) && !canStartInExon)
                     continue;
 
-                if(exon.ExonEnd < codingStart)
+                if(exon.End < codingStart)
                     break;
 
-                int exonCodingEnd = min(codingEnd, exon.ExonEnd);
+                int exonCodingEnd = min(codingEnd, exon.End);
                 exonCodingEnd = min(exonCodingEnd, nePosition);
-                int exonCodingStart = max(codingStart, exon.ExonStart);
+                int exonCodingStart = max(codingStart, exon.Start);
                 int exonCodingBases = exonCodingEnd - exonCodingStart + 1;
 
                 int baseStart, baseEnd;
@@ -246,10 +241,10 @@ public class NeoUtils
                 if(i == exonDataList.size() - 1)
                     break;
 
-                if (refPosition > exon.ExonEnd)
+                if (refPosition > exon.End)
                     continue;
 
-                exonicBaseCount += exon.ExonEnd - max(refPosition, exon.ExonStart) + 1;
+                exonicBaseCount += exon.End - max(refPosition, exon.Start) + 1;
             }
         }
         else
@@ -263,10 +258,10 @@ public class NeoUtils
                 if(i == 0)
                     break;
 
-                if(refPosition < exon.ExonStart)
+                if(refPosition < exon.Start)
                     continue;
 
-                exonicBaseCount += min(refPosition, exon.ExonEnd) - exon.ExonStart + 1;
+                exonicBaseCount += min(refPosition, exon.End) - exon.Start + 1;
             }
         }
 

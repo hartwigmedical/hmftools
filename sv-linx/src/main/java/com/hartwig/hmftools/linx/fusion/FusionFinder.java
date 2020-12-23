@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
@@ -16,6 +17,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.GeneAnnotation;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
@@ -160,8 +163,8 @@ public class FusionFinder
                                 continue;
                             }
 
-                            boolean exonDelDupCandidate = upstreamTrans.StableId.equals(downstreamTrans.StableId)
-                                    && mKnownFusionCache.isExonDelDupTrans(upstreamTrans.StableId);
+                            boolean exonDelDupCandidate = upstreamTrans.transName().equals(downstreamTrans.transName())
+                                    && mKnownFusionCache.isExonDelDupTrans(upstreamTrans.transName());
 
                             fusion = transcriptPairHasFusion(upstreamTrans, downstreamTrans, params, knownPair, exonDelDupCandidate);
                         }
@@ -186,10 +189,10 @@ public class FusionFinder
             return;
 
         if(trans2 == null)
-            LNX_LOGGER.trace("transcript({}:{}) invalid({}: {})", trans1.geneName(), trans1.StableId, reasonType, reason);
+            LNX_LOGGER.trace("transcript({}:{}) invalid({}: {})", trans1.geneName(), trans1.transName(), reasonType, reason);
         else
             LNX_LOGGER.trace("transcripts({}:{} and {}:{}) invalid({}: {})",
-                    trans1.geneName(), trans1.StableId, trans2.geneName(), trans2.StableId, reasonType, reason);
+                    trans1.geneName(), trans1.transName(), trans2.geneName(), trans2.transName(), reasonType, reason);
     }
 
     public static boolean validFusionTranscript(final Transcript transcript)
@@ -224,7 +227,7 @@ public class FusionFinder
         if(transcript.nonCoding())
             return false;
 
-        if(transcript.ExonMax == 1)
+        if(transcript.exonCount() == 1)
             return false;
 
         return true;
@@ -331,7 +334,7 @@ public class FusionFinder
         if(!checkExactMatch)
         {
             // all fusions to downstream exons may be excluded, but for now definitely exclude those which end in the last exon
-            if(downstreamTrans.isExonic() && downstreamTrans.ExonDownstream == downstreamTrans.ExonMax && !downstreamTrans.preCoding())
+            if(downstreamTrans.isExonic() && downstreamTrans.ExonDownstream == downstreamTrans.exonCount() && !downstreamTrans.preCoding())
             {
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "downstream last exon");
                 return null;
@@ -362,7 +365,7 @@ public class FusionFinder
             }
             else
             {
-                phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
+                phaseMatched = upstreamTrans.Phase == downstreamTrans.Phase;
             }
 
             if(!phaseMatched && params.AllowExonSkipping
@@ -371,7 +374,7 @@ public class FusionFinder
                 // check for a match within the alternative phasings from upstream and downstream of the breakend
                 for (Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())
                 {
-                    if (altPhasing.getKey() == downstreamTrans.ExonDownstreamPhase)
+                    if (altPhasing.getKey() == downstreamTrans.Phase)
                     {
                         phaseMatched = true;
                         phaseExonsSkippedUp = altPhasing.getValue();
@@ -383,7 +386,7 @@ public class FusionFinder
                 {
                     for (Map.Entry<Integer, Integer> altPhasing : downstreamTrans.getAlternativePhasing().entrySet())
                     {
-                        if (altPhasing.getKey() == upstreamTrans.ExonUpstreamPhase)
+                        if (altPhasing.getKey() == upstreamTrans.Phase)
                         {
                             phaseMatched = true;
                             phaseExonsSkippedDown = altPhasing.getValue();
@@ -438,16 +441,13 @@ public class FusionFinder
     private static boolean exonToExonInPhase(final Transcript upTrans, final Transcript downTrans)
     {
         // check phasing and offset since exon start or coding start
-        upTrans.setExonicCodingBase();
-        downTrans.setExonicCodingBase();
+        int upPhase = upTrans.Phase;
+        int downPhase = downTrans.Phase;
 
-        int upPhase = upTrans.exonicBasePhase();
-        int downPhase = downTrans.exonicBasePhase();
-
-        if(upPhase == -1 && downPhase == -1)
+        if(upPhase == PHASE_NONE && downPhase == PHASE_NONE)
             return true;
 
-        return codingBasesToPhase(upPhase + 1) == codingBasesToPhase(downPhase);
+        return tickPhaseForward(upPhase) == downPhase;
     }
 
     private void checkIgFusion(final GeneAnnotation startGene, final GeneAnnotation endGene, final List<GeneFusion> potentialFusions)
@@ -515,11 +515,12 @@ public class FusionFinder
 
     private Transcript generateIgTranscript(final GeneAnnotation gene, final KnownFusionData knownFusionData)
     {
+        TranscriptData transData = new TranscriptData(
+                0, String.format("@%s", knownFusionData.FiveGene), gene.StableId, false, gene.Strand,
+                knownFusionData.igRegion().start(), knownFusionData.igRegion().end(), null, null, "");
+
         Transcript transcript = new Transcript(
-                gene, 0, String.format("@%s", knownFusionData.FiveGene),
-                -1,-1, 1, -1,
-                0, 0,   0, false,
-                knownFusionData.igRegion().start(), knownFusionData.igRegion().end(), null, null);
+                gene, transData,  -1, -1, PHASE_NONE, 0, 0);
 
         transcript.setCodingType(ENHANCER);
         transcript.setRegionType(TranscriptRegionType.IG);
@@ -533,7 +534,7 @@ public class FusionFinder
             return false;
 
         // skip fusions between different transcripts in the same gene,
-        if (!upTrans.StableId.equals(downTrans.StableId))
+        if (!upTrans.transName().equals(downTrans.transName()))
             return true;
 
         if(upTrans.nonCoding())
@@ -603,7 +604,7 @@ public class FusionFinder
         if(downTrans.nonCoding())
             return;
 
-        final List<TranscriptProteinData> transProteinData = mGeneTransCache.getTranscriptProteinDataMap().get(downTrans.TransId);
+        final List<TranscriptProteinData> transProteinData = mGeneTransCache.getTranscriptProteinDataMap().get(downTrans.transId());
 
         if(transProteinData == null || transProteinData.isEmpty())
             return;
@@ -662,12 +663,12 @@ public class FusionFinder
             {
                 // coding must start before the start of the feature for it to be preserved
                 int featureCodingBaseStart = featureStart * 3;
-                int svCodingBaseStart = transcript.codingBases();
+                int svCodingBaseStart = transcript.CodingBases;
                 featurePreserved = (featureCodingBaseStart >= svCodingBaseStart);
             }
             else
             {
-                int svCodingBaseEnd = transcript.codingBases();
+                int svCodingBaseEnd = transcript.CodingBases;
                 int featureCodingBaseEnd = featureEnd * 3;
                 featurePreserved = (featureCodingBaseEnd <= svCodingBaseEnd);
             }
@@ -690,7 +691,7 @@ public class FusionFinder
         if(upGene.equals(downGene))
         {
             if(mKnownFusionCache.withinKnownExonRanges(
-                    EXON_DEL_DUP, geneFusion.transcripts()[FS_UP].StableId,
+                    EXON_DEL_DUP, geneFusion.transcripts()[FS_UP].transName(),
                     geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true),
                     geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
             {
@@ -710,7 +711,7 @@ public class FusionFinder
             geneFusion.isPromiscuous()[FS_DOWN] = true;
 
             if(mKnownFusionCache.withinPromiscuousExonRange(
-                    PROMISCUOUS_3, geneFusion.transcripts()[FS_DOWN].StableId,
+                    PROMISCUOUS_3, geneFusion.transcripts()[FS_DOWN].transName(),
                     geneFusion.getBreakendExon(false), geneFusion.getFusedExon(false)))
             {
                 geneFusion.setKnownExons();
@@ -724,7 +725,7 @@ public class FusionFinder
             geneFusion.isPromiscuous()[FS_UP] = true;
 
             if(mKnownFusionCache.withinPromiscuousExonRange(
-                    PROMISCUOUS_5, geneFusion.transcripts()[FS_UP].StableId,
+                    PROMISCUOUS_5, geneFusion.transcripts()[FS_UP].transName(),
                     geneFusion.getBreakendExon(true), geneFusion.getFusedExon(true)))
             {
                 geneFusion.setKnownExons();

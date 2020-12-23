@@ -311,27 +311,27 @@ public class SpliceVariantMatcher
                 AcceptorDonorType acceptorDonorType = AcceptorDonorType.NONE;
                 int exonDistance = 0;
 
-                if((i == 0 && withinRange(exon.ExonStart, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE))
-                || (i == transData.exons().size() - 1 && withinRange(exon.ExonEnd, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE)))
+                if((i == 0 && withinRange(exon.Start, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE))
+                || (i == transData.exons().size() - 1 && withinRange(exon.End, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE)))
                 {
                     // ignore matching at the first or last base of a transcript
                     continue;
                 }
 
-                if(positionWithin(variant.Position, exon.ExonStart, exon.ExonEnd))
+                if(positionWithin(variant.Position, exon.Start, exon.End))
                 {
                     // variant within an exon
-                    if(withinRange(exon.ExonStart, variant.Position, SPLICE_REGION_CODING_DISTANCE))
+                    if(withinRange(exon.Start, variant.Position, SPLICE_REGION_CODING_DISTANCE))
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR;
-                        exonDistance = -abs(exon.ExonStart - variant.Position) - 1; // first base inside exon is -1 by convention
-                        exonPosition = exon.ExonStart;
+                        exonDistance = -abs(exon.Start - variant.Position) - 1; // first base inside exon is -1 by convention
+                        exonPosition = exon.Start;
                     }
-                    else if(withinRange(exon.ExonEnd, variant.Position, SPLICE_REGION_CODING_DISTANCE))
+                    else if(withinRange(exon.End, variant.Position, SPLICE_REGION_CODING_DISTANCE))
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? DONOR : ACCEPTOR;
-                        exonDistance = -abs(exon.ExonEnd - variant.Position) - 1;
-                        exonPosition = exon.ExonEnd;
+                        exonDistance = -abs(exon.End - variant.Position) - 1;
+                        exonPosition = exon.End;
                     }
                     else
                     {
@@ -340,17 +340,17 @@ public class SpliceVariantMatcher
                 }
                 else
                 {
-                    if(withinRange(exon.ExonStart, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE))
+                    if(withinRange(exon.Start, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE))
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? ACCEPTOR : DONOR;
-                        exonDistance = abs(exon.ExonStart - variant.Position);
-                        exonPosition = exon.ExonStart;
+                        exonDistance = abs(exon.Start - variant.Position);
+                        exonPosition = exon.Start;
                     }
-                    else if(withinRange(exon.ExonEnd, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE))
+                    else if(withinRange(exon.End, variant.Position, SPLICE_REGION_NON_CODING_DISTANCE))
                     {
                         acceptorDonorType = geneData.Strand == POS_STRAND ? DONOR : ACCEPTOR;
-                        exonDistance = abs(exon.ExonEnd - variant.Position);
-                        exonPosition = exon.ExonEnd;
+                        exonDistance = abs(exon.End - variant.Position);
+                        exonPosition = exon.End;
                     }
                     else
                     {
@@ -365,7 +365,7 @@ public class SpliceVariantMatcher
                     closestAcceptorDonorType = acceptorDonorType;
                     closestExonDistance = exonDistance;
                     closestExonPosition = exonPosition;
-                    closestTransStr = String.format("%s;%d", transData.TransName, exon.ExonRank);
+                    closestTransStr = String.format("%s;%d", transData.TransName, exon.Rank);
                 }
 
                 final ExonData prevExon = i > 0 ? transData.exons().get(i - 1) : null;
@@ -389,13 +389,13 @@ public class SpliceVariantMatcher
                         if(prevExon == null || nextExon == null)
                             continue;
 
-                        if(altSJ.SpliceJunction[SE_START] != prevExon.ExonEnd || altSJ.SpliceJunction[SE_END] != nextExon.ExonStart)
+                        if(altSJ.SpliceJunction[SE_START] != prevExon.End || altSJ.SpliceJunction[SE_END] != nextExon.Start)
                             continue;
                     }
                     else
                     {
-                        int minPosition = prevExon != null ? prevExon.ExonEnd : exon.ExonStart;
-                        int maxPosition = nextExon != null ? nextExon.ExonStart : exon.ExonEnd;
+                        int minPosition = prevExon != null ? prevExon.End : exon.Start;
+                        int maxPosition = nextExon != null ? nextExon.Start : exon.End;
 
                         // allow a margin for misalignment
                         minPosition -= ALT_SJ_MISALIGN_BUFFER;
@@ -408,7 +408,7 @@ public class SpliceVariantMatcher
                     ISF_LOGGER.trace("sampleId({}) variant({}:{}) gene({}) transcript({}) matched altSJ({})",
                             sampleId, variant.Chromosome, variant.Position, geneData.GeneName, transData.TransName, altSJ.toString());
 
-                    final String transDataStr = String.format("%s;%d", transData.TransName, exon.ExonRank);
+                    final String transDataStr = String.format("%s;%d", transData.TransName, exon.Rank);
                     writeMatchData(sampleId, variant, geneData, altSJ, DISRUPTION, acceptorDonorType, exonDistance, exonPosition, transDataStr);
 
                     matchedAltSJs.add(altSJ);

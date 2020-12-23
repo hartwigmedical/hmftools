@@ -15,7 +15,7 @@ public class GeneAnnotation {
 
     public final String GeneName;
     public final String StableId;
-    public final int Strand;
+    public final byte Strand;
 
     private final int mVarId;
     private final boolean mIsStart;
@@ -36,7 +36,7 @@ public class GeneAnnotation {
     private String mInsertSequence;
 
     public GeneAnnotation(int varId, final boolean isStart, final String geneName, final String stableId,
-            final int strand, @NotNull String karyotypeBand)
+            final byte strand, @NotNull String karyotypeBand)
     {
         GeneName = geneName;
         StableId = stableId;
@@ -134,7 +134,7 @@ public class GeneAnnotation {
             if(!trans.isUpstream() && trans.hasNegativePrevSpliceAcceptorDistance())
                 continue;
 
-            int distance = Strand == 1 ? trans.TranscriptStart - mPosition : mPosition - trans.TranscriptEnd;
+            int distance = Strand == 1 ? trans.TransData.TransStart - mPosition : mPosition - trans.TransData.TransEnd;
 
             if(distance > 0 && distance <= preGeneDistance)
                 return true;

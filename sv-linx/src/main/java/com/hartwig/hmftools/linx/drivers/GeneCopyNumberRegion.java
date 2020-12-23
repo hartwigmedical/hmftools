@@ -44,10 +44,10 @@ public class GeneCopyNumberRegion
         {
             for(SvCNData cnData : copyNumberData)
             {
-                if(cnData.EndPos < exon.ExonStart)
+                if(cnData.EndPos < exon.Start)
                     continue;
 
-                if(cnData.StartPos > exon.ExonEnd)
+                if(cnData.StartPos > exon.End)
                     break;
 
                 if(minRegion == null || cnData.CopyNumber < minRegion.CopyNumber)

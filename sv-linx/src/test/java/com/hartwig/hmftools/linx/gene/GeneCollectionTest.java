@@ -10,6 +10,10 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.setAlter
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.Transcript.POST_CODING_PHASE;
@@ -19,6 +23,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -124,36 +129,33 @@ public class GeneCollectionTest
         // first a gene on the forward strand
         String geneName = "GENE1";
         String geneId = "ENSG0001";
-        String chromosome = "1";
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
-        geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, chromosome, POS_STRAND, 100, 1000));
-        GeneTestUtils.addGeneData(geneTransCache, chromosome, geneList);
+        geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, CHR_1, POS_STRAND, 100, 1000));
+        GeneTestUtils.addGeneData(geneTransCache, CHR_1, geneList);
 
-        GeneAnnotation genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, 1, chromosome, 0, POS_ORIENT);
+        GeneAnnotation genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, POS_ORIENT);
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
         int transId = 1;
-        byte strand = 1;
-
         int[] exonStarts = new int[]{100, 300, 500, 700, 900};
-        int[] exonPhases = new int[]{-1, 1, 2, 0, -1};
 
-        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100);
+        Integer codingStart = 349;
+        Integer codingEnd = 850;
+        TranscriptData transData = createTransExons(geneId, transId++, POS_STRAND, exonStarts, 100, codingStart, codingEnd, false, "");
         transDataList.add(transData);
 
         GeneTestUtils.addTransExonData(geneTransCache, geneId, transDataList);
 
         int position = 250;
-        genePosStrand.setPositionalData(chromosome, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
         Transcript trans = extractTranscriptExonData(transData, position, genePosStrand);
 
-        assertEquals(5, trans.ExonMax);
+        assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
         assertEquals(2, trans.ExonDownstream);
-        assertEquals(-1, trans.ExonUpstreamPhase);
-        assertEquals(-1, trans.ExonDownstreamPhase);
+        assertEquals(PHASE_NONE, trans.Phase);
 
         // test caching of upstream phasings for exon-skipping fusion logic
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
@@ -162,21 +164,20 @@ public class GeneCollectionTest
         // and test as a downstream gene
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
         assertEquals(3, trans.getAlternativePhasing().size());
-        Integer exonsSkipped = trans.getAlternativePhasing().get(1);
+        Integer exonsSkipped = trans.getAlternativePhasing().get(PHASE_1);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
-        exonsSkipped = trans.getAlternativePhasing().get(2);
-        assertTrue(exonsSkipped != null && exonsSkipped == 2);
-        exonsSkipped = trans.getAlternativePhasing().get(0);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_2);
         assertTrue(exonsSkipped != null && exonsSkipped == 3);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_0);
+        assertTrue(exonsSkipped != null && exonsSkipped == 2);
 
         position = 450;
-        genePosStrand.setPositionalData(chromosome, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
         trans = extractTranscriptExonData(transData, position, genePosStrand);
 
         assertEquals(2, trans.ExonUpstream);
         assertEquals(3, trans.ExonDownstream);
-        assertEquals(1, trans.ExonUpstreamPhase);
-        assertEquals(1, trans.ExonDownstreamPhase);
+        assertEquals(PHASE_1, trans.Phase);
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
         assertEquals(1, trans.getAlternativePhasing().size());
@@ -185,19 +186,18 @@ public class GeneCollectionTest
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
         assertEquals(2, trans.getAlternativePhasing().size());
-        exonsSkipped = trans.getAlternativePhasing().get(2);
-        assertTrue(exonsSkipped != null && exonsSkipped == 1);
-        exonsSkipped = trans.getAlternativePhasing().get(0);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_2);
         assertTrue(exonsSkipped != null && exonsSkipped == 2);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_0);
+        assertTrue(exonsSkipped != null && exonsSkipped == 1);
 
         position = 650;
-        genePosStrand.setPositionalData(chromosome, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
         trans = extractTranscriptExonData(transData, position, genePosStrand);
 
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
-        assertEquals(2, trans.ExonUpstreamPhase);
-        assertEquals(2, trans.ExonDownstreamPhase);
+        assertEquals(PHASE_0, trans.Phase);
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
         assertEquals(2, trans.getAlternativePhasing().size());
@@ -208,70 +208,63 @@ public class GeneCollectionTest
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
         assertEquals(1, trans.getAlternativePhasing().size());
-        exonsSkipped = trans.getAlternativePhasing().get(0);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_2);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
 
         // then a gene on the reverse strand
         geneName = "GENE2";
         geneId = "ENSG0002";
-        chromosome = "1";
 
-        geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, chromosome, POS_STRAND, 100, 1000));
-        GeneTestUtils.addGeneData(geneTransCache, chromosome, geneList);
+        geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, CHR_1, POS_STRAND, 100, 1000));
+        GeneTestUtils.addGeneData(geneTransCache, CHR_1, geneList);
 
-        GeneAnnotation geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, -1, chromosome, 0, POS_ORIENT);
+        GeneAnnotation geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, POS_ORIENT);
 
         transDataList = Lists.newArrayList();
 
         transId = 2;
-        strand = -1;
 
         exonStarts = new int[]{100, 300, 500, 700, 900};
-        exonPhases = new int[]{-1, -1, 1, 0, 2};
+        transData = createTransExons(geneId, transId++, NEG_STRAND, exonStarts, 100, codingStart, codingEnd, false, "");
 
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100);
         transDataList.add(transData);
 
         GeneTestUtils.addTransExonData(geneTransCache, geneId, transDataList);
 
         position = 850;
-        geneNegStrand.setPositionalData(chromosome, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
         trans = extractTranscriptExonData(transData, position, geneNegStrand);
 
-        assertEquals(5, trans.ExonMax);
+        assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
         assertEquals(2, trans.ExonDownstream);
-        assertEquals(2, trans.ExonUpstreamPhase);
-        assertEquals(2, trans.ExonDownstreamPhase);
+        assertEquals(PHASE_0, trans.Phase);
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
         assertEquals(0, trans.getAlternativePhasing().size());
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
-        assertEquals(3, trans.getAlternativePhasing().size());
-        exonsSkipped = trans.getAlternativePhasing().get(0);
+        assertEquals(2, trans.getAlternativePhasing().size());
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_1);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
-        exonsSkipped = trans.getAlternativePhasing().get(1);
-        assertTrue(exonsSkipped != null && exonsSkipped == 2);
-        exonsSkipped = trans.getAlternativePhasing().get(-1);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_NONE);
         assertTrue(exonsSkipped != null && exonsSkipped == 3);
 
         position = 250;
-        geneNegStrand.setPositionalData(chromosome, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
         trans = extractTranscriptExonData(transData, position, geneNegStrand);
 
         assertEquals(4, trans.ExonUpstream);
         assertEquals(5, trans.ExonDownstream);
-        assertEquals(POST_CODING_PHASE, trans.ExonUpstreamPhase);
-        assertEquals(POST_CODING_PHASE, trans.ExonDownstreamPhase);
+        assertEquals(POST_CODING_PHASE, trans.Phase);
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
         assertEquals(3, trans.getAlternativePhasing().size());
-        exonsSkipped = trans.getAlternativePhasing().get(1);
-        assertTrue(exonsSkipped != null && exonsSkipped == 1);
-        exonsSkipped = trans.getAlternativePhasing().get(0);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_1);
         assertTrue(exonsSkipped != null && exonsSkipped == 2);
-        exonsSkipped = trans.getAlternativePhasing().get(2);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_0);
+        assertTrue(exonsSkipped != null && exonsSkipped == 1);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_NONE);
         assertTrue(exonsSkipped != null && exonsSkipped == 3);
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
@@ -288,7 +281,7 @@ public class GeneCollectionTest
         String geneId = "ENSG0001";
         String chromosome = "1";
 
-        GeneAnnotation genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, chromosome, 0, POS_ORIENT);
+        GeneAnnotation genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, POS_ORIENT);
 
         int transId = 1;
 
@@ -302,17 +295,17 @@ public class GeneCollectionTest
                 geneId, transId++, POS_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         int position = 150;
-        genePosStrand.setPositionalData(chromosome, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
         Transcript trans = extractTranscriptExonData(transData, position, genePosStrand);
 
-        assertEquals(5, trans.ExonMax);
+        assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
         assertEquals(2, trans.ExonDownstream);
         assertEquals(UTR_3P, trans.codingType());
-        assertEquals(-2, trans.ExonUpstreamPhase);
-        assertEquals(-2, trans.ExonDownstreamPhase);
-        assertEquals(8, trans.codingBases()); // stop codon is taken out
-        assertEquals(8, trans.totalCodingBases());
+        assertEquals(-2, trans.Phase);
+        assertEquals(-2, trans.Phase);
+        assertEquals(8, trans.CodingBases); // stop codon is taken out
+        assertEquals(8, trans.TotalCodingBases);
 
         //
         codingStart = 105;
@@ -322,23 +315,22 @@ public class GeneCollectionTest
                 geneId, transId++, POS_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 350;
-        genePosStrand.setPositionalData(chromosome, position, POS_ORIENT);
+        genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
         trans = extractTranscriptExonData(transData, position, genePosStrand);
 
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
         assertEquals(CODING, trans.codingType());
-        assertEquals(0, trans.ExonUpstreamPhase);
-        assertEquals(0, trans.ExonDownstreamPhase);
-        assertEquals(28, trans.codingBases());
-        assertEquals(31, trans.totalCodingBases());
+        assertEquals(PHASE_1, trans.Phase);
+        assertEquals(28, trans.CodingBases);
+        assertEquals(31, trans.TotalCodingBases);
 
         // test the reverse strand
         geneName = "GENE2";
         geneId = "ENSG0002";
         chromosome = "1";
 
-        GeneAnnotation geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, chromosome, 0, POS_ORIENT);
+        GeneAnnotation geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, POS_ORIENT);
 
         // coding taking up exactly the first exon
         codingStart = 500;
@@ -348,17 +340,16 @@ public class GeneCollectionTest
                 geneId, transId++, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 450;
-        geneNegStrand.setPositionalData(chromosome, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
         trans = extractTranscriptExonData(transData, position, geneNegStrand);
 
-        assertEquals(5, trans.ExonMax);
+        assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
         assertEquals(2, trans.ExonDownstream);
         assertEquals(UTR_3P, trans.codingType());
-        assertEquals(-2, trans.ExonUpstreamPhase);
-        assertEquals(-2, trans.ExonDownstreamPhase);
-        assertEquals(8, trans.codingBases());
-        assertEquals(8, trans.totalCodingBases());
+        assertEquals(-2, trans.Phase);
+        assertEquals(8, trans.CodingBases);
+        assertEquals(8, trans.TotalCodingBases);
 
         //
         codingStart = 205;
@@ -368,16 +359,15 @@ public class GeneCollectionTest
                 geneId, transId++, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 250;
-        geneNegStrand.setPositionalData(chromosome, position, POS_ORIENT);
+        geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
         trans = extractTranscriptExonData(transData, position, geneNegStrand);
 
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
         assertEquals(CODING, trans.codingType());
-        assertEquals(0, trans.ExonUpstreamPhase);
-        assertEquals(0, trans.ExonDownstreamPhase);
-        assertEquals(28, trans.codingBases());
-        assertEquals(31, trans.totalCodingBases());
+        assertEquals(PHASE_1, trans.Phase);
+        assertEquals(28, trans.CodingBases);
+        assertEquals(31, trans.TotalCodingBases);
     }
 
     @Test
@@ -386,12 +376,10 @@ public class GeneCollectionTest
         String geneId = "G0001";
         int transId = 1;
 
-        byte strand = (byte)1;
-
         int[] exonStarts = new int[]{100, 300, 500};
         int[] exonPhases = new int[]{0, 0, -1};
 
-        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100);
+        TranscriptData transData = createTransExons(geneId, transId++, POS_STRAND, exonStarts, exonPhases, 100);
 
         TranscriptProteinData proteinData = new TranscriptProteinData(transId, 0, 0, 5, 55, "hd");
 
@@ -407,14 +395,12 @@ public class GeneCollectionTest
         assertEquals(545, (long)domainPositions[SE_END]);
 
         // now on the reverse strand
-        strand = (byte)-1;
-
         proteinData = new TranscriptProteinData(transId, 0, 0, 5, 55, "hd");
 
         exonStarts = new int[]{100, 300, 500};
         exonPhases = new int[]{-1, 0, 0};
 
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100);
+        transData = createTransExons(geneId, transId++, NEG_STRAND, exonStarts, exonPhases, 100);
 
         domainPositions = getProteinDomainPositions(proteinData, transData);
         assertEquals(185, (long)domainPositions[SE_START]);

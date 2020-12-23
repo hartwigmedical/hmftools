@@ -725,34 +725,34 @@ public class BamFragmentAllocator
         {
             if(!startFound)
             {
-                if(minReadPos < exon.ExonStart - MAX_SC_BASE_MATCH)
+                if(minReadPos < exon.Start - MAX_SC_BASE_MATCH)
                     break;
 
-                if(minReadPos > exon.ExonEnd)
+                if(minReadPos > exon.End)
                     continue;
 
-                if(maxReadPos <= exon.ExonEnd)
+                if(maxReadPos <= exon.End)
                 {
                     // within same exon
                     return maxReadPos - minReadPos + 1;
                 }
 
                 startFound = true;
-                transcriptBases = exon.ExonEnd - max(exon.ExonStart, minReadPos) + 1;
+                transcriptBases = exon.End - max(exon.Start, minReadPos) + 1;
             }
             else
             {
-                if(maxReadPos > exon.ExonEnd)
+                if(maxReadPos > exon.End)
                 {
                     transcriptBases += exon.baseLength();
                 }
-                else if(maxReadPos < exon.ExonStart)
+                else if(maxReadPos < exon.Start)
                 {
                     break;
                 }
                 else
                 {
-                    transcriptBases += maxReadPos - exon.ExonStart + 1;
+                    transcriptBases += maxReadPos - exon.Start + 1;
                     break;
                 }
             }

@@ -402,23 +402,23 @@ public class VisualiserWriter
                 if(geneData.ExonPositionOffsets.isEmpty())
                 {
                     geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
-                            geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonData.ExonStart, exonData.ExonEnd));
+                            geneData.Chromosome, geneData.AnnotationType, exonData.Rank, exonData.Start, exonData.End));
                 }
                 else
                 {
-                    final int[] exonPosOffsets = geneData.ExonPositionOffsets.get(exonData.ExonRank);
-                    final int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.ExonRank);
+                    final int[] exonPosOffsets = geneData.ExonPositionOffsets.get(exonData.Rank);
+                    final int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.Rank);
 
-                    int exonStart = exonData.ExonStart + exonPosOffsets[SE_START];
-                    int exonEnd = exonData.ExonEnd + exonPosOffsets[SE_END];
+                    int exonStart = exonData.Start + exonPosOffsets[SE_START];
+                    int exonEnd = exonData.End + exonPosOffsets[SE_END];
 
                     geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
-                            geneData.Chromosome, geneData.AnnotationType, exonData.ExonRank, exonStart, exonEnd));
+                            geneData.Chromosome, geneData.AnnotationType, exonData.Rank, exonStart, exonEnd));
 
                     if(exonsLost != null)
                     {
                         geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
-                                geneData.Chromosome, GENE_TYPE_EXON_LOST, exonData.ExonRank,
+                                geneData.Chromosome, GENE_TYPE_EXON_LOST, exonData.Rank,
                                 exonStart + exonsLost[SE_START], exonEnd + exonsLost[SE_END]));
                     }
                 }

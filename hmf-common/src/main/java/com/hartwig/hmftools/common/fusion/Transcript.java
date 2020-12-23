@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.fusion;
 
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.NON_CODING;
@@ -10,13 +11,13 @@ import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UNKNOWN;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UPSTREAM;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcPositionPhasing;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,35 +25,17 @@ import org.jetbrains.annotations.Nullable;
 // class linking an SV breakend to a potentially impacted transcript
 public class Transcript {
 
-    public final int TransId;
-    public final String StableId;
-
-    @Nullable
-    public final Integer CodingStart;
-
-    @Nullable
-    public final Integer CodingEnd;
-
-    public final int TranscriptStart;
-    public final int TranscriptEnd;
+    public final TranscriptData TransData;
 
     public final int ExonUpstream;
     public final int ExonDownstream;
 
-    public final int ExonDownstreamPhase;
-    public final int ExonUpstreamPhase;
-
-    public final int ExonMax;
-
     @NotNull
     private final GeneAnnotation mGene;
 
-    private final int mCodingBases; // number of bases into coding where this breakend occurs
-    private final int mTotalCodingBases;
-    private int mExonicBasePhase; // phase of base if in exon
-
-    private final boolean mCanonical;
-    private String mBioType;
+    public final int CodingBases; // number of bases into coding where this breakend occurs
+    public final int TotalCodingBases;
+    public int Phase; // phase of base if in exon
 
     private TranscriptCodingType mCodingType;
     private TranscriptRegionType mRegionType;
@@ -70,33 +53,21 @@ public class Transcript {
     private String mProteinFeaturesLost;
 
     public static final int POST_CODING_PHASE = -2;
-
     private static final int STOP_CODON_LENGTH = 3;
-
     public static final int NO_NEXT_SPLICE_ACCEPTOR = -1;
 
-    public Transcript(@NotNull final GeneAnnotation gene, int transId, final String stableId,
-            final int exonUpstream, final int exonUpstreamPhase, final int exonDownstream, final int exonDownstreamPhase,
-            final int codingBases, final int totalCodingBases,
-            final int exonMax, final boolean canonical, int transcriptStart, int transcriptEnd,
-            @Nullable final Integer codingStart, @Nullable final Integer codingEnd)
+    public Transcript(@NotNull final GeneAnnotation gene, final TranscriptData transData,
+            final int exonUpstream, final int exonDownstream, int phase, int codingBases, int totalCodingBases)
     {
-        TransId = transId;
-        StableId = stableId;
-        mCanonical = canonical;
-        CodingStart = codingStart;
-        CodingEnd = codingEnd;
-        TranscriptStart = transcriptStart;
-        TranscriptEnd = transcriptEnd;
+        TransData = transData;
+
         ExonUpstream = exonUpstream;
         ExonDownstream = exonDownstream;
-        ExonMax = exonMax;
 
         mGene = gene;
 
-        mExonicBasePhase = -1;
+        Phase = PHASE_NONE;
 
-        mBioType = "";
         mPrevSpliceAcceptorDistance = null;
         mNextSpliceAcceptorDistance = null;
 
@@ -105,35 +76,37 @@ public class Transcript {
         if(totalCodingBases > STOP_CODON_LENGTH)
         {
             // remove the stop codon from what is consider coding
-            mTotalCodingBases = totalCodingBases - STOP_CODON_LENGTH;
+            TotalCodingBases = totalCodingBases - STOP_CODON_LENGTH;
         }
         else
         {
-            mTotalCodingBases = 0;
+            TotalCodingBases = 0;
         }
 
-        if(codingBases > mTotalCodingBases)
+        // factor in insert sequence for the upstream partner if exonic
+        if(gene.isUpstream() && !gene.insertSequence().isEmpty() && ExonUpstream == ExonDownstream
+        && codingBases > 0 && codingBases < totalCodingBases)
         {
-            // limit as well
-            mCodingBases = mTotalCodingBases;
+            int insSeqLength = gene.insertSequence().length();
+            codingBases += insSeqLength;
+            phase = tickPhaseForward(phase, insSeqLength);
         }
+
+        if(codingBases > TotalCodingBases)
+            CodingBases = TotalCodingBases;
         else
-        {
-            mCodingBases = codingBases;
-        }
+            CodingBases = codingBases;
 
         setCodingType();
         setRegionType();
 
         if(mCodingType == UTR_3P)
         {
-            ExonUpstreamPhase = POST_CODING_PHASE;
-            ExonDownstreamPhase = POST_CODING_PHASE;
+            Phase = POST_CODING_PHASE;
         }
         else
         {
-            ExonDownstreamPhase = exonDownstreamPhase;
-            ExonUpstreamPhase = exonUpstreamPhase;
+            Phase = phase;
         }
 
         if(mRegionType == UPSTREAM || mRegionType == DOWNSTREAM)
@@ -155,6 +128,18 @@ public class Transcript {
     public String geneName() { return mGene.GeneName; }
     public boolean isUpstream() { return mGene.isUpstream(); }
 
+    // convenience
+    public int transId() { return TransData.TransId; }
+    public String transName() { return TransData.TransName; }
+    public int transStart() { return TransData.TransStart; }
+    public int transEnd() { return TransData.TransEnd; }
+    public final String bioType() { return TransData.BioType; }
+    public int codingStart() { return TransData.CodingStart != null ? TransData.CodingStart : 0; }
+    public int codingEnd() { return TransData.CodingEnd != null ? TransData.CodingEnd : 0; }
+    public int transLength() { return TransData.length(); }
+    public int exonCount() { return TransData.exons().size(); }
+
+
     public boolean isExonic()
     {
         return ExonUpstream > 0 && ExonUpstream == ExonDownstream;
@@ -173,9 +158,9 @@ public class Transcript {
     public boolean isPostTranscript()
     {
         if(mGene.Strand == POS_STRAND)
-            return svPosition() > TranscriptEnd;
+            return svPosition() > TransData.TransEnd;
         else
-            return svPosition() < TranscriptStart;
+            return svPosition() < TransData.TransStart;
     }
 
     public int getDistanceUpstream()
@@ -184,9 +169,9 @@ public class Transcript {
             return 0;
 
         if(mGene.Strand == POS_STRAND)
-            return TranscriptStart - svPosition();
+            return TransData.TransStart - svPosition();
         else
-            return svPosition() - TranscriptEnd;
+            return svPosition() - TransData.TransEnd;
     }
 
     public final TranscriptCodingType codingType() { return mCodingType; }
@@ -236,34 +221,35 @@ public class Transcript {
             return isUpstream() ? ExonUpstream : ExonDownstream;
     }
 
-    public int nextSpliceExonPhase()
-    {
-        return isUpstream() ? ExonUpstreamPhase : ExonDownstreamPhase;
-    }
-
     private void setCodingType()
     {
-        if(CodingStart == null || CodingEnd == null || mTotalCodingBases == 0)
+        if(TransData.CodingStart == null || TransData.CodingEnd == null)
         {
             mCodingType = NON_CODING;
+            return;
         }
-        else if(mCodingBases == mTotalCodingBases || isPostTranscript())
+
+        int position = gene().position();
+
+        if(positionWithin(position, TransData.CodingStart, TransData.CodingEnd))
         {
-            mCodingType = UTR_3P;
+            mCodingType = CODING;
+            return;
         }
-        else if(mCodingBases == 0)
+
+        if(TransData.Strand == POS_STRAND)
         {
-            mCodingType = UTR_5P;
+            mCodingType =  position > TransData.CodingEnd ? UTR_3P : UTR_5P;
         }
         else
         {
-            mCodingType = CODING;
+            mCodingType =  position < TransData.CodingStart ? UTR_3P : UTR_5P;
         }
     }
 
     public void setCodingType(final TranscriptCodingType type) { mCodingType = type; }
 
-    public boolean isCanonical() { return mCanonical; }
+    public boolean isCanonical() { return TransData.IsCanonical; }
 
     public final Map<Integer,Integer> getAlternativePhasing() { return mAlternativePhasing; }
 
@@ -295,28 +281,6 @@ public class Transcript {
         return mNextSpliceAcceptorDistance != null ? mNextSpliceAcceptorDistance : NO_NEXT_SPLICE_ACCEPTOR;
     }
 
-    public void setBioType(final String type) { mBioType = type; }
-    public final String bioType() { return mBioType; }
-
-    public int codingBases() { return mCodingBases; }
-
-    public int calcCodingBases()
-    {
-        // returns number of coding bases preserved in the context of this breakend and whether up or down stream
-        return mGene.isUpstream() ? mCodingBases : mTotalCodingBases - mCodingBases;
-    }
-
-    public int totalCodingBases() { return mTotalCodingBases; }
-
-    public void setExonicCodingBase()
-    {
-        mExonicBasePhase = calcPositionPhasing(this, isUpstream());
-    }
-
-    public int exonicBasePhase() { return mExonicBasePhase; }
-
-    public final int length() { return TranscriptEnd - TranscriptStart; }
-
     public boolean isDisruptive() { return mIsDisruptive; }
     public void setIsDisruptive(boolean toggle) { mIsDisruptive = toggle; }
 
@@ -326,12 +290,9 @@ public class Transcript {
     public double undisruptedCopyNumber() { return mUndisruptedCopyNumber; }
     public void setUndisruptedCopyNumber(double copyNumber) { mUndisruptedCopyNumber = copyNumber; }
 
-    public int codingStart() { return CodingStart != null ? CodingStart : 0; }
-    public int codingEnd() { return CodingEnd != null ? CodingEnd : 0; }
-
     public final String toString()
     {
-        return mGene.GeneName + " " + StableId;
+        return mGene.GeneName + " " + TransData.TransName;
     }
 
     public void addProteinFeature(final String feature, boolean isPreserved)

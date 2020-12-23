@@ -110,7 +110,7 @@ public class ExpectedRatesGenerator
 
                 for (ExonData exon : transData.exons())
                 {
-                    for (int startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
+                    for (int startPos = exon.Start; startPos <= exon.End; ++startPos)
                     {
                         cullTranscripts(candidateTrans, startPos);
 
@@ -405,7 +405,7 @@ public class ExpectedRatesGenerator
         int exonCount = transData.exons().size();
         final ExonData lastExon = transData.exons().get(exonCount - 1);
 
-        if(startPos + mCurrentFragSize - 1 > lastExon.ExonEnd)
+        if(startPos + mCurrentFragSize - 1 > lastExon.End)
             return UNSPLICED;
 
         FragmentMatchType matchType = SHORT;
@@ -420,7 +420,7 @@ public class ExpectedRatesGenerator
         {
             final ExonData exon = transData.exons().get(i);
 
-            if(nextRegionStart > exon.ExonEnd)
+            if(nextRegionStart > exon.End)
                 continue;
 
             if(!readRegions.isEmpty())
@@ -431,7 +431,7 @@ public class ExpectedRatesGenerator
 
             if(readsAdded == 1 && remainingInterimBases > 0)
             {
-                if(nextRegionStart + remainingInterimBases - 1 >= exon.ExonEnd)
+                if(nextRegionStart + remainingInterimBases - 1 >= exon.End)
                 {
                     if(i >= exonCount - 1)
                     {
@@ -439,9 +439,9 @@ public class ExpectedRatesGenerator
                         return UNSPLICED;
                     }
 
-                    nextRegionStart = transData.exons().get(i + 1).ExonStart;
+                    nextRegionStart = transData.exons().get(i + 1).Start;
 
-                    remainingInterimBases -= exon.ExonEnd - exon.ExonStart + 1;
+                    remainingInterimBases -= exon.End - exon.Start + 1;
                     continue;
 
                 }
@@ -450,7 +450,7 @@ public class ExpectedRatesGenerator
                 remainingInterimBases = 0;
             }
 
-            int regionEnd = min(nextRegionStart + remainingReadBases - 1, exon.ExonEnd);
+            int regionEnd = min(nextRegionStart + remainingReadBases - 1, exon.End);
             int regionLength = regionEnd - nextRegionStart + 1;
             remainingReadBases -= regionLength;
             readRegions.add(new int[] {nextRegionStart, regionEnd});
@@ -482,7 +482,7 @@ public class ExpectedRatesGenerator
             else
                 nextRegionStart = regionEnd + 1;
 
-            if(regionEnd == exon.ExonEnd || nextRegionStart > exon.ExonEnd)
+            if(regionEnd == exon.End || nextRegionStart > exon.End)
             {
                 if(i == exonCount - 1)
                 {
@@ -491,15 +491,15 @@ public class ExpectedRatesGenerator
                 }
 
                 // will move onto the next exon for further matching
-                nextRegionStart = transData.exons().get(i + 1).ExonStart;
+                nextRegionStart = transData.exons().get(i + 1).Start;
 
-                if(spansExonEnd && regionEnd == exon.ExonEnd)
+                if(spansExonEnd && regionEnd == exon.End)
                 {
                     matchType = SPLICED;
-                    spliceJunctions.add(new int[] {exon.ExonEnd, nextRegionStart});
+                    spliceJunctions.add(new int[] {exon.End, nextRegionStart});
                 }
 
-                remainingInterimBases -= exon.ExonEnd - regionEnd;
+                remainingInterimBases -= exon.End - regionEnd;
                 continue;
             }
             else
@@ -508,13 +508,13 @@ public class ExpectedRatesGenerator
             }
 
             // start the next match within this same exon
-            regionEnd = min(nextRegionStart + remainingReadBases - 1, exon.ExonEnd);
+            regionEnd = min(nextRegionStart + remainingReadBases - 1, exon.End);
             regionLength = (int)(regionEnd - nextRegionStart + 1);
             remainingReadBases -= regionLength;
 
             readRegions.add(new int[] { nextRegionStart, regionEnd });
 
-            if(remainingReadBases > 0 && regionEnd == exon.ExonEnd)
+            if(remainingReadBases > 0 && regionEnd == exon.End)
                 matchType = SPLICED;
 
             if(remainingReadBases == 0)
@@ -527,7 +527,7 @@ public class ExpectedRatesGenerator
             }
 
             // will move onto the next exon for further matching
-            nextRegionStart = transData.exons().get(i + 1).ExonStart;
+            nextRegionStart = transData.exons().get(i + 1).Start;
         }
 
         // merge adjacent regions from overlapping reads
@@ -568,7 +568,7 @@ public class ExpectedRatesGenerator
         if(requiredMatchType == SHORT)
         {
             // region must lie within an exon
-            return transData.exons().stream().anyMatch(x -> positionsWithin(regionsStart, regionsEnd, x.ExonStart, x.ExonEnd));
+            return transData.exons().stream().anyMatch(x -> positionsWithin(regionsStart, regionsEnd, x.Start, x.End));
         }
         else
         {
@@ -585,7 +585,7 @@ public class ExpectedRatesGenerator
                     ExonData exon = transData.exons().get(exonIndex);
                     ExonData nextExon = transData.exons().get(exonIndex + 1);
 
-                    if (exon.ExonEnd == spliceStart && nextExon.ExonStart == spliceEnd)
+                    if (exon.End == spliceStart && nextExon.Start == spliceEnd)
                     {
                         matched = true;
                         break;
@@ -609,15 +609,15 @@ public class ExpectedRatesGenerator
                 {
                     final ExonData exon = transData.exons().get(exonIndex);
 
-                    if(regionStart > exon.ExonEnd) // keep searching
+                    if(regionStart > exon.End) // keep searching
                         continue;
 
-                    if(regionEnd < exon.ExonStart) // would be intronic for this transcript
+                    if(regionEnd < exon.Start) // would be intronic for this transcript
                         return false;
 
-                    if(positionsOverlap(regionStart, regionEnd, exon.ExonStart, exon.ExonEnd))
+                    if(positionsOverlap(regionStart, regionEnd, exon.Start, exon.End))
                     {
-                        if(!positionsWithin(regionStart, regionEnd, exon.ExonStart, exon.ExonEnd))
+                        if(!positionsWithin(regionStart, regionEnd, exon.Start, exon.End))
                             return false; // breaches the exon boundaries
 
                         matched = true;

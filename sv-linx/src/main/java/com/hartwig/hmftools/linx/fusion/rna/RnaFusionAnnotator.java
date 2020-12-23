@@ -43,52 +43,52 @@ public class RnaFusionAnnotator
             final ExonData exonData = transData.exons().get(i);
             final ExonData nextExonData = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
-            if (rnaPosition == exonData.ExonEnd || rnaPosition == exonData.ExonStart)
+            if (rnaPosition == exonData.End || rnaPosition == exonData.Start)
             {
                 // skip matches on the last exon
-                if(i == 0 && transData.Strand == -1 && rnaPosition == exonData.ExonStart)
+                if(i == 0 && transData.Strand == -1 && rnaPosition == exonData.Start)
                     return exonMatch;
-                else if(i == transData.exons().size() - 1 && transData.Strand == POS_STRAND && rnaPosition == exonData.ExonEnd)
+                else if(i == transData.exons().size() - 1 && transData.Strand == POS_STRAND && rnaPosition == exonData.End)
                     return exonMatch;
 
                 // position exactly matches the bounds of an exon
                 exonMatch.ExonFound = true;
                 exonMatch.BoundaryMatch = true;
-                exonMatch.ExonRank = exonData.ExonRank;
+                exonMatch.ExonRank = exonData.Rank;
 
-                if ((transData.Strand == POS_STRAND) == (rnaPosition == exonData.ExonStart))
+                if ((transData.Strand == POS_STRAND) == (rnaPosition == exonData.Start))
                 {
-                    exonMatch.ExonPhase = exonData.ExonPhase;
+                    exonMatch.ExonPhase = exonData.PhaseStart;
                 }
                 else
                 {
-                    exonMatch.ExonPhase = exonData.ExonPhaseEnd;
+                    exonMatch.ExonPhase = exonData.PhaseEnd;
                 }
                 break;
             }
 
-            if (rnaPosition > exonData.ExonStart && rnaPosition < exonData.ExonEnd)
+            if (rnaPosition > exonData.Start && rnaPosition < exonData.End)
             {
                 // position is within the bounds of an exon
                 exonMatch.ExonFound = true;
-                exonMatch.ExonRank = exonData.ExonRank;
-                exonMatch.ExonPhase = exonData.ExonPhase;
+                exonMatch.ExonRank = exonData.Rank;
+                exonMatch.ExonPhase = exonData.PhaseStart;
                 break;
             }
 
-            if (nextExonData != null && rnaPosition > exonData.ExonEnd && rnaPosition < nextExonData.ExonStart)
+            if (nextExonData != null && rnaPosition > exonData.End && rnaPosition < nextExonData.Start)
             {
                 exonMatch.ExonFound = true;
 
                 if (transData.Strand == POS_STRAND)
                 {
-                    exonMatch.ExonRank = exonData.ExonRank;
-                    exonMatch.ExonPhase = exonData.ExonPhaseEnd;
+                    exonMatch.ExonRank = exonData.Rank;
+                    exonMatch.ExonPhase = exonData.PhaseEnd;
                 }
                 else
                 {
-                    exonMatch.ExonRank = nextExonData.ExonRank;
-                    exonMatch.ExonPhase = nextExonData.ExonPhaseEnd;
+                    exonMatch.ExonRank = nextExonData.Rank;
+                    exonMatch.ExonPhase = nextExonData.PhaseEnd;
                 }
 
                 break;
@@ -362,7 +362,7 @@ public class RnaFusionAnnotator
 
         // if the RNA boundary is at or before the 2nd exon (which has the first splice acceptor), then the breakend can
         // be upstream as far the previous gene or 100K
-        final TranscriptData transData = mGeneTransCache.getTranscriptData(trans.gene().StableId, trans.StableId);
+        final TranscriptData transData = mGeneTransCache.getTranscriptData(trans.gene().StableId, trans.transName());
 
         if (transData == null || transData.exons().isEmpty())
             return false;
@@ -381,13 +381,13 @@ public class RnaFusionAnnotator
                 // first check if at an exon boundary or before the start of the next exon and after the start of this one
                 if(strand == POS_STRAND)
                 {
-                    if ((rnaPosition == exonData.ExonEnd)
-                    || (!exactRnaPosition && nextExonData != null && rnaPosition > exonData.ExonStart && rnaPosition < nextExonData.ExonStart))
+                    if ((rnaPosition == exonData.End)
+                    || (!exactRnaPosition && nextExonData != null && rnaPosition > exonData.Start && rnaPosition < nextExonData.Start))
                     {
                         // in which case check whether the breakend is before the next exon's splice acceptor
                         if (nextExonData != null)
                         {
-                            return breakendPosition < nextExonData.ExonStart;
+                            return breakendPosition < nextExonData.Start;
                         }
 
                         // can't take the last exon
@@ -396,12 +396,12 @@ public class RnaFusionAnnotator
                 }
                 else
                 {
-                    if ((rnaPosition == exonData.ExonStart)
-                            || (!exactRnaPosition && prevExonData != null && rnaPosition < exonData.ExonEnd && rnaPosition > prevExonData.ExonEnd))
+                    if ((rnaPosition == exonData.Start)
+                            || (!exactRnaPosition && prevExonData != null && rnaPosition < exonData.End && rnaPosition > prevExonData.End))
                     {
                         if(prevExonData != null)
                         {
-                            return breakendPosition > prevExonData.ExonEnd;
+                            return breakendPosition > prevExonData.End;
                         }
 
                         return false;
@@ -410,8 +410,8 @@ public class RnaFusionAnnotator
             }
             else
             {
-                if((strand == POS_STRAND && rnaPosition <= exonData.ExonStart && exonData.ExonRank <= 2)
-                || (strand == NEG_STRAND && rnaPosition >= exonData.ExonEnd && exonData.ExonRank <= 2))
+                if((strand == POS_STRAND && rnaPosition <= exonData.Start && exonData.Rank <= 2)
+                || (strand == NEG_STRAND && rnaPosition >= exonData.End && exonData.Rank <= 2))
                 {
                     int breakendDistance = abs(breakendPosition - rnaPosition);
 
@@ -423,13 +423,13 @@ public class RnaFusionAnnotator
 
                 if(strand == POS_STRAND)
                 {
-                    if ((rnaPosition == exonData.ExonStart)
-                    || (!exactRnaPosition && prevExonData != null && rnaPosition > prevExonData.ExonStart && rnaPosition < exonData.ExonStart))
+                    if ((rnaPosition == exonData.Start)
+                    || (!exactRnaPosition && prevExonData != null && rnaPosition > prevExonData.Start && rnaPosition < exonData.Start))
                     {
                         if(prevExonData != null)
                         {
                             // after the previous exon's splice acceptor
-                            return breakendPosition > prevExonData.ExonStart;
+                            return breakendPosition > prevExonData.Start;
                         }
 
                         return false;
@@ -437,13 +437,13 @@ public class RnaFusionAnnotator
                 }
                 else
                 {
-                    if ((rnaPosition == exonData.ExonEnd)
-                    || (!exactRnaPosition && nextExonData != null && rnaPosition < nextExonData.ExonEnd && rnaPosition > exonData.ExonEnd))
+                    if ((rnaPosition == exonData.End)
+                    || (!exactRnaPosition && nextExonData != null && rnaPosition < nextExonData.End && rnaPosition > exonData.End))
                     {
                         if(nextExonData != null)
                         {
                             // after the previous exon's splice acceptor
-                            return breakendPosition < nextExonData.ExonStart;
+                            return breakendPosition < nextExonData.Start;
                         }
 
                         return false;

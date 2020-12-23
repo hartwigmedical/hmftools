@@ -350,21 +350,21 @@ public class CohortExpFusions
 
             ExonData nextExonData = transcript.exons().get(i+1);
 
-            if(geneData.Strand == 1 && nextExonData.ExonStart > transcript.CodingEnd)
+            if(geneData.Strand == 1 && nextExonData.Start > transcript.CodingEnd)
                 break;
-            else if(geneData.Strand == -1 && exonData.ExonEnd < transcript.CodingStart)
+            else if(geneData.Strand == -1 && exonData.End < transcript.CodingStart)
                 continue;
 
             // add an upstream gene region (only applicable for downstream fusion genes)
             // with a phase of -1 unless coding starts in the first exon or on the first base of the second exon
             if(precSpliceAcceptorPos > 0 && geneData.Strand == 1 && i == 0)
             {
-                int regionPhase = (transcript.CodingStart < exonData.ExonEnd) ? nextExonData.ExonPhase : -1;
+                int regionPhase = (transcript.CodingStart < exonData.End) ? nextExonData.PhaseStart : -1;
 
                 int preDistance = max(transcript.TransStart - precSpliceAcceptorPos, 0);
                 int upstreamDistance = min(preDistance, PRE_GENE_3P_DISTANCE);
                 int regionStart = transcript.TransStart - upstreamDistance;
-                int regionEnd = exonData.ExonStart - 1;
+                int regionEnd = exonData.Start - 1;
 
                 if(regionStart < regionEnd)
                 {
@@ -377,9 +377,9 @@ public class CohortExpFusions
             }
             else if(precSpliceAcceptorPos > 0 && geneData.Strand == -1 && i == transcript.exons().size() - 2)
             {
-                int regionPhase = (transcript.CodingEnd > nextExonData.ExonStart) ? exonData.ExonPhase : -1;
+                int regionPhase = (transcript.CodingEnd > nextExonData.Start) ? exonData.PhaseStart : -1;
 
-                int regionStart = nextExonData.ExonEnd + 1;
+                int regionStart = nextExonData.End + 1;
 
                 int preDistance = max(precSpliceAcceptorPos - transcript.TransEnd, 0);
                 int upstreamDistance = min(preDistance, PRE_GENE_3P_DISTANCE);
@@ -402,12 +402,12 @@ public class CohortExpFusions
             if(geneData.Strand == 1)
             {
                 phaseRegion = new GenePhaseRegion(
-                        geneData.GeneId, exonData.ExonStart, nextExonData.ExonStart - 1, mapExonPhase(exonData.ExonPhaseEnd));
+                        geneData.GeneId, exonData.Start, nextExonData.Start - 1, mapExonPhase(exonData.PhaseEnd));
             }
             else
             {
                 phaseRegion = new GenePhaseRegion(
-                        geneData.GeneId, exonData.ExonEnd + 1, nextExonData.ExonEnd, mapExonPhase(nextExonData.ExonPhaseEnd));
+                        geneData.GeneId, exonData.End + 1, nextExonData.End, mapExonPhase(nextExonData.PhaseEnd));
             }
 
             transcriptRegions.add(phaseRegion);
