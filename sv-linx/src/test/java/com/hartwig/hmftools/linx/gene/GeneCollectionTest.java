@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.linx.gene;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_PHASE_MAX;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_PHASE_MIN;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MAX;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MIN;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.extractTranscriptExonData;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.createBreakendTranscriptData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.getProteinDomainPositions;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.setAlternativeTranscriptPhasings;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
@@ -62,17 +60,17 @@ public class GeneCollectionTest
         byte strand = 1;
 
         int[] exonStarts = new int[]{10500, 11500, 12500, 13500};
-        int[] exonPhases = new int[]{-1, 1, 2, -1};
 
-        TranscriptData transData = createTransExons(geneId, transId, strand, exonStarts, exonPhases, 100, true);
+        int codingStart = 11500;
+        int codingEnd = 13598;
+        TranscriptData transData = createTransExons(geneId, transId, strand, exonStarts, 99, codingStart, codingEnd,true, "");
         transDataList.add(transData);
 
         int transId2 = 2;
 
         exonStarts = new int[]{12500, 13500, 14500};
-        exonPhases = new int[]{-1, -1, -1};
 
-        transData = createTransExons(geneId, transId2, strand, exonStarts, exonPhases, 100);
+        transData = createTransExons(geneId, transId2, strand, exonStarts, 100, null, null, true, "");
         String transName2 = transData.TransName;
         transDataList.add(transData);
 
@@ -93,32 +91,24 @@ public class GeneCollectionTest
 
         assertEquals(1, transUpExonData[EXON_RANK_MIN]);
         assertEquals(2, transUpExonData[EXON_RANK_MAX]);
-        assertEquals(-1, transUpExonData[EXON_PHASE_MIN]);
-        assertEquals(-1, transUpExonData[EXON_PHASE_MAX]);
 
         // before the first
         transUpExonData = geneTransCache.getExonRankings(geneId, 9000);
 
         assertEquals(0, transUpExonData[EXON_RANK_MIN]);
         assertEquals(1, transUpExonData[EXON_RANK_MAX]);
-        assertEquals(-1, transUpExonData[EXON_PHASE_MIN]);
-        assertEquals(-1, transUpExonData[EXON_PHASE_MAX]);
 
         // after the last
         transUpExonData = geneTransCache.getExonRankings(geneId, 16000);
 
         assertEquals(4, transUpExonData[EXON_RANK_MIN]);
         assertEquals(-1, transUpExonData[EXON_RANK_MAX]);
-        assertEquals(-1, transUpExonData[EXON_PHASE_MIN]);
-        assertEquals(-1, transUpExonData[EXON_PHASE_MAX]);
 
         // on an exon boundary
         transUpExonData = geneTransCache.getExonRankings(geneId, 12500);
 
         assertEquals(3, transUpExonData[EXON_RANK_MIN]);
         assertEquals(3, transUpExonData[EXON_RANK_MAX]);
-        assertEquals(1, transUpExonData[EXON_PHASE_MIN]);
-        assertEquals(1, transUpExonData[EXON_PHASE_MAX]);
     }
 
     @Test
@@ -142,7 +132,7 @@ public class GeneCollectionTest
         int[] exonStarts = new int[]{100, 300, 500, 700, 900};
 
         Integer codingStart = 349;
-        Integer codingEnd = 850;
+        Integer codingEnd = 950;
         TranscriptData transData = createTransExons(geneId, transId++, POS_STRAND, exonStarts, 100, codingStart, codingEnd, false, "");
         transDataList.add(transData);
 
@@ -150,7 +140,7 @@ public class GeneCollectionTest
 
         int position = 250;
         genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        BreakendTransData trans = extractTranscriptExonData(transData, position, genePosStrand);
+        BreakendTransData trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
@@ -173,7 +163,7 @@ public class GeneCollectionTest
 
         position = 450;
         genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        trans = extractTranscriptExonData(transData, position, genePosStrand);
+        trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         assertEquals(2, trans.ExonUpstream);
         assertEquals(3, trans.ExonDownstream);
@@ -193,7 +183,7 @@ public class GeneCollectionTest
 
         position = 650;
         genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        trans = extractTranscriptExonData(transData, position, genePosStrand);
+        trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
@@ -233,7 +223,7 @@ public class GeneCollectionTest
 
         position = 850;
         geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        trans = extractTranscriptExonData(transData, position, geneNegStrand);
+        trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
@@ -244,15 +234,17 @@ public class GeneCollectionTest
         assertEquals(0, trans.getAlternativePhasing().size());
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
-        assertEquals(2, trans.getAlternativePhasing().size());
+        assertEquals(3, trans.getAlternativePhasing().size());
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_1);
-        assertTrue(exonsSkipped != null && exonsSkipped == 1);
+        assertTrue(exonsSkipped != null && exonsSkipped == 2);
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_NONE);
         assertTrue(exonsSkipped != null && exonsSkipped == 3);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_2);
+        assertTrue(exonsSkipped != null && exonsSkipped == 1);
 
         position = 250;
         geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        trans = extractTranscriptExonData(transData, position, geneNegStrand);
+        trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         assertEquals(4, trans.ExonUpstream);
         assertEquals(5, trans.ExonDownstream);
@@ -261,11 +253,11 @@ public class GeneCollectionTest
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, NEG_ORIENT);
         assertEquals(3, trans.getAlternativePhasing().size());
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_1);
-        assertTrue(exonsSkipped != null && exonsSkipped == 2);
-        exonsSkipped = trans.getAlternativePhasing().get(PHASE_0);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);
-        exonsSkipped = trans.getAlternativePhasing().get(PHASE_NONE);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_0);
         assertTrue(exonsSkipped != null && exonsSkipped == 3);
+        exonsSkipped = trans.getAlternativePhasing().get(PHASE_2);
+        assertTrue(exonsSkipped != null && exonsSkipped == 2);
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, POS_ORIENT);
         assertEquals(0, trans.getAlternativePhasing().size());
@@ -296,7 +288,7 @@ public class GeneCollectionTest
 
         int position = 150;
         genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        BreakendTransData trans = extractTranscriptExonData(transData, position, genePosStrand);
+        BreakendTransData trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
@@ -316,7 +308,7 @@ public class GeneCollectionTest
 
         position = 350;
         genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        trans = extractTranscriptExonData(transData, position, genePosStrand);
+        trans = createBreakendTranscriptData(transData, position, genePosStrand);
 
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
@@ -341,7 +333,7 @@ public class GeneCollectionTest
 
         position = 450;
         geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        trans = extractTranscriptExonData(transData, position, geneNegStrand);
+        trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
@@ -360,7 +352,7 @@ public class GeneCollectionTest
 
         position = 250;
         geneNegStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        trans = extractTranscriptExonData(transData, position, geneNegStrand);
+        trans = createBreakendTranscriptData(transData, position, geneNegStrand);
 
         assertEquals(3, trans.ExonUpstream);
         assertEquals(4, trans.ExonDownstream);
@@ -377,9 +369,10 @@ public class GeneCollectionTest
         int transId = 1;
 
         int[] exonStarts = new int[]{100, 300, 500};
-        int[] exonPhases = new int[]{0, 0, -1};
 
-        TranscriptData transData = createTransExons(geneId, transId++, POS_STRAND, exonStarts, exonPhases, 100);
+        int codingStart = 150;
+        int codingEnd = 550;
+        TranscriptData transData = createTransExons(geneId, transId++, POS_STRAND, exonStarts, 100, codingStart, codingEnd, true, "");
 
         TranscriptProteinData proteinData = new TranscriptProteinData(transId, 0, 0, 5, 55, "hd");
 
@@ -398,9 +391,10 @@ public class GeneCollectionTest
         proteinData = new TranscriptProteinData(transId, 0, 0, 5, 55, "hd");
 
         exonStarts = new int[]{100, 300, 500};
-        exonPhases = new int[]{-1, 0, 0};
 
-        transData = createTransExons(geneId, transId++, NEG_STRAND, exonStarts, exonPhases, 100);
+        codingStart = 350;
+        codingEnd = 550;
+        transData = createTransExons(geneId, transId++, NEG_STRAND, exonStarts, 100, codingStart, codingEnd, true, "");
 
         domainPositions = getProteinDomainPositions(proteinData, transData);
         assertEquals(185, (long)domainPositions[SE_START]);

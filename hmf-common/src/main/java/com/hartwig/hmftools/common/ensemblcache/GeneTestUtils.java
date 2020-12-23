@@ -57,12 +57,6 @@ public final class GeneTestUtils
         return 0;
     }
 
-    public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
-            int[] exonStarts, int[] exonEndPhases, int exonLength)
-    {
-        return createTransExons(geneId, transId, strand, exonStarts, exonEndPhases, exonLength, false);
-    }
-
     public static int[] generateExonStarts(int startBase, int exonCount, int exonLength, int intronLength)
     {
         int[] exonStarts = new int[exonCount];
@@ -76,66 +70,6 @@ public final class GeneTestUtils
     }
 
     public static String generateTransName(int transId) { return String.format("TRAN%04d", transId); }
-
-    public static TranscriptData createTransExons(
-            final String geneId, int transId, byte strand, int[] exonStarts, int[] exonEndPhases, int exonLength, boolean isCanonical)
-    {
-        if(exonStarts.length == 0 || exonStarts.length != exonEndPhases.length)
-            return null;
-
-        int exonCount = exonStarts.length;
-        int transStart = exonStarts[0];
-        int transEnd = exonStarts[exonCount-1] + exonLength;
-
-        Integer codingStart = null;
-        Integer codingEnd = null;
-
-        int[] exonPhases = new int[exonCount];
-
-        // work out phases and coding start & end
-        for(int i = 0; i < exonCount; ++i)
-        {
-            int exonStart = exonStarts[i];
-
-            int exonEndPhase = exonEndPhases[i];
-
-            if(strand == 1)
-                exonPhases[i] = i > 0 ? exonEndPhases[i-1] : -1;
-            else
-                exonPhases[i] = i < exonCount - 1 ? exonEndPhases[i+1] : -1;
-
-            if(codingStart == null && ((strand == 1 && exonEndPhase != -1) || (strand == -1 && exonPhases[i] != -1)))
-            {
-                codingStart = exonStart + exonLength / 2;
-            }
-            else if(codingStart != null && codingEnd == null
-            && ((strand == 1 && exonEndPhase == -1) || (strand == -1 && exonPhases[i] == -1)))
-            {
-                codingEnd = exonStart + exonLength / 2;
-            }
-        }
-
-        if(codingStart != null && codingEnd == null)
-            codingEnd = transEnd;
-
-        TranscriptData transData = new TranscriptData(transId, generateTransName(transId), geneId, isCanonical, strand, transStart, transEnd,
-                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
-
-        List<ExonData> exons = Lists.newArrayList();
-
-        for(int i = 0; i < exonCount; ++i)
-        {
-            int exonStart = exonStarts[i];
-            int exonEnd = exonStarts[i] + exonLength;
-            int exonRank = strand == 1 ? i + 1 : exonCount - i;
-
-            exons.add(new ExonData(transId, exonStart, exonEnd, exonRank, exonPhases[i], exonEndPhases[i]));
-        }
-
-        transData.setExons(exons);
-
-        return transData;
-    }
 
     public static TranscriptData createTransExons(
             final String geneId, int transId, byte strand,
@@ -178,8 +112,8 @@ public final class GeneTestUtils
                         {
                             // coding starts in this exon
                             inCoding = true;
-                            exonPhase = PHASE_1;
-                            exonStartPhase = codingStart == exonStart ? exonPhase : PHASE_NONE;
+                            exonPhase = PHASE_1; // pre-exon base is 1 less so coding start with 1
+                            exonStartPhase = codingStart == exonStart ? PHASE_0 : PHASE_NONE;
                             exonCodingStart = codingStart;
                         }
                     }
@@ -229,7 +163,7 @@ public final class GeneTestUtils
                         {
                             inCoding = true;
                             exonPhase = PHASE_1;
-                            exonStartPhase = codingStart == exonStart ? exonPhase : PHASE_NONE;
+                            exonStartPhase = codingEnd == exonEnd ? PHASE_0 : PHASE_NONE;
                             exonCodingEnd = codingEnd;
                         }
                     }

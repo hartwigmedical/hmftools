@@ -71,9 +71,10 @@ public class FusionTest
         int transId = 1;
 
         int[] exonStarts = new int[]{100, 300, 500, 700, 900};
-        int[] exonPhases = new int[]{-1, 1, 2, 0, -1};
 
-        TranscriptData transData = createTransExons(geneId1, transId++, POS_STRAND, exonStarts, exonPhases, 100, true);
+        int codingStart = 300;
+        int codingEnd = 998;
+        TranscriptData transData = createTransExons(geneId1, transId++, POS_STRAND, exonStarts,  99, codingStart, codingEnd, true, "");
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId1, transDataList);
@@ -88,9 +89,10 @@ public class FusionTest
         transDataList = Lists.newArrayList();
 
         exonStarts = new int[]{10100, 10300, 10500, 10700, 10900};
-        exonPhases = new int[]{1, 2, 0, -1, -1};
 
-        transData = createTransExons(geneId1, transId++, POS_STRAND, exonStarts, exonPhases, 100, true);
+        codingStart = 10100;
+        codingEnd = 10998;
+        transData = createTransExons(geneId1, transId++, POS_STRAND, exonStarts, 99, codingStart, codingEnd, true, "");
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId2, transDataList);
@@ -125,13 +127,13 @@ public class FusionTest
         fusions.forEach(x -> x.setKnownType(KNOWN_PAIR));
         tester.FusionAnalyser.getFusionFinder().findTopReportableFusion(fusions);
 
-        assertEquals(9, fusions.size());
+        assertEquals(12, fusions.size());
         final GeneFusion reportedFusion = fusions.stream().filter(x -> x.reportable()).findFirst().orElse(null);
         assertNotNull(reportedFusion);
 
         // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(850, reportedFusion.upstreamTrans().gene().position());
-        assertEquals(10650, reportedFusion.downstreamTrans().gene().position());
+        assertEquals(450, reportedFusion.upstreamTrans().gene().position());
+        assertEquals(10850, reportedFusion.downstreamTrans().gene().position());
         assertEquals(0, reportedFusion.getExonsSkipped(true));
         assertEquals(0, reportedFusion.getExonsSkipped(false));
         assertTrue(reportedFusion.reportable());
@@ -276,8 +278,8 @@ public class FusionTest
 
         exons.add(new ExonData(transId1, 1000, 1100, 1, -1, -1));
         exons.add(new ExonData(transId1, 1300, 1500, 2, -1, 1));
-        exons.add(new ExonData(transId1, 1600, 1700, 3, 1, 2));
-        exons.add(new ExonData(transId1, 1800, 1900, 4, 2, -1));
+        exons.add(new ExonData(transId1, 1600, 1700, 3, 1, 0));
+        exons.add(new ExonData(transId1, 1800, 1900, 4, 0, -1));
 
         transData.setExons(exons);
         transDataList.add(transData);
@@ -456,8 +458,10 @@ public class FusionTest
 
         int transId3 = 3;
         int[] exonStarts = new int[]{1000, 2000, 3000};
-        int[] exonPhases = new int[]{0, 0, 0,};
-        TranscriptData transData3 = createTransExons(geneId3, transId3, POS_STRAND, exonStarts, exonPhases, 100);
+        Integer codingStart2 = 1003;
+        Integer codingEnd2 = 3098;
+        TranscriptData transData3 = createTransExons(geneId3, transId3, POS_STRAND, exonStarts, 98,
+                codingStart2, codingEnd2, true, "");
         transDataList.add(transData3);
 
         addTransExonData(geneTransCache, geneId3, transDataList);
@@ -500,8 +504,8 @@ public class FusionTest
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
-        assertEquals(3, tester.FusionAnalyser.getFusions().size());
-        assertEquals(2, tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).count());
+        assertEquals(2, tester.FusionAnalyser.getFusions().size());
+        assertEquals(1, tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).count());
 
         fusion = tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).findFirst().orElse(null);
         assertTrue(fusion.phaseMatched());
@@ -514,7 +518,7 @@ public class FusionTest
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
                 tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
-        assertEquals(3, tester.FusionAnalyser.getFusions().size());
+        assertEquals(2, tester.FusionAnalyser.getFusions().size());
 
         final int varId3 = var3.id();
         final int varId7 = var7.id();

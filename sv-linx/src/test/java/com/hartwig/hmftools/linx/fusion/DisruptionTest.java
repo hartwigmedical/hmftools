@@ -117,17 +117,10 @@ public class DisruptionTest
         int transId = 1;
 
         int[] exonStarts = new int[] { 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 110000 };
-        int[] exonPhases = new int[exonStarts.length];
 
-        for(int i = 0; i < exonPhases.length; ++i)
-        {
-            if(i == 0 || i == exonPhases.length - 1)
-                exonPhases[i] = -1;
-            else
-                exonPhases[i] = 0;
-        }
-
-        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        int codingStart = 20002;
+        int codingEnd = 110098;
+        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts,  100, codingStart, codingEnd, true, "");
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId, transDataList);

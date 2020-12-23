@@ -37,6 +37,7 @@ import org.junit.Test;
 
 public class FusionLikelihoodTest
 {
+    /*
     @Test
     public void testGeneRegions()
     {
@@ -203,29 +204,9 @@ public class FusionLikelihoodTest
         // likelihoodCalc.generateSameGeneCounts(geneRangeData);
 
         geneRangeData.clearOverlapCounts();
-
-        /*
-        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
-        assertEquals(1, geneRangeData.getDelFusionBaseCounts().size());
-
-        Integer overlapCount = new Integer(19*19 +19*19 + 19*19);
-        assertEquals(overlapCount, geneRangeData.getDelFusionBaseCounts().get(0));
-
-        // test again but with no phase matches within the same transcript
-        transExonDataList.clear();
-        geneRangeData.clearOverlapCounts();
-        exonStarts = new int[]{10, 30, 50, 70, 90};
-        exonPhases = new int[]{-1, 0, 1, 2, -1};
-        createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
-
-        exonStarts = new int[]{10, 30, 50, 70, 90};
-        exonPhases = new int[]{-1, 2, 1, 0, -1};
-        createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
-
-        likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
-        assertTrue(geneRangeData.getDelFusionBaseCounts().isEmpty());
-        */
     }
+
+     */
 
     private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, int start, int end, int combinedPhase, int combinedPreGene)
     {

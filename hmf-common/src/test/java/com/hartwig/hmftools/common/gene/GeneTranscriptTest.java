@@ -205,5 +205,18 @@ public class GeneTranscriptTest
         assertEquals(PHASE_2, transData.exons().get(1).PhaseEnd);
         assertEquals(PHASE_2, transData.exons().get(0).PhaseStart);
         assertEquals(PHASE_NONE, transData.exons().get(0).PhaseEnd);
+
+        // coding start on the first base of an exon, is given the phase before the base
+        transData = GeneTestUtils.createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, 10, codingEnd, false, BIOTYPE_PROTEIN_CODING);
+
+        assertEquals(PHASE_0, transData.exons().get(0).PhaseStart);
+        assertEquals(PHASE_2, transData.exons().get(0).PhaseEnd);
+
+        transData = GeneTestUtils.createTransExons(
+                GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, 15, 60, false, BIOTYPE_PROTEIN_CODING);
+
+        assertEquals(PHASE_0, transData.exons().get(2).PhaseStart);
+        assertEquals(PHASE_2, transData.exons().get(2).PhaseEnd);
     }
 }

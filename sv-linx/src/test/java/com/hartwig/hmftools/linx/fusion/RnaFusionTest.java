@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.extractTranscriptExonData;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.createBreakendTranscriptData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
@@ -55,9 +55,10 @@ public class RnaFusionTest
         byte strand = 1;
 
         int[] exonStarts = new int[]{10500, 11500, 12500, 13500};
-        int[] exonPhases = new int[]{-1, 1, 2, -1};
+        int codingStart = 10500;
+        int codingEnd = 13599;
 
-        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, 100, codingStart, codingEnd, true, "");
         String transName = transData.TransName;
         transDataList.add(transData);
 
@@ -67,28 +68,23 @@ public class RnaFusionTest
 
         strand = -1;
 
-        exonPhases = new int[]{-1, -1, -1, -1};
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        transData = createTransExons(geneId, transId++, strand, exonStarts, 100, codingStart, codingEnd, true, "");
         String transName2 = transData.TransName;
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId2, transDataList);
 
-        FusionFinder fusionAnalyser = new FusionFinder(null, geneTransCache);
-        List<GeneFusion> dnaFusions = Lists.newArrayList();
-        // RnaFusionMapper rnaFusionMapper = new RnaFusionMapper(null, geneTransCache, fusionAnalyser, dnaFusions, Maps.newHashMap());
         PRE_GENE_PROMOTOR_DISTANCE = DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
         RnaFusionAnnotator rnaAnnotator = new RnaFusionAnnotator(geneTransCache);
 
         // test positive strand
-
         int svPos1 = 12700;
         BreakendGeneData geneAnnot1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, chromosome, svPos1, 1);
 
         transData = geneTransCache.getTranscriptData(geneId, transName);
         assertEquals(4, transData.exons().size());
 
-        BreakendTransData trans = extractTranscriptExonData(transData, geneAnnot1.position(), geneAnnot1);
+        BreakendTransData trans = createBreakendTranscriptData(transData, geneAnnot1.position(), geneAnnot1);
 
         assertTrue(trans != null);
 
@@ -162,7 +158,7 @@ public class RnaFusionTest
         transData = geneTransCache.getTranscriptData(geneId2, transName2);
         assertEquals(4, transData.exons().size());
 
-        BreakendTransData trans2 = extractTranscriptExonData(transData, geneAnnot2.position(), geneAnnot2);
+        BreakendTransData trans2 = createBreakendTranscriptData(transData, geneAnnot2.position(), geneAnnot2);
 
         assertTrue(trans2 != null);
 

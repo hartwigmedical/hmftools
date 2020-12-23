@@ -60,9 +60,9 @@ public class HomDisruptionsTest
 
         int transId = 1;
         int[] exonStarts = new int[] { 10000, 40000, 70000, 100000, 130000};
-        int[] exonPhases = new int[] {-1, 0, 0, 0, -1};
 
-        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, 100,
+                10050, 130050, true, "");
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId, transDataList);
@@ -93,8 +93,6 @@ public class HomDisruptionsTest
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
-
-        SvCluster cluster = tester.Analyser.getClusters().get(0);
 
         assertEquals(1, driverAnnotator.getDriverGeneDataList().size());
         DriverGeneData dgData = driverAnnotator.getDriverGeneDataList().get(0);
@@ -134,9 +132,11 @@ public class HomDisruptionsTest
 
         int transId = 1;
         int[] exonStarts = new int[] { 10000, 20000, 30000, 40000, 50000};
-        int[] exonPhases = new int[] {-1, 0, 0, 0, -1};
+        // int[] exonPhases = new int[] {-1, 0, 0, 0, -1};
 
-        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        int codingStart = 10002;
+        int codingEnd = 50098;
+        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, 100, codingStart, codingEnd, true, "");
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId, transDataList);
@@ -232,9 +232,11 @@ public class HomDisruptionsTest
 
         int transId = 1;
         int[] exonStarts = new int[] { 10000, 20000, 30000, 40000, 50000};
-        int[] exonPhases = new int[] {-1, 0, 0, 0, -1};
+        // int[] exonPhases = new int[] {-1, 0, 0, 0, -1};
 
-        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        int codingStart = 10002;
+        int codingEnd = 50098;
+        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, 100, codingStart, codingEnd, true, "");
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId, transDataList);

@@ -240,22 +240,21 @@ public class SpecialFusionsTest
 
         int transId = 1;
 
-        int[] exonStarts = generateExonStarts(100, 7, 100, 100);
-        int[] exonPhases = new int[]{-1, -1, 1, 1, 1, 1, -1};
+        int[] exonStarts = generateExonStarts(100, 7, 98, 100);
 
-        TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);
+        TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, 98, 300, 1398, true, "");
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, geneId1, transDataList);
 
-        exonStarts = generateExonStarts(10000, exonPhases.length, 100, 100);
-        transData = createTransExons(geneId2, transId++, strand, exonStarts, exonPhases, 100, true);
+        exonStarts = generateExonStarts(10000, exonStarts.length, 98, 100);
+        transData = createTransExons(geneId2, transId++, strand, exonStarts, 98, 10300, 11390, true, "");
         transDataList = Lists.newArrayList(transData);
 
         addTransExonData(geneTransCache, geneId2, transDataList);
 
-        exonStarts = generateExonStarts(20000, exonPhases.length, 100, 100);
-        transData = createTransExons(geneId3, transId++, strand, exonStarts, exonPhases, 100, true);
+        exonStarts = generateExonStarts(20000, exonStarts.length, 98, 100);
+        transData = createTransExons(geneId3, transId++, strand, exonStarts, 98, 20300, 21390, true, "");
         transDataList = Lists.newArrayList(transData);
 
         addTransExonData(geneTransCache, geneId3, transDataList);
@@ -495,9 +494,10 @@ public class SpecialFusionsTest
         int transId = 1;
 
         int[] exonStarts = generateExonStarts(100, 7, 100, 100);
-        int[] exonPhases = new int[]{-1, -1, 1, 1, 1, 1, -1};
 
-        TranscriptData transData = createTransExons(igGeneId, transId++, strand, exonStarts, exonPhases, 100, true);
+        int codingStart = 100;
+        int codingEnd = 799;
+        TranscriptData transData = createTransExons(igGeneId, transId++, strand, exonStarts, 100, codingStart, codingEnd, true, "");
         transDataList.add(transData);
 
         addTransExonData(geneTransCache, igGeneId, transDataList);
