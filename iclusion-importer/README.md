@@ -17,9 +17,9 @@ Assuming this has been provided, the trials can be imported by running the iClus
   
 Argument  | Description
 ---|---
-iclusion_endpoint | Required: The URL where the iClusion API runs that we are going to query
-iclusion_client_id | Required: Provided by iClusion
-iclusion_client_secret | Required: Provided by iClusion
-iclusion_username | Required: Provided by iClusion
-iclusion_password | Required: Provided by iClusion
+iclusion_endpoint | Required: The URL where the iClusion API runs that one wants to query.
+iclusion_client_id | Required: Provided by iClusion.
+iclusion_client_secret | Required: Provided by iClusion.
+iclusion_username | Required: Provided by iClusion.
+iclusion_password | Required: Provided by iClusion.
 iclusion_trial_tsv | Required: The path to where the trials are going to be written to.
