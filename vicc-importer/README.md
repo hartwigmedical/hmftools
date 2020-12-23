@@ -4,8 +4,8 @@ VICC is the [Variant Interpretation for Cancer Consortium](https://cancervariant
 One of the aims of this consortium is to create a harmonized meta-knowledgebase from various actual knowledgebases (see [paper](http://dx.doi.org/10.1038/s41588-020-0603-8)).
 
 This module imports the data that has been generated as part of this paper, and in addition does the following:
- *  Determines the event type defined by the [SERVE](../serve/README.md) datamodel.
- *  Provides classification mapping to map the VICC database onto [SERVE](../serve/README.md) actionable events.
+ *  For each feature, determines the event type as defined by the [SERVE](../serve/README.md) datamodel.
+ *  Provides classification mapping to map all VICC entries onto [SERVE](../serve/README.md) actionable events.
  *  Loads up the database into a MySQL database
  
 ## Loading the VICC database into a MySQL database
