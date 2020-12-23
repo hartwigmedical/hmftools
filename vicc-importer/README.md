@@ -5,8 +5,7 @@ One of the aims of this consortium is to create a harmonized meta-knowledgebase 
 
 This module imports the data that has been generated as part of this paper, and in addition does the following:
  *  Determines the event type defined by the [SERVE](../serve/README.md) datamodel.
- *  Provides functionality to only read part of the VICC knowledgebase.
- *  Provides classification mapping to map the VICC database into [SERVE](../serve/README.md) actionable events.
+ *  Provides classification mapping to map the VICC database onto [SERVE](../serve/README.md) actionable events.
  *  Loads up the database into a MySQL database
  
 ## Loading the VICC database into a MySQL database
@@ -21,4 +20,3 @@ vicc_json  | Required: Path to the VICC json file containing the VICC data.
 db_url | Required: The URL of the database in which to ingest the data.
 db_user | Required: The DB user which has access to the the URL specified
 db_pass | Required: The password needed for the DB user to authenticate on the URL.
-skip_database_writing | Optional: When flag is provided, database writing is skipped. Mainly used for testing.
