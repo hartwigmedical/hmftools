@@ -12,7 +12,7 @@ This module imports the data that has been generated as part of this paper, and 
 
 In order to load the VICC database into a MySQL database, one needs to:
  * Create the database using create_vicc_database.sql script from the VICC importer resources.
- * Run ViccJsonSQLImporter with the following arguments:
+ * Run ViccJsonSQLImporter (default class in the vicc-importer jar) with the following arguments:
  
 Argument  | Description
 ---|---
