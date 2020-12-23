@@ -20,6 +20,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ProtectConfig {
 
+    String DOID_SEPARATOR = ";";
+
     // General params needed for every report
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
@@ -129,7 +131,7 @@ public interface ProtectConfig {
 
         return ImmutableProtectConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
-                .primaryTumorDoids(extractStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS)))
+                .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
@@ -148,8 +150,8 @@ public interface ProtectConfig {
     }
 
     @NotNull
-    static Iterable<String> extractStringSet(@NotNull String paramValue) {
-        return Sets.newHashSet(paramValue.split(","));
+    static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator) {
+        return Sets.newHashSet(paramValue.split(separator));
     }
 
     @NotNull

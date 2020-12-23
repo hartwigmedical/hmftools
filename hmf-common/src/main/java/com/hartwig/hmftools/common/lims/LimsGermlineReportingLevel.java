@@ -2,9 +2,6 @@ package com.hartwig.hmftools.common.lims;
 
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,8 +9,6 @@ public enum LimsGermlineReportingLevel {
     REPORT_WITH_NOTIFICATION,
     REPORT_WITHOUT_NOTIFICATION,
     NO_REPORTING;
-
-    private static final Logger LOGGER = LogManager.getLogger(LimsGermlineReportingLevel.class);
 
     @NotNull
     static LimsGermlineReportingLevel fromLimsInputs(boolean limsSampleReportGermlineVariants, @NotNull String germlineReportingLevelString,
