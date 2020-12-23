@@ -41,5 +41,4 @@ public class ActionableEventComparatorTest {
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction) {
         return ActionabilityTestUtil.create(source, treatment, cancerType, Strings.EMPTY, level, direction, Sets.newHashSet());
     }
-
 }

@@ -40,7 +40,7 @@ public class SignatureExtractorTest {
         SignatureName signature = signatureExtractor.extract(EventType.SIGNATURE, HRD);
 
         assertNotNull(signature);
-        assertEquals(SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENCY, signature);
+        assertEquals(SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENT, signature);
     }
 
     @Test
