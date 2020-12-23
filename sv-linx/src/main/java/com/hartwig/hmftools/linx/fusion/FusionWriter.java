@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
@@ -35,17 +35,17 @@ public class FusionWriter
     }
 
     public static void convertBreakendsAndFusions(
-            final List<GeneFusion> geneFusions, final List<Transcript> transcripts,
+            final List<GeneFusion> geneFusions, final List<BreakendTransData> transcripts,
             final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
     {
         int breakendId = 0;
-        Map<Transcript,Integer> transIdMap = Maps.newHashMap();
+        Map<BreakendTransData,Integer> transIdMap = Maps.newHashMap();
 
-        for(final Transcript transcript : transcripts)
+        for(final BreakendTransData transcript : transcripts)
         {
             transIdMap.put(transcript, breakendId);
 
-            final GeneAnnotation gene = transcript.gene();
+            final BreakendGeneData gene = transcript.gene();
 
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(breakendId++)
@@ -210,8 +210,8 @@ public class FusionWriter
             for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
             {
                 boolean isUpstream = (fs == FS_UP);
-                final Transcript trans = fusion.transcripts()[fs];
-                final GeneAnnotation gene = trans.gene();
+                final BreakendTransData trans = fusion.transcripts()[fs];
+                final BreakendGeneData gene = trans.gene();
 
                 writer.write(String.format(",%d,%s,%d,%d,%s,%.6f",
                         gene.id(), gene.chromosome(), gene.position(), gene.orientation(),

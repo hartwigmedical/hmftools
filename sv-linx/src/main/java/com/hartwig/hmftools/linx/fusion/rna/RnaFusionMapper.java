@@ -36,8 +36,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
@@ -148,10 +148,10 @@ public class RnaFusionMapper
 
         // viable breakends and their matching transcript
         final StartEndPair<List<SvBreakend>> viableBreakendPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
-        final StartEndPair<List<Transcript>> viableTranscriptPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
+        final StartEndPair<List<BreakendTransData>> viableTranscriptPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
 
         // transcripts on the correct side and orientation of the RNA boundary
-        final StartEndPair<List<Transcript>> nearTranscriptPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
+        final StartEndPair<List<BreakendTransData>> nearTranscriptPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
         final StartEndPair<List<SvBreakend>> nearBreakendPair = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
 
         boolean requireExactMatch = rnaFusion.JunctionTypes[FS_UP] == UNKNOWN || rnaFusion.JunctionTypes[FS_DOWN] == UNKNOWN;
@@ -182,7 +182,7 @@ public class RnaFusionMapper
                 if(var.isInferredSgl())
                     continue;
 
-                final List<GeneAnnotation> svGenesList = var.getGenesList(breakend.usesStart());
+                final List<BreakendGeneData> svGenesList = var.getGenesList(breakend.usesStart());
 
                 if(svGenesList.isEmpty())
                     continue;
@@ -199,9 +199,9 @@ public class RnaFusionMapper
                         continue;
                 }
 
-                final List<GeneAnnotation> genesList = Lists.newArrayList();
+                final List<BreakendGeneData> genesList = Lists.newArrayList();
 
-                for(GeneAnnotation gene : svGenesList)
+                for(BreakendGeneData gene : svGenesList)
                 {
                     if(!geneName.isEmpty() && !geneName.equals(gene.GeneName))
                         continue;
@@ -225,9 +225,9 @@ public class RnaFusionMapper
                 // boolean correctLocation = isViableBreakend(breakend, rnaPosition, requiredGeneStrand, isUpstream);
 
                 // check whether any of the breakend's transcripts match the exon (exact or nearest) of the RNA fusion breakpoint
-                for(final GeneAnnotation gene : genesList)
+                for(final BreakendGeneData gene : genesList)
                 {
-                    for(final Transcript trans : gene.transcripts())
+                    for(final BreakendTransData trans : gene.transcripts())
                     {
                         if(isKnownJunction && !rnaFusion.getExactMatchTransIds(fs).contains(trans.transName()))
                             continue;
@@ -261,7 +261,7 @@ public class RnaFusionMapper
             for (int i = 0; i < viableBreakendPair.get(FS_UP).size(); ++i)
             {
                 final SvBreakend upBreakend = viableBreakendPair.get(FS_UP).get(i);
-                final Transcript upTrans = viableTranscriptPair.get(FS_UP).get(i);
+                final BreakendTransData upTrans = viableTranscriptPair.get(FS_UP).get(i);
 
                 if(upBreakend.getSV().isSglBreakend())
                     continue;
@@ -269,7 +269,7 @@ public class RnaFusionMapper
                 for (int j = 0; j < viableBreakendPair.get(FS_DOWN).size(); ++j)
                 {
                     final SvBreakend downBreakend = viableBreakendPair.get(FS_DOWN).get(j);
-                    final Transcript downTrans = viableTranscriptPair.get(FS_DOWN).get(j);
+                    final BreakendTransData downTrans = viableTranscriptPair.get(FS_DOWN).get(j);
 
                     if(downBreakend.getSV().isSglBreakend())
                         continue;
@@ -318,7 +318,7 @@ public class RnaFusionMapper
                 boolean isUpstream = (fs == 0);
                 int rnaPosition = rnaFusion.Positions[fs];
 
-                List<Transcript> transcriptList;
+                List<BreakendTransData> transcriptList;
                 List<SvBreakend> breakendList;
                 boolean isViable = false;
                 boolean correctLocation = false;
@@ -344,13 +344,13 @@ public class RnaFusionMapper
                     // breakendList = genicBreakendPair.get(fs);
                 }
 
-                Transcript closestTrans = null;
+                BreakendTransData closestTrans = null;
                 SvBreakend closestBreakend = null;
                 int closestDistance = 0;
 
                 for (int j = 0; j < transcriptList.size(); ++j)
                 {
-                    final Transcript trans = transcriptList.get(j);
+                    final BreakendTransData trans = transcriptList.get(j);
                     final SvBreakend breakend = breakendList.get(j);
 
                     int distance = abs(rnaPosition - trans.svPosition());
@@ -392,8 +392,8 @@ public class RnaFusionMapper
 
         boolean isUnspliced = rnaFusion.JunctionTypes[FS_UP] == UNKNOWN && rnaFusion.JunctionTypes[FS_DOWN] == UNKNOWN;
 
-        final Transcript transUp = rnaFusion.getMatchedTranscripts()[FS_UP];
-        final Transcript transDown = rnaFusion.getMatchedTranscripts()[FS_DOWN];
+        final BreakendTransData transUp = rnaFusion.getMatchedTranscripts()[FS_UP];
+        final BreakendTransData transDown = rnaFusion.getMatchedTranscripts()[FS_DOWN];
 
         for(final GeneFusion dnaFusion : mDnaFusions)
         {

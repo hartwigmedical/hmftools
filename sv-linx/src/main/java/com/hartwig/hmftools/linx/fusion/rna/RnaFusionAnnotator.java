@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
 public class RnaFusionAnnotator
@@ -355,7 +355,7 @@ public class RnaFusionAnnotator
     }
 
     public boolean isTranscriptBreakendViableForRnaBoundary(
-            final Transcript trans, boolean isUpstream, int breakendPosition,
+            final BreakendTransData trans, boolean isUpstream, int breakendPosition,
             int rnaPosition, boolean exactRnaPosition)
     {
         // breakend must fall at or before the RNA boundary but not further upstream than the previous splice acceptor

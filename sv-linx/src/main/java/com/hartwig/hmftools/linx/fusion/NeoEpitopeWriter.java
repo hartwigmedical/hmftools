@@ -14,7 +14,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 
@@ -48,7 +48,7 @@ public class NeoEpitopeWriter
     }
 
     public void processFusionCandidate(
-            final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2,
+            final List<BreakendGeneData> breakendGenes1, final List<BreakendGeneData> breakendGenes2,
             final List<LinkedPair> traversedPairs, final DisruptionFinder disruptionFinder)
     {
         if(breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
@@ -60,20 +60,20 @@ public class NeoEpitopeWriter
 
         boolean fusionAdded = false;
 
-        for (final GeneAnnotation gene1 : breakendGenes1)
+        for (final BreakendGeneData gene1 : breakendGenes1)
         {
-            for (final GeneAnnotation gene2 : breakendGenes2)
+            for (final BreakendGeneData gene2 : breakendGenes2)
             {
                 // can allow upstream to upstream in reverse order??
                 if (gene1.isUpstream() == gene2.isUpstream())
                     continue;
 
-                final GeneAnnotation upGene = gene1.isUpstream() ? gene1 : gene2;
+                final BreakendGeneData upGene = gene1.isUpstream() ? gene1 : gene2;
 
                 if(!isCandidateUpstreamGene(upGene))
                     continue;
 
-                final GeneAnnotation downGene = upGene == gene1 ? gene2 : gene1;
+                final BreakendGeneData downGene = upGene == gene1 ? gene2 : gene1;
 
                 if(!hasValidTraversal(upGene, downGene, traversedPairs, gene1.isUpstream(), disruptionFinder))
                     continue;
@@ -97,7 +97,7 @@ public class NeoEpitopeWriter
     }
 
     private boolean hasValidTraversal(
-            final GeneAnnotation upGene, final GeneAnnotation downGene, final List<LinkedPair> traversedPairs,
+            final BreakendGeneData upGene, final BreakendGeneData downGene, final List<LinkedPair> traversedPairs,
             boolean fusionLowerToUpper, final DisruptionFinder disruptionFinder)
     {
         if(traversedPairs == null || traversedPairs.isEmpty())
@@ -130,13 +130,13 @@ public class NeoEpitopeWriter
         return true;
     }
 
-    private boolean isCandidateUpstreamGene(final GeneAnnotation gene)
+    private boolean isCandidateUpstreamGene(final BreakendGeneData gene)
     {
         // must have at least 1 coding transcript
         return gene.transcripts().stream().anyMatch(x -> x.isCoding() && x.isDisruptive());
     }
 
-    private boolean isDuplicate(final GeneAnnotation gene1, final GeneAnnotation gene2)
+    private boolean isDuplicate(final BreakendGeneData gene1, final BreakendGeneData gene2)
     {
         for(final NeoEpitopeFusion fusion : mFusions)
         {

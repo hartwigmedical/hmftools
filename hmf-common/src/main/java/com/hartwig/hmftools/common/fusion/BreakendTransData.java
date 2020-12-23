@@ -20,10 +20,10 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 // class linking an SV breakend to a potentially impacted transcript
-public class Transcript {
+public class BreakendTransData
+{
 
     public final TranscriptData TransData;
 
@@ -31,7 +31,7 @@ public class Transcript {
     public final int ExonDownstream;
 
     @NotNull
-    private final GeneAnnotation mGene;
+    private final BreakendGeneData mGene;
 
     public final int CodingBases; // number of bases into coding where this breakend occurs
     public final int TotalCodingBases;
@@ -56,7 +56,7 @@ public class Transcript {
     private static final int STOP_CODON_LENGTH = 3;
     public static final int NO_NEXT_SPLICE_ACCEPTOR = -1;
 
-    public Transcript(@NotNull final GeneAnnotation gene, final TranscriptData transData,
+    public BreakendTransData(@NotNull final BreakendGeneData gene, final TranscriptData transData,
             final int exonUpstream, final int exonDownstream, int phase, int codingBases, int totalCodingBases)
     {
         TransData = transData;
@@ -122,7 +122,7 @@ public class Transcript {
     }
 
     @NotNull
-    public GeneAnnotation gene() { return mGene; }
+    public BreakendGeneData gene() { return mGene; }
 
     public int svPosition() { return mGene.position(); }
     public String geneName() { return mGene.GeneName; }

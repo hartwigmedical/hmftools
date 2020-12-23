@@ -17,7 +17,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -49,7 +49,7 @@ public class PseudoGeneFinder
         for(final SvCluster cluster : clusters)
         {
             Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap = Maps.newHashMap();
-            List<GeneAnnotation> matchedGenes = Lists.newArrayList();
+            List<BreakendGeneData> matchedGenes = Lists.newArrayList();
 
             for(final LinkedPair pair : cluster.getLinkedPairs())
             {
@@ -69,9 +69,9 @@ public class PseudoGeneFinder
                 final String upperHomology = lower.usesStart() ?
                         upper.getSV().getSvData().startHomologySequence() : upper.getSV().getSvData().endHomologySequence();
 
-                for(final GeneAnnotation gene1 : lower.getSV().getGenesList(lower.usesStart()))
+                for(final BreakendGeneData gene1 : lower.getSV().getGenesList(lower.usesStart()))
                 {
-                    for(final GeneAnnotation gene2 : upper.getSV().getGenesList(upper.usesStart()))
+                    for(final BreakendGeneData gene2 : upper.getSV().getGenesList(upper.usesStart()))
                     {
                         if(!gene1.GeneName.equals(gene2.GeneName))
                             continue;
@@ -95,7 +95,7 @@ public class PseudoGeneFinder
             if(!pairMatchesMap.isEmpty())
             {
                 // select the most common transcript and report it for visualisation
-                for (final GeneAnnotation gene : matchedGenes)
+                for (final BreakendGeneData gene : matchedGenes)
                 {
                     // find the most frequent transcript
                     final PseudoGeneMatch maxTrans = findMostCommonTranscript(gene.GeneName, pairMatchesMap);
@@ -212,7 +212,7 @@ public class PseudoGeneFinder
     }
 
     private List<PseudoGeneMatch> findPseudoGeneExonMatches(
-            final GeneAnnotation gene, int posStart, int posEnd, int startHomologyLength, int endHomologyLength)
+            final BreakendGeneData gene, int posStart, int posEnd, int startHomologyLength, int endHomologyLength)
     {
         List<PseudoGeneMatch> pseudoMatches = Lists.newArrayList();
 
@@ -389,8 +389,8 @@ public class PseudoGeneFinder
         if(var.isSglBreakend())
             return false;
 
-        final List<GeneAnnotation> genesStart = var.getGenesList(true);
-        final List<GeneAnnotation> genesEnd = var.getGenesList(true);
+        final List<BreakendGeneData> genesStart = var.getGenesList(true);
+        final List<BreakendGeneData> genesEnd = var.getGenesList(true);
 
         if(genesStart.isEmpty() || genesEnd.isEmpty())
             return false;
@@ -401,7 +401,7 @@ public class PseudoGeneFinder
         int startHomologyLength = var.getSvData().startHomologySequence().length();
         int endHomologyLength = var.getSvData().endHomologySequence().length();
 
-        for(final GeneAnnotation gene : genesStart)
+        for(final BreakendGeneData gene : genesStart)
         {
             if(!genesEnd.stream().anyMatch(x -> x.GeneName.equals(gene.GeneName)))
                 continue;

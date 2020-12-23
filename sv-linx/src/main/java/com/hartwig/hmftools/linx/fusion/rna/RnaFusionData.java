@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -51,7 +51,7 @@ public class RnaFusionData
     // annotations and matching results
 
     // transcripts matching SV breakends
-    private final Transcript[] mMatchedTranscripts;
+    private final BreakendTransData[] mMatchedTranscripts;
 
     private final StartEndPair<List<RnaExonMatchData>> mTransExonData;
 
@@ -102,7 +102,7 @@ public class RnaFusionData
 
         mTransExonData = new StartEndPair<List<RnaExonMatchData>>( Lists.newArrayList(), Lists.newArrayList() );
 
-        mMatchedTranscripts = new Transcript[] { null, null};
+        mMatchedTranscripts = new BreakendTransData[] { null, null};
         mBreakends = new SvBreakend[] { null, null};
 
         mViableFusion = false;
@@ -198,7 +198,7 @@ public class RnaFusionData
                 mDnaFusionMatchType.toString() : String.format("%s_%s", mDnaFusionMatchType, mDnaFusionMatchInfo);
     }
 
-    public void setTranscriptData(int fs, final Transcript trans, final SvBreakend breakend,
+    public void setTranscriptData(int fs, final BreakendTransData trans, final SvBreakend breakend,
             boolean matchedRnaBoundary, boolean correctLocation, int exonsSkipped)
     {
         mMatchedTranscripts[fs] = trans;
@@ -208,7 +208,7 @@ public class RnaFusionData
         mExonsSkipped[fs] = exonsSkipped;
     }
 
-    public final Transcript[] getMatchedTranscripts() { return mMatchedTranscripts; }
+    public final BreakendTransData[] getMatchedTranscripts() { return mMatchedTranscripts; }
     public final SvBreakend[] getBreakend() { return mBreakends; }
     public final boolean[] isTransViable() { return mTransViable; }
     public final boolean[] isTransCorrectLocation() { return mTransCorrectLocation; }

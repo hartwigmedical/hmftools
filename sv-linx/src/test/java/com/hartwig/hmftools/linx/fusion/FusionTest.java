@@ -6,11 +6,9 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsem
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -37,9 +35,9 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -98,7 +96,7 @@ public class FusionTest
         addTransExonData(geneTransCache, geneId2, transDataList);
 
         // add upstream breakends
-        List<GeneAnnotation> upGenes = Lists.newArrayList();
+        List<BreakendGeneData> upGenes = Lists.newArrayList();
         upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, 250, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, CHR_1, 450, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, true, CHR_1, 650, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
@@ -109,7 +107,7 @@ public class FusionTest
         upGenes.get(3).setPositionalData(CHR_1, 850, POS_ORIENT);
 
         // add downstream breakends
-        List<GeneAnnotation> downGenes = Lists.newArrayList();
+        List<BreakendGeneData> downGenes = Lists.newArrayList();
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, 10250, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, CHR_1, 10450, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
@@ -153,21 +151,21 @@ public class FusionTest
         // create a set of valid fusions and successively invalidate the top one to test prioritisation logic
         String geneId1 = "ENSG0001";
 
-        GeneAnnotation upGene = createGeneAnnotation(0, true, geneId1, geneId1, POS_STRAND, CHR_1, 450, 1);
+        BreakendGeneData upGene = createGeneAnnotation(0, true, geneId1, geneId1, POS_STRAND, CHR_1, 450, 1);
 
         Integer codingStart = 350;
         Integer codingEnd = 950;
 
-        Transcript upTrans1 = createTranscript(
+        BreakendTransData upTrans1 = createTranscript(
                 upGene, 1, true, 100, 1000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_1, 50, 300);;
 
-        GeneAnnotation downGene = createGeneAnnotation(0, true, geneId1, geneId1, POS_STRAND, CHR_1, 450, 1);
+        BreakendGeneData downGene = createGeneAnnotation(0, true, geneId1, geneId1, POS_STRAND, CHR_1, 450, 1);
 
         codingStart = 10350;
         codingEnd = 10950;
 
-        Transcript downTrans1 = createTranscript(
+        BreakendTransData downTrans1 = createTranscript(
                 downGene, 11, true, 10000, 11000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_1, 50, 300);
 
@@ -196,7 +194,7 @@ public class FusionTest
         assertEquals(fusion2, topFusion);
 
         // 3. down protein coding
-        Transcript downTrans2 = createTranscript(
+        BreakendTransData downTrans2 = createTranscript(
                 downGene, 12, true, 10000, 11000, codingStart, codingEnd, BIOTYPE_PROCESSED_TRANS,
                 2, 3, PHASE_1, 50, 300);
 
@@ -215,7 +213,7 @@ public class FusionTest
         assertEquals(fusion2, topFusion);
 
         // 5. 3P partner canonical
-        Transcript downTrans3 = createTranscript(
+        BreakendTransData downTrans3 = createTranscript(
                 downGene, 13, false, 10000, 11000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_1, 50, 300);
 
@@ -225,7 +223,7 @@ public class FusionTest
         assertEquals(fusion2, topFusion);
 
         // 6. 5P partner canonical
-        Transcript upTrans2 = createTranscript(
+        BreakendTransData upTrans2 = createTranscript(
                 upGene, 2, false, 100, 1000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_1, 50, 300);
 
@@ -235,7 +233,7 @@ public class FusionTest
         assertEquals(fusion2, topFusion);
 
         // 7. 5P partner less coding bases
-        Transcript upTrans3 = createTranscript(
+        BreakendTransData upTrans3 = createTranscript(
                 upGene, 3, true, 100, 1000, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING,
                 2, 3, PHASE_1, 40, 200);
 

@@ -19,7 +19,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxLink;
@@ -282,14 +282,14 @@ public class SampleAnalyser
             for (int be = SE_START; be <= SE_END; ++be)
             {
                 boolean isStart = isStart(be);
-                final List<GeneAnnotation> genesList = var.getGenesList(isStart);
+                final List<BreakendGeneData> genesList = var.getGenesList(isStart);
 
                 if (be == SE_END && var.isSglBreakend())
                 {
                     // special case of looking for mappings to locations containing genes so hotspot fusions can be found
                     for(final SglMapping mapping : var.getSglMappings())
                     {
-                        final List<GeneAnnotation> mappingGenes = ensemblDataCache.findGeneAnnotationsBySv(
+                        final List<BreakendGeneData> mappingGenes = ensemblDataCache.findGeneAnnotationsBySv(
                                 var.id(), isStart, mapping.Chromosome, mapping.Position, mapping.Orientation, upstreamDistance);
 
                         mappingGenes.forEach(x -> x.setType(var.type()));
@@ -302,7 +302,7 @@ public class SampleAnalyser
                     genesList.addAll(ensemblDataCache.findGeneAnnotationsBySv(
                             var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance));
 
-                    for (GeneAnnotation gene : genesList)
+                    for (BreakendGeneData gene : genesList)
                     {
                         gene.setSvData(var.getSvData(), var.jcn());
                     }

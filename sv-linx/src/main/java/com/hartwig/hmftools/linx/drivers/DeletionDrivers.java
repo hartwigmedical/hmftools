@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.DbPair;
@@ -224,7 +224,7 @@ public class DeletionDrivers
                 if(!delType && !dupType)
                     continue;
 
-                final List<GeneAnnotation> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
+                final List<BreakendGeneData> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
                         .filter(x -> !delDriverGeneIds.contains(x.StableId))
                         .filter(x -> mReportableDelGeneIds.contains(x.StableId))
                         .collect(Collectors.toList());
@@ -233,9 +233,9 @@ public class DeletionDrivers
                     continue;
 
                 // consider any disruptive canonical transcript
-                for(final GeneAnnotation gene : genesList)
+                for(final BreakendGeneData gene : genesList)
                 {
-                    final Transcript trans = gene.canonical();
+                    final BreakendTransData trans = gene.canonical();
 
                     if(trans == null || !trans.isDisruptive())
                         continue;
@@ -259,7 +259,7 @@ public class DeletionDrivers
                         // both the SVs involved in the deletion must be disruptive, ie cannot be simple intronic DELs
                         final SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
 
-                        final Transcript matchingTrans = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
+                        final BreakendTransData matchingTrans = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
                                 .filter(x -> x.StableId.equals(gene.StableId))
                                 .map(x -> x.canonical())
                                 .findFirst().orElse(null);
@@ -292,7 +292,7 @@ public class DeletionDrivers
 
                         final SvBreakend otherBreakend = breakend.getOtherBreakend();
 
-                        final GeneAnnotation otherGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
+                        final BreakendGeneData otherGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
                                 .filter(x -> x.StableId.equals(gene.StableId))
                                 .findFirst().orElse(null);
 

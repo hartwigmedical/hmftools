@@ -20,14 +20,14 @@ import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedTy
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNSET;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 
 public class GeneFusion
 {
     private int mId; // optional identifier
-    private final Transcript[] mTranscripts;
+    private final BreakendTransData[] mTranscripts;
 
     private boolean mIsReportable;
     private ReportableReason mReportableReason;
@@ -44,9 +44,9 @@ public class GeneFusion
     // calculated priority according to scheme for selecting fusions
     private double mPriority;
 
-    public GeneFusion(final Transcript upstreamTrans, final Transcript downstreamTrans, boolean phaseMatched)
+    public GeneFusion(final BreakendTransData upstreamTrans, final BreakendTransData downstreamTrans, boolean phaseMatched)
     {
-        mTranscripts = new Transcript[] { upstreamTrans, downstreamTrans };
+        mTranscripts = new BreakendTransData[] { upstreamTrans, downstreamTrans };
 
         mIsReportable = false;
         mReportableReason = UNSET;
@@ -74,9 +74,9 @@ public class GeneFusion
 
     public int svId(boolean isUpstream) { return mTranscripts[fsIndex(isUpstream)].gene().id(); }
 
-    public Transcript[] transcripts() { return mTranscripts; }
-    public Transcript upstreamTrans() { return mTranscripts[FS_UP]; }
-    public Transcript downstreamTrans() { return mTranscripts[FS_DOWN]; }
+    public BreakendTransData[] transcripts() { return mTranscripts; }
+    public BreakendTransData upstreamTrans() { return mTranscripts[FS_UP]; }
+    public BreakendTransData downstreamTrans() { return mTranscripts[FS_DOWN]; }
 
     public String geneName(int fs)
     {

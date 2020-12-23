@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.Transcript.POST_CODING_PHASE;
+import static com.hartwig.hmftools.common.fusion.BreakendTransData.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -36,8 +36,8 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.GeneTestUtils;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 
 import org.junit.Test;
 
@@ -134,7 +134,7 @@ public class GeneCollectionTest
         geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, CHR_1, POS_STRAND, 100, 1000));
         GeneTestUtils.addGeneData(geneTransCache, CHR_1, geneList);
 
-        GeneAnnotation genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, POS_ORIENT);
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
@@ -150,7 +150,7 @@ public class GeneCollectionTest
 
         int position = 250;
         genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        Transcript trans = extractTranscriptExonData(transData, position, genePosStrand);
+        BreakendTransData trans = extractTranscriptExonData(transData, position, genePosStrand);
 
         assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
@@ -218,7 +218,7 @@ public class GeneCollectionTest
         geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, CHR_1, POS_STRAND, 100, 1000));
         GeneTestUtils.addGeneData(geneTransCache, CHR_1, geneList);
 
-        GeneAnnotation geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, POS_ORIENT);
 
         transDataList = Lists.newArrayList();
 
@@ -281,7 +281,7 @@ public class GeneCollectionTest
         String geneId = "ENSG0001";
         String chromosome = "1";
 
-        GeneAnnotation genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, POS_ORIENT);
 
         int transId = 1;
 
@@ -296,7 +296,7 @@ public class GeneCollectionTest
 
         int position = 150;
         genePosStrand.setPositionalData(CHR_1, position, POS_ORIENT);
-        Transcript trans = extractTranscriptExonData(transData, position, genePosStrand);
+        BreakendTransData trans = extractTranscriptExonData(transData, position, genePosStrand);
 
         assertEquals(5, trans.exonCount());
         assertEquals(1, trans.ExonUpstream);
@@ -330,7 +330,7 @@ public class GeneCollectionTest
         geneId = "ENSG0002";
         chromosome = "1";
 
-        GeneAnnotation geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, POS_ORIENT);
 
         // coding taking up exactly the first exon
         codingStart = 500;

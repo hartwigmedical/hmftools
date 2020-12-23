@@ -11,7 +11,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // class linking an SV breakend to a potentially impacted gene
-public class GeneAnnotation {
+public class BreakendGeneData
+{
 
     public final String GeneName;
     public final String StableId;
@@ -23,7 +24,7 @@ public class GeneAnnotation {
 
     private EnsemblGeneData mGeneData;
 
-    private final List<Transcript> mTranscripts;
+    private final List<BreakendTransData> mTranscripts;
 
     @NotNull
     private final String mKaryotypeBand;
@@ -35,7 +36,7 @@ public class GeneAnnotation {
     private double mJunctionCopyNumber;
     private String mInsertSequence;
 
-    public GeneAnnotation(int varId, final boolean isStart, final String geneName, final String stableId,
+    public BreakendGeneData(int varId, final boolean isStart, final String geneName, final String stableId,
             final byte strand, @NotNull String karyotypeBand)
     {
         GeneName = geneName;
@@ -93,25 +94,25 @@ public class GeneAnnotation {
     public boolean isStart() { return mIsStart; }
     public boolean isEnd() { return !mIsStart; }
 
-    public void addTranscript(Transcript transcript) {
+    public void addTranscript(BreakendTransData transcript) {
         mTranscripts.add(transcript);
     }
 
-    public List<Transcript> transcripts() { return mTranscripts; }
+    public List<BreakendTransData> transcripts() { return mTranscripts; }
 
     @Nullable
-    public Transcript canonical() {
-        return mTranscripts.stream().filter(Transcript::isCanonical).findFirst().orElse(null);
+    public BreakendTransData canonical() {
+        return mTranscripts.stream().filter(BreakendTransData::isCanonical).findFirst().orElse(null);
     }
 
     public String karyotypeBand() { return mKaryotypeBand; }
 
-    public static boolean isUpstream(final GeneAnnotation gene)
+    public static boolean isUpstream(final BreakendGeneData gene)
     {
         return gene.Strand * gene.orientation() > 0;
     }
 
-    public static boolean isDownstream(final GeneAnnotation gene)
+    public static boolean isDownstream(final BreakendGeneData gene)
     {
         return !isUpstream(gene);
     }
@@ -128,7 +129,7 @@ public class GeneAnnotation {
             return false;
 
         // return true if the gene has a transcript such that the breakend falls into its pre-gene region
-        for(final Transcript trans : mTranscripts)
+        for(final BreakendTransData trans : mTranscripts)
         {
             // exclude if the position is interrupted by another splice acceptor
             if(!trans.isUpstream() && trans.hasNegativePrevSpliceAcceptorDistance())

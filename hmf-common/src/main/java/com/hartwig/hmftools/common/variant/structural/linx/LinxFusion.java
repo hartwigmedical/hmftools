@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -220,7 +220,7 @@ public abstract class LinxFusion
                 .build();
     }
 
-    public static String context(@NotNull Transcript transcript, int fusedExon) {
+    public static String context(@NotNull BreakendTransData transcript, int fusedExon) {
         switch (transcript.regionType()) {
             case UPSTREAM:
                 return "Promoter Region";

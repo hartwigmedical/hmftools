@@ -21,8 +21,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator;
 
@@ -83,12 +83,12 @@ public class RnaFusionTest
         // test positive strand
 
         int svPos1 = 12700;
-        GeneAnnotation geneAnnot1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, chromosome, svPos1, 1);
+        BreakendGeneData geneAnnot1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, chromosome, svPos1, 1);
 
         transData = geneTransCache.getTranscriptData(geneId, transName);
         assertEquals(4, transData.exons().size());
 
-        Transcript trans = extractTranscriptExonData(transData, geneAnnot1.position(), geneAnnot1);
+        BreakendTransData trans = extractTranscriptExonData(transData, geneAnnot1.position(), geneAnnot1);
 
         assertTrue(trans != null);
 
@@ -157,12 +157,12 @@ public class RnaFusionTest
         // now test the negative strand
 
         int svPos2 = 12700;
-        GeneAnnotation geneAnnot2 = createGeneAnnotation(1, true, geneName2, geneId2, NEG_STRAND, chromosome, svPos2, -1);
+        BreakendGeneData geneAnnot2 = createGeneAnnotation(1, true, geneName2, geneId2, NEG_STRAND, chromosome, svPos2, -1);
 
         transData = geneTransCache.getTranscriptData(geneId2, transName2);
         assertEquals(4, transData.exons().size());
 
-        Transcript trans2 = extractTranscriptExonData(transData, geneAnnot2.position(), geneAnnot2);
+        BreakendTransData trans2 = extractTranscriptExonData(transData, geneAnnot2.position(), geneAnnot2);
 
         assertTrue(trans2 != null);
 

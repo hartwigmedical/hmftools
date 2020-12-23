@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.CodingBaseData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class EnsemblDataCache
@@ -184,10 +184,10 @@ public class EnsemblDataCache
         }
     }
 
-    public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, int position,
+    public List<BreakendGeneData> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, int position,
             byte orientation, int upstreamDistance)
     {
-        List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
+        List<BreakendGeneData> geneAnnotations = Lists.newArrayList();
 
         final List<EnsemblGeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
 
@@ -199,7 +199,7 @@ public class EnsemblDataCache
             if (transcriptDataList == null || transcriptDataList.isEmpty())
                 continue;
 
-            GeneAnnotation currentGene = new GeneAnnotation(svId, isStart, geneData.GeneName, geneData.GeneId,
+            BreakendGeneData currentGene = new BreakendGeneData(svId, isStart, geneData.GeneName, geneData.GeneId,
                     geneData.Strand, geneData.KaryotypeBand);
 
             currentGene.setGeneData(geneData);
@@ -208,7 +208,7 @@ public class EnsemblDataCache
             // collect up all the relevant exons for each unique transcript to analyse as a collection
             for(TranscriptData transData : transcriptDataList)
             {
-                Transcript transcript = extractTranscriptExonData(transData, position, currentGene);
+                BreakendTransData transcript = extractTranscriptExonData(transData, position, currentGene);
 
                 if(transcript != null)
                 {
@@ -233,7 +233,7 @@ public class EnsemblDataCache
                 {
                     final CodingBaseData cbData = calcCodingBases(transData, position);
 
-                    final Transcript postGeneTrans = new Transcript(
+                    final BreakendTransData postGeneTrans = new BreakendTransData(
                             currentGene, transData, 1, 1, PHASE_NONE, cbData.CodingBases, cbData.TotalCodingBases);
 
                     currentGene.addTranscript(postGeneTrans);
@@ -257,7 +257,7 @@ public class EnsemblDataCache
 
             final TranscriptData trans = transcriptDataList.stream().filter(x -> x.IsCanonical).findFirst().orElse(null);
 
-            GeneAnnotation geneAnnotation = new GeneAnnotation(svId, isStart, altGeneData.GeneName, altGeneData.GeneId,
+            BreakendGeneData geneAnnotation = new BreakendGeneData(svId, isStart, altGeneData.GeneName, altGeneData.GeneId,
                     altGeneData.Strand, altGeneData.KaryotypeBand);
 
             geneAnnotation.setGeneData(altGeneData);
@@ -269,7 +269,7 @@ public class EnsemblDataCache
             {
                 final CodingBaseData cbData = calcCodingBases(trans, position);
 
-                final Transcript altGeneTrans = new Transcript(
+                final BreakendTransData altGeneTrans = new BreakendTransData(
                         geneAnnotation, trans, 1, 1, PHASE_NONE, cbData.CodingBases, cbData.TotalCodingBases);
 
                 geneAnnotation.addTranscript(altGeneTrans);
@@ -281,10 +281,10 @@ public class EnsemblDataCache
         return geneAnnotations;
     }
 
-    public List<GeneAnnotation> findGeneAnnotationsByOverlap(int svId, final String chromosome, int posStart, int posEnd)
+    public List<BreakendGeneData> findGeneAnnotationsByOverlap(int svId, final String chromosome, int posStart, int posEnd)
     {
         // create gene and transcript data for any gene fully overlapped by the SV
-        List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
+        List<BreakendGeneData> geneAnnotations = Lists.newArrayList();
 
         final List<EnsemblGeneData> chrGeneList = mChrGeneDataMap.get(chromosome);
 
@@ -296,7 +296,7 @@ public class EnsemblDataCache
             if(!(posStart < geneData.GeneStart && posEnd > geneData.GeneEnd))
                 continue;
 
-            GeneAnnotation currentGene = new GeneAnnotation(svId, true, geneData.GeneName, geneData.GeneId,
+            BreakendGeneData currentGene = new BreakendGeneData(svId, true, geneData.GeneName, geneData.GeneId,
                     geneData.Strand, geneData.KaryotypeBand);
 
             currentGene.setGeneData(geneData);
@@ -308,7 +308,7 @@ public class EnsemblDataCache
             if (transcriptData == null)
                 continue;
 
-            Transcript transcript = extractTranscriptExonData(transcriptData, transcriptData.TransStart, currentGene);
+            BreakendTransData transcript = extractTranscriptExonData(transcriptData, transcriptData.TransStart, currentGene);
 
             if(transcript != null)
             {
@@ -321,7 +321,7 @@ public class EnsemblDataCache
         return geneAnnotations;
     }
 
-    private void setPrecedingGeneDistance(Transcript transcript, int position)
+    private void setPrecedingGeneDistance(BreakendTransData transcript, int position)
     {
         // annotate with preceding gene info if the up distance isn't set
         int precedingGeneSAPos = findPrecedingGeneSpliceAcceptorPosition(transcript.transId());
@@ -429,8 +429,8 @@ public class EnsemblDataCache
         return spliceAcceptorPos != null ? spliceAcceptorPos : -1;
     }
 
-    public static Transcript extractTranscriptExonData(
-            final TranscriptData transData, int position, final GeneAnnotation geneAnnotation)
+    public static BreakendTransData extractTranscriptExonData(
+            final TranscriptData transData, int position, final BreakendGeneData geneAnnotation)
     {
         final List<ExonData> exonList = transData.exons();
 
@@ -565,7 +565,7 @@ public class EnsemblDataCache
 
         final CodingBaseData cbData = calcCodingBases(transData, position);
 
-        Transcript transcript = new Transcript(geneAnnotation, transData,
+        BreakendTransData transcript = new BreakendTransData(geneAnnotation, transData,
                 upExonRank, downExonRank, cbData.Phase, cbData.CodingBases, cbData.TotalCodingBases);
 
         // if not set, leave the previous exon null and it will be taken from the closest upstream gene
@@ -681,7 +681,7 @@ public class EnsemblDataCache
         return exonData;
     }
 
-    public static void setAlternativeTranscriptPhasings(Transcript transcript, final List<ExonData> exonDataList, int position, byte orientation)
+    public static void setAlternativeTranscriptPhasings(BreakendTransData transcript, final List<ExonData> exonDataList, int position, byte orientation)
     {
         // collect exon phasings before the position on the upstream and after it on the downstream
         boolean isUpstream = (transcript.gene().Strand * orientation) > 0;

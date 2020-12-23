@@ -34,7 +34,7 @@ import static com.hartwig.hmftools.linx.fusion.ReportableReason.PRE_GENE_DISTANC
 import java.util.List;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -49,8 +49,8 @@ public class FusionReportability
         if (fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)
             return KNOWN_TYPE;
 
-        final Transcript upTrans = fusion.upstreamTrans();
-        final Transcript downTrans = fusion.downstreamTrans();
+        final BreakendTransData upTrans = fusion.upstreamTrans();
+        final BreakendTransData downTrans = fusion.downstreamTrans();
 
         if(!fusion.phaseMatched())
         {
@@ -134,8 +134,8 @@ public class FusionReportability
 
     private static double calcFusionPriority(final GeneFusion fusion)
     {
-        final Transcript upTrans = fusion.upstreamTrans();
-        final Transcript downTrans = fusion.downstreamTrans();
+        final BreakendTransData upTrans = fusion.upstreamTrans();
+        final BreakendTransData downTrans = fusion.downstreamTrans();
 
             /* prioritisation rules:
             0. Known pair
@@ -224,7 +224,7 @@ public class FusionReportability
 
     public static boolean validProteinDomains(final GeneFusion fusion)
     {
-        final Transcript downTrans = fusion.downstreamTrans();
+        final BreakendTransData downTrans = fusion.downstreamTrans();
 
         long requiredKeptButLost =
                 mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();

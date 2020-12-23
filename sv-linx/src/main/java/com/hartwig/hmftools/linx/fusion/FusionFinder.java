@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
@@ -34,11 +33,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
 import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 
@@ -96,20 +95,20 @@ public class FusionFinder
     public void reset() { mNextFusionId = 0; }
 
     public final List<GeneFusion> findFusions(
-            final List<GeneAnnotation> breakendGenes1, final List<GeneAnnotation> breakendGenes2, final FusionParameters params)
+            final List<BreakendGeneData> breakendGenes1, final List<BreakendGeneData> breakendGenes2, final FusionParameters params)
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
         if(!mHasValidConfigData)
             return potentialFusions;
 
-        for (final GeneAnnotation startGene : breakendGenes1)
+        for (final BreakendGeneData startGene : breakendGenes1)
         {
             // left is upstream, right is downstream
             boolean startUpstream = startGene.isUpstream();
             boolean startIsIgRegion = mKnownFusionCache.withinIgRegion(startGene.chromosome(), startGene.position());
 
-            for (final GeneAnnotation endGene : breakendGenes2)
+            for (final BreakendGeneData endGene : breakendGenes2)
             {
                 boolean endUpstream = endGene.isUpstream();
                 boolean endIsIgRegion = mKnownFusionCache.withinIgRegion(endGene.chromosome(), endGene.position());
@@ -131,13 +130,13 @@ public class FusionFinder
                     continue;
                 }
 
-                final GeneAnnotation upGene = startUpstream ? startGene : endGene;
-                final GeneAnnotation downGene = !startUpstream ? startGene : endGene;
+                final BreakendGeneData upGene = startUpstream ? startGene : endGene;
+                final BreakendGeneData downGene = !startUpstream ? startGene : endGene;
 
                 boolean knownPair = mKnownFusionCache.hasKnownFusion(upGene.GeneName, downGene.GeneName);
                 boolean knownUnmappable3Pair = mKnownFusionCache.hasKnownUnmappable3Fusion(upGene.GeneName, downGene.GeneName);
 
-                for(final Transcript upstreamTrans : upGene.transcripts())
+                for(final BreakendTransData upstreamTrans : upGene.transcripts())
                 {
                     if(!isValidUpstreamTranscript(upstreamTrans, !knownPair, params.RequireUpstreamBiotypes))
                     {
@@ -145,7 +144,7 @@ public class FusionFinder
                         continue;
                     }
 
-                    for(final Transcript downstreamTrans : downGene.transcripts())
+                    for(final BreakendTransData downstreamTrans : downGene.transcripts())
                     {
                         GeneFusion fusion;
 
@@ -183,7 +182,7 @@ public class FusionFinder
         return potentialFusions;
     }
 
-    private static void logInvalidReasonInfo(final Transcript trans1, final Transcript trans2, final String reasonType, final String reason)
+    private static void logInvalidReasonInfo(final BreakendTransData trans1, final BreakendTransData trans2, final String reasonType, final String reason)
     {
         if(!mLogInvalidReasons)
             return;
@@ -195,7 +194,7 @@ public class FusionFinder
                     trans1.geneName(), trans1.transName(), trans2.geneName(), trans2.transName(), reasonType, reason);
     }
 
-    public static boolean validFusionTranscript(final Transcript transcript)
+    public static boolean validFusionTranscript(final BreakendTransData transcript)
     {
         if(transcript.isUpstream())
             return isValidUpstreamTranscript(transcript, true, false);
@@ -204,7 +203,7 @@ public class FusionFinder
     }
 
     private static boolean isValidUpstreamTranscript(
-            final Transcript transcript, boolean requireUpstreamDisruptive, boolean requireUpstreamBiotypes)
+            final BreakendTransData transcript, boolean requireUpstreamDisruptive, boolean requireUpstreamBiotypes)
     {
         // check any conditions which would preclude this transcript being a part of a fusion no matter the other end
         if(transcript.isPromoter())
@@ -219,7 +218,7 @@ public class FusionFinder
         return true;
     }
 
-    private static boolean isValidDownstreamTranscript(final Transcript transcript)
+    private static boolean isValidDownstreamTranscript(final BreakendTransData transcript)
     {
         if(transcript.postCoding())
             return false;
@@ -233,7 +232,7 @@ public class FusionFinder
         return true;
     }
 
-    public static GeneFusion checkFusionLogic(final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params)
+    public static GeneFusion checkFusionLogic(final BreakendTransData upstreamTrans, final BreakendTransData downstreamTrans, final FusionParameters params)
     {
         if(!isValidUpstreamTranscript(upstreamTrans, true, params.RequireUpstreamBiotypes))
         {
@@ -250,7 +249,7 @@ public class FusionFinder
     }
 
     private static GeneFusion transcriptPairHasFusion(
-            final Transcript upstreamTrans, final Transcript downstreamTrans, final FusionParameters params,
+            final BreakendTransData upstreamTrans, final BreakendTransData downstreamTrans, final FusionParameters params,
             boolean isKnownPair, boolean exonDelDupCandidate)
     {
         // see SV Fusions document for permitted combinations
@@ -438,7 +437,7 @@ public class FusionFinder
         return null;
     }
 
-    private static boolean exonToExonInPhase(final Transcript upTrans, final Transcript downTrans)
+    private static boolean exonToExonInPhase(final BreakendTransData upTrans, final BreakendTransData downTrans)
     {
         // check phasing and offset since exon start or coding start
         int upPhase = upTrans.Phase;
@@ -450,7 +449,7 @@ public class FusionFinder
         return tickPhaseForward(upPhase) == downPhase;
     }
 
-    private void checkIgFusion(final GeneAnnotation startGene, final GeneAnnotation endGene, final List<GeneFusion> potentialFusions)
+    private void checkIgFusion(final BreakendGeneData startGene, final BreakendGeneData endGene, final List<GeneFusion> potentialFusions)
     {
         /* Criteria:
             - These are allowed to fuse with 5’UTR splice donors from 10kb upstream. Phasing is assumed to be -1.
@@ -463,12 +462,12 @@ public class FusionFinder
         if(!startIsIgGene && !endIsIgGene)
             return;
 
-        final GeneAnnotation igGene = startIsIgGene ? startGene : endGene;
-        final GeneAnnotation downGene = startIsIgGene ? endGene : startGene;
+        final BreakendGeneData igGene = startIsIgGene ? startGene : endGene;
+        final BreakendGeneData downGene = startIsIgGene ? endGene : startGene;
 
         KnownFusionType knownType = NONE;
 
-        final List<Transcript> candidateTranscripts = downGene.transcripts().stream()
+        final List<BreakendTransData> candidateTranscripts = downGene.transcripts().stream()
                 .filter(x -> x.codingType().equals(UTR_5P)).collect(Collectors.toList());
 
         KnownFusionData kfData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
@@ -499,11 +498,11 @@ public class FusionFinder
             knownType = IG_PROMISCUOUS;
         }
 
-        final Transcript upTrans = generateIgTranscript(igGene, kfData);
+        final BreakendTransData upTrans = generateIgTranscript(igGene, kfData);
 
         if(!candidateTranscripts.isEmpty())
         {
-            for(final Transcript downTrans : candidateTranscripts)
+            for(final BreakendTransData downTrans : candidateTranscripts)
             {
                 GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
                 fusion.setId(mNextFusionId++);
@@ -513,13 +512,13 @@ public class FusionFinder
         }
     }
 
-    private Transcript generateIgTranscript(final GeneAnnotation gene, final KnownFusionData knownFusionData)
+    private BreakendTransData generateIgTranscript(final BreakendGeneData gene, final KnownFusionData knownFusionData)
     {
         TranscriptData transData = new TranscriptData(
                 0, String.format("@%s", knownFusionData.FiveGene), gene.StableId, false, gene.Strand,
                 knownFusionData.igRegion().start(), knownFusionData.igRegion().end(), null, null, "");
 
-        Transcript transcript = new Transcript(
+        BreakendTransData transcript = new BreakendTransData(
                 gene, transData,  -1, -1, PHASE_NONE, 0, 0);
 
         transcript.setCodingType(ENHANCER);
@@ -528,7 +527,7 @@ public class FusionFinder
         return transcript;
     }
 
-    public static boolean isIrrelevantSameGene(final Transcript upTrans, final Transcript downTrans)
+    public static boolean isIrrelevantSameGene(final BreakendTransData upTrans, final BreakendTransData downTrans)
     {
         if(!upTrans.geneName().equals(downTrans.geneName()))
             return false;
@@ -599,7 +598,7 @@ public class FusionFinder
 
         fusion.setProteinFeaturesSet();
 
-        final Transcript downTrans = fusion.downstreamTrans();
+        final BreakendTransData downTrans = fusion.downstreamTrans();
 
         if(downTrans.nonCoding())
             return;
@@ -645,7 +644,7 @@ public class FusionFinder
     }
 
     private static boolean proteinFeaturePreserved(
-            final Transcript transcript, boolean isDownstream, int featureStart, int featureEnd)
+            final BreakendTransData transcript, boolean isDownstream, int featureStart, int featureEnd)
     {
         boolean featurePreserved;
 

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -62,7 +62,7 @@ public class SvVarData
     private final DbPair[] mDbLink; // deletion bridge formed from this breakend to another
     private final StartEndPair<List<String>> mTIAssemblies;
 
-    private final StartEndPair<List<GeneAnnotation>> mGenes;
+    private final StartEndPair<List<BreakendGeneData>> mGenes;
 
     private final double[] mReplicationOrigin;
 
@@ -453,19 +453,19 @@ public class SvVarData
 
     public final List<SglMapping> getSglMappings() { return mSglMappings; }
 
-    public final List<GeneAnnotation> getGenesList(boolean isStart) { return mGenes.get(isStart); }
+    public final List<BreakendGeneData> getGenesList(boolean isStart) { return mGenes.get(isStart); }
 
     private static final int PRE_TRANSCRIPT_DISTANCE = 10000;
 
     public final String getGeneInBreakend(boolean isStart, boolean includeId)
     {
         // create a list of any genes which this breakend touches, but exclude the upstream distance used for fusions
-        final List<GeneAnnotation> genesList = getGenesList(isStart).stream()
+        final List<BreakendGeneData> genesList = getGenesList(isStart).stream()
                 .filter(x -> x.breakendWithinGene(PRE_TRANSCRIPT_DISTANCE))
                 .collect(Collectors.toList());
 
         String genesStr = "";
-        for(final GeneAnnotation gene : genesList)
+        for(final BreakendGeneData gene : genesList)
         {
             String geneStr = includeId ? gene.StableId + ":" + gene.GeneName : gene.GeneName;
             genesStr = appendStr(genesStr, geneStr, ';');

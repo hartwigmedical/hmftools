@@ -9,8 +9,7 @@ import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.Transcript.POST_CODING_PHASE;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.fusion.BreakendTransData.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
@@ -26,10 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 
 import org.junit.Test;
 
@@ -42,13 +40,13 @@ public class FusionRulesTest
         String geneId = "ENSG0001";
 
         // SV breakend positions won't impact fusion determination since transcripts are created manually
-        GeneAnnotation gene1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 150, POS_ORIENT);
+        BreakendGeneData gene1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 150, POS_ORIENT);
 
         // one on the negative strand
         String geneName2 = "GENE2";
         String geneId2 = "ENSG0003";
 
-        GeneAnnotation gene2 = createGeneAnnotation(0, false, geneName2, geneId2, NEG_STRAND, CHR_1, 150, POS_ORIENT);
+        BreakendGeneData gene2 = createGeneAnnotation(0, false, geneName2, geneId2, NEG_STRAND, CHR_1, 150, POS_ORIENT);
 
         int transId1 = 1;
 
@@ -69,7 +67,7 @@ public class FusionRulesTest
         Integer codingStart = null;
         Integer codingEnd = null;
 
-        Transcript trans1 = createTranscript(
+        BreakendTransData trans1 = createTranscript(
                 gene1, transId1, false, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_NONE, 0, getCodingBases(codingStart, codingEnd));
 
@@ -78,7 +76,7 @@ public class FusionRulesTest
         codingStart = 100;
         codingEnd = 200;
 
-        Transcript trans2 = createTranscript(
+        BreakendTransData trans2 = createTranscript(
                 gene2, transId2, false, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_NONE, 10, getCodingBases(codingStart, codingEnd));
 
@@ -276,13 +274,13 @@ public class FusionRulesTest
         String geneId = "ENSG0001";
 
         // SV breakend positions won't impact fusion determination since transcripts are created manually
-        GeneAnnotation gene1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 150, POS_ORIENT);
+        BreakendGeneData gene1 = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 150, POS_ORIENT);
 
         // one on the negative strand
         String geneName2 = "GENE2";
         String geneId2 = "ENSG0003";
 
-        GeneAnnotation gene2 = createGeneAnnotation(0, false, geneName2, geneId2, NEG_STRAND, CHR_1, 150, POS_ORIENT);
+        BreakendGeneData gene2 = createGeneAnnotation(0, false, geneName2, geneId2, NEG_STRAND, CHR_1, 150, POS_ORIENT);
 
         int transId1 = 1;
 
@@ -290,13 +288,13 @@ public class FusionRulesTest
         Integer codingStart = 100;
         Integer codingEnd = 200;
 
-        Transcript transUp = createTranscript(
+        BreakendTransData transUp = createTranscript(
                 gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_1, 10, getCodingBases(codingStart, codingEnd));
 
         int transId2 = 2;
 
-        Transcript transDown = createTranscript(
+        BreakendTransData transDown = createTranscript(
                 gene2, transId2, false, 50, 250, codingStart, codingEnd, "",
                 2, 3, PHASE_0, 10, getCodingBases(codingStart, codingEnd));
 

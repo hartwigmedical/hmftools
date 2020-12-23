@@ -75,7 +75,7 @@ public class KnownFusionCache
                 .anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
     }
 
-    public boolean isSingleBreakendCandidate(final GeneAnnotation gene)
+    public boolean isSingleBreakendCandidate(final BreakendGeneData gene)
     {
         if(mKnownPairData.stream()
                 .anyMatch(x -> (gene.isUpstream() && x.FiveGene.equals(gene.GeneName))

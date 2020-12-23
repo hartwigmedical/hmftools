@@ -14,17 +14,17 @@ import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForwar
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public final class GeneTestUtils
 {
-    public static GeneAnnotation createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, byte strand,
+    public static BreakendGeneData createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, byte strand,
             final String chromosome, int position, int orientation)
     {
         String karyotypeBand = "";
 
-        GeneAnnotation gene = new GeneAnnotation(svId, isStart, geneName, stableId, strand, karyotypeBand);
+        BreakendGeneData gene = new BreakendGeneData(svId, isStart, geneName, stableId, strand, karyotypeBand);
         gene.setPositionalData(chromosome, position, (byte)orientation);
 
         return gene;

@@ -39,7 +39,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.types.SglMapping;
@@ -67,13 +67,13 @@ public class SpecialFusionsTest
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
                 .addData(new KnownFusionData(PROMISCUOUS_3, "", GENE_NAME_1, "", ""));
 
-        List<GeneAnnotation> upGenes = Lists.newArrayList();
+        List<BreakendGeneData> upGenes = Lists.newArrayList();
         int upPos = 1950;
         upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
 
         // add downstream breakends
-        List<GeneAnnotation> downGenes = Lists.newArrayList();
+        List<BreakendGeneData> downGenes = Lists.newArrayList();
         int downPos = 1350;
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
@@ -119,13 +119,13 @@ public class SpecialFusionsTest
         params.AllowExonSkipping = true;
 
         // first DEL doesn't delete a known region even though it's phased
-        List<GeneAnnotation> upGenes = Lists.newArrayList();
+        List<BreakendGeneData> upGenes = Lists.newArrayList();
         int upPos = 1550;
         upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
 
         // add downstream breakends
-        List<GeneAnnotation> downGenes = Lists.newArrayList();
+        List<BreakendGeneData> downGenes = Lists.newArrayList();
 
         int downPos = 2150;
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
@@ -277,12 +277,12 @@ public class SpecialFusionsTest
         params.AllowExonSkipping = true;
 
         // a DEL linking the 2 regions
-        List<GeneAnnotation> upGenes = Lists.newArrayList();
+        List<BreakendGeneData> upGenes = Lists.newArrayList();
         upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome, 200, NEG_ORIENT, 1000));
         upGenes.get(0).setPositionalData(chromosome, 200, NEG_ORIENT);
 
         // add downstream breakends
-        List<GeneAnnotation> downGenes = Lists.newArrayList();
+        List<BreakendGeneData> downGenes = Lists.newArrayList();
 
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome, 9500, NEG_ORIENT, 1000));
         downGenes.get(0).setPositionalData(chromosome, 9500, NEG_ORIENT);

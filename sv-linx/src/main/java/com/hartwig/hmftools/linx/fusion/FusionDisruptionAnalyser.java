@@ -32,10 +32,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.SvRegion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
@@ -261,14 +261,14 @@ public class FusionDisruptionAnalyser
 
                     boolean isStart = isStart(be);
 
-                    List<GeneAnnotation> genesList = var.getGenesList(isStart);
+                    List<BreakendGeneData> genesList = var.getGenesList(isStart);
 
-                    for (GeneAnnotation gene : genesList)
+                    for (BreakendGeneData gene : genesList)
                     {
                         int transIndex = 0;
                         while (transIndex < gene.transcripts().size())
                         {
-                            Transcript transcript = gene.transcripts().get(transIndex);
+                            BreakendTransData transcript = gene.transcripts().get(transIndex);
 
                             // only retain transcript which are potential fusion candidates (with exception for canonical)
                             if (!transcript.isDisruptive() && !validFusionTranscript(transcript) && !transcript.isCanonical())
@@ -309,7 +309,7 @@ public class FusionDisruptionAnalyser
             mUniqueFusions.stream().filter(x -> x.knownType() != NONE).forEach(x -> mFusionFinder.setFusionProteinFeatures(x));
         }
 
-        final List<Transcript> transcripts = getTranscriptList(svList, mUniqueFusions);
+        final List<BreakendTransData> transcripts = getTranscriptList(svList, mUniqueFusions);
 
         final List<LinxBreakend> breakends = Lists.newArrayList();
         final List<LinxFusion> fusions = Lists.newArrayList();
@@ -398,8 +398,8 @@ public class FusionDisruptionAnalyser
             if(var.getCluster().getSvCount() > 1 && var.getCluster().findChain(var) != null)
                 continue;
 
-            final List<GeneAnnotation> genesListStart = getBreakendGeneList(var, true);
-            final List<GeneAnnotation> genesListEnd =  getBreakendGeneList(var, false);
+            final List<BreakendGeneData> genesListStart = getBreakendGeneList(var, true);
+            final List<BreakendGeneData> genesListEnd =  getBreakendGeneList(var, false);
 
             if(genesListStart.isEmpty() || genesListEnd.isEmpty())
                 continue;
@@ -522,7 +522,7 @@ public class FusionDisruptionAnalyser
 
             // handle breakends from a SGL's mapping to known pair genes
             int lowerBreakendPos;
-            List<GeneAnnotation> genesListLower;
+            List<BreakendGeneData> genesListLower;
 
             if(lowerBreakend != null)
             {
@@ -564,7 +564,7 @@ public class FusionDisruptionAnalyser
                     upperSV = chain.getChainEndSV(false);
                 }
 
-                List<GeneAnnotation> genesListUpper;
+                List<BreakendGeneData> genesListUpper;
 
                 if(upperBreakend != null)
                 {
@@ -680,8 +680,8 @@ public class FusionDisruptionAnalyser
                         boolean isUpstream = (se == 0);
 
                         // look at each gene in turn
-                        Transcript transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                        GeneAnnotation gene = isUpstream ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
+                        BreakendTransData transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
+                        BreakendGeneData gene = isUpstream ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
 
                         boolean isLowerBreakend = lowerBreakendPos == gene.position();
 
@@ -812,12 +812,12 @@ public class FusionDisruptionAnalyser
         return false;
     }
 
-    private List<GeneAnnotation> getBreakendGeneList(final SvVarData var, boolean isStart)
+    private List<BreakendGeneData> getBreakendGeneList(final SvVarData var, boolean isStart)
     {
         if(var.isSglBreakend() && !isStart)
         {
             // limit to known fusion genes
-            final List<GeneAnnotation> genesList = var.getGenesList(false);
+            final List<BreakendGeneData> genesList = var.getGenesList(false);
             return genesList.stream().filter(x -> mFusionFinder.getKnownFusionCache().isSingleBreakendCandidate(x)).collect(Collectors.toList());
         }
 
@@ -825,7 +825,7 @@ public class FusionDisruptionAnalyser
     }
 
     private boolean checkTranscriptDisruptionInfo(
-            final SvBreakend breakend, final Transcript transcript, final SvChain chain, int linkIndex)
+            final SvBreakend breakend, final BreakendTransData transcript, final SvChain chain, int linkIndex)
     {
         // return true if the transcript is disrupted before the chain leaves it
 
@@ -943,16 +943,16 @@ public class FusionDisruptionAnalyser
         return uniqueFusions;
     }
 
-    public final List<Transcript> getTranscriptList(final List<SvVarData> svList, final List<GeneFusion> fusions)
+    public final List<BreakendTransData> getTranscriptList(final List<SvVarData> svList, final List<GeneFusion> fusions)
     {
         // add all canonical transcript and then add any additional transcripts from the fusions
-        List<Transcript> transcripts = Lists.newArrayList();
+        List<BreakendTransData> transcripts = Lists.newArrayList();
 
         for (SvVarData var : svList)
         {
             for (int be = SE_START; be <= SE_END; ++be)
             {
-                for (GeneAnnotation geneAnnotation : var.getGenesList(isStart(be)))
+                for (BreakendGeneData geneAnnotation : var.getGenesList(isStart(be)))
                 {
                     transcripts.addAll(geneAnnotation.transcripts().stream()
                             .filter(x -> x.isCanonical())
@@ -986,8 +986,8 @@ public class FusionDisruptionAnalyser
             {
                 int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
 
-                final Transcript transUp = fusion.upstreamTrans();
-                final Transcript transDown = fusion.downstreamTrans();
+                final BreakendTransData transUp = fusion.upstreamTrans();
+                final BreakendTransData transDown = fusion.downstreamTrans();
 
                 mVisWriter.addGeneExonData(clusterId, transUp.gene().StableId, transUp.gene().GeneName,
                         transUp.transName(), transUp.transId(), transUp.gene().chromosome(), GENE_TYPE_FUSION);

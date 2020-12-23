@@ -12,8 +12,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 
 public class RnaMatchWriter
 {
@@ -109,11 +109,11 @@ public class RnaMatchWriter
                         rnaFusion.GeneIds[fs], rnaFusion.GeneNames[fs], rnaFusion.Chromosomes[fs],
                         rnaFusion.Positions[fs], rnaFusion.Orientations[fs], rnaFusion.JunctionTypes[fs], rnaFusion.Strands[fs]));
 
-                final Transcript trans = rnaFusion.getMatchedTranscripts()[fs];
+                final BreakendTransData trans = rnaFusion.getMatchedTranscripts()[fs];
 
                 if(trans != null)
                 {
-                    final GeneAnnotation gene = trans.gene();
+                    final BreakendGeneData gene = trans.gene();
 
                     // SV breakend info
                     mWriter.write(String.format(",%d,%d,%s,%s",

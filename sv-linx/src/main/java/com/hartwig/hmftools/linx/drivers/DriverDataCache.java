@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -144,7 +144,7 @@ public class DriverDataCache
         mIsMale = isMale;
     }
 
-    public DriverGeneData createDriverData(final GeneAnnotation gene)
+    public DriverGeneData createDriverData(final BreakendGeneData gene)
     {
         GeneCopyNumber gcnData = null;
 

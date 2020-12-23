@@ -6,9 +6,7 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExo
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateExonStarts;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 
@@ -20,10 +18,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.GeneAnnotation;
-import com.hartwig.hmftools.common.fusion.Transcript;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 
 public class GeneTestUtils
 {
@@ -167,8 +163,8 @@ public class GeneTestUtils
                 .build();
     }
 
-    public static Transcript createTranscript(
-            final GeneAnnotation gene, int transId, boolean isCanonical,
+    public static BreakendTransData createTranscript(
+            final BreakendGeneData gene, int transId, boolean isCanonical,
             int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType,
             final int exonUpstream, final int exonDownstream, int phase, int codingBases, int totalCodingBases
     )
@@ -177,7 +173,7 @@ public class GeneTestUtils
         TranscriptData transData = new TranscriptData(
                 transId, transName, gene.StableId, isCanonical, gene.Strand, transStart, transEnd, codingStart, codingEnd, bioType);
 
-        return new Transcript(gene, transData, exonUpstream, exonDownstream, phase, codingBases, totalCodingBases);
+        return new BreakendTransData(gene, transData, exonUpstream, exonDownstream, phase, codingBases, totalCodingBases);
     }
 
 }
