@@ -167,12 +167,7 @@ public class SampleAnalyser
     public void setSampleSVs(final List<SvVarData> variants)
     {
         if (variants.isEmpty())
-        {
-            if(mConfig.isSingleSample())
-                writeSampleWithNoSVs();
-
             return;
-        }
 
         mAllVariants.addAll(variants);
 
@@ -415,7 +410,7 @@ public class SampleAnalyser
         mPcWrite.stop();
     }
 
-    private void writeSampleWithNoSVs()
+    public void writeSampleWithNoSVs()
     {
         try
         {
