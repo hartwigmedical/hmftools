@@ -44,7 +44,7 @@ public class CkbImporterTestApp {
         String ckbPath;
 
         if (hostname.toLowerCase().contains("datastore")) {
-            ckbPath = "/data/common/dbs/serve/ckb/";
+            ckbPath = "/data/common/dbs/ckb/";
         } else {
             ckbPath = System.getProperty("user.home") + "/hmf/projects/serve/ckb/";
         }
