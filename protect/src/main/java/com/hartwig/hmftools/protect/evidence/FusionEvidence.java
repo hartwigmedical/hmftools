@@ -27,20 +27,20 @@ public class FusionEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<LinxFusion> fusions) {
-        return fusions.stream().flatMap(x -> evidence(doid, x).stream()).collect(Collectors.toList());
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull List<LinxFusion> fusions) {
+        return fusions.stream().flatMap(x -> evidence(doids, x).stream()).collect(Collectors.toList());
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull LinxFusion reportable) {
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull LinxFusion reportable) {
         List<ProtectEvidenceItem> geneEvidence = actionableGenes.stream()
                 .filter(x -> match(x, reportable))
-                .map(x -> evidence(doid, reportable, x))
+                .map(x -> evidence(doids, reportable, x))
                 .collect(Collectors.toList());
 
         List<ProtectEvidenceItem> fusionEvidence = actionableFusions.stream()
                 .filter(x -> match(x, reportable))
-                .map(x -> evidence(doid, reportable, x))
+                .map(x -> evidence(doids, reportable, x))
                 .collect(Collectors.toList());
 
         Set<ProtectEvidenceItem> result = Sets.newHashSet();
@@ -50,36 +50,36 @@ public class FusionEvidence {
         return ProtectEvidenceItems.reportHighest(result);
     }
 
-    private static boolean match(@NotNull ActionableGene actionable, @NotNull LinxFusion victim) {
-        return actionable.gene().equals(victim.geneStart()) || actionable.gene().equals(victim.geneEnd());
+    private static boolean match(@NotNull ActionableGene actionable, @NotNull LinxFusion reportable) {
+        return actionable.gene().equals(reportable.geneStart()) || actionable.gene().equals(reportable.geneEnd());
     }
 
-    private static boolean match(@NotNull ActionableFusion actionable, @NotNull LinxFusion victim) {
-        if (!actionable.geneDown().equals(victim.geneStart())) {
+    private static boolean match(@NotNull ActionableFusion actionable, @NotNull LinxFusion reportable) {
+        if (!actionable.geneDown().equals(reportable.geneEnd())) {
             return false;
         }
 
-        if (!actionable.geneUp().equals(victim.geneEnd())) {
+        if (!actionable.geneUp().equals(reportable.geneStart())) {
             return false;
         }
 
         Integer actionableMinExonDown = actionable.minExonDown();
-        if (actionableMinExonDown != null && victim.fusedExonDown() < actionableMinExonDown) {
+        if (actionableMinExonDown != null && reportable.fusedExonDown() < actionableMinExonDown) {
             return false;
         }
 
         Integer actionableMaxExonDown = actionable.maxExonDown();
-        if (actionableMaxExonDown != null && victim.fusedExonDown() > actionableMaxExonDown) {
+        if (actionableMaxExonDown != null && reportable.fusedExonDown() > actionableMaxExonDown) {
             return false;
         }
 
         Integer actionableMinExonUp = actionable.minExonUp();
-        if (actionableMinExonUp != null && victim.fusedExonUp() < actionableMinExonUp) {
+        if (actionableMinExonUp != null && reportable.fusedExonUp() < actionableMinExonUp) {
             return false;
         }
 
         Integer actionableMaxExonUp = actionable.maxExonUp();
-        if (actionableMaxExonUp != null && victim.fusedExonUp() > actionableMaxExonUp) {
+        if (actionableMaxExonUp != null && reportable.fusedExonUp() > actionableMaxExonUp) {
             return false;
         }
 

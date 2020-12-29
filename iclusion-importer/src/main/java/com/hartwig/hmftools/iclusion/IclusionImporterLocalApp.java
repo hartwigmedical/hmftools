@@ -12,9 +12,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class iClusionImporterLocalApp {
+public class IclusionImporterLocalApp {
 
-    private static final Logger LOGGER = LogManager.getLogger(iClusionImporterLocalApp.class);
+    private static final Logger LOGGER = LogManager.getLogger(IclusionImporterLocalApp.class);
 
     public static void main(@NotNull final String[] args) throws IOException {
         String apiEndPoint = "https://iclusion.org/api";

@@ -21,27 +21,27 @@ public class CopyNumberEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull List<ReportableGainLoss> reportables) {
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull List<ReportableGainLoss> reportables) {
         List<ProtectEvidenceItem> result = Lists.newArrayList();
         for (ReportableGainLoss reportable : reportables) {
-            result.addAll(evidence(doid, reportable));
+            result.addAll(evidence(doids, reportable));
         }
         return result;
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doid, @NotNull ReportableGainLoss reportable) {
+    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull ReportableGainLoss reportable) {
         List<ProtectEvidenceItem> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(reportable.gene()) && isTypeMatch(actionable, reportable)) {
-                ProtectEvidenceItem evidence = ProtectEvidenceItems.create(actionable.genomicEvent(), doid, actionable);
+                ProtectEvidenceItem evidence = ProtectEvidenceItems.create(actionable.genomicEvent(), doids, actionable);
                 result.add(evidence);
             }
         }
         return ProtectEvidenceItems.reportHighest(result);
     }
 
-    private boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull ReportableGainLoss reportable) {
+    private static boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull ReportableGainLoss reportable) {
         switch (actionable.event()) {
             case AMPLIFICATION:
                 return reportable.interpretation() == CopyNumberInterpretation.GAIN;

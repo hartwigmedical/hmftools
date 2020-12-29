@@ -1,29 +1,21 @@
 package com.hartwig.hmftools.ckb;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialFactory;
 
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-public class CkbImporterApplication {
+public class CkbImporterTestApp {
 
-    private static final Logger LOGGER = LogManager.getLogger(CkbImporterApplication.class);
-    public static final String VERSION = CkbImporterApplication.class.getPackage().getImplementationVersion();
+    private static final Logger LOGGER = LogManager.getLogger(CkbImporterTestApp.class);
 
     private static final String CLINICAL_TRIALS = "clinicalTrials";
     private static final String DRUG_CLASSES = "drugClasses";
@@ -38,60 +30,39 @@ public class CkbImporterApplication {
     private static final String VARIANTS = "variants";
 
     public static void main(String[] args) throws IOException {
-        LOGGER.info("Running CKB importer v{}", VERSION);
+        Configurator.setRootLevel(Level.DEBUG);
 
-        Options options = CkbImporterConfig.createOptions();
+        String hostname = InetAddress.getLocalHost().getHostName();
+        LOGGER.debug("Running on '{}'", hostname);
 
-        CkbImporterConfig config = null;
-        try {
-            config = CkbImporterConfig.createConfig(new DefaultParser().parse(options, args));
-        } catch (ParseException exception) {
-            LOGGER.warn(exception);
-            new HelpFormatter().printHelp("CKB Importer", options);
-            System.exit(1);
+        String ckbPath;
+
+        if (hostname.toLowerCase().contains("datastore")) {
+            ckbPath = "/data/common/dbs/ckb/";
+        } else {
+            ckbPath = System.getProperty("user.home") + "/hmf/projects/serve/ckb/";
         }
 
-        readJsonData(config);
+        readJsonData(ckbPath);
         LOGGER.info("Complete!");
+
     }
 
-    private static void readJsonData(@NotNull CkbImporterConfig config) throws IOException {
-        List<ClinicalTrial> clinicalTrials = readingClinicalTrial(config.cbkDir() + CLINICAL_TRIALS);
-        readingDrugsClasses(config.cbkDir() + DRUG_CLASSES);
-        readingDrugs(config.cbkDir() + DRUGS);
-        readingGenes(config.cbkDir() + GENES);
-        readingGlobalTherapyApprovalStatuses(config.cbkDir() + GLOBAL_THERAPY_APPROVAL_STATUSES);
-        readingIndications(config.cbkDir() + INDICATIONS);
-        readingMolecularProfiles(config.cbkDir() + MOLECULAR_PROFILES);
-        readingReferences(config.cbkDir() + REFERENCES);
-        readingTherapies(config.cbkDir() + THERAPIES);
-        readingTreatmentApproaches(config.cbkDir() + TREATMENT_APPROACHES);
-        readingVariants(config.cbkDir() + VARIANTS);
+    private static void readJsonData(@NotNull String ckbPath) throws IOException {
+        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
+        readingDrugsClasses(ckbPath + DRUG_CLASSES);
+        readingDrugs(ckbPath + DRUGS);
+        readingGenes(ckbPath + GENES);
+        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
+        readingIndications(ckbPath + INDICATIONS);
+        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
+        readingReferences(ckbPath + REFERENCES);
+        readingTherapies(ckbPath + THERAPIES);
+        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
+        readingVariants(ckbPath + VARIANTS);
     }
 
-    @NotNull
-    private static List<ClinicalTrial> readingClinicalTrial(@NotNull String clinicalTrialDir) throws IOException {
-        LOGGER.info("Start reading clinical trials");
 
-        List<ClinicalTrial> clinicalTrials = Lists.newArrayList();
-        File[] filesClinicalTrials = new File(clinicalTrialDir).listFiles();
-        if (filesClinicalTrials != null) {
-            LOGGER.info("The total files in the clinical trial dir is {}", filesClinicalTrials.length);
-            for (File clinicalTrial : filesClinicalTrials) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(clinicalTrial));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject clinicalTrialsEntryObject = parser.parse(reader).getAsJsonObject();
-                    //clinicalTrials.add();
-                }
-            }
-        }
-        LOGGER.info("Finished reading clinical trials");
-
-        return clinicalTrials;
-    }
 
     private static void readingDrugsClasses(@NotNull String drugsClassesDir) throws IOException {
         LOGGER.info("Start reading drugs classes");
@@ -152,4 +123,5 @@ public class CkbImporterApplication {
 
         LOGGER.info("Finished reading variants");
     }
+
 }

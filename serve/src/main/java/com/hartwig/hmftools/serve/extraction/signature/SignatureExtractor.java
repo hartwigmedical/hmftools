@@ -47,7 +47,7 @@ public class SignatureExtractor {
         } else if (highTumorMutationalLoadEvents.contains(event)) {
             return SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD;
         } else if (hrDeficiencyEvents.contains(event)) {
-            return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENCY;
+            return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
         }
 
         return null;

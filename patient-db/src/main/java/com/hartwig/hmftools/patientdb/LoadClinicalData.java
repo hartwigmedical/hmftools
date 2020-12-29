@@ -464,7 +464,7 @@ public final class LoadClinicalData {
 
                 if (cohort == null) {
                     LOGGER.warn("Could not resolve cohort config for sample with barcode {}", tumorSamples.get(0).sampleBarcode());
-                } else if (cohort.cohortId().equals("CORE")) {
+                } else if (cohort.cohortId().contains("CORE")) {
                     String patientId = entry.getKey();
                     Patient corePatient =
                             corePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
