@@ -440,8 +440,8 @@ public class FusionFinder
     private static boolean exonToExonInPhase(final BreakendTransData upTrans, final BreakendTransData downTrans)
     {
         // check phasing and offset since exon start or coding start
-        int upPhase = upTrans.Phase;
-        int downPhase = downTrans.Phase;
+        int upPhase = upTrans.ExonicBasePhase;
+        int downPhase = downTrans.ExonicBasePhase;
 
         if(upPhase == PHASE_NONE && downPhase == PHASE_NONE)
             return true;
@@ -519,7 +519,7 @@ public class FusionFinder
                 knownFusionData.igRegion().start(), knownFusionData.igRegion().end(), null, null, "");
 
         BreakendTransData transcript = new BreakendTransData(
-                gene, transData,  -1, -1, PHASE_NONE, 0, 0);
+                gene, transData,  -1, -1, PHASE_NONE, PHASE_NONE, 0, 0);
 
         transcript.setCodingType(ENHANCER);
         transcript.setRegionType(TranscriptRegionType.IG);

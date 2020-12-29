@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 // class linking an SV breakend to a potentially impacted transcript
 public class BreakendTransData
 {
-
     public final TranscriptData TransData;
 
     public final int ExonUpstream;
@@ -35,7 +34,9 @@ public class BreakendTransData
 
     public final int CodingBases; // number of bases into coding where this breakend occurs
     public final int TotalCodingBases;
-    public int Phase; // phase of base if in exon
+
+    public int Phase; // intronic phase or the start phase for upstream, exon end for downstream
+    public int ExonicBasePhase; // phase of base if in exon
 
     private TranscriptCodingType mCodingType;
     private TranscriptRegionType mRegionType;
@@ -57,7 +58,7 @@ public class BreakendTransData
     public static final int NO_NEXT_SPLICE_ACCEPTOR = -1;
 
     public BreakendTransData(@NotNull final BreakendGeneData gene, final TranscriptData transData,
-            final int exonUpstream, final int exonDownstream, int phase, int codingBases, int totalCodingBases)
+            final int exonUpstream, final int exonDownstream, int phase, int exonicBasePhase, int codingBases, int totalCodingBases)
     {
         TransData = transData;
 
@@ -89,8 +90,10 @@ public class BreakendTransData
         {
             int insSeqLength = gene.insertSequence().length();
             codingBases += insSeqLength;
-            phase = tickPhaseForward(phase, insSeqLength);
+            exonicBasePhase = tickPhaseForward(phase, insSeqLength);
         }
+
+        ExonicBasePhase = exonicBasePhase;
 
         if(codingBases > TotalCodingBases)
             CodingBases = TotalCodingBases;
@@ -138,7 +141,6 @@ public class BreakendTransData
     public int codingEnd() { return TransData.CodingEnd != null ? TransData.CodingEnd : 0; }
     public int transLength() { return TransData.length(); }
     public int exonCount() { return TransData.exons().size(); }
-
 
     public boolean isExonic()
     {

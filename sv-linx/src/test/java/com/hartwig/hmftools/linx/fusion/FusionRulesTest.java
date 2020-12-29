@@ -1,18 +1,36 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.BreakendTransData.POST_CODING_PHASE;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_2;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_2;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.TRANS_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.TRANS_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTranscript;
 
 import static org.junit.Assert.assertEquals;
@@ -25,11 +43,17 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.utils.LinxTester;
 
 import org.junit.Test;
+
+import junit.framework.TestCase;
 
 public class FusionRulesTest
 {
@@ -205,12 +229,12 @@ public class FusionRulesTest
         gene1.setPositionalData(CHR_1, 110, POS_ORIENT);
         trans1 = createTranscript(
                 gene1, transId1, true, 50, 250, codingStart, codingEnd, "",
-                2, 2, PHASE_2, 10, getCodingBases(codingStart, codingEnd));
+                2, 2, PHASE_1, PHASE_2, 10, getCodingBases(codingStart, codingEnd));
 
         gene2.setPositionalData(CHR_1, 190, POS_ORIENT);
         trans2 = createTranscript(
                 gene2, transId2, true, 50, 250, codingStart, codingEnd, "",
-                2, 2, PHASE_2, 10, getCodingBases(codingStart, codingEnd));
+                2, 2, PHASE_0, PHASE_2, 10, getCodingBases(codingStart, codingEnd));
 
         assertTrue(trans1.isExonic());
         assertTrue(trans2.isExonic());
@@ -379,5 +403,89 @@ public class FusionRulesTest
         assertTrue(fusion.phaseMatched());
         assertEquals(2, fusion.getExonsSkipped(true));
         assertEquals(3, fusion.getExonsSkipped(false));
+    }
+
+    @Test
+    public void testExonicFusions()
+    {
+        LinxTester tester = new LinxTester();
+
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+        tester.initialiseFusions(geneTransCache);
+
+        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        geneList.add(createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, 100, 1000));
+
+        int[] exonStarts = new int[]{100, 300, 500, 700, 900};
+
+        TranscriptData transData = createTransExons(GENE_ID_1, TRANS_1, POS_STRAND, exonStarts,  100,
+                150, 950, true, BIOTYPE_PROTEIN_CODING);
+
+        addTransExonData(geneTransCache, GENE_ID_1, Lists.newArrayList(transData));
+
+        geneList.add(createEnsemblGeneData(GENE_ID_2, GENE_NAME_2, CHR_1, POS_STRAND, 10100, 11000));
+
+        addGeneData(geneTransCache, CHR_1, geneList);
+
+        exonStarts = new int[]{10100, 10300, 10500, 10700, 10900};
+
+        transData = createTransExons(GENE_ID_2, TRANS_2, POS_STRAND, exonStarts, 100,
+                10150, 10950, true, BIOTYPE_PROTEIN_CODING);
+
+        addTransExonData(geneTransCache, GENE_ID_2, Lists.newArrayList(transData));
+
+        // upstream exonic to downstream intronic - will use the preceding exon and exon's end phase to fuse
+        List<BreakendGeneData> upGenes = Lists.newArrayList();
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, 701, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, 701, POS_ORIENT);
+
+        List<BreakendGeneData> downGenes = Lists.newArrayList();
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, 10650, NEG_ORIENT);
+
+        FusionParameters params = new FusionParameters();
+        params.RequirePhaseMatch = false;
+        params.AllowExonSkipping = true;
+
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
+
+        assertEquals(1, fusions.size());
+        GeneFusion fusion = fusions.get(0);
+
+        // the selected fusion is the longest for coding bases and without any exon skipping
+        assertTrue(fusion.phaseMatched());
+        assertEquals(0, fusion.transcripts()[FS_UP].ExonicBasePhase);
+        assertEquals(1, fusion.transcripts()[FS_UP].Phase);
+        assertEquals(EXONIC, fusion.transcripts()[FS_UP].regionType());
+        assertEquals(4, fusion.transcripts()[FS_UP].ExonUpstream);
+        assertEquals(3, fusion.transcripts()[FS_DOWN].ExonUpstream);
+        assertEquals(3, fusion.getFusedExon(true));
+        assertEquals(0, fusion.getExonsSkipped(true));
+        assertEquals(0, fusion.getExonsSkipped(false));
+
+        // now an exonic fusion
+        upGenes.clear();
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, 701, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(CHR_1, 701, POS_ORIENT);
+
+        downGenes.clear();
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, 10705, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(CHR_1, 10705, NEG_ORIENT);
+
+        fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
+
+        assertEquals(1, fusions.size());
+        fusion = fusions.get(0);
+
+        // the selected fusion is the longest for coding bases and without any exon skipping
+        assertTrue(fusion.phaseMatched());
+        assertEquals(0, fusion.transcripts()[FS_UP].ExonicBasePhase);
+        assertEquals(1, fusion.transcripts()[FS_DOWN].ExonicBasePhase);
+        assertEquals(EXONIC, fusion.transcripts()[FS_UP].regionType());
+        assertEquals(EXONIC, fusion.transcripts()[FS_DOWN].regionType());
+        assertEquals(4, fusion.transcripts()[FS_UP].ExonUpstream);
+        assertEquals(4, fusion.transcripts()[FS_DOWN].ExonUpstream);
+        assertEquals(4, fusion.getFusedExon(true));
+        assertEquals(4, fusion.getFusedExon(false));
     }
 }

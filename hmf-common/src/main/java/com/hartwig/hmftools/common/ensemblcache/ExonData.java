@@ -19,12 +19,6 @@ public class ExonData
         PhaseEnd = phaseEnd;
     }
 
-    public boolean overlaps(final ExonData other)
-    {
-        // assumes not the same exon
-        return !(Start > other.End || End < other.Start);
-    }
-
     public int length() { return End - Start; }
     public int baseLength() { return length() + 1; }
 

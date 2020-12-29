@@ -79,7 +79,6 @@ public class TranscriptUtils
 
         boolean posInCodingRegion = positionWithin(position, codingStart, codingEnd);
 
-        int startPhase = PHASE_1;
         boolean isExonic = false;
 
         for (int i = 0; i < transData.exons().size(); ++i)

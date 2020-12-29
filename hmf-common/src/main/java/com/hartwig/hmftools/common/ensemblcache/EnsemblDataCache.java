@@ -240,7 +240,7 @@ public class EnsemblDataCache
                     final CodingBaseData cbData = calcCodingBases(transData, position);
 
                     final BreakendTransData postGeneTrans = new BreakendTransData(
-                            currentGene, transData, 1, 1, PHASE_NONE, cbData.CodingBases, cbData.TotalCodingBases);
+                            currentGene, transData, 1, 1, PHASE_NONE, PHASE_NONE, cbData.CodingBases, cbData.TotalCodingBases);
 
                     currentGene.addTranscript(postGeneTrans);
                 }
@@ -276,52 +276,12 @@ public class EnsemblDataCache
                 final CodingBaseData cbData = calcCodingBases(trans, position);
 
                 final BreakendTransData altGeneTrans = new BreakendTransData(
-                        geneAnnotation, trans, 1, 1, PHASE_NONE, cbData.CodingBases, cbData.TotalCodingBases);
+                        geneAnnotation, trans, 1, 1, PHASE_NONE, PHASE_NONE, cbData.CodingBases, cbData.TotalCodingBases);
 
                 geneAnnotation.addTranscript(altGeneTrans);
             }
 
             geneAnnotations.add(geneAnnotation);
-        }
-
-        return geneAnnotations;
-    }
-
-    public List<BreakendGeneData> findGeneAnnotationsByOverlap(int svId, final String chromosome, int posStart, int posEnd)
-    {
-        // create gene and transcript data for any gene fully overlapped by the SV
-        List<BreakendGeneData> geneAnnotations = Lists.newArrayList();
-
-        final List<EnsemblGeneData> chrGeneList = mChrGeneDataMap.get(chromosome);
-
-        if(chrGeneList == null)
-            return geneAnnotations;
-
-        for(final EnsemblGeneData geneData : chrGeneList)
-        {
-            if(!(posStart < geneData.GeneStart && posEnd > geneData.GeneEnd))
-                continue;
-
-            BreakendGeneData currentGene = new BreakendGeneData(svId, true, geneData.GeneName, geneData.GeneId,
-                    geneData.Strand, geneData.KaryotypeBand);
-
-            currentGene.setGeneData(geneData);
-
-            final TranscriptData transcriptData = mTranscriptDataMap.get(geneData.GeneId).stream()
-                    .filter(x -> x.IsCanonical)
-                    .findFirst().orElse(null);
-
-            if (transcriptData == null)
-                continue;
-
-            BreakendTransData transcript = createBreakendTranscriptData(transcriptData, transcriptData.TransStart, currentGene);
-
-            if(transcript != null)
-            {
-                currentGene.addTranscript(transcript);
-            }
-
-            geneAnnotations.add(currentGene);
         }
 
         return geneAnnotations;
@@ -444,12 +404,14 @@ public class EnsemblDataCache
             return null;
 
         boolean isForwardStrand = geneAnnotation.Strand == POS_STRAND;
+        boolean isUpstream = geneAnnotation.isUpstream();
 
         int upExonRank = -1;
         int downExonRank = -1;
         int nextUpDistance = -1;
         int nextDownDistance = -1;
         boolean isCodingTypeOverride = false;
+        int phase = PHASE_NONE;
 
         // first check for a position outside the exon boundaries
         final ExonData firstExon = exonList.get(0);
@@ -475,11 +437,22 @@ public class EnsemblDataCache
 
                 isCodingTypeOverride = transData.CodingStart != null && firstSpaExon.Start > transData.CodingStart;
 
+                if(transData.CodingStart != null)
+                {
+                    if(firstSpaExon.Start > transData.CodingStart)
+                        isCodingTypeOverride = true;
+
+                    if(firstSpaExon.Start == transData.CodingStart)
+                        phase = PHASE_NONE;
+                    else
+                        phase = firstSpaExon.PhaseStart;
+                }
+
                 upExonRank = 0;
             }
             else
             {
-                // falls after the last exon on forward strand or before the first on reverse strand makes this position downstream
+                // falls after the last exon on forward strand or before the first on reverse strand makes this position post-coding
                 return null;
             }
         }
@@ -491,7 +464,16 @@ public class EnsemblDataCache
                 downExonRank = firstSpaExon.Rank;
                 nextDownDistance = position - lastExon.End;
 
-                isCodingTypeOverride = transData.CodingEnd != null && firstSpaExon.End < transData.CodingEnd;
+                if(transData.CodingEnd != null)
+                {
+                    if(firstSpaExon.End < transData.CodingEnd)
+                        isCodingTypeOverride = true;
+
+                    if(firstSpaExon.End == transData.CodingEnd)
+                        phase = PHASE_NONE;
+                    else
+                        phase = firstSpaExon.PhaseStart;
+                }
 
                 upExonRank = 0;
             }
@@ -534,6 +516,8 @@ public class EnsemblDataCache
                         }
                     }
 
+                    phase = isUpstream ? exonData.PhaseStart : exonData.PhaseEnd;
+
                     break;
                 }
                 else if(position < exonData.Start)
@@ -560,6 +544,32 @@ public class EnsemblDataCache
                         nextDownDistance = position - prevExonData.End;
                     }
 
+                    if(isUpstream)
+                    {
+                        if(isForwardStrand)
+                            phase = prevExonData.PhaseEnd;
+                        else
+                            phase = exonData.PhaseEnd;
+                    }
+                    else
+                    {
+                        // if coding starts on the first base of the next exon, use -1
+                        if(isForwardStrand)
+                        {
+                            if(transData.CodingStart != null && transData.CodingStart == exonData.Start)
+                                phase = PHASE_NONE;
+                            else
+                                phase = exonData.PhaseStart;
+                        }
+                        else
+                        {
+                            if(transData.CodingEnd != null && transData.CodingEnd == prevExonData.End)
+                                phase = PHASE_NONE;
+                            else
+                                phase = prevExonData.PhaseStart;
+                        }
+                    }
+
                     break;
                 }
             }
@@ -572,7 +582,7 @@ public class EnsemblDataCache
         final CodingBaseData cbData = calcCodingBases(transData, position);
 
         BreakendTransData transcript = new BreakendTransData(geneAnnotation, transData,
-                upExonRank, downExonRank, cbData.Phase, cbData.CodingBases, cbData.TotalCodingBases);
+                upExonRank, downExonRank, phase, cbData.Phase, cbData.CodingBases, cbData.TotalCodingBases);
 
         // if not set, leave the previous exon null and it will be taken from the closest upstream gene
         transcript.setSpliceAcceptorDistance(true, nextUpDistance >= 0 ? nextUpDistance : null);

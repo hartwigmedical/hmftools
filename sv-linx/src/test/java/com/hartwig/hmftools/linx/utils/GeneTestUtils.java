@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsem
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateExonStarts;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 
@@ -162,18 +163,25 @@ public class GeneTestUtils
                 .likelihoodType(TSG)
                 .build();
     }
+    public static BreakendTransData createTranscript(
+            final BreakendGeneData gene, int transId, boolean isCanonical,
+            int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType,
+            final int exonUpstream, final int exonDownstream, int phase, int codingBases, int totalCodingBases)
+    {
+        return createTranscript(gene, transId, isCanonical, transStart, transEnd, codingStart, codingEnd, bioType,
+                exonUpstream, exonDownstream, phase, PHASE_NONE, codingBases, totalCodingBases);
+    }
 
     public static BreakendTransData createTranscript(
             final BreakendGeneData gene, int transId, boolean isCanonical,
             int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType,
-            final int exonUpstream, final int exonDownstream, int phase, int codingBases, int totalCodingBases
-    )
+            final int exonUpstream, final int exonDownstream, int phase, int exonicPhase, int codingBases, int totalCodingBases)
     {
         final String transName = String.format("TRANS%03d", transId);
         TranscriptData transData = new TranscriptData(
                 transId, transName, gene.StableId, isCanonical, gene.Strand, transStart, transEnd, codingStart, codingEnd, bioType);
 
-        return new BreakendTransData(gene, transData, exonUpstream, exonDownstream, phase, codingBases, totalCodingBases);
+        return new BreakendTransData(gene, transData, exonUpstream, exonDownstream, phase, exonicPhase, codingBases, totalCodingBases);
     }
 
 }
