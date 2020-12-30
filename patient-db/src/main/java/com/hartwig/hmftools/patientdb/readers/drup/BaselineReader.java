@@ -91,10 +91,10 @@ class BaselineReader {
                             || primaryTumorLocationICD.trim().toLowerCase().contains("head, face and neck")) {
                         if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify'")) {
                             primaryTumorLocation =
-                                    primaryTumorLocationICD + "+" + primaryTumorLocationBastTypeOther + "+" + primaryTumorLocationType;
+                                    primaryTumorLocationICD + " + " + primaryTumorLocationBastTypeOther + " + " + primaryTumorLocationType;
                         } else {
                             primaryTumorLocation =
-                                    primaryTumorLocationICD + "+" + primaryTumorLocationBastType + "+" + primaryTumorLocationType;
+                                    primaryTumorLocationICD + " + " + primaryTumorLocationBastType + " + " + primaryTumorLocationType;
                         }
 
                     } else {
