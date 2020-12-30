@@ -50,7 +50,7 @@ public class CorePatientReader {
         CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(limsPrimaryTumorLocation);
         if (curatedPrimaryTumor.location() == null && limsPrimaryTumorLocation != null
                 && !limsPrimaryTumorLocation.isEmpty()) {
-            LOGGER.warn("Could not curate WIDE primary tumor '{}'", limsPrimaryTumorLocation);
+            LOGGER.warn("Could not curate CORE primary tumor '{}'", limsPrimaryTumorLocation);
         }
 
         return ImmutableBaselineData.builder()
