@@ -12,22 +12,26 @@ import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class BaselineReader {
 
     private static final String STUDY_BASELINE = "SE.BAS";
     private static final String STUDY_REGISTRATION = "SE.REG";
     private static final String STUDY_END_OF_TRIAL = "SE.EOT";
+    private static final String STUDY_COHORT = "SE.COHORTS";
 
     private static final String FORM_BASELINE = "FRM.BAS";
     private static final String FORM_CSF = "FRM.CSF"; // Not sure where CSF stands for, could be "clinical study fields"?
     private static final String FORM_REGISTRATION = "FRM.REG";
     private static final String FORM_END_OF_TRIAL = "FRM.EOT";
+    private static final String FORM_COHORT_DATA = "FRM.COHORTDATA";
 
     private static final String ITEMGROUP_BASELINE = "GRP.BAS";
     private static final String ITEMGROUP_CSF = "GRP.CSF"; // Not sure where CSF stands for, could be "clinical study fields"?
     private static final String ITEMGROUP_REGISTRATION = "GRP.REG";
     private static final String ITEMGROUP_END_OF_TRIAL = "GRP.EOT";
+    private static final String ITEMGROUP_COHORT_DATA = "GRP.COHORTDATA";
 
     private static final String FIELD_INFORMED_CONSENT_DATE = "FLD.ICDTC";
     private static final String FIELD_HOSPITAL = "FLD.INST";
@@ -49,6 +53,9 @@ class BaselineReader {
 
     @NotNull
     BaselineData read(@NotNull EcrfPatient patient) {
+        String primaryTumorCohort = null;
+        String primaryTumorType = null;
+
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).build())
                 .demographyStatus(FormStatus.undefined())
@@ -58,48 +65,74 @@ class BaselineReader {
                 .primaryTumorStatus(FormStatus.undefined())
                 .informedConsentStatus(FormStatus.undefined());
 
-        for (EcrfStudyEvent baselineEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
-            setInformedConsentAndPrimaryTumor(baselineBuilder, baselineEvent);
+        for (EcrfStudyEvent endOfTrialEvent : patient.studyEventsPerOID(STUDY_END_OF_TRIAL)) {
+            setDeathDate(baselineBuilder, endOfTrialEvent);
+        }
+
+        for (EcrfStudyEvent studyCohort : patient.studyEventsPerOID(STUDY_COHORT)) {
+            primaryTumorCohort = setPrimaryTumorCohort(studyCohort, primaryTumorCohort);
+
         }
 
         for (EcrfStudyEvent registrationEvent : patient.studyEventsPerOID(STUDY_REGISTRATION)) {
             setBirthYearGenderHospital(baselineBuilder, registrationEvent);
+            primaryTumorType = setPrimaryTumorReg(registrationEvent, primaryTumorType);
+
         }
 
-        for (EcrfStudyEvent endOfTrialEvent : patient.studyEventsPerOID(STUDY_END_OF_TRIAL)) {
-            setDeathDate(baselineBuilder, endOfTrialEvent);
+        for (EcrfStudyEvent baselineEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
+            setInformedConsent(baselineBuilder, baselineEvent);
+            setPrimaryTumor(baselineBuilder, baselineEvent, primaryTumorCohort, primaryTumorType);
         }
 
         return baselineBuilder.build();
     }
 
-    private void setInformedConsentAndPrimaryTumor(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+    private String setPrimaryTumorCohort(@NotNull EcrfStudyEvent studyEvent, @Nullable String primaryTumorCohort) {
+        for (EcrfForm cohortForm : studyEvent.nonEmptyFormsPerOID(FORM_COHORT_DATA)) {
+            for (EcrfItemGroup cohortItemGroup : cohortForm.nonEmptyItemGroupsPerOID(ITEMGROUP_COHORT_DATA)) {
+                primaryTumorCohort = cohortItemGroup.readItemString(FIELD_PRIMARY_TUMOR_ICD10_DESCRIPTION);
+            }
+        }
+        return primaryTumorCohort;
+    }
+
+    private String setPrimaryTumorReg(@NotNull EcrfStudyEvent studyEvent, @Nullable String primaryTumorType) {
+        for (EcrfForm csfForm : studyEvent.nonEmptyFormsPerOID(FORM_CSF)) {
+            for (EcrfItemGroup csfItemGroup : csfForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CSF)) {
+                primaryTumorType = csfItemGroup.readItemString(FIELD_PRIMARY_TUMOR_TTYPE);
+            }
+        }
+        return primaryTumorType;
+    }
+
+    private void setPrimaryTumor(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
+            @Nullable String primaryTumorCohort, @Nullable String primaryTumorTtype) {
         String primaryTumorLocation = null;
+        String primaryTumorLocationBastType = null;
+        String primaryTumorLocationBastTypeOther = null;
 
         for (EcrfForm baselineForm : studyEvent.nonEmptyFormsPerOID(FORM_BASELINE)) {
             for (EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
-                builder.informedConsentDate(baselineItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
 
-                String primaryTumorLocationICD = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_ICD10_DESCRIPTION);
-                String primaryTumorLocationBastType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
-                String primaryTumorLocationBastTypeOther = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
-                String primaryTumorLocationType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_TTYPE);
+                primaryTumorLocationBastType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
+                primaryTumorLocationBastTypeOther = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
 
-                if (primaryTumorLocationICD != null) {
-                    if (primaryTumorLocationICD.trim().toLowerCase().contains("biliary tract") || primaryTumorLocationICD.trim()
+                if (primaryTumorCohort != null) {
+                    if (primaryTumorCohort.trim().toLowerCase().contains("biliary tract") || primaryTumorCohort.trim()
                             .toLowerCase()
-                            .contains("'colon'") || primaryTumorLocationICD.trim().toLowerCase().contains("urinary organ")
-                            || primaryTumorLocationICD.trim().toLowerCase().contains("head, face and neck")) {
-                        if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify'")) {
+                            .contains("'colon'") || primaryTumorCohort.trim().toLowerCase().contains("urinary organ")
+                            || primaryTumorCohort.trim().toLowerCase().contains("head, face and neck")) {
+                        if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify")) {
                             primaryTumorLocation =
-                                    primaryTumorLocationICD + " + " + primaryTumorLocationBastTypeOther + " + " + primaryTumorLocationType;
+                                    primaryTumorCohort + " + " + primaryTumorLocationBastTypeOther + " + " + primaryTumorTtype;
                         } else {
                             primaryTumorLocation =
-                                    primaryTumorLocationICD + " + " + primaryTumorLocationBastType + " + " + primaryTumorLocationType;
+                                    primaryTumorCohort + " + " + primaryTumorLocationBastType + " + " + primaryTumorTtype;
                         }
 
                     } else {
-                        primaryTumorLocation = primaryTumorLocationICD;
+                        primaryTumorLocation = primaryTumorCohort;
                     }
 
                 }
@@ -108,6 +141,17 @@ class BaselineReader {
                 // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.informedConsentStatus(baselineForm.status());
                 builder.primaryTumorStatus(baselineForm.status());
+            }
+        }
+    }
+
+    private void setInformedConsent(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+        for (EcrfForm baselineForm : studyEvent.nonEmptyFormsPerOID(FORM_BASELINE)) {
+            for (EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
+                builder.informedConsentDate(baselineItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
+
+                // This is somewhat ugly, the states are too tied with CPCT datamodel.
+                builder.informedConsentStatus(baselineForm.status());
             }
         }
     }
