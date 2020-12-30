@@ -132,14 +132,8 @@ class BaselineReader {
             for (EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
                 primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationOther = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
-                if (primaryTumorLocationCarcinoma != null && primaryTumorLocationCarcinoma.trim().toLowerCase().startsWith("other")) {
-                    primaryTumorLocationCarcinoma = primaryTumorLocationOther;
-                } else if (primaryTumorLocationOther != null && !primaryTumorLocationOther.isEmpty()) {
-                    // TODO See DEV-906
-                    //                    LOGGER.warn("{} has extra details specified for primary tumor location {}: {}",
-                    //                            patientId,
-                    //                            primaryTumorLocationCarcinoma,
-                    //                            primaryTumorLocationOther);
+                if (primaryTumorLocationCarcinoma != null && primaryTumorLocationOther != null) {
+                    primaryTumorLocationCarcinoma = primaryTumorLocationCarcinoma + " + " + primaryTumorLocationOther;
                 }
                 primaryTumorLocationCarcinomaStatus = carcinomaForm.status();
             }
