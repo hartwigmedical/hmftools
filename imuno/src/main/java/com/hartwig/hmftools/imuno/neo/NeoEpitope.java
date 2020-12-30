@@ -107,15 +107,15 @@ public abstract class NeoEpitope
 
     public void setCodingBases(final RefGenomeInterface refGenome, int reqAminoAcids)
     {
-        boolean isPhased = phaseMatched();
-        int upPhaseOffset = getUpstreamOpenCodonBases();
-        int downPhaseOffset = getDownstreamPhaseOffset();
-
         extractCodingBases(refGenome, reqAminoAcids);
 
         adjustCodingBasesForStrand(this);
 
         DownstreamNmdBases = calcNonMediatedDecayBases(this, FS_DOWN);
+
+        boolean isPhased = phaseMatched();
+        int upPhaseOffset = getUpstreamOpenCodonBases();
+        int downPhaseOffset = getDownstreamPhaseOffset();
 
         // if upstream ends on a phase other than 2, need to take the bases from the downstream gene to make a novel codon
         if(upPhaseOffset > 0 || downPhaseOffset > 0 || !isPhased)

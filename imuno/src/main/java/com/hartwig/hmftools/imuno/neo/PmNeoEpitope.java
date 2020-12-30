@@ -190,7 +190,7 @@ public class PmNeoEpitope extends NeoEpitope
 
         downCodingBases = getDownstreamCodingBases(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
-                downRequiredBases, canStartInExon);
+                downRequiredBases, canStartInExon, false);
 
         CodingBases[FS_UP] = upCodingBases;
         CodingBases[FS_DOWN] = downCodingBases;

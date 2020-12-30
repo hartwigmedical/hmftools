@@ -201,7 +201,7 @@ public class NeoUtils
 
     public static String getDownstreamCodingBases(
             final RefGenomeInterface refGenome, final TranscriptData transData,
-            final String chromosome, int nePosition, byte neOrientation, int requiredBases, boolean canStartInExon)
+            final String chromosome, int nePosition, byte neOrientation, int requiredBases, boolean canStartInExon, boolean reqSpliceAcceptor)
     {
         if(requiredBases == 0)
             return "";
@@ -222,7 +222,7 @@ public class NeoUtils
                 final ExonData exon = exonDataList.get(i);
 
                 // starts after the first exon, ie at the first splice acceptor
-                if(exon.Rank == 1)
+                if(reqSpliceAcceptor && exon.Rank == 1)
                     continue;
 
                 if(nePosition > exon.End)
@@ -269,7 +269,7 @@ public class NeoUtils
             {
                 final ExonData exon = exonDataList.get(i);
 
-                if(exon.Rank == 1)
+                if(reqSpliceAcceptor && exon.Rank == 1)
                     continue;
                 
                 if(nePosition < exon.Start)

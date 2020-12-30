@@ -121,7 +121,7 @@ public class SvNeoEpitope extends NeoEpitope
 
         CodingBases[FS_DOWN] = getDownstreamCodingBases(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), position(FS_DOWN), orientation(FS_DOWN),
-                downRequiredBases, canStartInExon);
+                downRequiredBases, canStartInExon, true);
 
         IM_LOGGER.trace("ne({}) phased({} up={} down={}) reqBases(up={} down={}) insSeqLen({})",
                 toString(), phaseMatched(), upPhaseOffset, downPhaseOffset, upRequiredBases, downRequiredBases, codingInsSequence.length());
