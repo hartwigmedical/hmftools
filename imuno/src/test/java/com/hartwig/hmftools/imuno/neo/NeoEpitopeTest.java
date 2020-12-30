@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.imuno.neo;
 
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
@@ -16,7 +17,9 @@ import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTrans
 import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.swapDnaToRna;
 import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.swapRnaToDna;
-import static com.hartwig.hmftools.imuno.neo.NeoUtils.getCodingBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.ALL_TRANS_BASES;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBases;
 
 import static org.junit.Assert.assertEquals;
 
@@ -67,8 +70,9 @@ public class NeoEpitopeTest
         return String.valueOf(str);
     }
 
+
     @Test
-    public void testSetCodingBases()
+    public void testUpstreamCodingBases()
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
@@ -77,11 +81,6 @@ public class NeoEpitopeTest
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
         // tests: repeated for each strand
-        // upstream: intronic
-        // upstream: intronic, coding bases insufficient for required bases
-        // upstream: exonic
-        // upstream: exonic, coding bases insufficient for required bases
-        // upstream: exonic, coding finishes in same exon
 
         int[] exonStarts = {0, 20, 40, 60, 80, 100};
         Integer codingStart = new Integer(25);
@@ -94,102 +93,210 @@ public class NeoEpitopeTest
         int nePosition = 32; // intronic
         byte neOrientation = NEG_ORIENT;
 
-        String codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 9, true);
+        String codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 9);
 
         String actCodingBases = chr1Bases.substring(40, 49);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // spanning 3 exons
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 25, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 25);
 
         actCodingBases = chr1Bases.substring(40, 51) + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 83);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // upstream: intronic, coding bases insufficient for required bases
         nePosition = 76;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10);
 
         actCodingBases = chr1Bases.substring(80, 86);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // upstream: exonic
         nePosition = 44;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10);
 
         actCodingBases = chr1Bases.substring(44, 51) + chr1Bases.substring(60, 63);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // upstream: exonic, coding bases insufficient for required bases
         nePosition = 68;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10);
 
         actCodingBases = chr1Bases.substring(68, 71) + chr1Bases.substring(80, 86);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // upstream: exonic, coding finishes in same exon
         nePosition = 81;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10);
 
         actCodingBases = chr1Bases.substring(81, 86);
         Assert.assertEquals(actCodingBases, codingBases);
-
-        // downstream, when not allowed to start in the same exon
-        nePosition = 44;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 15, false);
-
-        actCodingBases = chr1Bases.substring(60, 71) + chr1Bases.substring(80, 84);
-        Assert.assertEquals(actCodingBases, codingBases);
-
 
         // test again with reverse orientation
         neOrientation = POS_ORIENT;
         nePosition = 55; // intronic
 
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 9, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 9);
 
         actCodingBases = chr1Bases.substring(42, 51);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // spanning 3 exons
         nePosition = 75;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 25, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 25);
 
         actCodingBases = chr1Bases.substring(28, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 71);
         Assert.assertEquals(actCodingBases, codingBases);
 
-        // downstream: intronic, coding bases insufficient for required bases
+        // intronic, coding bases insufficient for required bases
         nePosition = 35;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10);
 
         actCodingBases = chr1Bases.substring(25, 31);
         Assert.assertEquals(actCodingBases, codingBases);
 
-        // downstream: exonic
+        // exonic
         nePosition = 44;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10);
 
         actCodingBases = chr1Bases.substring(26, 31) + chr1Bases.substring(40, 45);
         Assert.assertEquals(actCodingBases, codingBases);
 
-        // downstream: exonic, coding bases insufficient for required bases
+        // exonic, coding bases insufficient for required bases
         nePosition = 40;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10);
 
         actCodingBases = chr1Bases.substring(25, 31) + chr1Bases.substring(40, 41);
         Assert.assertEquals(actCodingBases, codingBases);
 
-        // downstream: exonic, coding finishes in same exon
+        // exonic, coding finishes in same exon
         nePosition = 29;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10, true);
+        codingBases = getUpstreamCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 10);
 
         actCodingBases = chr1Bases.substring(25, 30);
         Assert.assertEquals(actCodingBases, codingBases);
+    }
 
-        // downstream, when not allowed to start in the same exon
-        nePosition = 64;
-        codingBases = getCodingBases(refGenome, transDataUp, CHR_1, nePosition, neOrientation, 15, false);
+    @Test
+    public void testDownstreamCodingBases()
+    {
+        final MockRefGenome refGenome = new MockRefGenome();
 
-        actCodingBases = chr1Bases.substring(27, 31) + chr1Bases.substring(40, 51);
+        final String chr1Bases = generateRandomBases(280);
+
+        refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
+
+        // tests: repeated for each strand
+        // intronic within coding section
+        // starting in an exon but skipping it
+        // starting in an exon and using it
+        // upstream starting at first splice acceptor (2nd exon)
+        // getting all remaining bases
+        // non-coding - get all bases
+
+        int[] exonStarts = { 100, 120, 140, 160, 180, 200, 220, 240, 260 };
+        Integer codingStart = new Integer(125);
+        Integer codingEnd = new Integer(245);
+
+        TranscriptData transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
+
+        // intronic
+        int nePosition = 132;
+        byte neOrientation = NEG_ORIENT;
+
+        String codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 9, true);
+
+        String actCodingBases = chr1Bases.substring(140, 149);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // not allowed to start in the same exon
+        nePosition = 144;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 15, false);
+
+        actCodingBases = chr1Bases.substring(160, 171) + chr1Bases.substring(180, 184);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // allowed to start in an exon
+        nePosition = 147;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(47, 51) + chr1Bases.substring(160, 166);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // upstream
+        nePosition = 80;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 15, true);
+
+        actCodingBases = chr1Bases.substring(120, 131) + chr1Bases.substring(140, 144);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // all remaining bases
+        nePosition = 215;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, ALL_TRANS_BASES, false);
+
+        actCodingBases = chr1Bases.substring(220, 231) + chr1Bases.substring(240, 251) + chr1Bases.substring(260, 271);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // non-coding transcript
+        transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, null, null, false, "");
+
+        nePosition = 215;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, ALL_TRANS_BASES, false);
+
+        actCodingBases = chr1Bases.substring(220, 231) + chr1Bases.substring(240, 251) + chr1Bases.substring(260, 271);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+
+        // repeated for negative strand
+        transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
+
+        nePosition = 155;
+        neOrientation = POS_ORIENT;
+
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 11, false);
+
+        actCodingBases = chr1Bases.substring(140, 151);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // not allowed to start in the same exon
+        nePosition = 165;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 10, false);
+
+        actCodingBases = chr1Bases.substring(141, 151);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // allowed to start in an exon
+        nePosition = 165;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 10, true);
+
+        actCodingBases = chr1Bases.substring(147, 151) + chr1Bases.substring(160, 166);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // upstream
+        nePosition = 300;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 15, true);
+
+        actCodingBases = chr1Bases.substring(227, 231) + chr1Bases.substring(240, 251);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // all remaining bases
+        nePosition = 135;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, ALL_TRANS_BASES, false);
+
+        actCodingBases = chr1Bases.substring(100, 111) + chr1Bases.substring(120, 131);
+        Assert.assertEquals(actCodingBases, codingBases);
+
+        // non-coding transcript
+        transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, null, null, false, "");
+
+        nePosition = 135;
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, ALL_TRANS_BASES, false);
+
+        actCodingBases = chr1Bases.substring(100, 111) + chr1Bases.substring(120, 131);
         Assert.assertEquals(actCodingBases, codingBases);
     }
 
@@ -198,7 +305,7 @@ public class NeoEpitopeTest
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
-        final String chr1Bases = generateRandomBases(100);
+        final String chr1Bases = generateRandomBases(120);
 
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
@@ -227,8 +334,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(2, neData.Phases[FS_UP]);
-        assertEquals(0, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_0, neData.Phases[FS_UP]);
+        assertEquals(PHASE_1, neData.Phases[FS_DOWN]);
         assertEquals(3, neData.ExonRank[FS_UP]);
         assertEquals(3, neData.ExonRank[FS_DOWN]);
         Assert.assertTrue(neData.phaseMatched());
@@ -258,8 +365,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(0, neData.Phases[FS_UP]);
-        assertEquals(1, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_1, neData.Phases[FS_UP]);
+        assertEquals(PHASE_2, neData.Phases[FS_DOWN]);
         assertEquals(3, neData.ExonRank[FS_UP]);
         assertEquals(3, neData.ExonRank[FS_DOWN]);
         Assert.assertTrue(neData.phaseMatched());
@@ -292,8 +399,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(INTRONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(2, neData.Phases[FS_UP]);
-        assertEquals(2, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_0, neData.Phases[FS_UP]);
+        assertEquals(PHASE_0, neData.Phases[FS_DOWN]);
         assertEquals(2, neData.ExonRank[FS_UP]);
         assertEquals(3, neData.ExonRank[FS_DOWN]);
         Assert.assertTrue(neData.phaseMatched());
@@ -323,8 +430,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(2, neData.Phases[FS_UP]); // pushed out 2 by the inserted bases
-        assertEquals(1, neData.Phases[FS_DOWN]); // whatever it would usually be
+        assertEquals(PHASE_0, neData.Phases[FS_UP]); // pushed out 2 by the inserted bases
+        assertEquals(PHASE_2, neData.Phases[FS_DOWN]); // whatever it would usually be
         assertEquals(2, neData.ExonRank[FS_UP]);
         assertEquals(2, neData.ExonRank[FS_DOWN]);
         assertFalse(neData.phaseMatched());
@@ -334,7 +441,9 @@ public class NeoEpitopeTest
         upBases = chr1Bases.substring(25, 28) + pmData.Alt;
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        downBases = chr1Bases.substring(29, 31) + chr1Bases.substring(40, 47);
+        downBases = chr1Bases.substring(29, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91)
+                + chr1Bases.substring(100, 111);
+
         assertEquals("", neData.CodingBases[FS_DOWN]);
         assertEquals(downBases, neData.NovelCodonBases); // due to lack of phasing
 
@@ -355,8 +464,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(1, neData.Phases[FS_UP]);
-        assertEquals(2, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_2, neData.Phases[FS_UP]);
+        assertEquals(PHASE_0, neData.Phases[FS_DOWN]);
         assertEquals(3, neData.ExonRank[FS_UP]);
         assertEquals(3, neData.ExonRank[FS_DOWN]);
         Assert.assertTrue(neData.phaseMatched());
@@ -394,8 +503,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(1, neData.Phases[FS_UP]);
-        assertEquals(2, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_2, neData.Phases[FS_UP]);
+        assertEquals(PHASE_0, neData.Phases[FS_DOWN]);
         assertEquals(4, neData.ExonRank[FS_UP]);
         assertEquals(4, neData.ExonRank[FS_DOWN]);
         Assert.assertTrue(neData.phaseMatched());
@@ -428,8 +537,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(INTRONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(1, neData.Phases[FS_UP]);
-        assertEquals(1, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_2, neData.Phases[FS_UP]);
+        assertEquals(PHASE_2, neData.Phases[FS_DOWN]);
         assertEquals(4, neData.ExonRank[FS_UP]);
         assertEquals(3, neData.ExonRank[FS_DOWN]);
         Assert.assertTrue(neData.phaseMatched());
@@ -462,8 +571,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(1, neData.Phases[FS_UP]); // pushed out 2 by the inserted bases
-        assertEquals(2, neData.Phases[FS_DOWN]); // whatever it would usually be
+        assertEquals(PHASE_2, neData.Phases[FS_UP]); // pushed out 2 by the inserted bases
+        assertEquals(PHASE_0, neData.Phases[FS_DOWN]); // whatever it would usually be
         assertEquals(4, neData.ExonRank[FS_UP]);
         assertEquals(4, neData.ExonRank[FS_DOWN]);
         Assert.assertTrue(neData.phaseMatched());
@@ -496,8 +605,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(0, neData.Phases[FS_UP]);
-        assertEquals(1, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_1, neData.Phases[FS_UP]);
+        assertEquals(PHASE_2, neData.Phases[FS_DOWN]);
         assertEquals(4, neData.ExonRank[FS_UP]);
         assertEquals(4, neData.ExonRank[FS_DOWN]);
         Assert.assertTrue(neData.phaseMatched());
@@ -519,7 +628,7 @@ public class NeoEpitopeTest
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
-        final String chr1Bases = generateRandomBases(100);
+        final String chr1Bases = generateRandomBases(120);
 
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
@@ -561,10 +670,10 @@ public class NeoEpitopeTest
         String upBases = chr1Bases.substring(25, 31);
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        String novelBases = chr1Bases.substring(40, 46); // + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 86);
+        String novelBases = chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91) + chr1Bases.substring(100, 111);
+
         assertEquals(novelBases, neData.NovelCodonBases);
 
-        // String downBases = chr1Bases.substring(43, 51) + chr1Bases.substring(60, 61);
         assertEquals("", neData.CodingBases[FS_DOWN]);
 
         // intronic to exonic - skips to next exon
@@ -580,8 +689,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(INTRONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(2, neData.Phases[FS_UP]);
-        assertEquals(1, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_0, neData.Phases[FS_UP]);
+        assertEquals(PHASE_2, neData.Phases[FS_DOWN]);
         assertEquals(2, neData.ExonRank[FS_UP]);
         assertEquals(4, neData.ExonRank[FS_DOWN]);
         assertFalse(neData.phaseMatched());
@@ -591,7 +700,7 @@ public class NeoEpitopeTest
         upBases = chr1Bases.substring(25, 31);
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        novelBases = chr1Bases.substring(40, 46); // + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 86);
+        novelBases = chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91) + chr1Bases.substring(100, 111);
         assertEquals(novelBases, neData.NovelCodonBases);
 
         // String downBases = chr1Bases.substring(43, 51) + chr1Bases.substring(60, 61);
@@ -610,8 +719,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(1, neData.Phases[FS_UP]);
-        assertEquals(2, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_2, neData.Phases[FS_UP]);
+        assertEquals(PHASE_0, neData.Phases[FS_DOWN]);
         assertEquals(3, neData.ExonRank[FS_UP]);
         assertEquals(4, neData.ExonRank[FS_DOWN]);
         Assert.assertTrue(neData.phaseMatched());
@@ -642,8 +751,8 @@ public class NeoEpitopeTest
         assertEquals(CODING, neData.CodingType[FS_DOWN]);
         assertEquals(EXONIC, neData.RegionType[FS_UP]);
         assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
-        assertEquals(0, neData.Phases[FS_UP]);
-        assertEquals(2, neData.Phases[FS_DOWN]);
+        assertEquals(PHASE_1, neData.Phases[FS_UP]);
+        assertEquals(PHASE_0, neData.Phases[FS_DOWN]);
         assertEquals(3, neData.ExonRank[FS_UP]);
         assertEquals(4, neData.ExonRank[FS_DOWN]);
         assertFalse(neData.phaseMatched());
@@ -653,7 +762,7 @@ public class NeoEpitopeTest
         upBases = chr1Bases.substring(28, 31) + chr1Bases.substring(40, 45) + insSequence.substring(0, 1);
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        novelBases = insSequence.substring(1, 2) + chr1Bases.substring(63, 71) + chr1Bases.substring(80, 83);
+        novelBases = insSequence.substring(1, 2) + chr1Bases.substring(63, 71) + chr1Bases.substring(80, 91) + chr1Bases.substring(100, 111);
         assertEquals(novelBases, neData.NovelCodonBases);
 
         assertEquals("", neData.CodingBases[FS_DOWN]);

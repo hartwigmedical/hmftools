@@ -151,11 +151,13 @@ public abstract class NeoEpitope
             if(upstreamBases.length() > requiredLength)
                 upstreamBases = upstreamBases.substring(upstreamBases.length() - requiredLength);
 
+            /*
             if(downstreamBases.length() > requiredLength)
                 downstreamBases = downstreamBases.substring(0, requiredLength);
 
             if(NovelCodonBases.length() > requiredLength + 3)
                 NovelCodonBases = NovelCodonBases.substring(0, requiredLength + 3);
+            */
 
             CodingBases[FS_UP] = upstreamBases;
             CodingBases[FS_DOWN] = downstreamBases;
@@ -170,8 +172,15 @@ public abstract class NeoEpitope
     {
         boolean isPhased = phaseMatched();
         UpstreamAcids = getAminoAcids(CodingBases[FS_UP], false);
-        NovelAcid = getAminoAcids(NovelCodonBases, !isPhased);
-        DownstreamAcids = getAminoAcids(CodingBases[FS_DOWN], !isPhased);
+        NovelAcid = getAminoAcids(NovelCodonBases, true);
+        DownstreamAcids = getAminoAcids(CodingBases[FS_DOWN], true);
+
+        // truncate the novel bases and AAs if a stop codon is encountered
+        if(NovelAcid.endsWith(STOP_SYMBOL))
+        {
+            int novelBases = NovelAcid.length() * 3;
+            NovelCodonBases = NovelCodonBases.substring(0, novelBases);
+        }
 
         IM_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",
                 this, UpstreamAcids, checkTrimBases(NovelAcid), checkTrimBases(DownstreamAcids));

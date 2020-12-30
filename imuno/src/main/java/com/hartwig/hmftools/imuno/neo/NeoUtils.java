@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPh
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.convertDnaCodonToAminoAcid;
 import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.isStopCodon;
 import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.reverseStrandBases;
@@ -99,16 +101,15 @@ public class NeoUtils
         }
     }
 
-    public static String getCodingBases(
+    public static String getUpstreamCodingBases(
             final RefGenomeInterface refGenome, final TranscriptData transData,
-            final String chromosome, int nePosition, byte neOrientation,
-            int requiredBases, boolean canStartInExon)
+            final String chromosome, int nePosition, byte neOrientation, int requiredBases)
     {
-        if(requiredBases <= 0)
+        if(requiredBases <= 0 || transData.CodingStart == null)
             return "";
 
-        int codingStart = transData.CodingStart != null ? transData.CodingStart : transData.TransStart;
-        int codingEnd = transData.CodingEnd != null ? transData.CodingEnd : transData.TransEnd;
+        // int codingStart = transData.CodingStart : transData.TransStart;
+        // int codingEnd = transData.CodingEnd : transData.TransEnd;
 
         final List<ExonData> exonDataList = transData.exons();
 
@@ -124,32 +125,26 @@ public class NeoUtils
                 if(nePosition > exon.End)
                     continue;
 
-                if(codingStart > exon.End) // no coding bases reached yet
-                    continue;
-
-                if(positionWithin(nePosition, exon.Start, exon.End) && !canStartInExon)
-                    continue; // will start at the next exon
-
-                if(exon.Start > codingEnd)
+                if(exon.Start > transData.CodingEnd)
                     break; // no more coding bases
 
-                int exonCodingStart = max(codingStart, exon.Start);
-                exonCodingStart = max(exonCodingStart, nePosition);
-                int exonCodingEnd = min(codingEnd, exon.End);
-                int exonCodingBases = exonCodingEnd - exonCodingStart + 1;
+                int exonBaseStart = max(exon.Start, nePosition);
+
+                int exonBaseEnd = min(transData.CodingEnd, exon.End);
+                int exonBaseCount = exonBaseEnd - exonBaseStart + 1;
 
                 int baseStart, baseEnd;
 
-                if(requiredBases >= exonCodingBases)
+                if(requiredBases >= exonBaseCount)
                 {
                     // take them all
-                    baseStart = exonCodingStart;
-                    baseEnd = exonCodingEnd;
-                    requiredBases -= exonCodingBases;
+                    baseStart = exonBaseStart;
+                    baseEnd = exonBaseEnd;
+                    requiredBases -= exonBaseCount;
                 }
                 else
                 {
-                    baseStart = exonCodingStart;
+                    baseStart = exonBaseStart;
                     baseEnd = baseStart + requiredBases - 1;
                     requiredBases = 0;
                 }
@@ -169,32 +164,25 @@ public class NeoUtils
                 if(nePosition < exon.Start)
                     continue;
 
-                if(codingEnd < exon.Start)
-                    continue;
-
-                if(positionWithin(nePosition, exon.Start, exon.End) && !canStartInExon)
-                    continue;
-
-                if(exon.End < codingStart)
+                if(exon.End < transData.CodingStart)
                     break;
 
-                int exonCodingEnd = min(codingEnd, exon.End);
-                exonCodingEnd = min(exonCodingEnd, nePosition);
-                int exonCodingStart = max(codingStart, exon.Start);
-                int exonCodingBases = exonCodingEnd - exonCodingStart + 1;
+                int exonBaseEnd = min(exon.End, nePosition);
+                int exonBaseStart = max(transData.CodingStart, exon.Start);
+                int exonBaseCount = exonBaseEnd - exonBaseStart + 1;
 
                 int baseStart, baseEnd;
 
-                if(requiredBases >= exonCodingBases)
+                if(requiredBases >= exonBaseCount)
                 {
                     // take them all
-                    baseStart = exonCodingStart;
-                    baseEnd = exonCodingEnd;
-                    requiredBases -= exonCodingBases;
+                    baseStart = exonBaseStart;
+                    baseEnd = exonBaseEnd;
+                    requiredBases -= exonBaseCount;
                 }
                 else
                 {
-                    baseEnd = exonCodingEnd;
+                    baseEnd = exonBaseEnd;
                     baseStart = baseEnd - requiredBases + 1;
                     requiredBases = 0;
                 }
@@ -202,6 +190,126 @@ public class NeoUtils
                 baseString = refGenome.getBaseString(chromosome, baseStart, baseEnd) + baseString;
 
                 if (requiredBases <= 0)
+                    break;
+            }
+        }
+
+        return baseString;
+    }
+
+    public static final int ALL_TRANS_BASES = -1;
+
+    public static String getDownstreamCodingBases(
+            final RefGenomeInterface refGenome, final TranscriptData transData,
+            final String chromosome, int nePosition, byte neOrientation, int requiredBases, boolean canStartInExon)
+    {
+        if(requiredBases == 0)
+            return "";
+
+        boolean reqAllBases = (requiredBases == ALL_TRANS_BASES);
+
+        int codingStart = transData.CodingStart != null ? transData.CodingStart : transData.TransStart;
+        int codingEnd = transData.CodingEnd != null ? transData.CodingEnd : transData.TransEnd;
+
+        final List<ExonData> exonDataList = transData.exons();
+
+        String baseString = "";
+
+        if(neOrientation == NEG_ORIENT)
+        {
+            for (int i = 0; i < exonDataList.size(); ++i)
+            {
+                final ExonData exon = exonDataList.get(i);
+
+                // starts after the first exon, ie at the first splice acceptor
+                if(exon.Rank == 1)
+                    continue;
+
+                if(nePosition > exon.End)
+                    continue;
+
+                if(positionWithin(nePosition, exon.Start, exon.End) && !canStartInExon)
+                    continue; // will start at the next exon
+
+                if(exon.Start > codingEnd && !reqAllBases)
+                    break; // no more coding bases
+
+                int exonBaseStart = max(nePosition, exon.Start);
+
+                int exonBaseEnd = !reqAllBases ? min(codingEnd, exon.End) : exon.End;
+                int exonBaseCount = exonBaseEnd - exonBaseStart + 1;
+
+                int baseStart, baseEnd;
+
+                if(requiredBases >= exonBaseCount || reqAllBases)
+                {
+                    // take them all
+                    baseStart = exonBaseStart;
+                    baseEnd = exonBaseEnd;
+
+                    if(!reqAllBases)
+                        requiredBases -= exonBaseCount;
+                }
+                else
+                {
+                    baseStart = exonBaseStart;
+                    baseEnd = baseStart + requiredBases - 1;
+                    requiredBases = 0;
+                }
+
+                baseString += refGenome.getBaseString(chromosome, baseStart, baseEnd);
+
+                if (requiredBases <= 0 && !reqAllBases)
+                    break;
+            }
+        }
+        else
+        {
+            for(int i = exonDataList.size() - 1; i >= 0; --i)
+            {
+                final ExonData exon = exonDataList.get(i);
+
+                if(exon.Rank == 1)
+                    continue;
+                
+                if(nePosition < exon.Start)
+                    continue;
+
+                if(codingEnd < exon.Start && !reqAllBases)
+                    continue;
+
+                if(positionWithin(nePosition, exon.Start, exon.End) && !canStartInExon)
+                    continue;
+
+                if(exon.End < codingStart && !reqAllBases)
+                    break;
+
+                int exonBaseEnd = min(nePosition, exon.End);
+
+                int exonBaseStart = !reqAllBases ? max(codingStart, exon.Start) : exon.Start;
+                int exonBaseCount = exonBaseEnd - exonBaseStart + 1;
+
+                int baseStart, baseEnd;
+
+                if(requiredBases >= exonBaseCount || reqAllBases)
+                {
+                    // take them all
+                    baseStart = exonBaseStart;
+                    baseEnd = exonBaseEnd;
+
+                    if(!reqAllBases)
+                        requiredBases -= exonBaseCount;
+                }
+                else
+                {
+                    baseEnd = exonBaseEnd;
+                    baseStart = baseEnd - requiredBases + 1;
+                    requiredBases = 0;
+                }
+
+                baseString = refGenome.getBaseString(chromosome, baseStart, baseEnd) + baseString;
+
+                if (requiredBases <= 0 && !reqAllBases)
                     break;
             }
         }
@@ -287,8 +395,11 @@ public class NeoUtils
         {
             String codonBases = baseString.substring(index, index + 3);
 
-            if(isStopCodon(codonBases) && checkStopCodon)
+            if(checkStopCodon && isStopCodon(codonBases))
+            {
+                aminoAcidStr += STOP_SYMBOL;
                 break;
+            }
 
             String aminoAcid = convertDnaCodonToAminoAcid(codonBases);
 

@@ -5,11 +5,12 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
-import static com.hartwig.hmftools.imuno.neo.NeoUtils.getCodingBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.ALL_TRANS_BASES;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptCodingData;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
 
@@ -90,7 +91,6 @@ public class SvNeoEpitope extends NeoEpitope
         // phasing already takes insert sequence into account, so just adjust for the number of bases required
 
         int upPhaseOffset = getUpstreamOpenCodonBases();
-
         int downPhaseOffset = getDownstreamPhaseOffset();
 
         String codingInsSequence = "";
@@ -105,9 +105,8 @@ public class SvNeoEpitope extends NeoEpitope
 
         int upRequiredBases = requiredAminoAcids * 3 + upPhaseOffset;
 
-        CodingBases[FS_UP] = getCodingBases(
-                refGenome, TransData[FS_UP], chromosome(FS_UP), position(FS_UP), orientation(FS_UP),
-                upRequiredBases, true);
+        CodingBases[FS_UP] = getUpstreamCodingBases(
+                refGenome, TransData[FS_UP], chromosome(FS_UP), position(FS_UP), orientation(FS_UP), upRequiredBases);
 
         if(!codingInsSequence.isEmpty())
         {
@@ -117,10 +116,10 @@ public class SvNeoEpitope extends NeoEpitope
                 CodingBases[FS_UP]= codingInsSequence + CodingBases[FS_UP];
         }
 
-        boolean canStartInExon = RegionType[FS_UP] == TranscriptRegionType.EXONIC;
-        int downRequiredBases = requiredAminoAcids * 3 + downPhaseOffset;
+        boolean canStartInExon = RegionType[FS_UP] == TranscriptRegionType.EXONIC || upPhaseOffset > 0;
+        int downRequiredBases = phaseMatched() ? requiredAminoAcids * 3 + downPhaseOffset : ALL_TRANS_BASES;
 
-        CodingBases[FS_DOWN] = getCodingBases(
+        CodingBases[FS_DOWN] = getDownstreamCodingBases(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), position(FS_DOWN), orientation(FS_DOWN),
                 downRequiredBases, canStartInExon);
 

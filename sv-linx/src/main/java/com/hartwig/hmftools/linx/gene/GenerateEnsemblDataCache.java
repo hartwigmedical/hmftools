@@ -199,22 +199,24 @@ public class GenerateEnsemblDataCache
                 if(transId == transData.TransId)
                     continue;
 
-                int exonCount = transData.exons().size();
-
-                if(exonCount <= 1)
+                if(transData.exons().size() <= 1) // must have a splice acceptor
                     continue;
 
-                final ExonData firstSpaExon = strand == POS_STRAND ? transData.exons().get(1) : transData.exons().get(exonCount - 2);
+                for(ExonData exon : transData.exons())
+                {
+                    if(exon.Rank == 1)
+                        continue;
 
-                if (strand == POS_STRAND && firstSpaExon.Start < transStartPos)
-                {
-                    if (closestPosition == -1 || firstSpaExon.Start > closestPosition)
-                        closestPosition = firstSpaExon.Start;
-                }
-                else if (strand == NEG_STRAND && firstSpaExon.End > transStartPos)
-                {
-                    if (closestPosition == -1 || firstSpaExon.End < closestPosition)
-                        closestPosition = firstSpaExon.End;
+                    if(strand == POS_STRAND && exon.Start < transStartPos)
+                    {
+                        if (closestPosition == -1 || exon.Start > closestPosition)
+                            closestPosition = exon.Start;
+                    }
+                    else if(strand == NEG_STRAND && exon.End > transStartPos)
+                    {
+                        if (closestPosition == -1 || exon.End < closestPosition)
+                            closestPosition = exon.End;
+                    }
                 }
             }
         }

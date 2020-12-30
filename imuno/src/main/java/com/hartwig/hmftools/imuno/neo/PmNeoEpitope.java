@@ -10,7 +10,9 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
-import static com.hartwig.hmftools.imuno.neo.NeoUtils.getCodingBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.ALL_TRANS_BASES;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptCodingData;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
 
@@ -170,9 +172,8 @@ public class PmNeoEpitope extends NeoEpitope
             downPosition = mPointMutation.Position - 1;
         }
 
-        upCodingBases = getCodingBases(
-                refGenome, TransData[FS_UP], chromosome(FS_UP), upPosition, orientation(FS_UP),
-                upRequiredBases, true);
+        upCodingBases = getUpstreamCodingBases(
+                refGenome, TransData[FS_UP], chromosome(FS_UP), upPosition, orientation(FS_UP), upRequiredBases);
 
         // the ref bases was excluded and is now replaced by the alt
         if(TransData[FS_UP].Strand == POS_STRAND)
@@ -185,9 +186,9 @@ public class PmNeoEpitope extends NeoEpitope
         }
 
         boolean canStartInExon = true; // assumed true for now RegionType[FS_UPSTREAM] == TranscriptRegionType.EXONIC;
-        int downRequiredBases = requiredAminoAcids * 3 + downPhaseOffset;
+        int downRequiredBases = phaseMatched() ? requiredAminoAcids * 3 + downPhaseOffset : ALL_TRANS_BASES;
 
-        downCodingBases = getCodingBases(
+        downCodingBases = getDownstreamCodingBases(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
                 downRequiredBases, canStartInExon);
 

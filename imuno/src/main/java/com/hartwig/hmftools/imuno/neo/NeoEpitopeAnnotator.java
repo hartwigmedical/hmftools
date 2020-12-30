@@ -169,6 +169,10 @@ public class NeoEpitopeAnnotator
                     if(sameGene && upTransData.TransId != downTransData.TransId)
                         continue;
 
+                    // must have a splice acceptor
+                    if(downTransData.exons().size() <= 1)
+                        continue;
+
                     int transRangeStart, transRangeEnd;
 
                     if(downTransData.Strand == POS_STRAND)
@@ -191,6 +195,7 @@ public class NeoEpitopeAnnotator
                     if(downTransData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))
                         continue;
 
+                    // ensure that another transcript's splice acceptor doesn't disrupt this one
                     if(hasPriorAlternativeSpliceAcceptor(downTransData, fusion.Positions[FS_DOWN]))
                         continue;
 
