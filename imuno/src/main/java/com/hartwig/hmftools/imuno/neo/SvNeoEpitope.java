@@ -38,6 +38,7 @@ public class SvNeoEpitope extends NeoEpitope
     {
         return mSvFusion.Chromosomes[stream];
     }
+    public String geneName(int stream) { return mSvFusion.GeneNames[stream]; }
 
     public String variantType()
     {
@@ -99,7 +100,6 @@ public class SvNeoEpitope extends NeoEpitope
             codingInsSequence = mSvFusion.InsertSequence;
 
             int upstreamPhase = tickPhaseForward(Phases[FS_UP], codingInsSequence.length());
-            // int upstreamPhase = codingBasesToPhase(Phases[FS_UP] + 1 - codingInsSequence.length());
             upPhaseOffset = getUpstreamOpenCodonBases(upstreamPhase);
         }
 

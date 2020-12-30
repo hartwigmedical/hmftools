@@ -3,6 +3,7 @@ package com.hartwig.hmftools.imuno.neo;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
+import static com.hartwig.hmftools.imuno.common.ImunoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.SV_FUSION_FILE;
@@ -67,7 +69,7 @@ public class NeoEpitopeAnnotator
         mSampleFusionMap = Maps.newHashMap();
 
         mGeneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.RG_37);
-        mGeneTransCache.setRequiredData(true, false, false, false);
+        mGeneTransCache.setRequiredData(true, false, true, false);
         mGeneTransCache.setRestrictedGeneIdList(mConfig.RestrictedGeneIds);
         mGeneTransCache.load(false);
         mGeneTransCache.createGeneNameIdMap();
@@ -151,20 +153,45 @@ public class NeoEpitopeAnnotator
             final List<TranscriptData> upTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_UP]);
             final List<TranscriptData> downTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_DOWN]);
 
+            boolean sameGene = fusion.GeneIds[FS_UP].equals(fusion.GeneIds[FS_DOWN]);
+
             for(TranscriptData upTransData : upTransDataList)
             {
                 if(upTransData.CodingStart == null)
                     continue;
 
-                if(!positionWithin(fusion.Positions[FS_UP], upTransData.TransStart, upTransData.TransEnd))
+                if(!positionWithin(fusion.Positions[FS_UP], upTransData.CodingStart, upTransData.CodingEnd))
                     continue;
 
                 for(TranscriptData downTransData : downTransDataList)
                 {
-                    if(!positionWithin(fusion.Positions[FS_DOWN], downTransData.TransStart, downTransData.TransEnd))
+                    // if the same gene then must be the same transcript
+                    if(sameGene && upTransData.TransId != downTransData.TransId)
                         continue;
 
+                    int transRangeStart, transRangeEnd;
+
+                    if(downTransData.Strand == POS_STRAND)
+                    {
+                        transRangeStart = downTransData.TransStart - DOWNSTREAM_PRE_GENE_DISTANCE;
+                        transRangeEnd = downTransData.TransEnd;
+                    }
+                    else
+                    {
+                        transRangeStart = downTransData.TransStart;
+                        transRangeEnd = downTransData.TransEnd + DOWNSTREAM_PRE_GENE_DISTANCE;
+                    }
+
+                    if(!positionWithin(fusion.Positions[FS_DOWN], transRangeStart, transRangeEnd))
+                        continue;
+
+                    // restrict downstream transcripts which are in the promotor those without a prior splice acceptor from any other transcript
+                    // including from other genes
+
                     if(downTransData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))
+                        continue;
+
+                    if(hasPriorAlternativeSpliceAcceptor(downTransData, fusion.Positions[FS_DOWN]))
                         continue;
 
                     NeoEpitope neData = new SvNeoEpitope(fusion);
@@ -177,6 +204,24 @@ public class NeoEpitopeAnnotator
 
             processNeoEpitopes(neDataList);
         }
+    }
+
+    private boolean hasPriorAlternativeSpliceAcceptor(final TranscriptData transData, int position)
+    {
+        int preTransDistance = transData.Strand == POS_STRAND ? transData.TransStart - position : position - transData.TransEnd;
+
+        if(preTransDistance <= 0)
+            return false;
+
+        int preTransSpliceAcceptorPos = mGeneTransCache.findPrecedingGeneSpliceAcceptorPosition(transData.TransId);
+
+        if(preTransSpliceAcceptorPos == -1)
+            return false;
+
+        int preTransSpliceAcceptorDistance = transData.Strand == POS_STRAND ?
+                transData.TransStart - preTransSpliceAcceptorPos : preTransSpliceAcceptorPos - transData.TransEnd;
+
+        return preTransSpliceAcceptorDistance < preTransDistance;
     }
 
     private void addPointMutations(final List<PointMutationData> pointMutations)
@@ -280,14 +325,15 @@ public class NeoEpitopeAnnotator
 
                 mWriter = createBufferedWriter(outputFileName, false);
 
-                mWriter.write("SampleId,VariantType,VariantInfo,CopyNumber,GeneIdUp,GeneIdDown,");
+                mWriter.write("SampleId,VariantType,VariantInfo,CopyNumber,GeneIdUp,GeneIdDown,GeneNameUp,GeneNameDown");
                 mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NMDBases,Transcripts");
                 mWriter.newLine();
             }
 
-            mWriter.write(String.format("%s,%s,%s,%.2f,%s,%s",
+            mWriter.write(String.format("%s,%s,%s,%.2f,%s,%s,%s,%s",
                     mCurrentSampleId, neData.variantType(), neData.variantInfo(), neData.copyNumber(),
-                    neData.TransData[FS_UP].GeneId, neData.TransData[FS_DOWN].GeneId));
+                    neData.TransData[FS_UP].GeneId, neData.TransData[FS_DOWN].GeneId,
+                    neData.geneName(FS_UP), neData.geneName(FS_DOWN)));
 
             mWriter.write(String.format(",%s,%s,%s,%d",
                     neData.UpstreamAcids, neData.DownstreamAcids, neData.NovelAcid, neData.DownstreamNmdBases));

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.imuno.neo;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
@@ -74,12 +75,17 @@ public abstract class NeoEpitope
 
     public static int getUpstreamOpenCodonBases(int phase)
     {
+        // assumes a codon starts with phase 1
+        return phase == PHASE_NONE ? 0 : phase;
+
+        /*
         if(phase == 0)
             return 1;
         else if(phase == 1)
             return 2;
         else
             return 0;
+        */
     }
 
     public int getUpstreamOpenCodonBases() { return getUpstreamOpenCodonBases(Phases[FS_UP]); }
@@ -92,6 +98,7 @@ public abstract class NeoEpitope
 
     public abstract int position(int stream);
     public abstract String chromosome(int stream);
+    public abstract String geneName(int stream);
     public abstract void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData);
     public abstract void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids);
     public abstract String variantType();

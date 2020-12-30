@@ -67,6 +67,8 @@ public class PmNeoEpitope extends NeoEpitope
         return mPointMutation.Chromosome;
     }
 
+    public String geneName(int stream) { return mPointMutation.Gene; }
+
     public String variantType()
     {
         // missense, inframe insertion, inframe deletion, frameshift,
