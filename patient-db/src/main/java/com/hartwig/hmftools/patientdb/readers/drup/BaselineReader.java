@@ -121,7 +121,7 @@ class BaselineReader {
                 if (primaryTumorCohort != null) {
                     if (primaryTumorCohort.trim().toLowerCase().contains("biliary tract") || primaryTumorCohort.trim()
                             .toLowerCase()
-                            .contains("'colon'") || primaryTumorCohort.trim().toLowerCase().contains("urinary organ")
+                            .contains("colon") || primaryTumorCohort.trim().toLowerCase().contains("urinary organ")
                             || primaryTumorCohort.trim().toLowerCase().contains("head, face and neck")) {
                         if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify")) {
                             primaryTumorLocation =
