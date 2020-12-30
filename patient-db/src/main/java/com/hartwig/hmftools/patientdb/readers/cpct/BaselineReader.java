@@ -133,7 +133,7 @@ class BaselineReader {
                 primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationOther = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 if (primaryTumorLocationCarcinoma != null && primaryTumorLocationOther != null) {
-                    primaryTumorLocationCarcinoma = primaryTumorLocationCarcinoma + "+" + primaryTumorLocationOther;
+                    primaryTumorLocationCarcinoma = primaryTumorLocationCarcinoma + " + " + primaryTumorLocationOther;
                 } else if (primaryTumorLocationOther != null && !primaryTumorLocationOther.isEmpty()) {
                     // TODO See DEV-906
                     //                    LOGGER.warn("{} has extra details specified for primary tumor location {}: {}",
