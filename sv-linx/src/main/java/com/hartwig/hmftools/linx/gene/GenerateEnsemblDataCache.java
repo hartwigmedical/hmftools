@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.linx.gene;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
@@ -17,6 +22,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -49,22 +55,27 @@ public class GenerateEnsemblDataCache
     {
         final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
+        final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(RG_37)));
+
         LNX_LOGGER.info("writing Ensembl data files to {}", outputDir);
 
-        EnsemblDAO ensemblDAO = new EnsemblDAO(cmd);
-
-        if(!ensemblDAO.isValid())
+        if(EnsemblDAO.hasDatabaseConfig(cmd))
         {
-            LNX_LOGGER.info("invalid Ensembl DAO");
-            return;
-        }
+            EnsemblDAO ensemblDAO = new EnsemblDAO(cmd);
 
-        ensemblDAO.writeDataCacheFiles(outputDir);
+            if(!ensemblDAO.isValid())
+            {
+                LNX_LOGGER.info("invalid Ensembl DAO");
+                return;
+            }
+
+            ensemblDAO.writeDataCacheFiles(outputDir);
+        }
 
         LNX_LOGGER.debug("reloading transcript data to generate splice acceptor positions");
 
         // create the transcript splice acceptor position data
-        EnsemblDataCache geneTransCache = new EnsemblDataCache(outputDir, ensemblDAO.refGenomeVersion());
+        EnsemblDataCache geneTransCache = new EnsemblDataCache(outputDir, refGenomeVersion);
         geneTransCache.load(false);
 
         createTranscriptPreGenePositionData(
@@ -75,7 +86,7 @@ public class GenerateEnsemblDataCache
 
     private static void createTranscriptPreGenePositionData(
             final Map<String, List<EnsemblGeneData>> chrGeneDataMap, final Map<String, List<TranscriptData>> transcriptDataMap,
-            long preGenePromotorDistance, final String outputDir)
+            int preGenePromotorDistance, final String outputDir)
     {
         // generate a cache file of the nearest upstream splice acceptor from another gene for each transcript
         try
@@ -104,23 +115,30 @@ public class GenerateEnsemblDataCache
                 {
                     List<String> proximateGenes = Lists.newArrayList();
 
+                    int geneRangeStart;
+                    int geneRangeEnd;
+
+                    if (gene.Strand == POS_STRAND)
+                    {
+                        geneRangeStart = gene.GeneStart - preGenePromotorDistance;
+                        geneRangeEnd = gene.GeneEnd;
+                    }
+                    else
+                    {
+                        geneRangeStart = gene.GeneStart;
+                        geneRangeEnd = gene.GeneEnd + preGenePromotorDistance;
+                    }
+
                     for (final EnsemblGeneData otherGene : geneList)
                     {
-                        if (otherGene.Strand != gene.Strand || otherGene.GeneId.equals(gene.GeneId))
+                        if (otherGene.Strand != gene.Strand)
                             continue;
 
-                        if (gene.Strand == 1)
-                        {
-                            if (otherGene.GeneStart >= gene.GeneStart || otherGene.GeneEnd < gene.GeneStart - preGenePromotorDistance)
-                                continue;
+                        //if (otherGene.GeneId.equals(gene.GeneId)) // skip same gene
+                        //    continue;
 
-                            proximateGenes.add(otherGene.GeneId);
-                        }
-                        else
+                        if(positionsOverlap(geneRangeStart, geneRangeEnd, otherGene.GeneStart, otherGene.GeneEnd))
                         {
-                            if (otherGene.GeneEnd <= gene.GeneEnd || otherGene.GeneStart > gene.GeneEnd + preGenePromotorDistance)
-                                continue;
-
                             proximateGenes.add(otherGene.GeneId);
                         }
                     }
@@ -136,9 +154,9 @@ public class GenerateEnsemblDataCache
 
                     for(final TranscriptData transData : transDataList)
                     {
-                        long transStartPos = gene.Strand == 1 ? transData.TransStart : transData.TransEnd;
+                        long transStartPos = gene.Strand == POS_STRAND ? transData.TransStart : transData.TransEnd;
 
-                        long firstSpliceAcceptorPos = findFirstSpliceAcceptor(transStartPos, gene.Strand, proximateGenes, transcriptDataMap);
+                        long firstSpliceAcceptorPos = findFirstSpliceAcceptor(transData.TransId, transStartPos, gene.Strand, proximateGenes, transcriptDataMap);
 
                         if(firstSpliceAcceptorPos < 0)
                             continue;
@@ -164,7 +182,8 @@ public class GenerateEnsemblDataCache
     }
 
     private static long findFirstSpliceAcceptor(
-            long transStartPos, int strand, final List<String> proximateGenes, final Map<String, List<TranscriptData>> transDataMap)
+            int transId, long transStartPos, int strand,
+            final List<String> proximateGenes, final Map<String, List<TranscriptData>> transDataMap)
     {
         long closestPosition = -1;
 
@@ -177,19 +196,25 @@ public class GenerateEnsemblDataCache
 
             for(final TranscriptData transData : transDataList)
             {
-                for (final ExonData exonData : transData.exons())
+                if(transId == transData.TransId)
+                    continue;
+
+                int exonCount = transData.exons().size();
+
+                if(exonCount <= 1)
+                    continue;
+
+                final ExonData firstSpaExon = strand == POS_STRAND ? transData.exons().get(1) : transData.exons().get(exonCount - 2);
+
+                if (strand == POS_STRAND && firstSpaExon.Start < transStartPos)
                 {
-                    // find the closest exon fully before the transcript start, and then record its splice acceptor position
-                    if (strand == 1 && exonData.End < transStartPos)
-                    {
-                        if (closestPosition == -1 || exonData.Start > closestPosition)
-                            closestPosition = exonData.Start;
-                    }
-                    else if (strand == -1 && exonData.Start > transStartPos)
-                    {
-                        if (closestPosition == -1 || exonData.End < closestPosition)
-                            closestPosition = exonData.End;
-                    }
+                    if (closestPosition == -1 || firstSpaExon.Start > closestPosition)
+                        closestPosition = firstSpaExon.Start;
+                }
+                else if (strand == NEG_STRAND && firstSpaExon.End > transStartPos)
+                {
+                    if (closestPosition == -1 || firstSpaExon.End < closestPosition)
+                        closestPosition = firstSpaExon.End;
                 }
             }
         }

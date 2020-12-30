@@ -64,7 +64,6 @@ public class NeoEpitopeWriter
         {
             for (final BreakendGeneData gene2 : breakendGenes2)
             {
-                // can allow upstream to upstream in reverse order??
                 if (gene1.isUpstream() == gene2.isUpstream())
                     continue;
 

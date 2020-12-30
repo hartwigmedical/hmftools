@@ -82,6 +82,11 @@ public class EnsemblDAO
         return transName.equals("ENST00000467125"); // GOPC processed transcript which matches a ROS1 splice site
     }
 
+    public static boolean hasDatabaseConfig(final CommandLine cmd)
+    {
+        return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER) && cmd.hasOption(DB_PASS);
+    }
+
     private boolean connectDB(final CommandLine cmd)
     {
         mDbContext = null;
