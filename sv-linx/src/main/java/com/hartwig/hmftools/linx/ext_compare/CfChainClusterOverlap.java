@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -79,9 +79,9 @@ public class CfChainClusterOverlap
         csvOutput.add(String.valueOf(mChains.size()));
 
         // count of SVs in both a chain and cluster in this group
-        StringJoiner clusterIds = new StringJoiner(SUBSET_SPLIT);
-        StringJoiner clusterCounts = new StringJoiner(SUBSET_SPLIT);
-        StringJoiner resolvedTypes = new StringJoiner(SUBSET_SPLIT);
+        StringJoiner clusterIds = new StringJoiner(ITEM_DELIM);
+        StringJoiner clusterCounts = new StringJoiner(ITEM_DELIM);
+        StringJoiner resolvedTypes = new StringJoiner(ITEM_DELIM);
 
         int totalSVs = 0;
         int sglSVs = 0;
@@ -110,8 +110,8 @@ public class CfChainClusterOverlap
             }
         }
 
-        StringJoiner chainIds = new StringJoiner(SUBSET_SPLIT);
-        StringJoiner chainCounts = new StringJoiner(SUBSET_SPLIT);
+        StringJoiner chainIds = new StringJoiner(ITEM_DELIM);
+        StringJoiner chainCounts = new StringJoiner(ITEM_DELIM);
 
         int sharedSVs = 0;
         int chainedSVs = 0;
@@ -143,8 +143,8 @@ public class CfChainClusterOverlap
 
     public String toString()
     {
-        StringJoiner clusterIds = new StringJoiner(SUBSET_SPLIT);
-        StringJoiner chainIds = new StringJoiner(SUBSET_SPLIT);
+        StringJoiner clusterIds = new StringJoiner(ITEM_DELIM);
+        StringJoiner chainIds = new StringJoiner(ITEM_DELIM);
         mChains.forEach(x -> chainIds.add(String.valueOf(x.Id)));
         mClusters.forEach(x -> clusterIds.add(String.valueOf(x.id())));
 

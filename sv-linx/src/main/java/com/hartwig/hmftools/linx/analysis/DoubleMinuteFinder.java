@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.DoubleMinuteData.getMajorAlleleJcnRatio;
@@ -429,7 +429,7 @@ public class DoubleMinuteFinder
                     chromosomes.add(chromosome);
             }
 
-            svIds = appendStr(svIds, var.idStr(), SUBSET_DELIM);
+            svIds = appendStr(svIds, var.idStr(), ITEM_DELIM_CHR);
         }
 
         final String dmTypesStr = getSvTypesStr(typeCounts);
@@ -444,10 +444,10 @@ public class DoubleMinuteFinder
         {
             String amplifiedGenes = getAmplifiedGenesList(chain);
             if(!amplifiedGenes.isEmpty())
-                amplifiedGenesStr = appendStr(amplifiedGenesStr, amplifiedGenes, SUBSET_DELIM);
+                amplifiedGenesStr = appendStr(amplifiedGenesStr, amplifiedGenes, ITEM_DELIM_CHR);
         }
 
-        final String chromosomeStr = appendStrList(chromosomes, SUBSET_DELIM);
+        final String chromosomeStr = appendStrList(chromosomes, ITEM_DELIM_CHR);
 
         try
         {

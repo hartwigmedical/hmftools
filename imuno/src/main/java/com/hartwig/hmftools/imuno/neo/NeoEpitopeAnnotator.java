@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.imuno.neo;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
@@ -69,7 +71,7 @@ public class NeoEpitopeAnnotator
         mSampleFusionMap = Maps.newHashMap();
 
         mGeneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.RG_37);
-        mGeneTransCache.setRequiredData(true, false, true, false);
+        mGeneTransCache.setRequiredData(true, false, false, false);
         mGeneTransCache.setRestrictedGeneIdList(mConfig.RestrictedGeneIds);
         mGeneTransCache.load(false);
         mGeneTransCache.createGeneNameIdMap();
@@ -152,12 +154,13 @@ public class NeoEpitopeAnnotator
             // find all transcripts where the breakend is inside the coding region on the 5' gene
             final List<TranscriptData> upTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_UP]);
             final List<TranscriptData> downTransDataList = mGeneTransCache.getTranscripts(fusion.GeneIds[FS_DOWN]);
+            final String[] validTranscriptNames = fusion.Transcripts;
 
             boolean sameGene = fusion.GeneIds[FS_UP].equals(fusion.GeneIds[FS_DOWN]);
 
             for(TranscriptData upTransData : upTransDataList)
             {
-                if(upTransData.CodingStart == null)
+                if(!validTranscriptNames[FS_UP].contains(upTransData.TransName))
                     continue;
 
                 if(!positionWithin(fusion.Positions[FS_UP], upTransData.CodingStart, upTransData.CodingEnd))
@@ -189,14 +192,7 @@ public class NeoEpitopeAnnotator
                     if(!positionWithin(fusion.Positions[FS_DOWN], transRangeStart, transRangeEnd))
                         continue;
 
-                    // restrict downstream transcripts which are in the promotor those without a prior splice acceptor from any other transcript
-                    // including from other genes
-
-                    if(downTransData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))
-                        continue;
-
-                    // ensure that another transcript's splice acceptor doesn't disrupt this one
-                    if(hasPriorAlternativeSpliceAcceptor(downTransData, fusion.Positions[FS_DOWN]))
+                    if(!validTranscriptNames[FS_DOWN].contains(downTransData.TransName))
                         continue;
 
                     NeoEpitope neData = new SvNeoEpitope(fusion);
@@ -209,24 +205,6 @@ public class NeoEpitopeAnnotator
 
             processNeoEpitopes(neDataList);
         }
-    }
-
-    private boolean hasPriorAlternativeSpliceAcceptor(final TranscriptData transData, int position)
-    {
-        int preTransDistance = transData.Strand == POS_STRAND ? transData.TransStart - position : position - transData.TransEnd;
-
-        if(preTransDistance <= 0)
-            return false;
-
-        int preTransSpliceAcceptorPos = mGeneTransCache.findPrecedingGeneSpliceAcceptorPosition(transData.TransId);
-
-        if(preTransSpliceAcceptorPos == -1)
-            return false;
-
-        int preTransSpliceAcceptorDistance = transData.Strand == POS_STRAND ?
-                transData.TransStart - preTransSpliceAcceptorPos : preTransSpliceAcceptorPos - transData.TransEnd;
-
-        return preTransSpliceAcceptorDistance < preTransDistance;
     }
 
     private void addPointMutations(final List<PointMutationData> pointMutations)
@@ -305,17 +283,6 @@ public class NeoEpitopeAnnotator
         }
     }
 
-    private boolean isDuplicate(final NeoEpitope neData)
-    {
-        return false;
-
-        /*
-        return mNeoEpitopeResults.stream()
-                .anyMatch(x -> x.fusion().svId(true) == fusion.svId(true)
-                        && x.fusion().svId(false) == fusion.svId(false));
-        */
-    }
-
     private void writeData(final NeoEpitope neData, final Set<String> transNames)
     {
         if(mConfig.OutputDir.isEmpty())
@@ -331,7 +298,7 @@ public class NeoEpitopeAnnotator
                 mWriter = createBufferedWriter(outputFileName, false);
 
                 mWriter.write("SampleId,VariantType,VariantInfo,CopyNumber,GeneIdUp,GeneIdDown,GeneNameUp,GeneNameDown");
-                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NMDBases,Transcripts");
+                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NMDBases,Phased,Transcripts");
                 mWriter.newLine();
             }
 
@@ -340,8 +307,8 @@ public class NeoEpitopeAnnotator
                     neData.TransData[FS_UP].GeneId, neData.TransData[FS_DOWN].GeneId,
                     neData.geneName(FS_UP), neData.geneName(FS_DOWN)));
 
-            mWriter.write(String.format(",%s,%s,%s,%d",
-                    neData.UpstreamAcids, neData.DownstreamAcids, neData.NovelAcid, neData.DownstreamNmdBases));
+            mWriter.write(String.format(",%s,%s,%s,%d,%s",
+                    neData.UpstreamAcids, neData.DownstreamAcids, neData.NovelAcid, neData.DownstreamNmdBases, neData.phaseMatched()));
 
             final StringJoiner transStr = new StringJoiner(";");
             transNames.forEach(x -> transStr.add(x));

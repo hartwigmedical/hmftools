@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
@@ -341,7 +341,7 @@ public class SvCluster
 
         other.getLohEvents().stream().forEach(this::addLohEvent);
 
-        String[] clusterReasons = other.getClusteringReasons().split(SUBSET_SPLIT);
+        String[] clusterReasons = other.getClusteringReasons().split(ITEM_DELIM);
         for(int i = 0; i < clusterReasons.length; ++i)
         {
             if(clusterReasons[i].isEmpty())
@@ -385,7 +385,7 @@ public class SvCluster
     {
         if(!mClusteringReasons.contains(reason.toString()))
         {
-            mClusteringReasons = appendStr(mClusteringReasons, reason.toString(), SUBSET_DELIM);
+            mClusteringReasons = appendStr(mClusteringReasons, reason.toString(), ITEM_DELIM_CHR);
         }
     }
 
@@ -840,7 +840,7 @@ public class SvCluster
 
     public boolean hasAnnotation(final String annotation) { return mAnnotationList.contains(annotation); }
 
-    public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (SUBSET_SPLIT)); }
+    public String getAnnotations() { return mAnnotationList.stream().collect (Collectors.joining (ITEM_DELIM)); }
 
     public void determineRequiresReplication()
     {

@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.MIN_AMP_PERCENT_VS_MAX;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.findAmplifyingClusters;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.DATA_DELIM;
@@ -203,7 +203,7 @@ public class AmpliconCompare
                     }
                 }
 
-                String highJcnChromosomes = appendStrList(chromosomes, SUBSET_DELIM);
+                String highJcnChromosomes = appendStrList(chromosomes, ITEM_DELIM_CHR);
 
                 mResultsWriter.write(String.format(",%d,%d,%s,%s,%s",
                         cluster.id(), cluster.getSvCount(), cluster.getResolvedType(), cluster.getDesc(),

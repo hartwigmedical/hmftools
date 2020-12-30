@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 
@@ -600,7 +600,7 @@ public class DisruptionFinder
                 String exclusionReason = exclusionInfo;
                 String extraInfo = "";
 
-                String[] contextInfo = exclusionInfo.split(SUBSET_SPLIT);
+                String[] contextInfo = exclusionInfo.split(ITEM_DELIM);
 
                 if(contextInfo.length == 2)
                 {

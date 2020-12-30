@@ -1,20 +1,30 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.getExponent;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 
@@ -28,12 +38,15 @@ public class NeoEpitopeWriter
     private BufferedWriter mFileWriter;
     private String mSampleId;
 
+    private final EnsemblDataCache mGeneTransCache;
     private final List<NeoEpitopeFusion> mFusions;
 
-    public NeoEpitopeWriter(final String outputDir, boolean isMultiSample)
+    public NeoEpitopeWriter(final String outputDir, boolean isMultiSample, final EnsemblDataCache geneDataCache)
     {
         mOutputDir = outputDir;
         mIsMultiSample = isMultiSample;
+        mGeneTransCache = geneDataCache;
+
         mFileWriter = null;
         mSampleId = null;
         mFusions = Lists.newArrayList();
@@ -49,7 +62,8 @@ public class NeoEpitopeWriter
 
     public void processFusionCandidate(
             final List<BreakendGeneData> breakendGenes1, final List<BreakendGeneData> breakendGenes2,
-            final List<LinkedPair> traversedPairs, final DisruptionFinder disruptionFinder)
+            final List<LinkedPair> traversedPairs, final DisruptionFinder disruptionFinder,
+            final LinkedPair lowerLink, final LinkedPair upperLink)
     {
         if(breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
             return;
@@ -57,6 +71,8 @@ public class NeoEpitopeWriter
         // avoid writing duplicates of the same junction
         if(isDuplicate(breakendGenes1.get(0), breakendGenes2.get(0)))
             return;
+
+        int[] extensionLengths = new int[FS_PAIR];
 
         boolean fusionAdded = false;
 
@@ -74,15 +90,31 @@ public class NeoEpitopeWriter
 
                 final BreakendGeneData downGene = upGene == gene1 ? gene2 : gene1;
 
-                if(!hasValidTraversal(upGene, downGene, traversedPairs, gene1.isUpstream(), disruptionFinder))
+                if(!hasValidTraversal(upGene, traversedPairs, gene1.isUpstream(), disruptionFinder))
+                    continue;
+
+                int geneStreamIndex = gene1.isUpstream() ? FS_UP : FS_DOWN;
+                extensionLengths[geneStreamIndex] = lowerLink != null ? lowerLink.length() : -1;
+                extensionLengths[switchStream(geneStreamIndex)] = upperLink != null ? upperLink.length() : -1;
+
+                final List<BreakendTransData> validUpTrans = findValidTranscripts(upGene, extensionLengths[FS_UP]);
+                final List<BreakendTransData> validDownTrans = findValidTranscripts(downGene, extensionLengths[FS_DOWN]);
+
+                if(validUpTrans.isEmpty() || validDownTrans.isEmpty())
                     continue;
 
                 double avgJcn = (upGene.jcn() + downGene.jcn()) * 0.5;
 
+                final StringJoiner sjUp = new StringJoiner(ITEM_DELIM);
+                validUpTrans.stream().map(x -> x.TransData.TransName).forEach(x -> sjUp.add(x));
+
+                final StringJoiner sjDown = new StringJoiner(ITEM_DELIM);
+                validDownTrans.stream().map(x -> x.TransData.TransName).forEach(x -> sjDown.add(x));
+
                 NeoEpitopeFusion fusion = new NeoEpitopeFusion(
                         upGene.StableId, upGene.GeneName, upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.id(),
                         downGene.StableId, downGene.GeneName, downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.id(),
-                        avgJcn, upGene.insertSequence());
+                        avgJcn, upGene.insertSequence(), new String[] { sjUp.toString(), sjDown.toString()});
 
                 writeData(fusion);
 
@@ -95,8 +127,64 @@ public class NeoEpitopeWriter
         }
     }
 
+    private final List<BreakendTransData> findValidTranscripts(final BreakendGeneData gene, int linkExtensionLength)
+    {
+        final List<BreakendTransData> validTrans = Lists.newArrayList();
+
+        for(final BreakendTransData transcript : gene.transcripts())
+        {
+            if(!transcript.isDisruptive())
+                continue;
+
+            if(gene.isUpstream())
+            {
+                if(transcript.TransData.CodingStart == null)
+                    continue;
+            }
+            else
+            {
+                if(transcript.TransData.exons().size() <= 1)
+                    continue;
+
+                if(transcript.TransData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))
+                    continue;
+
+                // check for a preceding splice acceptor from another transcript, whether same gene or not
+                int preTransDistance = gene.Strand == POS_STRAND ?
+                        transcript.transStart() - gene.position() : gene.position() - transcript.transEnd();
+
+                if(preTransDistance > 0)
+                {
+                    int preTransSpliceAcceptorPos = mGeneTransCache.findPrecedingGeneSpliceAcceptorPosition(transcript.transId());
+
+                    if(preTransSpliceAcceptorPos > 0)
+                    {
+                        int preTransSpliceAcceptorDistance = gene.Strand == POS_STRAND ?
+                                transcript.transStart() - preTransSpliceAcceptorPos : preTransSpliceAcceptorPos - transcript.transEnd();
+
+                        if(preTransSpliceAcceptorDistance < preTransDistance)
+                            continue;
+                    }
+                }
+            }
+
+            if(linkExtensionLength > 0)
+            {
+                int transLength = (gene.Strand == POS_STRAND) == gene.isUpstream() ?
+                        abs(gene.position() - transcript.TransData.TransStart) : abs(gene.position() - transcript.TransData.TransEnd);
+
+                if(linkExtensionLength < transLength)
+                    continue;
+            }
+
+            validTrans.add(transcript);
+        }
+
+        return validTrans;
+    }
+
     private boolean hasValidTraversal(
-            final BreakendGeneData upGene, final BreakendGeneData downGene, final List<LinkedPair> traversedPairs,
+            final BreakendGeneData upGene, final List<LinkedPair> traversedPairs,
             boolean fusionLowerToUpper, final DisruptionFinder disruptionFinder)
     {
         if(traversedPairs == null || traversedPairs.isEmpty())

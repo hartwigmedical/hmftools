@@ -26,12 +26,14 @@ public class NeoEpitopeFusion
     public final double JunctionCopyNumber;
     public final String InsertSequence;
 
+    public final String[] Transcripts;
+
     public static final String DELIMITER = ",";
 
     public NeoEpitopeFusion(
             final String geneIdUp, final String geneNameUp, final String chrUp, int posUp, byte orientUp, int svIdUp,
             final String geneIdDown, final String geneNameDown, final String chrDown, int posDown, byte orientDown, int svIdDown,
-            final double junctionCopyNumber, final String insertSequence)
+            final double junctionCopyNumber, final String insertSequence, final String[] transcripts)
     {
         GeneIds = new String[] { geneIdUp, geneIdDown };
         GeneNames = new String[] { geneNameUp, geneNameDown };
@@ -41,6 +43,7 @@ public class NeoEpitopeFusion
         SvIds = new int[] { svIdUp, svIdDown };
         JunctionCopyNumber = junctionCopyNumber;
         InsertSequence = insertSequence;
+        Transcripts = transcripts;
     }
 
     private static final String FILE_EXTENSION = ".linx.neo_epitope.tsv";
@@ -103,6 +106,8 @@ public class NeoEpitopeFusion
                 .add("svIdDown")
                 .add("junctionCopyNumber")
                 .add("insertSeq")
+                .add("transcriptsUp")
+                .add("transcriptsDown")
                 .toString();
     }
 
@@ -123,6 +128,8 @@ public class NeoEpitopeFusion
 
         sj.add(String.format("%.4f",fusion.JunctionCopyNumber));
         sj.add(fusion.InsertSequence);
+        sj.add(String.valueOf(fusion.Transcripts[FS_UP]));
+        sj.add(String.valueOf(fusion.Transcripts[FS_DOWN]));
 
         return sj.toString();
     }
@@ -142,6 +149,7 @@ public class NeoEpitopeFusion
                 Integer.parseInt(values[index++]), Byte.parseByte(values[index++]), Integer.parseInt(values[index++]),
                 values[index++], values[index++], values[index++],
                 Integer.parseInt(values[index++]), Byte.parseByte(values[index++]), Integer.parseInt(values[index++]),
-                Double.parseDouble(values[index++]), values[index++]);
+                Double.parseDouble(values[index++]), values[index++],
+                new String[] {values[index++], values[index++]});
     }
 }

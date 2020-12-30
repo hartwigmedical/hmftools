@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
 
 import java.util.List;
 import java.util.Map;
@@ -48,7 +48,7 @@ public class AmpliconData
                 chromosomes.add(region.Chromosome);
         }
 
-        return appendStrList(chromosomes, SUBSET_DELIM);
+        return appendStrList(chromosomes, ITEM_DELIM_CHR);
     }
 
     public static String extractSampleId(final Map<String,Integer> fieldsIndexMap, final String[] items)

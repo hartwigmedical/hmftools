@@ -17,8 +17,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_DELIM;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.types.SglMapping.convertFromInsertSequenceAlignments;
 
 import java.util.List;
@@ -226,7 +226,7 @@ public class SvVarData
         if(mClusterReason.contains(reason.toString()))
             return;
 
-        mClusterReason = appendStr(mClusterReason, reason.toString(), SUBSET_DELIM);
+        mClusterReason = appendStr(mClusterReason, reason.toString(), ITEM_DELIM_CHR);
 
         if(otherId > -1)
             mClusterReason += CR_DELIM + otherId;
@@ -610,7 +610,7 @@ public class SvVarData
         if(mAnnotationList == null)
             return "";
 
-        return mAnnotationList.stream().collect (Collectors.joining (SUBSET_SPLIT));
+        return mAnnotationList.stream().collect (Collectors.joining (ITEM_DELIM));
     }
 
 

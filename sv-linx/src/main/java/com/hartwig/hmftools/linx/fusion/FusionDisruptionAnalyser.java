@@ -175,7 +175,7 @@ public class FusionDisruptionAnalyser
 
         if(cmdLineArgs.hasOption(WRITE_NEO_EPITOPES))
         {
-            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, mConfig.hasMultipleSamples());
+            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, mConfig.hasMultipleSamples(), mGeneDataCache);
         }
 
         if(mRunFusions)
@@ -407,7 +407,8 @@ public class FusionDisruptionAnalyser
             List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, mFusionParams);
 
             if(mNeoEpitopeWriter != null)
-                mNeoEpitopeWriter.processFusionCandidate(genesListStart, genesListEnd, null, null);
+                mNeoEpitopeWriter.processFusionCandidate(
+                        genesListStart, genesListEnd, null, null, null, null);
 
             if (fusions.isEmpty())
                 continue;
@@ -508,7 +509,8 @@ public class FusionDisruptionAnalyser
             {
                 LinkedPair pair = linkedPairs.get(lpIndex1);
                 lowerSV = pair.first();
-                lowerBreakend = pair.first().getBreakend(!pair.firstLinkOnStart());
+                // lowerBreakend = pair.first().getBreakend(!pair.firstLinkOnStart());
+                lowerBreakend = pair.firstBreakend().getOtherBreakend();
             }
             else
             {
@@ -549,7 +551,8 @@ public class FusionDisruptionAnalyser
                 SvVarData upperSV = null;
                 SvBreakend upperBreakend = null;
 
-                // the upper link takes the breakend of the current linked pair's 'second' SV
+                // the upper link takes the breakend of the current linked pair's 'first' SV
+                // which for the first index will just be the curent SV's 2 breakends - ie testing a single SV in a chain
                 // and beyond all the links, it must also test fusions with the chain's upper open breakend
                 if(lpIndex2 < linkedPairs.size())
                 {
@@ -597,7 +600,11 @@ public class FusionDisruptionAnalyser
 
                 if(mNeoEpitopeWriter != null)
                 {
-                    mNeoEpitopeWriter.processFusionCandidate(genesListLower, genesListUpper, traversedPairs, mDisruptionFinder);
+                    final LinkedPair lowerLink = lpIndex1 == 0 ? null : linkedPairs.get(lpIndex1 - 1);
+                    final LinkedPair upperLink = lpIndex2 < linkedPairs.size() ? linkedPairs.get(lpIndex2) : null;
+
+                    mNeoEpitopeWriter.processFusionCandidate(
+                            genesListLower, genesListUpper, traversedPairs, mDisruptionFinder, lowerLink, upperLink);
                 }
 
                 if(fusions.isEmpty())
@@ -675,13 +682,11 @@ public class FusionDisruptionAnalyser
 
                     boolean[] transTerminated = { false, false};
 
-                    for (int se = SE_START; se <= SE_END; ++se)
+                    for (int fs = FS_UP; fs <= FS_DOWN; ++fs)
                     {
-                        boolean isUpstream = (se == 0);
-
                         // look at each gene in turn
-                        BreakendTransData transcript = isUpstream ? fusion.upstreamTrans() : fusion.downstreamTrans();
-                        BreakendGeneData gene = isUpstream ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
+                        BreakendTransData transcript = fs == FS_UP ? fusion.upstreamTrans() : fusion.downstreamTrans();
+                        BreakendGeneData gene = fs == FS_UP ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
 
                         boolean isLowerBreakend = lowerBreakendPos == gene.position();
 
@@ -689,7 +694,7 @@ public class FusionDisruptionAnalyser
 
                         if (isChainEnd)
                         {
-                            transTerminated[se] = false;
+                            transTerminated[fs] = false;
                         }
                         else
                         {
@@ -697,7 +702,7 @@ public class FusionDisruptionAnalyser
 
                             if(breakend == null)
                             {
-                                transTerminated[se] = false;
+                                transTerminated[fs] = false;
                             }
                             else
                             {
@@ -711,7 +716,7 @@ public class FusionDisruptionAnalyser
                                     break;
                                 }
 
-                                transTerminated[se] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
+                                transTerminated[fs] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
                             }
                         }
                     }

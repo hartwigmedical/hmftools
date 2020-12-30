@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -641,10 +642,12 @@ public class NeoEpitopeTest
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
+        final String[] validTrans = new String[] {transDataPosStrand.TransName, transDataPosStrand.TransName};
+
         // intronic
         NeoEpitopeFusion svData = new NeoEpitopeFusion(
                 GENE_ID_1, GENE_ID_1, CHR_1, 35, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 55, NEG_ORIENT,
-                1, 1, "");
+                1, 1, "", validTrans);
 
         NeoEpitope neData = new SvNeoEpitope(svData);
 
@@ -679,7 +682,7 @@ public class NeoEpitopeTest
         // intronic to exonic - skips to next exon
         svData = new NeoEpitopeFusion(
                 GENE_ID_1, GENE_ID_1, CHR_1, 35, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 45, NEG_ORIENT,
-                1, 1, "");
+                1, 1, "", validTrans);
 
         neData = new SvNeoEpitope(svData);
 
@@ -703,13 +706,12 @@ public class NeoEpitopeTest
         novelBases = chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91) + chr1Bases.substring(100, 111);
         assertEquals(novelBases, neData.NovelCodonBases);
 
-        // String downBases = chr1Bases.substring(43, 51) + chr1Bases.substring(60, 61);
         assertEquals("", neData.CodingBases[FS_DOWN]);
 
         // exonic to exonic, in phase
         svData = new NeoEpitopeFusion(
                 GENE_ID_1, GENE_ID_1, CHR_1, 44, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 63, NEG_ORIENT,
-                1, 1, "");
+                1, 1, "", validTrans);
 
         neData = new SvNeoEpitope(svData);
 
@@ -741,7 +743,7 @@ public class NeoEpitopeTest
 
         svData = new NeoEpitopeFusion(
                 GENE_ID_1, GENE_ID_1, CHR_1, 44, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 63, NEG_ORIENT,
-                1, 1, insSequence);
+                1, 1, insSequence, validTrans);
 
         neData = new SvNeoEpitope(svData);
 

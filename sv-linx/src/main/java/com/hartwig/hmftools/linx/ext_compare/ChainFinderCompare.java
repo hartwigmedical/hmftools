@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxOutput.SUBSET_SPLIT;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfSvData.CF_DATA_DELIMITER;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
@@ -270,7 +270,7 @@ public class ChainFinderCompare
         if(clusterReason.isEmpty())
             return "NONE";
 
-        final String[] reasons = clusterReason.split(SUBSET_SPLIT, -1);
+        final String[] reasons = clusterReason.split(ITEM_DELIM, -1);
         final String firstReason = reasons[0].split(CR_DELIM)[0];
 
         return firstReason;
