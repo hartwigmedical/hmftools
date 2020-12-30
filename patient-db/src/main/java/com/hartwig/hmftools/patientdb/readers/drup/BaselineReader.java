@@ -31,11 +31,14 @@ class BaselineReader {
 
     private static final String FIELD_INFORMED_CONSENT_DATE = "FLD.ICDTC";
     private static final String FIELD_HOSPITAL = "FLD.INST";
-    private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.BASTTYP";
-    private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.BASTTOSP";
     private static final String FIELD_GENDER = "FLD.GEN";
     private static final String FIELD_BIRTH_YEAR = "FLD.YOB";
     private static final String FIELD_DEATH_DATE = "FLD.DEATHDTC";
+
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION = "FLD.BASTTYP";
+    private static final String FIELD_PRIMARY_TUMOR_LOCATION_OTHER = "FLD.BASTTOSP";
+    private static final String FIELD_PRIMARY_TUMOR_ICD10_DESCRIPTION = "FLD.ICD10Descr";
+    private static final String FIELD_PRIMARY_TUMOR_TTYPE = "FLD.TTYPE";
 
     @NotNull
     private final PrimaryTumorCurator primaryTumorCurator;
@@ -75,9 +78,29 @@ class BaselineReader {
             for (EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
                 builder.informedConsentDate(baselineItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
 
-                String primaryTumorLocation = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
-                if (primaryTumorLocation != null && primaryTumorLocation.trim().toLowerCase().startsWith("other")) {
-                    primaryTumorLocation = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
+                String primaryTumorLocationICD = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_ICD10_DESCRIPTION);
+                String primaryTumorLocationBastType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
+                String primaryTumorLocationBastTypeOther = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
+                String primaryTumorLocationType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_TTYPE);
+                String primaryTumorLocation = Strings.EMPTY;
+
+                if (primaryTumorLocationICD != null) {
+                    if (primaryTumorLocationICD.trim().toLowerCase().contains("biliary tract") || primaryTumorLocationICD.trim()
+                            .toLowerCase()
+                            .contains("'colon'") || primaryTumorLocationICD.trim().toLowerCase().contains("urinary organ")
+                            || primaryTumorLocationICD.trim().toLowerCase().contains("head, face and neck")) {
+                        if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify'")) {
+                            primaryTumorLocation =
+                                    primaryTumorLocationICD + "+" + primaryTumorLocationBastTypeOther + "+" + primaryTumorLocationType;
+                        } else {
+                            primaryTumorLocation =
+                                    primaryTumorLocationICD + "+" + primaryTumorLocationBastType + "+" + primaryTumorLocationType;
+                        }
+
+                    } else {
+                        primaryTumorLocation = primaryTumorLocationICD;
+                    }
+
                 }
                 builder.curatedPrimaryTumor(primaryTumorCurator.search(primaryTumorLocation));
 
