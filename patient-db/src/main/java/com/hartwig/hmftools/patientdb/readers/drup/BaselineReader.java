@@ -74,6 +74,8 @@ class BaselineReader {
     }
 
     private void setInformedConsentAndPrimaryTumor(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+        String primaryTumorLocation = null;
+
         for (EcrfForm baselineForm : studyEvent.nonEmptyFormsPerOID(FORM_BASELINE)) {
             for (EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
                 builder.informedConsentDate(baselineItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
@@ -82,7 +84,6 @@ class BaselineReader {
                 String primaryTumorLocationBastType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationBastTypeOther = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 String primaryTumorLocationType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_TTYPE);
-                String primaryTumorLocation = Strings.EMPTY;
 
                 if (primaryTumorLocationICD != null) {
                     if (primaryTumorLocationICD.trim().toLowerCase().contains("biliary tract") || primaryTumorLocationICD.trim()
