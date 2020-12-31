@@ -58,7 +58,7 @@ public class ExonChecker {
             for (HmfTranscriptRegion transriptsGene : transriptsGenes) {
                 for (HmfExonRegion exonRegion : transriptsGene.exome()) {
                     if (transriptsExonIds.contains(exonRegion.exonID())) {
-                        LOGGER.debug("The exon Id of SERVE {}, is not the same as in GRch 37{} but is placed in other loop",
+                        LOGGER.debug("The exon Id of SERVE {}, is not the same as in GRch 37{} but exon ID will be used",
                                 exonEnsemblId,
                                 exonRegion.exonID());
                     } else if (exonRegion.exonID().equals(exonEnsemblId)) {
