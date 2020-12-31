@@ -7,11 +7,13 @@ import java.util.Random;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
+import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CodonChecker {
@@ -40,6 +42,7 @@ public class CodonChecker {
             List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
             String chromosome = codon.annotation().chromosome();
             Integer codonIndex = codon.annotation().codonIndex();
+            MutationTypeFilter mutationTypeFilter = codon.annotation().mutationType();
 
             for (Long genomicPosition : genomicPositions) {
                 String extractRefBaseOfPosition = extractRefBaseOfGenomicPosition(chromosome, genomicPosition);
@@ -59,7 +62,7 @@ public class CodonChecker {
                 }
 
                 Integer annotatedVariantCodonIndex =
-                        extactAnnotationVariantCodonIndex(extractRefBaseOfPosition, randomAltBase, chromosome, genomicPosition);
+                        extactAnnotationVariantCodonIndex(extractRefBaseOfPosition, randomAltBase, chromosome, genomicPosition, mutationTypeFilter);
 
                 if (!codonIndex.equals(annotatedVariantCodonIndex)) {
                     LOGGER.warn("Condon index of SERVE {} are not equals for annotated codon index {}",
@@ -80,8 +83,10 @@ public class CodonChecker {
     }
 
     private static Integer extactAnnotationVariantCodonIndex(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
-            @Nullable String chromosome, Long position) {
+            @Nullable String chromosome, Long position, @NotNull MutationTypeFilter mutationTypeFilter) {
         //TODO extract codon annotation
+
+        //TODO check mutationTyepfilter
         return 1;
     }
 }
