@@ -44,16 +44,24 @@ public class ExonChecker {
             exonEnsemblId = exon.annotation().exonEnsemblId();
             gene = exon.annotation().gene();
             List<HmfTranscriptRegion> transriptsGenes = Lists.newArrayList();
-            LOGGER.info(exon);
+            List<String> transriptsExonIds = Lists.newArrayList();
+
             for (HmfTranscriptRegion region : transcripts) {
                 if (region.gene().equals(gene)) {
                     transriptsGenes.add(region);
+                    for (HmfExonRegion exonRegion : region.exome()) {
+                        transriptsExonIds.add(exonRegion.exonID());
+                    }
                 }
             }
 
             for (HmfTranscriptRegion transriptsGene : transriptsGenes) {
                 for (HmfExonRegion exonRegion : transriptsGene.exome()) {
-                    if (exonRegion.exonID().equals(exonEnsemblId)) {
+                    if (transriptsExonIds.contains(exonRegion.exonID())) {
+                        LOGGER.debug("The exon Id of SERVE {}, is not the same as in GRch 37{} but is placed in other loop",
+                                exonEnsemblId,
+                                exonRegion.exonID());
+                    } else if (exonRegion.exonID().equals(exonEnsemblId)) {
                         Long exonStart = exonRegion.start() - 5;
                         Long exonEnd = exonRegion.end() + 5;
                         String exonChromosome = exonRegion.chromosome();
