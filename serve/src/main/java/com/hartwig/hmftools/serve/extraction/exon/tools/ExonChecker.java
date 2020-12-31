@@ -26,8 +26,10 @@ public class ExonChecker {
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
 
         LOGGER.info("The size of the file is {}", exons.size());
-        LOGGER.info(exons);
 
+        for (KnownExon exon: exons) {
+            LOGGER.info(exon);
+        }
         LOGGER.info("Checking exons");
 
         LOGGER.info("Done!");

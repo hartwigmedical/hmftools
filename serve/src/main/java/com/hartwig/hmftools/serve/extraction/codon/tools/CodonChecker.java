@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.serve.extraction.codon.tools;
 
 import java.io.IOException;
+import java.util.List;
+
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +23,13 @@ public class CodonChecker {
         }
 
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
+        List<KnownCodon> codons = KnownCodonFile.read(knownCodonsTsv);
 
+        LOGGER.info("The size of the file is {}", codons.size());
+
+        for (KnownCodon codon: codons) {
+            LOGGER.info(codon);
+        }
         LOGGER.info("Checking codons");
 
         LOGGER.info("Done!");
