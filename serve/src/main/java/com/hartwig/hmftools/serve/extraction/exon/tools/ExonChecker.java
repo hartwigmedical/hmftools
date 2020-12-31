@@ -3,6 +3,10 @@ package com.hartwig.hmftools.serve.extraction.exon.tools;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExonFile;
 
@@ -25,10 +29,60 @@ public class ExonChecker {
         String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownExons.SERVE.37.tsv";
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
 
+        List<HmfTranscriptRegion> transcripts = HmfGenePanelSupplier.allGeneList37();
         LOGGER.info("The size of the file is {}", exons.size());
 
-        for (KnownExon exon: exons) {
+        String chromosome = null;
+        Long start = null;
+        Long end = null;
+        String exonEnsemblId = null;
+        String gene = null;
+        for (KnownExon exon : exons) {
+            chromosome = exon.annotation().chromosome();
+            start = exon.annotation().start();
+            end = exon.annotation().end();
+            exonEnsemblId = exon.annotation().exonEnsemblId();
+            gene = exon.annotation().gene();
+            List<HmfTranscriptRegion> transriptsGenes = Lists.newArrayList();
             LOGGER.info(exon);
+            for (HmfTranscriptRegion region : transcripts) {
+                if (region.gene().equals(gene)) {
+                    transriptsGenes.add(region);
+                }
+            }
+
+            for (HmfTranscriptRegion transriptsGene : transriptsGenes) {
+                for (HmfExonRegion exonRegion : transriptsGene.exome()) {
+                    if (exonRegion.exonID().equals(exonEnsemblId)) {
+                        Long exonStart = exonRegion.start() - 5;
+                        Long exonEnd = exonRegion.end() + 5;
+                        String exonChromosome = exonRegion.chromosome();
+                        if (!exonStart.equals(start)) {
+                            LOGGER.warn("The exon start postion of SERVE {} is not the same as in GRch 37 {} on exon ID {}",
+                                    start,
+                                    exonStart,
+                                    exonEnsemblId);
+                        }
+                        if (!exonEnd.equals(end)) {
+                            LOGGER.warn("The exon end postion of SERVE {} is not the same as in GRch 37 {} on exon ID {}",
+                                    end,
+                                    exonEnd,
+                                    exonEnsemblId);
+                        }
+                        if (!exonChromosome.equals(chromosome)) {
+                            LOGGER.warn("The exon chromosome of SERVE {} is not the same as in GRch 37 {} on exon ID {}",
+                                    chromosome,
+                                    exonChromosome,
+                                    exonEnsemblId);
+
+                        }
+
+                    } else {
+                        LOGGER.warn("The exon Id of SERVE {}, is not the same as in GRch 37{}", exonEnsemblId, exonRegion.exonID());
+                    }
+                }
+            }
+
         }
         LOGGER.info("Checking exons");
 
