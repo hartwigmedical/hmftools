@@ -74,7 +74,7 @@ public class CodonChecker {
             }
         }
 
-        LOGGER.info("Checking codons");
+        LOGGER.info("All codons are checked!");
 
         LOGGER.info("Done!");
 
