@@ -31,20 +31,15 @@ public class CodonChecker {
 
         LOGGER.info("The size of the file is {}", codons.size());
 
-        Integer codonIndex = null;
-        String chromosome = null;
-        Long start = null;
-        Long end = null;
         List<String> bases = Lists.newArrayList();
-        List<Long> genomicPositions = Lists.newArrayList();
         String randomAltBase = null;
         for (KnownCodon codon : codons) {
-            start = codon.annotation().start();
-            end = codon.annotation().end();
+            Long start = codon.annotation().start();
+            Long end = codon.annotation().end();
             Long bewtweenNumber = end > start ? start + 1 : start -1;
-            genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
-            chromosome = codon.annotation().chromosome();
-            codonIndex = codon.annotation().codonIndex();
+            List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
+            String chromosome = codon.annotation().chromosome();
+            Integer codonIndex = codon.annotation().codonIndex();
 
             for (Long genomicPosition : genomicPositions) {
                 String extractRefBaseOfPosition = extractRefBaseOfGenomicPosition(chromosome, genomicPosition);
@@ -75,9 +70,7 @@ public class CodonChecker {
         }
 
         LOGGER.info("All codons are checked!");
-
         LOGGER.info("Done!");
-
     }
 
     private static String extractRefBaseOfGenomicPosition(@Nullable String chromosome, Long genomicPosition) {
@@ -91,5 +84,4 @@ public class CodonChecker {
         //TODO extract codon annotation
         return 1;
     }
-
 }

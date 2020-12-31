@@ -32,17 +32,12 @@ public class ExonChecker {
         List<HmfTranscriptRegion> transcripts = HmfGenePanelSupplier.allGeneList37();
         LOGGER.info("The size of the file is {}", exons.size());
 
-        String chromosome = null;
-        Long start = null;
-        Long end = null;
-        String exonEnsemblId = null;
-        String gene = null;
         for (KnownExon exon : exons) {
-            chromosome = exon.annotation().chromosome();
-            start = exon.annotation().start();
-            end = exon.annotation().end();
-            exonEnsemblId = exon.annotation().exonEnsemblId();
-            gene = exon.annotation().gene();
+            String chromosome = exon.annotation().chromosome();
+            Long start = exon.annotation().start();
+            Long end = exon.annotation().end();
+            String exonEnsemblId = exon.annotation().exonEnsemblId();
+            String gene = exon.annotation().gene();
             List<HmfTranscriptRegion> transriptsGenes = Lists.newArrayList();
             List<String> transriptsExonIds = Lists.newArrayList();
 
@@ -92,7 +87,5 @@ public class ExonChecker {
         LOGGER.info("All exons are checked!");
 
         LOGGER.info("Done!");
-
     }
-
 }
