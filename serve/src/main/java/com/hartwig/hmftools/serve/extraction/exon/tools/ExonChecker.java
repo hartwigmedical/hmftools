@@ -82,17 +82,14 @@ public class ExonChecker {
                                     chromosome,
                                     exonChromosome,
                                     exonEnsemblId);
-
                         }
-
                     } else {
                         LOGGER.warn("The exon Id of SERVE {}, is not the same as in GRch 37{}", exonEnsemblId, exonRegion.exonID());
                     }
                 }
             }
-
         }
-        LOGGER.info("Checking exons");
+        LOGGER.info("All exons are checked!");
 
         LOGGER.info("Done!");
 
