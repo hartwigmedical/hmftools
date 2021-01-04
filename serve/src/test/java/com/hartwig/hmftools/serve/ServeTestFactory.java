@@ -82,6 +82,8 @@ public final class ServeTestFactory {
                         .end(0)
                         .mutationType(MutationTypeFilter.ANY)
                         .codonIndex(0)
+                        .proteinAnnotation(Strings.EMPTY)
+                        .transcript(Strings.EMPTY)
                         .build())
                 .addSources(source)
                 .build();
