@@ -12,4 +12,10 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CodonAnnotation implements RangeAnnotation {
 
     public abstract int codonIndex();
+
+    @Nullable
+    public abstract String transcript();
+
+    @NotNull
+    public abstract String proteinAnnotation();
 }

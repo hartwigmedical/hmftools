@@ -55,6 +55,8 @@ public final class KnownCodonFile {
                         .end(Long.parseLong(values[3]))
                         .mutationType(MutationTypeFilter.valueOf(values[4]))
                         .codonIndex(Integer.parseInt(values[5]))
+                        .transcript(values[7])
+                        .proteinAnnotation(values[8])
                         .build())
                 .sources(Knowledgebase.extractKnowledgebase(values[6]))
                 .build();
@@ -77,6 +79,8 @@ public final class KnownCodonFile {
                 .add("mutationType")
                 .add("codonIndex")
                 .add("sources")
+                .add("transcript")
+                .add("preoteinAnnotation")
                 .toString();
     }
 
@@ -107,6 +111,8 @@ public final class KnownCodonFile {
                 .add(codon.annotation().mutationType().toString())
                 .add(String.valueOf(codon.annotation().codonIndex()))
                 .add(Knowledgebase.commaSeparatedSourceString(codon.sources()))
+                .add(String.valueOf(codon.annotation().transcript()))
+                .add(String.valueOf(codon.annotation().proteinAnnotation()))
                 .toString();
     }
 }
