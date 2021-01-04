@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.codon.tools;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
@@ -15,6 +16,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class CodonChecker {
     private static final Logger LOGGER = LogManager.getLogger(CodonChecker.class);
@@ -38,7 +41,7 @@ public class CodonChecker {
         for (KnownCodon codon : codons) {
             Long start = codon.annotation().start();
             Long end = codon.annotation().end();
-            Long bewtweenNumber = end > start ? start + 1 : start -1;
+            Long bewtweenNumber = end > start ? start + 1 : start - 1;
             List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
             String chromosome = codon.annotation().chromosome();
             Integer codonIndex = codon.annotation().codonIndex();
@@ -61,13 +64,16 @@ public class CodonChecker {
                     randomAltBase = bases.get(random.nextInt(3));
                 }
 
-                Integer annotatedVariantCodonIndex =
-                        extactAnnotationVariantCodonIndex(extractRefBaseOfPosition, randomAltBase, chromosome, genomicPosition, mutationTypeFilter);
+                Integer annotatedVariantCodonIndex = extactAnnotationVariantCodonIndex(extractRefBaseOfPosition,
+                        randomAltBase,
+                        chromosome,
+                        genomicPosition,
+                        mutationTypeFilter);
 
                 if (!codonIndex.equals(annotatedVariantCodonIndex)) {
-                    LOGGER.warn("Condon index of SERVE {} are not equals for annotated codon index {}",
-                            codonIndex,
-                            annotatedVariantCodonIndex);
+                                        LOGGER.warn("Condon index of SERVE {} are not equals for annotated codon index {}",
+                                                codonIndex,
+                                                annotatedVariantCodonIndex);
                 }
             }
         }
@@ -76,10 +82,11 @@ public class CodonChecker {
         LOGGER.info("Done!");
     }
 
-    private static String extractRefBaseOfGenomicPosition(@Nullable String chromosome, Long genomicPosition) {
-        String genomicPositionBase = chromosome + ":" + genomicPosition + "-" + genomicPosition;
-        //TODO extract base with genomic posiiton
-        return genomicPositionBase;
+    private static String extractRefBaseOfGenomicPosition(@Nullable String chromosome, Long genomicPosition) throws IOException {
+        IndexedFastaSequenceFile fastaSequenceFile =
+                new IndexedFastaSequenceFile(new File("/Users/liekeschoenmaker/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta"));
+        return fastaSequenceFile.getSubsequenceAt(chromosome, genomicPosition, genomicPosition).getBaseString();
+
     }
 
     private static Integer extactAnnotationVariantCodonIndex(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
