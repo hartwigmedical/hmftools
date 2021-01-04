@@ -36,7 +36,6 @@ public class ExonChecker {
         List<HmfTranscriptRegion> transcripts = HmfGenePanelSupplier.allGeneList37();
         LOGGER.info("The size of the file is {}", exons.size());
 
-        List<String> bases = Lists.newArrayList();
         String randomAltBase = null;
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();
@@ -51,24 +50,19 @@ public class ExonChecker {
             //Extract genomicpositions with SNPEFF
             Long l = new Long(end - start + 1);
             Long bewtweenNumber = start + random.nextInt(l.intValue());
-            LOGGER.info(bewtweenNumber);
             List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
 
             for (Long genomicPosition : genomicPositions) {
                 String extractRefBaseOfPosition = extractRefBaseOfGenomicPosition(chromosome, genomicPosition);
 
                 if (extractRefBaseOfPosition.equals("A")) {
-                    bases = Lists.newArrayList("C", "T", "G");
-                    randomAltBase = bases.get(random.nextInt(3));
+                    randomAltBase = "T";
                 } else if (extractRefBaseOfPosition.equals("C")) {
-                    bases = Lists.newArrayList("A", "T", "G");
-                    randomAltBase = bases.get(random.nextInt(3));
+                    randomAltBase = "A";
                 } else if (extractRefBaseOfPosition.equals("T")) {
-                    bases = Lists.newArrayList("C", "A", "G");
-                    randomAltBase = bases.get(random.nextInt(3));
+                    randomAltBase = "G";
                 } else if (extractRefBaseOfPosition.equals("G")) {
-                    bases = Lists.newArrayList("C", "T", "A");
-                    randomAltBase = bases.get(random.nextInt(3));
+                    randomAltBase = "A";
                 }
 
                 extactMutationType(extractRefBaseOfPosition, randomAltBase, chromosome, genomicPosition, mutationTypeFilter);
@@ -132,6 +126,5 @@ public class ExonChecker {
     private static void extactMutationType(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
             @Nullable String chromosome, Long position, @NotNull MutationTypeFilter mutationTypeFilter) {
         //TODO extract codon annotation
-        //TODO extract mutation type filter
     }
 }
