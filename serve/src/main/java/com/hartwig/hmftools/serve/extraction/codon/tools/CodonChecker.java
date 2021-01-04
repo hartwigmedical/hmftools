@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.extraction.codon.tools;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -49,7 +48,6 @@ public class CodonChecker {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        Random random = new Random();
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
         String outputFile = System.getProperty("user.home") + "/hmf/tmp/test.vcf.gz";
 
@@ -57,7 +55,6 @@ public class CodonChecker {
 
         LOGGER.info("The size of the file is {}", codons.size());
 
-        List<String> bases = Lists.newArrayList();
         String randomAltBase = null;
         for (KnownCodon codon : codons) {
             Long start = codon.annotation().start();
@@ -72,17 +69,13 @@ public class CodonChecker {
                 String extractRefBaseOfPosition = extractRefBaseOfGenomicPosition(chromosome, genomicPosition);
 
                 if (extractRefBaseOfPosition.equals("A")) {
-                    bases = Lists.newArrayList("C", "T", "G");
-                    randomAltBase = bases.get(random.nextInt(3));
+                    randomAltBase = "T";
                 } else if (extractRefBaseOfPosition.equals("C")) {
-                    bases = Lists.newArrayList("A", "T", "G");
-                    randomAltBase = bases.get(random.nextInt(3));
+                    randomAltBase = "A";
                 } else if (extractRefBaseOfPosition.equals("T")) {
-                    bases = Lists.newArrayList("C", "A", "G");
-                    randomAltBase = bases.get(random.nextInt(3));
+                    randomAltBase = "G";
                 } else if (extractRefBaseOfPosition.equals("G")) {
-                    bases = Lists.newArrayList("C", "T", "A");
-                    randomAltBase = bases.get(random.nextInt(3));
+                    randomAltBase = "C";
                 }
 
                 Integer annotatedVariantCodonIndex = extactAnnotationVariantCodonIndex(extractRefBaseOfPosition,
@@ -138,7 +131,6 @@ public class CodonChecker {
             LOGGER.info(annotations); //TODO fix list are empty
         }
 
-        //TODO check mutationTyepfilter
         return 1;
     }
 
