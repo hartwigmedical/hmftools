@@ -54,9 +54,6 @@ class BaselineReader {
 
     private static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
 
-    private static final String FIELD_HOSPITAL1 = "FLD.ELIGIBILITY.HOSPITAL";
-    private static final String FIELD_HOSPITAL2 = "FLD.SELCRIT.NHOSPITAL";
-
     @NotNull
     private final PrimaryTumorCurator primaryTumorCurator;
     @NotNull
@@ -77,7 +74,7 @@ class BaselineReader {
                 .selectionCriteriaStatus(FormStatus.undefined())
                 .informedConsentStatus(FormStatus.undefined())
                 .deathStatus(FormStatus.undefined())
-                .hospital(getHospital(patient, hospitals));
+                .hospital(lookupHospital(patient, hospitals));
 
         for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
             setDemographyData(baselineBuilder, studyEvent);
@@ -91,12 +88,12 @@ class BaselineReader {
     }
 
     @Nullable
-    private static String getHospital(@NotNull EcrfPatient patient, @NotNull Map<Integer, String> hospitals) {
+    private static String lookupHospital(@NotNull EcrfPatient patient, @NotNull Map<Integer, String> hospitals) {
         if (patient.patientId().length() >= 8) {
             Integer hospitalCode = Integer.parseInt(patient.patientId().substring(6, 8));
             String hospital = hospitals.get(hospitalCode);
             if (hospital == null) {
-                LOGGER.warn("Fields '{}' and '{}' contained no hospital with code '{}'", FIELD_HOSPITAL1, FIELD_HOSPITAL2, hospitalCode);
+                LOGGER.warn("Could not find entry for hospital with code {}", hospitalCode);
             }
             return hospital;
         } else {
@@ -118,8 +115,6 @@ class BaselineReader {
             @SuppressWarnings("unused") @NotNull String patientId) {
         String primaryTumorLocationSelcrit = null;
         FormStatus primaryTumorLocationSelcritStatus = null;
-        String primaryTumorLocationCarcinoma = null;
-        FormStatus primaryTumorLocationCarcinomaStatus = null;
 
         for (EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
             for (EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
@@ -128,6 +123,8 @@ class BaselineReader {
             }
         }
 
+        String primaryTumorLocationCarcinoma = null;
+        FormStatus primaryTumorLocationCarcinomaStatus = null;
         for (EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA)) {
             for (EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
                 primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);

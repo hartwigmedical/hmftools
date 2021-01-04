@@ -71,7 +71,6 @@ class BaselineReader {
 
         for (EcrfStudyEvent studyCohort : patient.studyEventsPerOID(STUDY_COHORT)) {
             primaryTumorCohort = setPrimaryTumorCohort(studyCohort, primaryTumorCohort);
-
         }
 
         for (EcrfStudyEvent registrationEvent : patient.studyEventsPerOID(STUDY_REGISTRATION)) {
