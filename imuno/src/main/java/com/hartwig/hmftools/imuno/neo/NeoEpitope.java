@@ -35,6 +35,7 @@ public abstract class NeoEpitope
     public TranscriptRegionType[] RegionType;
 
     public final String[] CodingBases; // coding bases from before and after the mutation or fusion junction
+    public final int[] NovelBaseIndex; // index into the up and downstream coding bases
     public String NovelCodonBases;
 
     public String UpstreamAcids;
@@ -51,6 +52,7 @@ public abstract class NeoEpitope
         RegionType = new TranscriptRegionType[] {TranscriptRegionType.UNKNOWN, TranscriptRegionType.UNKNOWN};
 
         CodingBases = new String[] {"", ""};
+        NovelBaseIndex = new int[] {-1, -1};
         NovelCodonBases = "";
         UpstreamAcids = "";
         DownstreamAcids = "";
@@ -77,23 +79,6 @@ public abstract class NeoEpitope
     {
         // assumes a codon starts with phase 1
         return phase == PHASE_NONE ? 0 : phase;
-
-        /*
-        if(phase == 0)
-            return 1;
-        else if(phase == 1)
-            return 2;
-        else
-            return 0;
-        */
-    }
-
-    public int getUpstreamOpenCodonBases() { return getUpstreamOpenCodonBases(Phases[FS_UP]); }
-
-    public int getDownstreamPhaseOffset()
-    {
-        int upOpenBases = getUpstreamOpenCodonBases();
-        return upOpenBases == 0 ? 0 : 3 - upOpenBases;
     }
 
     public abstract int position(int stream);
@@ -114,30 +99,40 @@ public abstract class NeoEpitope
         DownstreamNmdBases = calcNonMediatedDecayBases(this, FS_DOWN);
 
         boolean isPhased = phaseMatched();
-        int upPhaseOffset = getUpstreamOpenCodonBases();
-        int downPhaseOffset = getDownstreamPhaseOffset();
+        // int upPhaseOffset = getUpstreamNovelCodonBases();
+        // int downPhaseOffset = getDownstreamNovelCodonBases();
+
+        int novelUpstreamBases = NovelBaseIndex[FS_UP];
+        int novelDownstreamBases = NovelBaseIndex[FS_DOWN];
+
+        if(novelUpstreamBases < 0 || novelDownstreamBases < 0)
+        {
+            IM_LOGGER.error("ne({}) invalid upBases({} noveBases={}) or downBases({} noveBases={})",
+                    this, CodingBases[FS_UP], novelUpstreamBases, CodingBases[FS_DOWN], novelDownstreamBases);
+            return;
+        }
 
         // if upstream ends on a phase other than 2, need to take the bases from the downstream gene to make a novel codon
-        if(upPhaseOffset > 0 || downPhaseOffset > 0 || !isPhased)
+        if(novelUpstreamBases > 0 || novelDownstreamBases > 0 || !isPhased)
         {
             String upstreamBases = CodingBases[FS_UP];
             String downstreamBases = CodingBases[FS_DOWN];
 
-            if(upPhaseOffset > upstreamBases.length() || downPhaseOffset > downstreamBases.length())
+            if(novelUpstreamBases > upstreamBases.length() || novelDownstreamBases > downstreamBases.length())
             {
-                IM_LOGGER.error("ne({}) invalid upBases({} phaseOffset={}) or downBases({} phaseOffset={})",
-                        this, upstreamBases, upPhaseOffset, downstreamBases, downPhaseOffset);
+                IM_LOGGER.error("ne({}) invalid upBases({} noveBases={}) or downBases({} noveBases={})",
+                        this, upstreamBases, novelUpstreamBases, downstreamBases, novelDownstreamBases);
                 return;
             }
 
             // take the last 1 or 2 bases from the end of upstream gene's section
-            NovelCodonBases = upstreamBases.substring(upstreamBases.length() - upPhaseOffset);
-            upstreamBases = upstreamBases.substring(0, upstreamBases.length() - upPhaseOffset);
+            NovelCodonBases = upstreamBases.substring(upstreamBases.length() - novelUpstreamBases);
+            upstreamBases = upstreamBases.substring(0, upstreamBases.length() - novelUpstreamBases);
 
             if(isPhased)
             {
-                NovelCodonBases += downstreamBases.substring(0, downPhaseOffset);
-                downstreamBases = downstreamBases.substring(downPhaseOffset);
+                NovelCodonBases += downstreamBases.substring(0, novelDownstreamBases);
+                downstreamBases = downstreamBases.substring(novelDownstreamBases);
             }
             else
             {
@@ -150,14 +145,6 @@ public abstract class NeoEpitope
 
             if(upstreamBases.length() > requiredLength)
                 upstreamBases = upstreamBases.substring(upstreamBases.length() - requiredLength);
-
-            /*
-            if(downstreamBases.length() > requiredLength)
-                downstreamBases = downstreamBases.substring(0, requiredLength);
-
-            if(NovelCodonBases.length() > requiredLength + 3)
-                NovelCodonBases = NovelCodonBases.substring(0, requiredLength + 3);
-            */
 
             CodingBases[FS_UP] = upstreamBases;
             CodingBases[FS_DOWN] = downstreamBases;

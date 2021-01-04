@@ -40,7 +40,7 @@ public class TranscriptUtils
         return mod == 1 ? 2 : 1;
     }
 
-    public static int tickPhaseForward(int phase, int increment) { return (phase + increment) % 3; }
+    public static int tickPhaseForward(int phase, int increment) { return increment != 0 ? (phase + increment) % 3 : phase; }
     public static int tickPhaseForward(int phase) { return (phase + 1) % 3; }
 
     public static int calcExonicCodingPhase(final ExonData exon, int codingStart, int codingEnd, byte strand, int position)

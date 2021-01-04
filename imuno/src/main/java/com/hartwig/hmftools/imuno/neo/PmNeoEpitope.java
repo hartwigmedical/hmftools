@@ -3,10 +3,15 @@ package com.hartwig.hmftools.imuno.neo;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
@@ -39,15 +44,17 @@ public class PmNeoEpitope extends NeoEpitope
     public int position(int stream)
     {
         // position for a point mutation is defined on the upstream as the base of the mutation
-        // for the downstream it is one base before for +ve strand and 1 after for -ve strand
+        // for the downstream it is one base after for +ve strand and 1 before for -ve strand
         int pmPosition = mPointMutation.Position;
 
         if(mIndelBaseDiff >= 0)
         {
+            int modifiedBases = mIndelBaseDiff == 0 ? mPointMutation.Alt.length() : 1;
+
             if(stream == FS_UP)
                 return pmPosition;
             else
-                return TransData[FS_UP].Strand == POS_STRAND ? pmPosition + 1 : pmPosition - 1;
+                return TransData[FS_UP].Strand == POS_STRAND ? pmPosition + modifiedBases : pmPosition - modifiedBases;
         }
 
         // handle the DEL scenario - shift the downstream position by the delete length
@@ -122,19 +129,48 @@ public class PmNeoEpitope extends NeoEpitope
         setTranscriptCodingData(this, transData, position(upperStream), insSeqLength, upperStream);
     }
 
-    public int getDownstreamPhaseOffset()
+    private int getUpstreamOpenCodonBases()
     {
-        int upOpenBases = getUpstreamOpenCodonBases();
-
-        if(upOpenBases == 0)
+        int phase = Phases[FS_UP];
+        if(mIndelBaseDiff > 0)
         {
-            if(mPointMutation.Effect == MISSENSE)
-                return 3;
+            // revert back to phase at start of mutation, prior to the insert
+            int mutationPhase = (phase - mIndelBaseDiff) % 3;
+
+            if(mutationPhase >= 0)
+                phase = mutationPhase;
+            else if(abs(mutationPhase) == PHASE_1)
+                phase = PHASE_2;
             else
-                return 0;
+                phase = PHASE_1;
         }
 
-        return 3 - upOpenBases;
+        // return the number of open codon bases up to but not including the PM's position
+        if(phase == PHASE_1)
+            return 0;
+        else if(phase == PHASE_2)
+            return 1;
+        else
+            return 2;
+    }
+
+    private int getDownstreamOpenCodonBases()
+    {
+        int mutationEndPhase = Phases[FS_UP];
+
+        if(mIndelBaseDiff == 0)
+        {
+            mutationEndPhase = tickPhaseForward(mutationEndPhase, mPointMutation.Alt.length() - 1);
+        }
+        else if(mIndelBaseDiff < 0)
+        {
+            // DEL scenario
+            // if a codon is just closed, get an extra 3 novel bases
+            if(mutationEndPhase == PHASE_0)
+                return 3;
+        }
+
+        return mutationEndPhase == PHASE_0 ? 0 : 3 - mutationEndPhase;
     }
 
     public void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids)
@@ -142,21 +178,20 @@ public class PmNeoEpitope extends NeoEpitope
         // get the number of bases from the mutation or junction as required by the required amino acid count
         // the downstream bases start directly after the mutation (ie after any insert, or deleted bases)
 
-        // if the upstream phase is not 2 (ie the end of a codon) then additionally extract enough bases to cover the required amino
+        // if the upstream phase is not 0 (ie the end of a codon) then additionally extract enough bases to cover the required amino
         // acids plus the bases of the partial codon - the downstream bases will provide the remainder to complete the codon
 
         // phasing already takes any inserted bases (ie from an INDEL) into account, so just adjust for the number of bases required
-        int upPhaseOffset = getUpstreamOpenCodonBases();
-        int downPhaseOffset = getDownstreamPhaseOffset();
+        int upExtraBases = getUpstreamOpenCodonBases();
+        int downExtraBases = getDownstreamOpenCodonBases();
 
-        int upRequiredBases = requiredAminoAcids * 3 + upPhaseOffset;
+        int upRequiredBases = requiredAminoAcids * 3 + upExtraBases;
 
         String upCodingBases = "";
         String downCodingBases = "";
 
-        upRequiredBases -= mPointMutation.Alt.length();
-
         int deletedBases = mIndelBaseDiff < 0 ? abs(mIndelBaseDiff) : 0;
+        int modifiedBases = mIndelBaseDiff == 0 ? mPointMutation.Alt.length() : 1;
 
         int upPosition;
         int downPosition;
@@ -164,11 +199,11 @@ public class PmNeoEpitope extends NeoEpitope
         if(TransData[FS_UP].Strand == POS_STRAND)
         {
             upPosition = mPointMutation.Position - 1;
-            downPosition = mPointMutation.Position + deletedBases + 1;
+            downPosition = mPointMutation.Position + deletedBases + modifiedBases;
         }
         else
         {
-            upPosition = mPointMutation.Position + deletedBases + 1;
+            upPosition = mPointMutation.Position + deletedBases + modifiedBases;
             downPosition = mPointMutation.Position - 1;
         }
 
@@ -185,8 +220,11 @@ public class PmNeoEpitope extends NeoEpitope
             upCodingBases = mPointMutation.Alt + upCodingBases;
         }
 
+        NovelBaseIndex[FS_UP] = upExtraBases + mPointMutation.Alt.length();
+        NovelBaseIndex[FS_DOWN] = downExtraBases;
+
         boolean canStartInExon = true; // assumed true for now RegionType[FS_UPSTREAM] == TranscriptRegionType.EXONIC;
-        int downRequiredBases = phaseMatched() ? requiredAminoAcids * 3 + downPhaseOffset : ALL_TRANS_BASES;
+        int downRequiredBases = phaseMatched() ? requiredAminoAcids * 3 + downExtraBases : ALL_TRANS_BASES;
 
         downCodingBases = getDownstreamCodingBases(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),

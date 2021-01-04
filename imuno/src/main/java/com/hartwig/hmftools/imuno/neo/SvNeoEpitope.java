@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.imuno.neo;
 
+import static java.lang.Math.abs;
+
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -83,6 +87,32 @@ public class SvNeoEpitope extends NeoEpitope
         }
     }
 
+    private int getUpstreamOpenCodonBases()
+    {
+        int phase = Phases[FS_UP];
+
+        if(RegionType[FS_UP] == TranscriptRegionType.EXONIC && !mSvFusion.InsertSequence.isEmpty())
+        {
+            int insSeqLen = mSvFusion.InsertSequence.length();
+            int preInsertPhase = (phase - insSeqLen) % 3;
+
+            if(preInsertPhase >= 0)
+                phase = preInsertPhase;
+            else if(abs(preInsertPhase) == PHASE_1)
+                phase = PHASE_2;
+            else
+                phase = PHASE_1;
+        }
+
+        return getUpstreamOpenCodonBases(phase);
+    }
+
+    private int getDownstreamOpenCodonBases()
+    {
+        int upOpenBases = Phases[FS_UP];
+        return upOpenBases == 0 ? 0 : 3 - upOpenBases;
+    }
+
     public void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids)
     {
         // get the number of bases from the fusion junction as required by the required amino acid count
@@ -90,41 +120,38 @@ public class SvNeoEpitope extends NeoEpitope
         // for fusions, the upstream bases include any inserted bases if the region is exonic
         // phasing already takes insert sequence into account, so just adjust for the number of bases required
 
-        int upPhaseOffset = getUpstreamOpenCodonBases();
-        int downPhaseOffset = getDownstreamPhaseOffset();
+        int upExtraBases = getUpstreamOpenCodonBases();
+        int downExtraBases = getDownstreamOpenCodonBases();
 
-        String codingInsSequence = "";
-
-        if(RegionType[FS_UP] == TranscriptRegionType.EXONIC && !mSvFusion.InsertSequence.isEmpty())
-        {
-            codingInsSequence = mSvFusion.InsertSequence;
-
-            int upstreamPhase = tickPhaseForward(Phases[FS_UP], codingInsSequence.length());
-            upPhaseOffset = getUpstreamOpenCodonBases(upstreamPhase);
-        }
-
-        int upRequiredBases = requiredAminoAcids * 3 + upPhaseOffset;
+        int upRequiredBases = requiredAminoAcids * 3 + upExtraBases;
 
         CodingBases[FS_UP] = getUpstreamCodingBases(
                 refGenome, TransData[FS_UP], chromosome(FS_UP), position(FS_UP), orientation(FS_UP), upRequiredBases);
 
-        if(!codingInsSequence.isEmpty())
+        int codingInsSeqLen = 0;
+
+        if(RegionType[FS_UP] == TranscriptRegionType.EXONIC && !mSvFusion.InsertSequence.isEmpty())
         {
+            codingInsSeqLen = mSvFusion.InsertSequence.length();
+
             if(TransData[FS_UP].Strand == POS_STRAND)
-                CodingBases[FS_UP] += codingInsSequence;
+                CodingBases[FS_UP] += mSvFusion.InsertSequence;
             else
-                CodingBases[FS_UP]= codingInsSequence + CodingBases[FS_UP];
+                CodingBases[FS_UP]= mSvFusion.InsertSequence + CodingBases[FS_UP];
         }
 
-        boolean canStartInExon = RegionType[FS_UP] == TranscriptRegionType.EXONIC || upPhaseOffset > 0;
-        int downRequiredBases = phaseMatched() ? requiredAminoAcids * 3 + downPhaseOffset : ALL_TRANS_BASES;
+        NovelBaseIndex[FS_UP] = upExtraBases + codingInsSeqLen;
+        NovelBaseIndex[FS_DOWN] = downExtraBases;
+
+        boolean canStartInExon = RegionType[FS_UP] == TranscriptRegionType.EXONIC || upExtraBases > 0;
+        int downRequiredBases = phaseMatched() ? requiredAminoAcids * 3 + downExtraBases : ALL_TRANS_BASES;
 
         CodingBases[FS_DOWN] = getDownstreamCodingBases(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), position(FS_DOWN), orientation(FS_DOWN),
                 downRequiredBases, canStartInExon, true);
 
         IM_LOGGER.trace("ne({}) phased({} up={} down={}) reqBases(up={} down={}) insSeqLen({})",
-                toString(), phaseMatched(), upPhaseOffset, downPhaseOffset, upRequiredBases, downRequiredBases, codingInsSequence.length());
+                toString(), phaseMatched(), upExtraBases, downExtraBases, upRequiredBases, downRequiredBases, codingInsSeqLen);
     }
 
     public String toString()
