@@ -14,6 +14,30 @@ data class ProteinSequence(val contig: String, val protein: String) {
         return ProteinSequence(contig, protein + more)
     }
 
+    fun inflate(template: String): ProteinSequence {
+        val joiner = StringBuilder()
+        for (i in protein.indices) {
+            if (protein[i] == '-') {
+                joiner.append(template[i])
+            } else {
+                joiner.append(protein[i])
+            }
+        }
+        return ProteinSequence(contig, joiner.toString())
+    }
+
+    fun deflate(template: String): ProteinSequence {
+        val joiner = StringBuilder()
+        for (i in protein.indices) {
+            when {
+                protein[i] == '.' -> joiner.append('.')
+                protein[i] == template[i] -> joiner.append('-')
+                else -> joiner.append(protein[i])
+            }
+        }
+        return ProteinSequence(contig, joiner.toString())
+    }
+
     fun exonicProteins(exonicBoundaries: List<Int>): List<String> {
         if (exonicBoundaries.isEmpty()) {
             return listOf(fullProteinSequence)
