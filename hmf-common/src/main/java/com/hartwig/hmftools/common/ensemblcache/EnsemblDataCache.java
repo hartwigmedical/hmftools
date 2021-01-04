@@ -296,7 +296,7 @@ public class EnsemblDataCache
         {
             // if the breakend is after (higher for +ve strand) the nearest preceding splice acceptor, then the distance will be positive
             // and mean that the transcript isn't interrupted when used in a downstream fusion
-            int preDistance = transcript.gene().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
+            int preDistance = transcript.gene().Strand == POS_STRAND ? position - precedingGeneSAPos : precedingGeneSAPos - position;
             transcript.setSpliceAcceptorDistance(true, preDistance);
         }
     }

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -25,6 +26,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 
@@ -133,19 +135,24 @@ public class NeoEpitopeWriter
 
         for(final BreakendTransData transcript : gene.transcripts())
         {
-            if(!transcript.isDisruptive())
-                continue;
-
             if(gene.isUpstream())
             {
+                if(!transcript.isDisruptive())
+                    continue;
+
                 if(transcript.TransData.CodingStart == null)
                     continue;
             }
             else
             {
+                // must have a splice acceptor
                 if(transcript.TransData.exons().size() <= 1)
                     continue;
 
+                if(transcript.regionType() == EXONIC && transcript.ExonDownstream == transcript.exonCount())
+                    continue;
+
+                // cannot be NMD
                 if(transcript.TransData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))
                     continue;
 
@@ -168,6 +175,7 @@ public class NeoEpitopeWriter
                 }
             }
 
+            // ensure the transcript is not interrupted by a chain link going elsewhere
             if(linkExtensionLength > 0)
             {
                 int transLength = (gene.Strand == POS_STRAND) == gene.isUpstream() ?
