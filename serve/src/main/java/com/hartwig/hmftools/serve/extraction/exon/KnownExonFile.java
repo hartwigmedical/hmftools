@@ -6,15 +6,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
@@ -62,7 +57,7 @@ public final class KnownExonFile {
                         .exonEnsemblId(values[5])
                         .exonIndex(Integer.parseInt(values[6]))
                         .build())
-                .sources(Sets.newHashSet(Knowledgebase.DOCM)) //TODO fix
+                .sources(Knowledgebase.extractKnowledgebase(values[7]))
                 .build();
     }
 

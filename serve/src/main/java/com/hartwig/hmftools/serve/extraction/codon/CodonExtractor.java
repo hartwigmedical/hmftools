@@ -51,7 +51,7 @@ public class CodonExtractor {
 
                 MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
                 List<CodonAnnotation> codonAnnotations =
-                        determineCodonAnnotations(gene, canonicalTranscript, codonIndex, mutationTypeFilter);
+                        determineCodonAnnotations(gene, canonicalTranscript, codonIndex, mutationTypeFilter, extractProteinannotation(event));
 
                 if (codonAnnotations == null) {
                     LOGGER.warn("Could not resolve codon index {} on transcript '{}' for gene '{}'",
@@ -70,6 +70,22 @@ public class CodonExtractor {
         }
 
         return null;
+    }
+
+    @NotNull
+    private static String extractProteinannotation(@NotNull String event) {
+        String codonPart;
+        if (event.contains(" ")) {
+            codonPart = event.split(" ")[1];
+        } else {
+            codonPart = event;
+        }
+        String codonPartWithout = codonPart.replaceAll("[^a-zA-Z0-9]", "");
+        if (Character.toString(codonPart.charAt(codonPartWithout.length()-1)).equals("X")) {
+            return codonPartWithout;
+        } else {
+            return codonPartWithout + "X";
+        }
     }
 
     @Nullable
@@ -91,7 +107,7 @@ public class CodonExtractor {
 
     @Nullable
     private static List<CodonAnnotation> determineCodonAnnotations(@NotNull String gene, @NotNull HmfTranscriptRegion canonicalTranscript,
-            int codonIndex, @NotNull MutationTypeFilter mutationTypeFilter) {
+            int codonIndex, @NotNull MutationTypeFilter mutationTypeFilter, @NotNull String proteinAnnotation) {
         List<GenomeRegion> regions = canonicalTranscript.codonByIndex(codonIndex);
 
         if (regions != null) {
@@ -104,6 +120,8 @@ public class CodonExtractor {
                         .gene(gene)
                         .mutationType(mutationTypeFilter)
                         .codonIndex(codonIndex)
+                        .transcript(canonicalTranscript.transcriptID())
+                        .proteinAnnotation(proteinAnnotation)
                         .build());
             }
             return codonAnnotations;

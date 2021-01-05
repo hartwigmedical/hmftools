@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.extraction.codon;
 
+import static com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions.FIELD_DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,6 +10,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +26,41 @@ public final class KnownCodonFile {
     @NotNull
     public static String knownCodonTsvPath(@NotNull String outputDir, @NotNull RefGenomeVersion refGenomeVersion) {
         return refGenomeVersion.addVersionToFilePath(outputDir + File.separator + KNOWN_CODON_TSV);
+    }
+
+    public static List<KnownCodon> read(@NotNull String file) throws IOException {
+        List<String> lines = Files.readAllLines(new File(file).toPath());
+
+        return fromLines(lines.subList(1, lines.size()));
+    }
+
+    @NotNull
+    private static List<KnownCodon> fromLines(@NotNull List<String> lines) {
+        List<KnownCodon> codons = Lists.newArrayList();
+        for (String line : lines) {
+            codons.add(fromLine(line));
+        }
+        return codons;
+    }
+
+    @NotNull
+    private static KnownCodon fromLine(@NotNull String line) {
+        String[] values = line.split(FIELD_DELIMITER);
+
+        return ImmutableKnownCodon.builder()
+                .annotation(ImmutableCodonAnnotation.builder()
+                        .gene(values[0])
+                        .chromosome(values[1])
+                        .start(Long.parseLong(values[2]))
+                        .end(Long.parseLong(values[3]))
+                        .mutationType(MutationTypeFilter.valueOf(values[4]))
+                        .codonIndex(Integer.parseInt(values[5]))
+                        .transcript(values[7])
+                        .proteinAnnotation(values[8])
+                        .build())
+                .sources(Knowledgebase.extractKnowledgebase(values[6]))
+                .build();
+
     }
 
     public static void write(@NotNull String codonTsv, @NotNull Iterable<KnownCodon> codons) throws IOException {
@@ -41,6 +79,8 @@ public final class KnownCodonFile {
                 .add("mutationType")
                 .add("codonIndex")
                 .add("sources")
+                .add("transcript")
+                .add("preoteinAnnotation")
                 .toString();
     }
 
@@ -71,6 +111,8 @@ public final class KnownCodonFile {
                 .add(codon.annotation().mutationType().toString())
                 .add(String.valueOf(codon.annotation().codonIndex()))
                 .add(Knowledgebase.commaSeparatedSourceString(codon.sources()))
+                .add(String.valueOf(codon.annotation().transcript()))
+                .add(String.valueOf(codon.annotation().proteinAnnotation()))
                 .toString();
     }
 }
