@@ -8,12 +8,9 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinKeyFormatter;
-import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -23,26 +20,23 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class CodonChecker {
-    private static final Logger LOGGER = LogManager.getLogger(CodonChecker.class);
+public class CodonAnnotationToVCFConverter {
+    private static final Logger LOGGER = LogManager.getLogger(CodonAnnotationToVCFConverter.class);
     private static final boolean LOG_DEBUG = true;
 
     public static void main(String[] args) throws IOException {
-        LOGGER.info("Running SERVE codon checker");
+        LOGGER.info("Running SERVE codon VCF converter");
 
         if (LOG_DEBUG) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -55,6 +49,20 @@ public class CodonChecker {
 
         LOGGER.info("The size of the file is {}", codons.size());
 
+        VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
+                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
+                .modifyOption(Options.INDEX_ON_THE_FLY, false)
+                .build();
+
+        VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
+        header.addMetaDataLine(new VCFInfoHeaderLine("input", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "input"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("source",
+                VCFHeaderLineCount.UNBOUNDED,
+                VCFHeaderLineType.String,
+                "sources"));
+
+        writer.writeHeader(header);
+
         String randomAltBase = null;
         for (KnownCodon codon : codons) {
             Long start = codon.annotation().start();
@@ -62,8 +70,6 @@ public class CodonChecker {
             Long bewtweenNumber = end > start ? start + 1 : start - 1;
             List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
             String chromosome = codon.annotation().chromosome();
-            Integer codonIndex = codon.annotation().codonIndex();
-            MutationTypeFilter mutationTypeFilter = codon.annotation().mutationType();
 
             for (Long genomicPosition : genomicPositions) {
                 String extractRefBaseOfPosition = extractRefBaseOfGenomicPosition(chromosome, genomicPosition);
@@ -78,26 +84,20 @@ public class CodonChecker {
                     randomAltBase = "C";
                 }
 
-                Integer annotatedVariantCodonIndex = extactAnnotationVariantCodonIndex(extractRefBaseOfPosition,
+                extactAnnotationVariantCodonIndex(extractRefBaseOfPosition,
                         randomAltBase,
                         chromosome,
                         genomicPosition,
-                        mutationTypeFilter,
                         codon.sources(),
                         codon.annotation().gene(),
                         codon.annotation().proteinAnnotation(),
                         codon.annotation().transcript(),
-                        outputFile);
-
-                if (!codonIndex.equals(annotatedVariantCodonIndex)) {
-                    LOGGER.warn("Condon index of SERVE {} are not equals for annotated codon index {}",
-                            codonIndex,
-                            annotatedVariantCodonIndex);
-                }
+                        writer);
             }
         }
 
-        LOGGER.info("All codons are checked!");
+        writer.close();
+        LOGGER.info("All codons are written to VCF file!");
         LOGGER.info("Done!");
     }
 
@@ -108,10 +108,10 @@ public class CodonChecker {
 
     }
 
-    private static Integer extactAnnotationVariantCodonIndex(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
-            @Nullable String chromosome, Long position, @NotNull MutationTypeFilter mutationTypeFilter,
+    private static void extactAnnotationVariantCodonIndex(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
+            @Nullable String chromosome, Long position,
             @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, @NotNull String proteinAnnotation, @NotNull String transcript,
-            @NotNull String outputFile) throws IOException {
+             @NotNull VariantContextWriter writer)  {
 
         generateVcfFileOfGenomicPosition(extractRefBaseOfPosition,
                 randomAltBase,
@@ -120,36 +120,14 @@ public class CodonChecker {
                 knowledgebases,
                 gene,
                 proteinAnnotation,
-                transcript,
-                outputFile);
+                transcript, writer);
 
-        AbstractFeatureReader<VariantContext, LineIterator> reader =
-                AbstractFeatureReader.getFeatureReader(outputFile, new VCFCodec(), false);
-        for (VariantContext variant : reader.iterator()) {
-
-            List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-            LOGGER.info(annotations); //TODO fix list are empty
-        }
-
-        return 1;
     }
 
     private static void generateVcfFileOfGenomicPosition(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
             @Nullable String chromosome, Long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene,
-            @NotNull String proteinAnnotation, @NotNull String transcript, @NotNull String outputFile) {
-        VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
-                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
-                .modifyOption(Options.INDEX_ON_THE_FLY, false)
-                .build();
+            @NotNull String proteinAnnotation, @NotNull String transcript, @NotNull VariantContextWriter writer) {
 
-        VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
-        header.addMetaDataLine(new VCFInfoHeaderLine("input", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "input"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("source",
-                VCFHeaderLineCount.UNBOUNDED,
-                VCFHeaderLineType.String,
-                "sources [" + knowledgebases + "]"));
-
-        writer.writeHeader(header);
 
         List<Allele> hotspotAlleles =
                 Lists.newArrayList(Allele.create(extractRefBaseOfPosition, true), Allele.create(randomAltBase, false));
@@ -164,10 +142,8 @@ public class CodonChecker {
                 .attribute("input", ProteinKeyFormatter.toProteinKey(gene, transcript, proteinAnnotation))
                 .make();
 
-        LOGGER.debug(" Writing variant '{}'", variantContext);
+        LOGGER.debug(" Writing variant to VCF file'{}'", variantContext);
         writer.add(variantContext);
-
-        writer.close();
     }
 
 }
