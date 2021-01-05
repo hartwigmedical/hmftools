@@ -8,6 +8,17 @@ class NucleotideCount(private val length: Int) {
     val tCount = Array(length) { 0 }
     val cCount = Array(length) { 0 }
 
+    fun basesAt(index: Int): Collection<Char> {
+        val result = mutableSetOf<Char>()
+        val depth = depth(index)
+        if (gCount[index] > depth / 6) result.add('G')
+        if (aCount[index] > depth / 6) result.add('A')
+        if (tCount[index] > depth / 6) result.add('T')
+        if (cCount[index] > depth / 6) result.add('C')
+        return result
+    }
+
+
     fun depth(index: Int): Int {
         return gCount[index] + aCount[index] + tCount[index] + cCount[index]
     }
@@ -15,10 +26,10 @@ class NucleotideCount(private val length: Int) {
     fun isHom(index: Int): Boolean {
         val depth = depth(index)
 
-        val isG = gCount[index] > depth / 4
-        val isA = aCount[index] > depth / 4
-        val isT = tCount[index] > depth / 4
-        val isC = cCount[index] > depth / 4
+        val isG = gCount[index] > depth / 6
+        val isA = aCount[index] > depth / 6
+        val isT = tCount[index] > depth / 6
+        val isC = cCount[index] > depth / 6
 
         var count = 0
         if (isG) count++
@@ -33,7 +44,7 @@ class NucleotideCount(private val length: Int) {
         return true
     }
 
-    fun write(fileName: String) {
+    fun writeHorizontally(fileName: String) {
         val file = File(fileName)
         file.writeText("Base\t" + (0 until length).joinToString("\t") + "\n")
         file.appendText("G   \t" + gCount.joinToString("\t") + "\n")
@@ -41,7 +52,14 @@ class NucleotideCount(private val length: Int) {
         file.appendText("T   \t" + tCount.joinToString("\t") + "\n")
         file.appendText("C   \t" + cCount.joinToString("\t") + "\n")
         file.appendText("Hom?\t" + (0 until length).joinToString("\t") { if (isHom(it)) "T" else "F" } + "\n")
+    }
 
+    fun writeVertically(fileName: String) {
+        val file = File(fileName)
+        file.writeText("i\t\tG\t\tA\t\tT\t\tC\t\tHom\n")
+        for (i in 0 until length) {
+            file.appendText("${i}\t\t${gCount[i]}\t\t${aCount[i]}\t\t${tCount[i]}\t\t${cCount[i]}\t\t${isHom(i)}\n")
+        }
     }
 
 }
