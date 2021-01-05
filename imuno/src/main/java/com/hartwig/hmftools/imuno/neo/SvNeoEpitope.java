@@ -59,6 +59,14 @@ public class SvNeoEpitope extends NeoEpitope
 
     public double copyNumber() { return mSvFusion.JunctionCopyNumber; }
 
+    public boolean phaseMatched()
+    {
+        if(RegionType[FS_UP] == EXONIC && RegionType[FS_DOWN] == EXONIC)
+            return tickPhaseForward(Phases[FS_UP]) == Phases[FS_DOWN];
+        else
+            return Phases[FS_UP] == Phases[FS_DOWN];
+    }
+
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {
         TransData[FS_UP] = upTransData;

@@ -52,7 +52,7 @@ public abstract class NeoEpitope
         RegionType = new TranscriptRegionType[] {TranscriptRegionType.UNKNOWN, TranscriptRegionType.UNKNOWN};
 
         CodingBases = new String[] {"", ""};
-        NovelBaseIndex = new int[] {-1, -1};
+        NovelBaseIndex = new int[] {0, 0};
         NovelCodonBases = "";
         UpstreamAcids = "";
         DownstreamAcids = "";
@@ -66,14 +66,6 @@ public abstract class NeoEpitope
     }
 
     public byte strand(int stream) { return TransData[stream].Strand; }
-
-    public boolean phaseMatched()
-    {
-        if(RegionType[FS_UP] == EXONIC && RegionType[FS_DOWN] == EXONIC)
-            return tickPhaseForward(Phases[FS_UP]) == Phases[FS_DOWN];
-        else
-            return Phases[FS_UP] == Phases[FS_DOWN];
-    }
 
     public static int getUpstreamOpenCodonBases(int phase)
     {
@@ -89,6 +81,7 @@ public abstract class NeoEpitope
     public abstract String variantType();
     public abstract String variantInfo();
     public abstract double copyNumber();
+    public abstract boolean phaseMatched();
 
     public void setCodingBases(final RefGenomeInterface refGenome, int reqAminoAcids)
     {
@@ -99,8 +92,6 @@ public abstract class NeoEpitope
         DownstreamNmdBases = calcNonMediatedDecayBases(this, FS_DOWN);
 
         boolean isPhased = phaseMatched();
-        // int upPhaseOffset = getUpstreamNovelCodonBases();
-        // int downPhaseOffset = getDownstreamNovelCodonBases();
 
         int novelUpstreamBases = NovelBaseIndex[FS_UP];
         int novelDownstreamBases = NovelBaseIndex[FS_DOWN];
