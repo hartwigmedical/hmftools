@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.align
 
+import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.ext.containsIndel
 import com.hartwig.hmftools.lilac.sam.SamSlicer
@@ -11,53 +12,112 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-data class HlaAlign(val hlaIndexStart: Int, val readIndexStart: Int, val length: Int, val samRecord: SAMRecord) {
-    val hlaIndexEnd = hlaIndexStart + length - 1
+data class HlaAlign(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord) {
 
+    val hlaNucIndexEnd = hlaNucIndexStart + length - 1
+    val nucleotideIndices = IntRange(hlaNucIndexStart, hlaNucIndexEnd)
+    val aminoAcidIndices = AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd)
 
     fun containsIndex(index: Int): Boolean {
-        return index >= hlaIndexStart && index <= hlaIndexStart + length
+        return index >= hlaNucIndexStart && index <= hlaNucIndexStart + length
     }
 
-    fun charAt(index: Int): Char {
-        val adjustedIndex = index - hlaIndexStart + readIndexStart
-        return samRecord.readBases[adjustedIndex].toChar()
+    fun aminoAcidAt(codonIndex: Int, minQual: Int = 0): Char {
+        val startIndex = codonIndex * 3
+
+        val firstBase = charAt(startIndex + 0, minQual)
+        if (firstBase == '.') {
+            return '.'
+        }
+
+        val secondBase = charAt(startIndex + 1, minQual)
+        if (secondBase == '.') {
+            return '.'
+        }
+
+        val thirdBase = charAt(startIndex + 2, minQual)
+        if (thirdBase == '.') {
+            return '.'
+        }
+
+        return Codons.aminoAcid(firstBase.toString() + secondBase + thirdBase)
+    }
+
+    fun charAt(index: Int, minQual: Int = 0): Char {
+        val adjustedIndex = if (reverseStrand) readIndexStart - index + hlaNucIndexStart else index - hlaNucIndexStart + readIndexStart
+        val quality = samRecord.baseQualities[adjustedIndex]
+        if (quality < minQual) {
+            return '.'
+        }
+        val readBase = samRecord.readBases[adjustedIndex].toChar()
+        return if (reverseStrand) readBase.reverseCompliment() else readBase
+    }
+
+    private fun Char.reverseCompliment(): Char {
+        when (this) {
+            'G' -> return 'C'
+            'A' -> return 'T'
+            'T' -> return 'A'
+            'C' -> return 'G'
+        }
+
+        return this
     }
 
     companion object {
 
-        fun realign(hlaCodingRegionOffset: Int, hlaCodingRegion: GenomeRegion, bamFileName: String): List<HlaAlign> {
+        fun realign(hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<HlaAlign> {
             val slicer = SamSlicer(1)
             val result = mutableListOf<HlaAlign>()
-
             SamReaderFactory.makeDefault().open(File(bamFileName)).use { samReader ->
 
                 val consumer = Consumer<SAMRecord> { samRecord ->
                     if (!samRecord.containsIndel()) {
-                        result.add(realign(hlaCodingRegionOffset, hlaCodingRegion, samRecord))
+                        if (reverseStrand) {
+                            result.add(realignReverseStrand(hlaCodingRegionOffset, region, samRecord))
+                        } else {
+                            result.add(realignForwardStrand(hlaCodingRegionOffset, region, samRecord))
+                        }
                     }
                 }
-
-                slicer.slice(samReader, hlaCodingRegion, consumer)
+                slicer.slice(region, samReader, consumer)
             }
-
             return result
         }
 
 
-        private fun realign(hlaCodingRegionOffset: Int, hlaCodingRegion: GenomeRegion, samRecord: SAMRecord): HlaAlign {
+        private fun realignForwardStrand(hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): HlaAlign {
+            val hlaExonStartPosition = region.start().toInt()
+            val hlaExonEndPosition = region.end().toInt()
+
             val alignmentStart = samRecord.alignmentStart
             val alignmentEnd = samRecord.alignmentEnd
 
-            val hlaStart = max(alignmentStart, hlaCodingRegion.start().toInt())
-            val hlaEnd = min(alignmentEnd, hlaCodingRegion.end().toInt())
+            val hlaStart = max(alignmentStart, hlaExonStartPosition)
+            val hlaEnd = min(alignmentEnd, hlaExonEndPosition)
             val length = hlaEnd - hlaStart + 1
 
-            val alignmentStartIndex = samRecord.getReadPositionAtReferencePosition(alignmentStart) - 1
-            val hlaStartIndex = hlaStart - alignmentStart + alignmentStartIndex
-            val hlaIndex = hlaStart - hlaCodingRegion.start().toInt() + hlaCodingRegionOffset
+            val readIndex = samRecord.getReadPositionAtReferencePosition(hlaStart) - 1
+            val hlaStartIndex = hlaStart - hlaExonStartPosition + hlaExonOffset
 
-            return HlaAlign(hlaIndex, hlaStartIndex, length, samRecord)
+            return HlaAlign(hlaStartIndex, readIndex, length, false, samRecord)
+        }
+
+        private fun realignReverseStrand(hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): HlaAlign {
+            val hlaExonStartPosition = region.end().toInt()
+            val hlaExonEndPosition = region.start().toInt()
+
+            val alignmentStart = samRecord.alignmentStart
+            val alignmentEnd = samRecord.alignmentEnd
+
+            val hlaStart = min(alignmentEnd, hlaExonStartPosition)
+            val hlaEnd = max(alignmentStart, hlaExonEndPosition)
+            val length = hlaStart - hlaEnd + 1
+
+            val readIndex = samRecord.getReadPositionAtReferencePosition(hlaStart) - 1
+            val hlaStartIndex = hlaExonStartPosition - hlaStart + hlaExonOffset
+
+            return HlaAlign(hlaStartIndex, readIndex, length, true, samRecord)
         }
 
     }
