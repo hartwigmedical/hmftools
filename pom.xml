@@ -10,36 +10,36 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>patient-db</module>
-        <module>hmf-extensions</module>
-        <module>api-clients</module>
-        <module>hmf-gene-panel-builder</module>
-        <module>hmf-id-generator</module>
-        <module>bam-slicer</module>
-        <module>gripss</module>
-        <module>lilac</module>
-        <module>paddle</module>
-        <module>health-checker</module>
-        <module>fastq-stats</module>
-        <module>amber</module>
-        <module>count-bam-lines</module>
-        <module>purity-ploidy-estimator</module>
-        <module>sage</module>
-        <module>bachelor</module>
-        <module>sv-linx</module>
-        <module>sv-tools</module>
-        <module>imuno</module>
-        <module>sig-analyser</module>
-        <module>cuppa</module>
-        <module>isofox</module>
-        <module>stat-calcs</module>
-        <module>knowledgebase-importer</module>
-        <module>vicc-importer</module>
-        <module>iclusion-importer</module>
-        <module>ckb-importer</module>
-        <module>serve</module>
-        <module>protect</module>
-        <module>patient-reporter</module>
+        <!--        <module>patient-db</module>-->
+        <!--        <module>hmf-extensions</module>-->
+        <!--        <module>api-clients</module>-->
+        <!--        <module>hmf-gene-panel-builder</module>-->
+        <!--        <module>hmf-id-generator</module>-->
+        <!--        <module>bam-slicer</module>-->
+        <!--        <module>gripss</module>-->
+        <!--        <module>lilac</module>-->
+        <!--        <module>paddle</module>-->
+        <!--        <module>health-checker</module>-->
+        <!--        <module>fastq-stats</module>-->
+        <!--        <module>amber</module>-->
+        <!--        <module>count-bam-lines</module>-->
+        <!--        <module>purity-ploidy-estimator</module>-->
+        <!--        <module>sage</module>-->
+        <!--        <module>bachelor</module>-->
+        <!--        <module>sv-linx</module>-->
+        <!--        <module>sv-tools</module>-->
+        <!--        <module>imuno</module>-->
+        <!--        <module>sig-analyser</module>-->
+        <!--        <module>cuppa</module>-->
+        <!--        <module>isofox</module>-->
+        <!--        <module>stat-calcs</module>-->
+        <!--        <module>knowledgebase-importer</module>-->
+        <!--        <module>vicc-importer</module>-->
+        <!--        <module>iclusion-importer</module>-->
+        <!--        <module>ckb-importer</module>-->
+        <!--        <module>serve</module>-->
+        <!--        <module>protect</module>-->
+        <!--        <module>patient-reporter</module>-->
     </modules>
 
     <properties>
@@ -51,7 +51,8 @@
         <maven.assembly.plugin.version>3.0.0</maven.assembly.plugin.version>
         <maven.jaxb2.plugin.version>0.14.0</maven.jaxb2.plugin.version>
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
-        <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
+        <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
+        <maven.site.plugin.version>3.7.1</maven.site.plugin.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
@@ -151,6 +152,16 @@
                     <groupId>org.jvnet.jaxb2.maven2</groupId>
                     <artifactId>maven-jaxb2-plugin</artifactId>
                     <version>${maven.jaxb2.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${maven.site.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-report-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.jetbrains.kotlin</groupId>
