@@ -150,7 +150,7 @@ public class ExonExtractor {
                 .end(end)
                 .gene(gene)
                 .mutationType(mutationTypeFilter)
-                .exonEnsemblId(canonicalTranscriptID)
+                .transcript(canonicalTranscriptID)
                 .exonIndex(exonIndex)
                 .build();
     }

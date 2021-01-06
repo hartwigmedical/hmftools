@@ -54,7 +54,7 @@ public final class KnownExonFile {
                         .start(Long.parseLong(values[2]))
                         .end(Long.parseLong(values[3]))
                         .mutationType(MutationTypeFilter.valueOf(values[4]))
-                        .exonEnsemblId(values[5])
+                        .transcript(values[5])
                         .exonIndex(Integer.parseInt(values[6]))
                         .build())
                 .sources(Knowledgebase.extractKnowledgebase(values[7]))
@@ -75,7 +75,7 @@ public final class KnownExonFile {
                 .add("start")
                 .add("end")
                 .add("mutationType")
-                .add("exonEnsemblId")
+                .add("transcript")
                 .add("exonIndex")
                 .add("sources")
                 .toString();
@@ -106,7 +106,7 @@ public final class KnownExonFile {
                 .add(String.valueOf(exon.annotation().start()))
                 .add(String.valueOf(exon.annotation().end()))
                 .add(exon.annotation().mutationType().toString())
-                .add(exon.annotation().exonEnsemblId())
+                .add(exon.annotation().transcript())
                 .add(String.valueOf(exon.annotation().exonIndex()))
                 .add(Knowledgebase.commaSeparatedSourceString(exon.sources()))
                 .toString();

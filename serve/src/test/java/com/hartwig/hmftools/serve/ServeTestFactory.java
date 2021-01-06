@@ -98,7 +98,7 @@ public final class ServeTestFactory {
                         .start(0)
                         .end(0)
                         .mutationType(MutationTypeFilter.ANY)
-                        .exonEnsemblId(Strings.EMPTY)
+                        .transcript(Strings.EMPTY)
                         .exonIndex(0)
                         .build())
                 .addSources(source)

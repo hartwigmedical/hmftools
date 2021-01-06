@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,7 +65,7 @@ public class ExonAnnotationToVCFConverter {
         writer.writeHeader(header);
 
         Random random = new Random();
-        String randomAltBase = null;
+        String randomAltBase = Strings.EMPTY;
 
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();
@@ -96,7 +97,7 @@ public class ExonAnnotationToVCFConverter {
                         exon.sources(),
                         gene,
                         exon.annotation().exonIndex(),
-                        exon.annotation().exonEnsemblId(),
+                        exon.annotation().transcript(),
                         writer);
 
             }
@@ -113,7 +114,7 @@ public class ExonAnnotationToVCFConverter {
         return fastaSequenceFile.getSubsequenceAt(chromosome, genomicPosition, genomicPosition).getBaseString();
     }
 
-    private static void extactAnnotationVariantExonIndex(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
+    private static void extactAnnotationVariantExonIndex(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
             @Nullable String chromosome, Long position,
             @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, int exonIndex, @NotNull String transcript,
             @NotNull VariantContextWriter writer)  {
@@ -129,7 +130,7 @@ public class ExonAnnotationToVCFConverter {
 
     }
 
-    private static void generateVcfFileOfGenomicPosition(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
+    private static void generateVcfFileOfGenomicPosition(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
             @Nullable String chromosome, Long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene,
             int exonIndex, @NotNull String transcript, @NotNull VariantContextWriter writer) {
 
