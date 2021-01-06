@@ -334,6 +334,13 @@ public class NeoUtils
 
     public static int calcNonMediatedDecayBases(final NeoEpitope neData)
     {
+        // distance from (novel) stop codon to last splice acceptor
+        if(!neData.NovelAcid.endsWith(STOP_SYMBOL))
+            return -1;
+
+        if(neData.NovelAcid.equals(STOP_SYMBOL)) // ignore stop-gained
+            return -1;
+
         final TranscriptData transData = neData.TransData[FS_DOWN];
         final List<ExonData> exonDataList = transData.exons();
         int refPosition = neData.position(FS_DOWN);
@@ -342,8 +349,6 @@ public class NeoUtils
 
         if(neData.orientation(FS_DOWN) == NEG_ORIENT)
         {
-            // int refPosition = transData.CodingEnd != null ? transData.CodingEnd : neData.position(stream);
-
             for (int i = 0; i < exonDataList.size(); ++i)
             {
                 final ExonData exon = exonDataList.get(i);
@@ -359,8 +364,6 @@ public class NeoUtils
         }
         else
         {
-            // int refPosition = transData.CodingStart != null ? transData.CodingStart : neData.position(stream);
-
             for(int i = exonDataList.size() - 1; i >= 0; --i)
             {
                 final ExonData exon = exonDataList.get(i);
@@ -375,7 +378,12 @@ public class NeoUtils
             }
         }
 
-        return exonicBaseCount;
+        int newCodingBases = neData.NovelAcid.length() * 3;
+
+        if(exonicBaseCount >= newCodingBases)
+            return exonicBaseCount - newCodingBases;
+
+        return -1;
     }
 
     public static String checkTrimBases(final String bases)
