@@ -241,7 +241,8 @@ public class PmNeoEpitope extends NeoEpitope
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
                 downRequiredBases, canStartInExon, false);
 
-        setWildtypeAminoAcids(refGenome, requiredAminoAcids);
+        if(isBaseChange())
+            setWildtypeAminoAcids(refGenome, requiredAminoAcids);
 
         // the ref bases was excluded and is now replaced by the alt
 

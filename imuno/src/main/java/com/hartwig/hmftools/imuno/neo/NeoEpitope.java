@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -41,7 +40,8 @@ public abstract class NeoEpitope
     public String UpstreamAcids;
     public String DownstreamAcids;
     public String NovelAcid;
-    public int DownstreamNmdBases;
+    public int NmdBasesMin;
+    public int NmdBasesMax;
     public String WildtypeAcids;
 
     public NeoEpitope()
@@ -58,7 +58,8 @@ public abstract class NeoEpitope
         UpstreamAcids = "";
         DownstreamAcids = "";
         NovelAcid = "";
-        DownstreamNmdBases = 0;
+        NmdBasesMin = 0;
+        NmdBasesMax = 0;
         WildtypeAcids = "";
     }
 
@@ -143,12 +144,12 @@ public abstract class NeoEpitope
 
         IM_LOGGER.trace("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
                 this, CodingBases[FS_UP], checkTrimBases(NovelCodonBases),
-                checkTrimBases(CodingBases[FS_DOWN]), DownstreamNmdBases);
+                checkTrimBases(CodingBases[FS_DOWN]), NmdBasesMin);
     }
 
     public void setNonsenseMediatedDecay()
     {
-        DownstreamNmdBases = calcNonMediatedDecayBases(this);
+        NmdBasesMin = NmdBasesMax = calcNonMediatedDecayBases(this);
     }
 
     public void setAminoAcids()

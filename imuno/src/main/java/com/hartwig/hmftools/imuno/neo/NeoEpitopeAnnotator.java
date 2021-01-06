@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.imuno.neo;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
@@ -275,7 +276,8 @@ public class NeoEpitopeAnnotator
                 while(j < neDataList.size())
                 {
                     final NeoEpitope otherNeData = neDataList.get(j);
-                    int minNmdCount = min(neData.DownstreamNmdBases, otherNeData.DownstreamNmdBases);
+                    int minNmdCount = min(neData.NmdBasesMin, otherNeData.NmdBasesMin);
+                    int maxNmdCount = max(neData.NmdBasesMax, otherNeData.NmdBasesMax);
 
                     // remove exact matches or take the longer if one is a subset
                     if(aminoAcidStr.contains(otherNeData.aminoAcidString()))
@@ -295,7 +297,8 @@ public class NeoEpitopeAnnotator
                     }
 
                     // take the shortest NMD base count
-                    neData.DownstreamNmdBases = minNmdCount;
+                    neData.NmdBasesMin = minNmdCount;
+                    neData.NmdBasesMax = maxNmdCount;
 
                     // collect up all transcripts
                     upTransNames.add(otherNeData.TransData[FS_UP].TransName);
@@ -322,7 +325,7 @@ public class NeoEpitopeAnnotator
                 mWriter = createBufferedWriter(outputFileName, false);
 
                 mWriter.write("SampleId,VariantType,VariantInfo,CopyNumber,GeneIdUp,GeneIdDown,GeneNameUp,GeneNameDown");
-                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NMDBases,Phased,UpTranscripts,DownTranscripts,WildtypeAA");
+                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NmdMin,NmdMax,UpTranscripts,DownTranscripts,WildtypeAA");
                 mWriter.newLine();
             }
 
@@ -331,8 +334,8 @@ public class NeoEpitopeAnnotator
                     neData.TransData[FS_UP].GeneId, neData.TransData[FS_DOWN].GeneId,
                     neData.geneName(FS_UP), neData.geneName(FS_DOWN)));
 
-            mWriter.write(String.format(",%s,%s,%s,%d,%s",
-                    neData.UpstreamAcids, neData.DownstreamAcids, neData.NovelAcid, neData.DownstreamNmdBases, neData.phaseMatched()));
+            mWriter.write(String.format(",%s,%s,%s,%d,%d",
+                    neData.UpstreamAcids, neData.DownstreamAcids, neData.NovelAcid, neData.NmdBasesMin, neData.NmdBasesMax));
 
             final StringJoiner upTransStr = new StringJoiner(";");
             final StringJoiner downTransStr = new StringJoiner(";");
