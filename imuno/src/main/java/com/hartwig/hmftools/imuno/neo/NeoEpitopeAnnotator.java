@@ -259,7 +259,7 @@ public class NeoEpitopeAnnotator
             NeoEpitope neData = neDataList.get(i);
 
             // filter out NEs with a novel stop codon
-            if(neData.NovelAcid.endsWith(STOP_SYMBOL))
+            if(neData.NovelAcid.equals(STOP_SYMBOL))
                 continue;
 
             final Set<String> upTransNames = Sets.newHashSet();
@@ -322,7 +322,7 @@ public class NeoEpitopeAnnotator
                 mWriter = createBufferedWriter(outputFileName, false);
 
                 mWriter.write("SampleId,VariantType,VariantInfo,CopyNumber,GeneIdUp,GeneIdDown,GeneNameUp,GeneNameDown");
-                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NMDBases,Phased,UpTranscripts,DownTranscripts");
+                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NMDBases,Phased,UpTranscripts,DownTranscripts,WildtypeAA");
                 mWriter.newLine();
             }
 
@@ -339,7 +339,8 @@ public class NeoEpitopeAnnotator
             upTransNames.forEach(x -> upTransStr.add(x));
             downTransNames.forEach(x -> downTransStr.add(x));
 
-            mWriter.write(String.format(",%s,%s", upTransStr.toString(), downTransStr.toString()));
+            mWriter.write(String.format(",%s,%s,%s",
+                    upTransStr.toString(), downTransStr.toString(), neData.WildtypeAcids));
 
             mWriter.newLine();
         }

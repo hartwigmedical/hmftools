@@ -13,17 +13,22 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
+import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.ALL_TRANS_BASES;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptCodingData;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.fusion.CodingBaseData;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public class PmNeoEpitope extends NeoEpitope
@@ -80,12 +85,12 @@ public class PmNeoEpitope extends NeoEpitope
     public String variantType()
     {
         // missense, inframe insertion, inframe deletion, frameshift,
-        if(mPointMutation.Effect == MISSENSE || mIndelBaseDiff == 0)
+        if(mPointMutation.Effect == MISSENSE || isBaseChange())
             return MISSENSE.toString();
 
         if((mIndelBaseDiff % 3) == 0)
         {
-            if(mIndelBaseDiff > 0)
+            if(isInsert())
                 return "INFRAME_INSERTION";
             else
                 return "INFRAME_DELETION";
@@ -107,6 +112,9 @@ public class PmNeoEpitope extends NeoEpitope
     }
 
     private boolean posStrand() { return TransData[FS_UP].Strand == POS_STRAND; }
+    private boolean isInsert() { return mIndelBaseDiff > 0; }
+    private boolean isDeletion() { return mIndelBaseDiff < 0; }
+    private boolean isBaseChange() { return mIndelBaseDiff == 0; }
 
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {
@@ -114,24 +122,19 @@ public class PmNeoEpitope extends NeoEpitope
 
         TransData[FS_UP] = TransData[FS_DOWN] = transData;
 
-        int insertedBaseLength = max(mIndelBaseDiff, 0);
-
         // set the data for the lower part of the mutation
         int lowerStream = transData.Strand == POS_STRAND ? FS_UP : FS_DOWN;
 
         setTranscriptContext(this, transData, position(lowerStream), lowerStream);
 
-        int insSeqLength = 0; // lowerStream == FS_UP ? insertedBaseLength : 0;
-
-        setTranscriptCodingData(this, transData, position(lowerStream), insSeqLength, lowerStream);
+        setTranscriptCodingData(this, transData, position(lowerStream), 0, lowerStream);
 
         int upperStream = switchStream(lowerStream);
 
         // for DELs, set the downstream data as well since it can cross exon-boundaries and/or affect coding bases
         setTranscriptContext(this, transData, position(upperStream), upperStream);
 
-        insSeqLength = 0; // upperStream == FS_UP ? insertedBaseLength : 0;
-        setTranscriptCodingData(this, transData, position(upperStream), insSeqLength, upperStream);
+        setTranscriptCodingData(this, transData, position(upperStream), 0, upperStream);
     }
 
     private int getUpstreamStartPhase()
@@ -145,14 +148,14 @@ public class PmNeoEpitope extends NeoEpitope
         int phase = getUpstreamStartPhase();
 
         // return the number of open codon bases up to but not including the PM's position
-        if(posStrand() || mIndelBaseDiff == 0)
+        if(posStrand() || isBaseChange())
         {
             if(phase == PHASE_1)
                 return 0;
             else if(phase == PHASE_2)
                 return 1;
             else
-                return mIndelBaseDiff == 0 ? 2 : 0; // INDEL leaves the mutation base unchanged, so if it ends a codon, it's not novel
+                return isBaseChange() ? 2 : 0; // INDEL leaves the mutation base unchanged, so if it ends a codon, it's not novel
         }
         else
         {
@@ -161,7 +164,7 @@ public class PmNeoEpitope extends NeoEpitope
             else if(phase == PHASE_2)
                 return 2;
             else
-                return mIndelBaseDiff == 0 ? 2 : 0;
+                return isBaseChange() ? 2 : 0;
         }
     }
 
@@ -172,14 +175,14 @@ public class PmNeoEpitope extends NeoEpitope
 
         if(posStrand())
         {
-            mutationTicks = mIndelBaseDiff < 0 ? 1 : mPointMutation.Alt.length();
+            mutationTicks = isDeletion() ? 1 : mPointMutation.Alt.length();
         }
         else
         {
             // need to go to the phase phase the ALT
-            if(mIndelBaseDiff == 0)
+            if(isBaseChange())
                 mutationTicks = mPointMutation.Alt.length();
-            else if(mIndelBaseDiff > 0)
+            else if(isInsert())
                 mutationTicks = mPointMutation.Alt.length() + 1;
             else
                 mutationTicks = 2;
@@ -222,7 +225,7 @@ public class PmNeoEpitope extends NeoEpitope
         }
         else
         {
-            if(mIndelBaseDiff == 0)
+            if(isBaseChange())
                 upPosition += 1; // since would otherwise cross with the SNV/MNV
 
             downPosition = mPointMutation.Position - 1; // since down pos on -ve strand is the mutation base
@@ -238,6 +241,8 @@ public class PmNeoEpitope extends NeoEpitope
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
                 downRequiredBases, canStartInExon, false);
 
+        setWildtypeAminoAcids(refGenome, requiredAminoAcids);
+
         // the ref bases was excluded and is now replaced by the alt
 
         int altLength = mPointMutation.Alt.length();
@@ -247,7 +252,7 @@ public class PmNeoEpitope extends NeoEpitope
         {
             upCodingBases += mPointMutation.Alt;
 
-            if(mIndelBaseDiff == 0)
+            if(isBaseChange())
             {
                 NovelBaseIndex[FS_UP] = upExtraBases + altLength;
             }
@@ -256,7 +261,7 @@ public class PmNeoEpitope extends NeoEpitope
                 // if the mutation occurs on the last base of a codon, then then novel codon starts immediately after
                 if(upPhase == PHASE_0)
                 {
-                    if(mIndelBaseDiff < 0)
+                    if(isDeletion())
                         NovelBaseIndex[FS_UP] = 0;
                     else
                         NovelBaseIndex[FS_UP] = max(altLength - 1, 0);
@@ -278,7 +283,7 @@ public class PmNeoEpitope extends NeoEpitope
 
             if(phaseMatched())
             {
-                if(mIndelBaseDiff < 0 && upPhase == PHASE_0)
+                if(isDeletion() && upPhase == PHASE_0)
                     NovelBaseIndex[FS_DOWN] = 0;
                 else
                     NovelBaseIndex[FS_DOWN] = downExtraBases + altLength;
@@ -287,6 +292,43 @@ public class PmNeoEpitope extends NeoEpitope
 
         CodingBases[FS_UP] = upCodingBases;
         CodingBases[FS_DOWN] = downCodingBases;
+    }
+
+    private void setWildtypeAminoAcids(final RefGenomeInterface refGenome, int requiredAminoAcids)
+    {
+        final TranscriptData transData = TransData[FS_UP];
+        boolean posStrand = transData.Strand == POS_STRAND;
+
+        final CodingBaseData cbData = calcCodingBases(transData, mPointMutation.Position);
+        int upOpenCodonBases = cbData.Phase == PHASE_0 ? 0 : cbData.Phase;
+
+        int upRequiredBases = requiredAminoAcids * 3 + upOpenCodonBases;
+
+        byte upOrient = posStrand ? POS_ORIENT : NEG_ORIENT;
+        String upBases = getUpstreamCodingBases(refGenome, transData, chromosome(FS_UP), mPointMutation.Position, upOrient, upRequiredBases);
+
+        byte downOrient = posStrand ? NEG_ORIENT : POS_ORIENT;
+        int downPosition = posStrand ? mPointMutation.Position + 1 : mPointMutation.Position - 1;
+        int downRequiredBases = requiredAminoAcids * 3 - upOpenCodonBases;
+        String downBases = getDownstreamCodingBases(
+                refGenome, transData, chromosome(FS_UP), downPosition, downOrient, downRequiredBases, true, false);
+
+        if(!posStrand)
+        {
+            upBases = reverseStrandBases(upBases);
+            downBases = reverseStrandBases(downBases);
+        }
+
+        if(upOpenCodonBases > 0)
+        {
+            downBases = upBases.substring(upBases.length() - upOpenCodonBases) + downBases;
+            upBases = upBases.substring(0, upBases.length() - upOpenCodonBases);
+        }
+
+        final String upstreamAcids = getAminoAcids(upBases, false);
+        final String downstreamAcids = getAminoAcids(downBases, true);
+
+        WildtypeAcids = upstreamAcids + downstreamAcids;
     }
 
     public String toString()

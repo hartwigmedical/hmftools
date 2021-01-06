@@ -42,6 +42,7 @@ public abstract class NeoEpitope
     public String DownstreamAcids;
     public String NovelAcid;
     public int DownstreamNmdBases;
+    public String WildtypeAcids;
 
     public NeoEpitope()
     {
@@ -58,6 +59,7 @@ public abstract class NeoEpitope
         DownstreamAcids = "";
         NovelAcid = "";
         DownstreamNmdBases = 0;
+        WildtypeAcids = "";
     }
 
     public byte orientation(int fs)
@@ -151,7 +153,6 @@ public abstract class NeoEpitope
 
     public void setAminoAcids()
     {
-        boolean isPhased = phaseMatched();
         UpstreamAcids = getAminoAcids(CodingBases[FS_UP], false);
         NovelAcid = getAminoAcids(NovelCodonBases, true);
         DownstreamAcids = getAminoAcids(CodingBases[FS_DOWN], true);
