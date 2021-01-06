@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LINKS;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
@@ -138,7 +140,7 @@ public class FusionReportability
         final BreakendTransData downTrans = fusion.downstreamTrans();
 
             /* prioritisation rules:
-            0. Known pair
+            0. Known pair or DEL-DUP
             1. inframe
             2. chain not terminated for known fusions
             3. 3’ partner biotype is protein_coding
@@ -155,6 +157,15 @@ public class FusionReportability
             fusionPriorityScore += factor;
 
         factor /= 10;
+
+        /*
+        // 0b. 3’ partner region is INTRONIC or EXONIC OR the first splice acceptor is the nearest to the breakpoint
+
+        if(downTrans.regionType() == EXONIC || downTrans.regionType() == INTRONIC || !downTrans.hasNegativePrevSpliceAcceptorDistance())
+            fusionPriorityScore += factor;
+
+        factor /= 10;
+        */
 
         // 1. Phase matched
         if(fusion.phaseMatched())
