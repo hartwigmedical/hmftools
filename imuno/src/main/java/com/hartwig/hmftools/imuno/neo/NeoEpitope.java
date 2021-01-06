@@ -89,8 +89,6 @@ public abstract class NeoEpitope
 
         adjustCodingBasesForStrand(this);
 
-        DownstreamNmdBases = calcNonMediatedDecayBases(this, FS_DOWN);
-
         boolean isPhased = phaseMatched();
 
         int novelUpstreamBases = NovelBaseIndex[FS_UP];
@@ -146,6 +144,11 @@ public abstract class NeoEpitope
                 checkTrimBases(CodingBases[FS_DOWN]), DownstreamNmdBases);
     }
 
+    public void setNonsenseMediatedDecay()
+    {
+        DownstreamNmdBases = calcNonMediatedDecayBases(this);
+    }
+
     public void setAminoAcids()
     {
         boolean isPhased = phaseMatched();
@@ -171,4 +174,6 @@ public abstract class NeoEpitope
     {
         return UpstreamAcids.equals(other.UpstreamAcids) && DownstreamAcids.equals(other.DownstreamAcids) && NovelAcid.equals(other.NovelAcid);
     }
+
+    public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
 }

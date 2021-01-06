@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.imuno.neo;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
@@ -17,6 +18,7 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.LOG_DEBUG;
+import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.SV_FUSION_FILE;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
 
@@ -249,15 +251,23 @@ public class NeoEpitopeAnnotator
 
         neDataList.forEach(x -> x.setCodingBases(mConfig.RefGenome, mConfig.RequiredAminoAcids));
         neDataList.forEach(x -> x.setAminoAcids());
+        neDataList.forEach(x -> x.setNonsenseMediatedDecay());
 
         // consolidate duplicates
         for(int i = 0; i < neDataList.size(); ++i)
         {
-            final NeoEpitope neData = neDataList.get(i);
+            NeoEpitope neData = neDataList.get(i);
 
-            final Set<String> transNames = Sets.newHashSet();
-            transNames.add(neData.TransData[FS_UP].TransName);
-            transNames.add(neData.TransData[FS_DOWN].TransName);
+            // filter out NEs with a novel stop codon
+            if(neData.NovelAcid.endsWith(STOP_SYMBOL))
+                continue;
+
+            final Set<String> upTransNames = Sets.newHashSet();
+            final Set<String> downTransNames = Sets.newHashSet();
+            upTransNames.add(neData.TransData[FS_UP].TransName);
+            downTransNames.add(neData.TransData[FS_DOWN].TransName);
+
+            final String aminoAcidStr = neData.aminoAcidString();
 
             if(!mConfig.WriteTransData)
             {
@@ -265,25 +275,39 @@ public class NeoEpitopeAnnotator
                 while(j < neDataList.size())
                 {
                     final NeoEpitope otherNeData = neDataList.get(j);
+                    int minNmdCount = min(neData.DownstreamNmdBases, otherNeData.DownstreamNmdBases);
 
-                    if(neData.matchesAminoAcids(otherNeData))
+                    // remove exact matches or take the longer if one is a subset
+                    if(aminoAcidStr.contains(otherNeData.aminoAcidString()))
                     {
                         neDataList.remove(j);
-                        transNames.add(otherNeData.TransData[FS_UP].TransName);
-                        transNames.add(otherNeData.TransData[FS_DOWN].TransName);
+                    }
+                    else if(otherNeData.aminoAcidString().contains(aminoAcidStr))
+                    {
+                        neDataList.set(i, otherNeData);
+                        neData = otherNeData;
+                        neDataList.remove(j);
                     }
                     else
                     {
                         ++j;
+                        continue;
                     }
+
+                    // take the shortest NMD base count
+                    neData.DownstreamNmdBases = minNmdCount;
+
+                    // collect up all transcripts
+                    upTransNames.add(otherNeData.TransData[FS_UP].TransName);
+                    downTransNames.add(otherNeData.TransData[FS_DOWN].TransName);
                 }
             }
 
-            writeData(neData, transNames);
+            writeData(neData, upTransNames, downTransNames);
         }
     }
 
-    private void writeData(final NeoEpitope neData, final Set<String> transNames)
+    private void writeData(final NeoEpitope neData, final Set<String> upTransNames, final Set<String> downTransNames)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -298,7 +322,7 @@ public class NeoEpitopeAnnotator
                 mWriter = createBufferedWriter(outputFileName, false);
 
                 mWriter.write("SampleId,VariantType,VariantInfo,CopyNumber,GeneIdUp,GeneIdDown,GeneNameUp,GeneNameDown");
-                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NMDBases,Phased,Transcripts");
+                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NMDBases,Phased,UpTranscripts,DownTranscripts");
                 mWriter.newLine();
             }
 
@@ -310,10 +334,12 @@ public class NeoEpitopeAnnotator
             mWriter.write(String.format(",%s,%s,%s,%d,%s",
                     neData.UpstreamAcids, neData.DownstreamAcids, neData.NovelAcid, neData.DownstreamNmdBases, neData.phaseMatched()));
 
-            final StringJoiner transStr = new StringJoiner(";");
-            transNames.forEach(x -> transStr.add(x));
+            final StringJoiner upTransStr = new StringJoiner(";");
+            final StringJoiner downTransStr = new StringJoiner(";");
+            upTransNames.forEach(x -> upTransStr.add(x));
+            downTransNames.forEach(x -> downTransStr.add(x));
 
-            mWriter.write(String.format(",%s", transStr.toString()));
+            mWriter.write(String.format(",%s,%s", upTransStr.toString(), downTransStr.toString()));
 
             mWriter.newLine();
         }

@@ -331,16 +331,17 @@ public class NeoUtils
         }
     }
 
-    public static int calcNonMediatedDecayBases(final NeoEpitope neData, int stream)
+    public static int calcNonMediatedDecayBases(final NeoEpitope neData)
     {
-        final TranscriptData transData = neData.TransData[stream];
+        final TranscriptData transData = neData.TransData[FS_DOWN];
         final List<ExonData> exonDataList = transData.exons();
+        int refPosition = neData.position(FS_DOWN);
 
         int exonicBaseCount = 0;
 
-        if(neData.orientation(stream) == NEG_STRAND)
+        if(neData.orientation(FS_DOWN) == NEG_ORIENT)
         {
-            int refPosition = transData.CodingEnd != null ? transData.CodingEnd : neData.position(stream);
+            // int refPosition = transData.CodingEnd != null ? transData.CodingEnd : neData.position(stream);
 
             for (int i = 0; i < exonDataList.size(); ++i)
             {
@@ -357,7 +358,7 @@ public class NeoUtils
         }
         else
         {
-            int refPosition = transData.CodingStart != null ? transData.CodingStart : neData.position(stream);
+            // int refPosition = transData.CodingStart != null ? transData.CodingStart : neData.position(stream);
 
             for(int i = exonDataList.size() - 1; i >= 0; --i)
             {

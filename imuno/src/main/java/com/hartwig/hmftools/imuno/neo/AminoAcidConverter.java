@@ -15,7 +15,6 @@ public class AminoAcidConverter
     public static boolean isStopCodon(final String codon)
     {
         final String rnaCodon = swapDnaToRna(codon);
-
         return rnaCodon.equals(STOP_CODON_1) || rnaCodon.equals(STOP_CODON_2) || rnaCodon.equals(STOP_CODON_3);
     }
 
