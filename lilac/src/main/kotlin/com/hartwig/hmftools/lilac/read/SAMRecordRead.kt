@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.lilac.align
+package com.hartwig.hmftools.lilac.read
 
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
-import com.hartwig.hmftools.ext.containsIndel
+import com.hartwig.hmftools.lilac.ext.containsIndel
 import com.hartwig.hmftools.lilac.sam.SamSlicer
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SamReaderFactory
@@ -12,18 +12,26 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-data class HlaAlign(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord) {
+data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord): AminoAcidRead {
 
     val hlaNucIndexEnd = hlaNucIndexStart + length - 1
     val nucleotideIndices = IntRange(hlaNucIndexStart, hlaNucIndexEnd)
     val aminoAcidIndices = AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd)
 
-    fun containsIndex(index: Int): Boolean {
+    fun containsNucleotide(index: Int): Boolean {
         return index >= hlaNucIndexStart && index <= hlaNucIndexStart + length
     }
 
-    fun aminoAcidAt(codonIndex: Int, minQual: Int = 0): Char {
-        val startIndex = codonIndex * 3
+    fun containsAminoAcid(index: Int): Boolean {
+        return aminoAcidIndices.contains(index)
+    }
+
+    override fun aminoAcidIndices(): IntRange {
+        return aminoAcidIndices
+    }
+
+    override fun aminoAcid(index: Int, minQual: Int): Char {
+        val startIndex = index * 3
 
         val firstBase = charAt(startIndex + 0, minQual)
         if (firstBase == '.') {
@@ -66,9 +74,9 @@ data class HlaAlign(val hlaNucIndexStart: Int, val readIndexStart: Int, val leng
 
     companion object {
 
-        fun realign(hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<HlaAlign> {
+        fun realign(hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
             val slicer = SamSlicer(1)
-            val result = mutableListOf<HlaAlign>()
+            val result = mutableListOf<SAMRecordRead>()
             SamReaderFactory.makeDefault().open(File(bamFileName)).use { samReader ->
 
                 val consumer = Consumer<SAMRecord> { samRecord ->
@@ -80,13 +88,15 @@ data class HlaAlign(val hlaNucIndexStart: Int, val readIndexStart: Int, val leng
                         }
                     }
                 }
+
+
                 slicer.slice(region, samReader, consumer)
             }
             return result
         }
 
 
-        private fun realignForwardStrand(hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): HlaAlign {
+        private fun realignForwardStrand(hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): SAMRecordRead {
             val hlaExonStartPosition = region.start().toInt()
             val hlaExonEndPosition = region.end().toInt()
 
@@ -100,10 +110,10 @@ data class HlaAlign(val hlaNucIndexStart: Int, val readIndexStart: Int, val leng
             val readIndex = samRecord.getReadPositionAtReferencePosition(hlaStart) - 1
             val hlaStartIndex = hlaStart - hlaExonStartPosition + hlaExonOffset
 
-            return HlaAlign(hlaStartIndex, readIndex, length, false, samRecord)
+            return SAMRecordRead(hlaStartIndex, readIndex, length, false, samRecord)
         }
 
-        private fun realignReverseStrand(hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): HlaAlign {
+        private fun realignReverseStrand(hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): SAMRecordRead {
             val hlaExonStartPosition = region.end().toInt()
             val hlaExonEndPosition = region.start().toInt()
 
@@ -117,7 +127,7 @@ data class HlaAlign(val hlaNucIndexStart: Int, val readIndexStart: Int, val leng
             val readIndex = samRecord.getReadPositionAtReferencePosition(hlaStart) - 1
             val hlaStartIndex = hlaExonStartPosition - hlaStart + hlaExonOffset
 
-            return HlaAlign(hlaStartIndex, readIndex, length, true, samRecord)
+            return SAMRecordRead(hlaStartIndex, readIndex, length, true, samRecord)
         }
 
     }

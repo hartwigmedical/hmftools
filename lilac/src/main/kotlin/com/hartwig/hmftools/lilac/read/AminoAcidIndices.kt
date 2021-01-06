@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.align
+package com.hartwig.hmftools.lilac.read
 
 object AminoAcidIndices {
 
