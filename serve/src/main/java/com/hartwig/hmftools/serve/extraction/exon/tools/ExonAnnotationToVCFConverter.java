@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.extraction.exon.tools;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -64,7 +63,6 @@ public class ExonAnnotationToVCFConverter {
 
         writer.writeHeader(header);
 
-        Random random = new Random();
         String randomAltBase = Strings.EMPTY;
 
         for (KnownExon exon : exons) {
@@ -73,8 +71,7 @@ public class ExonAnnotationToVCFConverter {
             Long end = exon.annotation().end() - 5;
             String gene = exon.annotation().gene();
 
-            Long l = new Long(end - start + 1);
-            Long bewtweenNumber = start + random.nextInt(l.intValue());
+            Long bewtweenNumber = start + Math.round((end - start)/2);
             List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
 
             for (Long genomicPosition : genomicPositions) {
