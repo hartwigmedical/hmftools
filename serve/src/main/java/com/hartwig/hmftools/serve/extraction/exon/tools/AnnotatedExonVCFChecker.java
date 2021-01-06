@@ -25,8 +25,6 @@ public class AnnotatedExonVCFChecker {
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedCodonVCFChecker.class);
     private static final boolean LOG_DEBUG = true;
 
-    private static final String NO_INPUT_PROTEIN = "-";
-
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE codon VCF checker");
 
@@ -34,7 +32,7 @@ public class AnnotatedExonVCFChecker {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/exon_annotated.vcf";
+        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated_exon.vcf";
 
         AbstractFeatureReader<VariantContext, LineIterator> reader =
                 AbstractFeatureReader.getFeatureReader(annotatedCodonVcf, new VCFCodec(), false);
@@ -53,7 +51,7 @@ public class AnnotatedExonVCFChecker {
     @Nullable
     private static SnpEffAnnotation annotationForTranscript(@NotNull List<SnpEffAnnotation> annotations, @NotNull String transcript) {
         for (SnpEffAnnotation annotation : annotations) {
-            if (annotation.isTranscriptFeature()) {
+            if (annotation.isTranscriptFeature() && annotation.transcript().equals(transcript)) {
                 return annotation;
             }
         }

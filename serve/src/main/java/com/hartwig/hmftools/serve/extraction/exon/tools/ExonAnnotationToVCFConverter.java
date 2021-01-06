@@ -68,8 +68,8 @@ public class ExonAnnotationToVCFConverter {
 
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();
-            Long start = exon.annotation().start();
-            Long end = exon.annotation().end();
+            Long start = exon.annotation().start() + 5;
+            Long end = exon.annotation().end() - 5;
             String gene = exon.annotation().gene();
 
             Long l = new Long(end - start + 1);
