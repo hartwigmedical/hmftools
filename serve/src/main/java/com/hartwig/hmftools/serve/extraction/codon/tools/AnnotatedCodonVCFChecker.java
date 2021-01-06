@@ -33,7 +33,7 @@ public class AnnotatedCodonVCFChecker {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/codon_annotated.vcf";
+        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated_codon.vcf";
 
         AbstractFeatureReader<VariantContext, LineIterator> reader =
                 AbstractFeatureReader.getFeatureReader(annotatedCodonVcf, new VCFCodec(), false);
@@ -51,6 +51,7 @@ public class AnnotatedCodonVCFChecker {
                 determineMatch(inputGene, inputTranscript, inputProteinAnnotation, annotations);
             }
         }
+        LOGGER.info("Codons are checked!");
     }
 
     @Nullable
@@ -84,8 +85,8 @@ public class AnnotatedCodonVCFChecker {
                 }
             }
         }
-        String inputCodon = inputProteinAnnotation.replace(inputProteinAnnotation.substring(inputProteinAnnotation.length() - 1), "");
-        String snpEffCodon = snpeffProteinAnnotation.replace(snpeffProteinAnnotation.substring(snpeffProteinAnnotation.length() - 1), "");
+        String inputCodon = inputProteinAnnotation.substring(0, inputProteinAnnotation.length() - 1);
+        String snpEffCodon = snpeffProteinAnnotation.substring(0, snpeffProteinAnnotation.length() - 1);
 
         if (inputCodon.equals(snpEffCodon)) {
             LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{} of snpeff annotation '{}'",
@@ -93,7 +94,7 @@ public class AnnotatedCodonVCFChecker {
                     inputGene,
                     snpeffProteinAnnotation);
         } else {
-            LOGGER.warn("Could not find a match amongst candidate transcripts for on '{}' of snpeff annotation '{}'",
+            LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}' of snpeff annotation '{}'",
                     inputProteinAnnotation,
                     inputGene,
                     snpeffProteinAnnotation);
@@ -105,5 +106,4 @@ public class AnnotatedCodonVCFChecker {
         return variant.getContig() + ":" + variant.getStart() + " " + variant.getReference().getBaseString() + ">"
                 + variant.getAlternateAllele(0).getBaseString();
     }
-
 }
