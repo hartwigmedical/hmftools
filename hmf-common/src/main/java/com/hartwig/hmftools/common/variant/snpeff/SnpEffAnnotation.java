@@ -56,7 +56,7 @@ public abstract class SnpEffAnnotation implements TranscriptAnnotation {
     abstract String transcriptBioType();
 
     @NotNull
-    abstract String rank();
+    public abstract String rank();
 
     @NotNull
     public abstract String hgvsCoding();

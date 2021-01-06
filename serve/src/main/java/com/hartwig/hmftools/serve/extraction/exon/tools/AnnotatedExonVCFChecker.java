@@ -34,7 +34,7 @@ public class AnnotatedExonVCFChecker {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated_test.vcf";
+        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated.vcf";
 
         AbstractFeatureReader<VariantContext, LineIterator> reader =
                 AbstractFeatureReader.getFeatureReader(annotatedCodonVcf, new VCFCodec(), false);
@@ -53,7 +53,7 @@ public class AnnotatedExonVCFChecker {
     @Nullable
     private static SnpEffAnnotation annotationForTranscript(@NotNull List<SnpEffAnnotation> annotations, @NotNull String transcript) {
         for (SnpEffAnnotation annotation : annotations) {
-            if (annotation.isTranscriptFeature() && annotation.transcript().equals(transcript)) {
+            if (annotation.isTranscriptFeature()) {
                 return annotation;
             }
         }
@@ -67,7 +67,7 @@ public class AnnotatedExonVCFChecker {
             SnpEffAnnotation annotation = annotationForTranscript(annotations, inputTranscript);
 
             if (annotation != null) {
-                snpeffExonID = annotation.severity();
+                snpeffExonID = annotation.rank();
 
             } else {
                 LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", inputTranscript, inputGene);
@@ -76,22 +76,22 @@ public class AnnotatedExonVCFChecker {
             // In case input transcript is missing we try to match against any transcript.
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature()) {
-                    snpeffExonID = annotation.severity();
+                    snpeffExonID = annotation.rank();
 
                 }
             }
         }
-
-        if (inputExonId.equals(snpeffExonID)) {
+        String snpeffExonIDExtract = snpeffExonID.split("/")[0];
+        if (inputExonId.equals(snpeffExonIDExtract)) {
             LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{} of snpeff annotation '{}'",
                     inputExonId,
                     inputGene,
-                    snpeffExonID);
+                    snpeffExonIDExtract);
         } else {
-            LOGGER.warn("Could not find a match amongst candidate transcripts for on '{}' of snpeff annotation '{}'",
+            LOGGER.warn("Could not find a match amongst candidate transcripts '{}' for on '{}' of snpeff annotation '{}'",
                     inputExonId,
                     inputGene,
-                    snpeffExonID);
+                    snpeffExonIDExtract);
         }
     }
 

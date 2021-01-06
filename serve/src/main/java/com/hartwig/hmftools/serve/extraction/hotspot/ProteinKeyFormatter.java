@@ -13,4 +13,10 @@ public final class ProteinKeyFormatter {
         String formattedProteinAnnotation = !proteinAnnotation.isEmpty() ? "p." + proteinAnnotation : "-";
         return gene + "|" + transcript + "|" + formattedProteinAnnotation;
     }
+
+    @NotNull
+    public static String toExonKey(@NotNull String gene, @Nullable String transcript, @NotNull String exonIndex) {
+        String formattedExonIndex = !exonIndex.isEmpty() ? exonIndex : "-";
+        return gene + "|" + transcript + "|" + formattedExonIndex;
+    }
 }

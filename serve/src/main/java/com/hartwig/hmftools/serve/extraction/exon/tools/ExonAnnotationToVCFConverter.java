@@ -144,7 +144,7 @@ public class ExonAnnotationToVCFConverter {
                 .alleles(hotspotAlleles)
                 .computeEndFromAlleles(hotspotAlleles, new Long(position).intValue())
                 .attribute("source", Knowledgebase.commaSeparatedSourceString(knowledgebases))
-                .attribute("input", ProteinKeyFormatter.toProteinKey(gene, transcript, Integer.toString(exonIndex)))
+                .attribute("input", ProteinKeyFormatter.toExonKey(gene, transcript, Integer.toString(exonIndex)))
                 .make();
 
         LOGGER.debug(" Writing variant to VCF file'{}'", variantContext);
