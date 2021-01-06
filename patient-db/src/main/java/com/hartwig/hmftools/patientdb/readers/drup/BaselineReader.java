@@ -107,6 +107,7 @@ class BaselineReader {
 
     private void setPrimaryTumor(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
             @Nullable String primaryTumorCohort, @Nullable String primaryTumorTtype) {
+        //See DEV-1713
         String primaryTumorLocation = null;
         String primaryTumorLocationBastType = null;
         String primaryTumorLocationBastTypeOther = null;
