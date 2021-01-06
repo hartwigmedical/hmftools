@@ -44,7 +44,7 @@ public class ExonAnnotationToVCFConverter {
         }
 
         String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownExons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/test.vcf.gz";
+        String outputFile = System.getProperty("user.home") + "/hmf/tmp/exon.vcf.gz";
 
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
         LOGGER.info("The size of the file is {}", exons.size());

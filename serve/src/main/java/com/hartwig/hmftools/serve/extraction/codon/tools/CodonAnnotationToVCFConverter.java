@@ -43,7 +43,7 @@ public class CodonAnnotationToVCFConverter {
         }
 
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/test.vcf.gz";
+        String outputFile = System.getProperty("user.home") + "/hmf/tmp/codon.vcf.gz";
 
         List<KnownCodon> codons = KnownCodonFile.read(knownCodonsTsv);
 

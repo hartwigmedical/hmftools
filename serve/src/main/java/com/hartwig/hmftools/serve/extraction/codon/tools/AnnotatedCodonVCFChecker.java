@@ -33,7 +33,7 @@ public class AnnotatedCodonVCFChecker {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated_test.vcf";
+        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/codon_annotated.vcf";
 
         AbstractFeatureReader<VariantContext, LineIterator> reader =
                 AbstractFeatureReader.getFeatureReader(annotatedCodonVcf, new VCFCodec(), false);

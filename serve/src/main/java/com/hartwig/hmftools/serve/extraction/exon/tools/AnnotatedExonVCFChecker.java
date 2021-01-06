@@ -34,7 +34,7 @@ public class AnnotatedExonVCFChecker {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated.vcf";
+        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/exon_annotated.vcf";
 
         AbstractFeatureReader<VariantContext, LineIterator> reader =
                 AbstractFeatureReader.getFeatureReader(annotatedCodonVcf, new VCFCodec(), false);
