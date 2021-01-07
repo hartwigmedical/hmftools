@@ -131,6 +131,8 @@ class BaselineReader {
                             || lowerPrimaryTumorCohort.contains("urinary organ")
                             || lowerPrimaryTumorCohort.contains("head, face and neck")) {
                         primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocation;
+                    } else {
+                        primaryTumorLocation = primaryTumorCohort;
                     }
                 }
 
