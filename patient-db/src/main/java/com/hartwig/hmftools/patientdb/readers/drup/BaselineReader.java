@@ -131,7 +131,7 @@ class BaselineReader {
                     }
                 }
 
-                if (primaryTumorCohort != null) {
+                if (primaryTumorCohort != null && !primaryTumorCohort.isEmpty()) {
                     String lowerPrimaryTumorCohort = primaryTumorCohort.trim().toLowerCase();
                     if (primaryTumorLocation != null && (lowerPrimaryTumorCohort.contains("biliary tract")
                             || lowerPrimaryTumorCohort.contains("colon") || lowerPrimaryTumorCohort.contains("urinary organ")
