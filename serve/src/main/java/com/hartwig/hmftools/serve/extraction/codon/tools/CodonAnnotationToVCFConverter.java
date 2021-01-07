@@ -38,7 +38,7 @@ public class CodonAnnotationToVCFConverter {
         }
 
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/codon.vcf.gz";
+        String outputFile = System.getProperty("user.home") + "/hmf/tmp/codons.vcf.gz";
         GenerateAltBase altBaseGenerator = new GenerateAltBase(new IndexedFastaSequenceFile(new File(
                 System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
 
