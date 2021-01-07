@@ -114,7 +114,7 @@ class BaselineReader {
                 String primaryTumorLocationBastTypeOther = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
 
                 String primaryTumorLocation = null;
-                if (primaryTumorLocationBastType != null) {
+                if (primaryTumorLocationBastType != null && !primaryTumorLocationBastType.isEmpty()) {
                     if (primaryTumorLocationBastType.equals("Other, specify")) {
                         primaryTumorLocation = primaryTumorLocationBastTypeOther;
                     } else {
