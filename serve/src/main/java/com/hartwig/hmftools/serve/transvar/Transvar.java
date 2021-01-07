@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinKeyFormatter;
+import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
@@ -55,7 +55,7 @@ public class Transvar implements ProteinResolver {
     public List<VariantHotspot> resolve(@NotNull String gene, @Nullable String specificTranscript, @NotNull String proteinAnnotation) {
         List<VariantHotspot> hotspots = extractHotspotsForAnnotation(gene, specificTranscript, proteinAnnotation);
 
-        String proteinKey = ProteinKeyFormatter.toProteinKey(gene, specificTranscript, proteinAnnotation);
+        String proteinKey = KeyFormatter.toProteinKey(gene, specificTranscript, proteinAnnotation);
         LOGGER.debug("Converted '{}' to {} hotspot(s)", proteinKey, hotspots.size());
         if (hotspots.isEmpty()) {
             unresolvedProteinAnnotations.add(proteinKey);

@@ -10,7 +10,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinKeyFormatter;
+import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -140,7 +140,7 @@ public class CodonAnnotationToVCFConverter {
                 .alleles(hotspotAlleles)
                 .computeEndFromAlleles(hotspotAlleles, new Long(position).intValue())
                 .attribute("source", Knowledgebase.commaSeparatedSourceString(knowledgebases))
-                .attribute("input", ProteinKeyFormatter.toProteinKey(gene, transcript, proteinAnnotation))
+                .attribute("input", KeyFormatter.toProteinKey(gene, transcript, proteinAnnotation))
                 .make();
 
         LOGGER.debug(" Writing variant to VCF file'{}'", variantContext);
