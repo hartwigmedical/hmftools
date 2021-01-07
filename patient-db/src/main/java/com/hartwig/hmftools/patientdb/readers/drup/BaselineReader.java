@@ -129,6 +129,13 @@ class BaselineReader {
                     } else {
                         primaryTumorLocation = primaryTumorCohort;
                     }
+                } else {
+                    if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify")) {
+                        primaryTumorLocation = primaryTumorLocationBastTypeOther + " + " + primaryTumorReg;
+                    } else {
+                        primaryTumorLocation = primaryTumorLocationBastType + " + " + primaryTumorReg;
+                    }
+
                 }
                 builder.curatedPrimaryTumor(primaryTumorCurator.search(primaryTumorLocation));
 
