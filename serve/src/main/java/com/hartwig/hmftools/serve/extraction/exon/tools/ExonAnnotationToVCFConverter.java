@@ -51,7 +51,7 @@ public class ExonAnnotationToVCFConverter {
             String chromosome = exon.annotation().chromosome();
             long start = exon.annotation().start() + 5; // remove the first 5 slice position before exon
             long end = exon.annotation().end() - 5; // remove the last 5 splice position after exon
-            long middle = start + Math.round((end - start) / 2D);
+            long middle = start + Math.round((end - start) / 2D); // take middle positie of exon
             List<Long> genomicPositions = Lists.newArrayList(start, middle, end);
 
             String gene = exon.annotation().gene();
