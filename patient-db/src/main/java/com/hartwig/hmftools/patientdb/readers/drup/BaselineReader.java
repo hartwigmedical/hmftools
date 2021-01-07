@@ -122,18 +122,35 @@ class BaselineReader {
                             || lowerPrimaryTumorCohort.contains("urinary organ")
                             || lowerPrimaryTumorCohort.contains("head, face and neck")) {
                         if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify")) {
-                            primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastTypeOther + " + " + primaryTumorReg;
+                            if (primaryTumorReg != null) {
+                                primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastTypeOther + " + " + primaryTumorReg;
+                            } else {
+                                primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastTypeOther;
+                            }
                         } else {
-                            primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastType + " + " + primaryTumorReg;
+                            if (primaryTumorReg != null) {
+                                primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastType + " + " + primaryTumorReg;
+                            } else {
+                                primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastType;
+                            }
                         }
                     } else {
                         primaryTumorLocation = primaryTumorCohort;
                     }
                 } else {
                     if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify")) {
-                        primaryTumorLocation = primaryTumorLocationBastTypeOther + " + " + primaryTumorReg;
+                        if (primaryTumorReg != null) {
+                            primaryTumorLocation = primaryTumorLocationBastTypeOther + " + " + primaryTumorReg;
+                        } else {
+                            primaryTumorLocation = primaryTumorLocationBastTypeOther;
+                        }
                     } else {
-                        primaryTumorLocation = primaryTumorLocationBastType + " + " + primaryTumorReg;
+                        if (primaryTumorReg != null) {
+                            primaryTumorLocation = primaryTumorLocationBastType + " + " + primaryTumorReg;
+                        } else {
+                            primaryTumorLocation = primaryTumorLocationBastType;
+                        }
+
                     }
 
                 }
