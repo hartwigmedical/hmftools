@@ -31,7 +31,7 @@ public class AnnotatedExonVCFChecker {
     }
 
     public static void main(String[] args) throws IOException {
-        LOGGER.info("Running SERVE codon VCF checker");
+        LOGGER.info("Running SERVE exon VCF checker");
 
         if (LOG_DEBUG) {
             Configurator.setRootLevel(Level.DEBUG);
