@@ -18,4 +18,9 @@ public final class KeyFormatter {
     public static String toExonKey(@NotNull String gene, @Nullable String transcript, int exonIndex) {
         return gene + "|" + transcript + "|" + exonIndex;
     }
+
+    @NotNull
+    public static String toCodonKey(@NotNull String gene, @Nullable String transcript, int codonIndex) {
+        return gene + "|" + transcript + "|" + codonIndex;
+    }
 }

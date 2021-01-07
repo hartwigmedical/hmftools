@@ -67,7 +67,7 @@ public class CodonAnnotationToVCFConverter {
                         codon.sources(),
                         codon.annotation().gene(),
                         codon.annotation().transcript(),
-                        codon.annotation().proteinAnnotation());
+                        codon.annotation().codonIndex());
             }
         }
 
@@ -78,7 +78,7 @@ public class CodonAnnotationToVCFConverter {
 
     private static void writeVariantToVCF(@NotNull VariantContextWriter writer, @NotNull String chromosome, long position,
             @NotNull String ref, @NotNull String alt, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene,
-            @NotNull String transcript, @NotNull String proteinAnnotation) {
+            @NotNull String transcript, int codonIndex) {
         List<Allele> alleles = Lists.newArrayList(Allele.create(ref, true), Allele.create(alt, false));
 
         VariantContext variantContext = new VariantContextBuilder().noGenotypes()
@@ -88,7 +88,7 @@ public class CodonAnnotationToVCFConverter {
                 .alleles(alleles)
                 .computeEndFromAlleles(alleles, new Long(position).intValue())
                 .attribute("source", Knowledgebase.commaSeparatedSourceString(knowledgebases))
-                .attribute("input", KeyFormatter.toProteinKey(gene, transcript, proteinAnnotation))
+                .attribute("input", KeyFormatter.toCodonKey(gene, transcript, codonIndex))
                 .make();
 
         LOGGER.debug(" Writing variant to VCF file'{}'", variantContext);

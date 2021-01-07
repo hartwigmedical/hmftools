@@ -25,8 +25,6 @@ public class AnnotatedCodonVCFChecker {
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedCodonVCFChecker.class);
     private static final boolean LOG_DEBUG = true;
 
-    private static final String NO_INPUT_PROTEIN = "-";
-
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE codon VCF checker");
 
@@ -49,18 +47,13 @@ public class AnnotatedCodonVCFChecker {
             String[] inputParts = variant.getAttributeAsString("input", Strings.EMPTY).split("\\|");
             String inputGene = inputParts[0];
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
-            String inputProteinAnnotation = inputParts[2];
-            String formattedHotspot = formatHotspot(variant);
+            int inputCodon = Integer.parseInt(inputParts[2]);
 
-            if (inputProteinAnnotation.equals(NO_INPUT_PROTEIN)) {
-                LOGGER.debug("Skipping non-coding hotspot on '{}'", formattedHotspot);
+            List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+            if (determineMatch(inputGene, inputTranscript, inputCodon, annotations)) {
+                matchCount++;
             } else {
-                List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-                if (determineMatch(inputGene, inputTranscript, inputProteinAnnotation, annotations)) {
-                    matchCount++;
-                } else {
-                    diffCount++;
-                }
+                diffCount++;
             }
         }
 
@@ -77,36 +70,28 @@ public class AnnotatedCodonVCFChecker {
         return null;
     }
 
-    private static boolean determineMatch(@NotNull String inputGene, @Nullable String inputTranscript,
-            @NotNull String inputProteinAnnotation, @NotNull List<SnpEffAnnotation> annotations) {
-        String inputCodon = inputProteinAnnotation.substring(0, inputProteinAnnotation.length() - 1);
-        String snpEffCodon = Strings.EMPTY;
-        String snpeffProteinAnnotation = Strings.EMPTY;
-
+    private static boolean determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, int inputCodon,
+            @NotNull List<SnpEffAnnotation> annotations) {
         if (inputTranscript != null) {
             SnpEffAnnotation annotation = annotationForTranscript(annotations, inputTranscript);
 
             if (annotation != null) {
-                snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                snpEffCodon = snpeffProteinAnnotation.substring(0, snpeffProteinAnnotation.length() - 1);
-                if (inputCodon.equals(snpEffCodon)) {
-                    LOGGER.debug("Identical on gene '{}' : SERVE input protein '{}' vs SnpEff protein '{}'",
+                int snpEffCodon = extractCodon(annotation.hgvsProtein());
+                if (inputCodon == snpEffCodon) {
+                    LOGGER.debug("Identical on gene '{}': SERVE input codon '{}' vs SnpEff codon '{}'",
                             inputGene,
                             inputCodon,
                             snpEffCodon);
                     return true;
                 } else {
-                    LOGGER.warn("Difference on gene '{}' : SERVE input protein '{}' vs SnpEff protein '{}'",
+                    LOGGER.warn("Difference on gene '{}': SERVE input codon '{}' vs SnpEff codon '{}'",
                             inputGene,
                             inputCodon,
                             snpEffCodon);
                     return false;
                 }
             } else {
-                LOGGER.warn("No match found on gene '{}': SERVE input protein '{}' vs SnpEff protein '{}'",
-                        inputGene,
-                        inputCodon,
-                        snpEffCodon);
+                LOGGER.warn("No suitable SnpEff annotation found on gene '{}': SERVE input codon '{}'", inputGene, inputCodon);
                 return false;
             }
         } else {
@@ -114,33 +99,26 @@ public class AnnotatedCodonVCFChecker {
             boolean matchFound = false;
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature()) {
-                    snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                    snpEffCodon = snpeffProteinAnnotation.substring(0, snpeffProteinAnnotation.length() - 1);
-                    if (inputCodon.equals(snpEffCodon)) {
+                    int snpEffCodon = extractCodon(annotation.hgvsProtein());
+                    if (inputCodon == snpEffCodon) {
                         matchFound = true;
                     }
                 }
             }
 
             if (matchFound) {
-                LOGGER.debug("Could not find a match amongst candidate transcripts for '{}' on '{}' of snpeff annotation '{}'",
-                        inputProteinAnnotation,
-                        inputGene,
-                        snpeffProteinAnnotation);
+                LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", inputCodon, inputGene);
                 return true;
             } else {
-                LOGGER.warn("Found a match amongst candidate transcripts for '{}' on '{} of snpeff annotation '{}'",
-                        inputProteinAnnotation,
-                        inputGene,
-                        snpeffProteinAnnotation);
+                LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'", inputCodon, inputGene);
                 return false;
             }
         }
     }
 
-    @NotNull
-    private static String formatHotspot(@NotNull VariantContext variant) {
-        return variant.getContig() + ":" + variant.getStart() + " " + variant.getReference().getBaseString() + ">"
-                + variant.getAlternateAllele(0).getBaseString();
+    private static int extractCodon(@NotNull String hgvsProteinAnnotation) {
+        String singleLetterAA = AminoAcidFunctions.forceSingleLetterProteinAnnotation(hgvsProteinAnnotation);
+        // The single letter AA should always start with "p.{A}"
+        return Integer.parseInt(singleLetterAA.substring(3, singleLetterAA.length() - 1));
     }
 }

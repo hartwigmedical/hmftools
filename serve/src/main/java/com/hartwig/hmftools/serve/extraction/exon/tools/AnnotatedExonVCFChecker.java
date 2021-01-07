@@ -47,7 +47,7 @@ public class AnnotatedExonVCFChecker {
             String[] inputParts = variant.getAttributeAsString("input", Strings.EMPTY).split("\\|");
             String inputGene = inputParts[0];
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
-            String inputExonId = inputParts[2];
+            int inputExonId = Integer.parseInt(inputParts[2]);
 
             List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
             if (determineMatch(inputGene, inputTranscript, inputExonId, annotations)) {
@@ -70,32 +70,28 @@ public class AnnotatedExonVCFChecker {
         return null;
     }
 
-    private static boolean determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, @NotNull String inputExonId,
+    private static boolean determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, int inputExonId,
             @NotNull List<SnpEffAnnotation> annotations) {
-        String snpeffExonID = Strings.EMPTY;
         if (inputTranscript != null) {
             SnpEffAnnotation annotation = annotationForTranscript(annotations, inputTranscript);
 
             if (annotation != null) {
-                snpeffExonID = annotation.rank().split("/")[0];
-                if (inputExonId.equals(snpeffExonID)) {
-                    LOGGER.debug("Identical on gene '{}' : SERVE input exon id '{}' vs SnpEff exon id '{}'",
+                int snpeffExonId = extractExonId(annotation.rank());
+                if (inputExonId == snpeffExonId) {
+                    LOGGER.debug("Identical on gene '{}': SERVE input exon id '{}' vs SnpEff exon id '{}'",
                             inputGene,
                             inputExonId,
-                            snpeffExonID);
+                            snpeffExonId);
                     return true;
                 } else {
-                    LOGGER.warn("Difference on gene '{}' : SERVE input exon id '{}' vs SnpEff exon id '{}'",
+                    LOGGER.warn("Difference on gene '{}': SERVE input exon id '{}' vs SnpEff exon id '{}'",
                             inputGene,
                             inputExonId,
-                            snpeffExonID);
+                            snpeffExonId);
                     return false;
                 }
             } else {
-                LOGGER.warn("No match found on gene '{}' : SERVE input exon id '{}' vs SnpEff exon id '{}'",
-                        inputGene,
-                        inputExonId,
-                        snpeffExonID);
+                LOGGER.warn("No suitable annotation found on gene '{}': SERVE input exon id '{}'", inputGene, inputExonId);
                 return false;
             }
         } else {
@@ -103,26 +99,25 @@ public class AnnotatedExonVCFChecker {
             boolean matchFound = false;
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature()) {
-                    snpeffExonID = annotation.rank().split("/")[0];
-                    if (inputExonId.equals(snpeffExonID)) {
+                    int snpeffExonId = extractExonId(annotation.rank());
+                    if (inputExonId == snpeffExonId) {
                         matchFound = true;
                     }
                 }
             }
 
             if (matchFound) {
-                LOGGER.debug("Could not find a match amongst candidate transcripts '{}' for on '{}' of snpeff annotation '{}'",
-                        inputExonId,
-                        inputGene,
-                        snpeffExonID);
+                LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", inputExonId, inputGene);
                 return true;
             } else {
-                LOGGER.warn("Found a match amongst candidate transcripts for '{}' on '{} of snpeff annotation '{}'",
-                        inputExonId,
-                        inputGene,
-                        snpeffExonID);
+                LOGGER.warn("Could not find a match amongst candidate transcripts '{}' for on '{}'", inputExonId, inputGene);
                 return false;
             }
         }
+    }
+
+    private static int extractExonId(@NotNull String snpeffExonRank) {
+        // Assume format is "{RANK}/{TOTAL}"
+        return Integer.parseInt(snpeffExonRank.split("/")[0]);
     }
 }
