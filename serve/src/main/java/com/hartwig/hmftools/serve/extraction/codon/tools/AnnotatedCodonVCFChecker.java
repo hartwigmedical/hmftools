@@ -48,6 +48,8 @@ public class AnnotatedCodonVCFChecker {
         AbstractFeatureReader<VariantContext, LineIterator> reader =
                 AbstractFeatureReader.getFeatureReader(annotatedCodonVcf, new VCFCodec(), false);
         for (VariantContext variant : reader.iterator()) {
+            totalCount++;
+
             String[] inputParts = variant.getAttributeAsString("input", Strings.EMPTY).split("\\|");
             String inputGene = inputParts[0];
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
