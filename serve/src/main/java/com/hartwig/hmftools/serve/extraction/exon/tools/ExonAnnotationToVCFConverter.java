@@ -1,36 +1,28 @@
 package com.hartwig.hmftools.serve.extraction.exon.tools;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExonFile;
+import com.hartwig.hmftools.serve.extraction.util.GenerateAltBase;
 import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
+import com.hartwig.hmftools.serve.extraction.util.VCFWriter;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class ExonAnnotationToVCFConverter {
     private static final Logger LOGGER = LogManager.getLogger(ExonAnnotationToVCFConverter.class);
@@ -49,21 +41,7 @@ public class ExonAnnotationToVCFConverter {
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
         LOGGER.info("The size of the file is {}", exons.size());
 
-        VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
-                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
-                .modifyOption(Options.INDEX_ON_THE_FLY, false)
-                .build();
-
-        VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
-        header.addMetaDataLine(new VCFInfoHeaderLine("input", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "input"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("source",
-                VCFHeaderLineCount.UNBOUNDED,
-                VCFHeaderLineType.String,
-                "sources"));
-
-        writer.writeHeader(header);
-
-        String randomAltBase = Strings.EMPTY;
+        VariantContextWriter writer = VCFWriter.generateVCFWriter(outputFile);
 
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();
@@ -75,17 +53,8 @@ public class ExonAnnotationToVCFConverter {
             List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
 
             for (Long genomicPosition : genomicPositions) {
-                String extractRefBaseOfPosition = extractRefBaseOfGenomicPosition(chromosome, genomicPosition);
-
-                if (extractRefBaseOfPosition.equals("A")) {
-                    randomAltBase = "T";
-                } else if (extractRefBaseOfPosition.equals("C")) {
-                    randomAltBase = "A";
-                } else if (extractRefBaseOfPosition.equals("T")) {
-                    randomAltBase = "G";
-                } else if (extractRefBaseOfPosition.equals("G")) {
-                    randomAltBase = "A";
-                }
+                String extractRefBaseOfPosition = GenerateAltBase.extractRefBaseOfGenomicPosition(chromosome, genomicPosition);
+                String randomAltBase = GenerateAltBase.createAltOfRefBase(chromosome, genomicPosition);
 
                 extactAnnotationVariantExonIndex(extractRefBaseOfPosition,
                         randomAltBase,
@@ -105,11 +74,7 @@ public class ExonAnnotationToVCFConverter {
         LOGGER.info("Done!");
     }
 
-    private static String extractRefBaseOfGenomicPosition(@Nullable String chromosome, Long genomicPosition) throws IOException {
-        IndexedFastaSequenceFile fastaSequenceFile =
-                new IndexedFastaSequenceFile(new File("/Users/liekeschoenmaker/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta"));
-        return fastaSequenceFile.getSubsequenceAt(chromosome, genomicPosition, genomicPosition).getBaseString();
-    }
+
 
     private static void extactAnnotationVariantExonIndex(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
             @Nullable String chromosome, Long position,
