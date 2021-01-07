@@ -10,6 +10,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
+import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
@@ -69,7 +70,7 @@ public final class KnownHotspotFile {
                     .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
                     .attribute(INFO_SOURCES, Knowledgebase.commaSeparatedSourceString(hotspot.sources()))
                     .attribute(INFO_INPUT,
-                            ProteinKeyFormatter.toProteinKey(hotspot.gene(), hotspot.transcript(), hotspot.proteinAnnotation()))
+                            KeyFormatter.toProteinKey(hotspot.gene(), hotspot.transcript(), hotspot.proteinAnnotation()))
                     .make();
 
             LOGGER.debug(" Writing variant '{}'", variantContext);

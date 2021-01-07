@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.serve.extraction.hotspot;
+package com.hartwig.hmftools.serve.extraction.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ProteinKeyFormatter {
+public final class KeyFormatter {
 
-    private ProteinKeyFormatter() {
+    private KeyFormatter() {
     }
 
     @NotNull
