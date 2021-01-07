@@ -110,50 +110,30 @@ class BaselineReader {
             @Nullable String primaryTumorCohort, @Nullable String primaryTumorReg) {
         for (EcrfForm baselineForm : studyEvent.nonEmptyFormsPerOID(FORM_BASELINE)) {
             for (EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
-                String primaryTumorLocation = null;
-
                 String primaryTumorLocationBastType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationBastTypeOther = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
 
+                String primaryTumorLocation;
+                if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify")) {
+                    primaryTumorLocation = primaryTumorLocationBastTypeOther;
+                } else {
+                    primaryTumorLocation = primaryTumorLocationBastType;
+                }
+
                 // See DEV-1713 for why below choices have been made.
+                if (primaryTumorReg != null) {
+                    primaryTumorLocation = primaryTumorLocation + " + " + primaryTumorReg;
+                }
+
                 if (primaryTumorCohort != null) {
                     String lowerPrimaryTumorCohort = primaryTumorCohort.trim().toLowerCase();
                     if (lowerPrimaryTumorCohort.contains("biliary tract") || lowerPrimaryTumorCohort.contains("colon")
                             || lowerPrimaryTumorCohort.contains("urinary organ")
                             || lowerPrimaryTumorCohort.contains("head, face and neck")) {
-                        if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify")) {
-                            if (primaryTumorReg != null) {
-                                primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastTypeOther + " + " + primaryTumorReg;
-                            } else {
-                                primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastTypeOther;
-                            }
-                        } else {
-                            if (primaryTumorReg != null) {
-                                primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastType + " + " + primaryTumorReg;
-                            } else {
-                                primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocationBastType;
-                            }
-                        }
-                    } else {
-                        primaryTumorLocation = primaryTumorCohort;
+                        primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocation;
                     }
-                } else {
-                    if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify")) {
-                        if (primaryTumorReg != null) {
-                            primaryTumorLocation = primaryTumorLocationBastTypeOther + " + " + primaryTumorReg;
-                        } else {
-                            primaryTumorLocation = primaryTumorLocationBastTypeOther;
-                        }
-                    } else {
-                        if (primaryTumorReg != null) {
-                            primaryTumorLocation = primaryTumorLocationBastType + " + " + primaryTumorReg;
-                        } else {
-                            primaryTumorLocation = primaryTumorLocationBastType;
-                        }
-
-                    }
-
                 }
+
                 builder.curatedPrimaryTumor(primaryTumorCurator.search(primaryTumorLocation));
 
                 // This is somewhat ugly, the states are too tied with CPCT datamodel.
