@@ -13,7 +13,7 @@ public abstract class CodonAnnotation implements RangeAnnotation {
 
     public abstract int codonIndex();
 
-    @Nullable
+    @NotNull
     public abstract String transcript();
 
     @NotNull

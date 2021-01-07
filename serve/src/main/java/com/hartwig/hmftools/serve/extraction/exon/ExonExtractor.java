@@ -57,7 +57,7 @@ public class ExonExtractor {
 
                 List<ExonAnnotation> annotations = Lists.newArrayList();
                 for (int exonIndex : exonIndices) {
-                    ExonAnnotation annotation = determineExonAnnotation(gene, canonicalTranscript, exonIndex, mutationTypeFilter);
+                    ExonAnnotation annotation = determineExonAnnotation(gene, canonicalTranscript, exonIndex, mutationTypeFilter, canonicalTranscript.transcriptID());
                     if (annotation != null) {
                         annotations.add(annotation);
                     } else {
@@ -133,7 +133,7 @@ public class ExonExtractor {
 
     @Nullable
     private static ExonAnnotation determineExonAnnotation(@NotNull String gene, @NotNull HmfTranscriptRegion transcript, int exonIndex,
-            @NotNull MutationTypeFilter mutationTypeFilter) {
+            @NotNull MutationTypeFilter mutationTypeFilter, @NotNull String canonicalTranscriptID) {
         HmfExonRegion hmfExonRegion = transcript.exonByIndex(exonIndex);
 
         if (hmfExonRegion == null) {
@@ -150,7 +150,7 @@ public class ExonExtractor {
                 .end(end)
                 .gene(gene)
                 .mutationType(mutationTypeFilter)
-                .exonEnsemblId(hmfExonRegion.exonID())
+                .transcript(canonicalTranscriptID)
                 .exonIndex(exonIndex)
                 .build();
     }

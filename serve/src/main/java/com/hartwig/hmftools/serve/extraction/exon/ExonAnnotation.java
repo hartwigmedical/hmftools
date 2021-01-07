@@ -13,6 +13,6 @@ public abstract class ExonAnnotation implements RangeAnnotation {
 
     public abstract int exonIndex();
 
-    @Nullable
-    public abstract String exonEnsemblId();
+    @NotNull
+    public abstract String transcript();
 }

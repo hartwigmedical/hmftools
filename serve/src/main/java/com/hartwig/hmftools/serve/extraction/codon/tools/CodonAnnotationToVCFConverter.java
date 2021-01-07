@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,7 +44,7 @@ public class CodonAnnotationToVCFConverter {
         }
 
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/test.vcf.gz";
+        String outputFile = System.getProperty("user.home") + "/hmf/tmp/codon.vcf.gz";
 
         List<KnownCodon> codons = KnownCodonFile.read(knownCodonsTsv);
 
@@ -63,7 +64,7 @@ public class CodonAnnotationToVCFConverter {
 
         writer.writeHeader(header);
 
-        String randomAltBase = null;
+        String randomAltBase = Strings.EMPTY;
         for (KnownCodon codon : codons) {
             Long start = codon.annotation().start();
             Long end = codon.annotation().end();
@@ -108,7 +109,7 @@ public class CodonAnnotationToVCFConverter {
 
     }
 
-    private static void extactAnnotationVariantCodonIndex(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
+    private static void extactAnnotationVariantCodonIndex(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
             @Nullable String chromosome, Long position,
             @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, @NotNull String proteinAnnotation, @NotNull String transcript,
              @NotNull VariantContextWriter writer)  {
@@ -124,7 +125,7 @@ public class CodonAnnotationToVCFConverter {
 
     }
 
-    private static void generateVcfFileOfGenomicPosition(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
+    private static void generateVcfFileOfGenomicPosition(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
             @Nullable String chromosome, Long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene,
             @NotNull String proteinAnnotation, @NotNull String transcript, @NotNull VariantContextWriter writer) {
 

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.extraction.exon.tools;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -17,6 +16,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,7 +44,7 @@ public class ExonAnnotationToVCFConverter {
         }
 
         String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownExons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/test.vcf.gz";
+        String outputFile = System.getProperty("user.home") + "/hmf/tmp/exon.vcf.gz";
 
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
         LOGGER.info("The size of the file is {}", exons.size());
@@ -63,17 +63,15 @@ public class ExonAnnotationToVCFConverter {
 
         writer.writeHeader(header);
 
-        Random random = new Random();
-        String randomAltBase = null;
+        String randomAltBase = Strings.EMPTY;
 
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();
-            Long start = exon.annotation().start();
-            Long end = exon.annotation().end();
+            Long start = exon.annotation().start() + 5;
+            Long end = exon.annotation().end() - 5;
             String gene = exon.annotation().gene();
 
-            Long l = new Long(end - start + 1);
-            Long bewtweenNumber = start + random.nextInt(l.intValue());
+            Long bewtweenNumber = start + Math.round((end - start)/2);
             List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
 
             for (Long genomicPosition : genomicPositions) {
@@ -96,7 +94,7 @@ public class ExonAnnotationToVCFConverter {
                         exon.sources(),
                         gene,
                         exon.annotation().exonIndex(),
-                        exon.annotation().exonEnsemblId(),
+                        exon.annotation().transcript(),
                         writer);
 
             }
@@ -113,7 +111,7 @@ public class ExonAnnotationToVCFConverter {
         return fastaSequenceFile.getSubsequenceAt(chromosome, genomicPosition, genomicPosition).getBaseString();
     }
 
-    private static void extactAnnotationVariantExonIndex(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
+    private static void extactAnnotationVariantExonIndex(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
             @Nullable String chromosome, Long position,
             @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, int exonIndex, @NotNull String transcript,
             @NotNull VariantContextWriter writer)  {
@@ -129,7 +127,7 @@ public class ExonAnnotationToVCFConverter {
 
     }
 
-    private static void generateVcfFileOfGenomicPosition(@Nullable String extractRefBaseOfPosition, @Nullable String randomAltBase,
+    private static void generateVcfFileOfGenomicPosition(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
             @Nullable String chromosome, Long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene,
             int exonIndex, @NotNull String transcript, @NotNull VariantContextWriter writer) {
 
@@ -144,7 +142,7 @@ public class ExonAnnotationToVCFConverter {
                 .alleles(hotspotAlleles)
                 .computeEndFromAlleles(hotspotAlleles, new Long(position).intValue())
                 .attribute("source", Knowledgebase.commaSeparatedSourceString(knowledgebases))
-                .attribute("input", ProteinKeyFormatter.toProteinKey(gene, transcript, Integer.toString(exonIndex)))
+                .attribute("input", ProteinKeyFormatter.toExonKey(gene, transcript, Integer.toString(exonIndex)))
                 .make();
 
         LOGGER.debug(" Writing variant to VCF file'{}'", variantContext);

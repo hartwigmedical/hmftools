@@ -51,7 +51,8 @@
         <maven.assembly.plugin.version>3.0.0</maven.assembly.plugin.version>
         <maven.jaxb2.plugin.version>0.14.0</maven.jaxb2.plugin.version>
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
-        <maven.surefire.plugin.version>2.21.0</maven.surefire.plugin.version>
+        <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
+        <maven.site.plugin.version>3.7.1</maven.site.plugin.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
@@ -151,6 +152,16 @@
                     <groupId>org.jvnet.jaxb2.maven2</groupId>
                     <artifactId>maven-jaxb2-plugin</artifactId>
                     <version>${maven.jaxb2.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${maven.site.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-report-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.jetbrains.kotlin</groupId>
