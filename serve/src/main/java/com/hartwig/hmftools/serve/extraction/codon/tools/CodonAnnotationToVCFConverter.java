@@ -11,7 +11,7 @@ import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
 import com.hartwig.hmftools.serve.extraction.util.GenerateAltBase;
 import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
-import com.hartwig.hmftools.serve.extraction.util.VCFWriter;
+import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -38,7 +38,7 @@ public class CodonAnnotationToVCFConverter {
         }
 
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/codon.vcf";
+        String outputFile = System.getProperty("user.home") + "/hmf/tmp/codon.vcf.gz";
         GenerateAltBase altBaseGenerator = new GenerateAltBase(new IndexedFastaSequenceFile(new File(
                 System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
 
@@ -46,7 +46,7 @@ public class CodonAnnotationToVCFConverter {
 
         LOGGER.info("The number of codons in known codon file is '{}'", codons.size());
 
-        VariantContextWriter writer = VCFWriter.generateVCFWriter(outputFile);
+        VariantContextWriter writer = VCFWriterFactory.generateVCFWriterWithInputAndSources(outputFile);
 
         for (KnownCodon codon : codons) {
             long start = codon.annotation().start();

@@ -13,13 +13,13 @@ import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public final class VCFWriter {
+public final class VCFWriterFactory {
 
-    private VCFWriter() {
+    private VCFWriterFactory() {
     }
 
     @NotNull
-    public static VariantContextWriter generateVCFWriter(@NotNull String outputFile) {
+    public static VariantContextWriter generateVCFWriterWithInputAndSources(@NotNull String outputFile) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)

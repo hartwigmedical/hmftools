@@ -11,7 +11,7 @@ import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExonFile;
 import com.hartwig.hmftools.serve.extraction.util.GenerateAltBase;
 import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
-import com.hartwig.hmftools.serve.extraction.util.VCFWriter;
+import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -38,14 +38,14 @@ public class ExonAnnotationToVCFConverter {
         }
 
         String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownExons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/exon.vcf";
+        String outputFile = System.getProperty("user.home") + "/hmf/tmp/exon.vcf.gz";
         GenerateAltBase altBaseGenerator = new GenerateAltBase(new IndexedFastaSequenceFile(new File(
                 System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
 
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
         LOGGER.info("The number of known exons in the known exon file is '{}'", exons.size());
 
-        VariantContextWriter writer = VCFWriter.generateVCFWriter(outputFile);
+        VariantContextWriter writer = VCFWriterFactory.generateVCFWriterWithInputAndSources(outputFile);
 
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();
