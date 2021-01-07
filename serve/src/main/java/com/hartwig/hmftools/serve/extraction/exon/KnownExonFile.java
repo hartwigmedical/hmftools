@@ -28,6 +28,7 @@ public final class KnownExonFile {
         return refGenomeVersion.addVersionToFilePath(outputDir + File.separator + KNOWN_EXON_TSV);
     }
 
+    @NotNull
     public static List<KnownExon> read(@NotNull String file) throws IOException {
         List<String> lines = Files.readAllLines(new File(file).toPath());
 

@@ -50,8 +50,11 @@ public class CodonExtractor {
                 }
 
                 MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
-                List<CodonAnnotation> codonAnnotations =
-                        determineCodonAnnotations(gene, canonicalTranscript, codonIndex, mutationTypeFilter, extractProteinannotation(event));
+                List<CodonAnnotation> codonAnnotations = determineCodonAnnotations(gene,
+                        canonicalTranscript,
+                        codonIndex,
+                        mutationTypeFilter,
+                        extractProteinAnnotation(event));
 
                 if (codonAnnotations == null) {
                     LOGGER.warn("Could not resolve codon index {} on transcript '{}' for gene '{}'",
@@ -73,7 +76,7 @@ public class CodonExtractor {
     }
 
     @NotNull
-    private static String extractProteinannotation(@NotNull String event) {
+    private static String extractProteinAnnotation(@NotNull String event) {
         String codonPart;
         if (event.contains(" ")) {
             codonPart = event.split(" ")[1];
@@ -81,7 +84,7 @@ public class CodonExtractor {
             codonPart = event;
         }
         String codonPartWithout = codonPart.replaceAll("[^a-zA-Z0-9]", "");
-        if (Character.toString(codonPart.charAt(codonPartWithout.length()-1)).equals("X")) {
+        if (Character.toString(codonPart.charAt(codonPartWithout.length() - 1)).equals("X")) {
             return codonPartWithout;
         } else {
             return codonPartWithout + "X";

@@ -28,6 +28,7 @@ public final class KnownCodonFile {
         return refGenomeVersion.addVersionToFilePath(outputDir + File.separator + KNOWN_CODON_TSV);
     }
 
+    @NotNull
     public static List<KnownCodon> read(@NotNull String file) throws IOException {
         List<String> lines = Files.readAllLines(new File(file).toPath());
 
@@ -111,8 +112,8 @@ public final class KnownCodonFile {
                 .add(codon.annotation().mutationType().toString())
                 .add(String.valueOf(codon.annotation().codonIndex()))
                 .add(Knowledgebase.commaSeparatedSourceString(codon.sources()))
-                .add(String.valueOf(codon.annotation().transcript()))
-                .add(String.valueOf(codon.annotation().proteinAnnotation()))
+                .add(codon.annotation().transcript())
+                .add(codon.annotation().proteinAnnotation())
                 .toString();
     }
 }

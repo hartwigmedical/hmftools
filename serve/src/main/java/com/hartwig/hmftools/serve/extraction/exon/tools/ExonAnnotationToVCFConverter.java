@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.exon.tools;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -19,17 +20,19 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 
 public class ExonAnnotationToVCFConverter {
+
     private static final Logger LOGGER = LogManager.getLogger(ExonAnnotationToVCFConverter.class);
     private static final boolean LOG_DEBUG = true;
 
     public static void main(String[] args) throws IOException {
-        LOGGER.info("Running SERVE exon checker");
+        LOGGER.info("Running SERVE exon annotation to VCF converter");
 
         if (LOG_DEBUG) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -37,6 +40,8 @@ public class ExonAnnotationToVCFConverter {
 
         String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownExons.SERVE.37.tsv";
         String outputFile = System.getProperty("user.home") + "/hmf/tmp/exon.vcf.gz";
+        GenerateAltBase altBaseGenerator = new GenerateAltBase(new IndexedFastaSequenceFile(new File(
+                System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
 
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
         LOGGER.info("The size of the file is {}", exons.size());
@@ -45,41 +50,35 @@ public class ExonAnnotationToVCFConverter {
 
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();
-            Long start = exon.annotation().start() + 5; // remove the first 5 slice position before exon
-            Long end = exon.annotation().end() - 5; // remove the last 5 splice postion after exon
+            long start = exon.annotation().start() + 5; // remove the first 5 slice position before exon
+            long end = exon.annotation().end() - 5; // remove the last 5 splice position after exon
+            long middle = start + Math.round((end - start) / 2D);
+            List<Long> genomicPositions = Lists.newArrayList(start, middle, end);
+
             String gene = exon.annotation().gene();
+            for (long position : genomicPositions) {
+                String extractRefBaseOfPosition = altBaseGenerator.extractRefBaseAtGenomicPosition(chromosome, position);
+                String randomAltBase = altBaseGenerator.createAltForRefBase(chromosome, position);
 
-            Long bewtweenNumber = start + Math.round((end - start)/2);
-            List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
-
-            for (Long genomicPosition : genomicPositions) {
-                String extractRefBaseOfPosition = GenerateAltBase.extractRefBaseOfGenomicPosition(chromosome, genomicPosition);
-                String randomAltBase = GenerateAltBase.createAltOfRefBase(chromosome, genomicPosition);
-
-                extactAnnotationVariantExonIndex(extractRefBaseOfPosition,
+                extractAnnotationVariantExonIndex(extractRefBaseOfPosition,
                         randomAltBase,
                         chromosome,
-                        genomicPosition,
+                        position,
                         exon.sources(),
                         gene,
                         exon.annotation().exonIndex(),
                         exon.annotation().transcript(),
                         writer);
-
             }
         }
         writer.close();
-        LOGGER.info("All exons are checked!");
 
-        LOGGER.info("Done!");
+        LOGGER.info("All known exons are converted!");
     }
 
-
-
-    private static void extactAnnotationVariantExonIndex(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
-            @Nullable String chromosome, Long position,
-            @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, int exonIndex, @NotNull String transcript,
-            @NotNull VariantContextWriter writer)  {
+    private static void extractAnnotationVariantExonIndex(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
+            @Nullable String chromosome, Long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, int exonIndex,
+            @NotNull String transcript, @NotNull VariantContextWriter writer) {
 
         generateVcfFileOfGenomicPosition(extractRefBaseOfPosition,
                 randomAltBase,
@@ -88,15 +87,13 @@ public class ExonAnnotationToVCFConverter {
                 knowledgebases,
                 gene,
                 exonIndex,
-                transcript, writer);
-
+                transcript,
+                writer);
     }
 
     private static void generateVcfFileOfGenomicPosition(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
-            @Nullable String chromosome, Long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene,
-            int exonIndex, @NotNull String transcript, @NotNull VariantContextWriter writer) {
-
-
+            @Nullable String chromosome, long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, int exonIndex,
+            @NotNull String transcript, @NotNull VariantContextWriter writer) {
         List<Allele> hotspotAlleles =
                 Lists.newArrayList(Allele.create(extractRefBaseOfPosition, true), Allele.create(randomAltBase, false));
 
