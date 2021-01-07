@@ -113,23 +113,29 @@ class BaselineReader {
                 String primaryTumorLocationBastType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationBastTypeOther = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
 
-                String primaryTumorLocation = Strings.EMPTY;
-                if (primaryTumorLocationBastType != null && primaryTumorLocationBastType.equals("Other, specify")) {
-                    primaryTumorLocation = primaryTumorLocationBastTypeOther;
-                } else if (primaryTumorLocationBastType != null) {
-                    primaryTumorLocation = primaryTumorLocationBastType;
+                String primaryTumorLocation = null;
+                if (primaryTumorLocationBastType != null) {
+                    if (primaryTumorLocationBastType.equals("Other, specify")) {
+                        primaryTumorLocation = primaryTumorLocationBastTypeOther;
+                    } else {
+                        primaryTumorLocation = primaryTumorLocationBastType;
+                    }
                 }
 
                 // See DEV-1713 for why below choices have been made.
                 if (primaryTumorReg != null && !primaryTumorReg.isEmpty()) {
-                    primaryTumorLocation = primaryTumorLocation + " + " + primaryTumorReg;
+                    if (primaryTumorLocation != null) {
+                        primaryTumorLocation = primaryTumorLocation + " + " + primaryTumorReg;
+                    } else {
+                        primaryTumorLocation = primaryTumorReg;
+                    }
                 }
 
                 if (primaryTumorCohort != null) {
                     String lowerPrimaryTumorCohort = primaryTumorCohort.trim().toLowerCase();
-                    if (lowerPrimaryTumorCohort.contains("biliary tract") || lowerPrimaryTumorCohort.contains("colon")
-                            || lowerPrimaryTumorCohort.contains("urinary organ")
-                            || lowerPrimaryTumorCohort.contains("head, face and neck")) {
+                    if (primaryTumorLocation != null && (lowerPrimaryTumorCohort.contains("biliary tract")
+                            || lowerPrimaryTumorCohort.contains("colon") || lowerPrimaryTumorCohort.contains("urinary organ")
+                            || lowerPrimaryTumorCohort.contains("head, face and neck"))) {
                         primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocation;
                     } else {
                         primaryTumorLocation = primaryTumorCohort;
