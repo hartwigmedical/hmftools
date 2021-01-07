@@ -53,8 +53,7 @@ public class CodonExtractor {
                 List<CodonAnnotation> codonAnnotations = determineCodonAnnotations(gene,
                         canonicalTranscript,
                         codonIndex,
-                        mutationTypeFilter,
-                        extractProteinAnnotation(event));
+                        mutationTypeFilter);
 
                 if (codonAnnotations == null) {
                     LOGGER.warn("Could not resolve codon index {} on transcript '{}' for gene '{}'",
@@ -73,22 +72,6 @@ public class CodonExtractor {
         }
 
         return null;
-    }
-
-    @NotNull
-    private static String extractProteinAnnotation(@NotNull String event) {
-        String codonPart;
-        if (event.contains(" ")) {
-            codonPart = event.split(" ")[1];
-        } else {
-            codonPart = event;
-        }
-        String codonPartWithout = codonPart.replaceAll("[^a-zA-Z0-9]", "");
-        if (Character.toString(codonPart.charAt(codonPartWithout.length() - 1)).equals("X")) {
-            return codonPartWithout;
-        } else {
-            return codonPartWithout + "X";
-        }
     }
 
     @Nullable
@@ -110,21 +93,20 @@ public class CodonExtractor {
 
     @Nullable
     private static List<CodonAnnotation> determineCodonAnnotations(@NotNull String gene, @NotNull HmfTranscriptRegion canonicalTranscript,
-            int codonIndex, @NotNull MutationTypeFilter mutationTypeFilter, @NotNull String proteinAnnotation) {
+            int codonIndex, @NotNull MutationTypeFilter mutationTypeFilter) {
         List<GenomeRegion> regions = canonicalTranscript.codonByIndex(codonIndex);
 
         if (regions != null) {
             List<CodonAnnotation> codonAnnotations = Lists.newArrayList();
             for (GenomeRegion region : regions) {
                 codonAnnotations.add(ImmutableCodonAnnotation.builder()
+                        .gene(gene)
+                        .transcript(canonicalTranscript.transcriptID())
                         .chromosome(region.chromosome())
                         .start(region.start())
                         .end(region.end())
-                        .gene(gene)
                         .mutationType(mutationTypeFilter)
                         .codonIndex(codonIndex)
-                        .transcript(canonicalTranscript.transcriptID())
-                        .proteinAnnotation(proteinAnnotation)
                         .build());
             }
             return codonAnnotations;

@@ -145,12 +145,12 @@ public class ExonExtractor {
         long end = hmfExonRegion.end() + 5;
 
         return ImmutableExonAnnotation.builder()
+                .gene(gene)
+                .transcript(canonicalTranscriptID)
                 .chromosome(hmfExonRegion.chromosome())
                 .start(start)
                 .end(end)
-                .gene(gene)
                 .mutationType(mutationTypeFilter)
-                .transcript(canonicalTranscriptID)
                 .exonIndex(exonIndex)
                 .build();
     }

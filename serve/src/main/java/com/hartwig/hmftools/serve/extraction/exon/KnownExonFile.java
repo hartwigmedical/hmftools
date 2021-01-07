@@ -51,11 +51,11 @@ public final class KnownExonFile {
         return ImmutableKnownExon.builder()
                 .annotation(ImmutableExonAnnotation.builder()
                         .gene(values[0])
-                        .chromosome(values[1])
-                        .start(Long.parseLong(values[2]))
-                        .end(Long.parseLong(values[3]))
-                        .mutationType(MutationTypeFilter.valueOf(values[4]))
-                        .transcript(values[5])
+                        .transcript(values[1])
+                        .chromosome(values[2])
+                        .start(Long.parseLong(values[3]))
+                        .end(Long.parseLong(values[4]))
+                        .mutationType(MutationTypeFilter.valueOf(values[5]))
                         .exonIndex(Integer.parseInt(values[6]))
                         .build())
                 .sources(Knowledgebase.extractKnowledgebase(values[7]))
@@ -72,11 +72,11 @@ public final class KnownExonFile {
     @NotNull
     private static String header() {
         return new StringJoiner(DELIMITER).add("gene")
+                .add("transcript")
                 .add("chromosome")
                 .add("start")
                 .add("end")
                 .add("mutationType")
-                .add("transcript")
                 .add("exonIndex")
                 .add("sources")
                 .toString();
@@ -103,11 +103,11 @@ public final class KnownExonFile {
     @NotNull
     private static String toLine(@NotNull KnownExon exon) {
         return new StringJoiner(DELIMITER).add(exon.annotation().gene())
+                .add(exon.annotation().transcript())
                 .add(exon.annotation().chromosome())
                 .add(String.valueOf(exon.annotation().start()))
                 .add(String.valueOf(exon.annotation().end()))
                 .add(exon.annotation().mutationType().toString())
-                .add(exon.annotation().transcript())
                 .add(String.valueOf(exon.annotation().exonIndex()))
                 .add(Knowledgebase.commaSeparatedSourceString(exon.sources()))
                 .toString();

@@ -11,8 +11,8 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ExonAnnotation implements RangeAnnotation {
 
-    public abstract int exonIndex();
-
     @NotNull
     public abstract String transcript();
+
+    public abstract int exonIndex();
 }

@@ -51,17 +51,15 @@ public final class KnownCodonFile {
         return ImmutableKnownCodon.builder()
                 .annotation(ImmutableCodonAnnotation.builder()
                         .gene(values[0])
-                        .chromosome(values[1])
-                        .start(Long.parseLong(values[2]))
-                        .end(Long.parseLong(values[3]))
-                        .mutationType(MutationTypeFilter.valueOf(values[4]))
-                        .codonIndex(Integer.parseInt(values[5]))
-                        .transcript(values[7])
-                        .proteinAnnotation(values[8])
+                        .transcript(values[1])
+                        .chromosome(values[2])
+                        .start(Long.parseLong(values[3]))
+                        .end(Long.parseLong(values[4]))
+                        .mutationType(MutationTypeFilter.valueOf(values[5]))
+                        .codonIndex(Integer.parseInt(values[6]))
                         .build())
-                .sources(Knowledgebase.extractKnowledgebase(values[6]))
+                .sources(Knowledgebase.extractKnowledgebase(values[7]))
                 .build();
-
     }
 
     public static void write(@NotNull String codonTsv, @NotNull Iterable<KnownCodon> codons) throws IOException {
@@ -74,14 +72,13 @@ public final class KnownCodonFile {
     @NotNull
     private static String header() {
         return new StringJoiner(DELIMITER).add("gene")
+                .add("transcript")
                 .add("chromosome")
                 .add("start")
                 .add("end")
                 .add("mutationType")
                 .add("codonIndex")
                 .add("sources")
-                .add("transcript")
-                .add("preoteinAnnotation")
                 .toString();
     }
 
@@ -106,14 +103,13 @@ public final class KnownCodonFile {
     @NotNull
     private static String toLine(@NotNull KnownCodon codon) {
         return new StringJoiner(DELIMITER).add(codon.annotation().gene())
+                .add(codon.annotation().transcript())
                 .add(codon.annotation().chromosome())
                 .add(String.valueOf(codon.annotation().start()))
                 .add(String.valueOf(codon.annotation().end()))
                 .add(codon.annotation().mutationType().toString())
                 .add(String.valueOf(codon.annotation().codonIndex()))
                 .add(Knowledgebase.commaSeparatedSourceString(codon.sources()))
-                .add(codon.annotation().transcript())
-                .add(codon.annotation().proteinAnnotation())
                 .toString();
     }
 }
