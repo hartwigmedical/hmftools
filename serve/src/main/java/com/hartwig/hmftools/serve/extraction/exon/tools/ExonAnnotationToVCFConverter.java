@@ -18,7 +18,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Allele;
@@ -32,19 +31,19 @@ public class ExonAnnotationToVCFConverter {
     private static final boolean LOG_DEBUG = true;
 
     public static void main(String[] args) throws IOException {
-        LOGGER.info("Running SERVE exon annotation to VCF converter");
+        LOGGER.info("Running SERVE exon VCF converter");
 
         if (LOG_DEBUG) {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
         String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownExons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/exon.vcf.gz";
+        String outputFile = System.getProperty("user.home") + "/hmf/tmp/exon.vcf";
         GenerateAltBase altBaseGenerator = new GenerateAltBase(new IndexedFastaSequenceFile(new File(
                 System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
 
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
-        LOGGER.info("The size of the file is {}", exons.size());
+        LOGGER.info("The number of known exons in the known exon file is '{}'", exons.size());
 
         VariantContextWriter writer = VCFWriter.generateVCFWriter(outputFile);
 
@@ -57,54 +56,39 @@ public class ExonAnnotationToVCFConverter {
 
             String gene = exon.annotation().gene();
             for (long position : genomicPositions) {
-                String extractRefBaseOfPosition = altBaseGenerator.extractRefBaseAtGenomicPosition(chromosome, position);
+                String refBaseOfPosition = altBaseGenerator.extractRefBaseAtGenomicPosition(chromosome, position);
                 String randomAltBase = altBaseGenerator.createAltForRefBase(chromosome, position);
 
-                extractAnnotationVariantExonIndex(extractRefBaseOfPosition,
-                        randomAltBase,
+                writeVariantToVCF(writer,
                         chromosome,
                         position,
+                        refBaseOfPosition,
+                        randomAltBase,
                         exon.sources(),
                         gene,
                         exon.annotation().exonIndex(),
-                        exon.annotation().transcript(),
-                        writer);
+                        exon.annotation().transcript());
             }
         }
+
         writer.close();
 
-        LOGGER.info("All known exons are converted!");
+        LOGGER.info("All known exons are converted and written to VCF file!");
     }
 
-    private static void extractAnnotationVariantExonIndex(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
-            @Nullable String chromosome, Long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, int exonIndex,
-            @NotNull String transcript, @NotNull VariantContextWriter writer) {
-
-        generateVcfFileOfGenomicPosition(extractRefBaseOfPosition,
-                randomAltBase,
-                chromosome,
-                position,
-                knowledgebases,
-                gene,
-                exonIndex,
-                transcript,
-                writer);
-    }
-
-    private static void generateVcfFileOfGenomicPosition(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
-            @Nullable String chromosome, long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, int exonIndex,
-            @NotNull String transcript, @NotNull VariantContextWriter writer) {
-        List<Allele> hotspotAlleles =
-                Lists.newArrayList(Allele.create(extractRefBaseOfPosition, true), Allele.create(randomAltBase, false));
+    private static void writeVariantToVCF(@NotNull VariantContextWriter writer, @NotNull String chromosome, long position,
+            @NotNull String ref, @NotNull String alt, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, int exonIndex,
+            @NotNull String transcript) {
+        List<Allele> alleles = Lists.newArrayList(Allele.create(ref, true), Allele.create(alt, false));
 
         VariantContext variantContext = new VariantContextBuilder().noGenotypes()
-                .source("SERVE")
+                .source("ExonChecker")
                 .chr(chromosome)
                 .start(position)
-                .alleles(hotspotAlleles)
-                .computeEndFromAlleles(hotspotAlleles, new Long(position).intValue())
+                .alleles(alleles)
+                .computeEndFromAlleles(alleles, new Long(position).intValue())
                 .attribute("source", Knowledgebase.commaSeparatedSourceString(knowledgebases))
-                .attribute("input", KeyFormatter.toExonKey(gene, transcript, Integer.toString(exonIndex)))
+                .attribute("input", KeyFormatter.toExonKey(gene, transcript, exonIndex))
                 .make();
 
         LOGGER.debug(" Writing variant to VCF file'{}'", variantContext);

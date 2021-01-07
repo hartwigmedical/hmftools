@@ -25,11 +25,6 @@ public class AnnotatedExonVCFChecker {
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedCodonVCFChecker.class);
     private static final boolean LOG_DEBUG = true;
 
-    private enum MatchType {
-        IDENTICAL,
-        NO_MATCH
-    }
-
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE exon VCF checker");
 
@@ -41,7 +36,7 @@ public class AnnotatedExonVCFChecker {
         int matchCount = 0;
         int diffCount = 0;
 
-        String annotatedExonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated_exon.vcf";
+        String annotatedExonVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedExons.vcf";
 
         LOGGER.info("Loading exons from '{}'", annotatedExonVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader =
@@ -55,22 +50,14 @@ public class AnnotatedExonVCFChecker {
             String inputExonId = inputParts[2];
 
             List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-            MatchType match = determineMatch(inputGene, inputTranscript, inputExonId, annotations);
-
-            switch (match) {
-                case IDENTICAL: {
-                    matchCount++;
-                    break;
-                }
-                case NO_MATCH: {
-                    diffCount++;
-                    break;
-                }
+            if (determineMatch(inputGene, inputTranscript, inputExonId, annotations)) {
+                matchCount++;
+            } else {
+                diffCount++;
             }
-
         }
-        LOGGER.info("Done comparing {} records: {} matches and {} differences found.", totalCount, matchCount, diffCount);
-        LOGGER.info("Exons are checked!");
+
+        LOGGER.info("Done comparing {} exons: {} matches and {} differences found.", totalCount, matchCount, diffCount);
     }
 
     @Nullable
@@ -83,15 +70,7 @@ public class AnnotatedExonVCFChecker {
         return null;
     }
 
-    private static boolean isSameAnnotation(@NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
-        if (inputAnnotation.equals(snpeffAnnotation)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private static MatchType determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, @NotNull String inputExonId,
+    private static boolean determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, @NotNull String inputExonId,
             @NotNull List<SnpEffAnnotation> annotations) {
         String snpeffExonID = Strings.EMPTY;
         if (inputTranscript != null) {
@@ -99,25 +78,25 @@ public class AnnotatedExonVCFChecker {
 
             if (annotation != null) {
                 snpeffExonID = annotation.rank().split("/")[0];
-                if (!isSameAnnotation(inputExonId, snpeffExonID)) {
-                    LOGGER.warn("Difference on gene '{}' : SERVE input exon id '{}' vs SnpEff exon id '{}'",
-                            inputGene,
-                            inputExonId,
-                            snpeffExonID);
-                    return MatchType.NO_MATCH;
-                } else {
+                if (inputExonId.equals(snpeffExonID)) {
                     LOGGER.debug("Identical on gene '{}' : SERVE input exon id '{}' vs SnpEff exon id '{}'",
                             inputGene,
                             inputExonId,
                             snpeffExonID);
-                    return MatchType.IDENTICAL;
+                    return true;
+                } else {
+                    LOGGER.warn("Difference on gene '{}' : SERVE input exon id '{}' vs SnpEff exon id '{}'",
+                            inputGene,
+                            inputExonId,
+                            snpeffExonID);
+                    return false;
                 }
             } else {
                 LOGGER.warn("No match found on gene '{}' : SERVE input exon id '{}' vs SnpEff exon id '{}'",
                         inputGene,
                         inputExonId,
                         snpeffExonID);
-                return MatchType.NO_MATCH;
+                return false;
             }
         } else {
             // In case input transcript is missing we try to match against any transcript.
@@ -125,7 +104,7 @@ public class AnnotatedExonVCFChecker {
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature()) {
                     snpeffExonID = annotation.rank().split("/")[0];
-                    if (isSameAnnotation(inputExonId, snpeffExonID)) {
+                    if (inputExonId.equals(snpeffExonID)) {
                         matchFound = true;
                     }
                 }
@@ -136,13 +115,13 @@ public class AnnotatedExonVCFChecker {
                         inputExonId,
                         inputGene,
                         snpeffExonID);
-                return MatchType.IDENTICAL;
+                return true;
             } else {
                 LOGGER.warn("Found a match amongst candidate transcripts for '{}' on '{} of snpeff annotation '{}'",
                         inputExonId,
                         inputGene,
                         snpeffExonID);
-                return MatchType.NO_MATCH;
+                return false;
             }
         }
     }

@@ -15,8 +15,7 @@ public final class KeyFormatter {
     }
 
     @NotNull
-    public static String toExonKey(@NotNull String gene, @Nullable String transcript, @NotNull String exonIndex) {
-        String formattedExonIndex = !exonIndex.isEmpty() ? exonIndex : "-";
-        return gene + "|" + transcript + "|" + formattedExonIndex;
+    public static String toExonKey(@NotNull String gene, @Nullable String transcript, int exonIndex) {
+        return gene + "|" + transcript + "|" + exonIndex;
     }
 }

@@ -21,15 +21,11 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
 public class AnnotatedCodonVCFChecker {
+
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedCodonVCFChecker.class);
     private static final boolean LOG_DEBUG = true;
 
     private static final String NO_INPUT_PROTEIN = "-";
-
-    private enum MatchType {
-        IDENTICAL,
-        NO_MATCH
-    }
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE codon VCF checker");
@@ -42,7 +38,7 @@ public class AnnotatedCodonVCFChecker {
         int matchCount = 0;
         int diffCount = 0;
 
-        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated_codon.vcf";
+        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedCodons.vcf";
 
         LOGGER.info("Loading codons from '{}'", annotatedCodonVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader =
@@ -60,23 +56,15 @@ public class AnnotatedCodonVCFChecker {
                 LOGGER.debug("Skipping non-coding hotspot on '{}'", formattedHotspot);
             } else {
                 List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-                MatchType match = determineMatch(inputGene, inputTranscript, inputProteinAnnotation, annotations);
-
-                switch (match) {
-                    case IDENTICAL: {
-                        matchCount++;
-                        break;
-                    }
-                    case NO_MATCH: {
-                        diffCount++;
-                        break;
-                    }
+                if (determineMatch(inputGene, inputTranscript, inputProteinAnnotation, annotations)) {
+                    matchCount++;
+                } else {
+                    diffCount++;
                 }
             }
         }
-        LOGGER.info("Done comparing {} records: {} matches and {} differences found.", totalCount, matchCount, diffCount);
 
-        LOGGER.info("Codons are checked!");
+        LOGGER.info("Done comparing {} codons: {} matches and {} differences found.", totalCount, matchCount, diffCount);
     }
 
     @Nullable
@@ -89,7 +77,7 @@ public class AnnotatedCodonVCFChecker {
         return null;
     }
 
-    private static MatchType determineMatch(@NotNull String inputGene, @Nullable String inputTranscript,
+    private static boolean determineMatch(@NotNull String inputGene, @Nullable String inputTranscript,
             @NotNull String inputProteinAnnotation, @NotNull List<SnpEffAnnotation> annotations) {
         String inputCodon = inputProteinAnnotation.substring(0, inputProteinAnnotation.length() - 1);
         String snpEffCodon = Strings.EMPTY;
@@ -101,25 +89,25 @@ public class AnnotatedCodonVCFChecker {
             if (annotation != null) {
                 snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
                 snpEffCodon = snpeffProteinAnnotation.substring(0, snpeffProteinAnnotation.length() - 1);
-                if (!isSameAnnotation(inputCodon, snpEffCodon)) {
-                    LOGGER.warn("Difference on gene '{}' : SERVE input protein '{}' vs SnpEff protein '{}'",
-                            inputGene,
-                            inputCodon,
-                            snpEffCodon);
-                    return MatchType.NO_MATCH;
-                } else {
+                if (inputCodon.equals(snpEffCodon)) {
                     LOGGER.debug("Identical on gene '{}' : SERVE input protein '{}' vs SnpEff protein '{}'",
                             inputGene,
                             inputCodon,
                             snpEffCodon);
-                    return MatchType.IDENTICAL;
+                    return true;
+                } else {
+                    LOGGER.warn("Difference on gene '{}' : SERVE input protein '{}' vs SnpEff protein '{}'",
+                            inputGene,
+                            inputCodon,
+                            snpEffCodon);
+                    return false;
                 }
             } else {
                 LOGGER.warn("No match found on gene '{}': SERVE input protein '{}' vs SnpEff protein '{}'",
                         inputGene,
                         inputCodon,
                         snpEffCodon);
-                return MatchType.NO_MATCH;
+                return false;
             }
         } else {
             // In case input transcript is missing we try to match against any transcript.
@@ -128,7 +116,7 @@ public class AnnotatedCodonVCFChecker {
                 if (annotation.isTranscriptFeature()) {
                     snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
                     snpEffCodon = snpeffProteinAnnotation.substring(0, snpeffProteinAnnotation.length() - 1);
-                    if (isSameAnnotation(inputCodon, snpEffCodon)) {
+                    if (inputCodon.equals(snpEffCodon)) {
                         matchFound = true;
                     }
                 }
@@ -139,22 +127,14 @@ public class AnnotatedCodonVCFChecker {
                         inputProteinAnnotation,
                         inputGene,
                         snpeffProteinAnnotation);
-                return MatchType.IDENTICAL;
+                return true;
             } else {
                 LOGGER.warn("Found a match amongst candidate transcripts for '{}' on '{} of snpeff annotation '{}'",
                         inputProteinAnnotation,
                         inputGene,
                         snpeffProteinAnnotation);
-                return MatchType.NO_MATCH;
+                return false;
             }
-        }
-    }
-
-    private static boolean isSameAnnotation(@NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
-        if (inputAnnotation.equals(snpeffAnnotation)) {
-            return true;
-        } else {
-            return false;
         }
     }
 
