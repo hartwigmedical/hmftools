@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortCompare;
+import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortMedians;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionMatrix;
 import com.hartwig.hmftools.isofox.expression.cohort.ExternalExpressionCompare;
 import com.hartwig.hmftools.isofox.expression.cohort.GeneExpressionDistribution;
@@ -87,6 +88,13 @@ public class CohortAnalyser
                 {
                     TransExpressionDistribution transExpDist = new TransExpressionDistribution(mConfig);
                     transExpDist.processSampleTranscriptFiles();
+                    break;
+                }
+
+                case EXPRESSION_COHORT_MEDIANS:
+                {
+                    ExpressionCohortMedians transExpDist = new ExpressionCohortMedians(mConfig);
+                    transExpDist.produceCohortData();
                     break;
                 }
 

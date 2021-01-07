@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.REF_GENOME;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXPRESSION_COHORT_MEDIANS;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXTERNAL_EXPRESSION_COMPARE;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_DISTRIBUTION;
@@ -19,7 +20,7 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MA
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SAMPLE_GENE_PERCENTILES;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
-import static com.hartwig.hmftools.isofox.cohort.AnalysisType.getFileId;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.getIsofoxFileId;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -150,7 +151,7 @@ public class CohortConfig
         return analysisTypes.contains(GENE_DISTRIBUTION) || analysisTypes.contains(TRANSCRIPT_DISTRIBUTION)
                 || analysisTypes.contains(SAMPLE_GENE_PERCENTILES) || analysisTypes.contains(GENE_EXPRESSION_COMPARE)
                 || analysisTypes.contains(EXTERNAL_EXPRESSION_COMPARE) || analysisTypes.contains(GENE_EXPRESSION_MATRIX)
-                || analysisTypes.contains(TRANSCRIPT_EXPRESSION_MATRIX);
+                || analysisTypes.contains(TRANSCRIPT_EXPRESSION_MATRIX) || analysisTypes.contains(EXPRESSION_COHORT_MEDIANS);
     }
 
     public static boolean isValid(final CommandLine cmd)
@@ -180,7 +181,7 @@ public class CohortConfig
             filename += File.separator + sampleId + File.separator;
 
         filename += sampleId + ISOFOX_ID;
-        filename += getFileId(dataType);
+        filename += getIsofoxFileId(dataType);
         return filename;
     }
 

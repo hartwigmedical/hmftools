@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -18,7 +19,9 @@ import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionData.
 import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionData.RATE_VALUE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.io.BufferedReader;
@@ -33,6 +36,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 public class TransExpressionDistribution
@@ -41,7 +45,7 @@ public class TransExpressionDistribution
 
     private final Map<Integer,TransExpressionData> mTranscriptExpressionData;
 
-    private BufferedWriter mTransDistributionWriter;
+    private BufferedWriter mWriter;
 
     private final Map<String,double[]> mCohortTranscriptDistribution;
     private final Map<String,double[]> mCancerTypeTranscriptDistribution;
@@ -54,8 +58,6 @@ public class TransExpressionDistribution
         mTranscriptExpressionData = Maps.newHashMap();
         mCohortTranscriptDistribution = Maps.newHashMap();
         mCancerTypeTranscriptDistribution = Maps.newHashMap();
-
-        mTransDistributionWriter = null;
 
         if(mConfig.Expression.CohortTransFile != null)
         {
@@ -78,7 +80,7 @@ public class TransExpressionDistribution
         if(!formSampleFilenames(mConfig, TRANSCRIPT_DISTRIBUTION, filenames))
             return;
 
-        initialiseWriter();
+        initialiseTransDistributionWriter();
 
         // load each sample's alt SJs and consolidate into a single list
         for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
@@ -94,24 +96,24 @@ public class TransExpressionDistribution
 
         writeTranscriptTpmPercentiles();
 
-        closeBufferedWriter(mTransDistributionWriter);
+        closeBufferedWriter(mWriter);
     }
 
-    private void initialiseWriter()
+    private void initialiseTransDistributionWriter()
     {
         try
         {
             final String outputFileName = mConfig.formCohortFilename("transcript_distribution.csv");
-            mTransDistributionWriter = createBufferedWriter(outputFileName, false);
+            mWriter = createBufferedWriter(outputFileName, false);
 
-            mTransDistributionWriter.write("GeneId,GeneName,TransName");
+            mWriter.write("GeneId,GeneName,TransName");
 
             for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
             {
-                mTransDistributionWriter.write(String.format(",Pct_%d", i));
+                mWriter.write(String.format(",Pct_%d", i));
             }
 
-            mTransDistributionWriter.newLine();
+            mWriter.newLine();
         }
         catch(IOException e)
         {
@@ -139,15 +141,15 @@ public class TransExpressionDistribution
                 if(percentileValues[percentileValues.length - 1] < mConfig.Expression.TpmThreshold)
                     continue;
 
-                mTransDistributionWriter.write(String.format("%s,%s,%s",
+                mWriter.write(String.format("%s,%s,%s",
                         expData.GeneId, expData.GeneName, expData.TransName));
 
                 for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
                 {
-                    mTransDistributionWriter.write(String.format(",%6.3e", percentileValues[i]));
+                    mWriter.write(String.format(",%6.3e", percentileValues[i]));
                 }
 
-                mTransDistributionWriter.newLine();
+                mWriter.newLine();
             }
         }
         catch(IOException e)
@@ -308,5 +310,7 @@ public class TransExpressionDistribution
 
         return getPercentile(transPercentiles, tpm);
     }
+
+
 
 }

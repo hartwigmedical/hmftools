@@ -13,6 +13,7 @@ public enum AnalysisType
     SUMMARY,
     GENE_DISTRIBUTION, // creates gene expression percentiles by cancer type and pan-cancer
     TRANSCRIPT_DISTRIBUTION, // as above but for transcripts
+    EXPRESSION_COHORT_MEDIANS, // as above but for transcripts
     SAMPLE_GENE_PERCENTILES, // reports where on a percentile a specific sample's gene expression lies
     ALT_SPLICE_JUNCTION, // combine and analyse alternate splice junctions for a cohort
     SPLICE_VARIANT_MATCHING, // match alternate splice junctions with (candidate-splicing) somatic variants
@@ -25,7 +26,7 @@ public enum AnalysisType
     GENE_EXPRESSION_MATRIX, // generates a single gene by sample matrix for expression data
     TRANSCRIPT_EXPRESSION_MATRIX; // as above but for transcript expression
 
-    public static String getFileId(AnalysisType type)
+    public static String getIsofoxFileId(AnalysisType type)
     {
         switch(type)
         {
