@@ -26,6 +26,11 @@ public class AnnotatedCodonVCFChecker {
 
     private static final String NO_INPUT_PROTEIN = "-";
 
+    private enum MatchType {
+        IDENTICAL,
+        NO_MATCH
+    }
+
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE codon VCF checker");
 
@@ -33,8 +38,13 @@ public class AnnotatedCodonVCFChecker {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
+        int totalCount = 0;
+        int matchCount = 0;
+        int diffCount = 0;
+
         String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated_codon.vcf";
 
+        LOGGER.info("Loading codons from '{}'", annotatedCodonVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader =
                 AbstractFeatureReader.getFeatureReader(annotatedCodonVcf, new VCFCodec(), false);
         for (VariantContext variant : reader.iterator()) {
@@ -48,9 +58,22 @@ public class AnnotatedCodonVCFChecker {
                 LOGGER.debug("Skipping non-coding hotspot on '{}'", formattedHotspot);
             } else {
                 List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-                determineMatch(inputGene, inputTranscript, inputProteinAnnotation, annotations);
+                MatchType match = determineMatch(inputGene, inputTranscript, inputProteinAnnotation, annotations);
+
+                switch (match) {
+                    case IDENTICAL: {
+                        matchCount++;
+                        break;
+                    }
+                    case NO_MATCH: {
+                        diffCount++;
+                        break;
+                    }
+                }
             }
         }
+        LOGGER.info("Done comparing {} records: {} matches and {} differences found.", totalCount, matchCount, diffCount);
+
         LOGGER.info("Codons are checked!");
     }
 
@@ -64,40 +87,72 @@ public class AnnotatedCodonVCFChecker {
         return null;
     }
 
-    private static void determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, @NotNull String inputProteinAnnotation,
-            @NotNull List<SnpEffAnnotation> annotations) {
+    private static MatchType determineMatch(@NotNull String inputGene, @Nullable String inputTranscript,
+            @NotNull String inputProteinAnnotation, @NotNull List<SnpEffAnnotation> annotations) {
+        String inputCodon = inputProteinAnnotation.substring(0, inputProteinAnnotation.length() - 1);
+        String snpEffCodon = Strings.EMPTY;
         String snpeffProteinAnnotation = Strings.EMPTY;
+
         if (inputTranscript != null) {
             SnpEffAnnotation annotation = annotationForTranscript(annotations, inputTranscript);
 
             if (annotation != null) {
                 snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-
+                snpEffCodon = snpeffProteinAnnotation.substring(0, snpeffProteinAnnotation.length() - 1);
+                if (!isSameAnnotation(inputCodon, snpEffCodon)) {
+                    LOGGER.warn("Difference on gene '{}' : SERVE input protein '{}' vs SnpEff protein '{}'",
+                            inputGene,
+                            inputCodon,
+                            snpEffCodon);
+                    return MatchType.NO_MATCH;
+                } else {
+                    LOGGER.debug("Identical on gene '{}' : SERVE input protein '{}' vs SnpEff protein '{}'",
+                            inputGene,
+                            inputCodon,
+                            snpEffCodon);
+                    return MatchType.IDENTICAL;
+                }
             } else {
-                LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", inputTranscript, inputGene);
+                LOGGER.warn("No match found on gene '{}': SERVE input protein '{}' vs SnpEff protein '{}'",
+                        inputGene,
+                        inputCodon,
+                        snpEffCodon);
+                return MatchType.NO_MATCH;
             }
         } else {
             // In case input transcript is missing we try to match against any transcript.
+            boolean matchFound = false;
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature()) {
                     snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-
+                    snpEffCodon = snpeffProteinAnnotation.substring(0, snpeffProteinAnnotation.length() - 1);
+                    if (isSameAnnotation(inputCodon, snpEffCodon)) {
+                        matchFound = true;
+                    }
                 }
             }
-        }
-        String inputCodon = inputProteinAnnotation.substring(0, inputProteinAnnotation.length() - 1);
-        String snpEffCodon = snpeffProteinAnnotation.substring(0, snpeffProteinAnnotation.length() - 1);
 
-        if (inputCodon.equals(snpEffCodon)) {
-            LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{} of snpeff annotation '{}'",
-                    inputProteinAnnotation,
-                    inputGene,
-                    snpeffProteinAnnotation);
+            if (matchFound) {
+                LOGGER.debug("Could not find a match amongst candidate transcripts for '{}' on '{}' of snpeff annotation '{}'",
+                        inputProteinAnnotation,
+                        inputGene,
+                        snpeffProteinAnnotation);
+                return MatchType.IDENTICAL;
+            } else {
+                LOGGER.warn("Found a match amongst candidate transcripts for '{}' on '{} of snpeff annotation '{}'",
+                        inputProteinAnnotation,
+                        inputGene,
+                        snpeffProteinAnnotation);
+                return MatchType.NO_MATCH;
+            }
+        }
+    }
+
+    private static boolean isSameAnnotation(@NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
+        if (inputAnnotation.equals(snpeffAnnotation)) {
+            return true;
         } else {
-            LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}' of snpeff annotation '{}'",
-                    inputProteinAnnotation,
-                    inputGene,
-                    snpeffProteinAnnotation);
+            return false;
         }
     }
 
