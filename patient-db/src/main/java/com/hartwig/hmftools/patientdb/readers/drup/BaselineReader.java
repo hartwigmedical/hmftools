@@ -121,7 +121,7 @@ class BaselineReader {
                 }
 
                 // See DEV-1713 for why below choices have been made.
-                if (primaryTumorReg != null) {
+                if (primaryTumorReg != null && !primaryTumorReg.isEmpty()) {
                     primaryTumorLocation = primaryTumorLocation + " + " + primaryTumorReg;
                 }
 
