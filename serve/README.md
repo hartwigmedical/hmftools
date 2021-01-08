@@ -20,7 +20,7 @@ SERVE supports the ingestion of the following knowledgebases:
 The following knowledgebases are under development:
  - [CBG Compassionate Use](https://www.cbg-meb.nl/onderwerpen/hv-compassionate-use-programma/overzicht-goedgekeurde-cup) - 
     a database of approved compassionate use programs in the Netherlands
- - [CKB FLEX](https://ckb.jax.org) - The complete CKB clinical database. This data requires a license from CKB.   
+ - [CKB FLEX](https://ckb.jax.org) - The complete CKB clinical database. 
  
 A number of hmf modules support the ingestion (and analysis) of these knowledgebases:
  - [VICC Importer](../vicc-importer/README.md): A module supporting the ingestion of any knowledgebase ingested into VICC.
@@ -36,9 +36,9 @@ they are compliant with the usage of the data itself.
 
 Clinical evidence is generated in the following datamodel:
  - Treatment
- - Cancer type (including DOID) for which the evidence applies.
- - Tier / Evidence level
- - Direction (Responsive or resistant)
+ - Cancer type (including DOID) for which the treatment is on-label.
+ - Tier / Evidence level of the treatment
+ - Direction (Responsive for the treatment or resistant to the treatment)
  
 The following genomic events can be mapped to clinical evidence:
  - Genome-wide events such as signatures or MSI status
@@ -56,8 +56,8 @@ genomic events implied to be able to driver cancer:
  (in either 5' or 3' position)
  - Known amplifications and deletions
  - Known hotspots (specific mutations on specific loci)
- - Known codons (individual codons in which mutations may be considered pathogenic)
- - Known exons (individual exons in which mutations may be considered pathogenic)
+ - Known codons (codons for which generic mutations are implied to be pathogenic)
+ - Known exons (exons for which specific mutations are applied to be pathogenic)
 
 SERVE can be configured to generate its output either for reference genome version 37 or version 38.  
 
@@ -99,22 +99,17 @@ Assuming we found a suitable transcript, we then derive N hotspots for each prot
    - Any of the 3 possible single base deletes inside the affected codon that does not lead to synonymous impact in the affected codon
    - Any of the 2 possible double base deletes inside the affected codon that does not lead to synonymous impact in the affected codon
    
-Additionally, hotspot generation is ignored for any INDEL that spans over multiple exons. Examples are:
+Additionally, hotspot generation is ignored for any INDEL that spans multiple exons. Examples are:
  - A DUP which duplicates a codon that is encoded by parts of two separate exons.
  - A frameshift which shifts into the intronic space of the gene.
   
-Finally, Any INDEL which is longer than 50 bases is ignored since this is considered to be a structural variant rather than a small INDEL.
- 
-There are a few scenarios scheduled for future implementation which are currently ignored:
- - Any variant impacting the stop codon.
- - Any variant creating a new start codon for a transcript. 
- - Variants that typically cross exon boundaries but can be re-aligned to fit within a single exon.
+Finally, Any INDEL longer than 50 bases is ignored since this is considered to be a structural variant rather than a small INDEL.
  
 ### Coordinate and mutation filter resolving for codons and exons
  
 For resolving coordinates for codons and exons the Hartwig canonical transcript of a gene is used exclusively. If evidence for a specific codon
 or exon range is defined for a different transcript this evidence is ignored. If no transcript is configured in the knowledgebase, it is 
-assumed the canonical transcript can be used. 
+assumed the canonical transcript is implied. 
  
 For ranges that represent exons, the range is extended by 5 bases on both sides of the exon to be able to capture splice variants affecting 
 the exon. 
@@ -128,7 +123,7 @@ Filter  | Description
 NONSENSE_OR_FRAMESHIFT  | Only frameshifts or nonsense mutations are valid for this range
 SPLICE | Only splice mutations are valid for this range
 INFRAME | Any inframe INDEL (insert or delete) is valid for this range
-INFRAME_DELETION | Only inframe DELs are valid for this range
+INFRAME_DELETION | Only inframe deletions are valid for this range
 INFRAME_INSERTION | Only inframe insertions are valid for this range
 MISSENSE | Only missense mutations are valid for this range
 ANY | Any of the above mutations are valid for this range (synonymous mutations and other types of mutations are still excluded).
@@ -137,7 +132,7 @@ ANY | Any of the above mutations are valid for this range (synonymous mutations 
 
 For evidence that is applicable when something has happened on a gene level, the type of event that is required to match evidence to a 
 mutation is derived from the knowledgebase event. In case a knowledgebase provides insufficient details to make a decision, the Hartwig 
-driver catalog is used to interpret what event qualifies for the evidence. 
+driver catalog is used to determine what event qualifies for the evidence. 
 
 Gene level event  | Description
 ---|---
@@ -145,8 +140,7 @@ AMPLIFICATION  | Evidence is applicable when the gene has been amplified.
 DELETION | Evidence is applicable when the gene has been completely deleted from the genome.
 ACTIVATION | Evidence is applicable when gene has been activated. Downstream algorithms are expected to further define this.
 INACTIVATION | Evidence is applicable when gene has been inactivated. Downstream algorithms are expected to further define this.
-ANY_MUTATION | This type is a "catch-all" meaning the knowledgebase did not provide enough details, and the gene is not a driver gene in 
-Hartwig's driver catalog.
+ANY_MUTATION | This type is a "catch-all" meaning the knowledgebase did not provide enough details, and the gene is not a driver gene in Hartwig's driver catalog.
 FUSION | Evidence is applicable in case the gene has fused with another gene.
  
   
