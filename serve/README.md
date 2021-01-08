@@ -50,17 +50,14 @@ The following genomic events can be mapped to clinical evidence:
     - any type of missense mutation in BRAF codon 600
  - Specific missense mutations such as BRAF V600E
  
- Missense mutations and genic ranges come in gDNA format and SERVE can be configured to generate its output 
- for either HG19 or HG38 reference genome version.
- 
- In addition to generating a mapping from various genomic events to clinical evidence, 
- SERVE also generates the following outputs describing genomic events implied to be able to driver cancer:
-  - Specific known fusion genes including individual genes that are believed to be able to drive cancer 
-  when fused with any other gene (in either 5' or 3' position)
-  - Known amplifications and deletions
-  - Known hotspots (specific mutations on specific loci)
-  - Known codons (individual codons in which mutations may be considered pathogenic)
-  - Known exons (individual exons in which mutations may be considered pathogenic)
+In addition to generating a mapping from various genomic events to clinical evidence, SERVE also generates the following outputs describing 
+genomic events implied to be able to driver cancer:
+ - Specific known fusion genes including individual genes that are believed to be able to drive cancer when fused with any other gene 
+ (in either 5' or 3' position)
+ - Known amplifications and deletions
+ - Known hotspots (specific mutations on specific loci)
+ - Known codons (individual codons in which mutations may be considered pathogenic)
+ - Known exons (individual exons in which mutations may be considered pathogenic)
 
 SERVE can be configured to generate its output either for reference genome version 37 or version 38.  
 
