@@ -3,18 +3,31 @@ package com.hartwig.hmftools.lilac.coverage
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 
 class ProteinCoverage(val hlaAllele: HlaAllele, proteins: List<String>) {
-    val map = proteins.map { Pair(it, ExonCoverage(it)) }.toMap()
+    val map = proteins.map { Pair(it, ExonCoverage(it)) }.toMap() //TODO: REMOVE
+    val coverages = proteins.map { ExonCoverage(it) }
 
     fun isCovered(): Boolean {
-        return map.all { it.value.isCovered() }
+        return coverages.all { it.isCovered() }
     }
 
     fun minCoverage(): Int {
-        return map.map { it.value.minCoverage() }.min()!!
+        return coverages.map { it.minCoverage() }.min()!!
     }
 
     fun maxCoverage(): Int {
-        return map.map { it.value.maxCoverage() }.max()!!
+        return coverages.map { it.maxCoverage() }.max()!!
+    }
+
+    fun avgCoverage(): Double {
+        var total: Int = 0
+        var sum: Int = 0
+
+        for (coverage in coverages) {
+            total += coverage.length()
+            sum += coverage.coverage.sum()
+        }
+
+        return 1.0 * sum / total
     }
 
 }

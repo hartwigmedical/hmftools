@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.lilac.read
 
 data class Fragment(val reads: List<AminoAcidRead>) {
+    private val aminoAcidIndices = reads
+            .flatMap { it.aminoAcidIndices().toList() }
+            .distinct()
+            .sorted()
+
 
     fun containsAminoAcid(index: Int): Boolean {
-        return reads.any { it.aminoAcidIndices().contains(index) }
+        return aminoAcidIndices.contains(index)
     }
 
     fun aminoAcid(index: Int, minQual: Int = 0): Char {
@@ -13,9 +18,19 @@ data class Fragment(val reads: List<AminoAcidRead>) {
             }
         }
 
-       throw IllegalArgumentException("Fragment does not contain amino acid at location $index")
+        throw IllegalArgumentException("Fragment does not contain amino acid at location $index")
     }
 
-    fun aminoAcidIndices(): List<IntRange> = reads.map { it.aminoAcidIndices() }
+    fun aminoAcidIndices(): List<Int> = aminoAcidIndices
+
+
+    fun <T> Iterator<T>.toList(): List<T> {
+        val result = mutableListOf<T>()
+        while (this.hasNext()) {
+            result.add(this.next())
+        }
+        return result
+    }
+
 
 }

@@ -6,12 +6,11 @@ import com.hartwig.hmftools.lilac.dna.dnaReverseComplement
 import htsjdk.samtools.SAMRecord
 import java.util.function.Consumer
 
-class BamCoverage(private val minMatch: Int, val proteins: Collection<ProteinCoverage>) : Consumer<SAMRecord> {
+class BamCoverage2(private val minMatch: Int, val proteins: Collection<ProteinCoverage>) : Consumer<SAMRecord> {
 
     override fun accept(record: SAMRecord) {
-        val readString = record.readString
         // Do some quality trimming???
-        processDna(readString.substring(20, readString.length - 20))
+        processDna(record.readString)
     }
 
     fun processDna(dna: String) {

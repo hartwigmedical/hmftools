@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.read
 
 interface AminoAcidRead {
 
-    fun aminoAcidIndices(): IntRange
+    fun aminoAcidIndices(): Collection<Int>
 
     fun aminoAcid(index: Int, minQual: Int = 0): Char
 

@@ -7,7 +7,8 @@ import com.hartwig.hmftools.common.genome.region.CodingRegions
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.nuc.AminoAcidCount
-import com.hartwig.hmftools.lilac.phase.PhasedEvidence
+import com.hartwig.hmftools.lilac.phase.HeterozygousEvidence
+import com.hartwig.hmftools.lilac.phase.PhasedEvidence2
 import com.hartwig.hmftools.lilac.prot.ProteinSequence
 import com.hartwig.hmftools.lilac.prot.ProteinSequenceFile
 import com.hartwig.hmftools.lilac.prot.ProteinSequenceFile.firstFourDigits
@@ -87,6 +88,42 @@ class LilacApplication2 : AutoCloseable, Runnable {
         println("${allProteinSequences.size} types")
         println("${initialCandidates.size} candidates after amino acid filtering")
 
+        val heterozygousEvidence = HeterozygousEvidence(minBaseQual,
+                heterozygousIndices.filter { it !in (298..370)}
+                , readFragments)
+
+        val initialEvidence = heterozygousEvidence.initialEvidence()
+
+
+        var candidates = initialCandidates
+
+        val allEvidence = mutableSetOf<PhasedEvidence2>()
+        allEvidence.addAll(initialEvidence)
+
+        var unprocessedEvidence = initialEvidence
+
+        for (i in 0..15000) {
+            if (unprocessedEvidence.isEmpty()) {
+                break
+            }
+
+            val topEvidence = unprocessedEvidence[0]
+            candidates = matchingCandidates(topEvidence, candidates)
+
+            if (i % 1 == 0) {
+                println("Iteration ${i}: ${candidates.size} candidates includes ${checkCandidates(candidates)} actual using evidence: $topEvidence  -> ")
+            }
+
+            val newEvidence = heterozygousEvidence.extendEvidence(topEvidence, allEvidence)
+            allEvidence.addAll(newEvidence)
+
+            val updatedEvidence = mutableSetOf<PhasedEvidence2>()
+            updatedEvidence.addAll(unprocessedEvidence.drop(1))
+            updatedEvidence.addAll(newEvidence)
+
+            unprocessedEvidence = updatedEvidence.sorted()
+        }
+
 
 
         println(heterozygousIndices)
@@ -113,17 +150,15 @@ class LilacApplication2 : AutoCloseable, Runnable {
 //        }
 
 
-        println("Phased Evidence")
-//        val jon2 = PhasedEvidence.evidence(minBaseQual, readFragments, 85, 86, 88, 89, 90, 92)
-        val jon2 = PhasedEvidence.evidence(minBaseQual, readFragments, 200, 203, 205, 207, 212, 217)
-        val jon2Candidates = matchingCandidates(jon2, initialCandidates)
-        println("${jon2Candidates.size} candidates after p[ahsed filtering")
-        checkCandidates(jon2Candidates)
+//        println("Phased Evidence")
+//        val jon2 = PhasedEvidence2.evidence(minBaseQual, readFragments, 85, 86, 88, 89, 90, 92)
+////        val jon2 = PhasedEvidence2.evidence(minBaseQual, readFragments, 200, 203, 205, 207, 212, 217)
+//        val jon2Candidates = matchingCandidates(jon2, initialCandidates)
+//        println("${jon2Candidates.size} candidates after p[ahsed filtering")
+//        checkCandidates(jon2Candidates)
+//
+//        println(jon2)
 
-
-        for (phasedEvidence in jon2) {
-            println(phasedEvidence)
-        }
 
 //        val jonjon = reads.groupBy { it.samRecord.readName }.filter { it.value.size > 1 }
 //        println(jonjon.size)
@@ -162,7 +197,6 @@ class LilacApplication2 : AutoCloseable, Runnable {
 //
 
 
-
 //        val specificSequencesA = setOf(HlaAllele("A*01:01:01:01"), HlaAllele("A*11:01:01:01"))
 //        val specificSequencesB = setOf(HlaAllele("B*08:01:01:01"), HlaAllele("B*56:01:01:01"))
 //        val specificSequencesC = setOf(HlaAllele("C*01:02:01:01"), HlaAllele("C*07:01:01:01"))
@@ -185,13 +219,32 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
     }
 
-    private fun checkCandidates(candidates: Collection<ProteinSequence>) {
-        println(candidates.any { it.allele == HlaAllele("A*01:01:01:01") })
-        println(candidates.any { it.allele == HlaAllele("A*11:01:01:01") })
-        println(candidates.any { it.allele == HlaAllele("B*08:01:01:01") })
-        println(candidates.any { it.allele == HlaAllele("B*56:01:01:01") })
-        println(candidates.any { it.allele == HlaAllele("C*01:02:01:01") })
-        println(candidates.any { it.allele == HlaAllele("C*07:01:01:01") })
+
+    private fun checkCandidates(candidates: Collection<ProteinSequence>): Int {
+        var count = 0
+
+        if  (candidates.any { it.allele == HlaAllele("A*01:01:01:01") }) {
+            count++;
+        }
+
+        if  (candidates.any { it.allele == HlaAllele("A*11:01:01:01") }) {
+            count++;
+        }
+        if  (candidates.any { it.allele == HlaAllele("B*08:01:01:01") }) {
+            count++;
+        }
+        if  (candidates.any { it.allele == HlaAllele("B*56:01:01:01") }) {
+            count++;
+        }
+        if  (candidates.any { it.allele == HlaAllele("C*01:02:01:01") }) {
+            count++;
+        }
+        if  (candidates.any { it.allele == HlaAllele("C*07:01:01:01") }) {
+            count++;
+        }
+
+
+        return count;
     }
 
     private fun initialCandidates(excludedLocations: Collection<Int>, aminoAcidCount: AminoAcidCount, candidates: List<ProteinSequence>): List<ProteinSequence> {
@@ -207,25 +260,8 @@ class LilacApplication2 : AutoCloseable, Runnable {
         return candidates.filter { it.length <= index || it.fullProteinSequence[index] == '*' || it.fullProteinSequence[index] in aminoAcids }
     }
 
-    private fun matchingCandidates(evidence: List<PhasedEvidence>, candidates: Collection<ProteinSequence>): List<ProteinSequence> {
+    private fun matchingCandidates(evidence: PhasedEvidence2, candidates: Collection<ProteinSequence>): List<ProteinSequence> {
         return candidates.filter { it.consistentWith(evidence) }
-    }
-
-    fun ProteinSequence.consistentWith(evidence: List<PhasedEvidence>): Boolean {
-        return evidence.any { this.consistentWith(it) }
-    }
-
-    fun ProteinSequence.consistentWith(evidence: PhasedEvidence): Boolean {
-        for (i in evidence.aminoAcids.indices) {
-            val index = evidence.indices[i]
-            val aminoAcid = evidence.aminoAcids[i]
-
-            if (this.length > index && this.fullProteinSequence[index] != '*' && this.fullProteinSequence[index] != aminoAcid) {
-                return false
-            }
-        }
-
-        return true
     }
 
 

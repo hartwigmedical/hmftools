@@ -12,22 +12,28 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord): AminoAcidRead {
+data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord) : AminoAcidRead {
 
     val hlaNucIndexEnd = hlaNucIndexStart + length - 1
     val nucleotideIndices = IntRange(hlaNucIndexStart, hlaNucIndexEnd)
-    val aminoAcidIndices = AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd)
+    val aminoAcidIndices = aminoAcidIndices(hlaNucIndexStart, hlaNucIndexEnd)
 
     fun containsNucleotide(index: Int): Boolean {
         return index >= hlaNucIndexStart && index <= hlaNucIndexStart + length
+    }
+
+    private fun aminoAcidIndices(hlaNucIndexStart: Int, hlaNucIndexEnd: Int): Collection<Int> {
+        val result = mutableListOf<Int>()
+        AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd).forEach { result.add(it) }
+        return result
     }
 
     fun containsAminoAcid(index: Int): Boolean {
         return aminoAcidIndices.contains(index)
     }
 
-    override fun aminoAcidIndices(): IntRange {
-        return aminoAcidIndices
+    override fun aminoAcidIndices(): Collection<Int> {
+        return aminoAcidIndices;
     }
 
     override fun aminoAcid(index: Int, minQual: Int): Char {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ext
+package com.hartwig.hmftools.lilac.ext
 
 import java.util.*
 

@@ -1,17 +1,36 @@
 package com.hartwig.hmftools.lilac.prot
 
-import com.hartwig.hmftools.ext.rollingKmers
+import com.hartwig.hmftools.lilac.ext.rollingKmers
 import com.hartwig.hmftools.lilac.hla.HlaAllele
+import com.hartwig.hmftools.lilac.phase.PhasedEvidence2
 
 data class ProteinSequence(val contig: String, val protein: String) {
     val allele: HlaAllele by lazy { HlaAllele(contig) }
 
-    val fullProteinSequence: String by lazy { protein.removeSpecialCharacters() }
+    val fullProteinSequence: String by lazy { protein.removeIndels() }
     val length: Int by lazy { fullProteinSequence.length }
 
 
     fun copyWithAdditionalProtein(more: String): ProteinSequence {
         return ProteinSequence(contig, protein + more)
+    }
+
+
+    fun consistentWith(evidence: PhasedEvidence2): Boolean {
+        return evidence.evidence.keys.any { this.consistentWith(evidence.aminoAcidIndices, it.toCharArray()) }
+    }
+
+    fun consistentWith(aminoAcidIndices: IntArray, aminoAcids: CharArray): Boolean {
+        for (i in aminoAcidIndices.indices) {
+            val index = aminoAcidIndices[i]
+            val aminoAcid = aminoAcids[i]
+
+            if (this.length > index && this.fullProteinSequence[index] != '*' && this.fullProteinSequence[index] != aminoAcid) {
+                return false
+            }
+        }
+
+        return true
     }
 
     fun inflate(template: String): ProteinSequence {
@@ -80,6 +99,10 @@ data class ProteinSequence(val contig: String, val protein: String) {
 //                .keys
     }
 
+
+    private fun String.removeIndels(): String {
+        return this.replace(".", "");
+    }
 
     private fun String.removeSpecialCharacters(): String {
         return this.replace("*", "").replace(".", "");
