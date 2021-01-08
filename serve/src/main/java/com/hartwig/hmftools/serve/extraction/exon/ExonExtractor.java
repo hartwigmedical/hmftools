@@ -57,7 +57,11 @@ public class ExonExtractor {
 
                 List<ExonAnnotation> annotations = Lists.newArrayList();
                 for (int exonIndex : exonIndices) {
-                    ExonAnnotation annotation = determineExonAnnotation(gene, canonicalTranscript, exonIndex, mutationTypeFilter, canonicalTranscript.transcriptID());
+                    ExonAnnotation annotation = determineExonAnnotation(gene,
+                            canonicalTranscript,
+                            exonIndex,
+                            mutationTypeFilter,
+                            canonicalTranscript.transcriptID());
                     if (annotation != null) {
                         annotations.add(annotation);
                     } else {
