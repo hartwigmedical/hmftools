@@ -152,8 +152,67 @@ Evidence on fusion pairs where these restrictions are missing can be assumed to 
 
 ## Curation and harmonization of individual knowledgebases
 
+Per knowledgebase curation and filtering has been implemented to harmonize knowledge from different sources and to correct/remove mistakes.
+
+### VICC Curation
+
+VICC contributes to both actionable and known events.
+
+For VICC the following curation and filtering is applied prior to presenting the data to SERVE:
+ 1. General filtering of mutations that are undetectable when analyzing DNA or RNA. Examples are phosphorylation and methylation.
+ 1. Filtering of specific mutations:
+   - Mutations that remove the stop codon. These are simply not interpreted yet by the SERVE main algorithm.
+   - Synonymous mutations in coding regions are assumed to be benign by SERVE and ignored.
+   - Fusions that are not considered pathogenic by Hartwig are removed for lack of evidence of pathogenicity (regardless of their level of evidence).
+   - Events that contradict Hartwig driver catalog. An example is "CCND3 loss" which is assumed to be benign. 
+ 1. Curation of specific mutations:
+   - SNVs/INDELs that are not aligned correctly according to HGVS standards are corrected to be HGVS-compliant.
+   - SNVs/INDELs that have correct notation but simply don't exist on the transcript specified by VICC are removed.
+   - Fusion pairs for which the genes are in the wrong order are flipped around. 
+   - Genes which are synonyms of genes used in the Hartwig exome definition are renamed.
+ 1. Correction of cancer types and DOID annotation:
+   - Evidence for which DOID is missing is added manually.
+   - Evidence on multiple cancer types generally get a wrong DOID assigned by VICC and these are rectified.
+ 1. Correction of drugs for which A or B level evidence exists:
+   - A whole range of drugs have wrong or inconsistent names in VICC and are rectified by SERVE.
+   - VICC does not explicitly model the difference between "multiple different drugs" and a "combination treatment of multiple drugs". 
+   This gets rectified by SERVE.
+
+### DoCM Curation   
+
+DoCM is used exclusively for known hotspot generation. The filtering is therefore tailored for hotspots:
+ - Entries implying general codon mutations are removed.
+ - Unusual notation for inframe deletions and insertions is removed.
+ - A small number of mutations don't exist on the transcript specified by DoCM and are removed.
  
+### iClusion Curation
+
+iClusion contributes to actionability only. SERVE configures every trail to B-level evidence with responsive direction. 
+SERVE only considers trials with one or more molecular inclusion criterium, and applies the following filtering and curation:
+ - Mutations that are inconsistent with the Hartwig driver catalog are removed
+ - Mutations that are detectable in DNA are removed. One example is "Expression" of a gene.
  
+Finally, similar to VICC, trials for which no DOIDs have been specified are rectified by SERVE. 
+ 
+## Overview of the SERVE algorithm
+
+SERVE starts with reading the various knowledgebases and after filtering and curation, knowledge is extracted.
+A knowledgebase can contribute to known and/or actionable events. Current configuration as follows:
+      
+Knowledgebase  | Contributes to Known events? | Contributes to Actionable events?
+---|---|---
+DoCM | Yes | No 
+iClusion | No | Yes
+VICC | Yes | Yes
+
+Knowledge extraction is performed on a per-knowledgebase level after which all events are consolidated as follows:
+ - All known events are aggregated on a per-event level where every level can have a set of sources in which the event has been defined as pathogenic.
+ - All actionable events are concatenated so every actionable event that is present in multiple sources will be present multiple times in 
+ the actionable output. 
+
+
+
+
   
  
  
