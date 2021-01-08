@@ -25,7 +25,7 @@ SERVE supports the ingestion of the following knowledgebases:
  - HMF Cohort - a database of recurrent somatic mutations in cancer-related genes from the Hartwig database.
  - HMF Curated - a database of known driver mutations curated by the Hartwig team.
  
-The following knowledgebases are under development:
+Support for the following knowledgebases is under development:
  - [CBG Compassionate Use](https://www.cbg-meb.nl/onderwerpen/hv-compassionate-use-programma/overzicht-goedgekeurde-cup) - 
     a database of approved compassionate use programs in the Netherlands
  - [CKB FLEX](https://ckb.jax.org) - The complete CKB clinical database. 
