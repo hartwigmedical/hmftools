@@ -6,7 +6,6 @@ LINX is an annotation, interpretation and [visualisation](./README_VIS.md) tool 
 
 * [Configuration](#configuration)
   + [Example Usage](#example-usage)
-* [Dependencies](#dependencies)
 * [Outputs](#outputs)
 * [Key Concepts in LINX](#key-concepts-in-linx)
   + [LINX terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
@@ -171,12 +170,12 @@ Ensembl database URLs for 19/37 & 38 are:
 - mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37
 - mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_102_38
 
-By default LINX will use versiopn 37, but this can be overridden using the ref_genome_version config described above.
+By default LINX will use version 37, but this can be overridden using the ref_genome_version config described above.
 
 Note that ENST00000467125 is blacklisted from Ensembl as it is shares a splice boundary with a chimeric pathogenic GOPC_ROS1 fusion transcript.
 
 ## Outputs
-Linx writes all output to tsv files, each of which is decribed below.
+Linx writes all output to tsv files, each of which is described below.
 
 ### SV Annotations
 
@@ -203,8 +202,8 @@ replicationTimingStart | Start breakend of break junction is in a known fragile 
 replicationTimingEnd | End breakend of break junction is in a known fragile site (based on HeLa replication timing,  hg19 only)
 localTopologyIdStart | Id for group of proximate breakends to the start breakend of break junction within an extending 5kb window 
 localTopologyIdEnd | Id for group of proximate breakends to the end breakend of break junction within an extending 5kb window 
-localTopologyStart | Local breakend toplogy type at site of start breakend.  One of ('ISOLATED_BE','DSB','TI_ONLY','SIMPLE_DUP','FOLDBACK', 'FOLDBACK_DSB','SAME_ORIENT','COMPLEX_FOLDBACK','COMPLEX_LINE','COMPLEX_OTHER')
-localTopologyEnd | Local breakend toplogy type at stie of end breakend.  One of ('ISOLATED_BE','DSB','TI_ONLY','SIMPLE_DUP','FOLDBACK', 'FOLDBACK_DSB','SAME_ORIENT','COMPLEX_FOLDBACK','COMPLEX_LINE','COMPLEX_OTHER')
+localTopologyStart | Local breakend topology type at site of start breakend.  One of ('ISOLATED_BE','DSB','TI_ONLY','SIMPLE_DUP','FOLDBACK', 'FOLDBACK_DSB','SAME_ORIENT','COMPLEX_FOLDBACK','COMPLEX_LINE','COMPLEX_OTHER')
+localTopologyEnd | Local breakend topology type at site of end breakend.  One of ('ISOLATED_BE','DSB','TI_ONLY','SIMPLE_DUP','FOLDBACK', 'FOLDBACK_DSB','SAME_ORIENT','COMPLEX_FOLDBACK','COMPLEX_LINE','COMPLEX_OTHER')
 localTICountStart | Number of chained templated insertions in local topology group of start breakend
 localTICountEnd | Number of chained templated insertions in local topology group of end breakend
 
@@ -244,10 +243,10 @@ Generated file: sample_id.clusters.tsv
 Field | Description 
 ---|---
 ClusterId | Unique Id for the cluster
-Category | High level categoristion of the cluster classification
+Category | High level categorisation of the cluster classification
 Synthetic | Set to TRUE if the cluster is resolved to a non complex type by simplification of a short templated insertion (<1kb)
 ResolvedType | Resolved classification of the cluster.
-clusterCount | The number of break juncitons in the cluster
+clusterCount | The number of break junctions in the cluster
 clusterDesc | String containing the types and counts of break junctions in the cluster.   eg. DEL=2_INV=2 
 
 ### Links
@@ -259,21 +258,21 @@ Generated file: sample_id.links.tsv
 Field | Description 
 ---|---
 clusterId | Id of the cluster which contains the link
-chainId | Id of the chain to which the link belongs representing a multi-segment prediction of the derivative chromosme
+chainId | Id of the chain to which the link belongs representing a multi-segment prediction of the derivative chromosome
 chainIndex | Position of the linked segment in the chain.  The predicted chain can be reconstructed by traversing each linked segment in order ie. 0,1,...,n
 chainCount | Total count of linked segments in the chan
 lowerBreakendId | svId of the leftmost breakend of the linked segment
 upperBreakendId | svId of the rightmost breakend of the linked segment
 lowerBreakendIsStart | True if the lower breakend is the start breakend of the break junction
 upperBreakendIsStart | True if the right breakend is the start breakend of the break junction
-chromosome | Chromosome of the linked sgement
+chromosome | Chromosome of the linked segment
 arm | Arm (P/Q) of the linked segment
 assembled | True if the segment is linked by a GRIDSS assembly
 traversedSVCount | The number of other breakends that are located on the linked segment
 length | Length of the linked segment
 junctionCopyNumber | Predicted copy number of the chain
 junctionCopyNumberUncertainty | Uncertainty in the copy number of the chain
-pseudogeneInfo | If the segment precisely matches an exon of an ensembl gene, then containts details of the matching exon:  {geneName;TranscriptId,ExonRank,ExonLength}
+pseudogeneInfo | If the segment precisely matches an exon of an ensembl gene, then contains details of the matching exon:  {geneName;TranscriptId,ExonRank,ExonLength}
 ecDna | True if the link is predicted to be part of a DM / ecDNA chain
 
 ### Viral insertions
@@ -301,11 +300,11 @@ FivePrimeBreakendId | Id of the 5' breakend in the fusion
 ThreePrimeBreakendId | Id of the 3' breakend in the fusion
 Name | Name of the fusion in the form 5'GENE_3'GENE
 Reported | True if the fusion meets all reportable fusion criteria for LINX
-ReportedType | If one or both of the genes matches  a promiscuous gene or known rearrangament in the HMF fusion knowledgebase, then the type of reportable gene pair:  f 'KNOWN_PAIR', 'PROMISCUOUS_5', 'PROMISCUOUS_3', 'PROMISCUOUS_BOTH', 'EXON_DEL_DUP', 'IG_PROMICUOUS', 'IG_KNOWN_PAIR', KNOWN_PAIR_UNMMABLE_3' or 'NONE' (if no match is found)
+ReportedType | If one or both of the genes matches  a promiscuous gene or known rearrangement in the HMF fusion knowledgebase, then the type of reportable gene pair:  f 'KNOWN_PAIR', 'PROMISCUOUS_5', 'PROMISCUOUS_3', 'PROMISCUOUS_BOTH', 'EXON_DEL_DUP', 'IG_PROMISCUOUS', 'IG_KNOWN_PAIR', KNOWN_PAIR_UNMMABLE_3' or 'NONE' (if no match is found)
 Phased | Set to 1 if a phased fusion can be formed (after allowing for exon skipping)
 ChainLength | 0 for simple fusions.  If fusion is chained equal to the total length of segments chained between 5' and 3' partners
 ChainLinks | 0 for simple fusions.  If fusion is chained equal to the number of segments chained between 5' and 3' partners
-ChainTerminated | True if the fusion is interupted either on the 5’ partner side by a chained breakend prior to the start of the 5’ gene or by a chained breakend prior to the last coding base of the 3’ gene
+ChainTerminated | True if the fusion is interrupted either on the 5’ partner side by a chained breakend prior to the start of the 5’ gene or by a chained breakend prior to the last coding base of the 3’ gene
 DomainsKept | List of 3' partner domains retained in fusion product (as annotated by PROSITE profiles)
 DomainsLost | List of 3' partner domains lost in fusion product (as annotated by PROSITE profiles)
 SkippedExonsUp | Count of splice donors required to be skipped on 5' partner side to form an inframe fusion.  
@@ -410,7 +409,7 @@ A deletion and duplication can together also form either a duplication or deleti
 #### Insertions
 An insertion event is modelled by LINX as a pair of structural variants which inserts a section of templated sequence from either another part of the genome WITHOUT disruption to the DNA at the source location OR from an external sequence such as an insertion from a viral genome.
 
-The most common class of insertion in tumor genomes by far are mobile element insertions, which are not typically active in the germline, but can be highly deregulated in many different types of cancer. Mobile elements insertions frequently insert short sequences of their own DNA sequence and templated segments from adjacent to the source LINE region, with sometimes many segments from the same source location being inserted at multiple locations around the genome [36]. Actived LINE can also cause SINE and pseudogene insertions. LINE insertion source breakends can be often difficult to map correctly on both ends, since they typically involve a repetitive LINE motif at the start of the insertion and a poly-A section at the end of the inserted section. LINX uses a combination of previously known active LINE source region information [CITE PCAWG] and identification of both the local breakpoint structure and POLY-A sequences to classify both fully and partially mapped breakpoints as LINE insertions. 
+The most common class of insertion in tumor genomes by far are mobile element insertions, which are not typically active in the germline, but can be highly deregulated in many different types of cancer. Mobile elements insertions frequently insert short sequences of their own DNA sequence and templated segments from adjacent to the source LINE region, with sometimes many segments from the same source location being inserted at multiple locations around the genome [36]. Activated LINE can also cause SINE and pseudogene insertions. LINE insertion source breakends can be often difficult to map correctly on both ends, since they typically involve a repetitive LINE motif at the start of the insertion and a poly-A section at the end of the inserted section. LINX uses a combination of previously known active LINE source region information [CITE PCAWG] and identification of both the local breakpoint structure and POLY-A sequences to classify both fully and partially mapped breakpoints as LINE insertions. 
 
 #### Double Minute
 Any 1 or 2 variant cluster which is predicted to form a closed loop by LINX without a centromere is resolved as a ‘double minute’.   All variants must form part of the ecDNA to be classified as event type double minute, although ecDNA may also occur as part of a complex cluster.    An exception is made for a simple DUP double minute clustered with an enclosing DEL, which is classified as double minute despite the DEL not being a part of the ecDNA structure.   Complex clusters may also contain double minutes.
@@ -428,7 +427,7 @@ INCOMPLETE includes but is not limited to the following configurations:
 - Lone single breakend
 - Lone inferred breakend
 - Any 2-break junction cluster with a single or inferred breakend that cannot be resolved as LINE or inferred as a synthetic.
-- Any 2-break junction cluster which cannot be chained OR resolved as either a LINE, synthetic,templa or reciprocal event
+- Any 2-break junction cluster which cannot be chained OR resolved as either a LINE, synthetic,template or reciprocal event
 
 Clusters of 2 inferred breakends are also classified in this category. Many of these are likely artefacts due to residual large scale GC biases affecting coverage unevenness in the sequencing data and false positive CNA calls..
 
@@ -619,11 +618,11 @@ Merge any 2 unresolved clusters if they touch the same 2 chromosomal arms. SVs w
 ##### Single breakends on same arm with matching satellite repeat type clustering (SATELLITE_SGL_ARM)
 Where complex events touch satellite repeats we frequently find many single breakends on the same chromosome with links to the same type of repeat. In particular this can occur when shattering events include complex focal scarring in centromeric regions leading to many unresolved single breakends
 
-We therefore merge any cluster with less than or equal to 1 non single breakend and non inferredbreakend with any other cluster which contains a single breakend on the same chromosome arm with matching repeat class or type for the following cases:
+We therefore merge any cluster with less than or equal to 1 non single breakend and non inferred breakend with any other cluster which contains a single breakend on the same chromosome arm with matching repeat class or type for the following cases:
 - RepeatClass = 'Satellite/centr’ (centromeric)
 - RepeatType = '(CATTC)n’ (satellite repeat type)
 - RepeatType = ‘(GAATG)n’ (satellite repeat type)
-- RepatType = ‘HSATII’ (pericentromeric)
+- RepeatType = ‘HSATII’ (pericentromeric)
 
 To protect against false positives and joining complex clusters that both touch repeats, but otherwise don’t appear to overlap, we avoid clustering 2 clusters which already have multiple non single breakends. 
 
@@ -732,7 +731,7 @@ For a pair of translocations:
   - If double minute rules are satisfied then resolve as DOUBLE_MINUTE
   - If the segment on either chromosome is bounded by LOH resolve then chain the other segments and resolve as a DUP_TI chain.
   - Else resolve as RECIP_TRANS_DUP (no chaining)
-- If the breakends face towards each other and are not cis-phased on one chromosome and the breakends face away from each other or are cis-phased on the ohter chromosome then:
+- If the breakends face towards each other and are not cis-phased on one chromosome and the breakends face away from each other or are cis-phased on the other chromosome then:
 - If the segment on the chromosome with facing breakends is bounded by LOH resolve then chain the other segments and resolve as a DEL_TI chain.
 Else resolve as RECIP_TRANS_DEL (no chaining)
 
@@ -1009,7 +1008,7 @@ Shown below is an example of a SS18-SSX1 fusion:
 1.5
 - Fusion likelihood calcs - implemented gene-pairs, skip non-coding same-gene fusions
 - known fusions don't require upstream transcript to be disruptive but will still fail on chain termination
-- TIs limited by min of achor distances now less sum of breakend homologies
+- TIs limited by min of anchor distances now less sum of breakend homologies
 - BFB_AMP does not require max ploidy x8
 - dominant foldback must exceed ploidy 4
 - DMs can have a single SV and need to be 5x sample ploidy or 2.3x telomere/centromere
