@@ -53,7 +53,7 @@ public interface SageConfig {
     String SLICE_SIZE = "slice_size";
     String MNV = "mnv_enabled";
     String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
-    String PANEL_COVERAGE = "panel_coverage";
+    String COVERAGE_BED = "coverage_bed";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 10;
@@ -63,7 +63,6 @@ public interface SageConfig {
     int DEFAULT_SLICE_SIZE = 100_000;
     int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
     boolean DEFAULT_MNV = true;
-    boolean DEFAULT_PANEL_COVERAGE = true;
 
     @NotNull
     static Options createSageOptions() {
@@ -78,7 +77,7 @@ public interface SageConfig {
         options.addOption(PANEL_BED, true, "Panel regions bed file");
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
         options.addOption(HOTSPOTS, true, "Hotspots");
-        options.addOption(PANEL_COVERAGE, true, "Create panel coverage states [" + DEFAULT_PANEL_COVERAGE + "]");
+        options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         return options;
@@ -129,6 +128,9 @@ public interface SageConfig {
     String highConfidenceBed();
 
     @NotNull
+    String coverageBed();
+
+    @NotNull
     List<String> tumor();
 
     @NotNull
@@ -160,8 +162,6 @@ public interface SageConfig {
     String panelBed();
 
     boolean panelOnly();
-
-    boolean panelCoverage();
 
     boolean mnvEnabled();
 
@@ -307,7 +307,6 @@ public interface SageConfig {
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
                 .mnvEnabled(defaultBooleanValue(cmd, MNV, DEFAULT_MNV))
-                .panelCoverage(defaultBooleanValue(cmd, PANEL_COVERAGE, DEFAULT_PANEL_COVERAGE))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .regionSliceSize(defaultIntValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
                 .readContextFlankSize(defaultIntValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE))
@@ -317,6 +316,7 @@ public interface SageConfig {
                 .maxRealignmentDepth(defaultIntValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH))
                 .filter(FilterConfig.createConfig(cmd))
                 .panelBed(cmd.getOptionValue(PANEL_BED, Strings.EMPTY))
+                .coverageBed(cmd.getOptionValue(COVERAGE_BED, Strings.EMPTY))
                 .highConfidenceBed(cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY))
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd, transcripts))
