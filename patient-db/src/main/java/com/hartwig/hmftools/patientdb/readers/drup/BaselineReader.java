@@ -135,7 +135,8 @@ class BaselineReader {
                     String lowerPrimaryTumorCohort = primaryTumorCohort.trim().toLowerCase();
                     if (primaryTumorLocation != null && (lowerPrimaryTumorCohort.contains("biliary tract")
                             || lowerPrimaryTumorCohort.contains("colon") || lowerPrimaryTumorCohort.contains("urinary organ")
-                            || lowerPrimaryTumorCohort.contains("head, face and neck"))) {
+                            || lowerPrimaryTumorCohort.contains("head, face and neck")
+                            || lowerPrimaryTumorCohort.contains("salivary gland"))) {
                         primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocation;
                     } else {
                         primaryTumorLocation = primaryTumorCohort;
