@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.genome.position;
 
-import static com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorImpl.compare;
+import static com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorListImpl.compare;
 
 import java.util.List;
 import java.util.Optional;

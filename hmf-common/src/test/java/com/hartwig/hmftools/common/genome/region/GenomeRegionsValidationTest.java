@@ -14,6 +14,18 @@ import org.junit.Test;
 public class GenomeRegionsValidationTest {
 
     @Test
+    public void testTwiceInSameRegion() {
+        final List<GenomeRegion> superset = newArrayList(
+                create("1", 100, 110)
+        );
+
+        assertTrue(isSubset(superset, newArrayList(
+                create("1", 100, 101),
+                create("1", 102, 103))));
+
+    }
+
+    @Test
     public void testCombinedCoverage() {
         final List<GenomeRegion> superset = newArrayList(
                 create("1", 100, 110),
