@@ -127,7 +127,7 @@ public class DriverDataCache
             final PurityContext purityContext = PurityContextFile.read(purpleDataPath, mSampleId);
             setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
-            mDriverCatalog.addAll(DriverCatalogFile.read(DriverCatalogFile.generateFilename(purpleDataPath, mSampleId)));
+            mDriverCatalog.addAll(DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDataPath, mSampleId)));
 
             mGeneCopyNumberData.addAll(
                     GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, mSampleId)));

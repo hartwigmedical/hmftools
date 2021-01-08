@@ -57,8 +57,6 @@ public interface DriverCatalogConfig {
         String germlineHotspotVcf = cmd.getOptionValue(GERMLINE_HOTSPOT, Strings.EMPTY);
         final DriverGenePanel genePanel;
 
-
-
         if (enabled) {
             if (!DriverGenePanelConfig.isConfigured(cmd)) {
                 throw new ParseException(
