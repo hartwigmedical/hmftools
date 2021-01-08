@@ -6,11 +6,11 @@ In addition, SERVE generates output containing all genomic events that are impli
 
 ## Contents
 
-* [Supported knowledgebases](#supported-input-knowledgebases)
-* [Outputs](#outputs)
-* [Genomic event extraction](#extraction-of-genomic-events-from-knowledgebases)
-* [Curation and harmonization](#curation-and-harmonization-of-individual-knowledgebases)
-* [SERVE algorithm](#overview-of-the-serve-algorithm)
+* [Which knowledgebases are supported?](#supported-input-knowledgebases)
+* [What is generated as final SERVE output?](#outputs)
+* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-from-knowledgebases)
+* [What is done in terms of curation and harmonization?](#curation-and-harmonization-of-individual-knowledgebases)
+* [How does everything come together?](#overview-of-the-serve-algorithm)
 
 ## Supported input knowledgebases
 
