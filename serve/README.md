@@ -30,11 +30,11 @@ The following knowledgebases are under development:
     a database of approved compassionate use programs in the Netherlands
  - [CKB FLEX](https://ckb.jax.org) - The complete CKB clinical database. 
  
-A number of hmf modules support the ingestion (and analysis) of these knowledgebases:
+A number of other Hartwig modules support the ingestion (and analysis) of these knowledgebases:
  - [VICC Importer](../vicc-importer/README.md): A module supporting the ingestion of any knowledgebase ingested into VICC.
- - [iClusion Importer](../iclusion-importer/README.md): A client implementation of the iClusion API which writes the iClusion to a flat 
- file that can be ingested into SERVE.
- - [CKB Importer](../ckb-importer/README.md): A module supporting the ingestion (and analysis) of CKB FLEX.  
+ - [iClusion Importer](../iclusion-importer/README.md): A client implementation of the iClusion API which transforms iClusion API output to 
+ data that can be ingested into SERVE.
+ - [CKB Importer](../ckb-importer/README.md): A module supporting the ingestion and analysis of CKB FLEX.  
   
 Do note that SERVE does not provide the actual data that is input to the algorithm, but only provides support for its ingestion.
 While SERVE itself is open-source, the sources that can be ingested have their own licensing and up to the users to make sure 
@@ -42,11 +42,12 @@ they are compliant with the usage of the data itself.
 
 ## Outputs
 
-Clinical evidence is generated in the following datamodel:
+SERVE generates clinical evidence in the following datamodel:
  - Treatment
  - Cancer type (including DOID) for which the treatment is on-label.
  - Tier / Evidence level of the treatment
  - Direction (Responsive for the treatment or resistant to the treatment)
+ - A set of URLs with extra information about the evidence (could be a publication, or a general website)
  
 The following genomic events can be mapped to clinical evidence:
  - Genome-wide events such as signatures or MSI status
@@ -58,7 +59,7 @@ The following genomic events can be mapped to clinical evidence:
     - any type of missense mutation in BRAF codon 600
  - Specific missense mutations such as BRAF V600E
  
-In addition to generating a mapping from various genomic events to clinical evidence, SERVE also generates the following outputs describing 
+In addition to generating a mapping from various genomic events to clinical evidence, SERVE generates the following outputs describing 
 genomic events implied to be able to driver cancer:
  - Specific known fusion genes including individual genes that are believed to be able to drive cancer when fused with any other gene 
  (in either 5' or 3' position)
@@ -73,9 +74,10 @@ SERVE can be configured to generate its output either for reference genome versi
  
 ### Gene checking
 
-Any type of evidence that is ingested into SERVE has to be defined for a gene which is known in Hartwig's definition of the complete exome.
+Evidence that is defined on a gene-level is checked to make sure that the gene exists in Hartwig's definition of the exome. 
+If a gene does not exist in Hartwig's exome definition the evidence is ignored. 
 
-For fusions, genes are added that are only defined in the context of a fusion pair (eg IG genes) 
+For fusions, genes are permitted that can exist in the context of a fusion pair (eg IG genes). 
  
 ### Protein resolving for SNVs and (small) INDELs
  
@@ -84,13 +86,13 @@ SERVE uses [transvar](https://github.com/zwdzwd/transvar) to resolve these annot
 for the reference genome version that is configured to be used.
  
 The first step is to choose what transcript to use for converting protein annotation back to genomic coordinates:
- 1. If the knowledgebase configured a transcript for a mutation we exclusively use that transcript.
+ 1. If the knowledgebase configured a transcript for a mutation, that transcript is used exclusively.
  1. If no transcript is configured, SERVE uses the typical transcript used by Hartwig which is generally the canonical 
  transcript defined by ensembl.
  1. If a protein annotation does not exist on the canonical transcript and has no transcript configured in the knowledgebase, 
  any random transcript for which the protein annotation does exist is picked.
  
-Assuming we found a suitable transcript, we then derive N hotspots for each protein annotation as follows:
+Assuming a suitable transcript has been found, N hotspots are derived for each protein annotation as follows:
  - In case the mutation is caused by SNV or MNV every possible trinucleotide combination that codes for the new amino acid is generated.
  - In case the mutation is caused by a duplication (DUP) or an inframe deletion (DEL) 1 hotspot is generated which assumes 
  the exact reference sequence has been duplicated or deleted. 
@@ -115,14 +117,14 @@ Finally, Any INDEL longer than 50 bases is ignored since this is considered to b
  
 ### Coordinate and mutation filter resolving for codons and exons
  
-For resolving coordinates for codons and exons the Hartwig canonical transcript of a gene is used exclusively. If evidence for a specific codon
-or exon range is defined for a different transcript this evidence is ignored. If no transcript is configured in the knowledgebase, it is 
-assumed the canonical transcript is implied. 
+For resolving coordinates for codons and exons the Hartwig canonical transcript of a gene is used exclusively:
+  - If evidence for a specific codon or exon range is defined for a different transcript this evidence is ignored. 
+  - If no transcript is configured in the knowledgebase, it is assumed the canonical transcript is implied. 
  
 For ranges that represent exons, the range is extended by 5 bases on both sides of the exon to be able to capture splice variants affecting 
 the exon. 
 
-In addition to resolving coordinates, every codon and exon range is annotated with a filter indicating which types of mutations are valid 
+In addition to resolving coordinates, every codon and exon range is annotated with a filter indicating which type(s) of mutations are valid 
 for this range. SERVE tries to determine this based on the information specified in the knowledgebase, but if that information is not
 sufficient, the Hartwig driver catalog is used to determine the filter.
   
@@ -138,7 +140,7 @@ ANY | Any of the above mutations are valid for this range (synonymous mutations 
 
 ### Gene level event determination
 
-For evidence that is applicable when something has happened on a gene level, the type of event that is required to match evidence to a 
+For evidence that is applicable when a gene-wide level event has happened, the type of event required to match evidence to a 
 mutation is derived from the knowledgebase event. In case a knowledgebase provides insufficient details to make a decision, the Hartwig 
 driver catalog is used to determine what event qualifies for the evidence. 
 
@@ -146,8 +148,8 @@ Gene level event  | Description
 ---|---
 AMPLIFICATION  | Evidence is applicable when the gene has been amplified.
 DELETION | Evidence is applicable when the gene has been completely deleted from the genome.
-ACTIVATION | Evidence is applicable when gene has been activated. Downstream algorithms are expected to further define this.
-INACTIVATION | Evidence is applicable when gene has been inactivated. Downstream algorithms are expected to further define this.
+ACTIVATION | Evidence is applicable when gene has been activated. Downstream algorithms are expected to interpret this.
+INACTIVATION | Evidence is applicable when gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | This type is a "catch-all" meaning the knowledgebase did not provide enough details, and the gene is not a driver gene in Hartwig's driver catalog.
 FUSION | Evidence is applicable in case the gene has fused with another gene.
 
@@ -160,7 +162,7 @@ Evidence on fusion pairs where these restrictions are missing can be assumed to 
 
 ## Curation and harmonization of individual knowledgebases
 
-Per knowledgebase curation and filtering has been implemented to harmonize knowledge from different sources and to correct/remove mistakes.
+Per knowledgebase curation and filtering is applied to harmonize knowledge from different sources and to correct/remove mistakes.
 
 ### VICC Curation
 
@@ -169,22 +171,22 @@ VICC contributes to both actionable and known events.
 For VICC the following curation and filtering is applied prior to presenting the data to SERVE:
  1. General filtering of mutations that are undetectable when analyzing DNA or RNA. Examples are phosphorylation and methylation.
  1. Filtering of specific mutations:
-   - Mutations that remove the stop codon. These are simply not interpreted yet by the SERVE main algorithm.
-   - Synonymous mutations in coding regions are assumed to be benign by SERVE and ignored.
-   - Fusions that are not considered pathogenic by Hartwig are removed for lack of evidence of pathogenicity (regardless of their level of evidence).
-   - Events that contradict Hartwig driver catalog. An example is "CCND3 loss" which is assumed to be benign. 
+    - Mutations that remove the stop codon. These are simply not interpreted yet by the SERVE main algorithm.
+    - Synonymous mutations in coding regions are assumed to be benign by SERVE and ignored.
+    - Fusions that are not considered pathogenic by Hartwig are removed for lack of evidence of pathogenicity (regardless of their level of evidence).
+    - Events that contradict Hartwig driver catalog. An example is "CCND3 loss" which is assumed to be benign. 
  1. Curation of specific mutations:
-   - SNVs/INDELs that are not aligned correctly according to HGVS standards are corrected to be HGVS-compliant.
-   - SNVs/INDELs that have correct notation but simply don't exist on the transcript specified by VICC are removed.
-   - Fusion pairs for which the genes are in the wrong order are flipped around. 
-   - Genes which are synonyms of genes used in the Hartwig exome definition are renamed.
+    - SNVs/INDELs that are not aligned correctly according to HGVS standards are corrected to be HGVS-compliant.
+    - SNVs/INDELs that have correct notation but simply don't exist on the transcript specified by VICC are removed.
+    - Fusion pairs for which the genes are in the wrong order are flipped around. 
+    - Genes which are synonyms of genes used in the Hartwig exome definition are renamed.
  1. Correction of cancer types and DOID annotation:
-   - Evidence for which DOID is missing is added manually.
-   - Evidence on multiple cancer types generally get a wrong DOID assigned by VICC and these are rectified.
+    - Evidence for which DOID is missing is added manually.
+    - Evidence on multiple cancer types generally get a wrong DOID assigned by VICC and these are rectified.
  1. Correction of drugs for which A or B level evidence exists:
-   - A whole range of drugs have wrong or inconsistent names in VICC and are rectified by SERVE.
-   - VICC does not explicitly model the difference between "multiple different drugs" and a "combination treatment of multiple drugs". 
-   This gets rectified by SERVE.
+    - A whole range of drugs have wrong or inconsistent names in VICC and are rectified by SERVE.
+    - VICC does not explicitly model the difference between "multiple different drugs" and a "combination treatment of multiple drugs". 
+    This gets rectified by SERVE.
 
 ### DoCM Curation   
 
