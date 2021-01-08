@@ -4,7 +4,15 @@ SERVE harmonizes various sources of evidence into a single unified model that ca
 The model provides a mapping from genomic events to clinical evidence. 
 In addition, SERVE generates output containing all genomic events that are implied to be able to driver cancer.  
 
-### Supported input knowledgebases
+## Contents
+
+* [Supported knowledgebases](#supported-input-knowledgebases)
+* [Outputs](#outputs)
+* [Genomic event extraction](#extraction-of-genomic-events-from-knowledgebases)
+* [Curation and harmonization](#curation-and-harmonization-of-individual-knowledgebases)
+* [SERVE algorithm](#overview-of-the-serve-algorithm)
+
+## Supported input knowledgebases
 
 SERVE supports the ingestion of the following knowledgebases:
  - [CGI](https://www.cancergenomeinterpreter.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
@@ -32,7 +40,7 @@ Do note that SERVE does not provide the actual data that is input to the algorit
 While SERVE itself is open-source, the sources that can be ingested have their own licensing and up to the users to make sure 
 they are compliant with the usage of the data itself. 
 
-### Outputs
+## Outputs
 
 Clinical evidence is generated in the following datamodel:
  - Treatment
