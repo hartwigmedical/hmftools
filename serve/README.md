@@ -142,6 +142,17 @@ ACTIVATION | Evidence is applicable when gene has been activated. Downstream alg
 INACTIVATION | Evidence is applicable when gene has been inactivated. Downstream algorithms are expected to further define this.
 ANY_MUTATION | This type is a "catch-all" meaning the knowledgebase did not provide enough details, and the gene is not a driver gene in Hartwig's driver catalog.
 FUSION | Evidence is applicable in case the gene has fused with another gene.
+
+### Exonic ranges specific for fusion pairs
+
+For evidence on fusion pairs, SERVE can add restrictions on which exons are allowed to be involved in the fusion.
+This is to support evidence on fusions like EGFRvII. 
+
+Evidence on fusion pairs where these restrictions are missing can be assumed to be valid for any fusion between the two genes specified. 
+
+## Curation and harmonization of individual knowledgebases
+
+ 
  
   
  
