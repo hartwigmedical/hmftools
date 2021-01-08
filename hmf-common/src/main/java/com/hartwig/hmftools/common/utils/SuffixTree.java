@@ -91,6 +91,15 @@ public class SuffixTree {
         return parentLength + lastNodeText.length();
     }
 
+    public int anyIndexOf(String pattern) {
+        Node lastNode = findNode(pattern);
+        if (lastNode != null) {
+            return getPositions(lastNode).get(0);
+        }
+
+        return -1;
+    }
+
     @NotNull
     public List<Integer> indices(String pattern) {
         Node lastNode = findNode(pattern);
