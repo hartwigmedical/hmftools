@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.nuc.AminoAcidCount
 import com.hartwig.hmftools.lilac.phase.HeterozygousEvidence
-import com.hartwig.hmftools.lilac.phase.PhasedEvidence2
+import com.hartwig.hmftools.lilac.phase.PhasedEvidence
 import com.hartwig.hmftools.lilac.prot.ProteinSequence
 import com.hartwig.hmftools.lilac.prot.ProteinSequenceFile
 import com.hartwig.hmftools.lilac.prot.ProteinSequenceFile.firstFourDigits
@@ -89,39 +89,48 @@ class LilacApplication2 : AutoCloseable, Runnable {
         println("${initialCandidates.size} candidates after amino acid filtering")
 
         val heterozygousEvidence = HeterozygousEvidence(minBaseQual,
-                heterozygousIndices.filter { it !in (298..370)}
-                , readFragments)
+                heterozygousIndices.filter { it !in (298..370) }, readFragments)
 
         val initialEvidence = heterozygousEvidence.initialEvidence()
 
 
+        println("HERE")
+        println(PhasedEvidence.evidence(minBaseQual, readFragments, 93, 94, 96))
+//        println(PhasedEvidence2.evidence(minBaseQual, readFragments, 90, 92, 93, 94, 96, 99, 100, 102, 103))
+//        println(PhasedEvidence2.evidence(minBaseQual, readFragments, 67, 68, 75, 85, 86, 88, 89, 90))
+//        println(PhasedEvidence2.evidence(minBaseQual, readFragments, 67, 68, 75, 85, 86, 88, 89, 90, 92, 93, 94, 96, 99, 100, 102, 103))
+//
+
         var candidates = initialCandidates
 
-        val allEvidence = mutableSetOf<PhasedEvidence2>()
+        val allEvidence = mutableSetOf<PhasedEvidence>()
         allEvidence.addAll(initialEvidence)
 
         var unprocessedEvidence = initialEvidence
 
-        for (i in 0..15000) {
+        for (i in 0..1) {
             if (unprocessedEvidence.isEmpty()) {
                 break
             }
 
             val topEvidence = unprocessedEvidence[0]
+
             candidates = matchingCandidates(topEvidence, candidates)
 
             if (i % 1 == 0) {
-                println("Iteration ${i}: ${candidates.size} candidates includes ${checkCandidates(candidates)} actual using evidence: $topEvidence  -> ")
+                println("Iteration ${i}: ${candidates.size} candidates includes ${checkCandidates(candidates)} actual using evidence with ${topEvidence.evidence.size} types -> $topEvidence ")
             }
 
             val newEvidence = heterozygousEvidence.extendEvidence(topEvidence, allEvidence)
             allEvidence.addAll(newEvidence)
 
-            val updatedEvidence = mutableSetOf<PhasedEvidence2>()
+            val updatedEvidence = mutableSetOf<PhasedEvidence>()
             updatedEvidence.addAll(unprocessedEvidence.drop(1))
             updatedEvidence.addAll(newEvidence)
 
             unprocessedEvidence = updatedEvidence.sorted()
+
+
         }
 
 
@@ -223,23 +232,23 @@ class LilacApplication2 : AutoCloseable, Runnable {
     private fun checkCandidates(candidates: Collection<ProteinSequence>): Int {
         var count = 0
 
-        if  (candidates.any { it.allele == HlaAllele("A*01:01:01:01") }) {
+        if (candidates.any { it.allele == HlaAllele("A*01:01:01:01") }) {
             count++;
         }
 
-        if  (candidates.any { it.allele == HlaAllele("A*11:01:01:01") }) {
+        if (candidates.any { it.allele == HlaAllele("A*11:01:01:01") }) {
             count++;
         }
-        if  (candidates.any { it.allele == HlaAllele("B*08:01:01:01") }) {
+        if (candidates.any { it.allele == HlaAllele("B*08:01:01:01") }) {
             count++;
         }
-        if  (candidates.any { it.allele == HlaAllele("B*56:01:01:01") }) {
+        if (candidates.any { it.allele == HlaAllele("B*56:01:01:01") }) {
             count++;
         }
-        if  (candidates.any { it.allele == HlaAllele("C*01:02:01:01") }) {
+        if (candidates.any { it.allele == HlaAllele("C*01:02:01:01") }) {
             count++;
         }
-        if  (candidates.any { it.allele == HlaAllele("C*07:01:01:01") }) {
+        if (candidates.any { it.allele == HlaAllele("C*07:01:01:01") }) {
             count++;
         }
 
@@ -260,7 +269,7 @@ class LilacApplication2 : AutoCloseable, Runnable {
         return candidates.filter { it.length <= index || it.fullProteinSequence[index] == '*' || it.fullProteinSequence[index] in aminoAcids }
     }
 
-    private fun matchingCandidates(evidence: PhasedEvidence2, candidates: Collection<ProteinSequence>): List<ProteinSequence> {
+    private fun matchingCandidates(evidence: PhasedEvidence, candidates: Collection<ProteinSequence>): List<ProteinSequence> {
         return candidates.filter { it.consistentWith(evidence) }
     }
 
