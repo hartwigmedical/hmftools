@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.imuno.neo;
+package com.hartwig.hmftools.common.neo;
 
 public class AminoAcidConverter
 {

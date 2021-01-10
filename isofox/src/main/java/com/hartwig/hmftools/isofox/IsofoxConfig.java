@@ -93,6 +93,9 @@ public class IsofoxConfig
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
     private static final String APPLY_MQ_ADJUST = "apply_map_qual_adjust";
 
+    // neo-epitopes
+    private static final String NEO_EPITOPE_FILE = "neoepitope_file";
+
     private static final String SPECIFIC_CHR = "specific_chr";
     private static final String SPECIFIC_REGIONS = "specific_regions";
     private static final String GENE_READ_LIMIT = "gene_read_limit";
@@ -128,6 +131,7 @@ public class IsofoxConfig
     public final boolean WriteSpliceSiteData;
 
     public final String ExpCountsFile;
+    public final String NeoEpitopeFile;
     public final String ExpGcRatiosFile;
     public final boolean ApplyExpectedRates;
     public final boolean ApplyFragmentLengthAdjust;
@@ -255,6 +259,7 @@ public class IsofoxConfig
         ApplyExpectedRates = cmd.hasOption(APPLY_EXP_RATES);
         ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
         ExpGcRatiosFile = cmd.getOptionValue(EXP_GC_RATIOS_FILE);
+        NeoEpitopeFile = cmd.getOptionValue(NEO_EPITOPE_FILE);
 
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
         ApplyFragmentLengthAdjust = cmd.hasOption(APPLY_FRAG_LENGTH_ADJUSTMENT);
@@ -395,7 +400,8 @@ public class IsofoxConfig
     {
         return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, GENE_TRANSCRIPTS_DIR)
                 && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
-                && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE);
+                && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE)
+                && configPathValid(cmd, NEO_EPITOPE_FILE);
     }
 
     public static boolean configPathValid(final CommandLine cmd, final String configItem)
@@ -488,6 +494,7 @@ public class IsofoxConfig
         FragmentSizeData = Lists.newArrayList();
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
+        NeoEpitopeFile = null;
 
         WriteExonData = false;
         WriteReadData = false;
@@ -548,6 +555,7 @@ public class IsofoxConfig
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
         options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates per transcript");
         options.addOption(EXP_GC_RATIOS_FILE, true, "File with generated expected GC ratios per transcript");
+        options.addOption(NEO_EPITOPE_FILE, true, "File with neo-epitopes to measure fragment support");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(SINGLE_MAP_QUAL, true, "Optional - map quality for reads mapped to a single location (default=255)");
         options.addOption(APPLY_FRAG_LENGTH_ADJUSTMENT, false, "Use sample fragment length distribution in expected rate calcs");

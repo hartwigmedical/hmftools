@@ -6,30 +6,33 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeType.FRAMESHIFT;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_DELETION;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
-import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.ALL_TRANS_BASES;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBaseExcerpt;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBaseExcerpt;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptCodingData;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.CodingBaseData;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
 public class PmNeoEpitope extends NeoEpitope
 {
@@ -82,26 +85,26 @@ public class PmNeoEpitope extends NeoEpitope
 
     public String geneName(int stream) { return mPointMutation.Gene; }
 
-    public String variantType()
+    public NeoEpitopeType variantType()
     {
         // missense, inframe insertion, inframe deletion, frameshift,
         if(mPointMutation.Effect == MISSENSE || isBaseChange())
-            return MISSENSE.toString();
+            return NeoEpitopeType.MISSENSE;
 
         if((mIndelBaseDiff % 3) == 0)
         {
             if(isInsert())
-                return "INFRAME_INSERTION";
+                return INFRAME_INSERTION;
             else
-                return "INFRAME_DELETION";
+                return INFRAME_DELETION;
         }
 
-        return "FRAMESHIFT";
+        return FRAMESHIFT;
     }
 
     public String variantInfo()
     {
-        return String.format("%s:%d:%s:%s", mPointMutation.Chromosome,  mPointMutation.Position, mPointMutation.Ref, mPointMutation.Alt);
+        return pointMutationInfo(mPointMutation.Chromosome, mPointMutation.Position, mPointMutation.Ref, mPointMutation.Alt);
     }
 
     public double copyNumber() { return mPointMutation.CopyNumber; }
@@ -231,15 +234,21 @@ public class PmNeoEpitope extends NeoEpitope
             downPosition = mPointMutation.Position - 1; // since down pos on -ve strand is the mutation base
         }
 
-        upCodingBases = getUpstreamCodingBases(
+        CodingBaseExcerpt cbExcerpt = getUpstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_UP], chromosome(FS_UP), upPosition, orientation(FS_UP), upRequiredBases);
+
+        upCodingBases = cbExcerpt.Bases;
+        CodingBasePositions[FS_UP] = cbExcerpt.Positions[FS_UP];
 
         boolean canStartInExon = true; // assumed true for now RegionType[FS_UPSTREAM] == TranscriptRegionType.EXONIC;
         int downRequiredBases = phaseMatched() ? requiredAminoAcids * 3 + downExtraBases : ALL_TRANS_BASES;
 
-        downCodingBases = getDownstreamCodingBases(
+        cbExcerpt = getDownstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
                 downRequiredBases, canStartInExon, false);
+
+        downCodingBases = cbExcerpt.Bases;
+        CodingBasePositions[FS_DOWN] = cbExcerpt.Positions[FS_DOWN];
 
         if(isBaseChange())
             setWildtypeAminoAcids(refGenome, requiredAminoAcids);
@@ -291,8 +300,8 @@ public class PmNeoEpitope extends NeoEpitope
             }
         }
 
-        CodingBases[FS_UP] = upCodingBases;
-        CodingBases[FS_DOWN] = downCodingBases;
+        RawCodingBases[FS_UP] = upCodingBases;
+        RawCodingBases[FS_DOWN] = downCodingBases;
     }
 
     private void setWildtypeAminoAcids(final RefGenomeInterface refGenome, int requiredAminoAcids)

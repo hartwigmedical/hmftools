@@ -8,6 +8,7 @@ public enum IsofoxFunction
     NOVEL_LOCATIONS,
     FUSIONS,
     STATISTICS,
-    READ_COUNTS;
+    READ_COUNTS,
+    NEO_EPITOPES;
 
 }

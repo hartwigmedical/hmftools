@@ -14,16 +14,13 @@ import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
-import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
-import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.STOP_SYMBOL;
-import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.convertDnaCodonToAminoAcid;
-import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.isStopCodon;
-import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.convertDnaCodonToAminoAcid;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.isStopCodon;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
 
 import java.util.List;
 
@@ -106,15 +103,23 @@ public class NeoUtils
             final RefGenomeInterface refGenome, final TranscriptData transData,
             final String chromosome, int nePosition, byte neOrientation, int requiredBases)
     {
-        if(requiredBases <= 0 || transData.CodingStart == null)
-            return "";
+        final CodingBaseExcerpt cbData = getUpstreamCodingBaseExcerpt(
+                refGenome, transData, chromosome, nePosition, neOrientation, requiredBases);
 
-        // int codingStart = transData.CodingStart : transData.TransStart;
-        // int codingEnd = transData.CodingEnd : transData.TransEnd;
+        return cbData.Bases;
+    }
+
+    public static CodingBaseExcerpt getUpstreamCodingBaseExcerpt(
+            final RefGenomeInterface refGenome, final TranscriptData transData,
+            final String chromosome, int nePosition, byte neOrientation, int requiredBases)
+    {
+        if(requiredBases <= 0 || transData.CodingStart == null)
+            return new CodingBaseExcerpt("", nePosition, nePosition);
 
         final List<ExonData> exonDataList = transData.exons();
 
         String baseString = "";
+        int upPosition = 0;
 
         if(neOrientation == NEG_ORIENT)
         {
@@ -151,6 +156,7 @@ public class NeoUtils
                 }
 
                 baseString += refGenome.getBaseString(chromosome, baseStart, baseEnd);
+                upPosition = baseEnd;
 
                 if (requiredBases <= 0)
                     break;
@@ -189,13 +195,14 @@ public class NeoUtils
                 }
 
                 baseString = refGenome.getBaseString(chromosome, baseStart, baseEnd) + baseString;
+                upPosition = baseStart;
 
                 if (requiredBases <= 0)
                     break;
             }
         }
 
-        return baseString;
+        return new CodingBaseExcerpt(baseString, upPosition, nePosition);
     }
 
     public static final int ALL_TRANS_BASES = -1;
@@ -204,8 +211,18 @@ public class NeoUtils
             final RefGenomeInterface refGenome, final TranscriptData transData,
             final String chromosome, int nePosition, byte neOrientation, int requiredBases, boolean canStartInExon, boolean reqSpliceAcceptor)
     {
+        final CodingBaseExcerpt cbData = getDownstreamCodingBaseExcerpt(
+                refGenome, transData, chromosome, nePosition, neOrientation, requiredBases, canStartInExon, reqSpliceAcceptor);
+
+        return cbData.Bases;
+    }
+
+    public static CodingBaseExcerpt getDownstreamCodingBaseExcerpt(
+            final RefGenomeInterface refGenome, final TranscriptData transData,
+            final String chromosome, int nePosition, byte neOrientation, int requiredBases, boolean canStartInExon, boolean reqSpliceAcceptor)
+    {
         if(requiredBases == 0)
-            return "";
+            return new CodingBaseExcerpt("", nePosition, nePosition);
 
         boolean reqAllBases = (requiredBases == ALL_TRANS_BASES);
 
@@ -215,6 +232,7 @@ public class NeoUtils
         final List<ExonData> exonDataList = transData.exons();
 
         String baseString = "";
+        int downPosition = 0;
 
         if(neOrientation == NEG_ORIENT)
         {
@@ -259,6 +277,7 @@ public class NeoUtils
                 }
 
                 baseString += refGenome.getBaseString(chromosome, baseStart, baseEnd);
+                downPosition = baseEnd;
 
                 if (requiredBases <= 0 && !reqAllBases)
                     break;
@@ -309,13 +328,14 @@ public class NeoUtils
                 }
 
                 baseString = refGenome.getBaseString(chromosome, baseStart, baseEnd) + baseString;
+                downPosition = baseStart;
 
                 if (requiredBases <= 0 && !reqAllBases)
                     break;
             }
         }
 
-        return baseString;
+        return new CodingBaseExcerpt(baseString, nePosition, downPosition);
     }
 
     public static void adjustCodingBasesForStrand(final NeoEpitope neData)
@@ -328,7 +348,9 @@ public class NeoUtils
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             if(neData.strand(fs) == NEG_STRAND)
-                neData.CodingBases[fs] = reverseStrandBases(neData.CodingBases[fs]);
+                neData.CodingBases[fs] = reverseStrandBases(neData.RawCodingBases[fs]);
+            else
+                neData.CodingBases[fs] = neData.RawCodingBases[fs];
         }
     }
 

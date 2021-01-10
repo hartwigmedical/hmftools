@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.LOG_DEBUG;
-import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.STOP_SYMBOL;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.SV_FUSION_FILE;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
 
@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,6 +38,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -324,27 +324,18 @@ public class NeoEpitopeAnnotator
 
                 mWriter = createBufferedWriter(outputFileName, false);
 
-                mWriter.write("SampleId,VariantType,VariantInfo,CopyNumber,GeneIdUp,GeneIdDown,GeneNameUp,GeneNameDown");
-                mWriter.write(",UpstreamAA,DownstreamAA,NovelAA,NmdMin,NmdMax,UpTranscripts,DownTranscripts,WildtypeAA");
+                if(mConfig.isMultiSample())
+                    mWriter.write("SampleId,");
+
+                mWriter.write(NeoEpitopeFile.header());
                 mWriter.newLine();
             }
 
-            mWriter.write(String.format("%s,%s,%s,%.2f,%s,%s,%s,%s",
-                    mCurrentSampleId, neData.variantType(), neData.variantInfo(), neData.copyNumber(),
-                    neData.TransData[FS_UP].GeneId, neData.TransData[FS_DOWN].GeneId,
-                    neData.geneName(FS_UP), neData.geneName(FS_DOWN)));
+            if(mConfig.isMultiSample())
+                mWriter.write(String.format("%s,", mCurrentSampleId));
 
-            mWriter.write(String.format(",%s,%s,%s,%d,%d",
-                    neData.UpstreamAcids, neData.DownstreamAcids, neData.NovelAcid, neData.NmdBasesMin, neData.NmdBasesMax));
-
-            final StringJoiner upTransStr = new StringJoiner(";");
-            final StringJoiner downTransStr = new StringJoiner(";");
-            upTransNames.forEach(x -> upTransStr.add(x));
-            downTransNames.forEach(x -> downTransStr.add(x));
-
-            mWriter.write(String.format(",%s,%s,%s",
-                    upTransStr.toString(), downTransStr.toString(), neData.WildtypeAcids));
-
+            final NeoEpitopeFile neFile = neData.toFile(upTransNames, downTransNames, (mConfig.RequiredAminoAcids + 1) * 3);
+            mWriter.write(NeoEpitopeFile.toString(neFile));
             mWriter.newLine();
         }
         catch (final IOException e)

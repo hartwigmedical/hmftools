@@ -81,6 +81,11 @@ public class RegionReadData implements Comparable< RegionReadData>
         return mTransExonRefs.stream().anyMatch(x -> x.TransId == transId);
     }
 
+    public boolean hasTransName(final int transName)
+    {
+        return mTransExonRefs.stream().anyMatch(x -> x.TransName.equals(transName));
+    }
+
     public void addExonRef(final String geneId, int transId, final String transName, int exonRank)
     {
         if(mTransExonRefs.stream().anyMatch(x -> x.TransId == transId && x.ExonRank == exonRank))

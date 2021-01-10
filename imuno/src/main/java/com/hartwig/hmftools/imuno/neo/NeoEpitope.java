@@ -6,21 +6,27 @@ import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
-import static com.hartwig.hmftools.imuno.neo.AminoAcidConverter.STOP_SYMBOL;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.adjustCodingBasesForStrand;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.calcNonMediatedDecayBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.checkTrimBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
 
+import java.util.Set;
+import java.util.StringJoiner;
+
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.TranscriptCodingType;
 import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
+import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
 public abstract class NeoEpitope
 {
@@ -33,7 +39,9 @@ public abstract class NeoEpitope
     public TranscriptCodingType[] CodingType;
     public TranscriptRegionType[] RegionType;
 
-    public final String[] CodingBases; // coding bases from before and after the mutation or fusion junction
+    public final String[] RawCodingBases; // coding bases from before and after the mutation or fusion junction
+    public final String[] CodingBases; // corrected for strand and stripped of any novel amino-acid bases
+    public int[] CodingBasePositions; // coding base up and down position
     public final int[] NovelBaseIndex; // index into the up and downstream coding bases
     public String NovelCodonBases;
 
@@ -52,6 +60,8 @@ public abstract class NeoEpitope
         CodingType = new TranscriptCodingType[] {TranscriptCodingType.UNKNOWN, TranscriptCodingType.UNKNOWN};
         RegionType = new TranscriptRegionType[] {TranscriptRegionType.UNKNOWN, TranscriptRegionType.UNKNOWN};
 
+        CodingBasePositions = new int[] {0, 0};
+        RawCodingBases = new String[] {"", ""};
         CodingBases = new String[] {"", ""};
         NovelBaseIndex = new int[] {0, 0};
         NovelCodonBases = "";
@@ -81,7 +91,7 @@ public abstract class NeoEpitope
     public abstract String geneName(int stream);
     public abstract void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData);
     public abstract void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids);
-    public abstract String variantType();
+    public abstract NeoEpitopeType variantType();
     public abstract String variantInfo();
     public abstract double copyNumber();
     public abstract boolean phaseMatched();
@@ -178,4 +188,27 @@ public abstract class NeoEpitope
     }
 
     public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
+
+    public NeoEpitopeFile toFile(final Set<String> upTransNames, final Set<String> downTransNames, int requiredBases)
+    {
+        final StringJoiner upTransStr = new StringJoiner(";");
+        final StringJoiner downTransStr = new StringJoiner(";");
+        upTransNames.forEach(x -> upTransStr.add(x));
+        downTransNames.forEach(x -> downTransStr.add(x));
+
+        String downCodingBases = RawCodingBases[FS_DOWN];
+
+        if(downCodingBases.length() > requiredBases)
+        {
+            downCodingBases = TransData[FS_DOWN].Strand == NEG_STRAND ?
+                    downCodingBases.substring(0, requiredBases) : downCodingBases.substring(downCodingBases.length() - requiredBases);
+        }
+
+        return new NeoEpitopeFile(
+                variantType(), variantInfo(), copyNumber(),
+                TransData[FS_UP].GeneId, TransData[FS_DOWN].GeneId, geneName(FS_UP), geneName(FS_DOWN),
+                UpstreamAcids, DownstreamAcids, NovelAcid, WildtypeAcids, NmdBasesMin, NmdBasesMax,
+                CodingBasePositions[FS_UP], CodingBasePositions[FS_DOWN], RawCodingBases[FS_UP], downCodingBases,
+                upTransStr.toString(), downTransStr.toString());
+    }
 }
