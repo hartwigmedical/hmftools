@@ -8,6 +8,8 @@ import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrial;
 import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrialFactory;
 import com.hartwig.hmftools.ckb.drugclasses.DrugClass;
 import com.hartwig.hmftools.ckb.drugclasses.DrugClassFactory;
+import com.hartwig.hmftools.ckb.drugs.Drugs;
+import com.hartwig.hmftools.ckb.drugs.DrugsFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -53,8 +55,7 @@ public class CkbImporterTestApp {
     private static void readJsonData(@NotNull String ckbPath) throws IOException {
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
         List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
-
-//        readingDrugs(ckbPath + DRUGS);
+        List<Drugs> drugs = DrugsFactory.readingDrugs(ckbPath + DRUGS);
 //        readingGenes(ckbPath + GENES);
 //        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
 //        readingIndications(ckbPath + INDICATIONS);
