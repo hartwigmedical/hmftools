@@ -22,6 +22,7 @@ public abstract class PurpleQC {
     static final double MAX_CONTAMINATION = 0.1;
     static final double MIN_PURITY = 0.2;
 
+    @NotNull
     public Set<PurpleQCStatus> status() {
         Set<PurpleQCStatus> result = Sets.newHashSet();
 
