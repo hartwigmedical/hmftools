@@ -92,7 +92,7 @@ abstract class LimsJsonSampleData {
 
     @Nullable
     @SerializedName("analysis_type")
-    public abstract String analysisTypeSample();
+    public abstract String analysisType();
 
     @NotNull
     @Value.Derived

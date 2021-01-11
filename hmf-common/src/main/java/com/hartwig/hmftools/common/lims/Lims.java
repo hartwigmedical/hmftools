@@ -254,7 +254,7 @@ public class Lims {
     public LimsAnalysisType extractAnalysisType(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
-            String analysisTypeString = sampleData.analysisTypeSample();
+            String analysisTypeString = sampleData.analysisType();
             return analysisTypeString != null ? LimsAnalysisType.extractAnalysisType(analysisTypeString) : null;
         } else {
             return null;

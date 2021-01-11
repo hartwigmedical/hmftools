@@ -26,26 +26,38 @@ public class AnnotatedExonVCFChecker {
     private static final boolean LOG_DEBUG = true;
 
     public static void main(String[] args) throws IOException {
-        LOGGER.info("Running SERVE codon VCF checker");
+        LOGGER.info("Running SERVE exon VCF checker");
 
         if (LOG_DEBUG) {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String annotatedCodonVcf = System.getProperty("user.home") + "/hmf/tmp/annotated_exon.vcf";
+        int totalCount = 0;
+        int matchCount = 0;
+        int diffCount = 0;
 
+        String annotatedExonVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedExons.vcf";
+
+        LOGGER.info("Loading exons from '{}'", annotatedExonVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader =
-                AbstractFeatureReader.getFeatureReader(annotatedCodonVcf, new VCFCodec(), false);
+                AbstractFeatureReader.getFeatureReader(annotatedExonVcf, new VCFCodec(), false);
         for (VariantContext variant : reader.iterator()) {
+            totalCount++;
+
             String[] inputParts = variant.getAttributeAsString("input", Strings.EMPTY).split("\\|");
             String inputGene = inputParts[0];
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
-            String inputExonId = inputParts[2];
+            int inputExonId = Integer.parseInt(inputParts[2]);
 
             List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-            determineMatch(inputGene, inputTranscript, inputExonId, annotations);
-
+            if (determineMatch(inputGene, inputTranscript, inputExonId, annotations)) {
+                matchCount++;
+            } else {
+                diffCount++;
+            }
         }
+
+        LOGGER.info("Done comparing {} exons: {} matches and {} differences found.", totalCount, matchCount, diffCount);
     }
 
     @Nullable
@@ -58,39 +70,54 @@ public class AnnotatedExonVCFChecker {
         return null;
     }
 
-    private static void determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, @NotNull String inputExonId,
+    private static boolean determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, int inputExonId,
             @NotNull List<SnpEffAnnotation> annotations) {
-        String snpeffExonID = Strings.EMPTY;
         if (inputTranscript != null) {
             SnpEffAnnotation annotation = annotationForTranscript(annotations, inputTranscript);
 
             if (annotation != null) {
-                snpeffExonID = annotation.rank();
-
+                int snpeffExonId = extractExonId(annotation.rank());
+                if (inputExonId == snpeffExonId) {
+                    LOGGER.debug("Identical on gene '{}': SERVE input exon id '{}' vs SnpEff exon id '{}'",
+                            inputGene,
+                            inputExonId,
+                            snpeffExonId);
+                    return true;
+                } else {
+                    LOGGER.warn("Difference on gene '{}': SERVE input exon id '{}' vs SnpEff exon id '{}'",
+                            inputGene,
+                            inputExonId,
+                            snpeffExonId);
+                    return false;
+                }
             } else {
-                LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", inputTranscript, inputGene);
+                LOGGER.warn("No suitable annotation found on gene '{}': SERVE input exon id '{}'", inputGene, inputExonId);
+                return false;
             }
         } else {
             // In case input transcript is missing we try to match against any transcript.
+            boolean matchFound = false;
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature()) {
-                    snpeffExonID = annotation.rank();
-
+                    int snpeffExonId = extractExonId(annotation.rank());
+                    if (inputExonId == snpeffExonId) {
+                        matchFound = true;
+                    }
                 }
             }
-        }
-        String snpeffExonIDExtract = snpeffExonID.split("/")[0];
-        if (inputExonId.equals(snpeffExonIDExtract)) {
-            LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{} of snpeff annotation '{}'",
-                    inputExonId,
-                    inputGene,
-                    snpeffExonIDExtract);
-        } else {
-            LOGGER.warn("Could not find a match amongst candidate transcripts '{}' for on '{}' of snpeff annotation '{}'",
-                    inputExonId,
-                    inputGene,
-                    snpeffExonIDExtract);
+
+            if (matchFound) {
+                LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", inputExonId, inputGene);
+                return true;
+            } else {
+                LOGGER.warn("Could not find a match amongst candidate transcripts '{}' for on '{}'", inputExonId, inputGene);
+                return false;
+            }
         }
     }
 
+    private static int extractExonId(@NotNull String snpeffExonRank) {
+        // Assume format is "{RANK}/{TOTAL}"
+        return Integer.parseInt(snpeffExonRank.split("/")[0]);
+    }
 }

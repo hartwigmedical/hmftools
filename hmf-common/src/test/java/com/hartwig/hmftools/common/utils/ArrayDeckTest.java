@@ -28,5 +28,4 @@ public class ArrayDeckTest {
 
         assertTrue(victim.tail <  victim.head);
     }
-
 }

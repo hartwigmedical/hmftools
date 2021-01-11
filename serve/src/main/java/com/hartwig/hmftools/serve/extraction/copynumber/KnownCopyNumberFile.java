@@ -59,7 +59,7 @@ public final class KnownCopyNumberFile {
     private static String toLine(@NotNull KnownCopyNumber copyNumber) {
         return new StringJoiner(DELIMITER).add(copyNumber.gene())
                 .add(copyNumber.type().toString().toLowerCase())
-                .add(Knowledgebase.commaSeparatedSourceString(copyNumber.sources()))
+                .add(Knowledgebase.toCommaSeparatedSourceString(copyNumber.sources()))
                 .toString();
     }
 }

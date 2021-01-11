@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
@@ -46,28 +45,27 @@ public final class PurpleDataLoader {
             @NotNull String driverCatalogFile, @NotNull String somaticVcf) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityFile).getParent());
 
-        final PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityFile);
-        LOGGER.info(" Purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
-        LOGGER.info(" Average tumor ploidy: {}", purityContext.bestFit().ploidy());
-        LOGGER.info(" Fit method: {}", purityContext.method());
-        LOGGER.info(" Whole genome duplication: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
+        PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityFile);
+        LOGGER.info("  QC status: {}", purityContext.qc().toString());
+        LOGGER.info("  Tumor purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
+        LOGGER.info("  Fit method: {}", purityContext.method());
+        LOGGER.info("  Average tumor ploidy: {}", purityContext.bestFit().ploidy());
+        LOGGER.info("  Whole genome duplication: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
+        LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
+        LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
 
-        PurpleQC purpleQC = purityContext.qc();
-        LOGGER.info(" QC status: {}", purpleQC.toString());
-
-        //TODO: Move remainder into purple
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogFile);
         LOGGER.info(" Loaded {} driver catalog entries from {}", driverCatalog.size(), driverCatalogFile);
-
-        List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVcf);
-        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableSomaticVariants(variants, driverCatalog);
-        LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableVariants.size(), somaticVcf);
 
         List<ReportableGainLoss> copyNumberAlterations = driverCatalog.stream()
                 .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.DEL)
                 .map(PurpleDataLoader::copyNumberAlteration)
                 .collect(Collectors.toList());
-        LOGGER.info(" Extracted {} reportable copy number alterations from driver catalog", copyNumberAlterations.size());
+        LOGGER.info("  Extracted {} reportable copy number alterations from driver catalog", copyNumberAlterations.size());
+
+        List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVcf);
+        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableSomaticVariants(variants, driverCatalog);
+        LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableVariants.size(), somaticVcf);
 
         return ImmutablePurpleData.builder()
                 .purity(purityContext.bestFit().purity())
@@ -83,7 +81,7 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static ReportableGainLoss copyNumberAlteration(DriverCatalog driver) {
+    private static ReportableGainLoss copyNumberAlteration(@NotNull DriverCatalog driver) {
         return ImmutableReportableGainLoss.builder()
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())

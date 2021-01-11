@@ -114,7 +114,7 @@ public class LinxDataLoader
                 annotationDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
             }
 
-            final String driverCatalogFilename = DriverCatalogFile.generateFilename(svDataOutputDir, sampleId);
+            final String driverCatalogFilename = DriverCatalogFile.generateSomaticFilename(svDataOutputDir, sampleId);
 
             if(Files.exists(Paths.get(driverCatalogFilename)))
             {

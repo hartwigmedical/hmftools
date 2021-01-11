@@ -30,7 +30,7 @@ public class PurpleQCFileTest {
     }
 
     @NotNull
-    public static PurpleQC create(final Random random ) {
+    public static PurpleQC create(@NotNull final Random random) {
         return ImmutablePurpleQC.builder()
                 .copyNumberSegments(random.nextInt())
                 .unsupportedCopyNumberSegments(random.nextInt())

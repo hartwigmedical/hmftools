@@ -59,7 +59,7 @@ object ProteinSequenceFile {
             val outputFile = File(output)
             outputFile.writeText(header(codonBoundaries))
             for (entry in fourDigitEntries) {
-                val protein = entry.proteins
+                val protein = entry.protein
                 outputFile.appendText("${entry.contig.padEnd(20, ' ')}\t${protein}\n")
             }
         }
@@ -127,8 +127,8 @@ object ProteinSequenceFile {
     }
 
     fun List<ProteinSequence>.inflate(): List<ProteinSequence> {
-        val template = this[0].proteins
-        return this.map { ProteinSequence(it.contig, inflate(template, it.proteins)) }
+        val template = this[0].protein
+        return this.map { ProteinSequence(it.contig, inflate(template, it.protein)) }
     }
 
     private fun inflate(template: String, sequence: String): String {

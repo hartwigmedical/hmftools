@@ -53,8 +53,9 @@ public class DriverGenePanelConversion {
         final String resourceDir = "/Users/jon/hmf/resources";
         final String extension = assembly.toString().toLowerCase();
         final String driverGeneFile = String.format("%s/DriverGenePanel.%s.tsv", resourceDir, extension);
-        final String somaticActionableFile = String.format("%s/ActionableCodingPanel.somatic.%s.bed", resourceDir, extension);
-        final String germlineActionableFile = String.format("%s/ActionableCodingPanel.germline.%s.bed", resourceDir, extension);
+        final String somaticCodingWithoutUtr = String.format("%s/ActionableCodingPanel.somatic.%s.bed", resourceDir, extension);
+        final String germlineCodingWithUtr = String.format("%s/ActionableCodingPanel.germline.%s.bed", resourceDir, extension);
+        final String germlineCodingWithoutUtr = String.format("%s/CoverageCodingPanel.germline.%s.bed", resourceDir, extension);
         final String germlineHotspotFile = String.format("%s/KnownHotspots.germline.%s.vcf.gz", resourceDir, extension);
         final String clinvarFile = String.format("%s/clinvar.%s.vcf.gz", resourceDir, extension);
 
@@ -73,15 +74,19 @@ public class DriverGenePanelConversion {
         allGenes.addAll(somaticGenes);
 
         // Write out actionable bed files
-        final List<HmfTranscriptRegion> transcripts =
-                assembly.equals(DriverGenePanelAssembly.HG19) ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
+        final List<HmfTranscriptRegion> transcripts = assembly.equals(DriverGenePanelAssembly.HG19)
+                ? HmfGenePanelSupplier.allGeneList37()
+                : HmfGenePanelSupplier.allGeneList38();
 
         // Write out driver gene panel
         LOGGER.info("Creating {} {} bed file", assembly, "somatic");
-        createBedFiles(false, somaticActionableFile, somaticGenes, transcripts);
+        createBedFiles(false, somaticCodingWithoutUtr, somaticGenes, transcripts);
 
         LOGGER.info("Creating {} {} bed file", assembly, "germline");
-        createBedFiles(true, germlineActionableFile, allGenes, transcripts);
+        createBedFiles(true, germlineCodingWithUtr, allGenes, transcripts);
+
+        LOGGER.info("Creating {} {} coverage bed file", assembly, "germline");
+        createBedFiles(false, germlineCodingWithoutUtr, allGenes, transcripts);
 
         // Write out germline hotspot files
         new GermlineHotspotVCF(germlineHotspotGenes(driverGenes)).process(clinvarFile, germlineHotspotFile);

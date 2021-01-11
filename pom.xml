@@ -34,9 +34,9 @@
         <module>isofox</module>
         <module>stat-calcs</module>
         <module>knowledgebase-importer</module>
-        <module>vicc-importer</module>
-        <module>iclusion-importer</module>
         <module>ckb-importer</module>
+        <module>iclusion-importer</module>
+        <module>vicc-importer</module>
         <module>serve</module>
         <module>protect</module>
         <module>patient-reporter</module>
@@ -59,7 +59,7 @@
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
-        <patient-db.version>3.54</patient-db.version>
+        <patient-db.version>3.55</patient-db.version>
         <id-generator.version>2.6</id-generator.version>
         <sage.version>2.5</sage.version>
         <amber.version>3.5</amber.version>
@@ -233,6 +233,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>paddle</artifactId>
                 <version>${paddle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>ckb-importer</artifactId>
+                <version>${ckb-importer.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
@@ -463,6 +468,13 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>
                 <version>${hmf-common.version}</version>
+                <scope>test</scope>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>serve</artifactId>
+                <version>${serve.version}</version>
                 <scope>test</scope>
                 <type>test-jar</type>
             </dependency>

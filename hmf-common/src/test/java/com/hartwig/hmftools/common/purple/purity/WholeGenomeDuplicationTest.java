@@ -59,7 +59,7 @@ public class WholeGenomeDuplicationTest {
     }
 
     @NotNull
-    private static PurpleCopyNumber create(String chromosome, double majorAllelePloidy, int bafCount) {
+    private static PurpleCopyNumber create(@NotNull String chromosome, double majorAllelePloidy, int bafCount) {
         return PurpleDatamodelTest.createCopyNumber(chromosome, 1, 1, majorAllelePloidy).averageActualBAF(1).bafCount(bafCount).build();
     }
 }

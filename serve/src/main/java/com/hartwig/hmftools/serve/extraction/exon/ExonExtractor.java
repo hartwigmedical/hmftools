@@ -57,7 +57,11 @@ public class ExonExtractor {
 
                 List<ExonAnnotation> annotations = Lists.newArrayList();
                 for (int exonIndex : exonIndices) {
-                    ExonAnnotation annotation = determineExonAnnotation(gene, canonicalTranscript, exonIndex, mutationTypeFilter, canonicalTranscript.transcriptID());
+                    ExonAnnotation annotation = determineExonAnnotation(gene,
+                            canonicalTranscript,
+                            exonIndex,
+                            mutationTypeFilter,
+                            canonicalTranscript.transcriptID());
                     if (annotation != null) {
                         annotations.add(annotation);
                     } else {
@@ -141,16 +145,17 @@ public class ExonExtractor {
         }
 
         // Extend exonic range by 5 to include SPLICE variants.
+        // First exon does not start with a splice region but we don't take this into account since it would not matter downstream anyways.
         long start = hmfExonRegion.start() - 5;
         long end = hmfExonRegion.end() + 5;
 
         return ImmutableExonAnnotation.builder()
+                .gene(gene)
+                .transcript(canonicalTranscriptID)
                 .chromosome(hmfExonRegion.chromosome())
                 .start(start)
                 .end(end)
-                .gene(gene)
                 .mutationType(mutationTypeFilter)
-                .transcript(canonicalTranscriptID)
                 .exonIndex(exonIndex)
                 .build();
     }

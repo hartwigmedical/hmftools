@@ -60,7 +60,7 @@ max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIG
 max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
 max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
-panel_coverage | true | Write file with counts of depth of each base of the gene panel
+coverage_bed | NA | Write file with counts of depth of each base of the supplied bed file
 
 The cardinality of `reference` must match `reference_bam`.
 
@@ -626,6 +626,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
+- Upcoming
+  - Coverage is now calculated on supplied bed file rather than on panel bed file
 - [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.5)
   - Gene panel coverage including estimate of missed variant likelihood 
   - Changed default value of max_germline_rel_raw_base_qual for HOTSPOTS to 50% (from 100%)

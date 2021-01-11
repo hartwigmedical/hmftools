@@ -49,7 +49,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jooq.Record;
 import org.jooq.Result;
-import org.jooq.ResultQuery;
 
 public class FeatureDataLoader
 {
@@ -108,7 +107,7 @@ public class FeatureDataLoader
             final List<LinxFusion> fusions = Files.exists(Paths.get(fusionsFilename)) ?
                     LinxFusion.read(fusionsFilename) : Lists.newArrayList();
 
-            final String driverCatalogFilename = DriverCatalogFile.generateFilename(sampleDataDir, sampleId);
+            final String driverCatalogFilename = DriverCatalogFile.generateSomaticFilename(sampleDataDir, sampleId);
 
             final List<DriverCatalog> drivers = Files.exists(Paths.get(driverCatalogFilename)) ?
                     DriverCatalogFile.read(driverCatalogFilename) : Lists.newArrayList();

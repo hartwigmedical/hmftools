@@ -227,7 +227,6 @@ public class PurityPloidyEstimateApplication {
 
             GermlineVariants germlineVariants = new GermlineVariants(configSupplier);
             if (configSupplier.germlineConfig().enabled()) {
-                LOGGER.info("Enriching germline variants");
                 germlineVariants.processAndWrite(purityAdjuster, copyNumbers);
             }
 
@@ -252,16 +251,24 @@ public class PurityPloidyEstimateApplication {
             final List<DriverCatalog> driverCatalog = Lists.newArrayList();
             if (configSupplier.driverCatalogConfig().enabled()) {
                 LOGGER.info("Generating driver catalog");
-                driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
-
-                final GermlineDrivers germlineDrivers = new GermlineDrivers(configSupplier.driverCatalogConfig().genePanel().driverGenes());
-                driverCatalog.addAll(germlineDrivers.drivers(germlineVariants.reportableVariants(), geneCopyNumbers));
+                List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
+                somaticDriverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
 
                 final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), configSupplier.driverCatalogConfig().genePanel());
-                driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
-                driverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
+                somaticDriverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
+                somaticDriverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
 
-                DriverCatalogFile.write(DriverCatalogFile.generateFilename(outputDirectory, tumorSample), driverCatalog);
+                final GermlineDrivers germlineDrivers = new GermlineDrivers(configSupplier.driverCatalogConfig().genePanel().driverGenes());
+                List<DriverCatalog> germlineDriverCatalog = germlineDrivers.drivers(germlineVariants.reportableVariants(), geneCopyNumbers);
+
+                DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(outputDirectory, tumorSample), somaticDriverCatalog);
+
+                if (configSupplier.germlineConfig().enabled()) {
+                    DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDriverCatalog);
+                }
+
+                driverCatalog.addAll(somaticDriverCatalog);
+                driverCatalog.addAll(germlineDriverCatalog);
             }
 
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);

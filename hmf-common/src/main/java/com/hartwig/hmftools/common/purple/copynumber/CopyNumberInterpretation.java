@@ -12,15 +12,15 @@ public enum CopyNumberInterpretation {
     PARTIAL_LOSS("partial loss");
 
     @NotNull
-    private final String text;
+    private final String display;
 
-    CopyNumberInterpretation(@NotNull final String text) {
-        this.text = text;
+    CopyNumberInterpretation(@NotNull final String display) {
+        this.display = display;
     }
 
     @NotNull
-    public String text() {
-        return text;
+    public String display() {
+        return display;
     }
 
     @NotNull

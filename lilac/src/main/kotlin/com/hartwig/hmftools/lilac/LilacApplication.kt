@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.lilac
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.hartwig.hmftools.common.utils.SuffixTree
+import com.hartwig.hmftools.lilac.coverage.BamCoverage
+import com.hartwig.hmftools.lilac.coverage.BamCoverage3
+import com.hartwig.hmftools.lilac.coverage.ProteinCoverage
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.kmer.BamKmer
 import com.hartwig.hmftools.lilac.kmer.HlaKmer
@@ -21,6 +25,7 @@ fun main(args: Array<String>) {
 }
 
 
+
 class LilacApplication : AutoCloseable, Runnable {
     companion object {
         val logger = LogManager.getLogger(this::class.java)
@@ -31,6 +36,10 @@ class LilacApplication : AutoCloseable, Runnable {
     val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("LILAC-%d").build()
     val executorService = Executors.newFixedThreadPool(7, namedThreadFactory)
 
+
+    fun coverage(boundaries: List<Int>, proteins: List<ProteinSequence>): List<ProteinCoverage> {
+        return proteins.map { ProteinCoverage(it.allele, it.exonicProteins(boundaries).filter { it.length >= 40 }) }
+    }
 
     override fun run() {
 
@@ -49,6 +58,15 @@ class LilacApplication : AutoCloseable, Runnable {
         val aSequences = ProteinSequenceFile.readFile(sequenceAFile).inflate().firstFourDigits()
         val bSequences = ProteinSequenceFile.readFile(sequenceBFile).inflate().firstFourDigits()
         val cSequences = ProteinSequenceFile.readFile(sequenceCFile).inflate().firstFourDigits()
+
+//        val jon = bSequences.filter { it.allele == HlaAllele("B*56:68") }[0]
+//        println(jon.exonicProteins(ProteinSequenceBoundaries.bBoundaries()))
+
+        for (i in 1 until aSequences.size) {
+            println("$i of ${aSequences.size}")
+            aSequences[i].exonicProteins(ProteinSequenceBoundaries.aBoundaries()).map { SuffixTree(it) }
+        }
+
 
 
         logger.info("Extracting kmers between ${minKmerLength} and ${maxKmerLength} in length")
@@ -107,24 +125,66 @@ class LilacApplication : AutoCloseable, Runnable {
         logger.info("Found ${kmerCount.size} distinct kmers with ${kmerCount.values.toIntArray().sum()} coverage")
 
         val initialCandidates = initialCandidates(hlaKmers, kmerCount)
+        val initialCandidateAlleles = initialCandidates.map { it.key.allele }
 
 
-        logger.info("*********** Round 2 ***********")
-        val candidateKmers = HlaKmer(listOf(initialCandidates))
-        val uniqueCandidateKmers = candidateKmers.uniqueKmers
-        round2(candidateKmers, kmerCount.filter { it.key in uniqueCandidateKmers })
+        logger.info("*********** Coverage ***********")
 
-//        val uniqueKmers = bamKmers intersect hlaKmers.uniqueKmers()
-//        println(uniqueKmers.size)
+
+        val aCoverage = coverage(ProteinSequenceBoundaries.aBoundaries(), aSequences).filter { it.hlaAllele in initialCandidateAlleles }
+        val bCoverage = coverage(ProteinSequenceBoundaries.bBoundaries(), bSequences).filter { it.hlaAllele in initialCandidateAlleles }
+        val cCoverage = coverage(ProteinSequenceBoundaries.cBoundaries(), cSequences).filter { it.hlaAllele in initialCandidateAlleles }
+        val allCoverage = mutableListOf<ProteinCoverage>()
+        allCoverage.addAll(aCoverage)
+        allCoverage.addAll(bCoverage)
+        allCoverage.addAll(cCoverage)
+
+
+
+//        for (proteinCoverage in allCoverage) {
+//            println(proteinCoverage.map.values.map { it.exonSequence })
 //
-//        for (kmer in uniqueKmers) {
-//            val matches = kmerCount.kmerCount().filter { it.key in kmer }.map { it.value }.sum()
-//            logger.info("Found unique candidate ${hlaKmers.proteinSequence(kmer).allele.toString()} -> $matches -> $kmer")
 //        }
 
-        logger.info("Found ${initialCandidates.size} candidates")
+        // Coverage
+        calculateCoverage3(minKmerLength, bamFile, allCoverage)
+        val secondaryCandidates = allCoverage.filter { it.isCovered() }
+
+        println("${initialCandidates.size} initial candidates")
+        println("${secondaryCandidates.size} secondary candidates")
+
+        logger.info("Candidate\tMinCoverage\tMaxCoverage\tAvgCoverage")
+        for (coverage in secondaryCandidates) {
+            val minCoverage = coverage.minCoverage()
+                logger.info("${coverage.hlaAllele.toString().padEnd(14, ' ')}\t${minCoverage}\t${coverage.maxCoverage()}\t${coverage.avgCoverage()}")
+
+        }
+
+
+        println("sdf")
+
+
+
+//
+//
+//        logger.info("*********** Round 2 ***********")
+//        val candidateKmers = HlaKmer(listOf(initialCandidates))
+//        val uniqueCandidateKmers = candidateKmers.uniqueKmers
+//        round2(candidateKmers, kmerCount.filter { it.key in uniqueCandidateKmers })
+//
+////        val uniqueKmers = bamKmers intersect hlaKmers.uniqueKmers()
+////        println(uniqueKmers.size)
+////
+////        for (kmer in uniqueKmers) {
+////            val matches = kmerCount.kmerCount().filter { it.key in kmer }.map { it.value }.sum()
+////            logger.info("Found unique candidate ${hlaKmers.proteinSequence(kmer).allele.toString()} -> $matches -> $kmer")
+////        }
+//
+//        logger.info("Found ${initialCandidates.size} candidates")
 
     }
+
+
 
     private fun initialCandidates(hlaKmers: HlaKmer, kmerCount: Map<String, Int>): Map<ProteinSequence, Set<String>> {
         val result = mutableMapOf<ProteinSequence, Set<String>>()
@@ -149,7 +209,7 @@ class LilacApplication : AutoCloseable, Runnable {
 //                }
 //
                 for (kmer in uniqueKmers) {
-                    logger.info("   includes unique kmer $kmer -> ${kmerCount[kmer]}")
+//                    logger.info("   includes unique kmer $kmer -> ${kmerCount[kmer]}")
                 }
             }
         }
@@ -190,6 +250,52 @@ class LilacApplication : AutoCloseable, Runnable {
         }
 
         return result
+    }
+
+    private fun calculateCoverage(minMatch: Int, bamFile: String, coverage: Collection<ProteinCoverage>) {
+        val bamCoverage = BamCoverage(minMatch, coverage)
+        val futures = mutableListOf<Future<*>>()
+        SamReaderFactory.makeDefault().open(File(bamFile)).use {
+
+            val sequenceIndex = it.fileHeader.sequenceDictionary.getSequence("6").sequenceIndex
+            val hlaa = QueryInterval(sequenceIndex, 29910331, 29913232)
+            val hlac = QueryInterval(sequenceIndex, 31235946, 31240848)
+            val hlab = QueryInterval(sequenceIndex, 31321260, 31325935)
+
+            logger.info("Reading BAM file $bamFile")
+            for (samRecord in it.queryOverlapping(arrayOf(hlaa, hlac, hlab))) {
+                futures.add(executorService.submit { bamCoverage.accept(samRecord) })
+            }
+
+        }
+
+        logger.info("Calculating coverage")
+        futures.forEach { it.get() }
+
+    }
+
+    private fun calculateCoverage3(minMatch: Int, bamFile: String, coverage: Collection<ProteinCoverage>) {
+        logger.info("Stuff")
+
+        val bamCoverage = BamCoverage3(minMatch, coverage.flatMap { it.coverages })
+        val futures = mutableListOf<Future<*>>()
+        SamReaderFactory.makeDefault().open(File(bamFile)).use {
+
+            val sequenceIndex = it.fileHeader.sequenceDictionary.getSequence("6").sequenceIndex
+            val hlaa = QueryInterval(sequenceIndex, 29910331, 29913232)
+            val hlac = QueryInterval(sequenceIndex, 31235946, 31240848)
+            val hlab = QueryInterval(sequenceIndex, 31321260, 31325935)
+
+            logger.info("Reading BAM file $bamFile")
+            for (samRecord in it.queryOverlapping(arrayOf(hlaa, hlac, hlab))) {
+                futures.add(executorService.submit { bamCoverage.accept(samRecord) })
+            }
+
+        }
+
+        logger.info("Calculating coverage")
+        futures.forEach { it.get() }
+
     }
 
     private fun kmerCounts(bamFile: String, kmers: Set<String>): Map<String, Int> {

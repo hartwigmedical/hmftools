@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrial;
-import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialFactory;
+import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrial;
+import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrialFactory;
+import com.hartwig.hmftools.ckb.drugclasses.DrugClass;
+import com.hartwig.hmftools.ckb.drugclasses.DrugClassFactory;
+import com.hartwig.hmftools.ckb.drugs.Drugs;
+import com.hartwig.hmftools.ckb.drugs.DrugsFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -18,7 +22,7 @@ public class CkbImporterTestApp {
     private static final Logger LOGGER = LogManager.getLogger(CkbImporterTestApp.class);
 
     private static final String CLINICAL_TRIALS = "clinicalTrials";
-    private static final String DRUG_CLASSES = "drugClasses";
+    private static final String DRUG_CLASSES = "drugclasses";
     private static final String DRUGS = "drugs";
     private static final String GENES = "genes";
     private static final String GLOBAL_THERAPY_APPROVAL_STATUSES = "globalTherapyApprovalStatuses";
@@ -50,16 +54,16 @@ public class CkbImporterTestApp {
 
     private static void readJsonData(@NotNull String ckbPath) throws IOException {
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        readingDrugsClasses(ckbPath + DRUG_CLASSES);
-        readingDrugs(ckbPath + DRUGS);
-        readingGenes(ckbPath + GENES);
-        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
-        readingIndications(ckbPath + INDICATIONS);
-        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
-        readingReferences(ckbPath + REFERENCES);
-        readingTherapies(ckbPath + THERAPIES);
-        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
-        readingVariants(ckbPath + VARIANTS);
+        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
+        List<Drugs> drugs = DrugsFactory.readingDrugs(ckbPath + DRUGS);
+//        readingGenes(ckbPath + GENES);
+//        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
+//        readingIndications(ckbPath + INDICATIONS);
+//        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
+//        readingReferences(ckbPath + REFERENCES);
+//        readingTherapies(ckbPath + THERAPIES);
+//        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
+//        readingVariants(ckbPath + VARIANTS);
     }
 
 

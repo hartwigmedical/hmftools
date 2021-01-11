@@ -8,22 +8,28 @@ public class CodonsTest {
 
     @Test
     public void testAsCodon() {
-        assertEquals('Y', Codons.asCondon("TAT"));
+        assertEquals('Y', Codons.aminoAcid("TAT"));
     }
 
     @Test
     public void testStopCodon() {
-        assertEquals('X', Codons.asCondon("TAA"));
-        assertEquals('X', Codons.asCondon("TAG"));
-        assertEquals('X', Codons.asCondon("TGA"));
+        assertEquals('X', Codons.aminoAcid("TAA"));
+        assertEquals('X', Codons.aminoAcid("TAG"));
+        assertEquals('X', Codons.aminoAcid("TGA"));
     }
 
     @Test
     public void testAsCodonString() {
-        assertEquals("Y", Codons.asCodonString("TAT"));
-        assertEquals("Y", Codons.asCodonString("TATG"));
-        assertEquals("Y", Codons.asCodonString("TATGA"));
-        assertEquals("YD", Codons.asCodonString("TATGAT"));
+        assertEquals("Y", Codons.aminoAcids("TAT"));
+        assertEquals("Y", Codons.aminoAcids("TATG"));
+        assertEquals("Y", Codons.aminoAcids("TATGA"));
+        assertEquals("YD", Codons.aminoAcids("TATGAT"));
     }
 
+    @Test
+    public void testAminoAcidToCodon() {
+        assertEquals("TAT", Codons.codon('Y'));
+        assertEquals("TAT", Codons.codon("Y"));
+        assertEquals("TATTGA", Codons.codon("YX"));
+    }
 }

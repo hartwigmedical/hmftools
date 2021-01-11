@@ -4,77 +4,131 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.protect.variants.DriverInterpretation;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantFactory;
+import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
+import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class VariantEvidence {
 
-    private static final Set<CodingEffect> RANGE_CODING_EFFECTS =
-            Sets.newHashSet(CodingEffect.SPLICE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE);
+    private static final Logger LOGGER = LogManager.getLogger(VariantEvidence.class);
 
     @NotNull
     private final List<ActionableHotspot> hotspots;
     @NotNull
     private final List<ActionableRange> ranges;
+    @NotNull
+    private final List<ActionableGene> genes;
 
-    public VariantEvidence(@NotNull final List<ActionableHotspot> hotspots, @NotNull final List<ActionableRange> ranges) {
+    public VariantEvidence(@NotNull final List<ActionableHotspot> hotspots, @NotNull final List<ActionableRange> ranges,
+            @NotNull final List<ActionableGene> genes) {
         this.hotspots = hotspots;
         this.ranges = ranges;
+        this.genes = genes.stream()
+                .filter(x -> x.event() == GeneLevelEvent.ACTIVATION || x.event() == GeneLevelEvent.INACTIVATION
+                        || x.event() == GeneLevelEvent.ANY_MUTATION)
+                .collect(Collectors.toList());
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull List<ReportableVariant> germline,
+    public List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull List<ReportableVariant> germline,
             @NotNull List<ReportableVariant> somatic) {
         List<ReportableVariant> variants = ReportableVariantFactory.mergeVariantLists(germline, somatic);
         return variants.stream().flatMap(x -> evidence(doids, x).stream()).collect(Collectors.toList());
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull ReportableVariant reportable) {
-        boolean report = reportable.driverLikelihoodInterpretation().equals(DriverInterpretation.HIGH);
-
-        List<ProtectEvidenceItem> hotspotEvidence = hotspots.stream()
+    private List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull ReportableVariant reportable) {
+        List<ProtectEvidence> hotspotEvidence = hotspots.stream()
                 .filter(x -> hotspotMatch(x, reportable))
                 .map(x -> evidence(true, doids, reportable, x))
                 .collect(Collectors.toList());
 
-        // TODO (DEV-642) Match mutation type against actionable mutation type filter
-        List<ProtectEvidenceItem> rangeEvidence = ranges.stream()
+        List<ProtectEvidence> rangeEvidence = ranges.stream()
                 .filter(x -> rangeMatch(x, reportable))
-                .map(x -> evidence(report, doids, reportable, x))
+                .map(x -> evidence(true, doids, reportable, x))
                 .collect(Collectors.toList());
 
-        // TODO (DEV-642) Include match for INACTIVATION/ACTIVATION/ANY_MUTATION
+        List<ProtectEvidence> geneEvidence = genes.stream()
+                .filter(x -> geneMatch(x, reportable))
+                .map(x -> evidence(reportable.driverLikelihoodInterpretation() == DriverInterpretation.HIGH, doids, reportable, x))
+                .collect(Collectors.toList());
 
-        Set<ProtectEvidenceItem> result = Sets.newHashSet();
+        List<ProtectEvidence> result = Lists.newArrayList();
         result.addAll(hotspotEvidence);
         result.addAll(rangeEvidence);
+        result.addAll(geneEvidence);
 
-        return ProtectEvidenceItems.reportHighest(result);
-    }
-
-    private static boolean rangeMatch(@NotNull ActionableRange range, @NotNull ReportableVariant variant) {
-        return RANGE_CODING_EFFECTS.contains(variant.canonicalCodingEffect()) && variant.chromosome().equals(range.chromosome())
-                && range.gene().equals(range.gene()) && variant.position() >= range.start() && variant.position() <= range.end();
+        return ProtectEvidenceFunctions.reportHighest(result);
     }
 
     private static boolean hotspotMatch(@NotNull ActionableHotspot hotspot, @NotNull ReportableVariant variant) {
-        return variant.chromosome().equals(hotspot.chromosome()) && hotspot.alt().equals(hotspot.alt())
-                && hotspot.position() == variant.position() && hotspot.ref().equals(variant.ref());
+        return variant.chromosome().equals(hotspot.chromosome()) && hotspot.position() == variant.position() && hotspot.ref()
+                .equals(variant.ref()) && hotspot.alt().equals(hotspot.alt());
+    }
+
+    private static boolean rangeMatch(@NotNull ActionableRange range, @NotNull ReportableVariant variant) {
+        return variant.chromosome().equals(range.chromosome()) && variant.gene().equals(range.gene()) && variant.position() >= range.start()
+                && variant.position() <= range.end() && meetsMutationTypeFilter(range.mutationType(), variant);
+    }
+
+    private static boolean meetsMutationTypeFilter(@NotNull MutationTypeFilter filter, @NotNull ReportableVariant variant) {
+        CodingEffect effect = variant.canonicalCodingEffect();
+        switch (filter) {
+            case NONSENSE_OR_FRAMESHIFT:
+                return effect == CodingEffect.NONSENSE_OR_FRAMESHIFT;
+            case SPLICE:
+                return effect == CodingEffect.SPLICE;
+            case INFRAME:
+                return effect == CodingEffect.MISSENSE && (isInsert(variant) || isDelete(variant));
+            case INFRAME_DELETION:
+                return effect == CodingEffect.MISSENSE && isDelete(variant);
+            case INFRAME_INSERTION:
+                return effect == CodingEffect.MISSENSE && isInsert(variant);
+            case MISSENSE:
+                return effect == CodingEffect.MISSENSE;
+            default: {
+                LOGGER.warn("Unrecognized mutation type filter: '{}'", filter);
+                return false;
+            }
+        }
+    }
+
+    private static boolean isInsert(@NotNull ReportableVariant variant) {
+        return variant.alt().length() > variant.ref().length();
+    }
+
+    private static boolean isDelete(@NotNull ReportableVariant variant) {
+        return variant.alt().length() < variant.ref().length();
+    }
+
+    private static boolean geneMatch(@NotNull ActionableGene gene, @NotNull ReportableVariant variant) {
+        assert gene.event() == GeneLevelEvent.ACTIVATION || gene.event() == GeneLevelEvent.INACTIVATION
+                || gene.event() == GeneLevelEvent.ANY_MUTATION;
+
+        return gene.gene().equals(variant.gene());
     }
 
     @NotNull
-    private static ProtectEvidenceItem evidence(boolean report, @NotNull Set<String> doids, @NotNull ReportableVariant reportable,
+    private static ProtectEvidence evidence(boolean report, @NotNull Set<String> doids, @NotNull ReportableVariant reportable,
             @NotNull ActionableEvent actionable) {
-        return ProtectEvidenceItems.builder(doids, actionable).genomicEvent(reportable.genomicEvent()).reported(report).build();
+        return ProtectEvidenceFunctions.builder(doids, actionable)
+                .genomicEvent(reportable.genomicEvent())
+                .germline(reportable.source() == ReportableVariantSource.GERMLINE)
+                .reported(report)
+                .build();
     }
 }

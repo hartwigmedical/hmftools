@@ -15,7 +15,6 @@ public class FittedRegionFactoryTest {
     private final CobaltChromosomes male = CobaltChromosomesTest.male();
     private final CobaltChromosomes female = CobaltChromosomesTest.female();
 
-
     @Test
     public void testFitYChromosome() {
         final GenomeRegion region = GenomeRegions.create("Y", 1, 100);
@@ -29,5 +28,4 @@ public class FittedRegionFactoryTest {
         assertTrue(FittedRegionFactoryV2.isAllowedRegion(male, region));
         assertTrue(FittedRegionFactoryV2.isAllowedRegion(female, region));
     }
-
 }

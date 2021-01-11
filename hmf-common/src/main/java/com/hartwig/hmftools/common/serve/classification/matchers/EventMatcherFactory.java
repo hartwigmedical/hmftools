@@ -37,7 +37,6 @@ public final class EventMatcherFactory {
         DeletionMatcher deletionMatcher =
                 new DeletionMatcher(config.deletionBlacklistKeyPhrases(), config.deletionKeywords(), config.deletionKeyPhrases());
 
-
         SignatureMatcher signatureMatcher = new SignatureMatcher(allSignatureEvents(config));
         ComplexMatcher complexMatcher = new ComplexMatcher(config.complexEventsPerGene());
         CombinedMatcher combinedMatcher =

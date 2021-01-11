@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurpleSegmentFactoryTest {
+
     private static final GenomePosition CHROMOSOME_LENGTH = GenomePositions.create("1", 10_000_000);
     private static final GenomePosition CHROMOSOME_CENTROMERE = GenomePositions.create("1", 5_000_001);
 
@@ -43,7 +44,6 @@ public class PurpleSegmentFactoryTest {
         assertPurpleSegment(segments.get(2), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), false, CENTROMERE);
     }
 
-
     @Test
     public void testSVAtCentromere() {
         final List<Cluster> clusters = Lists.newArrayList(cluster(17001, CHROMOSOME_CENTROMERE.position()).build());
@@ -53,7 +53,6 @@ public class PurpleSegmentFactoryTest {
         assertPurpleSegment(segments.get(0), 1, CHROMOSOME_CENTROMERE.position() - 1, true, TELOMERE);
         assertPurpleSegment(segments.get(1), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), false, CENTROMERE);
     }
-
 
     @Test
     public void testSingleSVWithRatioSupport() {
@@ -96,7 +95,6 @@ public class PurpleSegmentFactoryTest {
         assertPurpleSegment(segments.get(0), 1, 18880, true, TELOMERE);
         assertPurpleSegment(segments.get(1), 18881, CHROMOSOME_CENTROMERE.position() - 1, true, NONE);
         assertPurpleSegment(segments.get(2), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), true, CENTROMERE);
-
     }
 
     private static void assertPurpleSegment(@NotNull final PurpleSegment victim, long start, long end, boolean ratioSupport,
@@ -123,7 +121,7 @@ public class PurpleSegmentFactoryTest {
     }
 
     @NotNull
-    private static ImmutableCluster.Builder addRatios(ImmutableCluster.Builder builder, long... ratios) {
+    private static ImmutableCluster.Builder addRatios(@NotNull ImmutableCluster.Builder builder, long... ratios) {
         for (long position : ratios) {
             builder.addPcfPositions(ImmutablePCFPosition.builder()
                     .chromosome(CHROMOSOME_LENGTH.chromosome())

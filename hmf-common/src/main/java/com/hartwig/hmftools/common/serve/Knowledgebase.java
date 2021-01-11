@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public enum Knowledgebase {
     DOCM("docm"),
@@ -21,40 +22,48 @@ public enum Knowledgebase {
     VICC_ONCOKB("vicc_oncokb"),
     UNDEFINED("undefined");
 
+    @NotNull
+    private final String display;
+
     private static final Logger LOGGER = LogManager.getLogger(Knowledgebase.class);
 
-    @NotNull
-    private final String knowledgebase;
-
-    Knowledgebase(@NotNull final String knowledgebase) {
-        this.knowledgebase = knowledgebase;
+    Knowledgebase(@NotNull final String display) {
+        this.display = display;
     }
 
     @NotNull
-    public String knowledgebase() {
-        return knowledgebase;
+    public String display() {
+        return display;
     }
 
     @NotNull
-    public static Set<Knowledgebase> extractKnowledgebase(@NotNull String knowledgebase) {
+    public static Set<Knowledgebase> fromCommaSeparatedSourceString(@NotNull String sources) {
         Set<Knowledgebase> consolidated = Sets.newHashSet();
 
-        String [] multipleSources = knowledgebase.split(",");
-        for (String sources: multipleSources) {
-
-            for (Knowledgebase knowledgebaseSource : Knowledgebase.values()) {
-                if (knowledgebaseSource.knowledgebase().equals(sources)) {
-                    consolidated.add(knowledgebaseSource);
-                }
+        for (String source : sources.split(",")) {
+            Knowledgebase knowledgebase = lookupKnowledgebase(source);
+            if (knowledgebase != null) {
+                consolidated.add(knowledgebase);
+            } else {
+                LOGGER.warn("Could not resolve knowledgebase with display '{}'", source);
             }
         }
 
         return consolidated;
+    }
 
+    @Nullable
+    private static Knowledgebase lookupKnowledgebase(@NotNull String display) {
+        for (Knowledgebase knowledgebase : Knowledgebase.values()) {
+            if (knowledgebase.display().equals(display)) {
+                return knowledgebase;
+            }
+        }
+        return null;
     }
 
     @NotNull
-    public static String commaSeparatedSourceString(@NotNull Set<Knowledgebase> sources) {
+    public static String toCommaSeparatedSourceString(@NotNull Set<Knowledgebase> sources) {
         Set<Knowledgebase> sorted = Sets.newTreeSet(Comparator.naturalOrder());
         sorted.addAll(sources);
 

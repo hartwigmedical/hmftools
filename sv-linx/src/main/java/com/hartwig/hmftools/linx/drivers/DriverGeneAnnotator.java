@@ -220,7 +220,7 @@ public class DriverGeneAnnotator
         // generate an empty Linx driver file even if no annotations were found
         try
         {
-            final String driverCatalogFile = DriverCatalogFile.generateFilename(mOutputDir, mSampleId);
+            final String driverCatalogFile = DriverCatalogFile.generateSomaticFilename(mOutputDir, mSampleId);
             DriverCatalogFile.write(driverCatalogFile, mDataCache.getDriverCatalog());
 
             final String driversFile = LinxDriver.generateFilename(mOutputDir, mSampleId);

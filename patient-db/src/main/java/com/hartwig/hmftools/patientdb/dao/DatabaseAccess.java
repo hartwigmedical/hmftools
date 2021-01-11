@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -402,7 +402,7 @@ public class DatabaseAccess implements AutoCloseable {
         pgxDAO.writePgx(sample, pgxGenotype, pgxCalls);
     }
 
-    public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidenceItem> evidence) {
+    public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
         protectDAO.write(sample, evidence);
     }
 

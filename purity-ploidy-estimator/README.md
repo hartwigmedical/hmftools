@@ -126,6 +126,7 @@ samtools dict ref_genome.fasta -o ref_genome.dict
 Argument | Default | Description 
 ---|---|---
 threads | 2 | Number of threads to use.
+germline_vcf | None | Optional location of germline variants vcf. Sample names must match reference parameter. GZ files supported.
 somatic_vcf | None | Optional location of somatic variants vcf.  Sample name must match tumor parameter. GZ files supported.
 structural_vcf | None | Optional location of high confidence structural variants vcf. GZ files supported.
 sv_recovery_vcf | None | Optional location of low confidence structural variants vcf which may be recovered by PURPLE. GZ files supported.
@@ -184,7 +185,8 @@ The following arguments control the driver catalog behaviour.
 Argument | Description 
 ---|---
 driver_catalog |  Enables the driver catalog
-hotspots | VCF of hotspot locations. Mandatory if driver catalog enabled.
+somatic_hotspots | VCF of somatic hotspot locations. Mandatory if driver catalog enabled.
+germline_hotspots | VCF of germline hotspot locations. Mandatory if driver catalog enabled and germline variants supplied.
 driver_gene_panel | TSV of driver genes. Mandatory if driver catalog enabled.
 
 The hotspot VCF used by HMF (KnownHotspots.hg19.vcf.gz) is available to download from [HMFTools-Resources > Sage2](https://resources.hartwigmedicalfoundation.nl). 
@@ -1076,6 +1078,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Support for COBALT tumor only mode
   - Indels over splice regions should be marked as such
   - Add `PARTIAL_AMP` driver type for amplifications where only part of a gene is > 3 * tumor ploidy
+  - Germline variant enrichment
+  - Germline driver catalog
 - [2.51](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.51) 
   - Correctly identify SV genotypes in tumor-only mode
   - Allow overwrites of MH field in somatic VCF

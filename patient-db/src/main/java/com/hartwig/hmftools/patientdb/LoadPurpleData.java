@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -52,7 +53,16 @@ public class LoadPurpleData {
                 GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
         List<PurpleCopyNumber> copyNumbers =
                 PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
-        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateFilename(purplePath, tumorSample));
+        List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purplePath, tumorSample));
+
+        String germlineDriverCatalogFileName = DriverCatalogFile.generateGermlineFilename(purplePath, tumorSample);
+        List<DriverCatalog> germlineDriverCatalog = new File(germlineDriverCatalogFileName).exists()
+                ? DriverCatalogFile.read(germlineDriverCatalogFileName)
+                : Collections.emptyList();
+
+        List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        driverCatalog.addAll(somaticDriverCatalog);
+        driverCatalog.addAll(germlineDriverCatalog);
 
         PurpleQC purpleQC = purityContext.qc();
         List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.readBestFitPerPurity(purplePath, tumorSample);

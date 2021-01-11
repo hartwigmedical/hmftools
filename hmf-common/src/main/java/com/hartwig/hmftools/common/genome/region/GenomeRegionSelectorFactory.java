@@ -20,7 +20,7 @@ public final class GenomeRegionSelectorFactory {
 
     @NotNull
     public static <R extends GenomeRegion> GenomeRegionSelector<R> create(@NotNull final Collection<R> regions) {
-        return new GenomeRegionSelectorImpl<>(regions);
+        return new GenomeRegionSelectorListImpl<>(regions);
     }
 
     @NotNull
@@ -29,7 +29,7 @@ public final class GenomeRegionSelectorFactory {
 
         final Map<String, GenomeRegionSelector<R>> chromosomeSelectors = Maps.newHashMap();
         for (final String chromosome : regions.keySet()) {
-            chromosomeSelectors.put(chromosome, new GenomeRegionSelectorImpl<>(regions.get(chromosome)));
+            chromosomeSelectors.put(chromosome, new GenomeRegionSelectorListImpl<>(regions.get(chromosome)));
         }
 
         return new GenomeRegionSelector<R>() {
@@ -52,7 +52,7 @@ public final class GenomeRegionSelectorFactory {
 
         final Map<Chromosome, GenomeRegionSelector<R>> chromosomeSelectors = Maps.newHashMap();
         for (final Chromosome chromosome : regions.keySet()) {
-            chromosomeSelectors.put(chromosome, new GenomeRegionSelectorImpl<>(regions.get(chromosome)));
+            chromosomeSelectors.put(chromosome, new GenomeRegionSelectorListImpl<>(regions.get(chromosome)));
         }
 
         return new GenomeRegionSelector<R>() {

@@ -61,6 +61,9 @@ public class GermlineVariants {
         final Optional<File> optionalInputVCF = configSupplier.germlineConfig().file();
         if (optionalInputVCF.isPresent()) {
 
+            LOGGER.info("Loading germline variants from {}", optionalInputVCF.get());
+            LOGGER.info("Enriching germline variants");
+
             try (IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomeData.refGenome()));
                     VCFFileReader vcfReader = new VCFFileReader(optionalInputVCF.get(), false);
                     VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)

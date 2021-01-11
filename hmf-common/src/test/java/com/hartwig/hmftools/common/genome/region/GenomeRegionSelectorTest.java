@@ -74,13 +74,13 @@ public class GenomeRegionSelectorTest {
         assertAbsence(createPosition("4", 601));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test()
     public void testStandardBackwards() {
         assertEquals(Optional.empty(), standardSelector.select(createPosition("1", 1000)));
         assertEquals(Optional.empty(), standardSelector.select(createPosition("1", 999)));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test()
     public void testChromosomeBackwards() {
         assertEquals(Optional.empty(), chromosomeSelector.select(createPosition("1", 1000)));
         assertEquals(Optional.empty(), chromosomeSelector.select(createPosition("1", 999)));

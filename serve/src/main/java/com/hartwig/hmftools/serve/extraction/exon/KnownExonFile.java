@@ -28,6 +28,7 @@ public final class KnownExonFile {
         return refGenomeVersion.addVersionToFilePath(outputDir + File.separator + KNOWN_EXON_TSV);
     }
 
+    @NotNull
     public static List<KnownExon> read(@NotNull String file) throws IOException {
         List<String> lines = Files.readAllLines(new File(file).toPath());
 
@@ -50,14 +51,14 @@ public final class KnownExonFile {
         return ImmutableKnownExon.builder()
                 .annotation(ImmutableExonAnnotation.builder()
                         .gene(values[0])
-                        .chromosome(values[1])
-                        .start(Long.parseLong(values[2]))
-                        .end(Long.parseLong(values[3]))
-                        .mutationType(MutationTypeFilter.valueOf(values[4]))
-                        .transcript(values[5])
+                        .transcript(values[1])
+                        .chromosome(values[2])
+                        .start(Long.parseLong(values[3]))
+                        .end(Long.parseLong(values[4]))
+                        .mutationType(MutationTypeFilter.valueOf(values[5]))
                         .exonIndex(Integer.parseInt(values[6]))
                         .build())
-                .sources(Knowledgebase.extractKnowledgebase(values[7]))
+                .sources(Knowledgebase.fromCommaSeparatedSourceString(values[7]))
                 .build();
     }
 
@@ -71,11 +72,11 @@ public final class KnownExonFile {
     @NotNull
     private static String header() {
         return new StringJoiner(DELIMITER).add("gene")
+                .add("transcript")
                 .add("chromosome")
                 .add("start")
                 .add("end")
                 .add("mutationType")
-                .add("transcript")
                 .add("exonIndex")
                 .add("sources")
                 .toString();
@@ -102,13 +103,13 @@ public final class KnownExonFile {
     @NotNull
     private static String toLine(@NotNull KnownExon exon) {
         return new StringJoiner(DELIMITER).add(exon.annotation().gene())
+                .add(exon.annotation().transcript())
                 .add(exon.annotation().chromosome())
                 .add(String.valueOf(exon.annotation().start()))
                 .add(String.valueOf(exon.annotation().end()))
                 .add(exon.annotation().mutationType().toString())
-                .add(exon.annotation().transcript())
                 .add(String.valueOf(exon.annotation().exonIndex()))
-                .add(Knowledgebase.commaSeparatedSourceString(exon.sources()))
+                .add(Knowledgebase.toCommaSeparatedSourceString(exon.sources()))
                 .toString();
     }
 }

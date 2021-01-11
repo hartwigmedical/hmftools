@@ -41,7 +41,6 @@ public class PloidyDeviationTest {
         assertEquals(Math.max(minDeviation, 0.326), victim.minorAlleleDeviation(0.4, 0.63, 1.1), EPSILON);
     }
 
-
     @Test
     public void testHighPurity() {
         final PloidyDeviation victim = new PloidyDeviation(0.03, 0, 1, 1, 0);
@@ -50,5 +49,4 @@ public class PloidyDeviationTest {
         assertEquals(0.998, victim.minorAlleleDeviation(1, 0.63, 0.3), EPSILON);
         assertEquals(1.000, victim.minorAlleleDeviation(1, 0.63, 0.4), EPSILON);
     }
-
 }

@@ -1,19 +1,51 @@
 package com.hartwig.hmftools.common.codon;
 
-public class Codons {
+import org.jetbrains.annotations.NotNull;
 
-    public static String asCodonString(String dna) {
+public final class Codons {
+
+    private Codons() {
+    }
+
+    @NotNull
+    public static String codon(@NotNull String aminoAcids) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < aminoAcids.length(); i++) {
+            builder.append(codon(aminoAcids.charAt(i)));
+        }
+        return builder.toString();
+    }
+
+    @NotNull
+    public static String codon(char aminoAcid) {
+        final char[] bases = new char[] { 'G', 'A', 'T', 'C' };
+        for (final char firstBase : bases) {
+            for (final char secondBase : bases) {
+                for (final char thirdBase : bases) {
+                    final String codon = String.valueOf(firstBase) + secondBase + thirdBase;
+                    if (aminoAcid(codon) == aminoAcid) {
+                        return codon;
+                    }
+                }
+            }
+        }
+        throw new IllegalArgumentException("Unknown amino acid " + aminoAcid);
+    }
+
+    @NotNull
+    public static String aminoAcids(@NotNull String dna) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < dna.length() - 2; i += 3) {
-            builder.append(asCondon(dna.substring(i, i + 3)));
+            builder.append(aminoAcid(dna.substring(i, i + 3)));
         }
 
         return builder.toString();
     }
 
-    public static char asCondon(String dna) {
-        assert (dna.length() == 3);
-        switch (dna) {
+    public static char aminoAcid(@NotNull String codon) {
+        assert codon.length() == 3;
+
+        switch (codon) {
             // SECOND BASE T
             case "TTT":
             case "TTC":
@@ -109,10 +141,8 @@ public class Codons {
             case "GGA":
             case "GGG":
                 return 'G';
-
         }
 
         return '.';
     }
-
 }

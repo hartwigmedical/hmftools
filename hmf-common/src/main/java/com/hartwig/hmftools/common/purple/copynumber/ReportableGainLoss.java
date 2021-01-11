@@ -10,6 +10,12 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ReportableGainLoss {
 
     @NotNull
+    @Value.Derived
+    public String genomicEvent() {
+        return this.gene() + " " + this.interpretation().display();
+    }
+
+    @NotNull
     public abstract CopyNumberInterpretation interpretation();
 
     @NotNull

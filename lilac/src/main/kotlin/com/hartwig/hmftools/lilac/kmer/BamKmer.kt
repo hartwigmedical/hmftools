@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.lilac.kmer
 
-import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.SuffixTree
+import com.hartwig.hmftools.lilac.dna.aminoAcids
+import com.hartwig.hmftools.lilac.dna.dnaReverseComplement
 import htsjdk.samtools.SAMRecord
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
@@ -25,31 +26,16 @@ class BamKmer(private val codonKmers: Set<String>) : Consumer<SAMRecord> {
         return kmerCountDna(record.readString)
     }
 
-    private fun reverseComplement(dna: String): String {
-        val builder = StringBuilder()
-        for (i in dna.indices.reversed()) {
-            when (dna[i]) {
-                'G' -> builder.append('C')
-                'C' -> builder.append('G')
-                'A' -> builder.append('T')
-                'T' -> builder.append('A')
-                else -> builder.append(dna[i])
-
-            }
-        }
-
-        return builder.toString()
-    }
 
     private fun kmerCountDna(dna: String): Map<String, Int> {
-        val dnaReversed = reverseComplement(dna)
+        val dnaReversed = dna.dnaReverseComplement()
 
-        val codonString0 = Codons.asCodonString(dna)
-        val codonString1 = Codons.asCodonString(dna.substring(1))
-        val codonString2 = Codons.asCodonString(dna.substring(2))
-        val codonString3 = Codons.asCodonString(dnaReversed)
-        val codonString4 = Codons.asCodonString(dnaReversed.substring(1))
-        val codonString5 = Codons.asCodonString(dnaReversed.substring(2))
+        val codonString0 = dna.aminoAcids()
+        val codonString1 = dna.substring(1).aminoAcids()
+        val codonString2 = dna.substring(2).aminoAcids()
+        val codonString3 = dnaReversed.aminoAcids()
+        val codonString4 = dnaReversed.substring(1).aminoAcids()
+        val codonString5 = dnaReversed.substring(2).aminoAcids()
 
         val searchTrees = listOf(
                 SuffixTree(codonString0),

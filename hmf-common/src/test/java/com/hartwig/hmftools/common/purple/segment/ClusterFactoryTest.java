@@ -19,6 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ClusterFactoryTest {
+
     private static final String CHROM = "1";
 
     private ClusterFactory victim;
@@ -82,7 +83,6 @@ public class ClusterFactoryTest {
         assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37383999, -1, cobalt));
         assertEquals(37382002, victim.earliestDetectableCopyNumberChangePosition(37384000, -1, cobalt));
     }
-
 
     @Test
     public void testDefaultClusterBounds() {
@@ -170,11 +170,7 @@ public class ClusterFactoryTest {
 
     @NotNull
     private static SVSegment createSVPosition(long position) {
-        return ImmutableSVSegment.builder()
-                .chromosome(CHROM)
-                .position(position)
-                .type(StructuralVariantType.BND)
-                .build();
+        return ImmutableSVSegment.builder().chromosome(CHROM).position(position).type(StructuralVariantType.BND).build();
     }
 
     @NotNull
@@ -210,30 +206,32 @@ public class ClusterFactoryTest {
 
     @NotNull
     private static PCFPosition ratio(long position) {
-        return ImmutablePCFPosition.builder().chromosome(CHROM).position(position).source(PCFSource.TUMOR_RATIO).minPosition(0).maxPosition(0).build();
+        return ImmutablePCFPosition.builder()
+                .chromosome(CHROM)
+                .position(position)
+                .source(PCFSource.TUMOR_RATIO)
+                .minPosition(0)
+                .maxPosition(0)
+                .build();
     }
 
-
     @Nullable
-    private static Long firstVariant(Cluster cluster) {
+    private static Long firstVariant(@NotNull Cluster cluster) {
         return cluster.variants().isEmpty() ? null : cluster.variants().get(0).position();
     }
 
     @Nullable
-    private static Long finalVariant(Cluster cluster) {
-        return cluster.variants().isEmpty() ? null :cluster.variants().get(cluster.variants().size() - 1).position();
+    private static Long finalVariant(@NotNull Cluster cluster) {
+        return cluster.variants().isEmpty() ? null : cluster.variants().get(cluster.variants().size() - 1).position();
     }
 
     @Nullable
-    private static Long firstRatio(Cluster cluster) {
+    private static Long firstRatio(@NotNull Cluster cluster) {
         return cluster.ratios().isEmpty() ? null : cluster.ratios().get(0).position();
     }
 
     @Nullable
-    private static Long finalRatio(Cluster cluster) {
+    private static Long finalRatio(@NotNull Cluster cluster) {
         return cluster.ratios().isEmpty() ? null : cluster.ratios().get(cluster.ratios().size() - 1).position();
     }
-
-
-
 }

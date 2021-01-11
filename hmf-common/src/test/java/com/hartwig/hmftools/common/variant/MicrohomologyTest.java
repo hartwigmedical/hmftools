@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.variant;
 
 import static org.junit.Assert.assertEquals;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class MicrohomologyTest {
@@ -41,7 +42,6 @@ public class MicrohomologyTest {
         assertEquals("ATC", Microhomology.microhomologyAtInsert(5, refSequence, "ATCAA"));
         assertEquals("ATC", Microhomology.microhomologyAtInsert(6, refSequence, "TCAAT"));
         assertEquals("ATC", Microhomology.microhomologyAtInsert(7, refSequence, "CAATC"));
-
     }
 
     @Test
@@ -91,17 +91,17 @@ public class MicrohomologyTest {
     public void testMicrohomologyDeleteWithExpandedRepeats() {
         final String refSequence = "ATTTTGTTTGTTTGA";
 
-        asserDeleteExpandRepeats("", 0, 5, refSequence);
-        asserDeleteExpandRepeats("TTTGTTTGTTTG", 1, 5, refSequence);
-        asserDeleteExpandRepeats("TTTGTTTGTTTG", 2, 5, refSequence);
-        asserDeleteExpandRepeats("TTTGTTTGTTTG", 3, 5, refSequence);
-        asserDeleteExpandRepeats("TTTGTTTGTTTG", 4, 5, refSequence);
-        asserDeleteExpandRepeats("TTTGTTTGTTTG", 5, 5, refSequence);
-        asserDeleteExpandRepeats("TTTGTTTGTTTG", 6, 5, refSequence);
-        asserDeleteExpandRepeats("TTTGTTTGTTTG", 7, 5, refSequence);
-        asserDeleteExpandRepeats("TTTGTTTGTTTG", 8, 5, refSequence);
-        asserDeleteExpandRepeats("TTTGTTTGTTTG", 9, 5, refSequence);
-        asserDeleteExpandRepeats("", 10, 5, refSequence);
+        assertDeleteExpandRepeats("", 0, 5, refSequence);
+        assertDeleteExpandRepeats("TTTGTTTGTTTG", 1, 5, refSequence);
+        assertDeleteExpandRepeats("TTTGTTTGTTTG", 2, 5, refSequence);
+        assertDeleteExpandRepeats("TTTGTTTGTTTG", 3, 5, refSequence);
+        assertDeleteExpandRepeats("TTTGTTTGTTTG", 4, 5, refSequence);
+        assertDeleteExpandRepeats("TTTGTTTGTTTG", 5, 5, refSequence);
+        assertDeleteExpandRepeats("TTTGTTTGTTTG", 6, 5, refSequence);
+        assertDeleteExpandRepeats("TTTGTTTGTTTG", 7, 5, refSequence);
+        assertDeleteExpandRepeats("TTTGTTTGTTTG", 8, 5, refSequence);
+        assertDeleteExpandRepeats("TTTGTTTGTTTG", 9, 5, refSequence);
+        assertDeleteExpandRepeats("", 10, 5, refSequence);
     }
 
     @Test
@@ -119,21 +119,20 @@ public class MicrohomologyTest {
         assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(1, "GACAA".getBytes(), "AT")));
     }
 
-    private void asserDeleteExpandRepeats(String expected, int position, int altLength, String readSequence) {
+    private static void assertDeleteExpandRepeats(@NotNull String expected, int position, int altLength, @NotNull String readSequence) {
         MicrohomologyContext context = Microhomology.microhomologyAtDelete(position, altLength, readSequence.getBytes());
         MicrohomologyContext context2 = Microhomology.expandMicrohomologyRepeats(context);
         assertEquals(expected, context2.toString());
     }
 
-    private void assertInsertExpandRepeats(String expected, int position, int altLength, String readSequence) {
+    private static void assertInsertExpandRepeats(@NotNull String expected, int position, int altLength, @NotNull String readSequence) {
         MicrohomologyContext context = Microhomology.microhomologyAtInsert(position, altLength, readSequence.getBytes());
         MicrohomologyContext context2 = Microhomology.expandMicrohomologyRepeats(context);
         assertEquals(expected, context2.toString());
     }
 
-    private void assertInsert(String expected, int position, int altLength, String readSequence) {
+    private static void assertInsert(@NotNull String expected, int position, int altLength, @NotNull String readSequence) {
         MicrohomologyContext context = Microhomology.microhomologyAtInsert(position, altLength, readSequence.getBytes());
         assertEquals(expected, context.toString());
     }
-
 }

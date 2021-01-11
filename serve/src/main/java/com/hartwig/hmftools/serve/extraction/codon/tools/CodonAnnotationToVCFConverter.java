@@ -6,33 +6,27 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinKeyFormatter;
+import com.hartwig.hmftools.serve.extraction.util.GenerateAltBase;
+import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
+import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class CodonAnnotationToVCFConverter {
+
     private static final Logger LOGGER = LogManager.getLogger(CodonAnnotationToVCFConverter.class);
     private static final boolean LOG_DEBUG = true;
 
@@ -44,107 +38,60 @@ public class CodonAnnotationToVCFConverter {
         }
 
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/codon.vcf.gz";
+        String outputFile = System.getProperty("user.home") + "/hmf/tmp/codons.vcf.gz";
+        GenerateAltBase altBaseGenerator = new GenerateAltBase(new IndexedFastaSequenceFile(new File(
+                System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
 
         List<KnownCodon> codons = KnownCodonFile.read(knownCodonsTsv);
 
-        LOGGER.info("The size of the file is {}", codons.size());
+        LOGGER.info("The number of codons in known codon file is '{}'", codons.size());
 
-        VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
-                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
-                .modifyOption(Options.INDEX_ON_THE_FLY, false)
-                .build();
+        VariantContextWriter writer = VCFWriterFactory.generateVCFWriterWithInputAndSources(outputFile);
 
-        VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
-        header.addMetaDataLine(new VCFInfoHeaderLine("input", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "input"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("source",
-                VCFHeaderLineCount.UNBOUNDED,
-                VCFHeaderLineType.String,
-                "sources"));
-
-        writer.writeHeader(header);
-
-        String randomAltBase = Strings.EMPTY;
         for (KnownCodon codon : codons) {
-            Long start = codon.annotation().start();
-            Long end = codon.annotation().end();
-            Long bewtweenNumber = end > start ? start + 1 : start - 1;
-            List<Long> genomicPositions = Lists.newArrayList(start, bewtweenNumber, end);
+            long start = codon.annotation().start();
+            long end = codon.annotation().end();
+            long middle = start + 1;
+            List<Long> genomicPositions = Lists.newArrayList(start, middle, end);
+
             String chromosome = codon.annotation().chromosome();
+            for (long position : genomicPositions) {
+                String refBaseOfPosition = altBaseGenerator.extractRefBaseAtGenomicPosition(chromosome, position);
+                String randomAltBase = altBaseGenerator.createAltForRefBase(chromosome, position);
 
-            for (Long genomicPosition : genomicPositions) {
-                String extractRefBaseOfPosition = extractRefBaseOfGenomicPosition(chromosome, genomicPosition);
-
-                if (extractRefBaseOfPosition.equals("A")) {
-                    randomAltBase = "T";
-                } else if (extractRefBaseOfPosition.equals("C")) {
-                    randomAltBase = "A";
-                } else if (extractRefBaseOfPosition.equals("T")) {
-                    randomAltBase = "G";
-                } else if (extractRefBaseOfPosition.equals("G")) {
-                    randomAltBase = "C";
-                }
-
-                extactAnnotationVariantCodonIndex(extractRefBaseOfPosition,
-                        randomAltBase,
+                writeVariantToVCF(writer,
                         chromosome,
-                        genomicPosition,
+                        position,
+                        refBaseOfPosition,
+                        randomAltBase,
                         codon.sources(),
                         codon.annotation().gene(),
-                        codon.annotation().proteinAnnotation(),
                         codon.annotation().transcript(),
-                        writer);
+                        codon.annotation().codonIndex());
             }
         }
 
         writer.close();
-        LOGGER.info("All codons are written to VCF file!");
-        LOGGER.info("Done!");
+
+        LOGGER.info("All known codons are converted and written to VCF file!");
     }
 
-    private static String extractRefBaseOfGenomicPosition(@Nullable String chromosome, Long genomicPosition) throws IOException {
-        IndexedFastaSequenceFile fastaSequenceFile =
-                new IndexedFastaSequenceFile(new File("/Users/liekeschoenmaker/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta"));
-        return fastaSequenceFile.getSubsequenceAt(chromosome, genomicPosition, genomicPosition).getBaseString();
-
-    }
-
-    private static void extactAnnotationVariantCodonIndex(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
-            @Nullable String chromosome, Long position,
-            @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, @NotNull String proteinAnnotation, @NotNull String transcript,
-             @NotNull VariantContextWriter writer)  {
-
-        generateVcfFileOfGenomicPosition(extractRefBaseOfPosition,
-                randomAltBase,
-                chromosome,
-                position,
-                knowledgebases,
-                gene,
-                proteinAnnotation,
-                transcript, writer);
-
-    }
-
-    private static void generateVcfFileOfGenomicPosition(@NotNull String extractRefBaseOfPosition, @NotNull String randomAltBase,
-            @Nullable String chromosome, Long position, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene,
-            @NotNull String proteinAnnotation, @NotNull String transcript, @NotNull VariantContextWriter writer) {
-
-
-        List<Allele> hotspotAlleles =
-                Lists.newArrayList(Allele.create(extractRefBaseOfPosition, true), Allele.create(randomAltBase, false));
+    private static void writeVariantToVCF(@NotNull VariantContextWriter writer, @NotNull String chromosome, long position,
+            @NotNull String ref, @NotNull String alt, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene,
+            @NotNull String transcript, int codonIndex) {
+        List<Allele> alleles = Lists.newArrayList(Allele.create(ref, true), Allele.create(alt, false));
 
         VariantContext variantContext = new VariantContextBuilder().noGenotypes()
-                .source("SERVE")
+                .source("CodonChecker")
                 .chr(chromosome)
                 .start(position)
-                .alleles(hotspotAlleles)
-                .computeEndFromAlleles(hotspotAlleles, new Long(position).intValue())
-                .attribute("source", Knowledgebase.commaSeparatedSourceString(knowledgebases))
-                .attribute("input", ProteinKeyFormatter.toProteinKey(gene, transcript, proteinAnnotation))
+                .alleles(alleles)
+                .computeEndFromAlleles(alleles, new Long(position).intValue())
+                .attribute("source", Knowledgebase.toCommaSeparatedSourceString(knowledgebases))
+                .attribute("input", KeyFormatter.toCodonKey(gene, transcript, codonIndex))
                 .make();
 
         LOGGER.debug(" Writing variant to VCF file'{}'", variantContext);
         writer.add(variantContext);
     }
-
 }

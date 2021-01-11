@@ -34,7 +34,8 @@ public class RepeatContextTest {
         }
     }
 
-    private static void assertRepeats(final String expectedSequence, final int expectedCount, @NotNull final Optional<RepeatContext> victim) {
+    private static void assertRepeats(final String expectedSequence, final int expectedCount,
+            @NotNull final Optional<RepeatContext> victim) {
         assertTrue(victim.isPresent());
         assertEquals(expectedSequence, victim.get().sequence());
         assertEquals(expectedCount, victim.get().count());

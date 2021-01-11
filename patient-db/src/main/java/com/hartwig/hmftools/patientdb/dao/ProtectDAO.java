@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep10;
+import org.jooq.InsertValuesStep11;
 
 class ProtectDAO {
 
@@ -24,28 +24,30 @@ class ProtectDAO {
         this.context = context;
     }
 
-    void write(@NotNull String sample, @NotNull List<ProtectEvidenceItem> evidence) {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
+    void write(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
         deleteEvidenceForSample(sample);
-        for (List<ProtectEvidenceItem> batch : Iterables.partition(evidence, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep10 inserter = context.insertInto(PROTECT,
+
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+        for (List<ProtectEvidence> batch : Iterables.partition(evidence, DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep11 inserter = context.insertInto(PROTECT,
                     PROTECT.SAMPLEID,
                     PROTECT.EVENT,
+                    PROTECT.GERMLINE,
                     PROTECT.SOURCE,
+                    PROTECT.REPORTED,
                     PROTECT.TREATMENT,
+                    PROTECT.ONLABEL,
                     PROTECT.LEVEL,
                     PROTECT.DIRECTION,
                     PROTECT.URLS,
-                    PROTECT.ONLABEL,
-                    PROTECT.REPORTED,
                     PROTECT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep10 inserter, @NotNull String sample,
-            @NotNull ProtectEvidenceItem evidence) {
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep11 inserter, @NotNull String sample,
+            @NotNull ProtectEvidence evidence) {
         StringJoiner urlJoiner = new StringJoiner(",");
         for (String url : evidence.urls()) {
             urlJoiner.add(url);
@@ -53,13 +55,14 @@ class ProtectDAO {
 
         inserter.values(sample,
                 evidence.genomicEvent(),
+                evidence.germline(),
                 evidence.source().toString(),
+                evidence.reported(),
                 evidence.treatment(),
+                evidence.onLabel(),
                 evidence.level().toString(),
                 evidence.direction().toString(),
                 urlJoiner.toString(),
-                evidence.onLabel(),
-                evidence.reported(),
                 timestamp);
     }
 

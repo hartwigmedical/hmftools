@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionsValidation;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
@@ -60,7 +61,7 @@ public class SageApplication implements AutoCloseable {
     private final IndexedFastaSequenceFile refGenome;
     private final QualityRecalibrationSupplier qualityRecalibrationSupplier;
 
-    private final ListMultimap<Chromosome, NamedBed> panelWithoutHotspots;
+    private final ListMultimap<Chromosome, NamedBed> coveragePanel;
     private final ListMultimap<Chromosome, GenomeRegion> panelWithHotspots;
     private final ListMultimap<Chromosome, VariantHotspot> hotspots;
     private final ListMultimap<Chromosome, GenomeRegion> highConfidence;
@@ -83,7 +84,8 @@ public class SageApplication implements AutoCloseable {
 
         final CommandLine cmd = createCommandLine(args, options);
         this.config = SageConfig.createConfig(false, version.version(), cmd);
-        panelWithoutHotspots = readNamedBed(config.panelBed());
+        coveragePanel = readNamedBed(config.coverageBed());
+        final ListMultimap<Chromosome, GenomeRegion> panelWithoutHotspots = readUnnamedBed(config.panelBed());
         hotspots = readHotspots();
         panelWithHotspots = panelWithHotspots(panelWithoutHotspots, hotspots);
         highConfidence = readUnnamedBed(config.highConfidenceBed());
@@ -95,15 +97,22 @@ public class SageApplication implements AutoCloseable {
 
         vcf = new SageVCF(refGenome, config);
         LOGGER.info("Writing to file: {}", config.outputFile());
+
+        // Validate Coverage Bed
+        if (config.panelOnly() && !coveragePanel.isEmpty()) {
+            if (!GenomeRegionsValidation.isSubset(panelWithHotspots.values(), coveragePanel.values())) {
+                throw new IOException("Coverage bed must be a subset of panel bed when running in panel only mode");
+            }
+        }
     }
 
     @NotNull
     private Coverage createCoverage() {
         Set<String> samples = Sets.newHashSet();
-        if (config.panelCoverage()) {
+        if (!config.coverageBed().isEmpty()) {
             samples.addAll(config.tumor());
         }
-        return new Coverage(samples, panelWithoutHotspots.values());
+        return new Coverage(samples, coveragePanel.values());
 
     }
 
@@ -185,7 +194,7 @@ public class SageApplication implements AutoCloseable {
     }
 
     @NotNull
-    private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(final ListMultimap<Chromosome, NamedBed> panelWithoutHotspots,
+    private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(final ListMultimap<Chromosome, GenomeRegion> panelWithoutHotspots,
             @NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots) {
         final ListMultimap<Chromosome, GenomeRegion> result = ArrayListMultimap.create();
 

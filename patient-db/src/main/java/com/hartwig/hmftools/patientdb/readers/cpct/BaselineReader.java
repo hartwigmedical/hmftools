@@ -112,7 +112,6 @@ class BaselineReader {
     }
 
     private void setPrimaryTumorData(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
-        //See DEV-1713
         String primaryTumorLocationSelcrit = null;
         FormStatus primaryTumorLocationSelcritStatus = null;
 
@@ -129,6 +128,7 @@ class BaselineReader {
             for (EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
                 primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationOther = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
+                // We always read additional info if there is any, see also DEV-1713
                 if (primaryTumorLocationCarcinoma != null && primaryTumorLocationOther != null && !primaryTumorLocationOther.isEmpty()) {
                     primaryTumorLocationCarcinoma = primaryTumorLocationCarcinoma + " + " + primaryTumorLocationOther;
                 }
@@ -136,6 +136,7 @@ class BaselineReader {
             }
         }
 
+        // We prefer carcinoma form over sel crit form. See also DEV-540
         boolean useCarcinomaForm = primaryTumorLocationCarcinoma != null && !primaryTumorLocationCarcinoma.isEmpty();
         String primaryTumorLocation = useCarcinomaForm ? primaryTumorLocationCarcinoma : primaryTumorLocationSelcrit;
         FormStatus primaryTumorFormStatus = useCarcinomaForm ? primaryTumorLocationCarcinomaStatus : primaryTumorLocationSelcritStatus;

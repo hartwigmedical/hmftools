@@ -10,12 +10,14 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariantFile;
+import com.hartwig.hmftools.protect.ProtectConfig;
 import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantFactory;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +32,15 @@ public final class BachelorDataLoader {
     }
 
     @NotNull
-    public static BachelorData load(@NotNull String bachelorTsv, @NotNull PurpleData purpleData, @NotNull LinxData linxData,
+    public static BachelorData load(@NotNull ProtectConfig config, @NotNull PurpleData purpleData, @NotNull LinxData linxData)
+            throws IOException {
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
+
+        return load(config.bachelorTsv(), purpleData, linxData, germlineReportingModel);
+    }
+
+    @NotNull
+    private static BachelorData load(@NotNull String bachelorTsv, @NotNull PurpleData purpleData, @NotNull LinxData linxData,
             @NotNull GermlineReportingModel germlineReportingModel) throws IOException {
         LOGGER.info("Loading BACHELOR data from {}", new File(bachelorTsv).getParent());
         List<ReportableGermlineVariant> germlineVariants = ReportableGermlineVariantFile.read(bachelorTsv);
