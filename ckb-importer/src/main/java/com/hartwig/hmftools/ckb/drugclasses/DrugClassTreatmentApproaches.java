@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.drugClasses;
+package com.hartwig.hmftools.ckb.drugclasses;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

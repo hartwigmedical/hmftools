@@ -6,8 +6,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrial;
 import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrialFactory;
-import com.hartwig.hmftools.ckb.drugClasses.DrugClass;
-import com.hartwig.hmftools.ckb.drugClasses.DrugClassFactory;
+import com.hartwig.hmftools.ckb.drugclasses.DrugClass;
+import com.hartwig.hmftools.ckb.drugclasses.DrugClassFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +20,7 @@ public class CkbImporterTestApp {
     private static final Logger LOGGER = LogManager.getLogger(CkbImporterTestApp.class);
 
     private static final String CLINICAL_TRIALS = "clinicalTrials";
-    private static final String DRUG_CLASSES = "drugClasses";
+    private static final String DRUG_CLASSES = "drugclasses";
     private static final String DRUGS = "drugs";
     private static final String GENES = "genes";
     private static final String GLOBAL_THERAPY_APPROVAL_STATUSES = "globalTherapyApprovalStatuses";

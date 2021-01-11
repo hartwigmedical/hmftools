@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.drugClasses;
+package com.hartwig.hmftools.ckb.drugclasses;
 
 import java.io.File;
 import java.io.FileReader;

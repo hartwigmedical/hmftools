@@ -26,7 +26,7 @@ public class CkbImporterApplication {
     public static final String VERSION = CkbImporterApplication.class.getPackage().getImplementationVersion();
 
     private static final String CLINICAL_TRIALS = "clinicalTrials";
-    private static final String DRUG_CLASSES = "drugClasses";
+    private static final String DRUG_CLASSES = "drugclasses";
     private static final String DRUGS = "drugs";
     private static final String GENES = "genes";
     private static final String GLOBAL_THERAPY_APPROVAL_STATUSES = "globalTherapyApprovalStatuses";
