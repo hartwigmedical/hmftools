@@ -88,58 +88,50 @@ class LilacApplication2 : AutoCloseable, Runnable {
         println("${allProteinSequences.size} types")
         println("${initialCandidates.size} candidates after amino acid filtering")
 
-        val heterozygousEvidence = HeterozygousEvidence(minBaseQual,
-                heterozygousIndices.filter { it !in (298..370) }, readFragments)
+        // Specific Evidence
+//        println(PhasedEvidence.evidence(30, readFragments, 20, 29))
 
-        val initialEvidence = heterozygousEvidence.initialEvidence()
+        // Full Evidence
+        val fullEvidence = fullEvidence(aminoAcidCounts, readFragments)
+        println("Constructed ${fullEvidence.size} fully matched sequences")
 
-
-        println("HERE")
-        println(PhasedEvidence.evidence(minBaseQual, readFragments, 93, 94, 96))
-//        println(PhasedEvidence2.evidence(minBaseQual, readFragments, 90, 92, 93, 94, 96, 99, 100, 102, 103))
-//        println(PhasedEvidence2.evidence(minBaseQual, readFragments, 67, 68, 75, 85, 86, 88, 89, 90))
-//        println(PhasedEvidence2.evidence(minBaseQual, readFragments, 67, 68, 75, 85, 86, 88, 89, 90, 92, 93, 94, 96, 99, 100, 102, 103))
-//
 
         var candidates = initialCandidates
+        for (i in fullEvidence.indices) {
+            val evidence = fullEvidence[i]
+            candidates = matchingCandidates(evidence, candidates)
+            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $evidence ")
+        }
+        println("${candidates.size} candidates after full match filtering")
+        println("AFTER PARTIAL MATCHING")
 
-        val allEvidence = mutableSetOf<PhasedEvidence>()
-        allEvidence.addAll(initialEvidence)
+        var consolidated = consolidate(fullEvidence)
+         consolidated = consolidate(consolidated)
+         consolidated = consolidate(consolidated)
+         consolidated = consolidate(consolidated)
+         consolidated = consolidate(consolidated)
 
-        var unprocessedEvidence = initialEvidence
-
-        for (i in 0..1) {
-            if (unprocessedEvidence.isEmpty()) {
-                break
-            }
-
-            val topEvidence = unprocessedEvidence[0]
-
-            candidates = matchingCandidates(topEvidence, candidates)
-
-            if (i % 1 == 0) {
-                println("Iteration ${i}: ${candidates.size} candidates includes ${checkCandidates(candidates)} actual using evidence with ${topEvidence.evidence.size} types -> $topEvidence ")
-            }
-
-            val newEvidence = heterozygousEvidence.extendEvidence(topEvidence, allEvidence)
-            allEvidence.addAll(newEvidence)
-
-            val updatedEvidence = mutableSetOf<PhasedEvidence>()
-            updatedEvidence.addAll(unprocessedEvidence.drop(1))
-            updatedEvidence.addAll(newEvidence)
-
-            unprocessedEvidence = updatedEvidence.sorted()
-
-
+        for (i in consolidated.indices) {
+            val evidence = consolidated[i]
+            candidates = matchingCandidates(evidence, candidates)
+            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $evidence ")
         }
 
 
+        print(heterozygousIndices)
 
-        println(heterozygousIndices)
+//        var combined = PhasedEvidence.combineOverlapping(fullEvidence[19], fullEvidence[20])
+//        println(combined)
+//        combined = PhasedEvidence.combineOverlapping(combined, fullEvidence[21])
+//        println(combined)
+//        combined = PhasedEvidence.combineOverlapping(combined, fullEvidence[22])
+//        println(combined)
+//        println("SDF")
+//
+//        combined = PhasedEvidence.combineOverlapping(fullEvidence[22], fullEvidence[23])
+//        println(combined)
 
 
-
-        println("Fragments overlapping")
 //        for (heterozygousIndex in heterozygousIndices) {
 //            var intersectionCount = 0
 //            for (fragment in readFragments) {
@@ -226,6 +218,75 @@ class LilacApplication2 : AutoCloseable, Runnable {
 //
 //        println("HERE")
 
+    }
+
+    private fun consolidate(evidence: List<PhasedEvidence>): List<PhasedEvidence> {
+        val result = mutableListOf<PhasedEvidence>()
+        val used = mutableSetOf<Int>()
+
+        for (i in evidence.indices) {
+            for (j in i + 1 until evidence.size) {
+                if (evidence[i].overlaps(evidence[j])) {
+                    val consolidated = PhasedEvidence.combineOverlapping(evidence[i], evidence[j])
+                    if (consolidated.evidence.size <= 6) {
+                        result.add(consolidated)
+                        used.add(i)
+                        used.add(j)
+                    }
+                }
+            }
+
+        }
+
+        for (i in evidence.indices subtract used) {
+            result.add(evidence[i])
+        }
+
+        return result.toSet().toList().sortedBy { it.aminoAcidIndices[0] }
+    }
+//
+
+    private fun fullEvidence(aminoAcidCounts: AminoAcidCount, readFragments: List<Fragment>): List<PhasedEvidence> {
+
+        val excludedIndices = setOf( 364, 365, 366)
+//        val excludedIndices = setOf(24, 114, 206, 298, 337, 348, 349, 362, 364, 365, 366)
+        val heterozygousIndices = aminoAcidCounts.heterozygousIndices(minBaseCount).filter { it !in excludedIndices }
+        val heterozygousEvidence = HeterozygousEvidence(minBaseQual,
+                heterozygousIndices.filter { it !in (338..370) }, readFragments)
+
+        val allEvidence = mutableSetOf<PhasedEvidence>()
+        val initialEvidence = heterozygousEvidence.initialEvidence()
+        var unprocessedEvidence = initialEvidence
+
+        allEvidence.addAll(initialEvidence)
+
+        while (unprocessedEvidence.isNotEmpty()) {
+            val topEvidence = unprocessedEvidence[0]
+            allEvidence.add(topEvidence)
+
+            val newEvidence = heterozygousEvidence.extendEvidence(topEvidence, allEvidence)
+            allEvidence.addAll(newEvidence)
+
+            val updatedEvidence = mutableSetOf<PhasedEvidence>()
+            updatedEvidence.addAll(unprocessedEvidence.drop(1))
+            updatedEvidence.addAll(newEvidence)
+
+            unprocessedEvidence = updatedEvidence.sorted()
+        }
+
+        return longestFullEvidence(allEvidence)
+
+    }
+
+    private fun longestFullEvidence(evidence: Collection<PhasedEvidence>): List<PhasedEvidence> {
+
+        fun Collection<PhasedEvidence>.otherContains(victim: PhasedEvidence): Boolean {
+            return this.any { it != victim && it.contains(victim) }
+        }
+
+        return evidence
+                .filter { !evidence.otherContains(it) }
+                .sortedBy { it.aminoAcidIndices[0] }
     }
 
 
