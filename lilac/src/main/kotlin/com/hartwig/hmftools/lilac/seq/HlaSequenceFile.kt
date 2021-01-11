@@ -27,6 +27,20 @@ object HlaSequenceFile {
         return entries.values.toList()
     }
 
+    fun List<HlaSequence>.inflate(): List<HlaSequence> {
+        val template = this[0].rawSequence
+        return this.map {it.inflate(template) }
+    }
+
+    fun List<HlaSequence>.deflate(): List<HlaSequence> {
+        if (this.isEmpty()) {
+            return this
+        }
+
+        val template = this[0].sequence
+        return listOf(this[0]) + this.drop(1).map { it.deflate(template) }
+    }
+
     fun List<HlaSequence>.reduceToFirstFourDigits(): List<HlaSequence> {
         val resultMap = LinkedHashMap<String, HlaSequence>()
 

@@ -68,7 +68,7 @@ class HeterozygousEvidence(val minBaseQual: Int, val heterozygousIndices: List<I
             val fake = PhasedEvidence(newIndices, Collections.emptyMap())
             if (!others.contains(fake)) {
                 val evidence = PhasedEvidence.evidence(minBaseQual, readFragments, *newIndices)
-                if (evidence.evidence.isNotEmpty() && evidence.minEvidence() >= 2) {
+                if (evidence.evidence.isNotEmpty() && evidence.minEvidence() >= 3) {
                     result.add(evidence)
                 }
             }
@@ -80,7 +80,7 @@ class HeterozygousEvidence(val minBaseQual: Int, val heterozygousIndices: List<I
             if (!others.contains(fake)) {
 
                 val evidence = PhasedEvidence.evidence(minBaseQual, readFragments, *newIndices)
-                if (evidence.evidence.isNotEmpty() && evidence.minEvidence() >= 2) {
+                if (evidence.evidence.isNotEmpty() && evidence.minEvidence() >= 3) {
                     result.add(evidence)
                 }
             }

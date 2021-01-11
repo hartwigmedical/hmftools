@@ -12,20 +12,18 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord) : AminoAcidRead {
+data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord) : Read {
 
-    val hlaNucIndexEnd = hlaNucIndexStart + length - 1
-    val nucleotideIndices = IntRange(hlaNucIndexStart, hlaNucIndexEnd)
-    val aminoAcidIndices = aminoAcidIndices(hlaNucIndexStart, hlaNucIndexEnd)
+    private val hlaNucIndexEnd = hlaNucIndexStart + length - 1
+    private val nucleotideIndices = IntRange(hlaNucIndexStart, hlaNucIndexEnd).toList()
+    private val aminoAcidIndices =  AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd).toList()
 
     fun containsNucleotide(index: Int): Boolean {
-        return index >= hlaNucIndexStart && index <= hlaNucIndexStart + length
+        return index in nucleotideIndices
     }
 
-    private fun aminoAcidIndices(hlaNucIndexStart: Int, hlaNucIndexEnd: Int): Collection<Int> {
-        val result = mutableListOf<Int>()
-        AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd).forEach { result.add(it) }
-        return result
+    override fun nucleotideIndices(): Collection<Int> {
+        return nucleotideIndices
     }
 
     fun containsAminoAcid(index: Int): Boolean {
@@ -33,23 +31,23 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
     }
 
     override fun aminoAcidIndices(): Collection<Int> {
-        return aminoAcidIndices;
+        return aminoAcidIndices
     }
 
     override fun aminoAcid(index: Int, minQual: Int): Char {
         val startIndex = index * 3
 
-        val firstBase = charAt(startIndex + 0, minQual)
+        val firstBase = nucleotide(startIndex + 0, minQual)
         if (firstBase == '.') {
             return '.'
         }
 
-        val secondBase = charAt(startIndex + 1, minQual)
+        val secondBase = nucleotide(startIndex + 1, minQual)
         if (secondBase == '.') {
             return '.'
         }
 
-        val thirdBase = charAt(startIndex + 2, minQual)
+        val thirdBase = nucleotide(startIndex + 2, minQual)
         if (thirdBase == '.') {
             return '.'
         }
@@ -57,7 +55,7 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
         return Codons.aminoAcid(firstBase.toString() + secondBase + thirdBase)
     }
 
-    fun charAt(index: Int, minQual: Int = 0): Char {
+    override fun nucleotide(index: Int, minQual: Int): Char {
         val adjustedIndex = if (reverseStrand) readIndexStart - index + hlaNucIndexStart else index - hlaNucIndexStart + readIndexStart
         val quality = samRecord.baseQualities[adjustedIndex]
         if (quality < minQual) {

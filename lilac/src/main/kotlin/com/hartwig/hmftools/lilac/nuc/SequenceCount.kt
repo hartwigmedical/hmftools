@@ -5,12 +5,27 @@ import java.io.File
 import java.util.*
 import kotlin.math.min
 
-class AminoAcidCount(val length: Int) {
+class SequenceCount(val length: Int) {
 
     companion object {
-        operator fun invoke(minQual: Int, fragments: List<Fragment>): AminoAcidCount {
+        fun nucleotides(minQual: Int, fragments: List<Fragment>): SequenceCount {
+            val length = fragments.map { it.nucleotideIndices().max() ?: -1 }.max()!! + 1
+            val result = SequenceCount(length)
+
+            for (fragment in fragments) {
+                for (index in fragment.nucleotideIndices()) {
+                    val nucleotide = fragment.nucleotide(index, minQual)
+                    if (nucleotide != '.') {
+                        result.increment(index, nucleotide)
+                    }
+                }
+            }
+            return result
+        }
+
+        fun aminoAcids(minQual: Int, fragments: List<Fragment>): SequenceCount {
             val length = fragments.map { it.aminoAcidIndices().max() ?: -1 }.max()!! + 1
-            val result = AminoAcidCount(length)
+            val result = SequenceCount(length)
 
             for (fragment in fragments) {
                 for (index in fragment.aminoAcidIndices()) {
@@ -48,7 +63,7 @@ class AminoAcidCount(val length: Int) {
         return mapAtIndex.size > 1
     }
 
-    fun aminoAcidAt(index: Int, minCount: Int = 2): Collection<Char> {
+    fun sequenceAt(index: Int, minCount: Int = 2): Collection<Char> {
         val result = mutableSetOf<Char>()
         val indexMap = count[index]
         for ((aa, count) in indexMap) {
