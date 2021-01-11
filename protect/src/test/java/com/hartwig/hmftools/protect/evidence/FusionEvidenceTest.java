@@ -54,6 +54,60 @@ public class FusionEvidenceTest {
         assertEquals(promiscuousMatch.genomicEvent(), evidenceItems.get(1).genomicEvent());
     }
 
+    @Test
+    public void canCorrectlyFilterOnExonRange() {
+        String geneUp = "geneUp";
+        String geneDown = "geneDown";
+        int minExonUp = 5;
+        int maxExonUp = 7;
+        int minExonDown = 2;
+        int maxExonDown = 4;
+
+        ActionableFusion fusion = ImmutableActionableFusion.builder()
+                .from(createTestBaseEvent())
+                .geneUp(geneUp)
+                .minExonUp(minExonUp)
+                .maxExonUp(maxExonUp)
+                .geneDown(geneDown)
+                .minExonDown(minExonDown)
+                .maxExonDown(maxExonDown)
+                .build();
+
+        FusionEvidence fusionEvidence = new FusionEvidence(Lists.newArrayList(), Lists.newArrayList(fusion));
+
+        ImmutableLinxFusion.Builder builder = linxFusionBuilder().geneStart(geneUp).geneEnd(geneDown);
+
+        // On min range
+        assertEquals(1,
+                fusionEvidence.evidence(Sets.newHashSet(),
+                        Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown).build())).size());
+
+        // On max range
+        assertEquals(1,
+                fusionEvidence.evidence(Sets.newHashSet(),
+                        Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown).build())).size());
+
+        // Up gene exon too low
+        assertEquals(0,
+                fusionEvidence.evidence(Sets.newHashSet(),
+                        Lists.newArrayList(builder.fusedExonUp(minExonUp - 1).fusedExonDown(minExonDown).build())).size());
+
+        // Up gene exon too high
+        assertEquals(0,
+                fusionEvidence.evidence(Sets.newHashSet(),
+                        Lists.newArrayList(builder.fusedExonUp(maxExonUp + 1).fusedExonDown(minExonDown).build())).size());
+
+        // Down gene exon too low
+        assertEquals(0,
+                fusionEvidence.evidence(Sets.newHashSet(),
+                        Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown - 1).build())).size());
+
+        // Down gene exon too high
+        assertEquals(0,
+                fusionEvidence.evidence(Sets.newHashSet(),
+                        Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown + 1).build())).size());
+    }
+
     @NotNull
     private static ImmutableLinxFusion.Builder linxFusionBuilder() {
         return ImmutableLinxFusion.builder()
