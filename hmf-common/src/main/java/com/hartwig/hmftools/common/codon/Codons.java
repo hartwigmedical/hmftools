@@ -2,10 +2,13 @@ package com.hartwig.hmftools.common.codon;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Codons {
+public final class Codons {
+
+    private Codons() {
+    }
 
     @NotNull
-    public static String codon(String aminoAcids) {
+    public static String codon(@NotNull String aminoAcids) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < aminoAcids.length(); i++) {
             builder.append(codon(aminoAcids.charAt(i)));
@@ -29,7 +32,8 @@ public class Codons {
         throw new IllegalArgumentException("Unknown amino acid " + aminoAcid);
     }
 
-    public static String aminoAcids(String dna) {
+    @NotNull
+    public static String aminoAcids(@NotNull String dna) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < dna.length() - 2; i += 3) {
             builder.append(aminoAcid(dna.substring(i, i + 3)));
@@ -38,8 +42,9 @@ public class Codons {
         return builder.toString();
     }
 
-    public static char aminoAcid(String codon) {
-        assert (codon.length() == 3);
+    public static char aminoAcid(@NotNull String codon) {
+        assert codon.length() == 3;
+
         switch (codon) {
             // SECOND BASE T
             case "TTT":
@@ -136,10 +141,8 @@ public class Codons {
             case "GGA":
             case "GGG":
                 return 'G';
-
         }
 
         return '.';
     }
-
 }

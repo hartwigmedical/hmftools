@@ -32,5 +32,4 @@ public class CodonsTest {
         assertEquals("TAT", Codons.codon("Y"));
         assertEquals("TATTGA", Codons.codon("YX"));
     }
-
 }

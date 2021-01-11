@@ -37,5 +37,4 @@ public class ReportableGermlineVariantFileTest {
         assertEquals(3.8773, variant.adjustedCopyNumber(), EPSILON);
         assertFalse(variant.biallelic());
     }
-
 }

@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-final class PopulateUnknown {
+class PopulateUnknown {
 
     private final CobaltChromosomes cobaltChromosomes;
 
@@ -17,7 +17,6 @@ final class PopulateUnknown {
 
     @NotNull
     List<CombinedRegion> populateUnknown(@NotNull final List<CombinedRegion> regions) {
-
         for (int i = 0; i < regions.size(); i++) {
             final CombinedRegion region = regions.get(i);
 
@@ -37,7 +36,7 @@ final class PopulateUnknown {
             }
 
         }
+
         return regions;
     }
-
 }

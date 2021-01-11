@@ -79,7 +79,6 @@ public class GermlineStatusFactoryTest {
         } else {
             assertEquals(expected, femaleVictim.fromRatio(chromosome, ratio, 0.01));
         }
-
     }
 
     private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expectedMale,

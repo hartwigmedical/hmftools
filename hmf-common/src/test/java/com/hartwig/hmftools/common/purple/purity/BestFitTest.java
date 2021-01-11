@@ -33,7 +33,6 @@ public class BestFitTest {
         assertEquals(fp4, bestFitPerPurity.get(1));
     }
 
-
     @Test
     public void testMostDiploidPurity() {
         final FittedPurity fp1 = createRandomPurity(0.3, 0.3, 2.3);
@@ -51,11 +50,8 @@ public class BestFitTest {
         assertEquals(fp4, result.get(1));
     }
 
-
-
     @NotNull
     private FittedPurity createRandomPurity(double purity, double score, double ploidy) {
         return createRandomPurityBuilder(random).purity(purity).score(score).ploidy(ploidy).build();
     }
-
 }

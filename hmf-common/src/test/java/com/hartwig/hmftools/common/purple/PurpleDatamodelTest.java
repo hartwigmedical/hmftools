@@ -186,6 +186,7 @@ public class PurpleDatamodelTest {
                 .startContext(dummyContext() )
                 .imprecise(true);
     }
+
     @NotNull
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariantSingleBreakend(@NotNull final String startChromosome,
            final long startPosition, double startVaf) {

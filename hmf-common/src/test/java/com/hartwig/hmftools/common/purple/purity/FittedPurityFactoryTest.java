@@ -42,5 +42,4 @@ public class FittedPurityFactoryTest {
         assertEquals(1, fixed.size());
         assertEquals(fixedPloidy, fixed.get(0), EPSILON);
     }
-
 }

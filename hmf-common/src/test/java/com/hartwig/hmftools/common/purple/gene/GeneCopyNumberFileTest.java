@@ -17,7 +17,8 @@ public class GeneCopyNumberFileTest {
     @Test
     public void testSupportOlderFileFormat() {
         final String oldVersion =
-                "1\t11869\t14409\tDDX11L1\t2.5717\t2.5717\t0\t1\t0\t0\tENST00000456328\t2\tp36.33\t1\t1\t87337011\tTELOMERE\tBND\tBAF_WEIGHTED\t0\t0\t0.0000\t0\t0\t0.0000\t0\t0\t0.0000\t0.5491";
+                "1\t11869\t14409\tDDX11L1\t2.5717\t2.5717\t0\t1\t0\t0\tENST00000456328\t2\tp36.33\t1\t1\t87337011\tTELOMERE\tBND\t"
+                        + "BAF_WEIGHTED\t0\t0\t0.0000\t0\t0\t0.0000\t0\t0\t0.0000\t0.5491";
 
         GeneCopyNumber copyNumber = GeneCopyNumberFile.fromString(oldVersion);
         assertEquals(11869, copyNumber.start());
@@ -78,10 +79,9 @@ public class GeneCopyNumberFileTest {
     private static SegmentSupport randomSupport(@NotNull Random random) {
         return SegmentSupport.values()[random.nextInt(SegmentSupport.values().length)];
     }
-    
+
     private static double nextDouble(@NotNull final Random random) {
         return Math.round(random.nextDouble() * 10000D) / 10000D;
     }
-    
 
 }

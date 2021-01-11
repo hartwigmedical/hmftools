@@ -5,6 +5,7 @@ import static junit.framework.TestCase.assertEquals;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GermlineGenotypeEnrichmentTest {
@@ -21,11 +22,9 @@ public class GermlineGenotypeEnrichmentTest {
         assertStatus(GermlineGenotypeEnrichment.GermlineGenotypeStatus.HOM, 14, 15);
     }
 
-
-    private static void assertStatus(GermlineGenotypeEnrichment.GermlineGenotypeStatus expected, int alleleReadCount, int totalReadCount) {
-        AllelicDepth depth =  ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
+    private static void assertStatus(@NotNull GermlineGenotypeEnrichment.GermlineGenotypeStatus expected, int alleleReadCount,
+            int totalReadCount) {
+        AllelicDepth depth = ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
         assertEquals(expected, GermlineGenotypeEnrichment.status(depth));
     }
-
-
 }

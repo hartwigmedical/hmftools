@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.variant.snpeff.ImmutableSnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -75,23 +76,23 @@ public class CanonicalAnnotationTest {
     private static SnpEffAnnotation createSnpEffAnnotation(@NotNull final String gene, @NotNull final String transcript,
             @NotNull VariantConsequence consequence) {
         return ImmutableSnpEffAnnotation.builder()
-                .allele("")
-                .effects("")
+                .allele(Strings.EMPTY)
+                .effects(Strings.EMPTY)
                 .consequences(Lists.newArrayList(consequence))
-                .severity("")
+                .severity(Strings.EMPTY)
                 .gene(gene)
                 .geneID(gene)
                 .featureType("transcript")
                 .featureID(transcript)
-                .transcriptBioType("")
-                .rank("")
-                .hgvsCoding("")
-                .hgvsProtein("")
-                .cDNAPosAndLength("")
-                .cdsPosAndLength("")
-                .aaPosAndLength("")
-                .distance("")
-                .addition("")
+                .transcriptBioType(Strings.EMPTY)
+                .rank(Strings.EMPTY)
+                .hgvsCoding(Strings.EMPTY)
+                .hgvsProtein(Strings.EMPTY)
+                .cDNAPosAndLength(Strings.EMPTY)
+                .cdsPosAndLength(Strings.EMPTY)
+                .aaPosAndLength(Strings.EMPTY)
+                .distance(Strings.EMPTY)
+                .addition(Strings.EMPTY)
                 .build();
     }
 }

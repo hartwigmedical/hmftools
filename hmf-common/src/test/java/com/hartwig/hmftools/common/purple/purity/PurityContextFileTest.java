@@ -60,6 +60,7 @@ public class PurityContextFileTest {
         PurityContextFile.fromLines(qcLines, fitLines);
     }
 
+    @NotNull
     private static PurityContext createRandomContext(@NotNull Random random) {
         return ImmutablePurityContext.builder()
                 .version(random.nextInt() + "a")

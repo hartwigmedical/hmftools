@@ -20,10 +20,12 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.compress.utils.Lists;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CobaltChromosomesTest {
 
+    @NotNull
     public static CobaltChromosomes female() {
         List<MedianRatio> ratios = Lists.newArrayList();
         for (int i = 0; i < 22; i++) {
@@ -34,6 +36,7 @@ public class CobaltChromosomesTest {
         return new CobaltChromosomes(ratios);
     }
 
+    @NotNull
     public static CobaltChromosomes male() {
         List<MedianRatio> ratios = Lists.newArrayList();
         for (int i = 0; i < 22; i++) {
@@ -208,12 +211,13 @@ public class CobaltChromosomesTest {
         assertEquals(1.5, victim.get("X").actualRatio(), 0.01);
     }
 
-    private static MedianRatio create(String contig, double ratio) {
+    @NotNull
+    private static MedianRatio create(@NotNull String contig, double ratio) {
         return create(contig, ratio, MIN_Y_COUNT);
     }
 
-    private static MedianRatio create(String contig, double ratio, int count) {
+    @NotNull
+    private static MedianRatio create(@NotNull String contig, double ratio, int count) {
         return ImmutableMedianRatio.builder().count(count).chromosome(contig).medianRatio(ratio).build();
     }
-
 }

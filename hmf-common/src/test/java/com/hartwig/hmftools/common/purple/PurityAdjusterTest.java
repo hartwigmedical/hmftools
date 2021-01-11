@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurityAdjusterTest {
@@ -16,7 +17,7 @@ public class PurityAdjusterTest {
         assertPurityAdjustment(1, 0.85, 1.0, 0.575);
     }
 
-    private void assertPurityAdjustment(final double expectedAdjustedCopyNumber, final double purity, final double normFactor,
+    private static void assertPurityAdjustment(final double expectedAdjustedCopyNumber, final double purity, final double normFactor,
             final double ratio) {
         final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(Gender.MALE, purity, normFactor);
         assertEquals(expectedAdjustedCopyNumber, purityAdjuster.purityAdjustedCopyNumber("1", ratio), EPSILON);
@@ -45,7 +46,6 @@ public class PurityAdjusterTest {
         assertEquals(0, victim.expectedFrequency(2, 1, -0.2, -0.1), EPSILON);
     }
 
-
     @Test
     public void testNormFactorPloidyAverageRatioConsistency() {
         double averageRatio = 0.990374738586366;
@@ -58,12 +58,10 @@ public class PurityAdjusterTest {
 
         assertEquals(averageRatio, impliedAverageRatio, EPSILON);
         assertEquals(normFactor, impliedNormFactor, EPSILON);
-
     }
 
-    private void assertFrequencyMatchesPloidy(final PurityAdjuster victim, final int normalCopyNumber, final int normalPloidy,
-            final double tumorCopyNumber, final double tumorPloidy) {
-
+    private static void assertFrequencyMatchesPloidy(@NotNull final PurityAdjuster victim, final int normalCopyNumber,
+            final int normalPloidy, final double tumorCopyNumber, final double tumorPloidy) {
         double expectedFrequency = victim.expectedFrequency(normalCopyNumber, normalPloidy, tumorCopyNumber, tumorPloidy);
         double actualTumorPloidy = victim.purityAdjustedPloidy(normalCopyNumber, normalPloidy, tumorCopyNumber, expectedFrequency);
 

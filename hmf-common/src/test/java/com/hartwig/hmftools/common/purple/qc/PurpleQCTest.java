@@ -74,11 +74,11 @@ public class PurpleQCTest {
         assertStatus(victim, PurpleQCStatus.WARN_LOW_PURITY, PurpleQCStatus.FAIL_CONTAMINATION);
     }
 
-    private void assertStatus(ImmutablePurpleQC.Builder victim, PurpleQCStatus... status) {
+    private static void assertStatus(@NotNull ImmutablePurpleQC.Builder victim, @NotNull PurpleQCStatus... status) {
         assertStatus(victim.build(), status);
     }
 
-    private void assertStatus(PurpleQC victim, PurpleQCStatus... status) {
+    private static void assertStatus(@NotNull PurpleQC victim, @NotNull PurpleQCStatus... status) {
         assertEquals(victim.status().size(), status.length);
         for (PurpleQCStatus purpleQCStatus : status) {
             assertTrue(victim.status().contains(purpleQCStatus));
@@ -97,5 +97,4 @@ public class PurpleQCTest {
                 .deletedGenes(0)
                 .method(FittedPurityMethod.NORMAL);
     }
-
 }

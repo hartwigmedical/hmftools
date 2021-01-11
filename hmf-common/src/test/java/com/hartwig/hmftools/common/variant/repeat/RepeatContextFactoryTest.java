@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class RepeatContextFactoryTest {
@@ -81,25 +82,26 @@ public class RepeatContextFactoryTest {
     @Test
     public void testForwardRepeats() {
         final String sequence = "AAGATCATC";
-        assertEquals(1, RepeatContextFactory.forwardRepeats(6, 3,  sequence.getBytes()));
-        assertEquals(2, RepeatContextFactory.forwardRepeats(3, 3,  sequence.getBytes()));
+        assertEquals(1, RepeatContextFactory.forwardRepeats(6, 3, sequence.getBytes()));
+        assertEquals(2, RepeatContextFactory.forwardRepeats(3, 3, sequence.getBytes()));
     }
 
     @Test
     public void testBackwardRepeats() {
         final String sequence = "AAGATCATCATC";
-        assertEquals(1, RepeatContextFactory.backwardRepeats(6, 3,  sequence.getBytes()));
-        assertEquals(2, RepeatContextFactory.backwardRepeats(9, 3,  sequence.getBytes()));
+        assertEquals(1, RepeatContextFactory.backwardRepeats(6, 3, sequence.getBytes()));
+        assertEquals(2, RepeatContextFactory.backwardRepeats(9, 3, sequence.getBytes()));
     }
 
-    private static void assertRepeatContext(int expectedCount, String expectedBases, int index, String sequence) {
+    private static void assertRepeatContext(int expectedCount, @NotNull String expectedBases, int index, @NotNull String sequence) {
         Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
         RepeatContext repeatContextGATC = optRepeatContextGATC.get();
         assertEquals(expectedCount, repeatContextGATC.count());
         assertEquals(expectedBases, repeatContextGATC.sequence());
     }
 
-    private static void assertRepeatContext(int start, int end, int count, String expectedBases, int index, String sequence) {
+    private static void assertRepeatContext(int start, int end, int count, @NotNull String expectedBases, int index,
+            @NotNull String sequence) {
         Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
         RepeatContext repeatContextGATC = optRepeatContextGATC.get();
         assertEquals(count, repeatContextGATC.count());
@@ -108,7 +110,7 @@ public class RepeatContextFactoryTest {
         assertEquals(expectedBases, repeatContextGATC.sequence());
     }
 
-    private static void assertNone(int index, String sequence) {
+    private static void assertNone(int index, @NotNull String sequence) {
         Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
         assertFalse(optRepeatContextGATC.isPresent());
     }

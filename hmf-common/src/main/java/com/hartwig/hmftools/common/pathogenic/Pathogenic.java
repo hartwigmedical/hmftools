@@ -85,23 +85,23 @@ public enum Pathogenic {
     static final String CLINVAR_STR_LIKELY_BENIGN = "Likely_benign";
     static final String CLINVAR_STR_CONFLICTING = "Conflicting";
 
-    private static boolean hasPathogenic(final String clinvarStr) {
+    private static boolean hasPathogenic(@NotNull final String clinvarStr) {
         return clinvarStr.contains(CLINVAR_STR_PATHOGENIC);
     }
 
-    private static boolean hasLikelyPathogenic(final String clinvarStr) {
+    private static boolean hasLikelyPathogenic(@NotNull final String clinvarStr) {
         return clinvarStr.contains(CLINVAR_STR_LIKELY_PATHOGENIC);
     }
 
-    private static boolean hasBenign(final String clinvarStr) {
+    private static boolean hasBenign(@NotNull final String clinvarStr) {
         return clinvarStr.contains(CLINVAR_STR_BENIGN);
     }
 
-    private static boolean hasLikelyBenign(final String clinvarStr) {
+    private static boolean hasLikelyBenign(@NotNull final String clinvarStr) {
         return clinvarStr.contains(CLINVAR_STR_LIKELY_BENIGN);
     }
 
-    private static boolean isConflicting(final String clinvarStr) {
+    private static boolean isConflicting(@NotNull final String clinvarStr) {
         return clinvarStr.contains(CLINVAR_STR_CONFLICTING);
     }
 }

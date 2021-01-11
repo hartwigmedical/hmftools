@@ -32,5 +32,4 @@ public class AllelicDepthTest {
         assertEquals(10, victim.totalReadCount());
         assertEquals(0.4, victim.alleleFrequency(), 0.01);
     }
-
 }

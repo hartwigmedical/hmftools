@@ -19,8 +19,8 @@ public class SuffixTreeTest {
 
     @Test
     public void testRealExample() {
-
-        final String dna = "AATGTAGGTGCTGCTGTGAAGGGATTTAGCAGATATAATTAAGGGTCTCAATTAGTTGACTTTATGCTGCGTTTATCCTGCTTGGACTGTCCTAATCAGGTGAGCCCTTGAAAGGACTGGGTTCTTCATGAGCATAGAGACTTACAGTGTG";
+        final String dna = "AATGTAGGTGCTGCTGTGAAGGGATTTAGCAGATATAATTAAGGGTCTCAATTAGTTGACTTTATGCTGCGTTTAT"
+                + "CCTGCTTGGACTGTCCTAATCAGGTGAGCCCTTGAAAGGACTGGGTTCTTCATGAGCATAGAGACTTACAGTGTG";
         final String aminoAcids = Codons.aminoAcids(dna);
 
         SuffixTree tree = new SuffixTree(aminoAcids);
@@ -28,7 +28,6 @@ public class SuffixTreeTest {
             assertTrue(tree.contains(aminoAcids.substring(i, i + 10)));
         }
     }
-
 
     @Test
     public void testEndsWith() {
@@ -64,5 +63,4 @@ public class SuffixTreeTest {
         assertEquals(0, tree.endsWith("RNSLGWSGVGRAGQ"));
         assertEquals(4, tree.endsWith("RNSTGWSGVGRAGQ"));
     }
-
 }

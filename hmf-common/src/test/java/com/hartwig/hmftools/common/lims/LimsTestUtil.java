@@ -35,7 +35,7 @@ public final class LimsTestUtil {
                 .shallowSeq(false)
                 .reportViralInsertions(false)
                 .cohort(Strings.EMPTY)
-                .analysisTypeSample(Strings.EMPTY);
+                .analysisType(Strings.EMPTY);
     }
 
     @NotNull

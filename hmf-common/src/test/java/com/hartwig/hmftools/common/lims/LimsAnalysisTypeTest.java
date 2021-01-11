@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.common.lims;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 public class LimsAnalysisTypeTest {
+
     @Test
     public void canExtractLimsAnalysisType() {
         assertEquals(LimsAnalysisType.SOMATIC_R, LimsAnalysisType.extractAnalysisType("Somatic_R"));
@@ -13,7 +14,7 @@ public class LimsAnalysisTypeTest {
 
     @Test(expected = IllegalStateException.class)
     public void hasUnknownCohortType() {
+        //noinspection ResultOfMethodCallIgnored
         LimsAnalysisType.extractAnalysisType("somatic_T");
     }
-
 }

@@ -15,30 +15,20 @@ public class GenomeRegionsValidationTest {
 
     @Test
     public void testTwiceInSameRegion() {
-        final List<GenomeRegion> superset = newArrayList(
-                create("1", 100, 110)
-        );
+        final List<GenomeRegion> superset = newArrayList(create("1", 100, 110));
 
-        assertTrue(isSubset(superset, newArrayList(
-                create("1", 100, 101),
-                create("1", 102, 103))));
-
+        assertTrue(isSubset(superset, newArrayList(create("1", 100, 101), create("1", 102, 103))));
     }
 
     @Test
     public void testCombinedCoverage() {
-        final List<GenomeRegion> superset = newArrayList(
-                create("1", 100, 110),
-                create("1", 111, 120),
-                create("1", 122, 130),
-                create("1", 131, 140)
-        );
+        final List<GenomeRegion> superset =
+                newArrayList(create("1", 100, 110), create("1", 111, 120), create("1", 122, 130), create("1", 131, 140));
         assertFalse(isSubset(superset, newArrayList(create("1", 99, 101))));
         assertTrue(isSubset(superset, newArrayList(create("1", 100, 101))));
         assertTrue(isSubset(superset, newArrayList(create("1", 101, 101))));
 
         assertFalse(isSubset(superset, newArrayList(create("2", 101, 101))));
-
 
         assertFalse(isSubset(superset, newArrayList(create("1", 99, 120))));
         assertTrue(isSubset(superset, newArrayList(create("1", 100, 120))));
@@ -46,7 +36,5 @@ public class GenomeRegionsValidationTest {
 
         assertTrue(isSubset(superset, newArrayList(create("1", 122, 140))));
         assertFalse(isSubset(superset, newArrayList(create("1", 100, 140))));
-
     }
-
 }

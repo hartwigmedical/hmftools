@@ -89,12 +89,12 @@ public class KataegisQueueTest {
     }
 
     @NotNull
-    static VariantContext create(String contig, long start, boolean kataegis) {
+    static VariantContext create(@NotNull String contig, long start, boolean kataegis) {
         return create(contig, start, kataegis ? "T" : "A");
     }
 
     @NotNull
-    private static VariantContext create(String contig, long start, @NotNull final String alt) {
+    private static VariantContext create(@NotNull String contig, long start, @NotNull final String alt) {
         Allele refAllele = Allele.create("C", true);
         Allele altAllele = Allele.create(alt, false);
 
