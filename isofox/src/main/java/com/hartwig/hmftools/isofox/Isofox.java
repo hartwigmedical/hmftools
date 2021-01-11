@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.validConfigPaths;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.NEO_EPITOPES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
 import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
@@ -51,6 +52,7 @@ import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadCache;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
+import com.hartwig.hmftools.isofox.neo.NeoEpitopeReader;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
@@ -131,6 +133,13 @@ public class Isofox
             boolean status = generateExpectedCounts(chrGeneMap);
             mResultsWriter.close();
             return status;
+        }
+
+        if(mConfig.runFunction(NEO_EPITOPES))
+        {
+            NeoEpitopeReader neReader = new NeoEpitopeReader(mConfig, mGeneTransCache);
+            neReader.calcFragmentSupport();
+            return true;
         }
 
         if(mConfig.runFunction(READ_COUNTS))

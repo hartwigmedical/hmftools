@@ -13,11 +13,11 @@ import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForwar
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.fusionInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.OUT_OF_FRAME_FUSION;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
-import static com.hartwig.hmftools.imuno.neo.NeoUtils.ALL_TRANS_BASES;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBaseExcerpt;
-import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBaseExcerpt;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptCodingData;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
@@ -28,7 +28,9 @@ import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
-import com.hartwig.hmftools.common.variant.CodingEffect;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 public class SvNeoEpitope extends NeoEpitope
 {
@@ -141,7 +143,10 @@ public class SvNeoEpitope extends NeoEpitope
                 refGenome, TransData[FS_UP], chromosome(FS_UP), position(FS_UP), orientation(FS_UP), upRequiredBases);
 
         RawCodingBases[FS_UP] = cbExcerpt.Bases;
-        CodingBasePositions[FS_UP] = cbExcerpt.Positions[FS_UP];
+
+        ExtPositions[FS_UP][SE_START] = cbExcerpt.Positions[SE_START];
+        ExtPositions[FS_UP][SE_END] = cbExcerpt.Positions[SE_END];
+        ExtCigars[FS_UP] = cbExcerpt.CigarRef;
 
         int codingInsSeqLen = 0;
 
@@ -150,23 +155,43 @@ public class SvNeoEpitope extends NeoEpitope
             codingInsSeqLen = mSvFusion.InsertSequence.length();
 
             if(TransData[FS_UP].Strand == POS_STRAND)
+            {
+                ExtCigars[FS_UP].add(new CigarElement(codingInsSeqLen, CigarOperator.I));
                 RawCodingBases[FS_UP] += mSvFusion.InsertSequence;
+            }
             else
-                RawCodingBases[FS_UP]= mSvFusion.InsertSequence + CodingBases[FS_UP];
+            {
+                ExtCigars[FS_UP].getCigarElements().add(0, new CigarElement(codingInsSeqLen, CigarOperator.I));
+                RawCodingBases[FS_UP] = mSvFusion.InsertSequence + CodingBases[FS_UP];
+            }
         }
+
+        ExtCodingBases[FS_UP] = RawCodingBases[FS_UP];
 
         NovelBaseIndex[FS_UP] = upExtraBases + codingInsSeqLen;
         NovelBaseIndex[FS_DOWN] = downExtraBases;
 
         boolean canStartInExon = RegionType[FS_UP] == TranscriptRegionType.EXONIC || upExtraBases > 0;
-        int downRequiredBases = phaseMatched() ? requiredAminoAcids * 3 + downExtraBases : ALL_TRANS_BASES;
+        int downRequiredBases = requiredAminoAcids * 3 + downExtraBases;
 
         cbExcerpt = getDownstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), position(FS_DOWN), orientation(FS_DOWN),
-                downRequiredBases, canStartInExon, true);
+                downRequiredBases, canStartInExon, true, !phaseMatched());
 
         RawCodingBases[FS_DOWN] = cbExcerpt.Bases;
-        CodingBasePositions[FS_DOWN] = cbExcerpt.Positions[FS_DOWN];
+
+        // call again to get restricted downstream bases
+        if(!phaseMatched())
+        {
+            cbExcerpt = getDownstreamCodingBaseExcerpt(
+                    refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), position(FS_DOWN), orientation(FS_DOWN),
+                    downRequiredBases, canStartInExon, true, false);
+        }
+
+        ExtPositions[FS_DOWN][SE_START] = cbExcerpt.Positions[SE_START];
+        ExtPositions[FS_DOWN][SE_END] = cbExcerpt.Positions[SE_END];
+        ExtCodingBases[FS_DOWN] = cbExcerpt.Bases;
+        ExtCigars[FS_DOWN] = cbExcerpt.CigarRef;
 
         IM_LOGGER.trace("ne({}) phased({} up={} down={}) reqBases(up={} down={}) insSeqLen({})",
                 toString(), phaseMatched(), upExtraBases, downExtraBases, upRequiredBases, downRequiredBases, codingInsSeqLen);

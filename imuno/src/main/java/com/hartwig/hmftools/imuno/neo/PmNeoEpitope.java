@@ -16,11 +16,12 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.FRAMESHIFT;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_INSERTION;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
-import static com.hartwig.hmftools.imuno.neo.NeoUtils.ALL_TRANS_BASES;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBaseExcerpt;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
@@ -29,10 +30,18 @@ import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptCodingData;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.CodingBaseData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
+
+import org.apache.commons.compress.utils.Lists;
+
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 public class PmNeoEpitope extends NeoEpitope
 {
@@ -182,7 +191,7 @@ public class PmNeoEpitope extends NeoEpitope
         }
         else
         {
-            // need to go to the phase phase the ALT
+            // need to go to the phase (prior to?) the ALT
             if(isBaseChange())
                 mutationTicks = mPointMutation.Alt.length();
             else if(isInsert())
@@ -234,21 +243,19 @@ public class PmNeoEpitope extends NeoEpitope
             downPosition = mPointMutation.Position - 1; // since down pos on -ve strand is the mutation base
         }
 
-        CodingBaseExcerpt cbExcerpt = getUpstreamCodingBaseExcerpt(
+        CodingBaseExcerpt upExcerpt = getUpstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_UP], chromosome(FS_UP), upPosition, orientation(FS_UP), upRequiredBases);
 
-        upCodingBases = cbExcerpt.Bases;
-        CodingBasePositions[FS_UP] = cbExcerpt.Positions[FS_UP];
+        upCodingBases = upExcerpt.Bases;
 
         boolean canStartInExon = true; // assumed true for now RegionType[FS_UPSTREAM] == TranscriptRegionType.EXONIC;
-        int downRequiredBases = phaseMatched() ? requiredAminoAcids * 3 + downExtraBases : ALL_TRANS_BASES;
+        int downRequiredBases = requiredAminoAcids * 3 + downExtraBases;
 
-        cbExcerpt = getDownstreamCodingBaseExcerpt(
+        CodingBaseExcerpt downExcerpt = getDownstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
-                downRequiredBases, canStartInExon, false);
+                downRequiredBases, canStartInExon, false, !phaseMatched());
 
-        downCodingBases = cbExcerpt.Bases;
-        CodingBasePositions[FS_DOWN] = cbExcerpt.Positions[FS_DOWN];
+        downCodingBases = downExcerpt.Bases;
 
         if(isBaseChange())
             setWildtypeAminoAcids(refGenome, requiredAminoAcids);
@@ -284,11 +291,12 @@ public class PmNeoEpitope extends NeoEpitope
 
             if(phaseMatched())
                 NovelBaseIndex[FS_DOWN] = downExtraBases;
+
+            ExtCodingBases[FS_UP] = upExcerpt.Bases + mPointMutation.Alt + downExcerpt.Bases;
         }
         else
         {
             downCodingBases += mPointMutation.Alt;
-
             NovelBaseIndex[FS_UP] = upExtraBases;
 
             if(phaseMatched())
@@ -298,7 +306,72 @@ public class PmNeoEpitope extends NeoEpitope
                 else
                     NovelBaseIndex[FS_DOWN] = downExtraBases + altLength;
             }
+
+            ExtCodingBases[FS_UP] = downExcerpt.Bases + mPointMutation.Alt + upExcerpt.Bases;
         }
+
+        if(!phaseMatched())
+        {
+            // ensure a codon-rounding base total
+            if(isDeletion())
+                downRequiredBases = (requiredAminoAcids * 2 + 1) * 3 - upCodingBases.length();
+
+            downExcerpt = getDownstreamCodingBaseExcerpt(
+                    refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
+                    downRequiredBases, canStartInExon, false, false);
+        }
+
+        CodingBaseExcerpt lowerExcerpt = posStrand() ? upExcerpt : downExcerpt;
+        CodingBaseExcerpt upperExcerpt = posStrand() ? downExcerpt : upExcerpt;
+
+        // set cigar details just for the upstream slot since it's for a single gene
+        ExtPositions[FS_UP][SE_START] = lowerExcerpt.Positions[SE_START];
+        ExtPositions[FS_UP][SE_END] = upperExcerpt.Positions[SE_END];
+
+        List<CigarElement> cigarElements = Lists.newArrayList();
+        cigarElements.addAll(lowerExcerpt.CigarRef.getCigarElements());
+        CigarElement lastElement = cigarElements.get(cigarElements.size() - 1);
+
+        if(isInsert())
+        {
+            // add the unchanged base
+            if(lastElement.getOperator() == CigarOperator.M)
+                cigarElements.set(cigarElements.size() - 1, new CigarElement(lastElement.getLength() + 1, CigarOperator.M));
+            else
+                cigarElements.add(new CigarElement(1, CigarOperator.M));
+
+            cigarElements.add(new CigarElement(altLength - 1, CigarOperator.I));
+        }
+        else
+        {
+            // add the unchanged base(s)
+            if(lastElement.getOperator() == CigarOperator.M)
+                cigarElements.set(cigarElements.size() - 1, new CigarElement(lastElement.getLength() + altLength, CigarOperator.M));
+            else
+                cigarElements.add(new CigarElement(altLength, CigarOperator.M));
+
+            if(isDeletion())
+                cigarElements.add(new CigarElement(abs(mIndelBaseDiff), CigarOperator.D));
+        }
+
+        lastElement = cigarElements.get(cigarElements.size() - 1);
+
+        final List<CigarElement> upElements = Lists.newArrayList();
+        upElements.addAll(upperExcerpt.CigarRef.getCigarElements());
+
+        if(lastElement.getOperator() == CigarOperator.M && upElements.get(0).getOperator() == CigarOperator.M)
+        {
+            cigarElements.set(
+                    cigarElements.size() - 1, new CigarElement(lastElement.getLength() + upElements.get(0).getLength(), CigarOperator.M));
+
+            upElements.remove(0);
+        }
+
+        cigarElements.addAll(upElements);
+
+        Cigar cigar = new Cigar();
+        cigarElements.forEach(x -> cigar.add(x));
+        ExtCigars[FS_UP] = cigar;
 
         RawCodingBases[FS_UP] = upCodingBases;
         RawCodingBases[FS_DOWN] = downCodingBases;
@@ -320,8 +393,10 @@ public class PmNeoEpitope extends NeoEpitope
         byte downOrient = posStrand ? NEG_ORIENT : POS_ORIENT;
         int downPosition = posStrand ? mPointMutation.Position + 1 : mPointMutation.Position - 1;
         int downRequiredBases = requiredAminoAcids * 3 - upOpenCodonBases;
+
         String downBases = getDownstreamCodingBases(
-                refGenome, transData, chromosome(FS_UP), downPosition, downOrient, downRequiredBases, true, false);
+                refGenome, transData, chromosome(FS_UP), downPosition, downOrient, downRequiredBases,
+                true, false, false);
 
         if(!posStrand)
         {

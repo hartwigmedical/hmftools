@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,17 +32,20 @@ public class NeoEpitopeFile
     public final String UpstreamAA;
     public final String DownstreamAA;
     public final String NovelAA;
-    public final String WildtypeAA;
-    public final int[] CodingBasePositions;
-    public final String[] CodingBases;
     public final String[] Transcripts;
+    public final String WildtypeAA;
+
+    public final int[][] CodingBasePositions;
+    public final String[] CodingBases;
+    public final String[] CodingBaseCigars;
 
     public NeoEpitopeFile(
             final NeoEpitopeType varType, final String varInfo, final double copyNumber,
             final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
-            final String upAA, final String downAAs, final String novelAAs, final String wildtypeAAs, int nmdBasesMin, int nmdBasesMax,
-            int codingBasePosUp, int codingBasePosDown, final String upCodingBases, final String downCodingBases,
-            final String transcriptsUp, final String transcriptsDown)
+            final String upAA, final String downAAs, final String novelAAs, int nmdBasesMin, int nmdBasesMax,
+            final String transcriptsUp, final String transcriptsDown, final String wildtypeAAs,
+            int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
+            int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown)
     {
         VariantType = varType;
         VariantInfo = varInfo;
@@ -51,9 +57,13 @@ public class NeoEpitopeFile
         DownstreamAA = downAAs;
         NovelAA = novelAAs;
         WildtypeAA = wildtypeAAs;
-        CodingBases = new String[] { upCodingBases, downCodingBases };
-        CodingBasePositions = new int[] { codingBasePosUp, codingBasePosDown };
         Transcripts = new String[] { transcriptsUp, transcriptsDown };
+
+        CodingBases = new String[] { codingBasesUp, codingBasesDown };
+        CodingBaseCigars = new String[] { codingBaseCigarUp, codingBaseCigarDown };
+        CodingBasePositions = new int[FS_PAIR][SE_PAIR];
+        CodingBasePositions[FS_UP] = new int[] {codingBaseUpPosStart, codingBaseUpPosEnd};
+        CodingBasePositions[FS_DOWN] = new int[] {codingBaseDownPosStart, codingBaseDownPosEnd};
     }
 
     private static final String FILE_EXTENSION = ".imu.neo_epitope.tsv";
@@ -115,11 +125,15 @@ public class NeoEpitopeFile
                 .add("NmdMax")
                 .add("UpTranscripts")
                 .add("DownTranscripts")
-                .add("CodingBaseUpPos")
-                .add("CodingBaseDownPos")
-                .add("CodingBasesUp")
-                .add("CodingBasesDown")
                 .add("WildtypeAA")
+                .add("CodingBaseUpPosStart")
+                .add("CodingBaseUpPosEnd")
+                .add("CodingBasesUp")
+                .add("CodingBaseCigarUp")
+                .add("CodingBaseDownPosStart")
+                .add("CodingBaseDownPosEnd")
+                .add("CodingBasesDown")
+                .add("CodingBaseCigarDown")
                 .toString();
     }
 
@@ -142,11 +156,15 @@ public class NeoEpitopeFile
         sj.add(String.valueOf(neo.NmdBases[1]));
         sj.add(neo.Transcripts[FS_UP]);
         sj.add(neo.Transcripts[FS_DOWN]);
-        sj.add(String.valueOf(neo.CodingBasePositions[FS_UP]));
-        sj.add(String.valueOf(neo.CodingBasePositions[FS_DOWN]));
-        sj.add(neo.CodingBases[FS_UP]);
-        sj.add(neo.CodingBases[FS_DOWN]);
         sj.add(neo.WildtypeAA);
+        sj.add(String.valueOf(neo.CodingBasePositions[FS_UP][SE_START]));
+        sj.add(String.valueOf(neo.CodingBasePositions[FS_UP][SE_END]));
+        sj.add(neo.CodingBases[FS_UP]);
+        sj.add(neo.CodingBaseCigars[FS_UP]);
+        sj.add(String.valueOf(neo.CodingBasePositions[FS_DOWN][SE_START]));
+        sj.add(String.valueOf(neo.CodingBasePositions[FS_DOWN][SE_END]));
+        sj.add(neo.CodingBases[FS_DOWN]);
+        sj.add(neo.CodingBaseCigars[FS_DOWN]);
 
         return sj.toString();
     }
@@ -164,15 +182,15 @@ public class NeoEpitopeFile
         return new NeoEpitopeFile(
                 NeoEpitopeType.valueOf(values[index++]), values[index++], Double.parseDouble(values[index++]),
                 values[index++], values[index++], values[index++], values[index++],
-                values[index++], values[index++], values[index++], values[index++],
-                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
-                values[index++], values[index++], values[index++], values[index++]);
+                values[index++], values[index++], values[index++], Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
+                values[index++], values[index++], values[index++],
+                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++],
+                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++]);
     }
 
     public static final String ITEM_DELIM = ";";
     public static final String VAR_INFO_DELIM = ":";
-    public static final String FUSION_INFO_DELIM = "-";
+    public static final String FUSION_INFO_DELIM = ";";
 
     public static String pointMutationInfo(final String chromosome, int position, final String ref, final String alt)
     {
@@ -181,7 +199,7 @@ public class NeoEpitopeFile
 
     public static String fusionInfo(final String[] chromosomes, final int[] positions, final byte[] orientations)
     {
-        return String.format("%s:%d:%d-%s:%d:%d",
+        return String.format("%s:%d:%d;%s:%d:%d",
                 chromosomes[FS_UP], positions[FS_UP], orientations[FS_UP],
                 chromosomes[FS_DOWN], positions[FS_DOWN], orientations[FS_DOWN]);
     }

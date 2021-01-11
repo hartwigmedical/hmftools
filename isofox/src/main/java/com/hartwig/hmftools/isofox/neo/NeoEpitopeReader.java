@@ -128,10 +128,7 @@ public class NeoEpitopeReader
         {
             initialiseGeneData(mCurrentNeoData.Source.GeneIds[fs]);
 
-            int lowerPosition = min(mCurrentNeoData.Source.CodingBasePositions[fs], mCurrentNeoData.Positions[fs]);
-            int upperPosition = max(mCurrentNeoData.Source.CodingBasePositions[fs], mCurrentNeoData.Positions[fs]);
-
-            final SvRegion readRegion = new SvRegion(mCurrentNeoData.Chromosomes[fs], lowerPosition, upperPosition);
+            final SvRegion readRegion = new SvRegion(mCurrentNeoData.Chromosomes[fs], mCurrentNeoData.Source.CodingBasePositions[fs]);
 
             mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
         }
@@ -142,10 +139,8 @@ public class NeoEpitopeReader
     {
         initialiseGeneData(mCurrentNeoData.Source.GeneIds[FS_UP]);
 
-        final SvRegion readRegion = new SvRegion(
-                mCurrentNeoData.Chromosomes[FS_UP],
-                mCurrentNeoData.Source.CodingBasePositions[FS_UP], mCurrentNeoData.Source.CodingBasePositions[FS_DOWN]);
-
+        // the 'UP' stream caches the full coding base= sequence since relates to a single gene
+        final SvRegion readRegion = new SvRegion(mCurrentNeoData.Chromosomes[FS_UP],mCurrentNeoData.Source.CodingBasePositions[FS_UP]);
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
     }

@@ -18,6 +18,10 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+
 public class RnaUtils
 {
     public static List<int[]> deriveCommonRegions(final List<int[]> regions1, final List<int[]> regions2)
@@ -245,5 +249,29 @@ public class RnaUtils
         return chrLength != null ? chrLength : 0;
     }
 
+    public static Cigar cigarFromStr(final String cigarStr)
+    {
+        List<CigarElement> cigarElements = org.apache.commons.compress.utils.Lists.newArrayList();
 
+        int index = 0;
+        String basesStr = "";
+        while(index < cigarStr.length())
+        {
+            char c = cigarStr.charAt(index);
+
+            try
+            {
+                CigarOperator operator = CigarOperator.valueOf(String.valueOf(c));
+                cigarElements.add(new CigarElement(Integer.parseInt(basesStr), operator));
+                basesStr = "";
+            }
+            catch (Exception e)
+            {
+                basesStr += c;
+            }
+            ++index;
+        }
+
+        return new Cigar(cigarElements);
+    }
 }

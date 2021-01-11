@@ -8,14 +8,9 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.swapDnaToRna;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.swapRnaToDna;
-import static com.hartwig.hmftools.imuno.neo.NeoUtils.ALL_TRANS_BASES;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBases;
 
-import static org.junit.Assert.assertEquals;
-
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
@@ -197,35 +192,35 @@ public class NeoEpitopeUtilsTest
         int nePosition = 132;
         byte neOrientation = NEG_ORIENT;
 
-        String codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 9, true, true);
+        String codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 9, true, true, false);
 
         String actCodingBases = chr1Bases.substring(140, 149);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // not allowed to start in the same exon
         nePosition = 144;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 15, false, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 15, false, true, false);
 
         actCodingBases = chr1Bases.substring(160, 171) + chr1Bases.substring(180, 184);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // allowed to start in an exon
         nePosition = 147;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 10, true, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 10, true, true, false);
 
         actCodingBases = chr1Bases.substring(47, 51) + chr1Bases.substring(160, 166);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // upstream
         nePosition = 80;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 15, true, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 15, true, true, false);
 
         actCodingBases = chr1Bases.substring(120, 131) + chr1Bases.substring(140, 144);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // all remaining bases
         nePosition = 215;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, ALL_TRANS_BASES, false, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 1, false, true, true);
 
         actCodingBases = chr1Bases.substring(220, 231) + chr1Bases.substring(240, 251) + chr1Bases.substring(260, 271);
         Assert.assertEquals(actCodingBases, codingBases);
@@ -235,7 +230,7 @@ public class NeoEpitopeUtilsTest
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, null, null, false, "");
 
         nePosition = 215;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, ALL_TRANS_BASES, false, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 1, false, true, true);
 
         actCodingBases = chr1Bases.substring(220, 231) + chr1Bases.substring(240, 251) + chr1Bases.substring(260, 271);
         Assert.assertEquals(actCodingBases, codingBases);
@@ -248,35 +243,35 @@ public class NeoEpitopeUtilsTest
         nePosition = 155;
         neOrientation = POS_ORIENT;
 
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 11, false, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 11, false, true, false);
 
         actCodingBases = chr1Bases.substring(140, 151);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // not allowed to start in the same exon
         nePosition = 165;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 10, false, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 10, false, true, false);
 
         actCodingBases = chr1Bases.substring(141, 151);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // allowed to start in an exon
         nePosition = 165;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 10, true, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 10, true, true, false);
 
         actCodingBases = chr1Bases.substring(147, 151) + chr1Bases.substring(160, 166);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // upstream
         nePosition = 300;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 15, true, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 15, true, true, false);
 
         actCodingBases = chr1Bases.substring(227, 231) + chr1Bases.substring(240, 251);
         Assert.assertEquals(actCodingBases, codingBases);
 
         // all remaining bases
         nePosition = 135;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, ALL_TRANS_BASES, false, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 1, false, true, true);
 
         actCodingBases = chr1Bases.substring(100, 111) + chr1Bases.substring(120, 131);
         Assert.assertEquals(actCodingBases, codingBases);
@@ -286,7 +281,7 @@ public class NeoEpitopeUtilsTest
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, null, null, false, "");
 
         nePosition = 135;
-        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, ALL_TRANS_BASES, false, true);
+        codingBases = getDownstreamCodingBases(refGenome, transData, CHR_1, nePosition, neOrientation, 1, false, true, true);
 
         actCodingBases = chr1Bases.substring(100, 111) + chr1Bases.substring(120, 131);
         Assert.assertEquals(actCodingBases, codingBases);

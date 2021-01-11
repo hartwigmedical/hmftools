@@ -467,6 +467,32 @@ public class NeoEpitopeTest
 
         assertEquals("", neData.CodingBases[FS_DOWN]);
 
+        // delete - of 2 bases, out of phase, but delete starting with a new codon's first 2 bases
+        pmData = new PointMutationData(
+                CHR_1, 42, chr1Bases.substring(42, 45), chr1Bases.substring(42, 43),
+                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+
+        neData = new PmNeoEpitope(pmData);
+
+        neData.setTranscriptData(transDataPosStrand, transDataPosStrand);
+
+        assertEquals(42, neData.position(FS_UP));
+        assertEquals(45, neData.position(FS_DOWN));
+        assertEquals(PHASE_0, neData.Phases[FS_UP]);
+        assertEquals(PHASE_0, neData.Phases[FS_DOWN]);
+        Assert.assertFalse(neData.phaseMatched());
+
+        neData.setCodingBases(refGenome, 3);
+
+        upBases = chr1Bases.substring(25, 31) + chr1Bases.substring(40, 43);
+        assertEquals(upBases, neData.CodingBases[FS_UP]);
+
+        novelBases = chr1Bases.substring(45, 51) + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91)
+                + chr1Bases.substring(100, 111);
+        assertEquals(novelBases, neData.NovelCodonBases);
+
+        assertEquals("", neData.CodingBases[FS_DOWN]);
+
 
         // delete of 3 bases at last base of codon, no novel codon, in phase
         pmData = new PointMutationData(

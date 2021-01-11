@@ -5,18 +5,19 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.generateMappedCoords;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.cigarFromStr;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 
 import org.apache.commons.compress.utils.Lists;
+
+import htsjdk.samtools.Cigar;
 
 public class NeoEpitopeData
 {
@@ -27,6 +28,9 @@ public class NeoEpitopeData
     public final byte[] Orientations;
 
     public final List<String>[] Transcripts;
+
+    // public final Cigar[] CodingBaseCigars;
+    public final List<int[]>[] CodingBaseCoords;
 
     public NeoEpitopeData(final NeoEpitopeFile source)
     {
@@ -40,6 +44,19 @@ public class NeoEpitopeData
         Transcripts[FS_UP] = Lists.newArrayList();
         Transcripts[FS_DOWN] = Lists.newArrayList();
         Source.extractTranscriptNames(Transcripts[FS_UP], Transcripts[FS_DOWN]);
+
+        CodingBaseCoords = new List[FS_PAIR];
+
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
+        {
+            CodingBaseCoords[fs] = Lists.newArrayList();
+
+            if(Source.CodingBaseCigars[fs].isEmpty())
+                continue;
+
+            final Cigar cigar = cigarFromStr(Source.CodingBaseCigars[fs]);
+            CodingBaseCoords[fs].addAll(generateMappedCoords(cigar, Source.CodingBasePositions[fs][SE_START]));
+        }
     }
 
     public boolean isFusion() { return Source.VariantType.isFusion(); }
@@ -61,54 +78,41 @@ public class NeoEpitopeData
         }
     }
 
-    public int[] getCodingBaseRange(int stream)
-    {
-        int codingBaseEnd = Source.CodingBasePositions[stream];
-        int codingBaseLength = Source.CodingBases[stream].length();
-
-        if((Orientations[stream] == POS_ORIENT) == (stream == FS_UP))
-        {
-            return new int[] { codingBaseEnd, codingBaseEnd + codingBaseLength - 1 };
-        }
-        else
-        {
-            return new int[] { codingBaseEnd - (codingBaseLength - 1), codingBaseEnd };
-        }
-    }
+    public int[] getCodingBaseRange(int stream) { return Source.CodingBasePositions[stream]; }
 
     public String getFullCodingBases(int streamPerspective, final int[] codingBaseRange)
     {
-        if(!isFusion() || Orientations[FS_UP] != Orientations[FS_DOWN])
+        if(!isFusion() || (Orientations[FS_UP] != Orientations[FS_DOWN] && singleGene()))
         {
             if(Orientations[FS_UP] == POS_ORIENT)
             {
-                codingBaseRange[SE_START] = Source.CodingBasePositions[FS_UP];
-                codingBaseRange[SE_END] = Source.CodingBasePositions[FS_DOWN];
+                // codingBaseRange[SE_START] = Source.CodingBasePositions[FS_UP];
+                // codingBaseRange[SE_END] = Source.CodingBasePositions[FS_DOWN];
                 return Source.CodingBases[FS_UP] + Source.CodingBases[FS_DOWN];
             }
             else
             {
-                codingBaseRange[SE_START] = Source.CodingBasePositions[FS_DOWN];
-                codingBaseRange[SE_END] = Source.CodingBasePositions[FS_UP];
+                // codingBaseRange[SE_START] = Source.CodingBasePositions[FS_DOWN];
+                // codingBaseRange[SE_END] = Source.CodingBasePositions[FS_UP];
                 return Source.CodingBases[FS_DOWN] + Source.CodingBases[FS_UP];
             }
         }
 
-        int codingBaseEnd = Source.CodingBasePositions[streamPerspective];
-        int codingBaseLength = Source.CodingBases[streamPerspective].length() - 1;
+        // int codingBaseEnd = Source.CodingBasePositions[streamPerspective];
+        // int codingBaseLength = Source.CodingBases[streamPerspective].length() - 1;
 
         if(streamPerspective == FS_UP)
         {
             if(Orientations[FS_UP] == POS_ORIENT)
             {
-                codingBaseRange[SE_START] = codingBaseEnd;
-                codingBaseRange[SE_END] = codingBaseEnd + codingBaseLength;
+                // codingBaseRange[SE_START] = codingBaseEnd;
+                // codingBaseRange[SE_END] = codingBaseEnd + codingBaseLength;
                 return Source.CodingBases[FS_UP] + reverseStrandBases(Source.CodingBases[FS_DOWN]);
             }
             else
             {
-                codingBaseRange[SE_START] = codingBaseEnd - codingBaseLength;
-                codingBaseRange[SE_END] = codingBaseEnd;
+                // codingBaseRange[SE_START] = codingBaseEnd - codingBaseLength;
+                // codingBaseRange[SE_END] = codingBaseEnd;
                 return reverseStrandBases(Source.CodingBases[FS_DOWN]) + Source.CodingBases[FS_UP];
             }
         }
@@ -116,14 +120,14 @@ public class NeoEpitopeData
         {
             if(Orientations[FS_DOWN] == POS_ORIENT)
             {
-                codingBaseRange[SE_START] = codingBaseEnd;
-                codingBaseRange[SE_END] = codingBaseEnd + codingBaseLength;
+                // codingBaseRange[SE_START] = codingBaseEnd;
+                // codingBaseRange[SE_END] = codingBaseEnd + codingBaseLength;
                 return Source.CodingBases[FS_DOWN] + reverseStrandBases(Source.CodingBases[FS_UP]);
             }
             else
             {
-                codingBaseRange[SE_START] = codingBaseEnd - codingBaseLength;
-                codingBaseRange[SE_END] = codingBaseEnd;
+                // codingBaseRange[SE_START] = codingBaseEnd - codingBaseLength;
+                // codingBaseRange[SE_END] = codingBaseEnd;
                 return reverseStrandBases(Source.CodingBases[FS_UP]) + Source.CodingBases[FS_DOWN];
             }
         }

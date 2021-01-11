@@ -29,6 +29,10 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.CodingBaseData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+
 public class NeoUtils
 {
     public static void setTranscriptContext(
@@ -114,16 +118,24 @@ public class NeoUtils
             final String chromosome, int nePosition, byte neOrientation, int requiredBases)
     {
         if(requiredBases <= 0 || transData.CodingStart == null)
-            return new CodingBaseExcerpt("", nePosition, nePosition);
+            return new CodingBaseExcerpt("", nePosition, nePosition, null);
 
         final List<ExonData> exonDataList = transData.exons();
 
         String baseString = "";
-        int upPosition = 0;
+
+        Cigar cigar = new Cigar();
+        int lastMatchBase = -1;
+        int startPos;
+        int endPos;
 
         if(neOrientation == NEG_ORIENT)
         {
+            startPos = 0;
+            endPos = 0;
+
             // walk forwards through the exons, collecting up the required positions and bases
+
             for (int i = 0; i < exonDataList.size(); ++i)
             {
                 final ExonData exon = exonDataList.get(i);
@@ -135,7 +147,6 @@ public class NeoUtils
                     break; // no more coding bases
 
                 int exonBaseStart = max(exon.Start, nePosition);
-
                 int exonBaseEnd = min(transData.CodingEnd, exon.End);
                 int exonBaseCount = exonBaseEnd - exonBaseStart + 1;
 
@@ -156,7 +167,18 @@ public class NeoUtils
                 }
 
                 baseString += refGenome.getBaseString(chromosome, baseStart, baseEnd);
-                upPosition = baseEnd;
+
+                if(startPos == 0)
+                    startPos = exonBaseStart;
+
+                endPos = baseEnd;
+
+                if(lastMatchBase > 0)
+                    cigar.add(new CigarElement(baseStart - lastMatchBase - 1, CigarOperator.N));
+
+                lastMatchBase = baseEnd;
+
+                cigar.add(new CigarElement(baseEnd - baseStart + 1, CigarOperator.M));
 
                 if (requiredBases <= 0)
                     break;
@@ -164,6 +186,9 @@ public class NeoUtils
         }
         else
         {
+            startPos = 0;
+            endPos = 0;
+
             for(int i = exonDataList.size() - 1; i >= 0; --i)
             {
                 final ExonData exon = exonDataList.get(i);
@@ -195,36 +220,53 @@ public class NeoUtils
                 }
 
                 baseString = refGenome.getBaseString(chromosome, baseStart, baseEnd) + baseString;
-                upPosition = baseStart;
+
+                if(endPos == 0)
+                    endPos = exonBaseEnd;
+
+                startPos = baseStart;
+
+                if(lastMatchBase > 0)
+                    cigar.add(new CigarElement(lastMatchBase - baseEnd -  - 1, CigarOperator.N));
+
+                lastMatchBase = baseStart;
+
+                cigar.add(new CigarElement(baseEnd - baseStart + 1, CigarOperator.M));
 
                 if (requiredBases <= 0)
                     break;
             }
+
+            final List<CigarElement> elements = cigar.getCigarElements();
+
+            cigar = new Cigar();
+            for(int i = elements.size() - 1; i >= 0; --i)
+            {
+                cigar.add(elements.get(i));
+            }
         }
 
-        return new CodingBaseExcerpt(baseString, upPosition, nePosition);
+        return new CodingBaseExcerpt(baseString, startPos, endPos, cigar);
     }
-
-    public static final int ALL_TRANS_BASES = -1;
 
     public static String getDownstreamCodingBases(
             final RefGenomeInterface refGenome, final TranscriptData transData,
-            final String chromosome, int nePosition, byte neOrientation, int requiredBases, boolean canStartInExon, boolean reqSpliceAcceptor)
+            final String chromosome, int nePosition, byte neOrientation, int requiredBases,
+            boolean canStartInExon, boolean reqSpliceAcceptor, boolean reqAllBases)
     {
         final CodingBaseExcerpt cbData = getDownstreamCodingBaseExcerpt(
-                refGenome, transData, chromosome, nePosition, neOrientation, requiredBases, canStartInExon, reqSpliceAcceptor);
+                refGenome, transData, chromosome, nePosition, neOrientation, requiredBases, canStartInExon, reqSpliceAcceptor, reqAllBases);
 
         return cbData.Bases;
     }
 
     public static CodingBaseExcerpt getDownstreamCodingBaseExcerpt(
             final RefGenomeInterface refGenome, final TranscriptData transData,
-            final String chromosome, int nePosition, byte neOrientation, int requiredBases, boolean canStartInExon, boolean reqSpliceAcceptor)
+            final String chromosome, int nePosition, byte neOrientation, int requiredBases,
+            boolean canStartInExon, boolean reqSpliceAcceptor, boolean reqAllBases)
     {
         if(requiredBases == 0)
-            return new CodingBaseExcerpt("", nePosition, nePosition);
-
-        boolean reqAllBases = (requiredBases == ALL_TRANS_BASES);
+            return new CodingBaseExcerpt("", nePosition, nePosition, null);
 
         int codingStart = transData.CodingStart != null ? transData.CodingStart : transData.TransStart;
         int codingEnd = transData.CodingEnd != null ? transData.CodingEnd : transData.TransEnd;
@@ -232,10 +274,17 @@ public class NeoUtils
         final List<ExonData> exonDataList = transData.exons();
 
         String baseString = "";
-        int downPosition = 0;
+
+        Cigar cigar = new Cigar();
+        int lastMatchBase = -1;
+        int startPos;
+        int endPos;
 
         if(neOrientation == NEG_ORIENT)
         {
+            startPos = 0;
+            endPos = 0;
+
             for (int i = 0; i < exonDataList.size(); ++i)
             {
                 final ExonData exon = exonDataList.get(i);
@@ -254,7 +303,6 @@ public class NeoUtils
                     break; // no more coding bases
 
                 int exonBaseStart = max(nePosition, exon.Start);
-
                 int exonBaseEnd = !reqAllBases ? min(codingEnd, exon.End) : exon.End;
                 int exonBaseCount = exonBaseEnd - exonBaseStart + 1;
 
@@ -277,7 +325,18 @@ public class NeoUtils
                 }
 
                 baseString += refGenome.getBaseString(chromosome, baseStart, baseEnd);
-                downPosition = baseEnd;
+
+                if(startPos == 0)
+                    startPos = exonBaseStart;
+
+                endPos = baseEnd;
+
+                if(lastMatchBase > 0)
+                    cigar.add(new CigarElement(baseStart - lastMatchBase - 1, CigarOperator.N));
+
+                lastMatchBase = baseEnd;
+
+                cigar.add(new CigarElement(baseEnd - baseStart + 1, CigarOperator.M));
 
                 if (requiredBases <= 0 && !reqAllBases)
                     break;
@@ -285,6 +344,9 @@ public class NeoUtils
         }
         else
         {
+            startPos = 0;
+            endPos = 0;
+
             for(int i = exonDataList.size() - 1; i >= 0; --i)
             {
                 final ExonData exon = exonDataList.get(i);
@@ -328,14 +390,33 @@ public class NeoUtils
                 }
 
                 baseString = refGenome.getBaseString(chromosome, baseStart, baseEnd) + baseString;
-                downPosition = baseStart;
+
+                if(endPos == 0)
+                    endPos = exonBaseEnd;
+
+                startPos = baseStart;
+
+                if(lastMatchBase > 0)
+                    cigar.add(new CigarElement(lastMatchBase - baseEnd - 1, CigarOperator.N));
+
+                lastMatchBase = baseStart;
+
+                cigar.add(new CigarElement(baseEnd - baseStart + 1, CigarOperator.M));
 
                 if (requiredBases <= 0 && !reqAllBases)
                     break;
             }
+
+            final List<CigarElement> elements = cigar.getCigarElements();
+
+            cigar = new Cigar();
+            for(int i = elements.size() - 1; i >= 0; --i)
+            {
+                cigar.add(elements.get(i));
+            }
         }
 
-        return new CodingBaseExcerpt(baseString, nePosition, downPosition);
+        return new CodingBaseExcerpt(baseString, startPos, endPos, cigar);
     }
 
     public static void adjustCodingBasesForStrand(final NeoEpitope neData)

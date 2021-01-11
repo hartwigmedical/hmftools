@@ -334,7 +334,7 @@ public class NeoEpitopeAnnotator
             if(mConfig.isMultiSample())
                 mWriter.write(String.format("%s,", mCurrentSampleId));
 
-            final NeoEpitopeFile neFile = neData.toFile(upTransNames, downTransNames, (mConfig.RequiredAminoAcids + 1) * 3);
+            final NeoEpitopeFile neFile = neData.toFile(upTransNames, downTransNames);
             mWriter.write(NeoEpitopeFile.toString(neFile));
             mWriter.newLine();
         }

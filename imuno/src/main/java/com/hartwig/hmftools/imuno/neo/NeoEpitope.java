@@ -6,9 +6,11 @@ import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
@@ -28,6 +30,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
+import htsjdk.samtools.Cigar;
+
 public abstract class NeoEpitope
 {
     // transcript context
@@ -41,7 +45,6 @@ public abstract class NeoEpitope
 
     public final String[] RawCodingBases; // coding bases from before and after the mutation or fusion junction
     public final String[] CodingBases; // corrected for strand and stripped of any novel amino-acid bases
-    public int[] CodingBasePositions; // coding base up and down position
     public final int[] NovelBaseIndex; // index into the up and downstream coding bases
     public String NovelCodonBases;
 
@@ -52,6 +55,11 @@ public abstract class NeoEpitope
     public int NmdBasesMax;
     public String WildtypeAcids;
 
+    // data for RNA matching
+    public String[] ExtCodingBases;
+    public int[][] ExtPositions; // coding base up and down position
+    public final Cigar[] ExtCigars;
+
     public NeoEpitope()
     {
         TransData = new TranscriptData[] {null, null};
@@ -60,7 +68,6 @@ public abstract class NeoEpitope
         CodingType = new TranscriptCodingType[] {TranscriptCodingType.UNKNOWN, TranscriptCodingType.UNKNOWN};
         RegionType = new TranscriptRegionType[] {TranscriptRegionType.UNKNOWN, TranscriptRegionType.UNKNOWN};
 
-        CodingBasePositions = new int[] {0, 0};
         RawCodingBases = new String[] {"", ""};
         CodingBases = new String[] {"", ""};
         NovelBaseIndex = new int[] {0, 0};
@@ -71,6 +78,10 @@ public abstract class NeoEpitope
         NmdBasesMin = 0;
         NmdBasesMax = 0;
         WildtypeAcids = "";
+
+        ExtCodingBases = new String[] {"", ""};
+        ExtCigars = new Cigar[FS_PAIR];
+        ExtPositions = new int[FS_PAIR][SE_PAIR];
     }
 
     public byte orientation(int fs)
@@ -189,26 +200,20 @@ public abstract class NeoEpitope
 
     public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
 
-    public NeoEpitopeFile toFile(final Set<String> upTransNames, final Set<String> downTransNames, int requiredBases)
+    public NeoEpitopeFile toFile(final Set<String> upTransNames, final Set<String> downTransNames)
     {
         final StringJoiner upTransStr = new StringJoiner(";");
         final StringJoiner downTransStr = new StringJoiner(";");
         upTransNames.forEach(x -> upTransStr.add(x));
         downTransNames.forEach(x -> downTransStr.add(x));
 
-        String downCodingBases = RawCodingBases[FS_DOWN];
-
-        if(downCodingBases.length() > requiredBases)
-        {
-            downCodingBases = TransData[FS_DOWN].Strand == NEG_STRAND ?
-                    downCodingBases.substring(0, requiredBases) : downCodingBases.substring(downCodingBases.length() - requiredBases);
-        }
-
         return new NeoEpitopeFile(
                 variantType(), variantInfo(), copyNumber(),
                 TransData[FS_UP].GeneId, TransData[FS_DOWN].GeneId, geneName(FS_UP), geneName(FS_DOWN),
-                UpstreamAcids, DownstreamAcids, NovelAcid, WildtypeAcids, NmdBasesMin, NmdBasesMax,
-                CodingBasePositions[FS_UP], CodingBasePositions[FS_DOWN], RawCodingBases[FS_UP], downCodingBases,
-                upTransStr.toString(), downTransStr.toString());
+                UpstreamAcids, DownstreamAcids, NovelAcid, NmdBasesMin, NmdBasesMax,
+                upTransStr.toString(), downTransStr.toString(), WildtypeAcids,
+                ExtPositions[FS_UP][SE_START], ExtPositions[FS_UP][SE_END], ExtCodingBases[FS_UP], ExtCigars[FS_UP].toString(),
+                ExtPositions[FS_DOWN][SE_START], ExtPositions[FS_DOWN][SE_END], ExtCodingBases[FS_DOWN],
+                ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "");
     }
 }
