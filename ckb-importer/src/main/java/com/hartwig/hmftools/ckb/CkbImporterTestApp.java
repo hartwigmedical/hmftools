@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrial;
-import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialFactory;
+import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrial;
+import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrialFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -50,8 +50,7 @@ public class CkbImporterTestApp {
 
     private static void readJsonData(@NotNull String ckbPath) throws IOException {
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-       // LOGGER.info(clinicalTrials);
-//        readingDrugsClasses(ckbPath + DRUG_CLASSES);
+        readingDrugsClasses(ckbPath + DRUG_CLASSES);
 //        readingDrugs(ckbPath + DRUGS);
 //        readingGenes(ckbPath + GENES);
 //        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);

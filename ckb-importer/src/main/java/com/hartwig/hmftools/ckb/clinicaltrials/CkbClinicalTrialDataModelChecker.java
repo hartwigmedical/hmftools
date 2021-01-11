@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.clinicaltrial;
+package com.hartwig.hmftools.ckb.clinicaltrials;
 
 import java.util.Map;
 
