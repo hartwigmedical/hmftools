@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,17 +45,17 @@ public class ClinicalTrialFactory {
                 while (reader.peek() != JsonToken.END_DOCUMENT) {
                     JsonObject clinicalTrialsEntryObject = parser.parse(reader).getAsJsonObject();
                     clinicalTrials.add(ImmutableClinicalTrial.builder()
-                            .nctId(clinicalTrialsEntryObject.getAsJsonPrimitive("nctId").getAsString())
-                            .title(clinicalTrialsEntryObject.getAsJsonPrimitive("title").getAsString())
-                            .phase(clinicalTrialsEntryObject.getAsJsonPrimitive("phase").getAsString())
-                            .recruitment(clinicalTrialsEntryObject.getAsJsonPrimitive("recruitment").getAsString())
-                            .therapies(clinicalTrialsEntryObject.has("therapies") ? retrieveClinicalTrialsTherpaies(
-                                    clinicalTrialsEntryObject.getAsJsonArray("therapies")) : null)
+                            .nctId(JsonFunctions.string(clinicalTrialsEntryObject, "nctId"))
+                            .title(JsonFunctions.string(clinicalTrialsEntryObject, "title"))
+                            .phase(JsonFunctions.string(clinicalTrialsEntryObject, "phase"))
+                            .recruitment(JsonFunctions.string(clinicalTrialsEntryObject, "recruitment"))
+                            .therapies(retrieveClinicalTrialsTherapies(
+                                    clinicalTrialsEntryObject.getAsJsonArray("therapies")))
                             .ageGroups(Lists.newArrayList())
-                            .gender(Strings.EMPTY)
-                            .variantRequirements(clinicalTrialsEntryObject.getAsJsonPrimitive("variantRequirements").getAsString())
-                            .sponsors(Strings.EMPTY)
-                            .updateDate(clinicalTrialsEntryObject.getAsJsonPrimitive("updateDate").getAsString())
+                            .gender(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "gender"))
+                            .variantRequirements(JsonFunctions.string(clinicalTrialsEntryObject, "variantRequirements"))
+                            .sponsors(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "sponsors"))
+                            .updateDate(JsonFunctions.string(clinicalTrialsEntryObject, "updateDate"))
                             .indications(retrieveClinicalTrialsIndications(clinicalTrialsEntryObject.getAsJsonArray("indications")))
                             .variantRequirementDetails(Lists.newArrayList())
                             .clinicalTrialLocations(retrieveClinicalTrialsLocations(clinicalTrialsEntryObject.getAsJsonArray(
@@ -67,13 +68,13 @@ public class ClinicalTrialFactory {
         return clinicalTrials;
     }
 
-    private static List<Therapies> retrieveClinicalTrialsTherpaies(@NotNull JsonArray jsonArray) {
+    private static List<Therapies> retrieveClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
         List<Therapies> therapies = Lists.newArrayList();
         for (JsonElement therapy : jsonArray) {
             therapies.add(ImmutableTherapies.builder()
-                    .id(therapy.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .therapyName(therapy.getAsJsonObject().getAsJsonPrimitive("therapyName").getAsString())
-                    .synonyms(Strings.EMPTY)
+                    .id(JsonFunctions.string(therapy.getAsJsonObject(), "id"))
+                    .therapyName(JsonFunctions.string(therapy.getAsJsonObject(), "therapyName"))
+                    .synonyms(JsonFunctions.optionalNullableString(therapy.getAsJsonObject(), "synonyms"))
                     .build());
         }
         return therapies;
@@ -83,9 +84,9 @@ public class ClinicalTrialFactory {
         List<Indications> indications = Lists.newArrayList();
         for (JsonElement indication : jsonArray) {
             indications.add(ImmutableIndications.builder()
-                    .id(indication.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .name(indication.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-                    .source(indication.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
+                    .id(JsonFunctions.string(indication.getAsJsonObject(), "id"))
+                    .name(JsonFunctions.string(indication.getAsJsonObject(), "name"))
+                    .source(JsonFunctions.string(indication.getAsJsonObject(), "source"))
                     .build());
         }
         return indications;
@@ -96,18 +97,16 @@ public class ClinicalTrialFactory {
 
         for (JsonElement location : jsonArray) {
             locations.add(ImmutableClinicalTrialLocations.builder()
-                    .nctId(location.getAsJsonObject().getAsJsonPrimitive("nctId").getAsString())
-                    .facility(Strings.EMPTY)
-                    .city(location.getAsJsonObject().getAsJsonPrimitive("city").getAsString())
-                    .country(location.getAsJsonObject().getAsJsonPrimitive("country").getAsString())
-                    .status(Strings.EMPTY)
-                    .state(Strings.EMPTY)
-                    .zip(Strings.EMPTY)
+                    .nctId(JsonFunctions.string(location.getAsJsonObject(), "nctId"))
+                    .facility(JsonFunctions.optionalNullableString(location.getAsJsonObject(), "facility"))
+                    .city(JsonFunctions.string(location.getAsJsonObject(), "city"))
+                    .country(JsonFunctions.string(location.getAsJsonObject(), "country"))
+                    .status(JsonFunctions.optionalNullableString(location.getAsJsonObject(), "status"))
+                    .state(JsonFunctions.optionalNullableString(location.getAsJsonObject(), "state"))
+                    .zip(JsonFunctions.optionalNullableString(location.getAsJsonObject(), "zip"))
                     .clinicalTrialContacts(Lists.newArrayList())
-
                     .build());
         }
         return locations;
     }
-
 }

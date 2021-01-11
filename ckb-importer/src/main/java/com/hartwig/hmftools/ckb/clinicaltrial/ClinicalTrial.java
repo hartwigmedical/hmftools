@@ -28,13 +28,13 @@ public abstract class ClinicalTrial {
     @NotNull
     public abstract List<String> ageGroups();
 
-    @NotNull
+    @Nullable
     public abstract String gender();
 
     @NotNull
     public abstract String variantRequirements();
 
-    @NotNull
+    @Nullable
     public abstract String sponsors();
 
     @NotNull

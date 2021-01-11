@@ -50,16 +50,17 @@ public class CkbImporterTestApp {
 
     private static void readJsonData(@NotNull String ckbPath) throws IOException {
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        readingDrugsClasses(ckbPath + DRUG_CLASSES);
-        readingDrugs(ckbPath + DRUGS);
-        readingGenes(ckbPath + GENES);
-        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
-        readingIndications(ckbPath + INDICATIONS);
-        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
-        readingReferences(ckbPath + REFERENCES);
-        readingTherapies(ckbPath + THERAPIES);
-        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
-        readingVariants(ckbPath + VARIANTS);
+       // LOGGER.info(clinicalTrials);
+//        readingDrugsClasses(ckbPath + DRUG_CLASSES);
+//        readingDrugs(ckbPath + DRUGS);
+//        readingGenes(ckbPath + GENES);
+//        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
+//        readingIndications(ckbPath + INDICATIONS);
+//        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
+//        readingReferences(ckbPath + REFERENCES);
+//        readingTherapies(ckbPath + THERAPIES);
+//        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
+//        readingVariants(ckbPath + VARIANTS);
     }
 
 
