@@ -12,7 +12,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import com.hartwig.hmftools.ckb.CkbDataModelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -45,7 +44,7 @@ public class ClinicalTrialFactory {
 
                 while (reader.peek() != JsonToken.END_DOCUMENT) {
                     JsonObject clinicalTrialsEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker clinicalTrailChecker = CkbDataModelChecker.clinicalTrialObjectChecker();
+                    JsonDatamodelChecker clinicalTrailChecker = CkbClinicalTrialDataModelChecker.clinicalTrialObjectChecker();
                     clinicalTrailChecker.check(clinicalTrialsEntryObject);
 
                     clinicalTrials.add(ImmutableClinicalTrial.builder()
@@ -77,7 +76,7 @@ public class ClinicalTrialFactory {
             @NotNull JsonArray jsonArray) {
         List<ClinicalTrialVariantRequirementDetails> variantRequirementDetails = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailVariantRequirementDetailChecker =
-                CkbDataModelChecker.clinicalTrialVariantRequirementDetailsObjectChecker();
+                CkbClinicalTrialDataModelChecker.clinicalTrialVariantRequirementDetailsObjectChecker();
         for (JsonElement variantDetail : jsonArray) {
             clinicalTrailVariantRequirementDetailChecker.check(variantDetail.getAsJsonObject());
             variantRequirementDetails.add(ImmutableClinicalTrialVariantRequirementDetails.builder()
@@ -90,7 +89,7 @@ public class ClinicalTrialFactory {
     }
 
     private static ClinicalTrailMolecularProfile retrieveClinicalTrialsMolecularProfile(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker clinicalTrailMolecularProfileChecker = CkbDataModelChecker.clinicalTrialMolecularProfileObjectChecker();
+        JsonDatamodelChecker clinicalTrailMolecularProfileChecker = CkbClinicalTrialDataModelChecker.clinicalTrialMolecularProfileObjectChecker();
         clinicalTrailMolecularProfileChecker.check(jsonObject);
         return ImmutableClinicalTrailMolecularProfile.builder()
                 .id(JsonFunctions.nullableString(jsonObject, "id"))
@@ -101,7 +100,7 @@ public class ClinicalTrialFactory {
 
     private static List<Therapies> retrieveClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
         List<Therapies> therapies = Lists.newArrayList();
-        JsonDatamodelChecker clinicalTrailTherapiesChecker = CkbDataModelChecker.clinicalTrialTherapiesObjectChecker();
+        JsonDatamodelChecker clinicalTrailTherapiesChecker = CkbClinicalTrialDataModelChecker.clinicalTrialTherapiesObjectChecker();
         for (JsonElement therapy : jsonArray) {
             clinicalTrailTherapiesChecker.check(therapy.getAsJsonObject());
 
@@ -116,7 +115,7 @@ public class ClinicalTrialFactory {
 
     private static List<Indications> retrieveClinicalTrialsIndications(@NotNull JsonArray jsonArray) {
         List<Indications> indications = Lists.newArrayList();
-        JsonDatamodelChecker clinicalTrailIndicationsChecker = CkbDataModelChecker.clinicalTrialIndicationsObjectChecker();
+        JsonDatamodelChecker clinicalTrailIndicationsChecker = CkbClinicalTrialDataModelChecker.clinicalTrialIndicationsObjectChecker();
 
         for (JsonElement indication : jsonArray) {
             clinicalTrailIndicationsChecker.check(indication.getAsJsonObject());
@@ -131,7 +130,7 @@ public class ClinicalTrialFactory {
 
     private static List<ClinicalTrialLocations> retrieveClinicalTrialsLocations(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialLocations> locations = Lists.newArrayList();
-        JsonDatamodelChecker clinicalTrailLocationsChecker = CkbDataModelChecker.clinicalTrialLocationsObjectChecker();
+        JsonDatamodelChecker clinicalTrailLocationsChecker = CkbClinicalTrialDataModelChecker.clinicalTrialLocationsObjectChecker();
 
         for (JsonElement location : jsonArray) {
             clinicalTrailLocationsChecker.check(location.getAsJsonObject());
@@ -152,7 +151,7 @@ public class ClinicalTrialFactory {
     private static List<ClinicalTrialContacts> retrieveClinicalTrialsContact(@NotNull JsonObject jsonObject) {
         List<ClinicalTrialContacts> contacts = Lists.newArrayList();
 
-        JsonDatamodelChecker clinicalTrailContactChecker = CkbDataModelChecker.clinicalTrialContactObjectChecker();
+        JsonDatamodelChecker clinicalTrailContactChecker = CkbClinicalTrialDataModelChecker.clinicalTrialContactObjectChecker();
         JsonArray arrayContact = jsonObject.getAsJsonArray("clinicalTrialContacts");
 
         for (JsonElement contact : arrayContact) {

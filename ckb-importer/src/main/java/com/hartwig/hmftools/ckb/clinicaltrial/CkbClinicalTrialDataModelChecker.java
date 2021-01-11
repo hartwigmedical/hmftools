@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb;
+package com.hartwig.hmftools.ckb.clinicaltrial;
 
 import java.util.Map;
 
@@ -7,9 +7,9 @@ import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CkbDataModelChecker {
+public final class CkbClinicalTrialDataModelChecker {
 
-    private CkbDataModelChecker() {
+    private CkbClinicalTrialDataModelChecker() {
     }
 
     @NotNull
