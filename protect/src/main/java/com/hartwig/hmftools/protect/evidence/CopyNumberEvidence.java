@@ -2,12 +2,14 @@ package com.hartwig.hmftools.protect.evidence;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +19,10 @@ public class CopyNumberEvidence {
     private final List<ActionableGene> actionableGenes;
 
     public CopyNumberEvidence(@NotNull final List<ActionableGene> actionableGenes) {
-        this.actionableGenes = actionableGenes;
+        this.actionableGenes = actionableGenes.stream()
+                .filter(x -> x.event() == GeneLevelEvent.INACTIVATION || x.event() == GeneLevelEvent.AMPLIFICATION
+                        || x.event() == GeneLevelEvent.DELETION)
+                .collect(Collectors.toList());
     }
 
     @NotNull

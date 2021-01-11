@@ -7,6 +7,8 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -14,8 +16,11 @@ import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.protect.bachelor.BachelorData;
 import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
+import com.hartwig.hmftools.protect.evidence.ChordEvidence;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
+import com.hartwig.hmftools.protect.evidence.DisruptionEvidence;
 import com.hartwig.hmftools.protect.evidence.FusionEvidence;
+import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
@@ -99,33 +104,43 @@ public class ProtectApplication implements AutoCloseable {
 
     @NotNull
     private static List<ProtectEvidence> protectEvidence(@NotNull ProtectConfig config) throws IOException {
-        final Set<String> doids = doids(config);
+        Set<String> doids = doids(config);
 
         // Serve Data
-        final ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), REF_GENOME_VERSION);
-        final VariantEvidence variantEvidenceFactory =
+        ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), REF_GENOME_VERSION);
+        VariantEvidence variantEvidenceFactory =
                 new VariantEvidence(actionableEvents.hotspots(), actionableEvents.ranges(), actionableEvents.genes());
-        final CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(actionableEvents.genes());
-        final FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());
+        CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(actionableEvents.genes());
+        DisruptionEvidence disruptionEvidenceFactory = new DisruptionEvidence(actionableEvents.genes());
+        FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());
+        PurpleSignatureEvidence purpleSignatureEvidenceFactory = new PurpleSignatureEvidence(actionableEvents.signatures());
+        ChordEvidence chordEvidenceFactory = new ChordEvidence(actionableEvents.signatures());
 
         // Additional configuration
-        final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
+        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
 
         // External Data
-        final LinxData linxData = LinxDataLoader.load(config);
-        final PurpleData purpleData = PurpleDataLoader.load(config);
-        final BachelorData bachelorData = BachelorDataLoader.load(config.bachelorTsv(), purpleData, linxData, germlineReportingModel);
+        LinxData linxData = LinxDataLoader.load(config);
+        PurpleData purpleData = PurpleDataLoader.load(config);
+        BachelorData bachelorData = BachelorDataLoader.load(config.bachelorTsv(), purpleData, linxData, germlineReportingModel);
+        ChordAnalysis chordAnalysis = ChordFileReader.read(config.chordPredictionTxt());
 
         // Evidence
-        final List<ProtectEvidence> variantEvidence =
+        List<ProtectEvidence> variantEvidence =
                 variantEvidenceFactory.evidence(doids, bachelorData.germlineVariants(), purpleData.somaticVariants());
-        final List<ProtectEvidence> copyNumberEvidence = copyNumberEvidenceFactory.evidence(doids, purpleData.copyNumberAlterations());
-        final List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(doids, linxData.fusions());
+        List<ProtectEvidence> copyNumberEvidence = copyNumberEvidenceFactory.evidence(doids, purpleData.copyNumberAlterations());
+        List<ProtectEvidence> disruptionEvidence = disruptionEvidenceFactory.evidence(doids, linxData.homozygousDisruptions());
+        List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(doids, linxData.fusions());
+        List<ProtectEvidence> purpleSignatureEvidence = purpleSignatureEvidenceFactory.evidence(doids, purpleData);
+        List<ProtectEvidence> chordEvidence = chordEvidenceFactory.evidence(doids, chordAnalysis);
 
-        final List<ProtectEvidence> result = Lists.newArrayList();
+        List<ProtectEvidence> result = Lists.newArrayList();
         result.addAll(variantEvidence);
         result.addAll(copyNumberEvidence);
+        result.addAll(disruptionEvidence);
         result.addAll(fusionEvidence);
+        result.addAll(purpleSignatureEvidence);
+        result.addAll(chordEvidence);
         return result;
     }
 

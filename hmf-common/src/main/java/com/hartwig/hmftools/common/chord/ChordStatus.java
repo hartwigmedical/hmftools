@@ -4,8 +4,8 @@ import org.jetbrains.annotations.NotNull;
 
 public enum ChordStatus {
     CANNOT_BE_DETERMINED("Cannot be determined"),
-    HR_PROFICIENT("Proficient"),
-    HR_DEFICIENT("Deficient"),
+    HR_PROFICIENT("HR proficient"),
+    HR_DEFICIENT("HR deficient"),
     UNKNOWN("Unknown");
 
     public static final double HRD_THRESHOLD = 0.5;

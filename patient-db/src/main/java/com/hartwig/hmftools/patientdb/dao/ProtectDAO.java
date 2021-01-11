@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep10;
+import org.jooq.InsertValuesStep11;
 
 class ProtectDAO {
 
@@ -25,14 +25,16 @@ class ProtectDAO {
     }
 
     void write(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteEvidenceForSample(sample);
+
+        Timestamp timestamp = new Timestamp(new Date().getTime());
         for (List<ProtectEvidence> batch : Iterables.partition(evidence, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep10 inserter = context.insertInto(PROTECT,
+            InsertValuesStep11 inserter = context.insertInto(PROTECT,
                     PROTECT.SAMPLEID,
                     PROTECT.EVENT,
-                    PROTECT.REPORTED,
+                    PROTECT.GERMLINE,
                     PROTECT.SOURCE,
+                    PROTECT.REPORTED,
                     PROTECT.TREATMENT,
                     PROTECT.ONLABEL,
                     PROTECT.LEVEL,
@@ -44,7 +46,7 @@ class ProtectDAO {
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep10 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep11 inserter, @NotNull String sample,
             @NotNull ProtectEvidence evidence) {
         StringJoiner urlJoiner = new StringJoiner(",");
         for (String url : evidence.urls()) {
@@ -53,8 +55,9 @@ class ProtectDAO {
 
         inserter.values(sample,
                 evidence.genomicEvent(),
-                evidence.reported(),
+                evidence.germline(),
                 evidence.source().toString(),
+                evidence.reported(),
                 evidence.treatment(),
                 evidence.onLabel(),
                 evidence.level().toString(),
