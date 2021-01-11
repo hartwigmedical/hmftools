@@ -61,5 +61,4 @@ public class CopyNumberEvidenceTest {
                 .copies(1)
                 .build();
     }
-
 }

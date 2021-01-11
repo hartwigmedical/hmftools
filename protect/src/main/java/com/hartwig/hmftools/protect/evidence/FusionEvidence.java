@@ -17,12 +17,13 @@ import org.jetbrains.annotations.NotNull;
 public class FusionEvidence {
 
     @NotNull
-    private final List<ActionableGene> actionableGenes;
+    private final List<ActionableGene> actionablePromiscuous;
     @NotNull
     private final List<ActionableFusion> actionableFusions;
 
     public FusionEvidence(@NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions) {
-        this.actionableGenes = actionableGenes.stream().filter(x -> x.event().equals(GeneLevelEvent.FUSION)).collect(Collectors.toList());
+        this.actionablePromiscuous =
+                actionableGenes.stream().filter(x -> x.event().equals(GeneLevelEvent.FUSION)).collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
     }
 
@@ -33,7 +34,7 @@ public class FusionEvidence {
 
     @NotNull
     public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull LinxFusion reportable) {
-        List<ProtectEvidenceItem> geneEvidence = actionableGenes.stream()
+        List<ProtectEvidenceItem> geneEvidence = actionablePromiscuous.stream()
                 .filter(x -> match(x, reportable))
                 .map(x -> evidence(doids, reportable, x))
                 .collect(Collectors.toList());
@@ -89,6 +90,10 @@ public class FusionEvidence {
     @NotNull
     private static ProtectEvidenceItem evidence(@NotNull Set<String> doid, @NotNull LinxFusion reportable,
             @NotNull ActionableEvent actionable) {
-        return ProtectEvidenceItems.builder(doid, actionable).genomicEvent(reportable.genomicEvent()).reported(true).build();
+        return ProtectEvidenceItems.builder(doid, actionable)
+                .germline(false)
+                .genomicEvent(reportable.genomicEvent())
+                .reported(true)
+                .build();
     }
 }
