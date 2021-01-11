@@ -12,13 +12,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import com.hartwig.hmftools.ckb.clinicaltrial.ImmutableClinicalTrailMolecularProfile;
-import com.hartwig.hmftools.ckb.clinicaltrial.ImmutableClinicalTrial;
-import com.hartwig.hmftools.ckb.clinicaltrial.ImmutableClinicalTrialContacts;
-import com.hartwig.hmftools.ckb.clinicaltrial.ImmutableClinicalTrialLocations;
-import com.hartwig.hmftools.ckb.clinicaltrial.ImmutableClinicalTrialVariantRequirementDetails;
-import com.hartwig.hmftools.ckb.clinicaltrial.ImmutableIndications;
-import com.hartwig.hmftools.ckb.clinicaltrial.ImmutableTherapies;
+
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
