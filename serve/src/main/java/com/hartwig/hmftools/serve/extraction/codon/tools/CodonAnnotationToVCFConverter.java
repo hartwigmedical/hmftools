@@ -87,7 +87,7 @@ public class CodonAnnotationToVCFConverter {
                 .start(position)
                 .alleles(alleles)
                 .computeEndFromAlleles(alleles, new Long(position).intValue())
-                .attribute("source", Knowledgebase.commaSeparatedSourceString(knowledgebases))
+                .attribute("source", Knowledgebase.toCommaSeparatedSourceString(knowledgebases))
                 .attribute("input", KeyFormatter.toCodonKey(gene, transcript, codonIndex))
                 .make();
 

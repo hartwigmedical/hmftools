@@ -68,7 +68,7 @@ public final class KnownHotspotFile {
                     .start(hotspot.position())
                     .alleles(hotspotAlleles)
                     .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                    .attribute(INFO_SOURCES, Knowledgebase.commaSeparatedSourceString(hotspot.sources()))
+                    .attribute(INFO_SOURCES, Knowledgebase.toCommaSeparatedSourceString(hotspot.sources()))
                     .attribute(INFO_INPUT,
                             KeyFormatter.toProteinKey(hotspot.gene(), hotspot.transcript(), hotspot.proteinAnnotation()))
                     .make();
@@ -96,7 +96,7 @@ public final class KnownHotspotFile {
         for (KnownHotspot hotspot : hotspots) {
             sources.addAll(hotspot.sources());
         }
-        return Knowledgebase.commaSeparatedSourceString(sources);
+        return Knowledgebase.toCommaSeparatedSourceString(sources);
     }
 
     @NotNull

@@ -72,7 +72,7 @@ public final class KnownFusionPairFile {
                 .add(fusionPair.geneDown())
                 .add(nullToEmpty(fusionPair.minExonDown()))
                 .add(nullToEmpty(fusionPair.maxExonDown()))
-                .add(Knowledgebase.commaSeparatedSourceString(fusionPair.sources()))
+                .add(Knowledgebase.toCommaSeparatedSourceString(fusionPair.sources()))
                 .toString();
     }
 
