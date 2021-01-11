@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.lilac.read
 
 import com.hartwig.hmftools.common.codon.Codons
+import com.hartwig.hmftools.common.genome.bed.NamedBed
+import com.hartwig.hmftools.common.genome.region.CodingRegions
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion
+import com.hartwig.hmftools.common.genome.region.Strand
+import com.hartwig.hmftools.lilac.LilacApplication2
 import com.hartwig.hmftools.lilac.ext.containsIndel
 import com.hartwig.hmftools.lilac.sam.SamSlicer
 import htsjdk.samtools.SAMRecord
@@ -16,7 +21,7 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
 
     private val hlaNucIndexEnd = hlaNucIndexStart + length - 1
     private val nucleotideIndices = IntRange(hlaNucIndexStart, hlaNucIndexEnd).toList()
-    private val aminoAcidIndices =  AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd).toList()
+    private val aminoAcidIndices = AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd).toList()
 
     fun containsNucleotide(index: Int): Boolean {
         return index in nucleotideIndices
@@ -78,7 +83,27 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
 
     companion object {
 
-        fun realign(hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
+        fun readFromBam(transcript: HmfTranscriptRegion, bamFile: String): List<SAMRecordRead> {
+            LilacApplication2.logger.info("... querying ${transcript.gene()} (${transcript.chromosome()}:${transcript.codingStart()}-${transcript.codingEnd()})")
+
+            val reverseStrand = transcript.strand() == Strand.REVERSE
+            val codingRegions = if (reverseStrand) codingRegions(transcript).reversed() else codingRegions(transcript)
+
+            val realignedRegions = mutableListOf<SAMRecordRead>()
+            var length = 0
+            for (codingRegion in codingRegions) {
+                realignedRegions.addAll(SAMRecordRead.realign(length, codingRegion, reverseStrand, bamFile))
+                length += codingRegion.bases().toInt()
+//            println((length - 1) / 3)
+            }
+            return realignedRegions
+        }
+
+        private fun codingRegions(transcript: HmfTranscriptRegion): List<NamedBed> {
+            return CodingRegions.codingRegions(transcript)
+        }
+
+        private fun realign(hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
             val slicer = SamSlicer(1)
             val result = mutableListOf<SAMRecordRead>()
             SamReaderFactory.makeDefault().open(File(bamFileName)).use { samReader ->

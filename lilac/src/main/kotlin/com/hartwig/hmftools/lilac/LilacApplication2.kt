@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.lilac
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.hartwig.hmftools.common.genome.bed.NamedBed
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
-import com.hartwig.hmftools.common.genome.region.CodingRegions
-import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.nuc.SequenceCount
 import com.hartwig.hmftools.lilac.phase.HeterozygousEvidence
@@ -41,6 +38,36 @@ class LilacApplication2 : AutoCloseable, Runnable {
     val minBaseCount = 2
 
 
+    private fun filterCandidatesOnNucleotides(minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<Fragment>, vararg nucleotides: Int): List<HlaSequence> {
+        val reads = fragments
+                .filter { it.containsAllNucleotides(minBaseQual, *nucleotides) }
+                .map { it.nucleotides(minBaseQual, *nucleotides) }
+                .groupingBy { it }
+                .eachCount()
+                .filter { it.value >= minEvidence }
+                .keys
+                .map { it.toCharArray() }
+
+
+        return candidates.filter { it.consistentWith(nucleotides,reads) }
+    }
+
+    private fun filterCandidatesOnExonBoundaryNucleotide(aminoAcidIndex: Int, minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<Fragment>): List<HlaSequence> {
+        val firstBaseCandidates = filterCandidatesOnNucleotides(minEvidence, candidates, fragments, aminoAcidIndex * 3)
+        return filterCandidatesOnNucleotides(minEvidence, firstBaseCandidates, fragments, aminoAcidIndex * 3 + 1, aminoAcidIndex * 3 + 2)
+    }
+
+    private fun filterCandidatesOnExonBoundaries(exonBoundaries: Collection<Int>, minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<Fragment>): List<HlaSequence> {
+        var result = candidates.toList()
+        for (exonBoundary in exonBoundaries) {
+            result = filterCandidatesOnExonBoundaryNucleotide(exonBoundary, minEvidence, result, fragments)
+        }
+
+        return result
+    }
+
+
+
     override fun run() {
         logger.info("Starting")
 
@@ -68,8 +95,9 @@ class LilacApplication2 : AutoCloseable, Runnable {
         val bBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
         val cBoundaries = setOf(24, 114, 206, 298, 338, 349, 365, 366)
         val allBoundaries = aBoundaries + bBoundaries + cBoundaries
+        val commonBoundaries = aBoundaries intersect bBoundaries intersect cBoundaries
 
-        val excludedIndices = allBoundaries.toSet() union IntRange(360,370)
+        val excludedIndices = cBoundaries.toSet() union IntRange(360, 370)
 
         val heterozygousIndices = aminoAcidCounts.heterozygousIndices(minBaseCount)
                 .filter { it !in excludedIndices }
@@ -83,13 +111,15 @@ class LilacApplication2 : AutoCloseable, Runnable {
         logger.info("Reading protein files")
         val allProteinSequences = readSequenceFiles { "${resourcesDir}/${it}_prot.txt" }
 
-        val initialNucleotideCandidates = initialNucleotideCandidates(nucleotideCounts, nucleotideSequences).map { it.contig }.toSet()
+        val initialNucleotideCandidates = initialNucleotideCandidates(nucleotideCounts, nucleotideSequences)
+        val boundaryNucleotideCandidates = filterCandidatesOnExonBoundaries(commonBoundaries, 1, initialNucleotideCandidates, readFragments )
+        val nucleotideFilteredAlleles = boundaryNucleotideCandidates.map { it.contig }
         println("${nucleotideSequences.size} types")
         println("${initialNucleotideCandidates.size} candidates after nucleotide filtering")
 
 
         val initialCandidates = initialCandidates(excludedIndices, aminoAcidCounts, allProteinSequences)
-                .filter { it.contig in initialNucleotideCandidates }
+                .filter { it.contig in nucleotideFilteredAlleles }
         println("${allProteinSequences.size} types")
         println("${initialCandidates.size} candidates after amino acid filtering")
 
@@ -128,7 +158,11 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
         val sequences = candidates.map { HlaSequence(it.contig, it.sequence) }
         HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
-        HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
+        HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(aBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(bBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(cBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.appendFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
 
 
 //        var combined = PhasedEvidence.combineOverlapping(fullEvidence[19], fullEvidence[20])
@@ -355,32 +389,11 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
     private fun readFromBam(bamFile: String): List<Fragment> {
         val reads = mutableListOf<SAMRecordRead>()
-        reads.addAll(readFromBam("HLA-A", bamFile))
-        reads.addAll(readFromBam("HLA-B", bamFile))
-        reads.addAll(readFromBam("HLA-C", bamFile))
+        reads.addAll(SAMRecordRead.readFromBam(transcripts["HLA-A"]!!, bamFile))
+        reads.addAll(SAMRecordRead.readFromBam(transcripts["HLA-B"]!!, bamFile))
+        reads.addAll(SAMRecordRead.readFromBam(transcripts["HLA-C"]!!, bamFile))
 
         return reads.groupBy { it.samRecord.readName }.map { Fragment(it.value) }
-    }
-
-    private fun readFromBam(gene: String, bamFile: String): List<SAMRecordRead> {
-        val transcript = transcripts[gene]!!
-        logger.info("... querying ${transcript.gene()} (${transcript.chromosome()}:${transcript.codingStart()}-${transcript.codingEnd()})")
-
-        val reverseStrand = transcript.strand() == Strand.REVERSE
-        val codingRegions = if (reverseStrand) codingRegions(gene).reversed() else codingRegions(gene)
-
-        val realignedRegions = mutableListOf<SAMRecordRead>()
-        var length = 0
-        for (codingRegion in codingRegions) {
-            realignedRegions.addAll(SAMRecordRead.realign(length, codingRegion, reverseStrand, bamFile))
-            length += codingRegion.bases().toInt()
-//            println((length - 1) / 3)
-        }
-        return realignedRegions
-    }
-
-    fun codingRegions(gene: String): List<NamedBed> {
-        return CodingRegions.codingRegions(transcripts[gene]!!)
     }
 
 

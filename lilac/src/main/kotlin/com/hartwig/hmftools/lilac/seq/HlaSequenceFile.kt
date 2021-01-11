@@ -61,6 +61,34 @@ object HlaSequenceFile {
         return resultMap.values.toList()
     }
 
+    fun wipeFile(outputFileName: String) {
+        val outputFile = File(outputFileName)
+        outputFile.writeText("")
+    }
+
+    fun writeBoundary(boundaries: Collection<Int>, outputFileName: String) {
+        val outputFile = File(outputFileName)
+        outputFile.appendText("Boundary".padEnd(20, ' ') + "\t")
+        for (i in 0.. boundaries.max()!!) {
+            if (i in boundaries) {
+                outputFile.appendText("|")
+            } else {
+                outputFile.appendText(" ")
+            }
+        }
+
+        outputFile.appendText("\n")
+    }
+
+    fun appendFile(outputFileName: String, sequences: List<HlaSequence>) {
+        if (sequences.isNotEmpty()) {
+            val outputFile = File(outputFileName)
+            for (sequence in sequences) {
+                outputFile.appendText(sequence.toString() + "\n")
+            }
+        }
+    }
+
     fun writeFile(outputFileName: String, sequences: List<HlaSequence>) {
         if (sequences.isNotEmpty()) {
             val outputFile = File(outputFileName)

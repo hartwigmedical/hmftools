@@ -17,6 +17,14 @@ data class Fragment(val reads: List<Read>) {
         return aminoAcidIndices.contains(index)
     }
 
+    fun containsAllNucleotides(minQual: Int, vararg indices: Int): Boolean {
+        return indices.all { containsNucleotide(minQual, it) }
+    }
+
+    fun containsNucleotide(minQual: Int, index: Int): Boolean {
+        return nucleotideIndices.contains(index) && nucleotide(index, minQual) != '.'
+    }
+
     fun aminoAcid(index: Int, minQual: Int): Char {
         val first = nucleotide(index * 3, minQual)
         if (first == '.') {
@@ -33,6 +41,11 @@ data class Fragment(val reads: List<Read>) {
 
         return Codons.aminoAcid(first.toString() + second + third)
     }
+
+    fun nucleotides(minQual: Int, vararg indices: Int): String {
+        return indices.map { nucleotide(it, minQual) }.joinToString("")
+    }
+
 
     fun nucleotide(index: Int, minQual: Int): Char {
         for (read in reads) {

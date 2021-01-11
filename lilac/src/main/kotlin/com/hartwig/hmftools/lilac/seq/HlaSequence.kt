@@ -8,14 +8,19 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
     val sequence = rawSequence.aligned()
     val length = sequence.length
 
+
     fun consistentWith(evidence: PhasedEvidence): Boolean {
         return evidence.evidence.keys.any { this.consistentWith(evidence.aminoAcidIndices, it.toCharArray()) }
     }
 
-    fun consistentWith(aminoAcidIndices: IntArray, aminoAcids: CharArray): Boolean {
-        for (i in aminoAcidIndices.indices) {
-            val index = aminoAcidIndices[i]
-            val aminoAcid = aminoAcids[i]
+    fun consistentWith(sequenceIndices: IntArray, sequences: Collection<CharArray>): Boolean {
+        return sequences.any {consistentWith(sequenceIndices, it)}
+    }
+
+    fun consistentWith(sequenceIndices: IntArray, sequence: CharArray): Boolean {
+        for (i in sequenceIndices.indices) {
+            val index = sequenceIndices[i]
+            val aminoAcid = sequence[i]
 
             if (this.length > index && this.sequence[index] != '*' && this.sequence[index] != aminoAcid) {
                 return false
