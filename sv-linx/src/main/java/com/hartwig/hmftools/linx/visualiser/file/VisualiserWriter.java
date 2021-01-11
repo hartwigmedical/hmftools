@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_TELOMERE;
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.EXON_LOST;
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.FUSION;
 import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_FIVE_PRIME_UTR;
 import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_NON_CODING;
 import static com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile.PD_THREE_PRIME_UTR;
@@ -54,11 +56,6 @@ public class VisualiserWriter
     private BufferedWriter mGeneFileWriter;
     private BufferedWriter mProteinDomainFileWriter;
     private BufferedWriter mFusionFileWriter;
-
-    public static final String GENE_TYPE_DRIVER = "DRIVER";
-    public static final String GENE_TYPE_FUSION = "FUSION";
-    public static final String GENE_TYPE_PSEUDOGENE = "PSEUDO";
-    public static final String GENE_TYPE_EXON_LOST = "EXON_LOST";
 
     public VisualiserWriter(final String outputDir, boolean enabled, boolean isBatchOutput)
     {
@@ -136,16 +133,27 @@ public class VisualiserWriter
     }
 
     public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
-            final String chromosome, final String annotationType)
+            final String chromosome, final VisGeneAnnotationType annotationType)
     {
         addGeneExonData(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType));
     }
 
     public void addGeneExonData(final VisGeneData geneData)
     {
-        // no duplicates for the same clusterId
-        if(mGeneData.stream().anyMatch(x -> x.GeneId.equals(geneData.GeneId) && x.ClusterId == geneData.ClusterId))
-            return;
+        // no duplicates for the same clusterId - favour fusions over other types where transcripts differ
+        for(VisGeneData otherGeneData : mGeneData)
+        {
+            if(otherGeneData.GeneId.equals(geneData.GeneId) && otherGeneData.ClusterId == geneData.ClusterId)
+            {
+                if(otherGeneData.AnnotationType != FUSION && geneData.AnnotationType == FUSION)
+                {
+                    mGeneData.remove(otherGeneData);
+                    mGeneData.add(geneData);
+                }
+
+                return;
+            }
+        }
 
         mGeneData.add(geneData);
     }
@@ -402,7 +410,7 @@ public class VisualiserWriter
                 if(geneData.ExonPositionOffsets.isEmpty())
                 {
                     geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
-                            geneData.Chromosome, geneData.AnnotationType, exonData.Rank, exonData.Start, exonData.End));
+                            geneData.Chromosome, geneData.AnnotationType.toString(), exonData.Rank, exonData.Start, exonData.End));
                 }
                 else
                 {
@@ -413,12 +421,12 @@ public class VisualiserWriter
                     int exonEnd = exonData.End + exonPosOffsets[SE_END];
 
                     geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
-                            geneData.Chromosome, geneData.AnnotationType, exonData.Rank, exonStart, exonEnd));
+                            geneData.Chromosome, geneData.AnnotationType.toString(), exonData.Rank, exonStart, exonEnd));
 
                     if(exonsLost != null)
                     {
                         geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
-                                geneData.Chromosome, GENE_TYPE_EXON_LOST, exonData.Rank,
+                                geneData.Chromosome, EXON_LOST.toString(), exonData.Rank,
                                 exonStart + exonsLost[SE_START], exonEnd + exonsLost[SE_END]));
                     }
                 }
@@ -500,7 +508,7 @@ public class VisualiserWriter
 
     private boolean checkAddIgExonRegions(final VisGeneData geneData, final List<VisGeneExonFile> geneExonList)
     {
-        if(!geneData.AnnotationType.equals(GENE_TYPE_FUSION))
+        if(!geneData.AnnotationType.equals(FUSION))
             return false;
 
         if(!geneData.TransName.contains("@IG"))
@@ -538,7 +546,7 @@ public class VisualiserWriter
         }
 
         geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,
-                geneData.Chromosome, geneData.AnnotationType, 1, posStart, posEnd));
+                geneData.Chromosome, geneData.AnnotationType.toString(), 1, posStart, posEnd));
 
         return true;
     }

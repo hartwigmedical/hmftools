@@ -12,7 +12,7 @@ public class VisGeneData
     public final String TransName;
     public final int TransId;
     public final String Chromosome;
-    public final String AnnotationType;
+    public final VisGeneAnnotationType AnnotationType;
 
     // optional list of exons by rank and any adjustments to their positions for display
     public final Map<Integer,int[]> ExonPositionOffsets;
@@ -21,7 +21,7 @@ public class VisGeneData
     public final Map<Integer,int[]> ExonsLostOffsets;
 
     public VisGeneData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
-            final String chromosome, final String annotationType)
+            final String chromosome, final VisGeneAnnotationType annotationType)
     {
         ClusterId = clusterId;
         GeneId = geneId;

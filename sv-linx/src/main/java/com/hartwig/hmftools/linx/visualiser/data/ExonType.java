@@ -6,7 +6,7 @@ public enum ExonType
 {
     DRIVER,
     FUSION,
-    PSEUDO,
+    PSEUDOGENE,
     DISRUPTED;
 
     @NotNull

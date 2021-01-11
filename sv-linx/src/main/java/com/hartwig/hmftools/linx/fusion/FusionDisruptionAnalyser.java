@@ -21,7 +21,7 @@ import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndF
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
-import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_FUSION;
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.FUSION;
 
 import java.util.List;
 import java.util.Map;
@@ -995,10 +995,10 @@ public class FusionDisruptionAnalyser
                 final BreakendTransData transDown = fusion.downstreamTrans();
 
                 mVisWriter.addGeneExonData(clusterId, transUp.gene().StableId, transUp.gene().GeneName,
-                        transUp.transName(), transUp.transId(), transUp.gene().chromosome(), GENE_TYPE_FUSION);
+                        transUp.transName(), transUp.transId(), transUp.gene().chromosome(), FUSION);
 
                 mVisWriter.addGeneExonData(clusterId, transDown.gene().StableId, transDown.gene().GeneName,
-                        transDown.transName(), transDown.transId(), transDown.gene().chromosome(), GENE_TYPE_FUSION);
+                        transDown.transName(), transDown.transId(), transDown.gene().chromosome(), FUSION);
 
                 visFusions.add(new VisFusionFile(
                         mSampleId, clusterId, fusion.reportable(),

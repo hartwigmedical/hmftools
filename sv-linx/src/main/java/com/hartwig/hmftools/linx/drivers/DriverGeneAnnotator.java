@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.disruptionGeneIds;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_DRIVER;
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DRIVER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -248,7 +248,7 @@ public class DriverGeneAnnotator
                         .build());
 
                 mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
-                        "", 0, dgData.GeneData.Chromosome, GENE_TYPE_DRIVER);
+                        "", 0, dgData.GeneData.Chromosome, DRIVER);
             }
         }
 

@@ -73,7 +73,7 @@ public class CircosDataWriter
         {
             switch (x.type())
             {
-                case PSEUDO:
+                case PSEUDOGENE:
                     geneColorMap.put(x.name(), SINGLE_YELLOW);
                     break;
                 case DRIVER:

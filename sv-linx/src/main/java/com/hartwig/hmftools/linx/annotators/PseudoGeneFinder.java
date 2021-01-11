@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_PSEUDOGENE;
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.PSEUDOGENE;
 
 import java.util.List;
 import java.util.Map;
@@ -112,7 +112,7 @@ public class PseudoGeneFinder
                             continue;
 
                         VisGeneData geneData = new VisGeneData(cluster.id(), gene.StableId, gene.GeneName,
-                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), GENE_TYPE_PSEUDOGENE);
+                                maxTrans.TransName, maxTrans.TransId, gene.chromosome(), PSEUDOGENE);
 
                         final int selectedTransId = maxTrans.TransId;
 
