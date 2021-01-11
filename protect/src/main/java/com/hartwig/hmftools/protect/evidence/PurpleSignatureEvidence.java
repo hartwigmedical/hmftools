@@ -35,14 +35,14 @@ public class PurpleSignatureEvidence {
             switch (signature.name()) {
                 case MICROSATELLITE_UNSTABLE: {
                     if (purpleData.microsatelliteStatus() == MicrosatelliteStatus.MSI) {
-                        ProtectEvidence evidence = signatureEvidenceBuilder.genomicEvent(MicrosatelliteStatus.MSI.display()).build();
+                        ProtectEvidence evidence = signatureEvidenceBuilder.genomicEvent("Microsatellite unstable").build();
                         result.add(evidence);
                     }
                     break;
                 }
                 case HIGH_TUMOR_MUTATIONAL_LOAD: {
                     if (purpleData.tumorMutationalLoadStatus() == TumorMutationalStatus.HIGH) {
-                        ProtectEvidence evidence = signatureEvidenceBuilder.genomicEvent(TumorMutationalStatus.HIGH.display()).build();
+                        ProtectEvidence evidence = signatureEvidenceBuilder.genomicEvent("High tumor mutation load").build();
                         result.add(evidence);
                     }
                     break;

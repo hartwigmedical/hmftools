@@ -32,7 +32,7 @@ public class ChordEvidence {
                 assert signature.name() == SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
 
                 result.add(ProtectEvidenceFunctions.builder(doids, signature)
-                        .genomicEvent(ChordStatus.HR_DEFICIENT.display())
+                        .genomicEvent("HR deficient")
                         .germline(false)
                         .reported(true)
                         .build());
