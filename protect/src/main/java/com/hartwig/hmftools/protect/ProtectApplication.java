@@ -103,7 +103,8 @@ public class ProtectApplication implements AutoCloseable {
 
         // Serve Data
         final ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), REF_GENOME_VERSION);
-        final VariantEvidence variantEvidenceFactory = new VariantEvidence(actionableEvents.hotspots(), actionableEvents.ranges());
+        final VariantEvidence variantEvidenceFactory =
+                new VariantEvidence(actionableEvents.hotspots(), actionableEvents.ranges(), actionableEvents.genes());
         final CopyNumberEvidence copyNumberEvidenceFactory = new CopyNumberEvidence(actionableEvents.genes());
         final FusionEvidence fusionEvidenceFactory = new FusionEvidence(actionableEvents.genes(), actionableEvents.fusions());
 

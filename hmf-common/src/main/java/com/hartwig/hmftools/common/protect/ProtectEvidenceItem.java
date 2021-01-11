@@ -18,6 +18,8 @@ public abstract class ProtectEvidenceItem implements Comparable<ProtectEvidenceI
     @NotNull
     public abstract String genomicEvent();
 
+    public abstract boolean germline();
+
     @NotNull
     public abstract Knowledgebase source();
 

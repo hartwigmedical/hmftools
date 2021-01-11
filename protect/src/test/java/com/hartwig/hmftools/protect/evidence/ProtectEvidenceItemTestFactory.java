@@ -14,15 +14,17 @@ public final class ProtectEvidenceItemTestFactory {
     }
 
     @NotNull
-    public static ImmutableProtectEvidenceItem.Builder createDefault(boolean onLabel, EvidenceDirection direction, EvidenceLevel level) {
+    public static ImmutableProtectEvidenceItem.Builder createDefault(boolean onLabel, @NotNull EvidenceDirection direction,
+            @NotNull EvidenceLevel level) {
         return ImmutableProtectEvidenceItem.builder()
+                .genomicEvent("event")
+                .germline(false)
                 .source(Knowledgebase.VICC_CGI)
-                .direction(direction)
-                .level(level)
+                .reported(true)
                 .treatment("treatment")
                 .onLabel(onLabel)
-                .genomicEvent("event")
-                .reported(true)
+                .level(level)
+                .direction(direction)
                 .urls(Sets.newHashSet("url"));
     }
 }

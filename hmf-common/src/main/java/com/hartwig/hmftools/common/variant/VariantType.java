@@ -22,5 +22,4 @@ public enum VariantType {
         }
         return VariantType.UNDEFINED;
     }
-
 }
