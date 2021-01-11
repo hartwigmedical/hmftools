@@ -81,5 +81,4 @@ public class FusionEvidenceTest {
                 .geneTranscriptEnd(Strings.EMPTY)
                 .junctionCopyNumber(0D);
     }
-
 }
