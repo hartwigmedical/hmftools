@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 public class KnownFusionData
 {
@@ -35,11 +35,11 @@ public class KnownFusionData
     private int[] mThreeExonRange;
 
     // IG region
-    private SvRegion mIgRegion;
+    private BaseRegion mIgRegion;
     private byte mIgStrand;
 
     // 3' gene alternative mappings
-    private final List<SvRegion> mThreeGeneAltRegions;
+    private final List<BaseRegion> mThreeGeneAltRegions;
 
     private static final String FLD_TYPE = "Type";
     private static final String FLD_FIVE_GENE = "FiveGene";
@@ -174,7 +174,7 @@ public class KnownFusionData
                     ++index;
 
                     mThreeGeneAltRegions.add(
-                            new SvRegion(altItems[index], Integer.parseInt(altItems[index + 1]), Integer.parseInt(altItems[index + 2])));
+                            new BaseRegion(altItems[index], Integer.parseInt(altItems[index + 1]), Integer.parseInt(altItems[index + 2])));
                     index += 3;
                 }
             }
@@ -182,7 +182,7 @@ public class KnownFusionData
             {
                 final String[] igRangeItems = overrideData.split(ITEM_DELIM);
                 mIgStrand = Byte.parseByte(igRangeItems[0]);
-                mIgRegion = new SvRegion(igRangeItems[1], Integer.parseInt(igRangeItems[2]), Integer.parseInt(igRangeItems[3]));
+                mIgRegion = new BaseRegion(igRangeItems[1], Integer.parseInt(igRangeItems[2]), Integer.parseInt(igRangeItems[3]));
             }
         }
     }
@@ -197,7 +197,7 @@ public class KnownFusionData
     public int[] fiveGeneExonRange() { return mFiveExonRange; }
     public int[] threeGeneExonRange() { return mThreeExonRange; }
 
-    public SvRegion igRegion() { return mIgRegion; }
+    public BaseRegion igRegion() { return mIgRegion; }
 
     public boolean withinIgRegion(final String chromosome, int position)
     {
@@ -209,7 +209,7 @@ public class KnownFusionData
         return mIgStrand == orientation && withinIgRegion(chromosome, position);
     }
 
-    public final List<SvRegion> getThreeGeneAltRegions() { return mThreeGeneAltRegions; }
+    public final List<BaseRegion> getThreeGeneAltRegions() { return mThreeGeneAltRegions; }
 
     public String toString()
     {

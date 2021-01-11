@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_ACCEPTOR;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_DONOR_1;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_DONOR_2;

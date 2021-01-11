@@ -5,18 +5,18 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
-public class SvRegion
+public class BaseRegion
 {
     public final String Chromosome;
     public final int[] Positions;
 
-    public SvRegion(final String chromosome, final int[] positions)
+    public BaseRegion(final String chromosome, final int[] positions)
     {
         Chromosome = chromosome;
         Positions = positions;
     }
 
-    public SvRegion(final String chromosome, final int posStart, final int posEnd)
+    public BaseRegion(final String chromosome, final int posStart, final int posEnd)
     {
         Chromosome = chromosome;
         Positions = new int[] { posStart, posEnd };
@@ -35,7 +35,7 @@ public class SvRegion
     public boolean isValid() { return HumanChromosome.contains(Chromosome) && hasValidPositions(); }
     public boolean hasValidPositions() { return Positions[SE_START] > 0 & Positions[SE_END] >= Positions[SE_START]; }
 
-    public boolean overlaps(final SvRegion other)
+    public boolean overlaps(final BaseRegion other)
     {
         if(!Chromosome.equals(other.Chromosome))
             return false;
@@ -50,7 +50,7 @@ public class SvRegion
         return Chromosome.equals(chromosome) && positionWithin(position, start(), end());
     }
 
-    public boolean matches(final SvRegion other)
+    public boolean matches(final BaseRegion other)
     {
         return Chromosome.equals(other.Chromosome) && start() == other.start() && end() == other.end();
     }

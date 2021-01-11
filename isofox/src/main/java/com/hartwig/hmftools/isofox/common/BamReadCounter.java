@@ -18,11 +18,8 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.BamSlicer;
-import com.hartwig.hmftools.isofox.common.FragmentTracker;
-import com.hartwig.hmftools.isofox.common.FragmentType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -123,7 +120,7 @@ public class BamReadCounter implements Callable
             mCurrentGenes = overlappingGenes.get(0).GeneId;
             mCurrentGeneReadCount = 0;
 
-            final List<SvRegion> regions = Lists.newArrayList(new SvRegion(mChromosome, mCurrentGenesRange));
+            final List<BaseRegion> regions = Lists.newArrayList(new BaseRegion(mChromosome, mCurrentGenesRange));
 
             mBamSlicer.slice(mSamReader, regions, this::processBamRead);
         }

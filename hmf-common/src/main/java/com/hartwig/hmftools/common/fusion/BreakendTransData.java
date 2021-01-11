@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UNKNOWN;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
 import java.util.Map;
 

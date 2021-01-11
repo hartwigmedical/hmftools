@@ -6,8 +6,8 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
@@ -55,7 +55,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.DuplicateReadTracker;
@@ -115,7 +115,7 @@ public class BamFragmentAllocator
     private int mEnrichedGeneFragments;
     private final DuplicateReadTracker mDuplicateTracker;
     private final List<String[]> mKnownPairGeneIds;
-    private SvRegion mExcludedRegion;
+    private BaseRegion mExcludedRegion;
 
     public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
@@ -193,7 +193,7 @@ public class BamFragmentAllocator
 
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
-    public void produceBamCounts(final GeneCollection geneCollection, final SvRegion geneRegion)
+    public void produceBamCounts(final GeneCollection geneCollection, final BaseRegion geneRegion)
     {
         clearCache();
 
@@ -224,8 +224,8 @@ public class BamFragmentAllocator
         {
             // special handling to avoid any specified enriched region (in this case LINC00486's poly-G sequence)
             mExcludedRegion = mConfig.ExcludedRegion;
-            final SvRegion preRegion = new SvRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
-            final SvRegion postRegion = new SvRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
+            final BaseRegion preRegion = new BaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
+            final BaseRegion postRegion = new BaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
             mBamSlicer.slice(mSamReader, Lists.newArrayList(preRegion), this::processSamRecord);
             mBamSlicer.slice(mSamReader, Lists.newArrayList(postRegion), this::processSamRecord);
         }

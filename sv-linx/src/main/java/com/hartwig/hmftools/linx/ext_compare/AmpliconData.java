@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 public class AmpliconData
 {
-    public final List<SvRegion> Regions;
+    public final List<BaseRegion> Regions;
     public final String Type;
     public final int ClusterId;
     public final double MaxCN;
@@ -42,7 +42,7 @@ public class AmpliconData
     public String chromosomes()
     {
         final List<String> chromosomes = Lists.newArrayList();
-        for(SvRegion region : Regions)
+        for(BaseRegion region : Regions)
         {
             if(!chromosomes.contains(region.Chromosome))
                 chromosomes.add(region.Chromosome);
@@ -70,7 +70,7 @@ public class AmpliconData
         //pair	seqnames	start	end	strand	width	type	footprint	ev.id	id	max.cn	max.jcn	cluster
         final String chromosome = items[fieldsIndexMap.get("seqnames")];
         final int[] positions = { Integer.parseInt(items[fieldsIndexMap.get("start")]), Integer.parseInt(items[fieldsIndexMap.get("end")]) };
-        final SvRegion region = new SvRegion(chromosome, positions);
+        final BaseRegion region = new BaseRegion(chromosome, positions);
         final String type = items[fieldsIndexMap.get("type")];
         final int clusterId = Integer.parseInt(items[fieldsIndexMap.get("cluster")]);
         final double maxCN = Integer.parseInt(items[fieldsIndexMap.get("max.cn")]);

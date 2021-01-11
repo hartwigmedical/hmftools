@@ -18,12 +18,12 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 // matches an exon from or more transcripts in a gene
 public class RegionReadData implements Comparable< RegionReadData>
 {
-    public final SvRegion Region;
+    public final BaseRegion Region;
 
     private final List<TransExonRef> mTransExonRefs; // identifiers for this region, eg transcript & exon
 
@@ -44,7 +44,7 @@ public class RegionReadData implements Comparable< RegionReadData>
 
     public RegionReadData(final String chromosome, int posStart, int posEnd)
     {
-        Region = new SvRegion(chromosome, posStart, posEnd);
+        Region = new BaseRegion(chromosome, posStart, posEnd);
 
         mTransExonRefs = Lists.newArrayList();
 

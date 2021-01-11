@@ -33,9 +33,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.fusion.FusionConfig;
@@ -47,7 +46,6 @@ import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class IsofoxConfig
 {
@@ -109,7 +107,7 @@ public class IsofoxConfig
     public final List<String> RestrictedGeneIds; // specific set of genes to process
     public final List<String> ExcludedGeneIds; // genes to ignore
     public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
-    public final SvRegion ExcludedRegion;
+    public final BaseRegion ExcludedRegion;
 
     public final String OutputDir;
     public final String OutputIdentifier; // optionally include extra identifier in output files
@@ -153,7 +151,7 @@ public class IsofoxConfig
 
     // debugging and performance options
     public final List<String> SpecificChromosomes;
-    public final List<SvRegion> SpecificRegions;
+    public final List<BaseRegion> SpecificRegions;
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
     public final int Threads;
@@ -296,7 +294,7 @@ public class IsofoxConfig
                 final String[] items = regionStr.split(SUB_ITEM_DELIM);
                 if(items.length == 3)
                 {
-                    SvRegion region = new SvRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+                    BaseRegion region = new BaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
 
                     if(!region.isValid())
                     {

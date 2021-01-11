@@ -6,24 +6,20 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 
-import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
-
-import org.apache.commons.compress.utils.Lists;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 public class LineInsertSiteData
 {
     public final String Program;
     public final String SampleId;
 
-    public final SvRegion InsertSite;
+    public final BaseRegion InsertSite;
     public final String InsertType;
-    public final SvRegion SourceSite;
+    public final BaseRegion SourceSite;
     public final boolean HasInversion;
 
     // Linx only
@@ -39,8 +35,8 @@ public class LineInsertSiteData
     public static final String PROGRAM_LINX = "LINX";
     public static final String PROGRAM_PCAWG = "PCAWG";
 
-    public LineInsertSiteData(final String program, final String sampleId, final SvRegion insertSite, final String insertType,
-            final SvRegion sourceSite, final boolean hasInversion, final int clusterId, final int chainId, final String chainDesc)
+    public LineInsertSiteData(final String program, final String sampleId, final BaseRegion insertSite, final String insertType,
+            final BaseRegion sourceSite, final boolean hasInversion, final int clusterId, final int chainId, final String chainDesc)
     {
         Program = program;
         SampleId = sampleId;
@@ -93,8 +89,8 @@ public class LineInsertSiteData
         final String[] sourcePosItems = sourceSiteStr.split("_");
 
         // 22_29059272_29065304
-        final SvRegion sourceRegion = sourcePosItems.length == 3 ?
-                new SvRegion(sourcePosItems[0], Integer.parseInt(sourcePosItems[1]), Integer.parseInt(sourcePosItems[2])) : null;
+        final BaseRegion sourceRegion = sourcePosItems.length == 3 ?
+                new BaseRegion(sourcePosItems[0], Integer.parseInt(sourcePosItems[1]), Integer.parseInt(sourcePosItems[2])) : null;
 
         final String insertChromosome = items[fieldsIndexMap.get("InsertChr")];
 
@@ -111,7 +107,7 @@ public class LineInsertSiteData
         if(insertChromosome.isEmpty() || insertChromosome.equals("0"))
             return null;
 
-        final SvRegion insertRegion = new SvRegion(
+        final BaseRegion insertRegion = new BaseRegion(
                 insertChromosome, insertPositions[lowerInsertIndex], insertPositions[switchIndex(lowerInsertIndex)]);
 
         String insertType = "";
@@ -160,8 +156,8 @@ public class LineInsertSiteData
                         Integer.parseInt(items[fieldsIndexMap.get("SourceInvPosEnd")]) };
 
 
-        final SvRegion insertRegion = new SvRegion(insertChromosome, insertPositions);
-        final SvRegion sourceRegion = !sourceChromosome.isEmpty() ? new SvRegion(sourceChromosome, sourcePositions) : null;
+        final BaseRegion insertRegion = new BaseRegion(insertChromosome, insertPositions);
+        final BaseRegion sourceRegion = !sourceChromosome.isEmpty() ? new BaseRegion(sourceChromosome, sourcePositions) : null;
 
         final String insertType = sourceRegion == null ? INSERT_TYPE_SOLO_L1 : INSERT_TYPE_TRANSDUCTION;
 

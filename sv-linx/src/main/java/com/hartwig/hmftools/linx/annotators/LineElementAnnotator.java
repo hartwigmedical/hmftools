@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refG
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -37,7 +37,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class LineElementAnnotator {
 
-    private final List<SvRegion> mKnownLineElements;
+    private final List<BaseRegion> mKnownLineElements;
     private PseudoGeneFinder mPseudoGeneFinder;
     private final int mProximityDistance;
     private LineClusterState mLineState;
@@ -85,7 +85,7 @@ public class LineElementAnnotator {
                 if(items.length < LE_COL_POS_END+1)
                     continue;
 
-                final SvRegion lineRegion = new SvRegion(
+                final BaseRegion lineRegion = new BaseRegion(
                         refGenomeChromosome(items[LE_COL_CHR], RG_VERSION),
                         Integer.parseInt(items[LE_COL_POS_START]),
                         Integer.parseInt(items[LE_COL_POS_END]));
@@ -108,7 +108,7 @@ public class LineElementAnnotator {
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            for(final SvRegion lineRegion : mKnownLineElements)
+            for(final BaseRegion lineRegion : mKnownLineElements)
             {
                 if(!lineRegion.Chromosome.equals(svData.chromosome(isStart(se))))
                     continue;

@@ -10,12 +10,12 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class FragileSiteAnnotator
 {
-    private List<SvRegion> mFragileSites;
+    private List<BaseRegion> mFragileSites;
 
     private static final int CSV_REQUIRED_FIELDS = 3;
 
@@ -48,7 +48,7 @@ public class FragileSiteAnnotator
                 if(items.length < CSV_REQUIRED_FIELDS)
                     continue;
 
-                final SvRegion genomeRegion = new SvRegion(
+                final BaseRegion genomeRegion = new BaseRegion(
                         refGenomeChromosome(items[FS_COL_CHR], RG_VERSION),
                         Integer.parseInt(items[FS_COL_POS_START]),
                         Integer.parseInt(items[FS_COL_POS_END]));
@@ -69,7 +69,7 @@ public class FragileSiteAnnotator
         if(mFragileSites.isEmpty())
             return false;
 
-        for(final SvRegion fsRegion : mFragileSites)
+        for(final BaseRegion fsRegion : mFragileSites)
         {
             if(fsRegion.containsPosition(svData.chromosome(useStart), svData.position(useStart)))
             {

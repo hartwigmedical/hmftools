@@ -37,7 +37,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.linx.LinxConfig;
@@ -226,7 +226,7 @@ public class FusionDisruptionAnalyser
                     if(mGeneDataCache.getAlternativeGeneData().stream().anyMatch(x -> x.GeneId.equals(geneData.GeneId)))
                         continue;
 
-                    for(final SvRegion altRegion : kfData.getThreeGeneAltRegions())
+                    for(final BaseRegion altRegion : kfData.getThreeGeneAltRegions())
                     {
                         mGeneDataCache.getAlternativeGeneData().add(new EnsemblGeneData(
                                 geneData.GeneId, geneData.GeneName, altRegion.Chromosome, geneData.Strand, altRegion.start(), altRegion.end(), ""));

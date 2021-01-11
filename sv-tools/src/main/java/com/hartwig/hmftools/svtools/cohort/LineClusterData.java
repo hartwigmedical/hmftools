@@ -5,8 +5,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.KNOWN;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.KNOWN_SUSPECT;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.NONE;
@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.svtools.cohort.LineElementType.SUSPECT;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -27,13 +27,13 @@ public class LineClusterData
 
     public final List<LineRegion> LineRegions;
 
-    public final List<SvRegion> InsertedRegions;
+    public final List<BaseRegion> InsertedRegions;
 
     public final List<LineClusterData> MatchedClusters;
 
     private LineRegion mPrimaryRegion;
 
-    public LineClusterData(final String sampleId, final int clusterId, final SvRegion lineRegion, final LineElementType lineType)
+    public LineClusterData(final String sampleId, final int clusterId, final BaseRegion lineRegion, final LineElementType lineType)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -66,7 +66,7 @@ public class LineClusterData
         }
     }
 
-    private static boolean regionWithinBounds(final SvRegion region, final String chromosome, final int position)
+    private static boolean regionWithinBounds(final BaseRegion region, final String chromosome, final int position)
     {
         return region.Chromosome.equals(chromosome) && positionWithin(
                 position, region.start() - PROXIMATE_DISTANCE, region.end() + PROXIMATE_DISTANCE);
@@ -88,7 +88,7 @@ public class LineClusterData
             return;
         }
 
-        SvRegion newRegion = new SvRegion(chromosome, position, position);
+        BaseRegion newRegion = new BaseRegion(chromosome, position, position);
         LineRegions.add(new LineRegion(newRegion, lineType));
         setPrimaryRegion();
     }
@@ -98,7 +98,7 @@ public class LineClusterData
         if(chromosome.equals("0"))
             return;
 
-        for(SvRegion insertRegion : InsertedRegions)
+        for(BaseRegion insertRegion : InsertedRegions)
         {
             if(regionWithinBounds(insertRegion, chromosome, position))
             {
@@ -108,7 +108,7 @@ public class LineClusterData
             }
         }
 
-        InsertedRegions.add(new SvRegion(chromosome, position, position));
+        InsertedRegions.add(new BaseRegion(chromosome, position, position));
     }
 
     public boolean matches(final LineClusterData other)
@@ -128,12 +128,12 @@ public class LineClusterData
         return InsertedRegions.size() + matchedInsertTotal;
     }
 
-    public SvRegion getCombinedPrimarySourceRegion()
+    public BaseRegion getCombinedPrimarySourceRegion()
     {
         if(MatchedClusters.isEmpty())
             return mPrimaryRegion.Region;
 
-        SvRegion combinedRegion = new SvRegion(mPrimaryRegion.Region.Chromosome, mPrimaryRegion.Region.Positions);
+        BaseRegion combinedRegion = new BaseRegion(mPrimaryRegion.Region.Chromosome, mPrimaryRegion.Region.Positions);
 
         for(LineClusterData otherCluster : MatchedClusters)
         {

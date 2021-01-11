@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -49,10 +49,10 @@ public class CohortLineElements
     private static final Logger LOGGER = LogManager.getLogger(CohortLineElements.class);
 
     private final Map<String,Map<Integer,LineClusterData>> mSampleClusterLineData;
-    private final Map<SvRegion,Integer> mExtLineSampleCounts;
+    private final Map<BaseRegion,Integer> mExtLineSampleCounts;
     private final Map<String,List<LineRepeatMaskerData>> mChrRepeatMaskerData;
-    private final List<SvRegion> mKnownLineElements;
-    private final List<SvRegion> mPolymorphicLineElements;
+    private final List<BaseRegion> mKnownLineElements;
+    private final List<BaseRegion> mPolymorphicLineElements;
     private IndexedFastaSequenceFile mRefGenomeFile;
 
     private final String mOutputDir;
@@ -173,7 +173,7 @@ public class CohortLineElements
                 // parse CSV data
                 String[] items = line.split(",");
 
-                final SvRegion lineRegion = new SvRegion(
+                final BaseRegion lineRegion = new BaseRegion(
                         refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
                         Integer.parseInt(items[fieldsIndexMap.get("PosStart")]),
                         Integer.parseInt(items[fieldsIndexMap.get("PosEnd")]));
@@ -210,7 +210,7 @@ public class CohortLineElements
                 int pos1 = Integer.parseInt(items[fieldsIndexMap.get("PositivePosition")]);
                 int pos2 = Integer.parseInt(items[fieldsIndexMap.get("NegativePosition")]);
 
-                final SvRegion lineRegion = new SvRegion(
+                final BaseRegion lineRegion = new BaseRegion(
                         refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
                         pos1 < pos2 ? pos1 : pos2, pos1 < pos2 ? pos2 : pos1);
 
@@ -250,7 +250,7 @@ public class CohortLineElements
 
                 final int sampleCount = Integer.parseInt(items[fieldsIndexMap.get("PcawgSampleCount")]);
 
-                mExtLineSampleCounts.put(new SvRegion(chromosome, positions), sampleCount);
+                mExtLineSampleCounts.put(new BaseRegion(chromosome, positions), sampleCount);
             }
 
             LNX_LOGGER.info("loaded {} external line data items from file: {}", mExtLineSampleCounts.size(), filename);
@@ -298,7 +298,7 @@ public class CohortLineElements
 
                 final byte strand = items[strandIndex].equals("+") ? POS_ORIENT : NEG_ORIENT;
 
-                LineRepeatMaskerData rmData = new LineRepeatMaskerData(rmId, new SvRegion(chromosome, positions), strand);
+                LineRepeatMaskerData rmData = new LineRepeatMaskerData(rmId, new BaseRegion(chromosome, positions), strand);
                 ++itemCount;
 
                 if(!currentChr.equals(chromosome))
@@ -354,7 +354,7 @@ public class CohortLineElements
                 if(clusterData == null)
                 {
                     clusterData = new LineClusterData(
-                            sampleId, clusterId, new SvRegion(chromosomes[se], positions[se], positions[se]), lineTypes[se]);
+                            sampleId, clusterId, new BaseRegion(chromosomes[se], positions[se], positions[se]), lineTypes[se]);
                 }
                 else
                 {
@@ -431,11 +431,11 @@ public class CohortLineElements
             for(final LineClusterData lineData : combinedLineData)
             {
                 final LineRegion primarySource = lineData.primaryRegion();
-                final SvRegion combinedRegion = lineData.getCombinedPrimarySourceRegion();
+                final BaseRegion combinedRegion = lineData.getCombinedPrimarySourceRegion();
 
-                final SvRegion knownLineRegion = findKnownLineRegion(primarySource.Region);
+                final BaseRegion knownLineRegion = findKnownLineRegion(primarySource.Region);
 
-                final SvRegion pmLineRegion = knownLineRegion == null ? findPolymorphicLineRegion(primarySource.Region) : null;
+                final BaseRegion pmLineRegion = knownLineRegion == null ? findPolymorphicLineRegion(primarySource.Region) : null;
 
                 LineRepeatMaskerData rmData = findRepeatMaskerMatch(primarySource.Region, knownLineRegion);
 
@@ -473,9 +473,9 @@ public class CohortLineElements
         }
     }
 
-    private SvRegion findKnownLineRegion(final SvRegion lineRegion)
+    private BaseRegion findKnownLineRegion(final BaseRegion lineRegion)
     {
-        for(SvRegion knownRegion : mKnownLineElements)
+        for(BaseRegion knownRegion : mKnownLineElements)
         {
             if(!lineRegion.Chromosome.equals(knownRegion.Chromosome))
                 continue;
@@ -491,14 +491,14 @@ public class CohortLineElements
         return null;
     }
 
-    private static int regionMidpoint(final SvRegion region) { return (region.end() + region.end())  / 2; }
+    private static int regionMidpoint(final BaseRegion region) { return (region.end() + region.end())  / 2; }
 
-    private SvRegion findPolymorphicLineRegion(final SvRegion lineRegion)
+    private BaseRegion findPolymorphicLineRegion(final BaseRegion lineRegion)
     {
-        SvRegion closestPmRegion = null;
+        BaseRegion closestPmRegion = null;
         int closestDistance = -1;
 
-        for(SvRegion pmRegion : mPolymorphicLineElements)
+        for(BaseRegion pmRegion : mPolymorphicLineElements)
         {
             if(!lineRegion.Chromosome.equals(pmRegion.Chromosome))
                 continue;
@@ -522,7 +522,7 @@ public class CohortLineElements
 
     private static final int INTACT_LINE_ELEMENT_LENGTH = 5000;
 
-    private LineRepeatMaskerData findRepeatMaskerMatch(final SvRegion lineRegion, final SvRegion knownLineRegion)
+    private LineRepeatMaskerData findRepeatMaskerMatch(final BaseRegion lineRegion, final BaseRegion knownLineRegion)
     {
         final List<LineRepeatMaskerData> rmDataList = mChrRepeatMaskerData.get(lineRegion.Chromosome);
 
@@ -570,12 +570,12 @@ public class CohortLineElements
         return closestRmData;
     }
 
-    private int getExternalLineSampleCount(final SvRegion region)
+    private int getExternalLineSampleCount(final BaseRegion region)
     {
         if(mExtLineSampleCounts.isEmpty())
             return 0;
 
-        final Map.Entry<SvRegion,Integer> extRegion = mExtLineSampleCounts.entrySet().stream()
+        final Map.Entry<BaseRegion,Integer> extRegion = mExtLineSampleCounts.entrySet().stream()
                 .filter(x -> positionsOverlap(region.start(), region.end(),
                         x.getKey().start() - LINE_ELEMENT_PROXIMITY_DISTANCE, x.getKey().end() + LINE_ELEMENT_PROXIMITY_DISTANCE))
                 .findFirst().orElse(null);

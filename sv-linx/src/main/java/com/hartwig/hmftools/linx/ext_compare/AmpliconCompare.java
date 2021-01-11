@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSe
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
@@ -30,7 +30,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.linx.drivers.DriverAmpData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -82,7 +82,7 @@ public class AmpliconCompare
     {
         final List<DriverAmpData> ampClusterCandidates = Lists.newArrayList();
 
-        for(final SvRegion ampRegion : ampData.Regions)
+        for(final BaseRegion ampRegion : ampData.Regions)
         {
             final List<SvBreakend> breakendList = chrBreakendMap.get(ampRegion.Chromosome);
             if(breakendList == null)
@@ -234,7 +234,7 @@ public class AmpliconCompare
     {
         double[] maxCnData = {0, 0};
 
-        for(final SvRegion ampRegion : ampData.Regions)
+        for(final BaseRegion ampRegion : ampData.Regions)
         {
             final List<SvBreakend> breakendList = chrBreakendMap.get(ampRegion.Chromosome);
 

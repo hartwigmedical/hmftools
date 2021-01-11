@@ -3,13 +3,13 @@ package com.hartwig.hmftools.cup.rna;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 public class AltSjPrevData
 {
     public final String GeneId;
     public final String Type;
-    public final SvRegion Location;
+    public final BaseRegion Location;
 
     // for cancer type data
     public final Map<String,Double> CancerPrevalences;
@@ -24,7 +24,7 @@ public class AltSjPrevData
     {
         GeneId = gene;
         Type = type;
-        Location = new SvRegion(chromosome, posStart, posEnd);
+        Location = new BaseRegion(chromosome, posStart, posEnd);
         RawPrevalence = 0;
         Prevalence = 0;
 
@@ -38,7 +38,7 @@ public class AltSjPrevData
     {
         GeneId = gene;
         Type = type;
-        Location = new SvRegion(chromosome, posStart, posEnd);
+        Location = new BaseRegion(chromosome, posStart, posEnd);
         RawPrevalence = 0;
         Prevalence = 0;
 

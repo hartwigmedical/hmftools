@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
@@ -26,7 +26,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
-import com.hartwig.hmftools.common.utils.sv.SvRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -128,7 +128,7 @@ public class NeoEpitopeReader
         {
             initialiseGeneData(mCurrentNeoData.Source.GeneIds[fs]);
 
-            final SvRegion readRegion = new SvRegion(mCurrentNeoData.Chromosomes[fs], mCurrentNeoData.Source.CodingBasePositions[fs]);
+            final BaseRegion readRegion = new BaseRegion(mCurrentNeoData.Chromosomes[fs], mCurrentNeoData.Source.CodingBasePositions[fs]);
 
             mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
         }
@@ -140,7 +140,7 @@ public class NeoEpitopeReader
         initialiseGeneData(mCurrentNeoData.Source.GeneIds[FS_UP]);
 
         // the 'UP' stream caches the full coding base= sequence since relates to a single gene
-        final SvRegion readRegion = new SvRegion(mCurrentNeoData.Chromosomes[FS_UP],mCurrentNeoData.Source.CodingBasePositions[FS_UP]);
+        final BaseRegion readRegion = new BaseRegion(mCurrentNeoData.Chromosomes[FS_UP],mCurrentNeoData.Source.CodingBasePositions[FS_UP]);
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
     }
