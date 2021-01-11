@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceItemTestFactory.createTestBaseEvent;
+import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.createTestBaseEvent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -9,7 +9,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
@@ -39,7 +39,7 @@ public class CopyNumberEvidenceTest {
         ReportableGainLoss reportableDel = create(gene, CopyNumberInterpretation.FULL_LOSS);
         ReportableGainLoss ampOnOtherGene = create("other gene", CopyNumberInterpretation.GAIN);
 
-        List<ProtectEvidenceItem> evidenceItems =
+        List<ProtectEvidence> evidenceItems =
                 copyNumberEvidence.evidence(Sets.newHashSet(), Lists.newArrayList(reportableAmp, reportableDel, ampOnOtherGene));
 
         assertEquals(2, evidenceItems.size());

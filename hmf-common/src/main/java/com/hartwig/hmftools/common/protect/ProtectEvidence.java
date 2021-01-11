@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ProtectEvidenceItem implements Comparable<ProtectEvidenceItem> {
+public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
 
     @NotNull
     public abstract String genomicEvent();
@@ -40,7 +40,7 @@ public abstract class ProtectEvidenceItem implements Comparable<ProtectEvidenceI
     public abstract Set<String> urls();
 
     @Override
-    public int compareTo(@NotNull final ProtectEvidenceItem o) {
+    public int compareTo(@NotNull final ProtectEvidence o) {
         int reportedCompare = -Boolean.compare(reported(), o.reported());
         if (reportedCompare != 0) {
             return reportedCompare;

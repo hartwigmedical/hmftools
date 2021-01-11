@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceItemTestFactory.createTestBaseEvent;
+import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.createTestBaseEvent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -9,7 +9,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
@@ -42,7 +42,7 @@ public class FusionEvidenceTest {
         LinxFusion promiscuousMatch = linxFusionBuilder().geneStart(geneUp).geneEnd("other gene").build();
         LinxFusion promiscuousNonMatch = linxFusionBuilder().geneStart("other gene").geneEnd(geneDown).build();
 
-        List<ProtectEvidenceItem> evidenceItems =
+        List<ProtectEvidence> evidenceItems =
                 fusionEvidence.evidence(Sets.newHashSet(), Lists.newArrayList(fusionMatch, promiscuousMatch, promiscuousNonMatch));
 
         assertEquals(2, evidenceItems.size());

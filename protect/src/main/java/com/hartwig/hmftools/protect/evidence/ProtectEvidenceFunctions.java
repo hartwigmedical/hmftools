@@ -10,22 +10,22 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.protect.ImmutableProtectEvidenceItem;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ProtectEvidenceItems {
+public final class ProtectEvidenceFunctions {
 
-    private ProtectEvidenceItems() {
+    private ProtectEvidenceFunctions() {
     }
 
     @NotNull
-    public static ImmutableProtectEvidenceItem.Builder builder(@NotNull Set<String> doids, @NotNull ActionableEvent actionable) {
-        return ImmutableProtectEvidenceItem.builder()
+    public static ImmutableProtectEvidence.Builder builder(@NotNull Set<String> doids, @NotNull ActionableEvent actionable) {
+        return ImmutableProtectEvidence.builder()
                 .source(actionable.source())
                 .treatment(actionable.treatment())
                 .level(actionable.level())
@@ -35,11 +35,11 @@ public final class ProtectEvidenceItems {
     }
 
     @NotNull
-    public static List<ProtectEvidenceItem> reportHighest(@NotNull Collection<ProtectEvidenceItem> evidence) {
-        final Set<String> events = evidence.stream().map(ProtectEvidenceItem::genomicEvent).collect(Collectors.toSet());
-        final Set<String> treatments = evidence.stream().map(ProtectEvidenceItem::treatment).collect(Collectors.toSet());
+    public static List<ProtectEvidence> reportHighest(@NotNull Collection<ProtectEvidence> evidence) {
+        final Set<String> events = evidence.stream().map(ProtectEvidence::genomicEvent).collect(Collectors.toSet());
+        final Set<String> treatments = evidence.stream().map(ProtectEvidence::treatment).collect(Collectors.toSet());
 
-        List<ProtectEvidenceItem> result = Lists.newArrayList();
+        List<ProtectEvidence> result = Lists.newArrayList();
         for (String event : events) {
             for (String treatment : treatments) {
                 for (EvidenceDirection direction : EvidenceDirection.values()) {
@@ -56,28 +56,28 @@ public final class ProtectEvidenceItems {
     }
 
     @NotNull
-    private static List<ProtectEvidenceItem> reportHighestPerEventTreatmentDirection(@NotNull Collection<ProtectEvidenceItem> evidence) {
+    private static List<ProtectEvidence> reportHighestPerEventTreatmentDirection(@NotNull Collection<ProtectEvidence> evidence) {
         Optional<EvidenceLevel> highestOnLabel = highestReportableLevel(true, evidence);
         Optional<EvidenceLevel> highestOffLabel = highestReportableLevel(false, evidence);
-        Predicate<ProtectEvidenceItem> report = x -> x.reported() && x.onLabel()
+        Predicate<ProtectEvidence> report = x -> x.reported() && x.onLabel()
                 ? highestOnLabel.filter(highest -> x.level().ordinal() == highest.ordinal()).isPresent()
                 : highestOffLabel.filter(highest -> x.level().ordinal() == highest.ordinal()).isPresent()
                         && !highestOnLabel.filter(highest -> x.level().ordinal() >= highest.ordinal()).isPresent();
 
         return evidence.stream()
-                .map(x -> ImmutableProtectEvidenceItem.builder().from(x).reported(report.test(x)).build())
+                .map(x -> ImmutableProtectEvidence.builder().from(x).reported(report.test(x)).build())
                 .collect(Collectors.toList());
     }
 
     @NotNull
     @VisibleForTesting
     static Optional<EvidenceLevel> highestReportableLevel(boolean isOnLabel,
-            @NotNull Collection<? extends ProtectEvidenceItem> actionable) {
+            @NotNull Collection<? extends ProtectEvidence> actionable) {
         return actionable.stream()
                 .filter(x -> x.level().ordinal() <= EvidenceLevel.B.ordinal())
                 .filter(x -> x.onLabel() == isOnLabel)
                 .filter(x -> x.reported())
-                .min(Comparator.comparing(ProtectEvidenceItem::level))
-                .map(ProtectEvidenceItem::level);
+                .min(Comparator.comparing(ProtectEvidence::level))
+                .map(ProtectEvidence::level);
     }
 }

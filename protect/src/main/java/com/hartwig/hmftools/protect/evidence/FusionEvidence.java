@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -28,27 +28,27 @@ public class FusionEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull List<LinxFusion> fusions) {
+    public List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull List<LinxFusion> fusions) {
         return fusions.stream().flatMap(x -> evidence(doids, x).stream()).collect(Collectors.toList());
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull LinxFusion reportable) {
-        List<ProtectEvidenceItem> geneEvidence = actionablePromiscuous.stream()
+    public List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull LinxFusion reportable) {
+        List<ProtectEvidence> geneEvidence = actionablePromiscuous.stream()
                 .filter(x -> match(x, reportable))
                 .map(x -> evidence(doids, reportable, x))
                 .collect(Collectors.toList());
 
-        List<ProtectEvidenceItem> fusionEvidence = actionableFusions.stream()
+        List<ProtectEvidence> fusionEvidence = actionableFusions.stream()
                 .filter(x -> match(x, reportable))
                 .map(x -> evidence(doids, reportable, x))
                 .collect(Collectors.toList());
 
-        Set<ProtectEvidenceItem> result = Sets.newHashSet();
+        Set<ProtectEvidence> result = Sets.newHashSet();
         result.addAll(geneEvidence);
         result.addAll(fusionEvidence);
 
-        return ProtectEvidenceItems.reportHighest(result);
+        return ProtectEvidenceFunctions.reportHighest(result);
     }
 
     private static boolean match(@NotNull ActionableGene actionable, @NotNull LinxFusion reportable) {
@@ -88,9 +88,9 @@ public class FusionEvidence {
     }
 
     @NotNull
-    private static ProtectEvidenceItem evidence(@NotNull Set<String> doid, @NotNull LinxFusion reportable,
+    private static ProtectEvidence evidence(@NotNull Set<String> doid, @NotNull LinxFusion reportable,
             @NotNull ActionableEvent actionable) {
-        return ProtectEvidenceItems.builder(doid, actionable)
+        return ProtectEvidenceFunctions.builder(doid, actionable)
                 .germline(false)
                 .genomicEvent(reportable.genomicEvent())
                 .reported(true)

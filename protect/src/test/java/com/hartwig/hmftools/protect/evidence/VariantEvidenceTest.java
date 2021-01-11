@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceItemTestFactory.createTestBaseEvent;
+import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.createTestBaseEvent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,7 +10,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
@@ -53,7 +53,7 @@ public class VariantEvidenceTest {
         ReportableVariant variantNonMatch =
                 createTestReportableVariantBuilder().chromosome(chromosome).position(position + 1).ref(ref).alt(alt).build();
 
-        List<ProtectEvidenceItem> evidenceItems =
+        List<ProtectEvidence> evidenceItems =
                 variantEvidence.evidence(Sets.newHashSet(), Lists.newArrayList(variantMatch, variantNonMatch), Lists.newArrayList());
 
         assertEquals(1, evidenceItems.size());
@@ -101,7 +101,7 @@ public class VariantEvidenceTest {
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .build();
 
-        List<ProtectEvidenceItem> evidenceItems = variantEvidence.evidence(Sets.newHashSet(),
+        List<ProtectEvidence> evidenceItems = variantEvidence.evidence(Sets.newHashSet(),
                 Lists.newArrayList(variantMatch, variantOutsideRange, variantWrongGene, variantWrongMutationType),
                 Lists.newArrayList());
 
@@ -132,7 +132,7 @@ public class VariantEvidenceTest {
         ReportableVariant variantMatchGene3 = createTestReportableVariantBuilder().gene(gene3).driverLikelihood(0D).build();
         ReportableVariant variantOtherGene = createTestReportableVariantBuilder().gene("other gene").driverLikelihood(1D).build();
 
-        List<ProtectEvidenceItem> evidenceItems = variantEvidence.evidence(Sets.newHashSet(),
+        List<ProtectEvidence> evidenceItems = variantEvidence.evidence(Sets.newHashSet(),
                 Lists.newArrayList(variantMatchGene1, variantLowDriverGene2, variantMatchGene3, variantOtherGene),
                 Lists.newArrayList());
 

@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.protect.variants.DriverInterpretation;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
@@ -44,35 +44,35 @@ public class VariantEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull List<ReportableVariant> germline,
+    public List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull List<ReportableVariant> germline,
             @NotNull List<ReportableVariant> somatic) {
         List<ReportableVariant> variants = ReportableVariantFactory.mergeVariantLists(germline, somatic);
         return variants.stream().flatMap(x -> evidence(doids, x).stream()).collect(Collectors.toList());
     }
 
     @NotNull
-    private List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull ReportableVariant reportable) {
-        List<ProtectEvidenceItem> hotspotEvidence = hotspots.stream()
+    private List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull ReportableVariant reportable) {
+        List<ProtectEvidence> hotspotEvidence = hotspots.stream()
                 .filter(x -> hotspotMatch(x, reportable))
                 .map(x -> evidence(true, doids, reportable, x))
                 .collect(Collectors.toList());
 
-        List<ProtectEvidenceItem> rangeEvidence = ranges.stream()
+        List<ProtectEvidence> rangeEvidence = ranges.stream()
                 .filter(x -> rangeMatch(x, reportable))
                 .map(x -> evidence(true, doids, reportable, x))
                 .collect(Collectors.toList());
 
-        List<ProtectEvidenceItem> geneEvidence = genes.stream()
+        List<ProtectEvidence> geneEvidence = genes.stream()
                 .filter(x -> geneMatch(x, reportable))
                 .map(x -> evidence(reportable.driverLikelihoodInterpretation() == DriverInterpretation.HIGH, doids, reportable, x))
                 .collect(Collectors.toList());
 
-        List<ProtectEvidenceItem> result = Lists.newArrayList();
+        List<ProtectEvidence> result = Lists.newArrayList();
         result.addAll(hotspotEvidence);
         result.addAll(rangeEvidence);
         result.addAll(geneEvidence);
 
-        return ProtectEvidenceItems.reportHighest(result);
+        return ProtectEvidenceFunctions.reportHighest(result);
     }
 
     private static boolean hotspotMatch(@NotNull ActionableHotspot hotspot, @NotNull ReportableVariant variant) {
@@ -123,9 +123,9 @@ public class VariantEvidence {
     }
 
     @NotNull
-    private static ProtectEvidenceItem evidence(boolean report, @NotNull Set<String> doids, @NotNull ReportableVariant reportable,
+    private static ProtectEvidence evidence(boolean report, @NotNull Set<String> doids, @NotNull ReportableVariant reportable,
             @NotNull ActionableEvent actionable) {
-        return ProtectEvidenceItems.builder(doids, actionable)
+        return ProtectEvidenceFunctions.builder(doids, actionable)
                 .genomicEvent(reportable.genomicEvent())
                 .germline(reportable.source() == ReportableVariantSource.GERMLINE)
                 .reported(report)
