@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.protect.variants.DriverInterpretation;
@@ -52,8 +51,7 @@ public class VariantEvidence {
     }
 
     @NotNull
-    @VisibleForTesting
-    List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull ReportableVariant reportable) {
+    private List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull ReportableVariant reportable) {
         List<ProtectEvidenceItem> hotspotEvidence = hotspots.stream()
                 .filter(x -> hotspotMatch(x, reportable))
                 .map(x -> evidence(true, doids, reportable, x))
@@ -69,7 +67,7 @@ public class VariantEvidence {
                 .map(x -> evidence(reportable.driverLikelihoodInterpretation() == DriverInterpretation.HIGH, doids, reportable, x))
                 .collect(Collectors.toList());
 
-        Set<ProtectEvidenceItem> result = Sets.newHashSet();
+        List<ProtectEvidenceItem> result = Lists.newArrayList();
         result.addAll(hotspotEvidence);
         result.addAll(rangeEvidence);
         result.addAll(geneEvidence);
@@ -83,7 +81,7 @@ public class VariantEvidence {
     }
 
     private static boolean rangeMatch(@NotNull ActionableRange range, @NotNull ReportableVariant variant) {
-        return variant.chromosome().equals(range.chromosome()) && range.gene().equals(range.gene()) && variant.position() >= range.start()
+        return variant.chromosome().equals(range.chromosome()) && variant.gene().equals(range.gene()) && variant.position() >= range.start()
                 && variant.position() <= range.end() && meetsMutationTypeFilter(range.mutationType(), variant);
     }
 
@@ -118,6 +116,9 @@ public class VariantEvidence {
     }
 
     private static boolean geneMatch(@NotNull ActionableGene gene, @NotNull ReportableVariant variant) {
+        assert gene.event() == GeneLevelEvent.ACTIVATION || gene.event() == GeneLevelEvent.INACTIVATION
+                || gene.event() == GeneLevelEvent.ANY_MUTATION;
+
         return gene.gene().equals(variant.gene());
     }
 

@@ -31,7 +31,7 @@ public class ProtectEvidenceItemsTest {
     private final ProtectEvidenceItem offLabelResponsiveC = ProtectEvidenceItemTestFactory.createDefault(false, RESPONSIVE, C).build();
 
     @Test
-    public void testHighestReportableLevel() {
+    public void canDetermineHighestReportableLevel() {
         assertEquals(Optional.of(A),
                 highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
         assertEquals(Optional.of(B), highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveB, offLabelResponsiveA)));
@@ -41,16 +41,17 @@ public class ProtectEvidenceItemsTest {
     }
 
     @Test
-    public void testDoNotReportC() {
+    public void neverReportC() {
         final List<ProtectEvidenceItem> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveC);
         final Set<ProtectEvidenceItem> victims = Sets.newHashSet(ProtectEvidenceItems.reportHighest(evidence));
         assertEquals(2, victims.size());
-        assertFalse(victims.contains(onLabelResponsiveC));
-        assertFalse(victims.contains(offLabelResponsiveC));
+        for (ProtectEvidenceItem victim : victims) {
+            assertFalse(victim.reported());
+        }
     }
 
     @Test
-    public void testDoNoReportOffLabelAtSameLevelAsOnLabel() {
+    public void doNoReportOffLabelAtSameLevelAsOnLabel() {
         final List<ProtectEvidenceItem> evidence = Lists.newArrayList(onLabelResponsiveA, offLabelResponsiveA);
         final Set<ProtectEvidenceItem> victims = Sets.newHashSet(ProtectEvidenceItems.reportHighest(evidence));
         assertEquals(2, victims.size());
@@ -59,7 +60,7 @@ public class ProtectEvidenceItemsTest {
     }
 
     @Test
-    public void testReportHighestOffLabelIfHigherThanOnLabel() {
+    public void reportHighestOffLabelIfHigherThanOnLabel() {
         final List<ProtectEvidenceItem> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveA, offLabelResponsiveB);
         final Set<ProtectEvidenceItem> victims = Sets.newHashSet(ProtectEvidenceItems.reportHighest(evidence));
         assertEquals(3, victims.size());
@@ -69,7 +70,7 @@ public class ProtectEvidenceItemsTest {
     }
 
     @Test
-    public void testDoNotSetReportToTrue() {
+    public void doNotSetReportToTrue() {
         final ProtectEvidenceItem reported = onLabelResponsiveA;
         final ProtectEvidenceItem reportedVictim = ProtectEvidenceItems.reportHighest(Lists.newArrayList(reported)).get(0);
         assertTrue(reportedVictim.reported());

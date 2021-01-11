@@ -82,6 +82,7 @@ public final class ProtectEvidenceItems {
         return actionable.stream()
                 .filter(x -> x.level().ordinal() <= EvidenceLevel.B.ordinal())
                 .filter(x -> x.onLabel() == isOnLabel)
+                .filter(x -> x.reported())
                 .min(Comparator.comparing(ProtectEvidenceItem::level))
                 .map(ProtectEvidenceItem::level);
     }
