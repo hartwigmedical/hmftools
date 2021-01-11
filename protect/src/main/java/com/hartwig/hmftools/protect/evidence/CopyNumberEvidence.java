@@ -30,11 +30,15 @@ public class CopyNumberEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull ReportableGainLoss reportable) {
+    private List<ProtectEvidenceItem> evidence(@NotNull Set<String> doids, @NotNull ReportableGainLoss reportable) {
         List<ProtectEvidenceItem> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(reportable.gene()) && isTypeMatch(actionable, reportable)) {
-                ProtectEvidenceItem evidence = ProtectEvidenceItems.create(actionable.genomicEvent(), doids, actionable);
+                ProtectEvidenceItem evidence = ProtectEvidenceItems.builder(doids, actionable)
+                        .germline(false)
+                        .genomicEvent(reportable.genomicEvent())
+                        .reported(true)
+                        .build();
                 result.add(evidence);
             }
         }
@@ -45,6 +49,7 @@ public class CopyNumberEvidence {
         switch (actionable.event()) {
             case AMPLIFICATION:
                 return reportable.interpretation() == CopyNumberInterpretation.GAIN;
+            case INACTIVATION:
             case DELETION:
                 return reportable.interpretation() == CopyNumberInterpretation.FULL_LOSS
                         || reportable.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS;

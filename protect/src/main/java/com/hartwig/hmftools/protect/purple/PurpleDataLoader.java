@@ -83,7 +83,7 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static ReportableGainLoss copyNumberAlteration(DriverCatalog driver) {
+    private static ReportableGainLoss copyNumberAlteration(@NotNull DriverCatalog driver) {
         return ImmutableReportableGainLoss.builder()
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())

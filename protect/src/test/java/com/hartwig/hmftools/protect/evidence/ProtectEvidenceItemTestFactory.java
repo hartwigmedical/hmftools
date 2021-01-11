@@ -5,12 +5,26 @@ import com.hartwig.hmftools.common.protect.ImmutableProtectEvidenceItem;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
+import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ProtectEvidenceItemTestFactory {
 
     private ProtectEvidenceItemTestFactory() {
+    }
+
+    @NotNull
+    public static ActionableEvent createTestBaseEvent() {
+        return ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
+                Strings.EMPTY,
+                Strings.EMPTY,
+                Strings.EMPTY,
+                EvidenceLevel.A,
+                EvidenceDirection.RESPONSIVE,
+                Sets.newHashSet());
     }
 
     @NotNull

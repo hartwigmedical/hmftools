@@ -24,12 +24,6 @@ public final class ProtectEvidenceItems {
     }
 
     @NotNull
-    public static ProtectEvidenceItem create(@NotNull String genomicEvent, @NotNull Set<String> doids,
-            @NotNull ActionableEvent actionable) {
-        return builder(doids, actionable).genomicEvent(genomicEvent).reported(true).build();
-    }
-
-    @NotNull
     public static ImmutableProtectEvidenceItem.Builder builder(@NotNull Set<String> doids, @NotNull ActionableEvent actionable) {
         return ImmutableProtectEvidenceItem.builder()
                 .source(actionable.source())

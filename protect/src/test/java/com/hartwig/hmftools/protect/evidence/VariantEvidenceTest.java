@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
+import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceItemTestFactory.createTestBaseEvent;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -9,16 +11,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceItem;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
-import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
-import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
@@ -145,17 +142,6 @@ public class VariantEvidenceTest {
 
         assertFalse(evidenceItems.get(1).reported());
         assertEquals(variantLowDriverGene2.genomicEvent(), evidenceItems.get(1).genomicEvent());
-    }
-
-    @NotNull
-    private static ActionableEvent createTestBaseEvent() {
-        return ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
-                Strings.EMPTY,
-                Strings.EMPTY,
-                Strings.EMPTY,
-                EvidenceLevel.A,
-                EvidenceDirection.RESPONSIVE,
-                Sets.newHashSet());
     }
 
     @NotNull
