@@ -61,32 +61,43 @@ class LilacApplication2 : AutoCloseable, Runnable {
         val nucleotideCounts = SequenceCount.nucleotides(minBaseQual, readFragments)
         nucleotideCounts.writeVertically("/Users/jon/hmf/analysis/hla/nucleotides.count.txt")
 
-        val excludedIndices = setOf(24, 114, 206, 298, 337, 348, 349, 362, 364, 365, 366)
-        val heterozygousIndices = aminoAcidCounts.heterozygousIndices(minBaseCount).filter { it !in excludedIndices }
+        val aminoAcidBoundaries = setOf(24, 114, 206, 298, 337, 348, 349, 362, 364, 365, 366)
+        val nucleotideBoundaries = aminoAcidBoundaries.flatMap { listOf(it / 3, it / 3 + 1, it / 3 + 2) }
+
+        val aBoundaries = setOf(24, 114, 206, 298, 337, 348, 364, 365)
+        val bBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
+        val cBoundaries = setOf(24, 114, 206, 298, 338, 349, 365, 366)
+        val allBoundaries = aBoundaries + bBoundaries + cBoundaries
+
+        val excludedIndices = allBoundaries.toSet() union IntRange(360,370)
+
+        val heterozygousIndices = aminoAcidCounts.heterozygousIndices(minBaseCount)
+                .filter { it !in excludedIndices }
 
         println("Heterozygous locations")
         print(heterozygousIndices)
 
         LilacApplication.logger.info("Reading nucleotide files")
-        val nucleotideSequences = readSequenceFiles {"${resourcesDir}/${it}_nuc.txt" }
+        val nucleotideSequences = readSequenceFiles { "${resourcesDir}/${it}_nuc.txt" }
 
         logger.info("Reading protein files")
-        val allProteinSequences = readSequenceFiles {"${resourcesDir}/${it}_prot.txt" }
+        val allProteinSequences = readSequenceFiles { "${resourcesDir}/${it}_prot.txt" }
 
-        val initialNucleotideCandidates = initialNucleotideCandidates(nucleotideCounts, nucleotideSequences).map {it.contig}.toSet()
+        val initialNucleotideCandidates = initialNucleotideCandidates(nucleotideCounts, nucleotideSequences).map { it.contig }.toSet()
         println("${nucleotideSequences.size} types")
         println("${initialNucleotideCandidates.size} candidates after nucleotide filtering")
 
 
-        val initialCandidates = initialCandidates(excludedIndices, aminoAcidCounts, allProteinSequences).filter {it.contig in initialNucleotideCandidates}
+        val initialCandidates = initialCandidates(excludedIndices, aminoAcidCounts, allProteinSequences)
+                .filter { it.contig in initialNucleotideCandidates }
         println("${allProteinSequences.size} types")
         println("${initialCandidates.size} candidates after amino acid filtering")
 
         // Specific Evidence
-//        println(PhasedEvidence.evidence(30, readFragments, 20, 29))
+        println(PhasedEvidence.evidence(30, readFragments, 32, 67))
 
         // Full Evidence
-        val fullEvidence = fullEvidence(aminoAcidCounts, readFragments)
+        val fullEvidence = fullEvidence(excludedIndices, aminoAcidCounts, readFragments)
         println("Constructed ${fullEvidence.size} fully matched sequences")
 
 
@@ -101,11 +112,11 @@ class LilacApplication2 : AutoCloseable, Runnable {
         println("AFTER PARTIAL MATCHING")
 
         var consolidated = consolidate(fullEvidence)
-         consolidated = consolidate(consolidated)
-         consolidated = consolidate(consolidated)
-         consolidated = consolidate(consolidated)
-         consolidated = consolidate(consolidated)
-         consolidated = longestFullEvidence(consolidated)
+        consolidated = consolidate(consolidated)
+        consolidated = consolidate(consolidated)
+        consolidated = consolidate(consolidated)
+        consolidated = consolidate(consolidated)
+        consolidated = longestFullEvidence(consolidated)
 
         for (i in consolidated.indices) {
             val evidence = consolidated[i]
@@ -248,13 +259,10 @@ class LilacApplication2 : AutoCloseable, Runnable {
     }
 //
 
-    private fun fullEvidence(aminoAcidCounts: SequenceCount, readFragments: List<Fragment>): List<PhasedEvidence> {
+    private fun fullEvidence(excludedIndices: Set<Int>, aminoAcidCounts: SequenceCount, readFragments: List<Fragment>): List<PhasedEvidence> {
 
-        val excludedIndices = setOf( 364, 365, 366)
-//        val excludedIndices = setOf(24, 114, 206, 298, 337, 348, 349, 362, 364, 365, 366)
         val heterozygousIndices = aminoAcidCounts.heterozygousIndices(minBaseCount).filter { it !in excludedIndices }
-        val heterozygousEvidence = HeterozygousEvidence(minBaseQual,
-                heterozygousIndices.filter { it !in (330..370) }, readFragments)
+        val heterozygousEvidence = HeterozygousEvidence(minBaseQual, heterozygousIndices, readFragments)
 
         val allEvidence = mutableSetOf<PhasedEvidence>()
         val initialEvidence = heterozygousEvidence.initialEvidence()
@@ -328,7 +336,7 @@ class LilacApplication2 : AutoCloseable, Runnable {
         return result
     }
 
-    private fun initialNucleotideCandidates( aminoAcidCount: SequenceCount, candidates: List<HlaSequence>): List<HlaSequence> {
+    private fun initialNucleotideCandidates(aminoAcidCount: SequenceCount, candidates: List<HlaSequence>): List<HlaSequence> {
         var result = candidates
         val locations = (0 until min(1080, aminoAcidCount.length)).toSet()
         for (location in locations) {
