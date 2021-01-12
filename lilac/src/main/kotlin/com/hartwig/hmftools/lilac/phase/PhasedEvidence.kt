@@ -1,10 +1,47 @@
 package com.hartwig.hmftools.lilac.phase
 
 import com.hartwig.hmftools.lilac.read.Fragment
+import java.util.*
 import kotlin.math.min
 
 
 data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<String, Int>) : Comparable<PhasedEvidence> {
+
+    fun unambiguousHeadIndices(): IntArray {
+        return aminoAcidIndices.filterIndexed { index, _ -> index < unambiguousHeadLength() }.toIntArray()
+    }
+
+    fun unambiguousTailIndices(): IntArray {
+        val minIndex = aminoAcidIndices.size - unambiguousTailLength()
+        return aminoAcidIndices.filterIndexed { index, _ -> index >= minIndex }.toIntArray()
+    }
+
+    private fun unambiguousTailLength(): Int {
+        for (i in aminoAcidIndices.indices) {
+            val endIndex = aminoAcidIndices.size
+            val startIndex = endIndex - i - 1
+            val evidenceTails = evidence.keys.map { it.substring(startIndex, endIndex) }.toSet()
+            if (evidenceTails.size == evidence.size) {
+                return i + 1
+            }
+
+        }
+
+        return aminoAcidIndices.size
+    }
+
+    fun unambiguousHeadLength(): Int {
+        for (i in aminoAcidIndices.indices) {
+            val length = i + 1
+            val evidenceTails = evidence.keys.map { it.substring(0, length) }.toSet()
+            if (evidenceTails.size == evidence.size) {
+                return length
+            }
+
+        }
+
+        return aminoAcidIndices.size
+    }
 
     private fun evidenceIndex(index: Int): Int {
         for (i in aminoAcidIndices.indices) {
@@ -24,37 +61,6 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
     fun overlaps(other: PhasedEvidence): Boolean {
         val overlap = (other.aminoAcidIndices.toSet() intersect aminoAcidIndices.toSet()).size
         return overlap > 0 && overlap < aminoAcidIndices.size && overlap < other.aminoAcidIndices.size
-    }
-
-
-    fun combine(other: PhasedEvidence): PhasedEvidence {
-        if (this.contains(other)) {
-            return this
-        }
-
-        if (other.contains(this)) {
-            return other
-        }
-
-
-
-        val indexUnion = (other.aminoAcidIndices.toSet() union aminoAcidIndices.toSet()).toList().sorted()
-        val indexIntersection = (other.aminoAcidIndices.toSet() intersect aminoAcidIndices.toSet()).toList().sorted()
-        val evidenceIndices = indexIntersection.map { Pair(this.evidenceIndex(it), other.evidenceIndex(it)) }
-
-        return this
-    }
-
-
-
-    fun minOverlapEnd(): Int {
-        for (i in 1..aminoAcidIndices.size) {
-            evidence.map { it.key }.map { it.substring(it.length - 1 - i, it.length) }.groupingBy { }.eachCount()
-
-
-        }
-
-        return aminoAcidIndices.size
     }
 
 
@@ -91,8 +97,8 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
             val indexUnion = (left.aminoAcidIndices.toSet() union right.aminoAcidIndices.toSet()).toList().sorted()
             val indexIntersection = (left.aminoAcidIndices.toSet() intersect right.aminoAcidIndices.toSet()).toList().sorted()
 
-            val uniqueToLeft = left.aminoAcidIndices.filter { it !in indexIntersection}
-            val uniqueToRight = right.aminoAcidIndices.filter { it !in indexIntersection}
+            val uniqueToLeft = left.aminoAcidIndices.filter { it !in indexIntersection }
+            val uniqueToRight = right.aminoAcidIndices.filter { it !in indexIntersection }
 
             assert(uniqueToLeft.all { it < indexIntersection.min() ?: 0 })
             assert(uniqueToRight.all { it > indexIntersection.max() ?: 0 })
@@ -114,9 +120,33 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
 
     }
 
+    fun evidenceString():String {
+        val resultBuilder = StringJoiner(" ")
+        evidence.forEach {(evidence, count) -> resultBuilder.add(toEvidenceString(evidence, count))}
+        return "{$resultBuilder}"
+    }
+
+    fun toEvidenceString(evidence: String, count: Int): String {
+        val resultBuilder = StringJoiner("")
+        var evidenceIndex = 0
+        for (i in aminoAcidIndices[0]..aminoAcidIndices[aminoAcidIndices.lastIndex])        {
+            if (i in aminoAcidIndices) {
+                resultBuilder.add(evidence[evidenceIndex].toString())
+                evidenceIndex++
+            } else {
+                resultBuilder.add("-")
+            }
+        }
+
+        return resultBuilder.add("=").add(count.toString()).toString()
+    }
 
     override fun toString(): String {
-        return "PhasedEvidence(bases=${ 3 * (aminoAcidIndices[aminoAcidIndices.size - 1] - aminoAcidIndices[0])} loci=${aminoAcidIndices.size} types=${evidence.size} indices=${aminoAcidIndices.contentToString()}, evidence=$evidence, total=${totalEvidence()})"
+        val uniqueTail = unambiguousTailLength()
+        val uniqueHead = unambiguousHeadLength()
+        val bases = 3 * (aminoAcidIndices[aminoAcidIndices.size - 1] - aminoAcidIndices[0])
+
+        return "PhasedEvidence(head=${uniqueHead} tail=${uniqueTail} loci=${aminoAcidIndices.size} types=${evidence.size} indices=${aminoAcidIndices.contentToString()}, evidence=${evidenceString()}, total=${totalEvidence()})"
     }
 
     override fun compareTo(other: PhasedEvidence): Int {

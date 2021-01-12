@@ -10,7 +10,6 @@ import com.hartwig.hmftools.lilac.read.Fragment
 import com.hartwig.hmftools.lilac.read.SAMRecordRead
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
-import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.deflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFirstFourDigits
 import org.apache.logging.log4j.LogManager
@@ -94,10 +93,10 @@ class LilacApplication2 : AutoCloseable, Runnable {
         val aBoundaries = setOf(24, 114, 206, 298, 337, 348, 364, 365)
         val bBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
         val cBoundaries = setOf(24, 114, 206, 298, 338, 349, 365, 366)
-        val allBoundaries = aBoundaries + bBoundaries + cBoundaries
+        val allBoundaries = (aBoundaries + bBoundaries + cBoundaries)//.filter { it !in setOf(24, 114) }
         val commonBoundaries = aBoundaries intersect bBoundaries intersect cBoundaries
 
-        val excludedIndices = cBoundaries.toSet() union IntRange(360, 370)
+        val excludedIndices = allBoundaries.toSet() union IntRange(360, 370)
 
         val heterozygousIndices = aminoAcidCounts.heterozygousIndices(minBaseCount)
                 .filter { it !in excludedIndices }
@@ -127,42 +126,50 @@ class LilacApplication2 : AutoCloseable, Runnable {
         println(PhasedEvidence.evidence(30, readFragments, 32, 67))
 
         // Full Evidence
-        val fullEvidence = fullEvidence(excludedIndices, aminoAcidCounts, readFragments)
-        println("Constructed ${fullEvidence.size} fully matched sequences")
-
-
-        var candidates = initialCandidates
-        for (i in fullEvidence.indices) {
-            val evidence = fullEvidence[i]
-            candidates = matchingCandidates(evidence, candidates)
-            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $evidence ")
+        val consecutiveEvidence = consecutiveEvidence(excludedIndices, aminoAcidCounts, readFragments, initialCandidates)
+        println("Constructed ${consecutiveEvidence.size} consecutive sequences")
+        for (phasedEvidence in consecutiveEvidence) {
+            println(phasedEvidence)
         }
 
-        println("${candidates.size} candidates after full match filtering")
-        println("AFTER PARTIAL MATCHING")
-
-        var consolidated = consolidate(fullEvidence)
-        consolidated = consolidate(consolidated)
-        consolidated = consolidate(consolidated)
-        consolidated = consolidate(consolidated)
-        consolidated = consolidate(consolidated)
-        consolidated = longestFullEvidence(consolidated)
-
-        for (i in consolidated.indices) {
-            val evidence = consolidated[i]
-            candidates = matchingCandidates(evidence, candidates)
-            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $evidence ")
-        }
-        println("${candidates.size} candidates after partial match filtering")
 
 
-        val sequences = candidates.map { HlaSequence(it.contig, it.sequence) }
-        HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
-        HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(aBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(bBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(cBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-        HlaSequenceFile.appendFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
+
+
+//        var candidates = initialCandidates
+//        for (i in fullEvidence.indices) {
+//            val evidence = fullEvidence[i]
+//            candidates = matchingCandidates(evidence, candidates)
+//            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $evidence ")
+//        }
+
+//        println("${candidates.size} candidates after full match filtering")
+
+
+//        println("AFTER PARTIAL MATCHING")
+//
+//        var consolidated = consolidate(fullEvidence)
+//        consolidated = consolidate(consolidated)
+//        consolidated = consolidate(consolidated)
+//        consolidated = consolidate(consolidated)
+//        consolidated = consolidate(consolidated)
+//        consolidated = longestFullEvidence(consolidated)
+//
+//        for (i in consolidated.indices) {
+//            val evidence = consolidated[i]
+//            candidates = matchingCandidates(evidence, candidates)
+//            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $evidence ")
+//        }
+//        println("${candidates.size} candidates after partial match filtering")
+
+
+//        val sequences = candidates.map { HlaSequence(it.contig, it.sequence) }
+//        HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
+//        HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+//        HlaSequenceFile.writeBoundary(aBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+//        HlaSequenceFile.writeBoundary(bBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+//        HlaSequenceFile.writeBoundary(cBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+//        HlaSequenceFile.appendFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
 
 
 //        var combined = PhasedEvidence.combineOverlapping(fullEvidence[19], fullEvidence[20])
@@ -293,26 +300,35 @@ class LilacApplication2 : AutoCloseable, Runnable {
     }
 //
 
-    private fun fullEvidence(excludedIndices: Set<Int>, aminoAcidCounts: SequenceCount, readFragments: List<Fragment>): List<PhasedEvidence> {
+    private fun consecutiveEvidence(excludedIndices: Set<Int>, aminoAcidCounts: SequenceCount, readFragments: List<Fragment>, initialCandidates: List<HlaSequence>): List<PhasedEvidence> {
 
+        var candidates = initialCandidates
         val heterozygousIndices = aminoAcidCounts.heterozygousIndices(minBaseCount).filter { it !in excludedIndices }
         val heterozygousEvidence = HeterozygousEvidence(minBaseQual, heterozygousIndices, readFragments)
 
         val allEvidence = mutableSetOf<PhasedEvidence>()
-        val initialEvidence = heterozygousEvidence.initialEvidence()
+        val initialEvidence = heterozygousEvidence.consecutiveEvidence()
         var unprocessedEvidence = initialEvidence
 
         allEvidence.addAll(initialEvidence)
 
+        var i = 0
         while (unprocessedEvidence.isNotEmpty()) {
             val topEvidence = unprocessedEvidence[0]
             allEvidence.add(topEvidence)
 
-            val newEvidence = heterozygousEvidence.extendEvidence(topEvidence, allEvidence)
+            candidates = matchingCandidates(topEvidence, candidates)
+            println("${i++} ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $topEvidence")
+
+
+            val newEvidence = heterozygousEvidence.extendConsecutive(topEvidence, allEvidence)
             allEvidence.addAll(newEvidence)
 
             val updatedEvidence = mutableSetOf<PhasedEvidence>()
-            updatedEvidence.addAll(unprocessedEvidence.drop(1))
+            updatedEvidence.addAll(unprocessedEvidence
+                    .drop(1)
+                    .filter { !newEvidence.any { x -> x.contains(it)} }
+            )
             updatedEvidence.addAll(newEvidence)
 
             unprocessedEvidence = updatedEvidence.sorted()
