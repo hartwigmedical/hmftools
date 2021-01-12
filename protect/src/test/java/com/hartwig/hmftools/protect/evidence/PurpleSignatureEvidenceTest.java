@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.createTestBaseEvent;
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.dummyEvidenceFactory;
+import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvent;
+import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidenceFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -26,18 +26,18 @@ public class PurpleSignatureEvidenceTest {
     @Test
     public void canDeterminePurpleSignatureEvidence() {
         ActionableSignature signature1 = ImmutableActionableSignature.builder()
-                .from(createTestBaseEvent())
+                .from(createTestEvent())
                 .name(SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
 
         ActionableSignature signature2 =
-                ImmutableActionableSignature.builder().from(createTestBaseEvent()).name(SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD).build();
+                ImmutableActionableSignature.builder().from(createTestEvent()).name(SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD).build();
 
         ActionableSignature signature3 =
-                ImmutableActionableSignature.builder().from(createTestBaseEvent()).name(SignatureName.MICROSATELLITE_UNSTABLE).build();
+                ImmutableActionableSignature.builder().from(createTestEvent()).name(SignatureName.MICROSATELLITE_UNSTABLE).build();
 
         PurpleSignatureEvidence purpleSignatureEvidence =
-                new PurpleSignatureEvidence(dummyEvidenceFactory(), Lists.newArrayList(signature1, signature2, signature3));
+                new PurpleSignatureEvidence(createTestEvidenceFactory(), Lists.newArrayList(signature1, signature2, signature3));
 
         PurpleData all = createPurpleData(MicrosatelliteStatus.MSI, TumorMutationalStatus.HIGH);
         List<ProtectEvidence> evidence = purpleSignatureEvidence.evidence(all);

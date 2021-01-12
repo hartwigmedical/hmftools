@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.createTestBaseEvent;
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.dummyEvidenceFactory;
+import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvent;
+import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidenceFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -27,14 +27,14 @@ public class CopyNumberEvidenceTest {
     public void canDetermineCopyNumberEvidence() {
         String gene = "gene";
         ActionableGene amp =
-                ImmutableActionableGene.builder().from(createTestBaseEvent()).gene(gene).event(GeneLevelEvent.AMPLIFICATION).build();
+                ImmutableActionableGene.builder().from(createTestEvent()).gene(gene).event(GeneLevelEvent.AMPLIFICATION).build();
         ActionableGene inactivation =
-                ImmutableActionableGene.builder().from(createTestBaseEvent()).gene(gene).event(GeneLevelEvent.INACTIVATION).build();
+                ImmutableActionableGene.builder().from(createTestEvent()).gene(gene).event(GeneLevelEvent.INACTIVATION).build();
         ActionableGene fusion =
-                ImmutableActionableGene.builder().from(createTestBaseEvent()).gene(gene).event(GeneLevelEvent.FUSION).build();
+                ImmutableActionableGene.builder().from(createTestEvent()).gene(gene).event(GeneLevelEvent.FUSION).build();
 
         CopyNumberEvidence copyNumberEvidence =
-                new CopyNumberEvidence(dummyEvidenceFactory(), Lists.newArrayList(amp, inactivation, fusion));
+                new CopyNumberEvidence(createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, fusion));
 
         ReportableGainLoss reportableAmp = create(gene, CopyNumberInterpretation.GAIN);
         ReportableGainLoss reportableDel = create(gene, CopyNumberInterpretation.FULL_LOSS);

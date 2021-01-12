@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.evidence;
+package com.hartwig.hmftools.protect;
 
 import java.util.Comparator;
 import java.util.List;
@@ -21,6 +21,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import org.jetbrains.annotations.NotNull;
 
 public final class ProtectEvidenceFunctions {
+
+    private static final Set<Knowledgebase> TRIAL_SOURCES = Sets.newHashSet(Knowledgebase.ICLUSION);
 
     private ProtectEvidenceFunctions() {
     }
@@ -51,7 +53,29 @@ public final class ProtectEvidenceFunctions {
     }
 
     @NotNull
-    public static List<ProtectEvidence> reportHighest(@NotNull List<ProtectEvidence> evidence) {
+    public static List<ProtectEvidence> reportOnLabelTrialsOnly(@NotNull List<ProtectEvidence> evidences) {
+        List<ProtectEvidence> result = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (!hasAtLeastOneNoneTrialSource(evidence)) {
+                result.add(ImmutableProtectEvidence.builder().from(evidence).reported(evidence.reported() && evidence.onLabel()).build());
+            } else {
+                result.add(evidence);
+            }
+        }
+        return result;
+    }
+
+    private static boolean hasAtLeastOneNoneTrialSource(@NotNull ProtectEvidence evidence) {
+        for (Knowledgebase source : evidence.sources()) {
+            if (!TRIAL_SOURCES.contains(source)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @NotNull
+    public static List<ProtectEvidence> reportHighestLevelEvidence(@NotNull List<ProtectEvidence> evidence) {
         Set<String> events = evidence.stream().map(ProtectEvidence::genomicEvent).collect(Collectors.toSet());
         Set<String> treatments = evidence.stream().map(ProtectEvidence::treatment).collect(Collectors.toSet());
 

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.createTestBaseEvent;
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.dummyEvidenceFactory;
+import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvent;
+import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidenceFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -32,16 +32,16 @@ public class FusionEvidenceTest {
         String geneDown = "geneDown";
         String genePromiscuous = "genePromiscuous";
         ActionableGene promiscuous =
-                ImmutableActionableGene.builder().from(createTestBaseEvent()).gene(genePromiscuous).event(GeneLevelEvent.FUSION).build();
+                ImmutableActionableGene.builder().from(createTestEvent()).gene(genePromiscuous).event(GeneLevelEvent.FUSION).build();
         ActionableGene amp = ImmutableActionableGene.builder()
-                .from(createTestBaseEvent())
+                .from(createTestEvent())
                 .gene(genePromiscuous)
                 .event(GeneLevelEvent.AMPLIFICATION)
                 .build();
-        ActionableFusion fusion = ImmutableActionableFusion.builder().from(createTestBaseEvent()).geneUp(geneUp).geneDown(geneDown).build();
+        ActionableFusion fusion = ImmutableActionableFusion.builder().from(createTestEvent()).geneUp(geneUp).geneDown(geneDown).build();
 
         FusionEvidence fusionEvidence =
-                new FusionEvidence(dummyEvidenceFactory(), Lists.newArrayList(promiscuous, amp), Lists.newArrayList(fusion));
+                new FusionEvidence(createTestEvidenceFactory(), Lists.newArrayList(promiscuous, amp), Lists.newArrayList(fusion));
 
         LinxFusion fusionMatch = linxFusionBuilder().geneStart(geneUp).geneEnd(geneDown).build();
         LinxFusion promiscuousMatch = linxFusionBuilder().geneStart(genePromiscuous).geneEnd("other gene").build();
@@ -69,7 +69,7 @@ public class FusionEvidenceTest {
         int maxExonDown = 4;
 
         ActionableFusion fusion = ImmutableActionableFusion.builder()
-                .from(createTestBaseEvent())
+                .from(createTestEvent())
                 .geneUp(geneUp)
                 .minExonUp(minExonUp)
                 .maxExonUp(maxExonUp)
@@ -78,7 +78,7 @@ public class FusionEvidenceTest {
                 .maxExonDown(maxExonDown)
                 .build();
 
-        FusionEvidence fusionEvidence = new FusionEvidence(dummyEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(fusion));
+        FusionEvidence fusionEvidence = new FusionEvidence(createTestEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(fusion));
 
         ImmutableLinxFusion.Builder builder = linxFusionBuilder().geneStart(geneUp).geneEnd(geneDown);
 

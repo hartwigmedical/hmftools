@@ -1,10 +1,12 @@
-package com.hartwig.hmftools.protect.evidence;
+package com.hartwig.hmftools.protect;
 
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.RESPONSIVE;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.B;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.C;
-import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceFunctions.highestReportableLevel;
+import static com.hartwig.hmftools.protect.ProtectEvidenceFunctions.highestReportableLevel;
+import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestBuilder;
+import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,12 +27,12 @@ import org.junit.Test;
 
 public class ProtectEvidenceFunctionsTest {
 
-    private final ProtectEvidence onLabelResponsiveA = ProtectEvidenceTestFactory.create(true, RESPONSIVE, A).build();
-    private final ProtectEvidence onLabelResponsiveB = ProtectEvidenceTestFactory.create(true, RESPONSIVE, B).build();
-    private final ProtectEvidence onLabelResponsiveC = ProtectEvidenceTestFactory.create(true, RESPONSIVE, C).build();
-    private final ProtectEvidence offLabelResponsiveA = ProtectEvidenceTestFactory.create(false, RESPONSIVE, A).build();
-    private final ProtectEvidence offLabelResponsiveB = ProtectEvidenceTestFactory.create(false, RESPONSIVE, B).build();
-    private final ProtectEvidence offLabelResponsiveC = ProtectEvidenceTestFactory.create(false, RESPONSIVE, C).build();
+    private final ProtectEvidence onLabelResponsiveA = createTestEvidence(true, RESPONSIVE, A).build();
+    private final ProtectEvidence onLabelResponsiveB = createTestEvidence(true, RESPONSIVE, B).build();
+    private final ProtectEvidence onLabelResponsiveC = createTestEvidence(true, RESPONSIVE, C).build();
+    private final ProtectEvidence offLabelResponsiveA = createTestEvidence(false, RESPONSIVE, A).build();
+    private final ProtectEvidence offLabelResponsiveB = createTestEvidence(false, RESPONSIVE, B).build();
+    private final ProtectEvidence offLabelResponsiveC = createTestEvidence(false, RESPONSIVE, C).build();
 
     @Test
     public void canConsolidate() {
@@ -43,14 +45,9 @@ public class ProtectEvidenceFunctionsTest {
 
         String treatment2 = "treatment2";
 
-        ProtectEvidence evidence1 =
-                ProtectEvidenceTestFactory.testBuilder().treatment(treatment1).addUrls(url1).addSources(source1).build();
-
-        ProtectEvidence evidence2 =
-                ProtectEvidenceTestFactory.testBuilder().treatment(treatment1).addUrls(url2).addSources(source2).build();
-
-        ProtectEvidence evidence3 =
-                ProtectEvidenceTestFactory.testBuilder().treatment(treatment2).addUrls(url3).addSources(source1).build();
+        ProtectEvidence evidence1 = createTestBuilder().treatment(treatment1).addUrls(url1).addSources(source1).build();
+        ProtectEvidence evidence2 = createTestBuilder().treatment(treatment1).addUrls(url2).addSources(source2).build();
+        ProtectEvidence evidence3 = createTestBuilder().treatment(treatment2).addUrls(url3).addSources(source1).build();
 
         List<ProtectEvidence> consolidated = ProtectEvidenceFunctions.consolidate(Lists.newArrayList(evidence1, evidence2, evidence3));
 
@@ -83,7 +80,7 @@ public class ProtectEvidenceFunctionsTest {
     @Test
     public void neverReportC() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveC);
-        Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighest(evidence));
+        Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighestLevelEvidence(evidence));
         assertEquals(2, victims.size());
         for (ProtectEvidence victim : victims) {
             assertFalse(victim.reported());
@@ -93,7 +90,7 @@ public class ProtectEvidenceFunctionsTest {
     @Test
     public void doNoReportOffLabelAtSameLevelAsOnLabel() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveA, offLabelResponsiveA);
-        Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighest(evidence));
+        Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighestLevelEvidence(evidence));
         assertEquals(2, victims.size());
         assertTrue(victims.contains(onLabelResponsiveA));
         assertFalse(victims.contains(offLabelResponsiveA));
@@ -102,7 +99,7 @@ public class ProtectEvidenceFunctionsTest {
     @Test
     public void reportHighestOffLabelIfHigherThanOnLabel() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveA, offLabelResponsiveB);
-        Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighest(evidence));
+        Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighestLevelEvidence(evidence));
         assertEquals(3, victims.size());
         assertTrue(victims.contains(offLabelResponsiveA));
         assertFalse(victims.contains(offLabelResponsiveB));
@@ -110,14 +107,45 @@ public class ProtectEvidenceFunctionsTest {
     }
 
     @Test
-    public void doNotSetReportToTrue() {
+    public void neverSetReportToTrue() {
         ProtectEvidence reported = onLabelResponsiveA;
-        ProtectEvidence reportedVictim = ProtectEvidenceFunctions.reportHighest(Lists.newArrayList(reported)).get(0);
+        ProtectEvidence reportedVictim = ProtectEvidenceFunctions.reportHighestLevelEvidence(Lists.newArrayList(reported)).get(0);
         assertTrue(reportedVictim.reported());
 
         ProtectEvidence notReported = ImmutableProtectEvidence.builder().from(reported).reported(false).build();
-        ProtectEvidence notReportedVictim = ProtectEvidenceFunctions.reportHighest(Lists.newArrayList(notReported)).get(0);
+        ProtectEvidence notReportedVictim = ProtectEvidenceFunctions.reportHighestLevelEvidence(Lists.newArrayList(notReported)).get(0);
         assertFalse(notReportedVictim.reported());
+    }
+
+    @Test
+    public void neverReportOffLabelTrials() {
+        String event1 = "event1";
+        String event2 = "event2";
+        String event3 = "event3";
+        String event4 = "event4";
+
+        ProtectEvidence evidence1 =
+                createTestBuilder().genomicEvent(event1).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(true).build();
+        ProtectEvidence evidence2 =
+                createTestBuilder().genomicEvent(event2).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(false).build();
+        ProtectEvidence evidence3 =
+                createTestBuilder().genomicEvent(event3).addSources(Knowledgebase.VICC_CGI).reported(true).onLabel(false).build();
+        ProtectEvidence evidence4 = createTestBuilder().genomicEvent(event4)
+                .addSources(Knowledgebase.VICC_CGI, Knowledgebase.ICLUSION)
+                .reported(true)
+                .onLabel(false)
+                .build();
+
+        List<ProtectEvidence> evidence =
+                ProtectEvidenceFunctions.reportOnLabelTrialsOnly(Lists.newArrayList(evidence1, evidence2, evidence3, evidence4));
+
+        assertEquals(4, evidence.size());
+        assertTrue(evidence.contains(evidence1));
+        assertTrue(evidence.contains(evidence3));
+        assertTrue(evidence.contains(evidence4));
+
+        ProtectEvidence convertedEvidence2 = findByEvent(evidence, event2);
+        assertFalse(convertedEvidence2.reported());
     }
 
     @NotNull
@@ -129,5 +157,16 @@ public class ProtectEvidenceFunctionsTest {
         }
 
         throw new IllegalStateException("Could not find evidence with treatment: " + treatment);
+    }
+
+    @NotNull
+    private static ProtectEvidence findByEvent(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String event) {
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.genomicEvent().equals(event)) {
+                return evidence;
+            }
+        }
+
+        throw new IllegalStateException("Could not find evidence with genomic event: " + event);
     }
 }

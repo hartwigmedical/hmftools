@@ -13,7 +13,6 @@ import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
 import com.hartwig.hmftools.protect.evidence.DisruptionEvidence;
 import com.hartwig.hmftools.protect.evidence.FusionEvidence;
 import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
-import com.hartwig.hmftools.protect.evidence.ProtectEvidenceFunctions;
 import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
 import com.hartwig.hmftools.protect.linx.LinxData;
@@ -105,9 +104,14 @@ public class ProtectAlgo {
         List<ProtectEvidence> consolidated = ProtectEvidenceFunctions.consolidate(result);
         LOGGER.debug("Consolidated {} evidence items to {} unique evidences", result.size(), consolidated.size());
 
-        List<ProtectEvidence> highestReported = ProtectEvidenceFunctions.reportHighest(consolidated);
-        LOGGER.debug("Reduced reported evidence from {} items to {} items",
+        List<ProtectEvidence> updatedForTrials = ProtectEvidenceFunctions.reportOnLabelTrialsOnly(consolidated);
+        LOGGER.debug("Reduced reported evidence from {} items to {} items by removing off-label trials",
                 reportedCount(consolidated),
+                reportedCount(updatedForTrials));
+
+        List<ProtectEvidence> highestReported = ProtectEvidenceFunctions.reportHighestLevelEvidence(updatedForTrials);
+        LOGGER.debug("Reduced reported evidence from {} items to {} items by reporting highest level evidence only",
+                reportedCount(updatedForTrials),
                 reportedCount(highestReported));
 
         return highestReported;
