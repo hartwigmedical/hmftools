@@ -94,11 +94,11 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static ClinicalTrailMolecularProfile retrieveClinicalTrialsMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static ClinicalTrialMolecularProfile retrieveClinicalTrialsMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker clinicalTrailMolecularProfileChecker =
                 ClinicalTrialDataModelChecker.clinicalTrialMolecularProfileObjectChecker();
         clinicalTrailMolecularProfileChecker.check(jsonObject);
-        return ImmutableClinicalTrailMolecularProfile.builder()
+        return ImmutableClinicalTrialMolecularProfile.builder()
                 .id(JsonFunctions.nullableString(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();

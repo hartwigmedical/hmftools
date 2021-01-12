@@ -50,7 +50,7 @@ public abstract class Drugs {
     public abstract List<DrugsTherapies> therapies();
 
     @Nullable
-    public abstract List<DrugsGlobalApproavalStatus> globalApprovaStatus();
+    public abstract List<DrugsGlobalApprovalStatus> globalApprovaStatus();
 
 
 }
