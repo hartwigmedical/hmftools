@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ClinicalTrialVariantRequirementDetails {
 
     @NotNull
-    public abstract ClinicalTrailMolecularProfile molecularProfile();
+    public abstract ClinicalTrialMolecularProfile molecularProfile();
 
     @NotNull
     public abstract String requirementType();

@@ -224,11 +224,11 @@ public class DrugsFactory {
     }
 
     @NotNull
-    public static List<DrugsGlobalApproavalStatus> extractGlobalApprovaStatus(@NotNull JsonArray jsonArray) {
-        List<DrugsGlobalApproavalStatus> globalApproavalStatuses = Lists.newArrayList();
+    public static List<DrugsGlobalApprovalStatus> extractGlobalApprovaStatus(@NotNull JsonArray jsonArray) {
+        List<DrugsGlobalApprovalStatus> globalApproavalStatuses = Lists.newArrayList();
         for (JsonElement globalApproavalStatus : jsonArray) {
             JsonObject globalTherapyObject = globalApproavalStatus.getAsJsonObject();
-            globalApproavalStatuses.add(ImmutableDrugsGlobalApproavalStatus.builder()
+            globalApproavalStatuses.add(ImmutableDrugsGlobalApprovalStatus.builder()
                     .id(JsonFunctions.string(globalTherapyObject, "id"))
                     .therapy(extractTherapiesGlobalApprovalStatus(globalTherapyObject.getAsJsonObject("therapy")))
                     .indications(extractIndicationsGlobalApprovalStatus(globalTherapyObject.getAsJsonObject("indications")))
