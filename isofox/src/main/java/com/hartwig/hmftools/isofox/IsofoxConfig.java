@@ -52,6 +52,7 @@ public class IsofoxConfig
     // config items
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SAMPLE = "sample";
+    public static final String CANCER_TYPE = "cancer_type";
     public static final String DATA_OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_ID = "output_id";
     public static final String FUNCTIONS = "functions";
@@ -93,6 +94,7 @@ public class IsofoxConfig
 
     // neo-epitopes
     private static final String NEO_EPITOPE_FILE = "neoepitope_file";
+    private static final String CANCER_TPM_FILE = "cancer_tpm_file";
 
     private static final String SPECIFIC_CHR = "specific_chr";
     private static final String SPECIFIC_REGIONS = "specific_regions";
@@ -104,6 +106,7 @@ public class IsofoxConfig
     public static final String LOG_LEVEL = "log_level";
 
     public final String SampleId;
+    public final String CancerType;
     public final List<String> RestrictedGeneIds; // specific set of genes to process
     public final List<String> ExcludedGeneIds; // genes to ignore
     public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
@@ -130,6 +133,7 @@ public class IsofoxConfig
 
     public final String ExpCountsFile;
     public final String NeoEpitopeFile;
+    public final String CancerTpmFile;
     public final String ExpGcRatiosFile;
     public final boolean ApplyExpectedRates;
     public final boolean ApplyFragmentLengthAdjust;
@@ -161,6 +165,7 @@ public class IsofoxConfig
     public IsofoxConfig(final CommandLine cmd)
     {
         SampleId = cmd.getOptionValue(SAMPLE);
+        CancerType = cmd.getOptionValue(CANCER_TYPE);
 
         Functions = Lists.newArrayList();
 
@@ -258,6 +263,7 @@ public class IsofoxConfig
         ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
         ExpGcRatiosFile = cmd.getOptionValue(EXP_GC_RATIOS_FILE);
         NeoEpitopeFile = cmd.getOptionValue(NEO_EPITOPE_FILE);
+        CancerTpmFile = cmd.getOptionValue(CANCER_TPM_FILE);
 
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
         ApplyFragmentLengthAdjust = cmd.hasOption(APPLY_FRAG_LENGTH_ADJUSTMENT);
@@ -399,7 +405,7 @@ public class IsofoxConfig
         return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, GENE_TRANSCRIPTS_DIR)
                 && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
                 && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE)
-                && configPathValid(cmd, NEO_EPITOPE_FILE);
+                && configPathValid(cmd, NEO_EPITOPE_FILE) && configPathValid(cmd, CANCER_TPM_FILE);
     }
 
     public static boolean configPathValid(final CommandLine cmd, final String configItem)
@@ -467,6 +473,7 @@ public class IsofoxConfig
     public IsofoxConfig()
     {
         SampleId = "TEST";
+        CancerType = "";
 
         Functions = Lists.newArrayList();
         Functions.add(TRANSCRIPT_COUNTS);
@@ -493,6 +500,7 @@ public class IsofoxConfig
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
         NeoEpitopeFile = null;
+        CancerTpmFile = null;
 
         WriteExonData = false;
         WriteReadData = false;
@@ -521,6 +529,7 @@ public class IsofoxConfig
     {
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample ID");
+        options.addOption(CANCER_TYPE, true, "Tumor cancer type");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
 
         options.addOption(FUNCTIONS, true, "Optional: list of functional routines to run (see documentation)");
@@ -554,6 +563,7 @@ public class IsofoxConfig
         options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates per transcript");
         options.addOption(EXP_GC_RATIOS_FILE, true, "File with generated expected GC ratios per transcript");
         options.addOption(NEO_EPITOPE_FILE, true, "File with neo-epitopes to measure fragment support");
+        options.addOption(CANCER_TPM_FILE, true, "TPM per cancer type and pan-cancer");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(SINGLE_MAP_QUAL, true, "Optional - map quality for reads mapped to a single location (default=255)");
         options.addOption(APPLY_FRAG_LENGTH_ADJUSTMENT, false, "Use sample fragment length distribution in expected rate calcs");

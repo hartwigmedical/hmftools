@@ -268,8 +268,8 @@ public class NeoUtils
         if(requiredBases == 0)
             return new CodingBaseExcerpt("", nePosition, nePosition, null);
 
-        int codingStart = transData.CodingStart != null ? transData.CodingStart : transData.TransStart;
-        int codingEnd = transData.CodingEnd != null ? transData.CodingEnd : transData.TransEnd;
+        int codingStart = transData.CodingStart != null && nePosition >= transData.CodingStart ? transData.CodingStart : transData.TransStart;
+        int codingEnd = transData.CodingEnd != null && nePosition <= transData.CodingEnd ? transData.CodingEnd : transData.TransEnd;
 
         final List<ExonData> exonDataList = transData.exons();
 

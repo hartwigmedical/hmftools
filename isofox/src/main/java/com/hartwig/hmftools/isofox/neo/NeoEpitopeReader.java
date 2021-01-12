@@ -5,17 +5,26 @@ import static java.lang.Math.min;
 import static java.lang.Math.nextDown;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
+import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
+import static com.hartwig.hmftools.isofox.neo.CohortTpmData.CANCER_VALUE;
+import static com.hartwig.hmftools.isofox.neo.CohortTpmData.COHORT_VALUE;
+import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.checkBaseCoverage;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.getNeoEpitopeSupport;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -29,6 +38,7 @@ import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
@@ -56,6 +66,9 @@ public class NeoEpitopeReader
     private NeoEpitopeData mCurrentNeoData;
     private final Map<String,ReadGroup> mReadGroups;
 
+    private final CohortTpmData mCohortTpmData;
+    private BufferedWriter mWriter;
+
     public NeoEpitopeReader(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
         mConfig = config;
@@ -78,6 +91,8 @@ public class NeoEpitopeReader
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
 
         loadNeoEpitopes(mConfig.NeoEpitopeFile);
+        mCohortTpmData = new CohortTpmData(mConfig.CancerTpmFile);
+        initialiseWriter();
     }
 
     private void loadNeoEpitopes(final String filename)
@@ -111,28 +126,31 @@ public class NeoEpitopeReader
 
             if(neData.isFusion())
             {
-                calcFusionSupport(neData);
+                calcFusionSupport();
             }
             else
             {
                 neData.setOrientation(mCurrentGenes.genes().get(0).GeneData.Strand);
                 calcPointMutationSupport();
             }
+
+            addTpmMedians(neData);
+
+            writeData(neData);
         }
 
+        closeBufferedWriter(mWriter);
     }
 
-    private void calcFusionSupport(final NeoEpitopeData neData)
+    private void calcFusionSupport()
     {
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             initialiseGeneData(mCurrentNeoData.Source.GeneIds[fs]);
 
             final BaseRegion readRegion = new BaseRegion(mCurrentNeoData.Chromosomes[fs], mCurrentNeoData.Source.CodingBasePositions[fs]);
-
             mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
         }
-
     }
 
     private void calcPointMutationSupport()
@@ -141,7 +159,6 @@ public class NeoEpitopeReader
 
         // the 'UP' stream caches the full coding base= sequence since relates to a single gene
         final BaseRegion readRegion = new BaseRegion(mCurrentNeoData.Chromosomes[FS_UP],mCurrentNeoData.Source.CodingBasePositions[FS_UP]);
-
         mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
     }
 
@@ -175,14 +192,12 @@ public class NeoEpitopeReader
             return;
         }
 
+        readGroup.Reads.add(read);
+
         if(readGroup.isComplete())
         {
             processFragmentReads(readGroup);
             mReadGroups.remove(read.Id);
-        }
-        else
-        {
-            readGroup.Reads.add(read);
         }
     }
 
@@ -210,17 +225,17 @@ public class NeoEpitopeReader
         if(!isCandidateGroup(readGroup))
             return;
 
+        checkBaseCoverage(mCurrentNeoData, readGroup);
+
         // each fragment must support at least one of the up & down transcripts by being fully exonic or matching an exon boundary
         // unspliced reads are skipped (in any of the transcripts in question)
         // for fusions, determine the gene covered by each read, and therefore the stream-edness of the read
 
         boolean[] hasSupportedTrans = { false, false };
 
-        boolean singleGene = mCurrentNeoData.singleGene();
-
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            if(singleGene && fs == FS_DOWN)
+            if(mCurrentNeoData.singleGene() && fs == FS_DOWN)
             {
                 hasSupportedTrans[fs] = hasSupportedTrans[FS_UP];
                 break;
@@ -260,9 +275,11 @@ public class NeoEpitopeReader
             return;
 
         // work out which of the sections of the neo-epitope may be supported
+        NeoFragmentSupport readGroupSupport = new NeoFragmentSupport();
+
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            if(singleGene && fs == FS_DOWN)
+            if(mCurrentNeoData.isPointMutation() && fs == FS_DOWN)
                 break;
 
             final int[] codingBaseRange = mCurrentNeoData.getCodingBaseRange(fs);
@@ -273,11 +290,62 @@ public class NeoEpitopeReader
                     continue;
 
                 // check that this read relates to the neo section
-                if(!positionsOverlap(codingBaseRange[SE_START], codingBaseRange[SE_END], read.PosStart, read.PosEnd))
+                if(read.getMappedRegionCoords(false).stream()
+                        .noneMatch(x -> positionsOverlap(codingBaseRange[SE_START], codingBaseRange[SE_END], x[SE_START], x[SE_END])))
+                {
                     continue;
+                }
 
                 NeoFragmentSupport support = getNeoEpitopeSupport(mCurrentNeoData, fs, read);
+                readGroupSupport.setMax(support);
             }
         }
+
+        mCurrentNeoData.getFragmentSupport().combine(readGroupSupport);
+    }
+
+    private void addTpmMedians(final NeoEpitopeData neData)
+    {
+        double cancerTotal = 0;
+        double cohortTotal = 0;
+
+        for(String transName : mCurrentNeoData.Transcripts[FS_UP])
+        {
+            final double[] result = mCohortTpmData.getTranscriptTpm(transName, mConfig.CancerType);
+            cancerTotal += result[CANCER_VALUE];
+            cohortTotal += result[COHORT_VALUE];
+        }
+
+        neData.setTpmTotals(cancerTotal, cohortTotal);
+    }
+
+    private void initialiseWriter()
+    {
+        try
+        {
+            final String outputFileName = mConfig.formOutputFile("neo_epitopes.csv");
+
+            mWriter = createBufferedWriter(outputFileName, false);
+            mWriter.write(NeoEpitopeData.header());
+            mWriter.newLine();
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to create neo-epitope writer: {}", e.toString());
+        }
+    }
+
+    private void writeData(final NeoEpitopeData neData)
+    {
+        try
+        {
+            mWriter.write(neData.toString());
+            mWriter.newLine();
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to write neo-epitope data: {}", e.toString());
+        }
+
     }
 }

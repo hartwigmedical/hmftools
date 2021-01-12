@@ -54,9 +54,17 @@ public class ExpressionCohortMedians
 
         initialiseWriter();
 
+        int nextLog = 1000;
+
         for(int i = 0; i < mGeneTransIds.size(); ++i)
         {
             produceCohortData(i);
+
+            if(i >= nextLog)
+            {
+                nextLog += 1000;
+                ISF_LOGGER.info("processing %d transcripts", i);
+            }
         }
 
         closeBufferedWriter(mWriter);
@@ -89,7 +97,6 @@ public class ExpressionCohortMedians
 
             for(Map.Entry<String,List<String>> entry : mConfig.SampleData.CancerTypeSamples.entrySet())
             {
-                final String cancerType = entry.getKey();
                 final List<String> samples = entry.getValue();
 
                 final List<Double> cancerValues = Lists.newArrayListWithExpectedSize(samples.size());
@@ -158,6 +165,8 @@ public class ExpressionCohortMedians
 
             if(mTranscriptScope)
                 mWriter.write(",TransName");
+
+            mWriter.write(",All");
 
             for(String cancerType : mConfig.SampleData.CancerTypeSamples.keySet())
             {
