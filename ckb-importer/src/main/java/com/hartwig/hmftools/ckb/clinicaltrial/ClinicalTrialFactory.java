@@ -104,14 +104,14 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<Therapy> retrieveClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
-        List<Therapy> therapies = Lists.newArrayList();
+    private static List<ClinicalTrialTherapy> retrieveClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
+        List<ClinicalTrialTherapy> therapies = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailTherapiesChecker = ClinicalTrialDataModelChecker.clinicalTrialTherapiesObjectChecker();
         for (JsonElement therapy : jsonArray) {
             JsonObject therapyObject = therapy.getAsJsonObject();
             clinicalTrailTherapiesChecker.check(therapyObject);
 
-            therapies.add(ImmutableTherapy.builder()
+            therapies.add(ImmutableClinicalTrialTherapy.builder()
                     .id(JsonFunctions.string(therapyObject, "id"))
                     .therapyName(JsonFunctions.string(therapyObject, "therapyName"))
                     .synonyms(JsonFunctions.optionalNullableString(therapyObject, "synonyms"))
@@ -121,14 +121,14 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<Indication> retrieveClinicalTrialsIndications(@NotNull JsonArray jsonArray) {
-        List<Indication> indications = Lists.newArrayList();
+    private static List<ClinicalTrialIndication> retrieveClinicalTrialsIndications(@NotNull JsonArray jsonArray) {
+        List<ClinicalTrialIndication> indications = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailIndicationsChecker = ClinicalTrialDataModelChecker.clinicalTrialIndicationsObjectChecker();
 
         for (JsonElement indication : jsonArray) {
             JsonObject indicationObject = indication.getAsJsonObject();
             clinicalTrailIndicationsChecker.check(indicationObject);
-            indications.add(ImmutableIndication.builder()
+            indications.add(ImmutableClinicalTrialIndication.builder()
                     .id(JsonFunctions.string(indicationObject, "id"))
                     .name(JsonFunctions.string(indicationObject, "name"))
                     .source(JsonFunctions.string(indicationObject, "source"))

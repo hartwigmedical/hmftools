@@ -23,7 +23,7 @@ public abstract class ClinicalTrial {
     public abstract String recruitment();
 
     @NotNull
-    public abstract List<Therapy> therapies();
+    public abstract List<ClinicalTrialTherapy> therapies();
 
     @NotNull
     public abstract List<String> ageGroups();
@@ -41,7 +41,7 @@ public abstract class ClinicalTrial {
     public abstract String updateDate();
 
     @NotNull
-    public abstract List<Indication> indications();
+    public abstract List<ClinicalTrialIndication> indications();
 
     @NotNull
     public abstract List<ClinicalTrialVariantRequirementDetail> variantRequirementDetails();
