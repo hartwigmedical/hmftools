@@ -14,6 +14,7 @@ Fallopian tube,1964
 Gallbladder,3121
 Gastroesophageal,0080374
 Gastrointestinal tract,3119
+Head and neck,11934;8850;2596;10811;0050619;8618
 Hepatobiliary system,0080355
 Kidney,263
 Liver,3571
@@ -25,7 +26,6 @@ Ovary,2394
 Pancreas,1793
 Penis,11615
 Prostate,10283
-Salivary gland,8850
 Skin,4159
 Small intestine,10154
 Stomach,10534
@@ -34,7 +34,6 @@ Thymus,3277
 Thyroid gland,1781
 Trachea,11920
 Unknown,UNMAPPED
-Upper respiratory system,2596;10811;0050619;8618
 Urothelial tract,3996
 Uterus,363
 Vagina,119
