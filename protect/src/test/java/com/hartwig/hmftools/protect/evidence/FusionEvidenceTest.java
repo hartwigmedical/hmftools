@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.createTestBaseEvent;
+import static com.hartwig.hmftools.protect.evidence.ProtectEvidenceTestFactory.dummyEvidenceFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -8,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
@@ -36,14 +36,15 @@ public class FusionEvidenceTest {
                 ImmutableActionableGene.builder().from(createTestBaseEvent()).gene(geneDown).event(GeneLevelEvent.AMPLIFICATION).build();
         ActionableFusion fusion = ImmutableActionableFusion.builder().from(createTestBaseEvent()).geneUp(geneUp).geneDown(geneDown).build();
 
-        FusionEvidence fusionEvidence = new FusionEvidence(Lists.newArrayList(promiscuous, amp), Lists.newArrayList(fusion));
+        FusionEvidence fusionEvidence =
+                new FusionEvidence(dummyEvidenceFactory(), Lists.newArrayList(promiscuous, amp), Lists.newArrayList(fusion));
 
         LinxFusion fusionMatch = linxFusionBuilder().geneStart(geneUp).geneEnd(geneDown).build();
         LinxFusion promiscuousMatch = linxFusionBuilder().geneStart(geneUp).geneEnd("other gene").build();
         LinxFusion promiscuousNonMatch = linxFusionBuilder().geneStart("other gene").geneEnd(geneDown).build();
 
         List<ProtectEvidence> evidenceItems =
-                fusionEvidence.evidence(Sets.newHashSet(), Lists.newArrayList(fusionMatch, promiscuousMatch, promiscuousNonMatch));
+                fusionEvidence.evidence(Lists.newArrayList(fusionMatch, promiscuousMatch, promiscuousNonMatch));
 
         assertEquals(2, evidenceItems.size());
 
@@ -73,39 +74,33 @@ public class FusionEvidenceTest {
                 .maxExonDown(maxExonDown)
                 .build();
 
-        FusionEvidence fusionEvidence = new FusionEvidence(Lists.newArrayList(), Lists.newArrayList(fusion));
+        FusionEvidence fusionEvidence = new FusionEvidence(dummyEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(fusion));
 
         ImmutableLinxFusion.Builder builder = linxFusionBuilder().geneStart(geneUp).geneEnd(geneDown);
 
         // On min range
         assertEquals(1,
-                fusionEvidence.evidence(Sets.newHashSet(),
-                        Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown).build())).size());
+                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown).build())).size());
 
         // On max range
         assertEquals(1,
-                fusionEvidence.evidence(Sets.newHashSet(),
-                        Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown).build())).size());
+                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown).build())).size());
 
         // Up gene exon too low
         assertEquals(0,
-                fusionEvidence.evidence(Sets.newHashSet(),
-                        Lists.newArrayList(builder.fusedExonUp(minExonUp - 1).fusedExonDown(minExonDown).build())).size());
+                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(minExonUp - 1).fusedExonDown(minExonDown).build())).size());
 
         // Up gene exon too high
         assertEquals(0,
-                fusionEvidence.evidence(Sets.newHashSet(),
-                        Lists.newArrayList(builder.fusedExonUp(maxExonUp + 1).fusedExonDown(minExonDown).build())).size());
+                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(maxExonUp + 1).fusedExonDown(minExonDown).build())).size());
 
         // Down gene exon too low
         assertEquals(0,
-                fusionEvidence.evidence(Sets.newHashSet(),
-                        Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown - 1).build())).size());
+                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown - 1).build())).size());
 
         // Down gene exon too high
         assertEquals(0,
-                fusionEvidence.evidence(Sets.newHashSet(),
-                        Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown + 1).build())).size());
+                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown + 1).build())).size());
     }
 
     @NotNull

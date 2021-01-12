@@ -14,24 +14,12 @@ import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class ProtectEvidenceFunctions {
 
     private ProtectEvidenceFunctions() {
-    }
-
-    @NotNull
-    public static ImmutableProtectEvidence.Builder builder(@NotNull Set<String> doids, @NotNull ActionableEvent actionable) {
-        return ImmutableProtectEvidence.builder()
-                .source(actionable.source())
-                .treatment(actionable.treatment())
-                .level(actionable.level())
-                .direction(actionable.direction())
-                .onLabel(doids.contains(actionable.doid()))
-                .urls(actionable.urls());
     }
 
     @NotNull

@@ -17,38 +17,45 @@ import org.jetbrains.annotations.NotNull;
 public class FusionEvidence {
 
     @NotNull
+    private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
+    @NotNull
     private final List<ActionableGene> actionablePromiscuous;
     @NotNull
     private final List<ActionableFusion> actionableFusions;
 
-    public FusionEvidence(@NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions) {
+    public FusionEvidence(@NotNull final PersonalizedEvidenceFactory personalizedEvidenceFactory,
+            @NotNull final List<ActionableGene> actionableGenes, @NotNull final List<ActionableFusion> actionableFusions) {
+        this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionablePromiscuous =
                 actionableGenes.stream().filter(x -> x.event().equals(GeneLevelEvent.FUSION)).collect(Collectors.toList());
         this.actionableFusions = actionableFusions;
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull List<LinxFusion> fusions) {
-        return fusions.stream().flatMap(x -> evidence(doids, x).stream()).collect(Collectors.toList());
+    public List<ProtectEvidence> evidence(@NotNull List<LinxFusion> fusions) {
+        return fusions.stream().flatMap(x -> evidence(x).stream()).collect(Collectors.toList());
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull LinxFusion reportable) {
+    public List<ProtectEvidence> evidence(@NotNull LinxFusion reportable) {
         List<ProtectEvidence> geneEvidence = actionablePromiscuous.stream()
                 .filter(x -> match(x, reportable))
-                .map(x -> evidence(doids, reportable, x))
+                .map(x -> evidence(reportable, x))
                 .collect(Collectors.toList());
 
-        List<ProtectEvidence> fusionEvidence = actionableFusions.stream()
-                .filter(x -> match(x, reportable))
-                .map(x -> evidence(doids, reportable, x))
-                .collect(Collectors.toList());
+        List<ProtectEvidence> fusionEvidence =
+                actionableFusions.stream().filter(x -> match(x, reportable)).map(x -> evidence(reportable, x)).collect(Collectors.toList());
 
         Set<ProtectEvidence> result = Sets.newHashSet();
         result.addAll(geneEvidence);
         result.addAll(fusionEvidence);
 
         return ProtectEvidenceFunctions.reportHighest(result);
+    }
+
+    @NotNull
+    private ProtectEvidence evidence(@NotNull LinxFusion reportable, @NotNull ActionableEvent actionable) {
+        return personalizedEvidenceFactory.somaticallyReportableEvidence(actionable).genomicEvent(reportable.genomicEvent()).build();
     }
 
     private static boolean match(@NotNull ActionableGene actionable, @NotNull LinxFusion reportable) {
@@ -85,15 +92,5 @@ public class FusionEvidence {
         }
 
         return true;
-    }
-
-    @NotNull
-    private static ProtectEvidence evidence(@NotNull Set<String> doid, @NotNull LinxFusion reportable,
-            @NotNull ActionableEvent actionable) {
-        return ProtectEvidenceFunctions.builder(doid, actionable)
-                .germline(false)
-                .genomicEvent(reportable.genomicEvent())
-                .reported(true)
-                .build();
     }
 }

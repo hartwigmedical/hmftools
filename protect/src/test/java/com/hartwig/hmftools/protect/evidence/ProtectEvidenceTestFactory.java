@@ -17,6 +17,11 @@ public final class ProtectEvidenceTestFactory {
     }
 
     @NotNull
+    public static PersonalizedEvidenceFactory dummyEvidenceFactory() {
+        return new PersonalizedEvidenceFactory(Sets.newHashSet());
+    }
+
+    @NotNull
     public static ActionableEvent createTestBaseEvent() {
         return ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
                 Strings.EMPTY,
