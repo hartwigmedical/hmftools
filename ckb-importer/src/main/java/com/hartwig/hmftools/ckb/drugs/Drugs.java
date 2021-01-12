@@ -49,7 +49,7 @@ public abstract class Drugs {
     @NotNull
     public abstract List<DrugsTherapies> therapies();
 
-    @NotNull
+    @Nullable
     public abstract List<DrugsGlobalApproavalStatus> globalApprovaStatus();
 
 

@@ -14,6 +14,6 @@ public abstract class DrugsTherapy {
     @NotNull
     public abstract String therapyName();
 
-    @NotNull
+    @Nullable
     public abstract String synonyms();
 }

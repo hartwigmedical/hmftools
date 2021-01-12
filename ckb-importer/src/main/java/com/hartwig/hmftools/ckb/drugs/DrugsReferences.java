@@ -11,33 +11,33 @@ public abstract class DrugsReferences {
     @NotNull
     public abstract String id();
 
-    @NotNull
+    @Nullable
     public abstract String pubMedId();
 
-    @NotNull
+    @Nullable
     public abstract String title();
 
-    @NotNull
+    @Nullable
     public abstract String url();
 
-    @NotNull
+    @Nullable
     public abstract String authors();
 
-    @NotNull
+    @Nullable
     public abstract String journal();
 
-    @NotNull
+    @Nullable
     public abstract String volume();
 
-    @NotNull
+    @Nullable
     public abstract String issue();
 
-    @NotNull
+    @Nullable
     public abstract String date();
 
-    @NotNull
+    @Nullable
     public abstract String abstractText();
 
-    @NotNull
+    @Nullable
     public abstract String year();
 }

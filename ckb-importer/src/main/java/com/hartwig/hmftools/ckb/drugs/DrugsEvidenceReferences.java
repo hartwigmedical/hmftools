@@ -11,12 +11,12 @@ public abstract class DrugsEvidenceReferences {
     @NotNull
     public abstract String id();
 
-    @NotNull
+    @Nullable
     public abstract String pubMedId();
 
-    @NotNull
+    @Nullable
     public abstract String title();
 
-    @NotNull
+    @Nullable
     public abstract String url();
 }
