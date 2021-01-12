@@ -38,6 +38,6 @@ public class ChordEvidence {
             }
         }
 
-        return ProtectEvidenceFunctions.reportHighest(result);
+        return result;
     }
 }

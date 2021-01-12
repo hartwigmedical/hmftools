@@ -47,6 +47,6 @@ public class DisruptionEvidence {
             }
         }
 
-        return ProtectEvidenceFunctions.reportHighest(result);
+        return result;
     }
 }

@@ -24,11 +24,11 @@ public class PersonalizedEvidenceFactory {
     @NotNull
     public ImmutableProtectEvidence.Builder patientEvidenceBuilder(@NotNull ActionableEvent actionable) {
         return ImmutableProtectEvidence.builder()
-                .source(actionable.source())
                 .treatment(actionable.treatment())
                 .level(actionable.level())
                 .direction(actionable.direction())
                 .onLabel(patientTumorDoids.contains(actionable.doid()))
+                .addSources(actionable.source())
                 .urls(actionable.urls());
     }
 }

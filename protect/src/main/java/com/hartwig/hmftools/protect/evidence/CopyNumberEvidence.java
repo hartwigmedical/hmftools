@@ -49,7 +49,7 @@ public class CopyNumberEvidence {
             }
         }
 
-        return ProtectEvidenceFunctions.reportHighest(result);
+        return result;
     }
 
     private static boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull ReportableGainLoss reportable) {

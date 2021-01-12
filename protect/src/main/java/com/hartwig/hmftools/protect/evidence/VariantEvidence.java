@@ -73,7 +73,7 @@ public class VariantEvidence {
         result.addAll(rangeEvidence);
         result.addAll(geneEvidence);
 
-        return ProtectEvidenceFunctions.reportHighest(result);
+        return result;
     }
 
     @NotNull

@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
@@ -46,11 +45,11 @@ public class FusionEvidence {
         List<ProtectEvidence> fusionEvidence =
                 actionableFusions.stream().filter(x -> match(x, reportable)).map(x -> evidence(reportable, x)).collect(Collectors.toList());
 
-        Set<ProtectEvidence> result = Sets.newHashSet();
+        List<ProtectEvidence> result = Lists.newArrayList();
         result.addAll(geneEvidence);
         result.addAll(fusionEvidence);
 
-        return ProtectEvidenceFunctions.reportHighest(result);
+        return result;
     }
 
     @NotNull

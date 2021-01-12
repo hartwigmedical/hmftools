@@ -54,6 +54,6 @@ public class PurpleSignatureEvidence {
             }
         }
 
-        return ProtectEvidenceFunctions.reportHighest(result);
+        return result;
     }
 }

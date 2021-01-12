@@ -33,17 +33,20 @@ public final class ProtectEvidenceTestFactory {
     }
 
     @NotNull
-    public static ImmutableProtectEvidence.Builder createDefault(boolean onLabel, @NotNull EvidenceDirection direction,
+    public static ImmutableProtectEvidence.Builder create(boolean onLabel, @NotNull EvidenceDirection direction,
             @NotNull EvidenceLevel level) {
+        return testBuilder().onLabel(onLabel).level(level).direction(direction);
+    }
+
+    @NotNull
+    public static ImmutableProtectEvidence.Builder testBuilder() {
         return ImmutableProtectEvidence.builder()
-                .genomicEvent("event")
+                .genomicEvent(Strings.EMPTY)
                 .germline(false)
-                .source(Knowledgebase.VICC_CGI)
                 .reported(true)
-                .treatment("treatment")
-                .onLabel(onLabel)
-                .level(level)
-                .direction(direction)
-                .urls(Sets.newHashSet("url"));
+                .treatment(Strings.EMPTY)
+                .onLabel(false)
+                .level(EvidenceLevel.A)
+                .direction(EvidenceDirection.RESPONSIVE);
     }
 }

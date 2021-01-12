@@ -30,17 +30,21 @@ public class FusionEvidenceTest {
     public void canDetermineFusionEvidence() {
         String geneUp = "geneUp";
         String geneDown = "geneDown";
+        String genePromiscuous = "genePromiscuous";
         ActionableGene promiscuous =
-                ImmutableActionableGene.builder().from(createTestBaseEvent()).gene(geneUp).event(GeneLevelEvent.FUSION).build();
-        ActionableGene amp =
-                ImmutableActionableGene.builder().from(createTestBaseEvent()).gene(geneDown).event(GeneLevelEvent.AMPLIFICATION).build();
+                ImmutableActionableGene.builder().from(createTestBaseEvent()).gene(genePromiscuous).event(GeneLevelEvent.FUSION).build();
+        ActionableGene amp = ImmutableActionableGene.builder()
+                .from(createTestBaseEvent())
+                .gene(genePromiscuous)
+                .event(GeneLevelEvent.AMPLIFICATION)
+                .build();
         ActionableFusion fusion = ImmutableActionableFusion.builder().from(createTestBaseEvent()).geneUp(geneUp).geneDown(geneDown).build();
 
         FusionEvidence fusionEvidence =
                 new FusionEvidence(dummyEvidenceFactory(), Lists.newArrayList(promiscuous, amp), Lists.newArrayList(fusion));
 
         LinxFusion fusionMatch = linxFusionBuilder().geneStart(geneUp).geneEnd(geneDown).build();
-        LinxFusion promiscuousMatch = linxFusionBuilder().geneStart(geneUp).geneEnd("other gene").build();
+        LinxFusion promiscuousMatch = linxFusionBuilder().geneStart(genePromiscuous).geneEnd("other gene").build();
         LinxFusion promiscuousNonMatch = linxFusionBuilder().geneStart("other gene").geneEnd(geneDown).build();
 
         List<ProtectEvidence> evidenceItems =

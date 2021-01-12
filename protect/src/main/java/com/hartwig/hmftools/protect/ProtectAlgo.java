@@ -13,6 +13,7 @@ import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
 import com.hartwig.hmftools.protect.evidence.DisruptionEvidence;
 import com.hartwig.hmftools.protect.evidence.FusionEvidence;
 import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
+import com.hartwig.hmftools.protect.evidence.ProtectEvidenceFunctions;
 import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
 import com.hartwig.hmftools.protect.linx.LinxData;
@@ -100,7 +101,11 @@ public class ProtectAlgo {
         result.addAll(fusionEvidence);
         result.addAll(purpleSignatureEvidence);
         result.addAll(chordEvidence);
-        return result;
+
+        List<ProtectEvidence> consolidated = ProtectEvidenceFunctions.consolidate(result);
+        LOGGER.debug(" Consolidated {} evidences to {} unique evidences", result.size(), consolidated.size());
+
+        return ProtectEvidenceFunctions.reportHighest(consolidated);
     }
 
     private static void printExtraction(@NotNull String title, @NotNull List<ProtectEvidence> evidences) {
