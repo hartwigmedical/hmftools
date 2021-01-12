@@ -78,7 +78,7 @@ public class ProtectEvidenceFunctionsTest {
     }
 
     @Test
-    public void neverReportC() {
+    public void doNotReportC() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveC);
         Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighestLevelEvidence(evidence));
         assertEquals(2, victims.size());
@@ -118,7 +118,7 @@ public class ProtectEvidenceFunctionsTest {
     }
 
     @Test
-    public void neverReportOffLabelTrials() {
+    public void doNotReportOffLabelTrials() {
         String event1 = "event1";
         String event2 = "event2";
         String event3 = "event3";
@@ -146,6 +146,22 @@ public class ProtectEvidenceFunctionsTest {
 
         ProtectEvidence convertedEvidence2 = findByEvent(evidence, event2);
         assertFalse(convertedEvidence2.reported());
+    }
+
+    @Test
+    public void canApplyBlacklist() {
+        String event1 = "any event";
+        String event2 = "TP53 loss";
+
+        ProtectEvidence evidence1 = createTestBuilder().genomicEvent(event1).reported(true).build();
+        ProtectEvidence evidence2 = createTestBuilder().genomicEvent(event2).reported(true).build();
+
+        List<ProtectEvidence> evidence = ProtectEvidenceFunctions.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
+        assertEquals(2, evidence.size());
+        assertTrue(evidence.contains(evidence1));
+
+        ProtectEvidence blacklisted = findByEvent(evidence, event2);
+        assertFalse(blacklisted.reported());
     }
 
     @NotNull

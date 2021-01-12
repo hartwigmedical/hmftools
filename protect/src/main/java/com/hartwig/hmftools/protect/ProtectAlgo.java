@@ -104,9 +104,14 @@ public class ProtectAlgo {
         List<ProtectEvidence> consolidated = ProtectEvidenceFunctions.consolidate(result);
         LOGGER.debug("Consolidated {} evidence items to {} unique evidences", result.size(), consolidated.size());
 
-        List<ProtectEvidence> updatedForTrials = ProtectEvidenceFunctions.reportOnLabelTrialsOnly(consolidated);
-        LOGGER.debug("Reduced reported evidence from {} items to {} items by removing off-label trials",
+        List<ProtectEvidence> updatedForBlacklist = ProtectEvidenceFunctions.applyReportingBlacklist(consolidated);
+        LOGGER.debug("Reduced reported evidence from {} items to {} items by blacklisting specific evidence for reporting",
                 reportedCount(consolidated),
+                reportedCount(updatedForBlacklist));
+
+        List<ProtectEvidence> updatedForTrials = ProtectEvidenceFunctions.reportOnLabelTrialsOnly(updatedForBlacklist);
+        LOGGER.debug("Reduced reported evidence from {} items to {} items by removing off-label trials",
+                reportedCount(updatedForBlacklist),
                 reportedCount(updatedForTrials));
 
         List<ProtectEvidence> highestReported = ProtectEvidenceFunctions.reportHighestLevelEvidence(updatedForTrials);

@@ -24,6 +24,8 @@ public final class ProtectEvidenceFunctions {
 
     private static final Set<Knowledgebase> TRIAL_SOURCES = Sets.newHashSet(Knowledgebase.ICLUSION);
 
+    private static final Set<String> EVENT_REPORTING_BLACKLIST = Sets.newHashSet("TP53");
+
     private ProtectEvidenceFunctions() {
     }
 
@@ -50,6 +52,28 @@ public final class ProtectEvidenceFunctions {
                     .build());
         }
         return consolidatedEvents;
+    }
+
+    @NotNull
+    public static List<ProtectEvidence> applyReportingBlacklist(@NotNull List<ProtectEvidence> evidences) {
+        List<ProtectEvidence> result = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (hasBlacklistedEvent(evidence)) {
+                result.add(ImmutableProtectEvidence.builder().from(evidence).reported(false).build());
+            } else {
+                result.add(evidence);
+            }
+        }
+        return result;
+    }
+
+    private static boolean hasBlacklistedEvent(@NotNull ProtectEvidence evidence) {
+        for (String entry : EVENT_REPORTING_BLACKLIST) {
+            if (evidence.genomicEvent().contains(entry)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @NotNull
