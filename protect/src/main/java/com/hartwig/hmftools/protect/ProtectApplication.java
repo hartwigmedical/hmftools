@@ -92,7 +92,7 @@ public class ProtectApplication implements AutoCloseable {
             result.addAll(doidParentModel.parents(initialDoid));
         }
 
-        LOGGER.info(" All doids which are considered on-label for patient: '{}'", result);
+        LOGGER.info(" Doids which are considered on-label for patient: '{}'", result);
         return result;
     }
 

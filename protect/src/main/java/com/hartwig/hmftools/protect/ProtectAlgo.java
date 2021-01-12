@@ -79,6 +79,7 @@ public class ProtectAlgo {
     @NotNull
     public List<ProtectEvidence> determineEvidence(@NotNull PurpleData purpleData, @NotNull LinxData linxData,
             @NotNull BachelorData bachelorData, @NotNull ChordAnalysis chordAnalysis) {
+        LOGGER.info("Evidence extraction started");
         List<ProtectEvidence> variantEvidence =
                 variantEvidenceFactory.evidence(bachelorData.germlineVariants(), purpleData.somaticVariants());
         printExtraction("somatic and germline variants", variantEvidence);
