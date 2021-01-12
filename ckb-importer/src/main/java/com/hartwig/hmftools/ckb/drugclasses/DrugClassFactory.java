@@ -64,12 +64,13 @@ public class DrugClassFactory {
         List<DrugClassDrugs> drugs = Lists.newArrayList();
         JsonDatamodelChecker drugsClassDrugChecker = DrugClassDataModelChecker.drugClassDrugsObjectChecker();
         for (JsonElement drug : jsonArray) {
-            drugsClassDrugChecker.check(drug.getAsJsonObject());
+            JsonObject drugsObject = drug.getAsJsonObject();
+            drugsClassDrugChecker.check(drugsObject);
 
             drugs.add(ImmutableDrugClassDrugs.builder()
-                    .id(JsonFunctions.string(drug.getAsJsonObject(), "id"))
-                    .drugName(JsonFunctions.string(drug.getAsJsonObject(), "drugName"))
-                    .drugsTerms(JsonFunctions.optionalStringList(drug.getAsJsonObject(), "drugsterms"))
+                    .id(JsonFunctions.string(drugsObject, "id"))
+                    .drugName(JsonFunctions.string(drugsObject, "drugName"))
+                    .drugsTerms(JsonFunctions.optionalStringList(drugsObject, "drugsterms"))
                     .build());
         }
         return drugs;
@@ -80,12 +81,13 @@ public class DrugClassFactory {
         JsonDatamodelChecker drugsClassTreatmentApprochChecker = DrugClassDataModelChecker.drugClassTreatmentApproachesObjectChecker();
 
         for (JsonElement treatmentApproach : jsonArray) {
-            drugsClassTreatmentApprochChecker.check(treatmentApproach.getAsJsonObject());
+            JsonObject treatmentApproachObject = treatmentApproach.getAsJsonObject();
+            drugsClassTreatmentApprochChecker.check(treatmentApproachObject);
 
             treatmentApproaches.add(ImmutableDrugClassTreatmentApproaches.builder()
-                    .id(JsonFunctions.string(treatmentApproach.getAsJsonObject(), "id"))
-                    .name(JsonFunctions.string(treatmentApproach.getAsJsonObject(), "name"))
-                    .profileName(JsonFunctions.string(treatmentApproach.getAsJsonObject(), "profileName"))
+                    .id(JsonFunctions.string(treatmentApproachObject, "id"))
+                    .name(JsonFunctions.string(treatmentApproachObject, "name"))
+                    .profileName(JsonFunctions.string(treatmentApproachObject, "profileName"))
                     .build());
         }
         return treatmentApproaches;
