@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.protect.variants.DriverInterpretation;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantFactory;
@@ -93,7 +94,7 @@ public class VariantEvidence {
             case SPLICE:
                 return effect == CodingEffect.SPLICE;
             case INFRAME:
-                return effect == CodingEffect.MISSENSE && (isInsert(variant) || isDelete(variant));
+                return effect == CodingEffect.MISSENSE && variant.type() == VariantType.INDEL;
             case INFRAME_DELETION:
                 return effect == CodingEffect.MISSENSE && isDelete(variant);
             case INFRAME_INSERTION:
@@ -108,11 +109,11 @@ public class VariantEvidence {
     }
 
     private static boolean isInsert(@NotNull ReportableVariant variant) {
-        return variant.alt().length() > variant.ref().length();
+        return variant.type() == VariantType.INDEL && variant.alt().length() > variant.ref().length();
     }
 
     private static boolean isDelete(@NotNull ReportableVariant variant) {
-        return variant.alt().length() < variant.ref().length();
+        return variant.type() == VariantType.INDEL && variant.alt().length() < variant.ref().length();
     }
 
     private static boolean geneMatch(@NotNull ActionableGene gene, @NotNull ReportableVariant variant) {
