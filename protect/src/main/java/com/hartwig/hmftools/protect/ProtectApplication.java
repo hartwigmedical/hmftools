@@ -35,10 +35,13 @@ import org.jetbrains.annotations.NotNull;
 public class ProtectApplication implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
+    private static final String VERSION = ProtectApplication.class.getPackage().getImplementationVersion();
 
     private static final RefGenomeVersion REF_GENOME_VERSION = RefGenomeVersion.V37;
 
     public static void main(@NotNull String[] args) throws IOException {
+        LOGGER.info("Running PROTECT v{}", VERSION);
+
         Options options = ProtectConfig.createOptions();
         DatabaseAccess.addDatabaseCmdLineArgs(options);
 
@@ -68,11 +71,11 @@ public class ProtectApplication implements AutoCloseable {
     public void run() throws IOException {
         List<ProtectEvidence> evidence = protectEvidence(protectConfig);
 
-        LOGGER.info("Writing {} records to database", evidence.size());
+        LOGGER.info("Writing {} evidence items to database", evidence.size());
         dbAccess.writeProtectEvidence(protectConfig.tumorSampleId(), evidence);
 
         String filename = ProtectEvidenceFile.generateFilename(protectConfig.outputDir(), protectConfig.tumorSampleId());
-        LOGGER.info("Writing {} records to file: {}", evidence.size(), filename);
+        LOGGER.info("Writing {} evidence items to file: {}", evidence.size(), filename);
         ProtectEvidenceFile.write(filename, evidence);
     }
 
@@ -83,13 +86,13 @@ public class ProtectApplication implements AutoCloseable {
         DoidParents doidParentModel = new DoidParents(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
 
         Set<String> initialDoids = config.primaryTumorDoids();
-        LOGGER.info("Starting with initial primary tumor doids '{}'", initialDoids);
+        LOGGER.debug(" Starting doid resolving for patient with initial tumor doids '{}'", initialDoids);
         for (String initialDoid : initialDoids) {
             result.add(initialDoid);
             result.addAll(doidParentModel.parents(initialDoid));
         }
 
-        LOGGER.info(" Resolved doid tree: {}", result);
+        LOGGER.info(" All doids which are considered on-label for patient: '{}'", result);
         return result;
     }
 

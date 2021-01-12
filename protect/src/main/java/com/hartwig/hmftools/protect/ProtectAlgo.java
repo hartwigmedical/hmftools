@@ -103,17 +103,26 @@ public class ProtectAlgo {
         result.addAll(chordEvidence);
 
         List<ProtectEvidence> consolidated = ProtectEvidenceFunctions.consolidate(result);
-        LOGGER.debug(" Consolidated {} evidences to {} unique evidences", result.size(), consolidated.size());
+        LOGGER.debug("Consolidated {} evidence items to {} unique evidences", result.size(), consolidated.size());
 
-        return ProtectEvidenceFunctions.reportHighest(consolidated);
+        List<ProtectEvidence> highestReported = ProtectEvidenceFunctions.reportHighest(consolidated);
+        LOGGER.debug("Reduced reported evidence from {} items to {} items",
+                reportedCount(consolidated),
+                reportedCount(highestReported));
+
+        return highestReported;
     }
 
     private static void printExtraction(@NotNull String title, @NotNull List<ProtectEvidence> evidences) {
         Set<String> events = evidences.stream().map(x -> x.genomicEvent()).collect(Collectors.toSet());
-        LOGGER.debug("Extracted {} evidences for {} based off {} genomic events", evidences.size(), title, events.size());
+        LOGGER.debug("Extracted {} evidence items for {} based off {} genomic events", evidences.size(), title, events.size());
         for (String event : events) {
             int count = evidences.stream().filter(x -> x.genomicEvent().equals(event)).collect(Collectors.toList()).size();
-            LOGGER.debug(" Resolved {} evidences for '{}'", count, event);
+            LOGGER.debug(" Resolved {} items for '{}'", count, event);
         }
+    }
+
+    private static int reportedCount(@NotNull List<ProtectEvidence> evidences) {
+        return evidences.stream().filter(x -> x.reported()).collect(Collectors.toList()).size();
     }
 }
