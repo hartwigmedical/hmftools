@@ -10,6 +10,7 @@ import com.hartwig.hmftools.lilac.read.Fragment
 import com.hartwig.hmftools.lilac.read.SAMRecordRead
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.deflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFirstFourDigits
 import org.apache.logging.log4j.LogManager
@@ -48,7 +49,7 @@ class LilacApplication2 : AutoCloseable, Runnable {
                 .map { it.toCharArray() }
 
 
-        return candidates.filter { it.consistentWith(nucleotides,reads) }
+        return candidates.filter { it.consistentWith(nucleotides, reads) }
     }
 
     private fun filterCandidatesOnExonBoundaryNucleotide(aminoAcidIndex: Int, minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<Fragment>): List<HlaSequence> {
@@ -64,7 +65,6 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
         return result
     }
-
 
 
     override fun run() {
@@ -96,13 +96,13 @@ class LilacApplication2 : AutoCloseable, Runnable {
         val allBoundaries = (aBoundaries + bBoundaries + cBoundaries)//.filter { it !in setOf(24, 114) }
         val commonBoundaries = aBoundaries intersect bBoundaries intersect cBoundaries
 
-        val excludedIndices = allBoundaries.toSet() union IntRange(360, 370)
+        val excludedIndices = allBoundaries.toSet()
 
         val heterozygousIndices = aminoAcidCounts.heterozygousIndices(minBaseCount)
                 .filter { it !in excludedIndices }
 
         println("Heterozygous locations")
-        print(heterozygousIndices)
+        println(heterozygousIndices)
 
         LilacApplication.logger.info("Reading nucleotide files")
         val nucleotideSequences = readSequenceFiles { "${resourcesDir}/${it}_nuc.txt" }
@@ -110,11 +110,11 @@ class LilacApplication2 : AutoCloseable, Runnable {
         logger.info("Reading protein files")
         val allProteinSequences = readSequenceFiles { "${resourcesDir}/${it}_prot.txt" }
 
-        val initialNucleotideCandidates = initialNucleotideCandidates(nucleotideCounts, nucleotideSequences)
-        val boundaryNucleotideCandidates = filterCandidatesOnExonBoundaries(commonBoundaries, 1, initialNucleotideCandidates, readFragments )
+//        val initialNucleotideCandidates = initialNucleotideCandidates(nucleotideCounts, nucleotideSequences)
+        val boundaryNucleotideCandidates = filterCandidatesOnExonBoundaries(allBoundaries, 1, nucleotideSequences, readFragments)
         val nucleotideFilteredAlleles = boundaryNucleotideCandidates.map { it.contig }
         println("${nucleotideSequences.size} types")
-        println("${initialNucleotideCandidates.size} candidates after nucleotide filtering")
+        println("${boundaryNucleotideCandidates.size} candidates after nucleotide filtering")
 
 
         val initialCandidates = initialCandidates(excludedIndices, aminoAcidCounts, allProteinSequences)
@@ -133,15 +133,12 @@ class LilacApplication2 : AutoCloseable, Runnable {
         }
 
 
-
-
-
-//        var candidates = initialCandidates
-//        for (i in fullEvidence.indices) {
-//            val evidence = fullEvidence[i]
-//            candidates = matchingCandidates(evidence, candidates)
+        var candidates = initialCandidates
+        for (i in consecutiveEvidence.indices) {
+            val evidence = consecutiveEvidence[i]
+            candidates = matchingCandidates(evidence, candidates)
 //            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $evidence ")
-//        }
+        }
 
 //        println("${candidates.size} candidates after full match filtering")
 
@@ -163,13 +160,13 @@ class LilacApplication2 : AutoCloseable, Runnable {
 //        println("${candidates.size} candidates after partial match filtering")
 
 
-//        val sequences = candidates.map { HlaSequence(it.contig, it.sequence) }
-//        HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
-//        HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-//        HlaSequenceFile.writeBoundary(aBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-//        HlaSequenceFile.writeBoundary(bBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-//        HlaSequenceFile.writeBoundary(cBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-//        HlaSequenceFile.appendFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
+        val sequences = candidates.map { HlaSequence(it.contig, it.sequence) }
+        HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
+        HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(aBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(bBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(cBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.appendFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
 
 
 //        var combined = PhasedEvidence.combineOverlapping(fullEvidence[19], fullEvidence[20])
@@ -327,7 +324,7 @@ class LilacApplication2 : AutoCloseable, Runnable {
             val updatedEvidence = mutableSetOf<PhasedEvidence>()
             updatedEvidence.addAll(unprocessedEvidence
                     .drop(1)
-                    .filter { !newEvidence.any { x -> x.contains(it)} }
+                    .filter { !newEvidence.any { x -> x.contains(it) } }
             )
             updatedEvidence.addAll(newEvidence)
 
@@ -437,7 +434,8 @@ class LilacApplication2 : AutoCloseable, Runnable {
         result.addAll(bSequence)
         result.addAll(cSequence)
 
-        return result
+        val maxLength = result.map { it.sequence.length }.max()!!
+        return result.map { it.pad(maxLength) }
     }
 
 

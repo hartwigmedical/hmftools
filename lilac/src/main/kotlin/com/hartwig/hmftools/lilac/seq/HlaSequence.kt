@@ -34,6 +34,13 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
         return HlaSequence(contig, rawSequence + additionalSequence)
     }
 
+    fun pad(length: Int): HlaSequence {
+        val currentLength = sequence.length
+        val desiredLength = rawSequence.length + length - currentLength
+
+        return HlaSequence(contig, rawSequence.padEnd(desiredLength, '*'))
+    }
+
     fun inflate(template: String): HlaSequence {
         val joiner = StringBuilder()
         for (i in rawSequence.indices) {
