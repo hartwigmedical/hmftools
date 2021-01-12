@@ -162,15 +162,6 @@ public class FusionReportability
 
         factor /= 10;
 
-        /*
-        // 0b. 3’ partner region is INTRONIC or EXONIC OR the first splice acceptor is the nearest to the breakpoint
-
-        if(downTrans.regionType() == EXONIC || downTrans.regionType() == INTRONIC || !downTrans.hasNegativePrevSpliceAcceptorDistance())
-            fusionPriorityScore += factor;
-
-        factor /= 10;
-        */
-
         // 1. Phase matched
         if(fusion.phaseMatched())
             fusionPriorityScore += factor;
