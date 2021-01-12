@@ -485,7 +485,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("evidence_level", true);
         map.put("evidence_direction", true);
         map.put("drug_interaction_type", true);
-        map.put("drug", true);
+        map.put("drugs", true);
         map.put("disease", true);
         map.put("variant_origin", true);
         map.put("source", true);
