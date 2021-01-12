@@ -240,7 +240,7 @@ public class FusionDisruptionAnalyser
     public final Set<String> getRnaSampleIds() { return mRnaFusionMapper.getSampleRnaData().keySet(); }
     public final List<GeneFusion> getFusions() { return mFusions; }
     public boolean validState() { return mValidState; }
-
+    public final Map<GeneFusion,String> getInvalidFusions() { return mInvalidFusions; }
     public final FusionFinder getFusionFinder() { return mFusionFinder; }
     public final DisruptionFinder getDisruptionFinder() { return mDisruptionFinder; }
 
@@ -634,6 +634,12 @@ public class FusionDisruptionAnalyser
                     boolean isPrecodingUpstream = fusion.upstreamTrans().preCoding();
                     boolean fusionLowerToUpper = fusion.upstreamTrans().gene().position() == lowerBreakendPos;
 
+                    final List<BreakendGeneData> downstreamGenes = lowerBreakendPos == fusion.downstreamTrans().gene().position()
+                            ? genesListLower : genesListUpper;
+
+                    boolean nonDisruptiveChain = !traversedPairs.isEmpty() && !downstreamGenes.isEmpty() ?
+                            mDisruptionFinder.isNonDisruptiveChainedPair(fusion.upstreamTrans(), downstreamGenes) : false;
+
                     // check any traversed genes
                     long totalLinkLength = 0;
                     boolean validTraversal = true;
@@ -729,6 +735,7 @@ public class FusionDisruptionAnalyser
                             .chainLength((int)totalLinkLength)
                             .traversalAssembled(allTraversalAssembled)
                             .validTraversal(validTraversal)
+                            .nonDisruptive(nonDisruptiveChain)
                             .build();
 
                     FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
@@ -746,7 +753,7 @@ public class FusionDisruptionAnalyser
                     boolean chainLengthOk = totalLinkLength <= FUSION_MAX_CHAIN_LENGTH;
                     boolean traversalOk = validTraversal || allowInvalidTraversal;
 
-                    if(chainLengthOk && traversalOk)
+                    if(chainLengthOk && traversalOk && !nonDisruptiveChain)
                     {
                         if(!hasIdenticalFusion(fusion, chainFusions))
                         {
@@ -755,7 +762,15 @@ public class FusionDisruptionAnalyser
                     }
                     else
                     {
-                        final String invalidReason = !validTraversal ? "TraversesSPA" : "LongChain";
+                        String invalidReason = "Unknown";
+
+                        if(!validTraversal)
+                            invalidReason = "TraversesSPA";
+                        else if(!chainLengthOk)
+                            invalidReason = "LongChain";
+                        else if(nonDisruptiveChain)
+                            invalidReason = "NonDisruptiveChain";
+
                         recordInvalidFusion(fusion, invalidReason);
                     }
                 }

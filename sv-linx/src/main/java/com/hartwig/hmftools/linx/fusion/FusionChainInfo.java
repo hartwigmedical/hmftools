@@ -10,4 +10,5 @@ public abstract class FusionChainInfo
     public abstract int chainLength();
     public abstract boolean validTraversal();
     public abstract boolean traversalAssembled();
+    public abstract boolean nonDisruptive();
 }

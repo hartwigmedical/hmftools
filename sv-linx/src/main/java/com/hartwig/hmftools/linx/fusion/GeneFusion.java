@@ -221,6 +221,14 @@ public class GeneFusion
             return true;
     }
 
+    public boolean nonDisruptiveChain()
+    {
+        if(mAnnotations != null && mAnnotations.chainInfo() != null)
+            return mAnnotations.chainInfo().nonDisruptive();
+        else
+            return false;
+    }
+
     public String svIdPair()
     {
         return String.format("%d_%d", mTranscripts[FS_UP].gene().id(), mTranscripts[FS_DOWN].gene().id());

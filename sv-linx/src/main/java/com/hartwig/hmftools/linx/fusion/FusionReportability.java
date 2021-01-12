@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.linx.fusion.ReportableReason.INVALID_TRAVERSA
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.KNOWN_TYPE;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.NEG_SPLICE_ACC_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.NMD;
+import static com.hartwig.hmftools.linx.fusion.ReportableReason.NON_DISRUPTIVE_CHAIN;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.SGL_NOT_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNPHASED_5P_UTR;
@@ -97,6 +98,9 @@ public class FusionReportability
 
         if(fusion.isTerminated() && !allowSuspectChains(fusion.knownType()))
             return CHAIN_TERMINATED;
+
+        if(fusion.nonDisruptiveChain())
+            return NON_DISRUPTIVE_CHAIN;
 
         if(!fusion.validChainTraversal() && !allowSuspectChains(fusion.knownType()))
             return INVALID_TRAVERSAL;

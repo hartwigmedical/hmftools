@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -233,6 +234,30 @@ public class DisruptionFinder
             else
                 transList.remove(index);
         }
+    }
+
+    public boolean isNonDisruptiveChainedPair(final BreakendTransData upTrans, final List<BreakendGeneData> downGenesList)
+    {
+        if(upTrans.regionType() == EXONIC)
+            return false;
+
+        // check whether these breakends may belong to the same non-disrupted segment in any upstream transcript
+        final BreakendGeneData downGene = downGenesList.stream()
+                .filter(x -> x.StableId.equals(upTrans.gene().StableId)).findFirst().orElse(null);
+
+        if(downGene == null)
+            return false;
+
+        for(BreakendTransData downTrans : downGene.transcripts())
+        {
+            if(downTrans.transId() != upTrans.transId())
+                continue;
+
+            if(downTrans.regionType() == upTrans.regionType() && downTrans.ExonUpstream == upTrans.ExonUpstream)
+                return true;
+        }
+
+        return false;
     }
 
     private void checkChainedTranscripts(final SvBreakend breakend, final SvChain chain, final List<BreakendTransData> transList)

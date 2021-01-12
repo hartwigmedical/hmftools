@@ -529,6 +529,36 @@ public class FusionTest
         assertNotNull(fusion);
         assertEquals(KNOWN_PAIR, fusion.knownType());
         assertFalse(fusion.validChainTraversal());
+
+
+        // non-disruptive chain, doesn't register a fusion
+        PRE_GENE_PROMOTOR_DISTANCE = 30000;
+
+        tester.clearClustersAndSVs();
+
+        // inv coming in before the gene
+        var1 = createBnd(1, "1", 1510, 1, "2", 1000, -1);
+        var2 = createBnd(2, "1", 1580, -1, "2", 1100, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+        assertEquals(1, cluster.getChains().size());
+
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
+
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
+                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+
+        assertTrue(tester.FusionAnalyser.getFusions().isEmpty());
+        assertEquals(1, tester.FusionAnalyser.getInvalidFusions().size());
+        assertTrue(tester.FusionAnalyser.getInvalidFusions().keySet().iterator().next().nonDisruptiveChain());
     }
 
     private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)
