@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.clinicaltrials;
+package com.hartwig.hmftools.ckb.clinicaltrial;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ public abstract class ClinicalTrial {
     public abstract String recruitment();
 
     @NotNull
-    public abstract List<Therapies> therapies();
+    public abstract List<Therapy> therapies();
 
     @NotNull
     public abstract List<String> ageGroups();
@@ -41,11 +41,11 @@ public abstract class ClinicalTrial {
     public abstract String updateDate();
 
     @NotNull
-    public abstract List<Indications> indications();
+    public abstract List<Indication> indications();
 
     @NotNull
-    public abstract List<ClinicalTrialVariantRequirementDetails> variantRequirementDetails();
+    public abstract List<ClinicalTrialVariantRequirementDetail> variantRequirementDetails();
 
     @NotNull
-    public abstract List<ClinicalTrialLocations> clinicalTrialLocations();
+    public abstract List<ClinicalTrialLocation> clinicalTrialLocations();
 }

@@ -59,7 +59,7 @@ class ActionableEvidenceFactory {
         DIRECTIONS_TO_IGNORE.add("Increased toxicity (haemolytic anemia)");
         DIRECTIONS_TO_IGNORE.add("Unknown");
 
-        // These directions only appear in evidence which lacks either level or drugs
+        // These directions only appear in evidence which lacks either level or drug
         DIRECTIONS_TO_IGNORE.add("Pathogenic");
         DIRECTIONS_TO_IGNORE.add("Likely pathogenic");
         DIRECTIONS_TO_IGNORE.add("Positive");

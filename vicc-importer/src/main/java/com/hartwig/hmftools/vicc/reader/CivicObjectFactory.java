@@ -240,7 +240,7 @@ final class CivicObjectFactory {
                     .evidenceLevel(string(evidenceItemObject, "evidence_level"))
                     .evidenceDirection(nullableString(evidenceItemObject, "evidence_direction"))
                     .drugInteractionType(nullableString(evidenceItemObject, "drug_interaction_type"))
-                    .drugs(createDrugs(evidenceItemObject.getAsJsonArray("drugs")))
+                    .drugs(createDrugs(evidenceItemObject.getAsJsonArray("drug")))
                     .disease(createDisease(evidenceItemObject.getAsJsonObject("disease")))
                     .variantOrigin(nullableString(evidenceItemObject, "variant_origin"))
                     .source(createSource(evidenceItemObject.getAsJsonObject("source")))

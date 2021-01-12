@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.clinicaltrials;
+package com.hartwig.hmftools.ckb.drug;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,11 +6,14 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ClinicalTrialMolecularProfile {
+public abstract class DrugIndication {
 
-    @Nullable
+    @NotNull
     public abstract String id();
 
     @NotNull
-    public abstract String profileName();
+    public abstract String name();
+
+    @NotNull
+    public abstract String source();
 }

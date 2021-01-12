@@ -32,7 +32,7 @@ final class DrugCurationFactory {
     private static void populateBlacklist() {
         DRUG_BLACKLIST.add(civicB("119"));
 
-        // The below drugs are supposed to be given sequentially.
+        // The below drug are supposed to be given sequentially.
         DRUG_BLACKLIST.add(civicB("Sunitinib,Everolimus"));
         DRUG_BLACKLIST.add(civicB("Vismodegib,Erismodegib"));
     }
@@ -168,7 +168,7 @@ final class DrugCurationFactory {
     @NotNull
     private static DrugCurationValues and(@NotNull String... drugs) {
         if (drugs.length < 2) {
-            throw new IllegalStateException("At least 2 drugs required for an AND relation!");
+            throw new IllegalStateException("At least 2 drug required for an AND relation!");
         }
         List<List<String>> curatedDrugs = Lists.newArrayList();
         curatedDrugs.add(Lists.newArrayList(drugs));
@@ -178,7 +178,7 @@ final class DrugCurationFactory {
     @NotNull
     private static DrugCurationValues or(@NotNull String... drugs) {
         if (drugs.length < 2) {
-            throw new IllegalStateException("At least 2 drugs required for an OR relation!");
+            throw new IllegalStateException("At least 2 drug required for an OR relation!");
         }
         List<List<String>> curatedDrugs = Lists.newArrayList();
         for (String drug : drugs) {

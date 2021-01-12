@@ -279,7 +279,7 @@ public final class PatientValidator {
                     if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < 0.9) {
                         findings.add(ValidationFinding.of(curationName,
                                 patientIdentifier,
-                                "Matched drugs are based on less than 90% of search term.",
+                                "Matched drug are based on less than 90% of search term.",
                                 treatment.formStatus(),
                                 "'" + drugName + "' matched to '" + Strings.join(curatedTreatments, ',') + "' based on '" + Strings.join(
                                         matchedTerms,

@@ -41,7 +41,7 @@ public class ViccExtractorTest {
                 DoidLookupTestFactory.dummy());
 
         Association association =
-                ViccTestFactory.testActionableAssociation("drugs", "colorectal cancer", "DOID:123", "A", "Responsive", "http");
+                ViccTestFactory.testActionableAssociation("drug", "colorectal cancer", "DOID:123", "A", "Responsive", "http");
 
         List<ViccEntry> entries = Lists.newArrayList();
         entries.add(ViccTestFactory.testEntryWithGeneEventAndAssociation("KIT", "KIT Amplification", association));

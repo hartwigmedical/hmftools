@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrial;
-import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrialFactory;
-import com.hartwig.hmftools.ckb.drugclasses.DrugClass;
-import com.hartwig.hmftools.ckb.drugclasses.DrugClassFactory;
-import com.hartwig.hmftools.ckb.drugs.Drugs;
-import com.hartwig.hmftools.ckb.drugs.DrugsFactory;
+import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialFactory;
+import com.hartwig.hmftools.ckb.drugclass.DrugClass;
+import com.hartwig.hmftools.ckb.drugclass.DrugClassFactory;
+import com.hartwig.hmftools.ckb.drug.Drug;
+import com.hartwig.hmftools.ckb.drug.DrugFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -22,8 +22,8 @@ public class CkbImporterTestApp {
     private static final Logger LOGGER = LogManager.getLogger(CkbImporterTestApp.class);
 
     private static final String CLINICAL_TRIALS = "clinicalTrials";
-    private static final String DRUG_CLASSES = "drugclasses";
-    private static final String DRUGS = "drugs";
+    private static final String DRUG_CLASSES = "drugclass";
+    private static final String DRUGS = "drug";
     private static final String GENES = "genes";
     private static final String GLOBAL_THERAPY_APPROVAL_STATUSES = "globalTherapyApprovalStatuses";
     private static final String INDICATIONS = "indications";
@@ -55,7 +55,7 @@ public class CkbImporterTestApp {
     private static void readJsonData(@NotNull String ckbPath) throws IOException {
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
         List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
-        List<Drugs> drugs = DrugsFactory.readingDrugs(ckbPath + DRUGS);
+        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
 //        readingGenes(ckbPath + GENES);
 //        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
 //        readingIndications(ckbPath + INDICATIONS);
@@ -69,15 +69,15 @@ public class CkbImporterTestApp {
 
 
     private static void readingDrugsClasses(@NotNull String drugsClassesDir) throws IOException {
-        LOGGER.info("Start reading drugs classes");
+        LOGGER.info("Start reading drug classes");
 
-        LOGGER.info("Finished reading drugs classes");
+        LOGGER.info("Finished reading drug classes");
     }
 
     private static void readingDrugs(@NotNull String drugsDir) throws IOException {
-        LOGGER.info("Start reading drugs");
+        LOGGER.info("Start reading drug");
 
-        LOGGER.info("Finished reading drugs");
+        LOGGER.info("Finished reading drug");
     }
 
     private static void readingGenes(@NotNull String genesDir) throws IOException {

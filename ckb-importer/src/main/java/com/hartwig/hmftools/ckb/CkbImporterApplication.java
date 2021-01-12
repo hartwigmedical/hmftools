@@ -10,7 +10,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import com.hartwig.hmftools.ckb.clinicaltrials.ClinicalTrial;
+import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrial;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -26,8 +26,8 @@ public class CkbImporterApplication {
     public static final String VERSION = CkbImporterApplication.class.getPackage().getImplementationVersion();
 
     private static final String CLINICAL_TRIALS = "clinicalTrials";
-    private static final String DRUG_CLASSES = "drugclasses";
-    private static final String DRUGS = "drugs";
+    private static final String DRUG_CLASSES = "drugclass";
+    private static final String DRUGS = "drug";
     private static final String GENES = "genes";
     private static final String GLOBAL_THERAPY_APPROVAL_STATUSES = "globalTherapyApprovalStatuses";
     private static final String INDICATIONS = "indications";
@@ -94,15 +94,15 @@ public class CkbImporterApplication {
     }
 
     private static void readingDrugsClasses(@NotNull String drugsClassesDir) throws IOException {
-        LOGGER.info("Start reading drugs classes");
+        LOGGER.info("Start reading drug classes");
 
-        LOGGER.info("Finished reading drugs classes");
+        LOGGER.info("Finished reading drug classes");
     }
 
     private static void readingDrugs(@NotNull String drugsDir) throws IOException {
-        LOGGER.info("Start reading drugs");
+        LOGGER.info("Start reading drug");
 
-        LOGGER.info("Finished reading drugs");
+        LOGGER.info("Finished reading drug");
     }
 
     private static void readingGenes(@NotNull String genesDir) throws IOException {

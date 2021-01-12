@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.drugs;
+package com.hartwig.hmftools.ckb.drug;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DrugsReferences {
+public abstract class DrugReference {
 
     @NotNull
     public abstract String id();

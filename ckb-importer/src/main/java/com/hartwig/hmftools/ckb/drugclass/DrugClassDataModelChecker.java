@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.drugclasses;
+package com.hartwig.hmftools.ckb.drugclass;
 
 import java.util.Map;
 
@@ -19,7 +19,7 @@ public final class DrugClassDataModelChecker {
         map.put("id", true);
         map.put("drugClass", true);
         map.put("createDate", true);
-        map.put("drugs", true);
+        map.put("drug", true);
         map.put("treatmentApproaches", true);
 
         return new JsonDatamodelChecker("DrugClassObject", map);

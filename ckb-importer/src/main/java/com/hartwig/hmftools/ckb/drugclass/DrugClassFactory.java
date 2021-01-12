@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.drugclasses;
+package com.hartwig.hmftools.ckb.drugclass;
 
 import java.io.File;
 import java.io.FileReader;
@@ -50,7 +50,7 @@ public class DrugClassFactory {
                             .id(JsonFunctions.string(drugClassEntryObject, "id"))
                             .drugClass(JsonFunctions.string(drugClassEntryObject, "drugClass"))
                             .createDate(JsonFunctions.string(drugClassEntryObject, "createDate"))
-                            .drugs(retrieveDrugs(drugClassEntryObject.getAsJsonArray("drugs")))
+                            .drugs(retrieveDrugs(drugClassEntryObject.getAsJsonArray("drug")))
                             .treatmentApproaches(retrieveTreatmentApproaches(drugClassEntryObject.getAsJsonArray("treatmentApproaches")))
                             .build());
                 }
@@ -60,14 +60,14 @@ public class DrugClassFactory {
         return drugClasses;
     }
 
-    private static List<DrugClassDrugs> retrieveDrugs(@NotNull JsonArray jsonArray) {
-        List<DrugClassDrugs> drugs = Lists.newArrayList();
+    private static List<DrugClassDrug> retrieveDrugs(@NotNull JsonArray jsonArray) {
+        List<DrugClassDrug> drugs = Lists.newArrayList();
         JsonDatamodelChecker drugsClassDrugChecker = DrugClassDataModelChecker.drugClassDrugsObjectChecker();
         for (JsonElement drug : jsonArray) {
             JsonObject drugsObject = drug.getAsJsonObject();
             drugsClassDrugChecker.check(drugsObject);
 
-            drugs.add(ImmutableDrugClassDrugs.builder()
+            drugs.add(ImmutableDrugClassDrug.builder()
                     .id(JsonFunctions.string(drugsObject, "id"))
                     .drugName(JsonFunctions.string(drugsObject, "drugName"))
                     .drugsTerms(JsonFunctions.optionalStringList(drugsObject, "drugsterms"))
@@ -76,15 +76,15 @@ public class DrugClassFactory {
         return drugs;
     }
 
-    private static List<DrugClassTreatmentApproaches> retrieveTreatmentApproaches(@NotNull JsonArray jsonArray) {
-        List<DrugClassTreatmentApproaches> treatmentApproaches = Lists.newArrayList();
+    private static List<DrugClassTreatmentApproach> retrieveTreatmentApproaches(@NotNull JsonArray jsonArray) {
+        List<DrugClassTreatmentApproach> treatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker drugsClassTreatmentApprochChecker = DrugClassDataModelChecker.drugClassTreatmentApproachesObjectChecker();
 
         for (JsonElement treatmentApproach : jsonArray) {
             JsonObject treatmentApproachObject = treatmentApproach.getAsJsonObject();
             drugsClassTreatmentApprochChecker.check(treatmentApproachObject);
 
-            treatmentApproaches.add(ImmutableDrugClassTreatmentApproaches.builder()
+            treatmentApproaches.add(ImmutableDrugClassTreatmentApproach.builder()
                     .id(JsonFunctions.string(treatmentApproachObject, "id"))
                     .name(JsonFunctions.string(treatmentApproachObject, "name"))
                     .profileName(JsonFunctions.string(treatmentApproachObject, "profileName"))

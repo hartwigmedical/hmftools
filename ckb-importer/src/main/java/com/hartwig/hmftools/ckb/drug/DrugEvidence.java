@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.drugs;
+package com.hartwig.hmftools.ckb.drug;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DrugsEvidence {
+public abstract class DrugEvidence {
 
     @NotNull
     public abstract String id();
@@ -23,19 +23,19 @@ public abstract class DrugsEvidence {
     public abstract String efficacyEvidence();
 
     @NotNull
-    public abstract DrugsMolecularProfile molecularProfile();
+    public abstract DrugMolecularProfile molecularProfile();
 
     @NotNull
-    public abstract DrugsTherapy therapy();
+    public abstract DrugTherapy therapy();
 
     @Nullable
-    public abstract DrugsIndications indications();
+    public abstract DrugIndication indications();
 
     @NotNull
     public abstract String responseType();
 
     @NotNull
-    public abstract List<DrugsEvidenceReferences> references();
+    public abstract List<DrugEvidenceReference> references();
 
     @NotNull
     public abstract String ampCapAscoEvidenceLevel();
