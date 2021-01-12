@@ -34,7 +34,9 @@ public class ChordEvidence {
             for (ActionableSignature signature : actionableSignatures) {
                 assert signature.name() == SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
 
-                result.add(personalizedEvidenceFactory.somaticallyReportableEvidence(signature).genomicEvent("HR deficiency").build());
+                result.add(personalizedEvidenceFactory.somaticallyReportableEvidence(signature)
+                        .genomicEvent("HR deficiency signature")
+                        .build());
             }
         }
 

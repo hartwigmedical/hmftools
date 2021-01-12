@@ -51,9 +51,9 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return eventCompare;
         }
 
-        int treatmentCompare = treatment().compareTo(o.treatment());
-        if (treatmentCompare != 0) {
-            return treatmentCompare;
+        int levelCompare = level().compareTo(o.level());
+        if (levelCompare != 0) {
+            return levelCompare;
         }
 
         int onLabelCompare = -Boolean.compare(onLabel(), o.onLabel());
@@ -61,9 +61,9 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return onLabelCompare;
         }
 
-        int levelCompare = level().compareTo(o.level());
-        if (levelCompare != 0) {
-            return levelCompare;
+        int treatmentCompare = treatment().compareTo(o.treatment());
+        if (treatmentCompare != 0) {
+            return treatmentCompare;
         }
 
         int directionCompare = direction().compareTo(o.direction());
