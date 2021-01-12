@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
@@ -97,7 +98,8 @@ public class ProtectApplication implements AutoCloseable {
     }
 
     @NotNull
-    private static List<ProtectEvidence> protectEvidence(@NotNull ProtectConfig config) throws IOException {
+    @VisibleForTesting
+    static List<ProtectEvidence> protectEvidence(@NotNull ProtectConfig config) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(config);
         LinxData linxData = LinxDataLoader.load(config);
         BachelorData bachelorData = BachelorDataLoader.load(config, purpleData, linxData);
