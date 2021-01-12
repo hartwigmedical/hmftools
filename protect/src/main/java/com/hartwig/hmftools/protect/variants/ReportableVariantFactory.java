@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
@@ -112,6 +113,7 @@ public final class ReportableVariantFactory {
     @NotNull
     private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant) {
         return ImmutableReportableVariant.builder()
+                .type(VariantType.type(variant.ref(), variant.alt()))
                 .source(ReportableVariantSource.GERMLINE)
                 .gene(variant.gene())
                 .chromosome(variant.chromosome())
@@ -133,6 +135,7 @@ public final class ReportableVariantFactory {
     @NotNull
     private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull SomaticVariant variant) {
         return ImmutableReportableVariant.builder()
+                .type(variant.type())
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(variant.gene())
                 .chromosome(variant.chromosome())

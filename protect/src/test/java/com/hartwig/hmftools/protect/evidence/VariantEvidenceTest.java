@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
@@ -147,6 +148,7 @@ public class VariantEvidenceTest {
     @NotNull
     private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
         return ImmutableReportableVariant.builder()
+                .type(VariantType.SNP)
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)

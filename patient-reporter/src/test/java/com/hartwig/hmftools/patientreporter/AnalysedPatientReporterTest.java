@@ -11,13 +11,13 @@ import com.hartwig.hmftools.common.actionability.WithEvent;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnalysedPatientReporterTest {
@@ -136,6 +136,7 @@ public class AnalysedPatientReporterTest {
     @NotNull
     private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
         return ImmutableReportableVariant.builder()
+                .type(VariantType.SNP)
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
