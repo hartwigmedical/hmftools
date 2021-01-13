@@ -92,7 +92,7 @@ The first step is to choose what transcript to use for converting protein annota
  1. If a protein annotation does not exist on the canonical transcript and has no transcript configured in the knowledgebase, 
  any random transcript for which the protein annotation does exist is picked.
  
-If a protein annotation does not exist on any transcript for a specific gene, the evidence is ignored 
+If a protein annotated form does not exist on any transcript for a specific gene, the evidence is ignored 
 (see also [curation](#curation-and-harmonization-of-individual-knowledgebases)). 
  
 Assuming a suitable transcript has been found, N hotspots are derived for each protein annotation as follows:
@@ -102,8 +102,8 @@ Assuming a suitable transcript has been found, N hotspots are derived for each p
    - In case a DEL can be left-aligned a hotspot is generated for every position between the left-aligned position and the actual position. 
  - In case the mutation is caused by an inframe insertion (INS) there are two flavors based on the length of the insertion:
    1. In case 1 amino acid is inserted, hotspots are generated for every trinucleotide coding for that amino acid.
-   1. In case multiple amino acids are inserted, one of the potentially many hotspots is generated. This is just for the practical reason
-    to put a limit on the (exponential) number of variants implying a multi-amino-acid insert. 
+   1. In case multiple amino acids are inserted, one of the potentially many hotspots is generated. This is just for practical reasons
+    to put a limit on the (exponential) number of variants that can code for a multi-amino-acid insert. 
  - In case of a complex deletion/insertion (DELINS) the rules for hotspot generation for deletions and insertions are extrapolated. 
  Hence, the reference sequence is assumed to be deleted, and one new nucleotide sequence is inserted unless the insertion is 1 amino acid 
  in which case hotspots are generated for all trinucleotides coding for the inserted amino acid. 
@@ -124,7 +124,7 @@ Finally, Any INDEL longer than 50 bases is ignored since this is considered to b
 For evidence defined on a codon or exon level, no protein annotation resolving is done. 
 Instead, genomic coordinates are resolved using the following rules. 
 
-First off, evidence on codons and exons are assumed to be defined in terms of the Hartwig canonical transcript.  
+First off, evidence on codons and exons are assumed to be defined with respect to the Hartwig canonical transcript.  
   - If evidence for a specific codon or exon range is defined for a different transcript, this evidence is ignored. 
   Since all variants in Hartwig are annotated in terms of their impact on the Hartwig canonical transcript, resolving 
   this evidence could potentially lead to wrong matching.  
