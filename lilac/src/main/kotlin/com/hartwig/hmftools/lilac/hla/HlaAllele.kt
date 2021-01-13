@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.hla
 
+import org.apache.logging.log4j.util.Strings
+
 data class HlaAllele(val gene: String, val alleleGroup: String, val protein: String, val remainder: String) {
 
     companion object {
@@ -11,7 +13,7 @@ data class HlaAllele(val gene: String, val alleleGroup: String, val protein: Str
             val alleleGroup = contigSplit[0]
             val protein = contigSplit[1]
             val finalRemainder = contigRemainder.substring(alleleGroup.length + protein.length + 1)
-            return HlaAllele(gene, alleleGroup, protein, finalRemainder);
+            return HlaAllele(gene, alleleGroup, protein, finalRemainder)
         }
     }
 
@@ -21,5 +23,13 @@ data class HlaAllele(val gene: String, val alleleGroup: String, val protein: Str
 
     fun fourDigitName(): String {
         return "$gene*$alleleGroup:$protein"
+    }
+
+    fun specificProtein(): HlaAllele {
+        return HlaAllele(gene, alleleGroup, protein, Strings.EMPTY)
+    }
+
+    fun alleleGroup(): HlaAllele {
+        return HlaAllele(gene, alleleGroup, Strings.EMPTY, Strings.EMPTY)
     }
 }
