@@ -26,6 +26,8 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.ValidationStringency;
+
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface SageConfig {
@@ -54,6 +56,7 @@ public interface SageConfig {
     String MNV = "mnv_enabled";
     String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     String COVERAGE_BED = "coverage_bed";
+    String VALIDATION_STRINGENCY = "validation_stringency";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 10;
@@ -78,6 +81,8 @@ public interface SageConfig {
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
         options.addOption(HOTSPOTS, true, "Hotspots");
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
+        options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
+
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         return options;
@@ -144,6 +149,9 @@ public interface SageConfig {
 
     @NotNull
     List<HmfTranscriptRegion> transcriptRegions();
+
+    @NotNull
+    ValidationStringency validationStringency();
 
     @NotNull
     default String geneCoverageFile(@NotNull final String sample) {
@@ -295,6 +303,9 @@ public interface SageConfig {
             throw new IOException("Unable to write directory " + outputDir.toString());
         }
 
+        final ValidationStringency validationStringency =
+                Configs.defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
+
         return ImmutableSageConfig.builder()
                 .version(version)
                 .transcriptRegions(transcripts)
@@ -322,6 +333,7 @@ public interface SageConfig {
                 .qualityConfig(QualityConfig.createConfig(cmd, transcripts))
                 .baseQualityRecalibrationConfig(BaseQualityRecalibrationConfig.createConfig(cmd))
                 .panelOnly(Configs.containsFlag(cmd, PANEL_ONLY))
+                .validationStringency(validationStringency)
                 .build();
     }
 }

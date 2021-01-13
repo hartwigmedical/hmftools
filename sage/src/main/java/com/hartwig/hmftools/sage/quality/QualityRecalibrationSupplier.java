@@ -45,7 +45,7 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
         final Map<String, QualityRecalibrationMap> result = Maps.newHashMap();
         LOGGER.info("Beginning quality recalibration");
 
-        final QualityRecalibration qualityRecalibration = new QualityRecalibration(bqrConfig, executorService, refGenome);
+        final QualityRecalibration qualityRecalibration = new QualityRecalibration(config, executorService, refGenome);
         final List<CompletableFuture<Void>> done = Lists.newArrayList();
 
         final BiFunction<String, String, CompletableFuture<Void>> processSample =

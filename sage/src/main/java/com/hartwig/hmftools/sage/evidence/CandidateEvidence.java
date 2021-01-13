@@ -77,6 +77,7 @@ public class CandidateEvidence {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
+                .validationStringency(config.validationStringency())
                 .referenceSource(new ReferenceSource(refGenome))
                 .open(new File(bamFile))) {
 

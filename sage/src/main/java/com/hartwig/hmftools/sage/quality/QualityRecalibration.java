@@ -13,7 +13,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig;
+import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,9 +24,9 @@ public class QualityRecalibration {
 
     private final ExecutorService executorService;
     private final IndexedFastaSequenceFile refGenome;
-    private final BaseQualityRecalibrationConfig config;
+    private final SageConfig config;
 
-    public QualityRecalibration(final BaseQualityRecalibrationConfig config, final ExecutorService executorService,
+    public QualityRecalibration(final SageConfig config, final ExecutorService executorService,
             final IndexedFastaSequenceFile refGenome) {
         this.executorService = executorService;
         this.refGenome = refGenome;
@@ -42,7 +42,7 @@ public class QualityRecalibration {
             final String contig = sequenceRecord.getSequenceName();
 
             if (HumanChromosome.contains(contig) && HumanChromosome.fromString(contig).isAutosome()) {
-                int start = sequenceRecord.getSequenceLength() - 1_000_000 - config.sampleSize();
+                int start = sequenceRecord.getSequenceLength() - 1_000_000 - config.baseQualityRecalibrationConfig().sampleSize();
                 int end = sequenceRecord.getSequenceLength() - 1_000_001;
                 for (CompletableFuture<Collection<QualityCounter>> region : submitAllRegions(bamFile, contig, start, end)) {
                     final CompletableFuture<Void> done = region.thenAccept(counts -> {

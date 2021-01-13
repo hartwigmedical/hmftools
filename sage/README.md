@@ -61,6 +61,7 @@ max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of
 max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
 coverage_bed | NA | Write file with counts of depth of each base of the supplied bed file
+validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
 
 The cardinality of `reference` must match `reference_bam`.
 
@@ -628,6 +629,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 # Version History and Download Links
 - Upcoming
   - Coverage is now calculated on supplied bed file rather than on panel bed file
+  - Added validation_stringency parameter
 - [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.5)
   - Gene panel coverage including estimate of missed variant likelihood 
   - Changed default value of max_germline_rel_raw_base_qual for HOTSPOTS to 50% (from 100%)
