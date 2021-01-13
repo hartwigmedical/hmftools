@@ -40,6 +40,7 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
+import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
@@ -262,6 +263,13 @@ public class NeoEpitopeAnnotator
             // filter out NEs with a novel stop codon
             if(neData.NovelAcid.equals(STOP_SYMBOL))
                 continue;
+
+            // filter out missense if in some transcripts their NE is the same as the wild-type
+            if(neData.variantType() == NeoEpitopeType.MISSENSE && !neData.WildtypeAcids.isEmpty())
+            {
+                if(neData.aminoAcidString().contains(neData.WildtypeAcids))
+                    continue;
+            }
 
             final Set<String> upTransNames = Sets.newHashSet();
             final Set<String> downTransNames = Sets.newHashSet();
