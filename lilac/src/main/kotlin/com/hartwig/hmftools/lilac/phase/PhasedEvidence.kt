@@ -7,6 +7,27 @@ import kotlin.math.min
 
 data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<String, Int>) : Comparable<PhasedEvidence> {
 
+    fun reduceInLightOfNewEvidence(newEvidence: PhasedEvidence): PhasedEvidence {
+        val newEvidenceStrings = newEvidence.evidence.map { it.key }.toSet()
+
+        val evidenceIndices = aminoAcidIndices
+                .mapIndexed {x, y -> Pair(x, y)}
+                .filter { it.second in newEvidence.aminoAcidIndices }
+                .map { it.first }
+
+        fun jonjon(largeEvidence: String): String {
+            return evidenceIndices.map { largeEvidence[it] }.joinToString("")
+        }
+
+        val jonjon2 = evidence.keys.map { jonjon(it) }
+
+
+        val filteredEvidence = evidence.filter { jonjon(it.key) in newEvidenceStrings }
+        return PhasedEvidence(aminoAcidIndices, filteredEvidence)
+
+    }
+
+
     fun unambiguousHeadIndices(): IntArray {
         return aminoAcidIndices.filterIndexed { index, _ -> index < unambiguousHeadLength() }.toIntArray()
     }
@@ -76,17 +97,17 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
     companion object {
 
         fun evidence(minQual: Int, fragments: List<Fragment>, vararg indices: Int): PhasedEvidence {
-            val filteredFragments = fragments.filter { it.containsAll(minQual, indices) }
+            val filteredFragments = fragments.filter { it.containsAll(indices) }
             val aminoAcidEvidence = filteredFragments.map { it.toAminoAcids(minQual, indices) }.groupingBy { it }.eachCount()
             return PhasedEvidence(indices, aminoAcidEvidence)
         }
 
         private fun Fragment.toAminoAcids(minQual: Int, indices: IntArray): String {
-            return indices.map { this.aminoAcid(it, minQual) }.joinToString("")
+            return indices.map { this.aminoAcid(it) }.joinToString("")
         }
 
-        private fun Fragment.containsAll(minQual: Int, indices: IntArray): Boolean {
-            return indices.all { this.containsAminoAcid(it) && this.aminoAcid(it, minQual) != '.' }
+        private fun Fragment.containsAll(indices: IntArray): Boolean {
+            return indices.all { this.containsAminoAcid(it) && this.aminoAcid(it) != '.' }
         }
 
         fun combineOverlapping(left: PhasedEvidence, right: PhasedEvidence): PhasedEvidence {
@@ -146,7 +167,8 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
         val uniqueHead = unambiguousHeadLength()
         val bases = 3 * (aminoAcidIndices[aminoAcidIndices.size - 1] - aminoAcidIndices[0])
 
-        return "PhasedEvidence(head=${uniqueHead} tail=${uniqueTail} loci=${aminoAcidIndices.size} types=${evidence.size} indices=${aminoAcidIndices.contentToString()}, evidence=${evidenceString()}, total=${totalEvidence()})"
+//        return "PhasedEvidence(head=${uniqueHead} tail=${uniqueTail} loci=${aminoAcidIndices.size} types=${evidence.size} indices=${aminoAcidIndices.contentToString()}, evidence=${evidenceString()}, total=${totalEvidence()})"
+        return "PhasedEvidence(head=${uniqueHead} tail=${uniqueTail} loci=${aminoAcidIndices.size} types=${evidence.size} indices=${aminoAcidIndices.contentToString()}, evidence=${evidence}, total=${totalEvidence()})"
     }
 
     override fun compareTo(other: PhasedEvidence): Int {

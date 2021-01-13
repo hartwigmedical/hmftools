@@ -27,6 +27,10 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
         return index in nucleotideIndices
     }
 
+    override fun nucleotideIndices(minQual: Int): Collection<Int> {
+        return nucleotideIndices.filter { nucleotideQuality(it) >= minQual }
+    }
+
     override fun nucleotideIndices(): Collection<Int> {
         return nucleotideIndices
     }
@@ -58,6 +62,21 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
         }
 
         return Codons.aminoAcid(firstBase.toString() + secondBase + thirdBase)
+    }
+
+    fun nucleotideQuality(loci: Int): Int {
+        val readIndex = readIndex(loci)
+        return samRecord.baseQualities[readIndex].toInt()
+    }
+
+    private fun readIndex(loci: Int): Int {
+        return if (reverseStrand) readIndexStart - loci + hlaNucIndexStart else loci - hlaNucIndexStart + readIndexStart
+    }
+
+    override fun nucleotide(loci: Int): Char {
+        val readIndex = readIndex(loci)
+        val readBase = samRecord.readBases[readIndex].toChar()
+        return if (reverseStrand) readBase.reverseCompliment() else readBase
     }
 
     override fun nucleotide(index: Int, minQual: Int): Char {

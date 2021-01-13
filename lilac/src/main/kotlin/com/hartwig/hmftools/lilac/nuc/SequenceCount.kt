@@ -14,7 +14,7 @@ class SequenceCount(val length: Int) {
 
             for (fragment in fragments) {
                 for (index in fragment.nucleotideIndices()) {
-                    val nucleotide = fragment.nucleotide(index, minQual)
+                    val nucleotide = fragment.nucleotide(index)
                     if (nucleotide != '.') {
                         result.increment(index, nucleotide)
                     }
@@ -29,7 +29,7 @@ class SequenceCount(val length: Int) {
 
             for (fragment in fragments) {
                 for (index in fragment.aminoAcidIndices()) {
-                    val aminoAcid = fragment.aminoAcid(index, minQual)
+                    val aminoAcid = fragment.aminoAcid(index)
                     if (aminoAcid != '.') {
                         result.increment(index, aminoAcid)
                     }

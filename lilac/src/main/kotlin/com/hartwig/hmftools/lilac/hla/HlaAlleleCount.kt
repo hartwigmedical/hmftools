@@ -2,19 +2,19 @@ package com.hartwig.hmftools.lilac.hla
 
 import com.hartwig.hmftools.lilac.read.FragmentSequences
 
-data class HlaAlleleCount(val allele: HlaAllele, val uniqueCoverage: Int, val combinedCoverage: Double) {
+data class HlaAlleleCount(val allele: HlaAllele, val uniqueCoverage: Int, val combinedCoverage: Double): Comparable<HlaAlleleCount> {
 
     companion object {
 
         fun proteinCoverage(fragmentSequences: List<FragmentSequences>): List<HlaAlleleCount> {
-            return create(fragmentSequences) {it.alleles}
+            return create(fragmentSequences) {it}
         }
 
         fun groupCoverage(fragmentSequences: List<FragmentSequences>): List<HlaAlleleCount> {
-            return create(fragmentSequences) {it.alleleGroups}
+            return create(fragmentSequences) { it.alleleGroup()}
         }
 
-        fun create(fragmentSequences: List<FragmentSequences>, type: (FragmentSequences) -> Collection<HlaAllele>): List<HlaAlleleCount> {
+        fun create(fragmentSequences: List<FragmentSequences>, type: (HlaAllele) -> HlaAllele): List<HlaAlleleCount> {
             val result = mutableListOf<HlaAlleleCount>()
 
             val uniqueCoverageMap = mutableMapOf<HlaAllele, Int>()
@@ -22,12 +22,15 @@ data class HlaAlleleCount(val allele: HlaAllele, val uniqueCoverage: Int, val co
 
             // Counts
             for (fragment in fragmentSequences) {
-                val alleles = type(fragment)
-                if (alleles.size == 1) {
-                    uniqueCoverageMap.compute(alleles.first()) {_, oldValue ->  (oldValue ?: 0) + 1}
+                val fullAlleles = fragment.full.map(type).toSet()
+                val partialAlleles = fragment.partial.map(type).toSet()
+
+                if (fullAlleles.size == 1 && partialAlleles.isEmpty())  {
+                    uniqueCoverageMap.compute(fullAlleles.first()) {_, oldValue ->  (oldValue ?: 0) + 1}
                 } else {
-                    val contribution = 1.0 / alleles.size
-                    alleles.forEach {combinedCoverageMap.compute(it) {_, oldValue -> (oldValue ?: 0.0) + contribution} }
+                    val contribution = 1.0 / (fullAlleles.size + partialAlleles.size)
+                    fullAlleles.forEach {combinedCoverageMap.compute(it) {_, oldValue -> (oldValue ?: 0.0) + contribution} }
+                    partialAlleles.forEach {combinedCoverageMap.compute(it) {_, oldValue -> (oldValue ?: 0.0) + contribution} }
                 }
             }
 
@@ -40,7 +43,15 @@ data class HlaAlleleCount(val allele: HlaAllele, val uniqueCoverage: Int, val co
                 result.add(HlaAlleleCount(allele, uniqueCoverage, combinedCoverage))
             }
 
-            return result.sortedBy { -it.uniqueCoverage }
+            return result.sortedDescending()
         }
+    }
+
+    override fun compareTo(other: HlaAlleleCount): Int {
+        val uniqueCompare = uniqueCoverage.compareTo(other.uniqueCoverage)
+        if (uniqueCompare != 0) {
+            return uniqueCompare
+        }
+        return combinedCoverage.compareTo(other.combinedCoverage)
     }
 }
