@@ -3,7 +3,6 @@ package com.hartwig.hmftools.lilac
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
 import com.hartwig.hmftools.lilac.hla.HlaAllele
-import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverage
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.totalCoverage
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.uniqueCoverage
@@ -21,8 +20,10 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.deflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFirstFourDigits
 import org.apache.logging.log4j.LogManager
+import java.util.*
 import java.util.concurrent.Executors
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 fun main(args: Array<String>) {
     LilacApplication2().use { x -> x.run() }
@@ -131,41 +132,44 @@ class LilacApplication2 : AutoCloseable, Runnable {
         println("${allProteinSequences.size} types")
         println("${initialCandidates.size} candidates after amino acid filtering")
 
-        // Specific Evidence
-        println(PhasedEvidence.evidence(30, readFragments, 32, 67))
 
-        // Full Evidence
-        val consecutiveEvidence = consecutiveEvidence(excludedIndices, aminoAcidCounts, readFragments, initialCandidates)
-        println("Constructed ${consecutiveEvidence.size} consecutive sequences")
+        val aConsecutiveEvidence = consecutiveEvidence(aBoundaries, aminoAcidCounts, readFragments, Collections.emptyList())
+        val aCandidates = filterCandidates(initialCandidates.filter { it.allele.gene == "A" }, aConsecutiveEvidence)
 
-        var candidates = initialCandidates
-        for (i in consecutiveEvidence.indices) {
-            val evidence = consecutiveEvidence[i]
-            candidates = matchingCandidates(evidence, candidates)
-            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $evidence ")
+        val bConsecutiveEvidence = consecutiveEvidence(bBoundaries, aminoAcidCounts, readFragments, Collections.emptyList())
+        val bCandidates = filterCandidates(initialCandidates.filter { it.allele.gene == "B" }, bConsecutiveEvidence)
+
+        val cConsecutiveEvidence = consecutiveEvidence(cBoundaries, aminoAcidCounts, readFragments, Collections.emptyList())
+        val cCandidates = filterCandidates(initialCandidates.filter { it.allele.gene == "C" }, cConsecutiveEvidence)
+
+        val consecutiveEvidenceCandidates = aCandidates + bCandidates + cCandidates
+        for (consecutiveEvidenceCandidate in consecutiveEvidenceCandidates) {
+            println(consecutiveEvidenceCandidate)
         }
 
+
+
         val coverageFactory = HlaAlleleCoverageFactory(hetLoci, readFragments)
-        val proteinCoverage = coverageFactory.alleleCoverage(candidates)
+        val proteinCoverage = coverageFactory.proteinCoverage(consecutiveEvidenceCandidates)
 
 
-        val fragmentSequences = FragmentAlleles.create(readFragments, hetLoci, candidates)
+        val fragmentSequences = FragmentAlleles.create(readFragments, hetLoci, consecutiveEvidenceCandidates)
 
 
         FragmentSequencesFile.writeFile("/Users/jon/hmf/analysis/hla/fragments.txt", fragmentSequences)
 
-        val groupCoverage = HlaAlleleCoverage.groupCoverage(fragmentSequences)
+        val groupCoverage = coverageFactory.groupCoverage(consecutiveEvidenceCandidates)
         println("SDFSD")
 
         val confirmedGroups = listOf(HlaAllele("B*08"), HlaAllele("C*07"), HlaAllele("C*01"), HlaAllele("B*56"), HlaAllele("A*11"), HlaAllele("A*01"))
         val confimedProtein = listOf(HlaAllele("C*01:02:01:01"), HlaAllele("A*01:01:01:01"), HlaAllele("B*56:01:01:01"))
-        val complexes = HlaComplex.complexes(confirmedGroups, confimedProtein, candidates.map { it.allele })
+        val complexes = HlaComplex.complexes(confirmedGroups, confimedProtein, consecutiveEvidenceCandidates.map { it.allele })
         println("TotalCoverage\tUniqueCoverage\tComplex")
         for (complex in complexes) {
-            val complexCoverage = coverageFactory.alleleCoverage(candidates.filter { it.allele in complex.alleles })
-            println(complexCoverage.totalCoverage().toString() + "\t" + complexCoverage.uniqueCoverage().toString() + "\t" + complex)
+            val complexCoverage = coverageFactory.proteinCoverage(consecutiveEvidenceCandidates.filter { it.allele in complex.alleles })
+            println(complexCoverage.totalCoverage().roundToInt().toString() + "\t" + complexCoverage.uniqueCoverage().toString() + "\t" + complex)
         }
-
+//
 
 
 //        println("Group Coverage")
@@ -258,7 +262,7 @@ class LilacApplication2 : AutoCloseable, Runnable {
 //        println("${candidates.size} candidates after partial match filtering")
 
 
-        val sequences = candidates.map { HlaSequence(it.contig, it.sequence) }
+        val sequences = consecutiveEvidenceCandidates.map { HlaSequence(it.contig, it.sequence) }
         HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
         HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
         HlaSequenceFile.writeBoundary(aBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
@@ -394,6 +398,18 @@ class LilacApplication2 : AutoCloseable, Runnable {
         return result.toSet().toList().sortedBy { it.aminoAcidIndices[0] }
     }
 //
+
+    private fun filterCandidates(initialCandidates: List<HlaSequence>, evidence: List<PhasedEvidence>): List<HlaSequence> {
+        var candidates = initialCandidates
+        for (i in evidence.indices) {
+            val newEvidence = evidence[i]
+            candidates = matchingCandidates(newEvidence, candidates)
+//            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $newEvidence ")
+        }
+
+        return candidates
+    }
+
 
     private fun consecutiveEvidence(excludedIndices: Set<Int>, aminoAcidCounts: SequenceCount, readFragments: List<Fragment>, initialCandidates: List<HlaSequence>): List<PhasedEvidence> {
 

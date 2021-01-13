@@ -18,11 +18,14 @@ class HlaAlleleCoverageFactory(private val hetLoci: Collection<Int>, private val
         fun List<HlaAlleleCoverage>.totalCoverage(): Double {
             return this.map { it.combinedCoverage + it.uniqueCoverage }.sum()
         }
-
     }
 
+    fun groupCoverage(alleles: Collection<HlaSequence>): List<HlaAlleleCoverage> {
+        val fragmentAlleles = FragmentAlleles.create(fragments, hetLoci, alleles)
+        return HlaAlleleCoverage.groupCoverage(fragmentAlleles)
+    }
 
-    fun alleleCoverage(alleles: Collection<HlaSequence>): List<HlaAlleleCoverage> {
+    fun proteinCoverage(alleles: Collection<HlaSequence>): List<HlaAlleleCoverage> {
         val fragmentAlleles = FragmentAlleles.create(fragments, hetLoci, alleles)
         return HlaAlleleCoverage.proteinCoverage(fragmentAlleles)
     }
