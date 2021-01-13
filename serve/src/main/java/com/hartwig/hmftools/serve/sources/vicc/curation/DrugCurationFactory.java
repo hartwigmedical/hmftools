@@ -52,7 +52,8 @@ final class DrugCurationFactory {
         DRUG_MAPPINGS.put(cgiB("2-butanone"), rename("MEK inhibitor"));
         DRUG_MAPPINGS.put(cgiB("Cetuximab,Mab"), rename("Cetuximab"));
         DRUG_MAPPINGS.put(cgiB("Egfr"), rename("EGFR inhibitor"));
-        DRUG_MAPPINGS.put(cgiB("Mab"), rename("EGFR mAb inhibitors"));
+        DRUG_MAPPINGS.put(cgiB("Mab"), rename("Anti-EGFR monoclonal antibody"));
+        DRUG_MAPPINGS.put(cgiB("Mtor inhibitor"), rename("MTOR inhibitor"));
         DRUG_MAPPINGS.put(cgiB("Panitumumab,Mab"), rename("Panitumumab"));
 
         DRUG_MAPPINGS.put(civicB("120"), rename("AG-120"));
