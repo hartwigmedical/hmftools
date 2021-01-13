@@ -5,7 +5,7 @@ import java.io.File
 
 object FragmentSequencesFile {
 
-    fun writeFile(filename: String, fragmentSequences: List<FragmentSequences>) {
+    fun writeFile(filename: String, fragmentSequences: List<FragmentAlleles>) {
         val alleles = (fragmentSequences.flatMap { it.full } union fragmentSequences.flatMap { it.partial }).sortedBy { it.toString() }
         val file = File(filename)
         file.writeText("Fragment\t" + alleles.joinToString("\t") + "\n")
@@ -16,7 +16,7 @@ object FragmentSequencesFile {
 
     }
 
-    private fun toChar(fragment: FragmentSequences, allele: HlaAllele): Char {
+    private fun toChar(fragment: FragmentAlleles, allele: HlaAllele): Char {
         if (fragment.full.contains(allele)) {
             return 'T'
         }

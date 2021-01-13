@@ -1,21 +1,21 @@
 package com.hartwig.hmftools.lilac.hla
 
-import com.hartwig.hmftools.lilac.read.FragmentSequences
+import com.hartwig.hmftools.lilac.read.FragmentAlleles
 
-data class HlaAlleleCount(val allele: HlaAllele, val uniqueCoverage: Int, val combinedCoverage: Double): Comparable<HlaAlleleCount> {
+data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val combinedCoverage: Double) : Comparable<HlaAlleleCoverage> {
 
     companion object {
 
-        fun proteinCoverage(fragmentSequences: List<FragmentSequences>): List<HlaAlleleCount> {
-            return create(fragmentSequences) {it}
+        fun proteinCoverage(fragmentSequences: List<FragmentAlleles>): List<HlaAlleleCoverage> {
+            return create(fragmentSequences) { it }
         }
 
-        fun groupCoverage(fragmentSequences: List<FragmentSequences>): List<HlaAlleleCount> {
-            return create(fragmentSequences) { it.alleleGroup()}
+        fun groupCoverage(fragmentSequences: List<FragmentAlleles>): List<HlaAlleleCoverage> {
+            return create(fragmentSequences) { it.alleleGroup() }
         }
 
-        fun create(fragmentSequences: List<FragmentSequences>, type: (HlaAllele) -> HlaAllele): List<HlaAlleleCount> {
-            val result = mutableListOf<HlaAlleleCount>()
+        fun create(fragmentSequences: List<FragmentAlleles>, type: (HlaAllele) -> HlaAllele): List<HlaAlleleCoverage> {
+            val result = mutableListOf<HlaAlleleCoverage>()
 
             val uniqueCoverageMap = mutableMapOf<HlaAllele, Int>()
             val combinedCoverageMap = mutableMapOf<HlaAllele, Double>()
@@ -40,14 +40,14 @@ data class HlaAlleleCount(val allele: HlaAllele, val uniqueCoverage: Int, val co
                 val uniqueCoverage = uniqueCoverageMap[allele] ?: 0
                 val combinedCoverage = combinedCoverageMap[allele] ?: 0.0
 
-                result.add(HlaAlleleCount(allele, uniqueCoverage, combinedCoverage))
+                result.add(HlaAlleleCoverage(allele, uniqueCoverage, combinedCoverage))
             }
 
             return result.sortedDescending()
         }
     }
 
-    override fun compareTo(other: HlaAlleleCount): Int {
+    override fun compareTo(other: HlaAlleleCoverage): Int {
         val uniqueCompare = uniqueCoverage.compareTo(other.uniqueCoverage)
         if (uniqueCompare != 0) {
             return uniqueCompare

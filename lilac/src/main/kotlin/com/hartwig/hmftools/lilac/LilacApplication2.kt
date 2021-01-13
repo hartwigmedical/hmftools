@@ -3,12 +3,16 @@ package com.hartwig.hmftools.lilac
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
 import com.hartwig.hmftools.lilac.hla.HlaAllele
-import com.hartwig.hmftools.lilac.hla.HlaAlleleCount
+import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverage
+import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
+import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.totalCoverage
+import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.uniqueCoverage
+import com.hartwig.hmftools.lilac.hla.HlaComplex
 import com.hartwig.hmftools.lilac.nuc.SequenceCount
 import com.hartwig.hmftools.lilac.phase.HeterozygousEvidence
 import com.hartwig.hmftools.lilac.phase.PhasedEvidence
 import com.hartwig.hmftools.lilac.read.Fragment
-import com.hartwig.hmftools.lilac.read.FragmentSequences
+import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.FragmentSequencesFile
 import com.hartwig.hmftools.lilac.read.SAMRecordRead
 import com.hartwig.hmftools.lilac.seq.HlaSequence
@@ -42,21 +46,19 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
 
     private fun filterCandidatesOnNucleotides(minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<Fragment>, vararg nucleotides: Int): List<HlaSequence> {
-        try {
-            val reads = fragments
-                    .filter { it.containsAllNucleotides(*nucleotides) }
-                    .map { it.nucleotides(*nucleotides) }
-                    .groupingBy { it }
-                    .eachCount()
-                    .filter { it.value >= minEvidence }
-                    .keys
-                    .map { it.toCharArray() }
+
+        val reads = fragments
+                .filter { it.containsAllNucleotides(*nucleotides) }
+                .map { it.nucleotides(*nucleotides) }
+                .groupingBy { it }
+                .eachCount()
+                .filter { it.value >= minEvidence }
+                .keys
+                .map { it.toCharArray() }
 
 
-            return candidates.filter { it.consistentWith(nucleotides, reads) }
-        } catch (e: Exception) {
-            throw e
-        }
+        return candidates.filter { it.consistentWith(nucleotides, reads) }
+
     }
 
     private fun filterCandidatesOnExonBoundaryNucleotide(aminoAcidIndex: Int, minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<Fragment>): List<HlaSequence> {
@@ -143,23 +145,38 @@ class LilacApplication2 : AutoCloseable, Runnable {
             println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $evidence ")
         }
 
-        val fragmentSequences = FragmentSequences.create(readFragments, hetLoci, candidates)
+        val coverageFactory = HlaAlleleCoverageFactory(hetLoci, readFragments)
+        val proteinCoverage = coverageFactory.alleleCoverage(candidates)
+
+
+        val fragmentSequences = FragmentAlleles.create(readFragments, hetLoci, candidates)
+
 
         FragmentSequencesFile.writeFile("/Users/jon/hmf/analysis/hla/fragments.txt", fragmentSequences)
 
-        val groupCoverage = HlaAlleleCount.groupCoverage(fragmentSequences)
-        val proteinCoverage = HlaAlleleCount.proteinCoverage(fragmentSequences)
+        val groupCoverage = HlaAlleleCoverage.groupCoverage(fragmentSequences)
         println("SDFSD")
 
-        println("Group Coverage")
-        for (hlaAlleleCount in groupCoverage) {
-            println(hlaAlleleCount)
+        val confirmedGroups = listOf(HlaAllele("B*08"), HlaAllele("C*07"), HlaAllele("C*01"), HlaAllele("B*56"), HlaAllele("A*11"), HlaAllele("A*01"))
+        val confimedProtein = listOf(HlaAllele("C*01:02:01:01"), HlaAllele("A*01:01:01:01"), HlaAllele("B*56:01:01:01"))
+        val complexes = HlaComplex.complexes(confirmedGroups, confimedProtein, candidates.map { it.allele })
+        println("TotalCoverage\tUniqueCoverage\tComplex")
+        for (complex in complexes) {
+            val complexCoverage = coverageFactory.alleleCoverage(candidates.filter { it.allele in complex.alleles })
+            println(complexCoverage.totalCoverage().toString() + "\t" + complexCoverage.uniqueCoverage().toString() + "\t" + complex)
         }
 
-        println("Protein Coverage")
-        for (hlaAlleleCount in proteinCoverage) {
-            println(hlaAlleleCount)
-        }
+
+
+//        println("Group Coverage")
+//        for (hlaAlleleCount in groupCoverage) {
+//            println(hlaAlleleCount)
+//        }
+//
+//        println("Protein Coverage")
+//        for (hlaAlleleCount in proteinCoverage) {
+//            println(hlaAlleleCount)
+//        }
 
 //        val jon = PhasedEvidence.combineOverlapping(consecutiveEvidence[2], consecutiveEvidence[3])
 //        val exon2 = PhasedEvidence.combineOverlapping(jon, consecutiveEvidence[4])
@@ -519,7 +536,7 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
         return result
                 .filter { it.sequence.isNotEmpty() }
-//                .map { it.pad(maxLength) }
+                .map { it.pad(maxLength) }
     }
 
 
