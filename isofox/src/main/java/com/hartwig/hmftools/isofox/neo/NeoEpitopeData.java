@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -75,6 +76,7 @@ public class NeoEpitopeData
     public boolean isPointMutation() { return Source.VariantType.isPointMutation(); }
 
     public boolean singleGene() { return Source.GeneIds[FS_UP].equals(Source.GeneIds[FS_DOWN]); }
+    public boolean singleChromosome() { return Chromosomes[FS_UP].equals(Chromosomes[FS_DOWN]); }
     public boolean posStrand(int stream) { return (stream == FS_UP) == (Orientations[stream] == POS_ORIENT); }
 
     public NeoFragmentSupport getFragmentSupport() { return mFragmentSupport; }
@@ -102,7 +104,7 @@ public class NeoEpitopeData
 
     public String getFullCodingBases(int streamPerspective)
     {
-        if(!isFusion() || (Orientations[FS_UP] != Orientations[FS_DOWN] && singleGene()))
+        if(!isFusion() || (Orientations[FS_UP] != Orientations[FS_DOWN] && singleChromosome()))
         {
             if(Orientations[FS_UP] == POS_ORIENT)
                 return Source.CodingBases[FS_UP] + Source.CodingBases[FS_DOWN];
@@ -123,6 +125,36 @@ public class NeoEpitopeData
                 return Source.CodingBases[FS_DOWN] + reverseStrandBases(Source.CodingBases[FS_UP]);
             else
                 return reverseStrandBases(Source.CodingBases[FS_UP]) + Source.CodingBases[FS_DOWN];
+        }
+    }
+
+    public boolean isDeletionFusion()
+    {
+        if(!isFusion())
+            return false;
+
+        if(!singleChromosome())
+            return false;
+
+        if(Positions[FS_UP] < Positions[FS_DOWN])
+        {
+            return Orientations[FS_UP] == POS_ORIENT && Orientations[FS_DOWN] == NEG_ORIENT;
+        }
+        else
+        {
+            return Orientations[FS_UP] == NEG_ORIENT && Orientations[FS_DOWN] == POS_ORIENT;
+        }
+    }
+
+    public String getFusionSoftClippedBases(int streamPerspective)
+    {
+        if(Orientations[FS_UP] != Orientations[FS_DOWN])
+        {
+            return Source.CodingBases[switchStream(streamPerspective)];
+        }
+        else
+        {
+            return reverseStrandBases(Source.CodingBases[switchStream(streamPerspective)]);
         }
     }
 
@@ -176,10 +208,10 @@ public class NeoEpitopeData
         sj.add(String.format("%d/%d", mFragmentSupport.UpFragments[EXACT_MATCH], mFragmentSupport.UpFragments[PARTIAL_MATCH]));
         sj.add(String.format("%d/%d", mFragmentSupport.NovelFragments[EXACT_MATCH], mFragmentSupport.NovelFragments[PARTIAL_MATCH]));
         sj.add(String.format("%d/%d", mFragmentSupport.DownFragments[EXACT_MATCH], mFragmentSupport.DownFragments[PARTIAL_MATCH]));
-        sj.add(String.format("%d", mFragmentSupport.RefBaseSupport[FS_UP]));
-        sj.add(String.format("%d", mFragmentSupport.RefBaseSupport[FS_DOWN]));
-        sj.add(String.format("%d", mCancerTpmTotal));
-        sj.add(String.format("%d", mCohortTpmTotal));
+        sj.add(String.format("%d", mFragmentSupport.RefBaseDepth[FS_UP]));
+        sj.add(String.format("%d", mFragmentSupport.RefBaseDepth[FS_DOWN]));
+        sj.add(String.format("%6.3e", mCancerTpmTotal));
+        sj.add(String.format("%6.3e", mCohortTpmTotal));
 
         return sj.toString();
     }

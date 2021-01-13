@@ -228,9 +228,9 @@ public class TestUtils
         return cigar;
     }
 
-    public static Cigar createCigar(int preSc, int preMatch, int nonRef, int postMatch, int postSc)
+    public static Cigar createCigar(int preSc, int preMatch, int nSplit, int postMatch, int postSc)
     {
-        if (preSc == 0 && preMatch == 0 && nonRef == 0 && postMatch == 0 && postSc == 0)
+        if (preSc == 0 && preMatch == 0 && nSplit == 0 && postMatch == 0 && postSc == 0)
             return null;
 
         Cigar cigar = new Cigar();
@@ -241,8 +241,8 @@ public class TestUtils
         if (preMatch > 0)
             cigar.add(new CigarElement(preMatch, CigarOperator.MATCH_OR_MISMATCH));
 
-        if (nonRef > 0)
-            cigar.add(new CigarElement(nonRef, CigarOperator.SKIPPED_REGION));
+        if (nSplit > 0)
+            cigar.add(new CigarElement(nSplit, CigarOperator.SKIPPED_REGION));
 
         if (postMatch > 0)
             cigar.add(new CigarElement(postMatch, CigarOperator.MATCH_OR_MISMATCH));

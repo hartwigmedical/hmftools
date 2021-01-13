@@ -30,7 +30,9 @@ public class CohortTpmData
     public CohortTpmData(final String filename)
     {
         mTransCancerTpmMap = Maps.newHashMap();
-        loadCohortFile(filename);
+
+        if(filename != null)
+            loadCohortFile(filename);
     }
 
     public double[] getTranscriptTpm(final String transName, final String cancerType)
