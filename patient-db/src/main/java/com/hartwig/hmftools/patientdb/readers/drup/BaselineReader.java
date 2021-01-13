@@ -7,13 +7,9 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.CuratedPrimaryTumor;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
-import com.hartwig.hmftools.patientdb.readers.CorePatientReader;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -92,6 +88,7 @@ class BaselineReader {
                 primaryTumor = getBaselinePrimaryTumor(baselineEvent, primaryTumorReg, baselineBuilder);
             }
         }
+
         setPrimaryTumor(baselineBuilder, primaryTumorCohort, primaryTumor);
 
         return baselineBuilder.build();
@@ -121,12 +118,15 @@ class BaselineReader {
     @Nullable
     private static String getBaselinePrimaryTumor(@NotNull EcrfStudyEvent studyEvent, @Nullable String primaryTumorReg,
             @NotNull ImmutableBaselineData.Builder builder) {
-        String primaryTumorLocation = null;
         for (EcrfForm baselineForm : studyEvent.nonEmptyFormsPerOID(FORM_BASELINE)) {
+            // This is somewhat ugly, the states are too tied with CPCT datamodel.
+            builder.primaryTumorStatus(baselineForm.status());
+
             for (EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
                 String primaryTumorLocationBastType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationBastTypeOther = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
 
+                String primaryTumorLocation = null;
                 if (primaryTumorLocationBastType != null && !primaryTumorLocationBastType.isEmpty()) {
                     if (primaryTumorLocationBastType.equals("Other, specify")) {
                         primaryTumorLocation = primaryTumorLocationBastTypeOther;
@@ -143,30 +143,30 @@ class BaselineReader {
                         primaryTumorLocation = primaryTumorReg;
                     }
                 }
-
+                return primaryTumorLocation;
             }
-            // This is somewhat ugly, the states are too tied with CPCT datamodel.
-            builder.primaryTumorStatus(baselineForm.status());
         }
-        return primaryTumorLocation;
 
+        return null;
     }
 
     private void setPrimaryTumor(@NotNull ImmutableBaselineData.Builder builder, @Nullable String primaryTumorCohort,
             @Nullable String primaryTumorLocation) {
-
+        String finalPrimaryTumorLocation;
         if (primaryTumorCohort != null && !primaryTumorCohort.isEmpty()) {
             String lowerPrimaryTumorCohort = primaryTumorCohort.trim().toLowerCase();
             if (primaryTumorLocation != null && (lowerPrimaryTumorCohort.contains("biliary tract") || lowerPrimaryTumorCohort.contains(
                     "colon") || lowerPrimaryTumorCohort.contains("urinary organ") || lowerPrimaryTumorCohort.contains("head, face and neck")
                     || lowerPrimaryTumorCohort.contains("salivary gland"))) {
-                primaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocation;
+                finalPrimaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocation;
             } else {
-                primaryTumorLocation = primaryTumorCohort;
+                finalPrimaryTumorLocation = primaryTumorCohort;
             }
+        } else {
+            finalPrimaryTumorLocation = primaryTumorLocation;
         }
 
-        builder.curatedPrimaryTumor(primaryTumorCurator.search(primaryTumorLocation));
+        builder.curatedPrimaryTumor(primaryTumorCurator.search(finalPrimaryTumorLocation));
     }
 
     private void setInformedConsent(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
