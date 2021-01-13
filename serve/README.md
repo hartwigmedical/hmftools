@@ -53,7 +53,7 @@ The following genomic events can be mapped to clinical evidence:
  - Genome-wide events such as signatures or MSI status
  - Multi-gene events such as gene fusions
  - Single gene events such as amplification or general (in)activation of a gene
- - Types of mutations in genic ranges such as:
+ - Types of mutations in ranges overlapping with specific genes such as:
     - inframe insertions in EGFR exon 20
     - splice site mutations in MET exon 14
     - any type of missense mutation in BRAF codon 600
@@ -81,7 +81,7 @@ For fusions, genes are permitted that can exist in the context of a fusion pair 
  
 ### Protein resolving for SNVs and (small) INDELs
  
-Evidence on SNVs and small INDELs generally come in their protein annotated form (eg BRAF V600E). 
+Evidence on SNVs and small INDELs generally come in their protein annotated form (e.g. BRAF V600E). 
 SERVE uses [transvar](https://github.com/zwdzwd/transvar) to resolve these annotations into genomic coordinates (referred to as hotspots) 
 for the reference genome version that is configured to be used.
  
@@ -92,6 +92,9 @@ The first step is to choose what transcript to use for converting protein annota
  1. If a protein annotation does not exist on the canonical transcript and has no transcript configured in the knowledgebase, 
  any random transcript for which the protein annotation does exist is picked.
  
+If a protein annotation does not exist on any transcript for a specific gene, the evidence is ignored 
+(see also [curation](#curation-and-harmonization-of-individual-knowledgebases)). 
+ 
 Assuming a suitable transcript has been found, N hotspots are derived for each protein annotation as follows:
  - In case the mutation is caused by SNV or MNV every possible trinucleotide combination that codes for the new amino acid is generated.
  - In case the mutation is caused by a duplication (DUP) or an inframe deletion (DEL) 1 hotspot is generated which assumes 
@@ -99,7 +102,8 @@ Assuming a suitable transcript has been found, N hotspots are derived for each p
    - In case a DEL can be left-aligned a hotspot is generated for every position between the left-aligned position and the actual position. 
  - In case the mutation is caused by an inframe insertion (INS) there are two flavors based on the length of the insertion:
    1. In case 1 amino acid is inserted, hotspots are generated for every trinucleotide coding for that amino acid.
-   1. In case multiple amino acids are inserted, one of the potentially many hotspots is generated.
+   1. In case multiple amino acids are inserted, one of the potentially many hotspots is generated. This is just for the practical reason
+    to put a limit on the (exponential) number of variants implying a multi-amino-acid insert. 
  - In case of a complex deletion/insertion (DELINS) the rules for hotspot generation for deletions and insertions are extrapolated. 
  Hence, the reference sequence is assumed to be deleted, and one new nucleotide sequence is inserted unless the insertion is 1 amino acid 
  in which case hotspots are generated for all trinucleotides coding for the inserted amino acid. 
@@ -117,8 +121,13 @@ Finally, Any INDEL longer than 50 bases is ignored since this is considered to b
  
 ### Coordinate and mutation filter resolving for codons and exons
  
-For resolving coordinates for codons and exons the Hartwig canonical transcript of a gene is used exclusively:
-  - If evidence for a specific codon or exon range is defined for a different transcript this evidence is ignored. 
+For evidence defined on a codon or exon level, no protein annotation resolving is done. 
+Instead, genomic coordinates are resolved using the following rules. 
+
+First off, evidence on codons and exons are assumed to be defined in terms of the Hartwig canonical transcript.  
+  - If evidence for a specific codon or exon range is defined for a different transcript, this evidence is ignored. 
+  Since all variants in Hartwig are annotated in terms of their impact on the Hartwig canonical transcript, resolving 
+  this evidence could potentially lead to wrong matching.  
   - If no transcript is configured in the knowledgebase, it is assumed the canonical transcript is implied. 
  
 For ranges that represent exons, the range is extended by 5 bases on both sides of the exon to be able to capture splice variants affecting 
@@ -136,7 +145,7 @@ INFRAME | Any inframe INDEL (insert or delete) is valid for this range
 INFRAME_DELETION | Only inframe deletions are valid for this range
 INFRAME_INSERTION | Only inframe insertions are valid for this range
 MISSENSE | Only missense mutations are valid for this range
-ANY | Any of the above mutations are valid for this range (synonymous mutations and other types of mutations are still excluded).
+ANY | Any mutation is considered valid for this range.
 
 ### Gene level event determination
 
@@ -148,9 +157,9 @@ Gene level event  | Description
 ---|---
 AMPLIFICATION  | Evidence is applicable when the gene has been amplified.
 DELETION | Evidence is applicable when the gene has been completely deleted from the genome.
-ACTIVATION | Evidence is applicable when gene has been activated. Downstream algorithms are expected to interpret this.
-INACTIVATION | Evidence is applicable when gene has been inactivated. Downstream algorithms are expected to interpret this.
-ANY_MUTATION | This type is a "catch-all" meaning the knowledgebase did not provide enough details, and the gene is not a driver gene in Hartwig's driver catalog.
+ACTIVATION | Evidence is applicable when a gene has been activated. Downstream algorithms are expected to interpret this.
+INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
+ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
 FUSION | Evidence is applicable in case the gene has fused with another gene.
 
 ### Exonic ranges specific for fusion pairs
