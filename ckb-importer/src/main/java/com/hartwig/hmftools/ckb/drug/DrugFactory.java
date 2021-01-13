@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialDataModelChecker;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
 import org.apache.logging.log4j.LogManager;
@@ -42,6 +44,9 @@ public class DrugFactory {
 
                 while (reader.peek() != JsonToken.END_DOCUMENT) {
                     JsonObject drugsEntryObject = parser.parse(reader).getAsJsonObject();
+                    JsonDatamodelChecker drugChecker = DrugDataModelChecker.drugObjectChecker();
+                    drugChecker.check(drugsEntryObject);
+
                     drugs.add(ImmutableDrug.builder()
                             .id(JsonFunctions.string(drugsEntryObject, "id"))
                             .drugName(JsonFunctions.string(drugsEntryObject, "drugName"))
@@ -67,9 +72,11 @@ public class DrugFactory {
     @NotNull
     public static List<DrugDescription> extractDrugDescriptions(@NotNull JsonArray jsonArray) {
         List<DrugDescription> drugDescriptions = Lists.newArrayList();
-
+        JsonDatamodelChecker drugDescriptionChecker = DrugDataModelChecker.drugDescriptionObjectChecker();
         for (JsonElement drugDescription : jsonArray) {
             JsonObject drugDescriptionObject = drugDescription.getAsJsonObject();
+            drugDescriptionChecker.check(drugDescriptionObject);
+
             drugDescriptions.add(ImmutableDrugDescription.builder()
                     .description(JsonFunctions.string(drugDescriptionObject, "description"))
                     .references(extractDrugReferences(drugDescriptionObject.getAsJsonArray("references")))
@@ -81,8 +88,12 @@ public class DrugFactory {
     @NotNull
     public static List<DrugReference> extractDrugReferences(@NotNull JsonArray jsonArray) {
         List<DrugReference> drugReferences = Lists.newArrayList();
+        JsonDatamodelChecker drugReferenceChecker = DrugDataModelChecker.drugReferenceObjectChecker();
+
         for (JsonElement drugReference : jsonArray) {
             JsonObject drugsReferenceObject = drugReference.getAsJsonObject();
+            drugReferenceChecker.check(drugsReferenceObject);
+
             drugReferences.add(ImmutableDrugReference.builder()
                     .id(JsonFunctions.string(drugsReferenceObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(drugsReferenceObject, "pubMedId"))
@@ -103,8 +114,12 @@ public class DrugFactory {
     @NotNull
     public static List<DrugClass> extractDrugsClasses(@NotNull JsonArray jsonArray) {
         List<DrugClass> drugClasses = Lists.newArrayList();
+        JsonDatamodelChecker drugClassChecker = DrugDataModelChecker.drugClassObjectChecker();
+
         for (JsonElement drugClass : jsonArray) {
             JsonObject drugClassObject = drugClass.getAsJsonObject();
+            drugClassChecker.check(drugClassObject);
+
             drugClasses.add(ImmutableDrugClass.builder()
                     .id(JsonFunctions.string(drugClassObject, "id"))
                     .drugClass(JsonFunctions.string(drugClassObject, "drugClass"))
@@ -116,8 +131,12 @@ public class DrugFactory {
     @NotNull
     public static List<DrugClinicalTrial> extractCliniclaTrials(@NotNull JsonArray jsonArray) {
         List<DrugClinicalTrial> clinicalTrials = Lists.newArrayList();
+        JsonDatamodelChecker drugClinicalTrialChecker = DrugDataModelChecker.drugClinicalTrialObjectChecker();
+
         for (JsonElement clinicalTrial : jsonArray) {
             JsonObject clinicalTrialObject = clinicalTrial.getAsJsonObject();
+            drugClinicalTrialChecker.check(clinicalTrialObject);
+
             clinicalTrials.add(ImmutableDrugClinicalTrial.builder()
                     .nctId(JsonFunctions.string(clinicalTrialObject, "nctId"))
                     .title(JsonFunctions.string(clinicalTrialObject, "title"))
@@ -132,8 +151,12 @@ public class DrugFactory {
     @NotNull
     public static List<DrugTherapy> extractDrugTherapies(@NotNull JsonArray jsonArray) {
         List<DrugTherapy> drugTherapies = Lists.newArrayList();
+        JsonDatamodelChecker drugClinicalTrialTherapyChecker = DrugDataModelChecker.drugClinicalTrialTherapyObjectChecker();
+
         for (JsonElement drugTherpy : jsonArray) {
             JsonObject drugTherapyObject = drugTherpy.getAsJsonObject();
+            drugClinicalTrialTherapyChecker.check(drugTherapyObject);
+
             drugTherapies.add(ImmutableDrugTherapy.builder()
                     .id(JsonFunctions.string(drugTherapyObject, "id"))
                     .therapyName(JsonFunctions.string(drugTherapyObject, "therapyName"))
@@ -146,8 +169,12 @@ public class DrugFactory {
     @NotNull
     public static List<DrugEvidence> extractEvidence(@NotNull JsonArray jsonArray) {
         List<DrugEvidence> evidences = Lists.newArrayList();
+        JsonDatamodelChecker drugEvidenceChecker = DrugDataModelChecker.drugEvidenceObjectChecker();
+
         for (JsonElement evidence : jsonArray) {
             JsonObject evidenceObject = evidence.getAsJsonObject();
+            drugEvidenceChecker.check(evidenceObject);
+
             evidences.add(ImmutableDrugEvidence.builder()
                     .id(JsonFunctions.string(evidenceObject, "id"))
                     .approvalStatus(JsonFunctions.string(evidenceObject, "approvalStatus"))
@@ -168,6 +195,9 @@ public class DrugFactory {
     @NotNull
     public static DrugMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonObject molecularProfileObject = jsonObject.getAsJsonObject();
+        JsonDatamodelChecker drugEvidenceMolecularProfileChecker = DrugDataModelChecker.drugEvidenceMolecularProfileObjectChecker();
+        drugEvidenceMolecularProfileChecker.check(molecularProfileObject);
+
         return ImmutableDrugMolecularProfile.builder()
                 .id(JsonFunctions.string(molecularProfileObject, "id"))
                 .profileName(JsonFunctions.string(molecularProfileObject, "profileName"))
@@ -177,6 +207,9 @@ public class DrugFactory {
     @NotNull
     public static DrugTherapy extractTherapy(@NotNull JsonObject jsonObject) {
         JsonObject therapyObject = jsonObject.getAsJsonObject();
+        JsonDatamodelChecker drugEvidenceTherapyChecker = DrugDataModelChecker.drugEvidenceTherapyObjectChecker();
+        drugEvidenceTherapyChecker.check(therapyObject);
+
         return ImmutableDrugTherapy.builder()
                 .id(JsonFunctions.string(therapyObject, "id"))
                 .therapyName(JsonFunctions.string(therapyObject, "therapyName"))
@@ -187,6 +220,9 @@ public class DrugFactory {
     @NotNull
     public static DrugIndication extractIndications(@NotNull JsonObject jsonObject) {
         JsonObject indicationObject = jsonObject.getAsJsonObject();
+        JsonDatamodelChecker drugEvidenceIndicationChecker = DrugDataModelChecker.drugEvidenceIndicationObjectChecker();
+        drugEvidenceIndicationChecker.check(indicationObject);
+
         return ImmutableDrugIndication.builder()
                 .id(JsonFunctions.string(indicationObject, "id"))
                 .name(JsonFunctions.string(indicationObject, "name"))
@@ -197,8 +233,12 @@ public class DrugFactory {
     @NotNull
     public static List<DrugEvidenceReference> extractEvidenceReferences(@NotNull JsonArray jsonArray) {
         List<DrugEvidenceReference> references = Lists.newArrayList();
+        JsonDatamodelChecker drugEvidenceReferenceChecker = DrugDataModelChecker.drugEvidenceReferenceObjectChecker();
+
         for (JsonElement reference : jsonArray) {
             JsonObject referenceObject = reference.getAsJsonObject();
+            drugEvidenceReferenceChecker.check(referenceObject);
+
             references.add(ImmutableDrugEvidenceReference.builder()
                     .id(JsonFunctions.string(referenceObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceObject, "pubMedId"))
@@ -212,8 +252,12 @@ public class DrugFactory {
     @NotNull
     public static List<DrugTherapy> extractTherapies(@NotNull JsonArray jsonArray) {
         List<DrugTherapy> drugsTherapies = Lists.newArrayList();
+        JsonDatamodelChecker drugTherapyChecker = DrugDataModelChecker.drugTherapyObjectChecker();
+
         for (JsonElement drugTherapy : jsonArray) {
             JsonObject drugTherapyObject = drugTherapy.getAsJsonObject();
+            drugTherapyChecker.check(drugTherapyObject);
+
             drugsTherapies.add(ImmutableDrugTherapy.builder()
                     .id(JsonFunctions.string(drugTherapyObject, "id"))
                     .therapyName(JsonFunctions.string(drugTherapyObject, "therapyName"))
@@ -226,8 +270,12 @@ public class DrugFactory {
     @NotNull
     public static List<DrugGlobalApprovalStatus> extractGlobalApprovaStatus(@NotNull JsonArray jsonArray) {
         List<DrugGlobalApprovalStatus> globalApproavalStatuses = Lists.newArrayList();
+        JsonDatamodelChecker drugGlobalApprovalStatusChecker = DrugDataModelChecker.drugGlobalApprovalStatusObjectChecker();
+
         for (JsonElement globalApproavalStatus : jsonArray) {
             JsonObject globalTherapyObject = globalApproavalStatus.getAsJsonObject();
+            drugGlobalApprovalStatusChecker.check(globalTherapyObject);
+
             globalApproavalStatuses.add(ImmutableDrugGlobalApprovalStatus.builder()
                     .id(JsonFunctions.string(globalTherapyObject, "id"))
                     .therapy(extractTherapiesGlobalApprovalStatus(globalTherapyObject.getAsJsonObject("therapy")))
@@ -243,6 +291,9 @@ public class DrugFactory {
     @NotNull
     public static DrugTherapy extractTherapiesGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
         JsonObject therapiesGlobalApprovalStatusObject = jsonObject.getAsJsonObject();
+        JsonDatamodelChecker drugGlobalApprovalStatusTherapyChecker = DrugDataModelChecker.drugGlobalApprovalStatusTherapyObjectChecker();
+        drugGlobalApprovalStatusTherapyChecker.check(therapiesGlobalApprovalStatusObject);
+
         return ImmutableDrugTherapy.builder()
                 .id(JsonFunctions.string(therapiesGlobalApprovalStatusObject, "id"))
                 .therapyName(JsonFunctions.string(therapiesGlobalApprovalStatusObject, "therapyName"))
@@ -253,6 +304,9 @@ public class DrugFactory {
     @NotNull
     public static DrugIndication extractIndicationsGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
         JsonObject indicationsGlobalApprovalStatusObject = jsonObject.getAsJsonObject();
+        JsonDatamodelChecker drugGlobalApprovalStatusIndicationChecker = DrugDataModelChecker.drugGlobalApprovalStatusIndicationObjectChecker();
+        drugGlobalApprovalStatusIndicationChecker.check(indicationsGlobalApprovalStatusObject);
+
         return ImmutableDrugIndication.builder()
                 .id(JsonFunctions.string(indicationsGlobalApprovalStatusObject, "id"))
                 .name(JsonFunctions.string(indicationsGlobalApprovalStatusObject, "name"))
@@ -263,6 +317,9 @@ public class DrugFactory {
     @NotNull
     public static DrugMolecularProfile extractMolecularProfileGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
         JsonObject molecularProfileGlobalApprovalStatus = jsonObject.getAsJsonObject();
+        JsonDatamodelChecker drugGlobalApprovalStatusMolecularProfileChecker = DrugDataModelChecker.drugGlobalApprovalStatusMolecularProfileObjectChecker();
+        drugGlobalApprovalStatusMolecularProfileChecker.check(molecularProfileGlobalApprovalStatus);
+
         return ImmutableDrugMolecularProfile.builder()
                 .id(JsonFunctions.string(molecularProfileGlobalApprovalStatus, "id"))
                 .profileName(JsonFunctions.string(molecularProfileGlobalApprovalStatus, "profileName"))
