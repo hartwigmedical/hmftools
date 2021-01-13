@@ -87,10 +87,6 @@ public class WidePatientReader {
         LocalDate informedConsentDate = !fiveDays.isEmpty() ? fiveDays.get(0).informedConsentDate() : null;
 
         CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(limsPrimaryTumorLocation);
-        if (curatedPrimaryTumor.location() == null && limsPrimaryTumorLocation != null
-                && !limsPrimaryTumorLocation.isEmpty()) {
-            LOGGER.warn("Could not curate WIDE primary tumor '{}'", limsPrimaryTumorLocation);
-        }
 
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
