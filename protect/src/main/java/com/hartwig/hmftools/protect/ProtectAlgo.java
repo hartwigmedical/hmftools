@@ -102,20 +102,20 @@ public class ProtectAlgo {
         result.addAll(purpleSignatureEvidence);
         result.addAll(chordEvidence);
 
-        List<ProtectEvidence> consolidated = ProtectEvidenceFunctions.consolidate(result);
-        LOGGER.debug("Consolidated {} evidence items to {} unique evidences", result.size(), consolidated.size());
+        List<ProtectEvidence> consolidated = EvidenceConsolidation.consolidate(result);
+        LOGGER.debug("Consolidated {} evidence items to {} unique evidence items", result.size(), consolidated.size());
 
-        List<ProtectEvidence> updatedForBlacklist = ProtectEvidenceFunctions.applyReportingBlacklist(consolidated);
+        List<ProtectEvidence> updatedForBlacklist = EvidenceCuration.applyReportingBlacklist(consolidated);
         LOGGER.debug("Reduced reported evidence from {} items to {} items by blacklisting specific evidence for reporting",
                 reportedCount(consolidated),
                 reportedCount(updatedForBlacklist));
 
-        List<ProtectEvidence> updatedForTrials = ProtectEvidenceFunctions.reportOnLabelTrialsOnly(updatedForBlacklist);
+        List<ProtectEvidence> updatedForTrials = EvidenceReportingFunctions.reportOnLabelTrialsOnly(updatedForBlacklist);
         LOGGER.debug("Reduced reported evidence from {} items to {} items by removing off-label trials",
                 reportedCount(updatedForBlacklist),
                 reportedCount(updatedForTrials));
 
-        List<ProtectEvidence> highestReported = ProtectEvidenceFunctions.reportHighestLevelEvidence(updatedForTrials);
+        List<ProtectEvidence> highestReported = EvidenceReportingFunctions.reportHighestLevelEvidence(updatedForTrials);
         LOGGER.debug("Reduced reported evidence from {} items to {} items by reporting highest level evidence only",
                 reportedCount(updatedForTrials),
                 reportedCount(highestReported));

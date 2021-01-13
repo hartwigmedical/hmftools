@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.B;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.C;
-import static com.hartwig.hmftools.protect.ProtectEvidenceFunctions.highestReportableLevel;
+import static com.hartwig.hmftools.protect.EvidenceReportingFunctions.highestReportableLevel;
 import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestBuilder;
 import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidence;
 
@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ProtectEvidenceFunctionsTest {
+public class EvidenceReportingFunctionsTest {
 
     private final ProtectEvidence onLabelResponsiveA = createTestEvidence(true, RESPONSIVE, A).build();
     private final ProtectEvidence onLabelResponsiveB = createTestEvidence(true, RESPONSIVE, B).build();
@@ -33,39 +33,6 @@ public class ProtectEvidenceFunctionsTest {
     private final ProtectEvidence offLabelResponsiveA = createTestEvidence(false, RESPONSIVE, A).build();
     private final ProtectEvidence offLabelResponsiveB = createTestEvidence(false, RESPONSIVE, B).build();
     private final ProtectEvidence offLabelResponsiveC = createTestEvidence(false, RESPONSIVE, C).build();
-
-    @Test
-    public void canConsolidate() {
-        String treatment1 = "treatment1";
-        String url1 = "url1";
-        String url2 = "url2";
-        String url3 = "url3";
-        Knowledgebase source1 = Knowledgebase.VICC_CGI;
-        Knowledgebase source2 = Knowledgebase.VICC_CIVIC;
-
-        String treatment2 = "treatment2";
-
-        ProtectEvidence evidence1 = createTestBuilder().treatment(treatment1).addUrls(url1).addSources(source1).build();
-        ProtectEvidence evidence2 = createTestBuilder().treatment(treatment1).addUrls(url2).addSources(source2).build();
-        ProtectEvidence evidence3 = createTestBuilder().treatment(treatment2).addUrls(url3).addSources(source1).build();
-
-        List<ProtectEvidence> consolidated = ProtectEvidenceFunctions.consolidate(Lists.newArrayList(evidence1, evidence2, evidence3));
-
-        assertEquals(2, consolidated.size());
-        ProtectEvidence consolidatedEvidence1 = findByTreatment(consolidated, treatment1);
-        assertTrue(consolidatedEvidence1.urls().contains(url1));
-        assertTrue(consolidatedEvidence1.urls().contains(url2));
-        assertFalse(consolidatedEvidence1.urls().contains(url3));
-        assertTrue(consolidatedEvidence1.sources().contains(source1));
-        assertTrue(consolidatedEvidence1.sources().contains(source2));
-
-        ProtectEvidence consolidatedEvidence2 = findByTreatment(consolidated, treatment2);
-        assertFalse(consolidatedEvidence2.urls().contains(url1));
-        assertFalse(consolidatedEvidence2.urls().contains(url2));
-        assertTrue(consolidatedEvidence2.urls().contains(url3));
-        assertTrue(consolidatedEvidence2.sources().contains(source1));
-        assertFalse(consolidatedEvidence2.sources().contains(source2));
-    }
 
     @Test
     public void canDetermineHighestReportableLevel() {
@@ -80,7 +47,7 @@ public class ProtectEvidenceFunctionsTest {
     @Test
     public void doNotReportC() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveC);
-        Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighestLevelEvidence(evidence));
+        Set<ProtectEvidence> victims = Sets.newHashSet(EvidenceReportingFunctions.reportHighestLevelEvidence(evidence));
         assertEquals(2, victims.size());
         for (ProtectEvidence victim : victims) {
             assertFalse(victim.reported());
@@ -90,7 +57,7 @@ public class ProtectEvidenceFunctionsTest {
     @Test
     public void doNoReportOffLabelAtSameLevelAsOnLabel() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveA, offLabelResponsiveA);
-        Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighestLevelEvidence(evidence));
+        Set<ProtectEvidence> victims = Sets.newHashSet(EvidenceReportingFunctions.reportHighestLevelEvidence(evidence));
         assertEquals(2, victims.size());
         assertTrue(victims.contains(onLabelResponsiveA));
         assertFalse(victims.contains(offLabelResponsiveA));
@@ -99,7 +66,7 @@ public class ProtectEvidenceFunctionsTest {
     @Test
     public void reportHighestOffLabelIfHigherThanOnLabel() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveA, offLabelResponsiveB);
-        Set<ProtectEvidence> victims = Sets.newHashSet(ProtectEvidenceFunctions.reportHighestLevelEvidence(evidence));
+        Set<ProtectEvidence> victims = Sets.newHashSet(EvidenceReportingFunctions.reportHighestLevelEvidence(evidence));
         assertEquals(3, victims.size());
         assertTrue(victims.contains(offLabelResponsiveA));
         assertFalse(victims.contains(offLabelResponsiveB));
@@ -109,11 +76,11 @@ public class ProtectEvidenceFunctionsTest {
     @Test
     public void neverSetReportToTrue() {
         ProtectEvidence reported = onLabelResponsiveA;
-        ProtectEvidence reportedVictim = ProtectEvidenceFunctions.reportHighestLevelEvidence(Lists.newArrayList(reported)).get(0);
+        ProtectEvidence reportedVictim = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(reported)).get(0);
         assertTrue(reportedVictim.reported());
 
         ProtectEvidence notReported = ImmutableProtectEvidence.builder().from(reported).reported(false).build();
-        ProtectEvidence notReportedVictim = ProtectEvidenceFunctions.reportHighestLevelEvidence(Lists.newArrayList(notReported)).get(0);
+        ProtectEvidence notReportedVictim = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(notReported)).get(0);
         assertFalse(notReportedVictim.reported());
     }
 
@@ -137,7 +104,7 @@ public class ProtectEvidenceFunctionsTest {
                 .build();
 
         List<ProtectEvidence> evidence =
-                ProtectEvidenceFunctions.reportOnLabelTrialsOnly(Lists.newArrayList(evidence1, evidence2, evidence3, evidence4));
+                EvidenceReportingFunctions.reportOnLabelTrialsOnly(Lists.newArrayList(evidence1, evidence2, evidence3, evidence4));
 
         assertEquals(4, evidence.size());
         assertTrue(evidence.contains(evidence1));
@@ -146,33 +113,6 @@ public class ProtectEvidenceFunctionsTest {
 
         ProtectEvidence convertedEvidence2 = findByEvent(evidence, event2);
         assertFalse(convertedEvidence2.reported());
-    }
-
-    @Test
-    public void canApplyBlacklist() {
-        String event1 = "any event";
-        String event2 = "TP53 loss";
-
-        ProtectEvidence evidence1 = createTestBuilder().genomicEvent(event1).reported(true).build();
-        ProtectEvidence evidence2 = createTestBuilder().genomicEvent(event2).reported(true).build();
-
-        List<ProtectEvidence> evidence = ProtectEvidenceFunctions.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
-        assertEquals(2, evidence.size());
-        assertTrue(evidence.contains(evidence1));
-
-        ProtectEvidence blacklisted = findByEvent(evidence, event2);
-        assertFalse(blacklisted.reported());
-    }
-
-    @NotNull
-    private static ProtectEvidence findByTreatment(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String treatment) {
-        for (ProtectEvidence evidence : evidences) {
-            if (evidence.treatment().equals(treatment)) {
-                return evidence;
-            }
-        }
-
-        throw new IllegalStateException("Could not find evidence with treatment: " + treatment);
     }
 
     @NotNull
