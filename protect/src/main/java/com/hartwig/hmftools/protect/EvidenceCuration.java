@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public final class EvidenceCuration {
 
     private static final Set<String> EVENT_REPORTING_BLACKLIST_KEYWORDS = Sets.newHashSet("TP53");
-    private static final Set<String> TREATMENT_REPORTING_BLACKLIST = Sets.newHashSet("Chemotherapy", "Aspirin");
+    private static final Set<String> TREATMENT_REPORTING_BLACKLIST = Sets.newHashSet("Chemotherapy", "Aspirin", "Steroids");
 
     private EvidenceCuration() {
     }
