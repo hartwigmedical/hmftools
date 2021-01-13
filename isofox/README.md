@@ -160,12 +160,10 @@ java -jar isofox.jar
     -apply_calc_frag_lengths 
     -apply_exp_rates 
     -read_length 151
-    -single_map_qual 255
     -exp_counts_file /path_to_ref_files/read_76_exp_counts.csv 
     -apply_gc_bias_adjust 
     -exp_gc_ratios_file /path_to_ref_files/read_100_exp_gc_ratios.csv 
     -long_frag_limit 550 
-    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0"
     -apply_map_qual_adjust 
     -threads 10 
 ```
