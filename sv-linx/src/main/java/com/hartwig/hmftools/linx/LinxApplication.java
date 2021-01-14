@@ -83,7 +83,7 @@ public class LinxApplication
 
         final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
-        boolean sampleDataFromFile = !config.PurpleDataPath.isEmpty() || config.IsGermline;
+        boolean sampleDataFromFile = (!config.PurpleDataPath.isEmpty() && cmd.hasOption(VCF_FILE)) || config.IsGermline;
 
         List<String> samplesList = config.getSampleIds();
 
@@ -298,7 +298,7 @@ public class LinxApplication
                 config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
     }
 
-    private static List<StructuralVariantData> loadSampleSvDataFromFile(
+    public static List<StructuralVariantData> loadSampleSvDataFromFile(
             final LinxConfig config, final String sampleId, final CommandLine cmd)
     {
         if(cmd.hasOption(VCF_FILE))

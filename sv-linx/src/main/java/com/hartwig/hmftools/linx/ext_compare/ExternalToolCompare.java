@@ -2,12 +2,14 @@ package com.hartwig.hmftools.linx.ext_compare;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.linx.LinxApplication.loadSampleSvDataFromFile;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.LinxDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconCompare.AMPLICON_DATA_FILE;
 import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FINDER_DATA_DIR;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -57,11 +59,15 @@ public class ExternalToolCompare
 
         final List<String> samplesList = config.getSampleIds();
 
+        boolean sampleDataFromFile = !config.PurpleDataPath.isEmpty() && cmd.hasOption(VCF_FILE);
+
+        /*
         if(dbAccess == null)
         {
             LNX_LOGGER.error("no DB connection configured");
             return;
         }
+        */
 
         if (samplesList.isEmpty())
         {
@@ -118,7 +124,8 @@ public class ExternalToolCompare
         {
             ++count;
 
-            final List<StructuralVariantData> svRecords = dbAccess.readStructuralVariantData(sampleId);
+            final List<StructuralVariantData> svRecords = sampleDataFromFile ?
+                    loadSampleSvDataFromFile(config, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
 
             final List<SvVarData> svDataList = createSvData(svRecords);
 
@@ -171,7 +178,7 @@ public class ExternalToolCompare
 
             if(ampliconCompare != null)
             {
-                ampliconCompare.processSample(sampleId, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
+                ampliconCompare.processSample(sampleId, sampleAnalyser.getChrBreakendMap());
             }
         }
 
@@ -211,6 +218,7 @@ public class ExternalToolCompare
         options.addOption(CHECK_DRIVERS, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: Ensembl data cache directory");
+        options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
 
         // allow sub-components to add their specific config
         LinxConfig.addCmdLineArgs(options);

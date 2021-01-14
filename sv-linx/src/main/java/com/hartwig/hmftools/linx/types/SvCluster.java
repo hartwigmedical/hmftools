@@ -204,41 +204,6 @@ public class SvCluster
         }
     }
 
-    public void removeVariant(final SvVarData var)
-    {
-        mSVs.remove(var);
-        mRequiresRecalc = true;
-
-        mDoubleMinuteSVs.remove(var);
-        mLongDelDups.remove(var);
-        mFoldbacks.remove(var);
-        mLongDelDups.remove(var);
-        mInversions.remove(var);
-
-        --mTypeCounts[typeAsInt(var.type())];
-
-        for (int be = SE_START; be <= SE_END; ++be)
-        {
-            SvBreakend breakend = var.getBreakend(be);
-
-            if(breakend == null)
-                continue;
-
-            for (ArmGroup armGroup : mArmGroups)
-            {
-                if (armGroup.chromosome().equals(breakend.chromosome()) && armGroup.arm().equals(breakend.arm()))
-                {
-                    armGroup.getBreakends().remove(breakend);
-                    armGroup.getSVs().remove(var);
-                    break;
-                }
-            }
-
-            final List<SvBreakend> breakendList = mChrBreakendMap.get(breakend.chromosome());
-            breakendList.remove(breakend);
-        }
-    }
-
     public List<ArmGroup> getArmGroups() { return mArmGroups; }
     public Map<String, List<SvBreakend>> getChrBreakendMap() { return mChrBreakendMap; }
 
@@ -320,7 +285,7 @@ public class SvCluster
         }
 
         // just add the other cluster's variants - no preservation of links or chains
-        if(other.getSvCount() > getSvCount())
+        if(other.getSvCount() > getSvCount() || other.hasAnnotation(CLUSTER_ANNOT_DM))
         {
             if(logDetails)
             {

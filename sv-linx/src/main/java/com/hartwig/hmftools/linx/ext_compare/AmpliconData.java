@@ -20,7 +20,11 @@ public class AmpliconData
     public final int Breakends;
     public final int HighBreakends;
 
-    public static final String DATA_DELIM = "\t";
+    public static final String JABBA_DATA_DELIM = "\t";
+    public static final String AA_DATA_DELIM = ",";
+
+    public static final String AMPLICON_SOURCE_AMP_ARCHITECT = "AMPLICON_ARCHITECT";
+    public static final String AMPLICON_SOURCE_JABBA = "JABBA";
 
     // key thresholds and parameters for Jabba
     public static final double MIN_CLUSTER_JCN_THRESHOLD = 3;
@@ -51,9 +55,19 @@ public class AmpliconData
         return appendStrList(chromosomes, ITEM_DELIM_CHR);
     }
 
-    public static String extractSampleId(final Map<String,Integer> fieldsIndexMap, final String[] items)
+    public static String extractSampleId(final String dataSource, final Map<String,Integer> fieldsIndexMap, final String[] items)
     {
+        if(dataSource.equals(AMPLICON_SOURCE_AMP_ARCHITECT))
+        {
+            String sampleId = items[fieldsIndexMap.get("SampleId")];
+
+            return sampleId.endsWith("T") ? sampleId : sampleId + "T";
+        }
+
         String sampleId = items[fieldsIndexMap.get("pair")];
+
+        if(sampleId.endsWith("T"))
+            return sampleId;
 
         if(sampleId.endsWith(".2"))
             return sampleId.substring(0, sampleId.length() - 2) + "TII";
@@ -65,8 +79,39 @@ public class AmpliconData
             return sampleId + "T";
     }
 
-    public static AmpliconData from(final Map<String,Integer> fieldsIndexMap, final String[] items)
+    public static AmpliconData from(final String dataSource, final Map<String,Integer> fieldsIndexMap, final String[] items)
     {
+        if(dataSource.equals(AMPLICON_SOURCE_AMP_ARCHITECT))
+        {
+            if(items.length != 5)
+                return null;
+
+            // SampleBarcode,SampleId,AmpliconClusterId,AmpliconClassification,AmpliconIntervals
+
+            final String type = items[fieldsIndexMap.get("AmpliconClassification")];
+            final int clusterId = Integer.parseInt(items[fieldsIndexMap.get("AmpliconClusterId")]);
+
+            AmpliconData ampData = new AmpliconData(clusterId, type, 0, 0, 0, 0, 0);
+
+            // intervals: 3:174885846-197847500;11:40144508-40344836
+            final String[] ampRegions = items[fieldsIndexMap.get("AmpliconIntervals")].split(";", -1);
+
+            for(String ampRegion : ampRegions)
+            {
+                final String[] regionItems = ampRegion.split(":");
+
+                if(regionItems.length != 3)
+                    return null;
+
+                final String chromosome = regionItems[0];
+                final int[] positions = { Integer.parseInt(regionItems[1]), Integer.parseInt(regionItems[2]) };
+                ampData.Regions.add(new BaseRegion(chromosome, positions));
+
+            }
+
+            return ampData;
+        }
+
         //pair	seqnames	start	end	strand	width	type	footprint	ev.id	id	max.cn	max.jcn	cluster
         final String chromosome = items[fieldsIndexMap.get("seqnames")];
         final int[] positions = { Integer.parseInt(items[fieldsIndexMap.get("start")]), Integer.parseInt(items[fieldsIndexMap.get("end")]) };

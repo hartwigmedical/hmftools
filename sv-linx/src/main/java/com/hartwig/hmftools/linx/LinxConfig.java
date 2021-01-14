@@ -245,7 +245,7 @@ public class LinxConfig
     {
         if(!cmd.hasOption(VCF_FILE))
         {
-            LNX_LOGGER.error("missing structrual variant VCF file");
+            LNX_LOGGER.error("missing structural variant VCF file");
             return false;
         }
 
@@ -353,10 +353,10 @@ public class LinxConfig
     {
         try
         {
-            final List<String> sampleIds = Files.readAllLines(new File(filename).toPath());
-
-            if (sampleIds.get(0).equals("SampleId"))
-                sampleIds.remove(0);
+            final List<String> sampleIds = Files.readAllLines(new File(filename).toPath()).stream()
+                    .filter(x -> !x.equals("SampleId"))
+                    .filter(x -> !x.isEmpty())
+                    .collect(Collectors.toList());
 
             LNX_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
 

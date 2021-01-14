@@ -18,10 +18,10 @@ import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.DELETED_TOTAL;
 import static com.hartwig.hmftools.linx.chaining.ChainJcnLimits.RANGE_TOTAL;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.createAssemblyLinkedPairs;
 import static com.hartwig.hmftools.linx.types.ArmCluster.buildArmClusters;
-import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -211,6 +211,10 @@ public class ClusterAnalyser {
 
         // final clean-up and analysis
 
+        // take note of DM clusters so they can be rechecked after any final cluster merging
+        final List<Integer> dmClusterIds = mClusters.stream().filter(x -> x.hasAnnotation(CLUSTER_ANNOT_DM))
+                .map(x -> new Integer(x.id())).collect(Collectors.toList());
+
         // re-check foldbacks amongst newly formed chains and then DM status
         if(FoldbackFinder.markFoldbacks(mState.getChrBreakendMap(), true))
         {
@@ -219,10 +223,10 @@ public class ClusterAnalyser {
 
         for(SvCluster cluster : mClusters)
         {
-            if(!cluster.getDoubleMinuteSVs().isEmpty())
+            if(!cluster.getDoubleMinuteSVs().isEmpty() || dmClusterIds.contains(cluster.id()))
                 mDmFinder.analyseCluster(cluster, true);
 
-            if(cluster.getResolvedType() != DOUBLE_MINUTE && !cluster.isResolved())
+            if(!cluster.hasAnnotation(CLUSTER_ANNOT_DM) && !cluster.isResolved())
                 mBfbFinder.analyseCluster(cluster);
 
             if(!cluster.isResolved())

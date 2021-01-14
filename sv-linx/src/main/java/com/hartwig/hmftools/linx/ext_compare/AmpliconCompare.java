@@ -13,7 +13,10 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.MIN_AMP_PERCENT_VS_MAX;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconClusterMatch.findAmplifyingClusters;
-import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.DATA_DELIM;
+import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.AA_DATA_DELIM;
+import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.AMPLICON_SOURCE_AMP_ARCHITECT;
+import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.AMPLICON_SOURCE_JABBA;
+import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.JABBA_DATA_DELIM;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MAX_FOLDBACK_INV_LENGTH;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MIN_CLUSTER_JCN_THRESHOLD;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.extractSampleId;
@@ -44,16 +47,29 @@ public class AmpliconCompare
 {
     private final String mAmpliconDataFile;
     private String mSampleId;
-    
+
+    private final String mDataSource;
     private final Map<String,List<AmpliconData>> mSampleAmpData;
 
     private BufferedWriter mResultsWriter;
 
     public static final String AMPLICON_DATA_FILE = "amplicon_data_file";
+    public static final String AMPLICON_SOURCE = "amplicon_source";
 
     public AmpliconCompare(final String outputDir, final CommandLine cmd)
     {
         mAmpliconDataFile = checkAddDirSeparator(cmd.getOptionValue(AMPLICON_DATA_FILE));
+        mDataSource = cmd.getOptionValue(AMPLICON_SOURCE);
+
+        if(mDataSource.equals(AMPLICON_SOURCE_AMP_ARCHITECT) || mDataSource.equals(AMPLICON_SOURCE_JABBA))
+        {
+            LNX_LOGGER.info("comparing amplifications with {}", mDataSource);
+        }
+        else
+        {
+            LNX_LOGGER.error("invalid amplificon data source: {}", mDataSource);
+        }
+
         mSampleAmpData = Maps.newHashMap();
         mResultsWriter = null;
         mSampleId = "";
@@ -62,9 +78,11 @@ public class AmpliconCompare
         loadData();
     }
 
-    public void processSample(
-            final String sampleId, final List<SvCluster> clusters, final Map<String, List<SvBreakend>> chrBreakendMap)
+    public void processSample(final String sampleId, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
+        if(!mDataSource.equals(AMPLICON_SOURCE_AMP_ARCHITECT) && !mDataSource.equals(AMPLICON_SOURCE_JABBA))
+            return;
+
         final List<AmpliconData> ampDataList = mSampleAmpData.get(sampleId);
 
         if(ampDataList == null)
@@ -87,7 +105,7 @@ public class AmpliconCompare
             final List<SvBreakend> breakendList = chrBreakendMap.get(ampRegion.Chromosome);
             if(breakendList == null)
             {
-                LNX_LOGGER.warn("amp(%s) has unmatched region(%s)", ampData, ampRegion);
+                LNX_LOGGER.warn("amp({}) has unmatched region({})", ampData, ampRegion);
                 continue;
             }
 
@@ -257,6 +275,7 @@ public class AmpliconCompare
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(AMPLICON_DATA_FILE, true, "Input file for Amplicon data");
+        options.addOption(AMPLICON_SOURCE, true, "JABBA or AMPLICON_ARCHITECT");
     }
 
     public void close()
@@ -268,8 +287,9 @@ public class AmpliconCompare
     {
         try
         {
+            final String delim = mDataSource.equals(AMPLICON_SOURCE_JABBA) ? JABBA_DATA_DELIM : AA_DATA_DELIM;
             final List<String> lines = Files.readAllLines(Paths.get(mAmpliconDataFile));
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DATA_DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), delim);
             lines.remove(0); // remove header
 
             AmpliconData currentAmpData = null;
@@ -277,9 +297,9 @@ public class AmpliconCompare
 
             for(String line : lines)
             {
-                final String[] items = line.split(DATA_DELIM, -1);
+                final String[] items = line.split(delim, -1);
 
-                final String sampleId = extractSampleId(fieldsIndexMap, items);
+                final String sampleId = extractSampleId(mDataSource, fieldsIndexMap, items);
 
                 List<AmpliconData> ampDataList = mSampleAmpData.get(sampleId);
 
@@ -290,7 +310,10 @@ public class AmpliconCompare
                     currentAmpData = null;
                 }
 
-                AmpliconData ampData = AmpliconData.from(fieldsIndexMap, items);
+                AmpliconData ampData = AmpliconData.from(mDataSource, fieldsIndexMap, items);
+
+                if(ampData == null)
+                    continue;
 
                 if(currentAmpData == null || currentAmpData.ClusterId != ampData.ClusterId)
                 {
