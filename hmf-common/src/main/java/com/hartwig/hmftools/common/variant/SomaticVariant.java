@@ -10,9 +10,6 @@ public interface SomaticVariant extends Variant {
     double qual();
 
     @NotNull
-    VariantType type();
-
-    @NotNull
     String filter();
 
     int genesAffected();

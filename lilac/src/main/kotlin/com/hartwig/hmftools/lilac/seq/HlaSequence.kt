@@ -1,14 +1,53 @@
 package com.hartwig.hmftools.lilac.seq
 
 import com.hartwig.hmftools.lilac.hla.HlaAllele
+import com.hartwig.hmftools.lilac.phase.PhasedEvidence
 
 data class HlaSequence(val contig: String, val rawSequence: String) {
-    val allele: HlaAllele by lazy { HlaAllele(contig) }
-    val sequence = rawSequence.removeSpecialCharacters()
+    val allele = HlaAllele(contig)
+    val sequence = rawSequence.aligned()
     val length = sequence.length
+
+
+    fun consistentWith(evidence: PhasedEvidence): Boolean {
+        return evidence.evidence.keys.any { this.consistentWith(evidence.aminoAcidIndices, it.toCharArray()) }
+    }
+
+    fun consistentWith(sequenceIndices: IntArray, sequences: Collection<CharArray>): Boolean {
+        return sequences.any { consistentWith(sequenceIndices, it) }
+    }
+
+    fun consistentWith(sequenceIndices: IntArray, sequence: CharArray): Boolean {
+        return match(sequenceIndices, sequence) != HlaSequenceMatch.NONE
+    }
+
+    fun match(indicies: IntArray, sequence: CharArray): HlaSequenceMatch {
+        var wildCardCount = 0
+        for (i in indicies.indices) {
+            val index = indicies[i]
+            val aminoAcid = sequence[i]
+
+            if (this.length > index && this.sequence[index] != '*' && this.sequence[index] != aminoAcid) {
+                return HlaSequenceMatch.NONE
+            }
+
+            if (this.length > index && this.sequence[index] == '*') {
+                wildCardCount++
+            }
+        }
+
+        return if (wildCardCount > 0) HlaSequenceMatch.PARTIAL else HlaSequenceMatch.FULL
+    }
 
     fun copyWithAdditionalSequence(additionalSequence: String): HlaSequence {
         return HlaSequence(contig, rawSequence + additionalSequence)
+    }
+
+    fun pad(length: Int): HlaSequence {
+        val currentLength = sequence.length
+        val desiredLength = rawSequence.length + length - currentLength
+
+        return HlaSequence(contig, rawSequence.padEnd(desiredLength, '*'))
     }
 
     fun inflate(template: String): HlaSequence {
@@ -25,7 +64,7 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
 
     fun deflate(template: String): HlaSequence {
         val joiner = StringBuilder()
-        for (i in rawSequence.indices) {
+        for (i in sequence.indices) {
             when {
                 rawSequence[i] == '.' -> joiner.append('.')
                 rawSequence[i] == '|' -> joiner.append('|')
@@ -39,10 +78,15 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
     }
 
     override fun toString(): String {
-        return "${contig.padEnd(20, ' ')}\t${rawSequence}"
+        return "${contig.padEnd(20, ' ')}\t${sequence}"
+    }
+
+    private fun String.aligned(): String {
+        return this.replace(".", "").replace("|", "")
     }
 
     private fun String.removeSpecialCharacters(): String {
         return this.replace("*", "").replace(".", "").replace("|", "")
     }
+
 }

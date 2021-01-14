@@ -59,6 +59,7 @@ public class ReadContextEvidence {
         final SamRecordSelector<ReadContextCounter> consumerSelector = new SamRecordSelector<>(counters);
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
+                .validationStringency(sageConfig.validationStringency())
                 .referenceSource(new ReferenceSource(refGenome))
                 .open(new File(bam))) {
             slicer.slice(tumorReader, samRecord -> {

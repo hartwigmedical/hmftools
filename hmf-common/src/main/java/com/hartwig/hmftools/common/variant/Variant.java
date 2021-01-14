@@ -7,6 +7,9 @@ import org.jetbrains.annotations.NotNull;
 public interface Variant extends GenomePosition, AllelicDepth {
 
     @NotNull
+    VariantType type();
+
+    @NotNull
     String gene();
 
     @NotNull

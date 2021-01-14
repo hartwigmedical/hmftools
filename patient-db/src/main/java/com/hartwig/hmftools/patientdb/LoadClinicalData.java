@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -135,6 +136,9 @@ public final class LoadClinicalData {
         Map<String, Patient> patients =
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, lims);
 
+        LOGGER.info("Check for missing curation tumor location when info is known");
+        checkForMissingCuratedTumorLocations(sampleDataPerPatient, patients.values());
+
         LOGGER.info("Writing curated primary tumors");
         DumpPrimaryTumorData.writeCuratedPrimaryTumorsToTSV(cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV), patients.values());
 
@@ -153,6 +157,30 @@ public final class LoadClinicalData {
         }
 
         LOGGER.info("Complete");
+    }
+
+    private static void checkForMissingCuratedTumorLocations(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
+            @NotNull Collection<Patient> patients) {
+        List<String> patientsInLims = Lists.newArrayList();
+        for (List<SampleData> sampleDataList : sampleDataPerPatient.values()) {
+            for (SampleData sampleData : sampleDataList) {
+                patientsInLims.add(sampleData.sampleId().substring(0, 12));
+            }
+        }
+
+        for (Patient patient : patients) {
+            if (patientsInLims.contains(patient.patientIdentifier())) {
+                if (patient.baselineData().curatedPrimaryTumor().location() == null
+                        && patient.baselineData().curatedPrimaryTumor().searchTerm() != null && !patient.baselineData()
+                        .curatedPrimaryTumor()
+                        .searchTerm()
+                        .isEmpty()) {
+                    LOGGER.warn("Could not curate patient {} for primary tumor '{}'",
+                            patient.patientIdentifier(),
+                            patient.baselineData().curatedPrimaryTumor().searchTerm());
+                }
+            }
+        }
     }
 
     @NotNull

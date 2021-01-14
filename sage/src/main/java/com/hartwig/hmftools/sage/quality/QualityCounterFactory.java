@@ -6,7 +6,7 @@ import java.util.concurrent.CompletionException;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.SageApplication;
-import com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig;
+import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 
@@ -25,9 +25,9 @@ class QualityCounterFactory {
 
     private final String bamFile;
     private final ReferenceSequenceFile refGenome;
-    private final BaseQualityRecalibrationConfig config;
+    private final SageConfig config;
 
-    public QualityCounterFactory(final BaseQualityRecalibrationConfig config, final String bamFile, final ReferenceSequenceFile refGenome ) {
+    public QualityCounterFactory(final SageConfig config, final String bamFile, final ReferenceSequenceFile refGenome) {
         this.bamFile = bamFile;
         this.refGenome = refGenome;
         this.config = config;
@@ -38,9 +38,11 @@ class QualityCounterFactory {
         LOGGER.debug("Processing bqr region {}", bounds);
 
         final RefSequence refSequence = new RefSequence(bounds, refGenome);
-        final QualityCounterCigarHandler counter = new QualityCounterCigarHandler(refSequence, bounds, config.maxAltCount());
+        final QualityCounterCigarHandler counter =
+                new QualityCounterCigarHandler(refSequence, bounds, config.baseQualityRecalibrationConfig().maxAltCount());
         final SamSlicer slicer = new SamSlicer(config.minMapQuality(), bounds);
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
+                .validationStringency(config.validationStringency())
                 .referenceSource(new ReferenceSource(refGenome))
                 .open(new File(bamFile))) {
 

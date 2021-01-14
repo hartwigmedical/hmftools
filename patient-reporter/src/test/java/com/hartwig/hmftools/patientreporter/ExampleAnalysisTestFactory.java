@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
@@ -538,6 +539,7 @@ public final class ExampleAnalysisTestFactory {
                 .position(140453136)
                 .ref("T")
                 .alt("A")
+                .type(VariantType.SNP)
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
@@ -558,6 +560,7 @@ public final class ExampleAnalysisTestFactory {
                 .position(21971153)
                 .ref("CCG")
                 .alt("C")
+                .type(VariantType.INDEL)
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .canonicalHgvsCodingImpact("c.203_204delCG")
                 .canonicalHgvsProteinImpact("p.Ala68fs")
@@ -578,6 +581,7 @@ public final class ExampleAnalysisTestFactory {
                 .position(1295228)
                 .ref("GG")
                 .alt("AA")
+                .type(VariantType.MNP)
                 .canonicalCodingEffect(CodingEffect.NONE)
                 .canonicalHgvsCodingImpact("c.-125_-124delCCinsTT")
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
@@ -598,6 +602,7 @@ public final class ExampleAnalysisTestFactory {
                 .position(198266779)
                 .ref("C")
                 .alt("T")
+                .type(VariantType.SNP)
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.2153C>T")
                 .canonicalHgvsProteinImpact("p.Pro718Leu")
@@ -618,6 +623,7 @@ public final class ExampleAnalysisTestFactory {
                 .position(189604330)
                 .ref("G")
                 .alt("T")
+                .type(VariantType.SNP)
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
@@ -643,6 +649,7 @@ public final class ExampleAnalysisTestFactory {
                 .position(189604330)
                 .ref("G")
                 .alt("T")
+                .type(VariantType.SNP)
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
@@ -663,6 +670,7 @@ public final class ExampleAnalysisTestFactory {
                 .position(81627197)
                 .ref("G")
                 .alt("T")
+                .type(VariantType.SNP)
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")

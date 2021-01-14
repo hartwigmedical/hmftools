@@ -32,6 +32,8 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
+import htsjdk.samtools.ValidationStringency;
+
 public class SageConfigTest {
 
     @Test
@@ -71,6 +73,7 @@ public class SageConfigTest {
                 .filter(defaultFilterConfig())
                 .readContextFlankSize(SageConfig.DEFAULT_READ_CONTEXT_FLANK_SIZE)
                 .baseQualityRecalibrationConfig(defaultQualityRecalibrationConfig())
+                .validationStringency(ValidationStringency.DEFAULT_STRINGENCY)
                 .build();
     }
 

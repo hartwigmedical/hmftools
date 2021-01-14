@@ -55,7 +55,7 @@ public final class DiseaseOntology {
 
             String id = string(graphObject, "id");
             if (id.equals(ID_TO_READ)) {
-                LOGGER.debug("Reading DOID entry with ID '{}'", id);
+                LOGGER.debug(" Reading DOID entry with ID '{}'", id);
 
                 // Add data to doid entry
                 doidEntryBuilder.id(id);
@@ -69,8 +69,6 @@ public final class DiseaseOntology {
                 doidEntryBuilder.equivalentNodesSets(optionalStringList(graphObject, "equivalentNodesSets"));
                 doidEntryBuilder.domainRangeAxioms(optionalStringList(graphObject, "domainRangeAxioms"));
                 doidEntryBuilder.propertyChainAxioms(optionalStringList(graphObject, ("propertyChainAxioms")));
-            } else {
-                LOGGER.debug("Skipping DOID entry with ID '{}'", id);
             }
         }
 

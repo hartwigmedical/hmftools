@@ -7,6 +7,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
@@ -50,6 +51,7 @@ public class SomaticVariantsTest {
                 .position(0)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
+                .type(VariantType.SNP)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)

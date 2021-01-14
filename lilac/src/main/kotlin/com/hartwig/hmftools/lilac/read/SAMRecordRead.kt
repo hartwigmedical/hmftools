@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.lilac.read
 
 import com.hartwig.hmftools.common.codon.Codons
+import com.hartwig.hmftools.common.genome.bed.NamedBed
+import com.hartwig.hmftools.common.genome.region.CodingRegions
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion
+import com.hartwig.hmftools.common.genome.region.Strand
+import com.hartwig.hmftools.lilac.LilacApplication2
 import com.hartwig.hmftools.lilac.ext.containsIndel
 import com.hartwig.hmftools.lilac.sam.SamSlicer
 import htsjdk.samtools.SAMRecord
@@ -12,20 +17,22 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord) : AminoAcidRead {
+data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord) : Read {
 
-    val hlaNucIndexEnd = hlaNucIndexStart + length - 1
-    val nucleotideIndices = IntRange(hlaNucIndexStart, hlaNucIndexEnd)
-    val aminoAcidIndices = aminoAcidIndices(hlaNucIndexStart, hlaNucIndexEnd)
+    private val hlaNucIndexEnd = hlaNucIndexStart + length - 1
+    private val nucleotideIndices = IntRange(hlaNucIndexStart, hlaNucIndexEnd).toList()
+    private val aminoAcidIndices = AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd).toList()
 
     fun containsNucleotide(index: Int): Boolean {
-        return index >= hlaNucIndexStart && index <= hlaNucIndexStart + length
+        return index in nucleotideIndices
     }
 
-    private fun aminoAcidIndices(hlaNucIndexStart: Int, hlaNucIndexEnd: Int): Collection<Int> {
-        val result = mutableListOf<Int>()
-        AminoAcidIndices.indices(hlaNucIndexStart, hlaNucIndexEnd).forEach { result.add(it) }
-        return result
+    override fun nucleotideIndices(minQual: Int): Collection<Int> {
+        return nucleotideIndices.filter { nucleotideQuality(it) >= minQual }
+    }
+
+    override fun nucleotideIndices(): Collection<Int> {
+        return nucleotideIndices
     }
 
     fun containsAminoAcid(index: Int): Boolean {
@@ -33,23 +40,23 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
     }
 
     override fun aminoAcidIndices(): Collection<Int> {
-        return aminoAcidIndices;
+        return aminoAcidIndices
     }
 
     override fun aminoAcid(index: Int, minQual: Int): Char {
         val startIndex = index * 3
 
-        val firstBase = charAt(startIndex + 0, minQual)
+        val firstBase = nucleotide(startIndex + 0, minQual)
         if (firstBase == '.') {
             return '.'
         }
 
-        val secondBase = charAt(startIndex + 1, minQual)
+        val secondBase = nucleotide(startIndex + 1, minQual)
         if (secondBase == '.') {
             return '.'
         }
 
-        val thirdBase = charAt(startIndex + 2, minQual)
+        val thirdBase = nucleotide(startIndex + 2, minQual)
         if (thirdBase == '.') {
             return '.'
         }
@@ -57,7 +64,22 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
         return Codons.aminoAcid(firstBase.toString() + secondBase + thirdBase)
     }
 
-    fun charAt(index: Int, minQual: Int = 0): Char {
+    fun nucleotideQuality(loci: Int): Int {
+        val readIndex = readIndex(loci)
+        return samRecord.baseQualities[readIndex].toInt()
+    }
+
+    private fun readIndex(loci: Int): Int {
+        return if (reverseStrand) readIndexStart - loci + hlaNucIndexStart else loci - hlaNucIndexStart + readIndexStart
+    }
+
+    override fun nucleotide(loci: Int): Char {
+        val readIndex = readIndex(loci)
+        val readBase = samRecord.readBases[readIndex].toChar()
+        return if (reverseStrand) readBase.reverseCompliment() else readBase
+    }
+
+    override fun nucleotide(index: Int, minQual: Int): Char {
         val adjustedIndex = if (reverseStrand) readIndexStart - index + hlaNucIndexStart else index - hlaNucIndexStart + readIndexStart
         val quality = samRecord.baseQualities[adjustedIndex]
         if (quality < minQual) {
@@ -80,7 +102,27 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
 
     companion object {
 
-        fun realign(hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
+        fun readFromBam(transcript: HmfTranscriptRegion, bamFile: String): List<SAMRecordRead> {
+            LilacApplication2.logger.info("... querying ${transcript.gene()} (${transcript.chromosome()}:${transcript.codingStart()}-${transcript.codingEnd()})")
+
+            val reverseStrand = transcript.strand() == Strand.REVERSE
+            val codingRegions = if (reverseStrand) codingRegions(transcript).reversed() else codingRegions(transcript)
+
+            val realignedRegions = mutableListOf<SAMRecordRead>()
+            var length = 0
+            for (codingRegion in codingRegions) {
+                realignedRegions.addAll(SAMRecordRead.realign(length, codingRegion, reverseStrand, bamFile))
+                length += codingRegion.bases().toInt()
+//            println((length - 1) / 3)
+            }
+            return realignedRegions
+        }
+
+        private fun codingRegions(transcript: HmfTranscriptRegion): List<NamedBed> {
+            return CodingRegions.codingRegions(transcript)
+        }
+
+        private fun realign(hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
             val slicer = SamSlicer(1)
             val result = mutableListOf<SAMRecordRead>()
             SamReaderFactory.makeDefault().open(File(bamFileName)).use { samReader ->

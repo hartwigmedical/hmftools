@@ -19,8 +19,7 @@ public enum Knowledgebase {
     VICC_CGI("vicc_cgi"),
     VICC_CIVIC("vicc_civic"),
     VICC_JAX("vicc_jax"),
-    VICC_ONCOKB("vicc_oncokb"),
-    UNDEFINED("undefined");
+    VICC_ONCOKB("vicc_oncokb");
 
     @NotNull
     private final String display;

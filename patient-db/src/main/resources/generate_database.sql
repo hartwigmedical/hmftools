@@ -8,24 +8,6 @@ CREATE TABLE patient
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS protect;
-CREATE TABLE protect
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    event varchar(255) NOT NULL,
-    germline BOOLEAN NOT NULL,
-    source varchar(255) NOT NULL,
-    reported BOOLEAN NOT NULL,
-    treatment varchar(255) NOT NULL,
-    onLabel BOOLEAN NOT NULL,
-    level varchar(255) NOT NULL,
-    direction varchar(255) NOT NULL,
-    urls varchar(2500) NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
-);
-
 DROP TABLE IF EXISTS baseline;
 CREATE TABLE baseline
 (   patientId int NOT NULL,
@@ -908,6 +890,24 @@ CREATE TABLE clinicalEvidence
     source varchar(255) NOT NULL,
     cancerType varchar(500) NOT NULL,
     isOnLabel BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+DROP TABLE IF EXISTS protect;
+CREATE TABLE protect
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    event varchar(255) NOT NULL,
+    germline BOOLEAN NOT NULL,
+    reported BOOLEAN NOT NULL,
+    treatment varchar(255) NOT NULL,
+    onLabel BOOLEAN NOT NULL,
+    level varchar(255) NOT NULL,
+    direction varchar(255) NOT NULL,
+    sources varchar(255) NOT NULL,
+    urls varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

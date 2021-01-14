@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -33,12 +34,12 @@ class ProtectDAO {
                     PROTECT.SAMPLEID,
                     PROTECT.EVENT,
                     PROTECT.GERMLINE,
-                    PROTECT.SOURCE,
                     PROTECT.REPORTED,
                     PROTECT.TREATMENT,
                     PROTECT.ONLABEL,
                     PROTECT.LEVEL,
                     PROTECT.DIRECTION,
+                    PROTECT.SOURCES,
                     PROTECT.URLS,
                     PROTECT.MODIFIED);
             batch.forEach(entry -> addRecord(timestamp, inserter, sample, entry));
@@ -53,15 +54,20 @@ class ProtectDAO {
             urlJoiner.add(url);
         }
 
+        StringJoiner sourceJoiner = new StringJoiner(",");
+        for (Knowledgebase source : evidence.sources()) {
+            sourceJoiner.add(source.display());
+        }
+
         inserter.values(sample,
                 evidence.genomicEvent(),
                 evidence.germline(),
-                evidence.source().toString(),
                 evidence.reported(),
                 evidence.treatment(),
                 evidence.onLabel(),
                 evidence.level().toString(),
                 evidence.direction().toString(),
+                sourceJoiner.toString(),
                 urlJoiner.toString(),
                 timestamp);
     }

@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.protect.variants.DriverInterpretation;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantFactory;
@@ -27,14 +27,18 @@ public class VariantEvidence {
     private static final Logger LOGGER = LogManager.getLogger(VariantEvidence.class);
 
     @NotNull
+    private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
+    @NotNull
     private final List<ActionableHotspot> hotspots;
     @NotNull
     private final List<ActionableRange> ranges;
     @NotNull
     private final List<ActionableGene> genes;
 
-    public VariantEvidence(@NotNull final List<ActionableHotspot> hotspots, @NotNull final List<ActionableRange> ranges,
+    public VariantEvidence(@NotNull final PersonalizedEvidenceFactory personalizedEvidenceFactory,
+            @NotNull final List<ActionableHotspot> hotspots, @NotNull final List<ActionableRange> ranges,
             @NotNull final List<ActionableGene> genes) {
+        this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.hotspots = hotspots;
         this.ranges = ranges;
         this.genes = genes.stream()
@@ -44,27 +48,24 @@ public class VariantEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull List<ReportableVariant> germline,
-            @NotNull List<ReportableVariant> somatic) {
+    public List<ProtectEvidence> evidence(@NotNull List<ReportableVariant> germline, @NotNull List<ReportableVariant> somatic) {
         List<ReportableVariant> variants = ReportableVariantFactory.mergeVariantLists(germline, somatic);
-        return variants.stream().flatMap(x -> evidence(doids, x).stream()).collect(Collectors.toList());
+        return variants.stream().flatMap(x -> evidence(x).stream()).collect(Collectors.toList());
     }
 
     @NotNull
-    private List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull ReportableVariant reportable) {
+    private List<ProtectEvidence> evidence(@NotNull ReportableVariant reportable) {
         List<ProtectEvidence> hotspotEvidence = hotspots.stream()
                 .filter(x -> hotspotMatch(x, reportable))
-                .map(x -> evidence(true, doids, reportable, x))
+                .map(x -> evidence(true, reportable, x))
                 .collect(Collectors.toList());
 
-        List<ProtectEvidence> rangeEvidence = ranges.stream()
-                .filter(x -> rangeMatch(x, reportable))
-                .map(x -> evidence(true, doids, reportable, x))
-                .collect(Collectors.toList());
+        List<ProtectEvidence> rangeEvidence =
+                ranges.stream().filter(x -> rangeMatch(x, reportable)).map(x -> evidence(true, reportable, x)).collect(Collectors.toList());
 
         List<ProtectEvidence> geneEvidence = genes.stream()
                 .filter(x -> geneMatch(x, reportable))
-                .map(x -> evidence(reportable.driverLikelihoodInterpretation() == DriverInterpretation.HIGH, doids, reportable, x))
+                .map(x -> evidence(reportable.driverLikelihoodInterpretation() == DriverInterpretation.HIGH, reportable, x))
                 .collect(Collectors.toList());
 
         List<ProtectEvidence> result = Lists.newArrayList();
@@ -72,7 +73,16 @@ public class VariantEvidence {
         result.addAll(rangeEvidence);
         result.addAll(geneEvidence);
 
-        return ProtectEvidenceFunctions.reportHighest(result);
+        return result;
+    }
+
+    @NotNull
+    private ProtectEvidence evidence(boolean report, @NotNull ReportableVariant reportable, @NotNull ActionableEvent actionable) {
+        return personalizedEvidenceFactory.patientEvidenceBuilder(actionable)
+                .genomicEvent(reportable.genomicEvent())
+                .germline(reportable.source() == ReportableVariantSource.GERMLINE)
+                .reported(report)
+                .build();
     }
 
     private static boolean hotspotMatch(@NotNull ActionableHotspot hotspot, @NotNull ReportableVariant variant) {
@@ -93,7 +103,7 @@ public class VariantEvidence {
             case SPLICE:
                 return effect == CodingEffect.SPLICE;
             case INFRAME:
-                return effect == CodingEffect.MISSENSE && (isInsert(variant) || isDelete(variant));
+                return effect == CodingEffect.MISSENSE && variant.type() == VariantType.INDEL;
             case INFRAME_DELETION:
                 return effect == CodingEffect.MISSENSE && isDelete(variant);
             case INFRAME_INSERTION:
@@ -108,11 +118,11 @@ public class VariantEvidence {
     }
 
     private static boolean isInsert(@NotNull ReportableVariant variant) {
-        return variant.alt().length() > variant.ref().length();
+        return variant.type() == VariantType.INDEL && variant.alt().length() > variant.ref().length();
     }
 
     private static boolean isDelete(@NotNull ReportableVariant variant) {
-        return variant.alt().length() < variant.ref().length();
+        return variant.type() == VariantType.INDEL && variant.alt().length() < variant.ref().length();
     }
 
     private static boolean geneMatch(@NotNull ActionableGene gene, @NotNull ReportableVariant variant) {
@@ -120,15 +130,5 @@ public class VariantEvidence {
                 || gene.event() == GeneLevelEvent.ANY_MUTATION;
 
         return gene.gene().equals(variant.gene());
-    }
-
-    @NotNull
-    private static ProtectEvidence evidence(boolean report, @NotNull Set<String> doids, @NotNull ReportableVariant reportable,
-            @NotNull ActionableEvent actionable) {
-        return ProtectEvidenceFunctions.builder(doids, actionable)
-                .genomicEvent(reportable.genomicEvent())
-                .germline(reportable.source() == ReportableVariantSource.GERMLINE)
-                .reported(report)
-                .build();
     }
 }

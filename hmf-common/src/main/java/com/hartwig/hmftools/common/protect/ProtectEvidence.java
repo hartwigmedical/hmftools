@@ -20,9 +20,6 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
 
     public abstract boolean germline();
 
-    @NotNull
-    public abstract Knowledgebase source();
-
     public abstract boolean reported();
 
     @NotNull
@@ -35,6 +32,9 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
 
     @NotNull
     public abstract EvidenceDirection direction();
+
+    @NotNull
+    public abstract Set<Knowledgebase> sources();
 
     @NotNull
     public abstract Set<String> urls();
@@ -51,9 +51,9 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return eventCompare;
         }
 
-        int treatmentCompare = treatment().compareTo(o.treatment());
-        if (treatmentCompare != 0) {
-            return treatmentCompare;
+        int levelCompare = level().compareTo(o.level());
+        if (levelCompare != 0) {
+            return levelCompare;
         }
 
         int onLabelCompare = -Boolean.compare(onLabel(), o.onLabel());
@@ -61,18 +61,13 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return onLabelCompare;
         }
 
-        int levelCompare = level().compareTo(o.level());
-        if (levelCompare != 0) {
-            return levelCompare;
+        int treatmentCompare = treatment().compareTo(o.treatment());
+        if (treatmentCompare != 0) {
+            return treatmentCompare;
         }
 
         int directionCompare = direction().compareTo(o.direction());
         if (directionCompare != 0) {
-            return directionCompare;
-        }
-
-        int sourceCompare = source().compareTo(o.source());
-        if (sourceCompare != 0) {
             return directionCompare;
         }
 

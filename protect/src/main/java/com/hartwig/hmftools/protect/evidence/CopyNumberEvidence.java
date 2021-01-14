@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -16,9 +15,13 @@ import org.jetbrains.annotations.NotNull;
 public class CopyNumberEvidence {
 
     @NotNull
+    private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
+    @NotNull
     private final List<ActionableGene> actionableGenes;
 
-    public CopyNumberEvidence(@NotNull final List<ActionableGene> actionableGenes) {
+    public CopyNumberEvidence(@NotNull final PersonalizedEvidenceFactory personalizedEvidenceFactory,
+            @NotNull final List<ActionableGene> actionableGenes) {
+        this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionableGenes = actionableGenes.stream()
                 .filter(x -> x.event() == GeneLevelEvent.INACTIVATION || x.event() == GeneLevelEvent.AMPLIFICATION
                         || x.event() == GeneLevelEvent.DELETION)
@@ -26,28 +29,27 @@ public class CopyNumberEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull List<ReportableGainLoss> reportables) {
+    public List<ProtectEvidence> evidence(@NotNull List<ReportableGainLoss> reportables) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ReportableGainLoss reportable : reportables) {
-            result.addAll(evidence(doids, reportable));
+            result.addAll(evidence(reportable));
         }
         return result;
     }
 
     @NotNull
-    private List<ProtectEvidence> evidence(@NotNull Set<String> doids, @NotNull ReportableGainLoss reportable) {
+    private List<ProtectEvidence> evidence(@NotNull ReportableGainLoss reportable) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(reportable.gene()) && isTypeMatch(actionable, reportable)) {
-                ProtectEvidence evidence = ProtectEvidenceFunctions.builder(doids, actionable)
-                        .germline(false)
+                ProtectEvidence evidence = personalizedEvidenceFactory.somaticallyReportableEvidence(actionable)
                         .genomicEvent(reportable.genomicEvent())
-                        .reported(true)
                         .build();
                 result.add(evidence);
             }
         }
-        return ProtectEvidenceFunctions.reportHighest(result);
+
+        return result;
     }
 
     private static boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull ReportableGainLoss reportable) {

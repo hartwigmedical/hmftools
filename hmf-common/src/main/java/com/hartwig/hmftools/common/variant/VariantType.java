@@ -11,6 +11,15 @@ public enum VariantType {
     UNDEFINED;
 
     @NotNull
+    public static VariantType type(String ref, String alt) {
+        if (ref.length() == alt.length()) {
+            return ref.length() == 1 ? SNP : MNP;
+        }
+
+        return INDEL;
+    }
+
+    @NotNull
     public static VariantType type(@NotNull VariantContext context) {
         switch (context.getType()) {
             case MNP:

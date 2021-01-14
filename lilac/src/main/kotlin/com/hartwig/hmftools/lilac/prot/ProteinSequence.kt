@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.prot
 
 import com.hartwig.hmftools.lilac.ext.rollingKmers
 import com.hartwig.hmftools.lilac.hla.HlaAllele
-import com.hartwig.hmftools.lilac.phase.PhasedEvidence2
+import com.hartwig.hmftools.lilac.phase.PhasedEvidence
 
 data class ProteinSequence(val contig: String, val protein: String) {
     val allele: HlaAllele by lazy { HlaAllele(contig) }
@@ -16,7 +16,7 @@ data class ProteinSequence(val contig: String, val protein: String) {
     }
 
 
-    fun consistentWith(evidence: PhasedEvidence2): Boolean {
+    fun consistentWith(evidence: PhasedEvidence): Boolean {
         return evidence.evidence.keys.any { this.consistentWith(evidence.aminoAcidIndices, it.toCharArray()) }
     }
 

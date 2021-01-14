@@ -107,6 +107,7 @@ public class CoveragePipeline {
             final HumanChromosome chrom = HumanChromosome.fromString(bounds.chromosome());
             final SamSlicer slicer = new SamSlicer(1, bounds, panel.get(chrom));
             try (final SamReader samReader = SamReaderFactory.makeDefault()
+                    .validationStringency(config.validationStringency())
                     .referenceSource(new ReferenceSource(refGenome))
                     .open(new File(bam))) {
                 slicer.slice(samReader, consumer);

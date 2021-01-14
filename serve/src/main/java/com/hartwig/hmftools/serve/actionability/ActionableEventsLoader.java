@@ -33,30 +33,30 @@ public final class ActionableEventsLoader {
 
         String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableHotspot> hotspots = ActionableHotspotFile.read(actionableHotspotTsv);
-        LOGGER.info(" Loaded {} actionable hotspots", hotspots.size());
+        LOGGER.info(" Loaded {} actionable hotspots from {}", hotspots.size(), actionableHotspotTsv);
 
         String actionableRangeTsv = ActionableRangeFile.actionableRangeTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableRange> ranges = ActionableRangeFile.read(actionableRangeTsv);
-        LOGGER.info(" Loaded {} actionable ranges", ranges.size());
+        LOGGER.info(" Loaded {} actionable ranges from {}", ranges.size(), actionableRangeTsv);
 
         String actionableGeneTsv = ActionableGeneFile.actionableGeneTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableGene> genes = ActionableGeneFile.read(actionableGeneTsv);
-        LOGGER.info(" Loaded {} actionable genes", genes.size());
+        LOGGER.info(" Loaded {} actionable genes from {}", genes.size(), actionableGeneTsv);
 
         String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableFusion> fusions = ActionableFusionFile.read(actionableFusionTsv);
-        LOGGER.info(" Loaded {} actionable fusions", fusions.size());
+        LOGGER.info(" Loaded {} actionable fusions from {}", fusions.size(), actionableFusionTsv);
 
         String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableSignature> signatures = ActionableSignatureFile.read(actionableSignatureTsv);
-        LOGGER.info(" Loaded {} actionable signatures", signatures.size());
+        LOGGER.info(" Loaded {} actionable signatures from {}", signatures.size(), actionableSignatureTsv);
 
         return ImmutableActionableEvents.builder()
-                .addAllHotspots(hotspots)
-                .addAllRanges(ranges)
-                .addAllGenes(genes)
-                .addAllFusions(fusions)
-                .addAllSignatures(signatures)
+                .hotspots(hotspots)
+                .ranges(ranges)
+                .genes(genes)
+                .fusions(fusions)
+                .signatures(signatures)
                 .build();
     }
 }

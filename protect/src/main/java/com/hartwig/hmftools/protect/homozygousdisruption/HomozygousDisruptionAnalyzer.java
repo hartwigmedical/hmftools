@@ -22,10 +22,10 @@ public final class HomozygousDisruptionAnalyzer {
     @NotNull
     public static List<ReportableHomozygousDisruption> extractFromLinxDriversTsv(@NotNull String linxDriversTsv) throws IOException {
         List<DriverCatalog> linxDriversCatalog = DriverCatalogFile.read(linxDriversTsv);
-        LOGGER.debug("Loaded {} linx driver catalog records from {}", linxDriversCatalog.size(), linxDriversTsv);
+        LOGGER.debug(" Loaded {} linx driver catalog records from {}", linxDriversCatalog.size(), linxDriversTsv);
 
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptions(linxDriversCatalog);
-        LOGGER.debug("Extracted {} homozygous disruptions from linx drivers", reportableHomozygousDisruptions.size());
+        LOGGER.debug("  Extracted {} homozygous disruptions from linx drivers", reportableHomozygousDisruptions.size());
         return reportableHomozygousDisruptions;
     }
 
