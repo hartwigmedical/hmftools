@@ -12,7 +12,6 @@ import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
-import com.hartwig.hmftools.patientdb.interpretator.cpct.BaselineInterpretator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -113,38 +112,47 @@ class BaselineReader {
     }
 
     private void setPrimaryTumorData(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
-        String primaryTumorLocationSelcrit = null;
+        String primaryTumorLocationSelcritForm = null;
         FormStatus primaryTumorLocationSelcritStatus = null;
-
         for (EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
             for (EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
-                primaryTumorLocationSelcrit = selcritItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_SELCRIT);
+                primaryTumorLocationSelcritForm = selcritItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_SELCRIT);
                 primaryTumorLocationSelcritStatus = selcritForm.status();
             }
         }
 
-        String primaryTumorLocationCarcinoma = null;
+        String primaryTumorLocationCarcinomaForm = null;
         FormStatus primaryTumorLocationCarcinomaStatus = null;
         for (EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA)) {
             for (EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
-                primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
+                String primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationOther = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
-                primaryTumorLocationCarcinoma = BaselineInterpretator.interpretationCarcinomaPrimaryTumorLocation(
-                        primaryTumorLocationCarcinoma,
-                        primaryTumorLocationOther);
+                primaryTumorLocationCarcinomaForm =
+                        determineCarcinomaPrimaryTumorLocation(primaryTumorLocationCarcinoma, primaryTumorLocationOther);
                 primaryTumorLocationCarcinomaStatus = carcinomaForm.status();
             }
         }
 
-        boolean useCarcinomaForm = primaryTumorLocationCarcinoma != null && !primaryTumorLocationCarcinoma.isEmpty();
+        // We prefer carcinoma form over sel crit form. See also DEV-540
+        boolean useCarcinomaForm = primaryTumorLocationCarcinomaForm != null && !primaryTumorLocationCarcinomaForm.isEmpty();
         FormStatus primaryTumorFormStatus = useCarcinomaForm ? primaryTumorLocationCarcinomaStatus : primaryTumorLocationSelcritStatus;
+        String finalPrimaryTumor = useCarcinomaForm ? primaryTumorLocationCarcinomaForm : primaryTumorLocationSelcritForm;
 
-        String primaryTumorLocation = BaselineInterpretator.setFinalPrimaryTumorLocation(primaryTumorLocationCarcinoma,
-                primaryTumorLocationSelcrit,
-                useCarcinomaForm);
-
-        builder.curatedPrimaryTumor(primaryTumorCurator.search(primaryTumorLocation));
+        builder.curatedPrimaryTumor(primaryTumorCurator.search(finalPrimaryTumor));
         builder.primaryTumorStatus(primaryTumorFormStatus != null ? primaryTumorFormStatus : FormStatus.undefined());
+    }
+
+    @Nullable
+    private static String determineCarcinomaPrimaryTumorLocation(@Nullable String primaryTumorLocationCarcinoma,
+            @Nullable String primaryTumorLocationOther) {
+        // We always read additional info if there is any, see also DEV-1713
+        if (primaryTumorLocationCarcinoma == null) {
+            return primaryTumorLocationOther;
+        } else if (primaryTumorLocationCarcinoma != null && primaryTumorLocationOther != null && !primaryTumorLocationOther.isEmpty()) {
+            return primaryTumorLocationCarcinoma + " + " + primaryTumorLocationOther;
+        } else {
+            return primaryTumorLocationCarcinoma;
+        }
     }
 
     private static void setRegistrationAndBirthData(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
