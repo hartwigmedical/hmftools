@@ -149,6 +149,8 @@ public class NeoEpitopeReader
             final BaseRegion readRegion = new BaseRegion(mCurrentNeoData.Chromosomes[fs], mCurrentNeoData.Source.CodingBasePositions[fs]);
             mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
         }
+
+        mReadGroups.values().forEach(x -> processFragmentReads(x));
     }
 
     private void calcPointMutationSupport()
@@ -158,6 +160,8 @@ public class NeoEpitopeReader
         // the 'UP' stream caches the full coding base= sequence since relates to a single gene
         final BaseRegion readRegion = new BaseRegion(mCurrentNeoData.Chromosomes[FS_UP],mCurrentNeoData.Source.CodingBasePositions[FS_UP]);
         mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
+
+        mReadGroups.values().forEach(x -> processFragmentReads(x));
     }
 
     private void initialiseGeneData(final String geneId)
@@ -201,9 +205,6 @@ public class NeoEpitopeReader
 
     private boolean isCandidateGroup(final ReadGroup readGroup)
     {
-        if(!readGroup.isComplete())
-            return false;
-
         // ignore unspliced reads
         if(mCurrentNeoData.isFusion())
         {

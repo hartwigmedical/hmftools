@@ -173,16 +173,14 @@ public class NeoEpitopeData
                 .add("NovelAA")
                 .add("NmdMin")
                 .add("NmdMax")
-                .add("UpTranscripts")
-                .add("DownTranscripts")
-                .add("WildtypeAA")
-                .add("FragmentsUp")
                 .add("FragmentsNovel")
-                .add("FragmentsDown")
                 .add("BaseDepthUp")
                 .add("BaseDepthDown")
                 .add("TpmCancer")
                 .add("TpmCohort")
+                .add("UpTranscripts")
+                .add("DownTranscripts")
+                .add("WildtypeAA")
                 .toString();
     }
 
@@ -202,16 +200,14 @@ public class NeoEpitopeData
         sj.add(Source.NovelAA);
         sj.add(String.valueOf(Source.NmdBases[0]));
         sj.add(String.valueOf(Source.NmdBases[1]));
-        sj.add(Source.Transcripts[FS_UP]);
-        sj.add(Source.Transcripts[FS_DOWN]);
-        sj.add(Source.WildtypeAA);
-        sj.add(String.format("%d/%d", mFragmentSupport.UpFragments[EXACT_MATCH], mFragmentSupport.UpFragments[PARTIAL_MATCH]));
-        sj.add(String.format("%d/%d", mFragmentSupport.NovelFragments[EXACT_MATCH], mFragmentSupport.NovelFragments[PARTIAL_MATCH]));
-        sj.add(String.format("%d/%d", mFragmentSupport.DownFragments[EXACT_MATCH], mFragmentSupport.DownFragments[PARTIAL_MATCH]));
+        sj.add(String.format("%d", mFragmentSupport.NovelFragments[EXACT_MATCH]));
         sj.add(String.format("%d", mFragmentSupport.RefBaseDepth[FS_UP]));
         sj.add(String.format("%d", mFragmentSupport.RefBaseDepth[FS_DOWN]));
         sj.add(String.format("%6.3e", mCancerTpmTotal));
         sj.add(String.format("%6.3e", mCohortTpmTotal));
+        sj.add(Source.Transcripts[FS_UP]);
+        sj.add(Source.Transcripts[FS_DOWN]);
+        sj.add(Source.WildtypeAA);
 
         return sj.toString();
     }
