@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientdb.interpretator.cpct;
 
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-
 import org.jetbrains.annotations.Nullable;
 
 public class BaselineInterpretator {

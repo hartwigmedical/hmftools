@@ -187,8 +187,6 @@ public final class LoadClinicalData {
                                 patient.patientIdentifier());
                     }
                 }
-
-
             }
         }
     }
