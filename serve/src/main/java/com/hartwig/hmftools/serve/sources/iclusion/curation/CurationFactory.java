@@ -24,7 +24,5 @@ final class CurationFactory {
         MUTATION_MAPPINGS.put(new CurationEntry("MSI", "HIGH"), new CurationEntry("-", "MSI HIGH"));
         MUTATION_MAPPINGS.put(new CurationEntry("TumMutLoad", "HIGH"), new CurationEntry("-", "TumMutLoad HIGH"));
         MUTATION_MAPPINGS.put(new CurationEntry("HRD", "POSITIVE"), new CurationEntry("-", "HRD POSITIVE"));
-
-        MUTATION_MAPPINGS.put(new CurationEntry("1p/19q", "CO-DELETION"), new CurationEntry("-", "1p & 19q CO-DELETION"));
     }
 }
