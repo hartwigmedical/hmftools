@@ -17,8 +17,6 @@ import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.AA_DATA_DELIM;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.AMPLICON_SOURCE_AMP_ARCHITECT;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.AMPLICON_SOURCE_JABBA;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.JABBA_DATA_DELIM;
-import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MAX_FOLDBACK_INV_LENGTH;
-import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.MIN_CLUSTER_JCN_THRESHOLD;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconData.extractSampleId;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 
@@ -29,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -51,15 +50,25 @@ public class AmpliconCompare
     private final String mDataSource;
     private final Map<String,List<AmpliconData>> mSampleAmpData;
 
+    // key thresholds and parameters for Jabba and Amp-Architect
+    private final int mMaxFoldbackInvLength;
+    private final double mMinClusterJcnThreshold;
+
     private BufferedWriter mResultsWriter;
 
     public static final String AMPLICON_DATA_FILE = "amplicon_data_file";
     public static final String AMPLICON_SOURCE = "amplicon_source";
 
+    public static final String MAX_INV_LENGTH = "amplicon_inv_len";
+    public static final String MIN_JCN_THRESHOLD = "amplicon_min_jcn";
+
     public AmpliconCompare(final String outputDir, final CommandLine cmd)
     {
         mAmpliconDataFile = checkAddDirSeparator(cmd.getOptionValue(AMPLICON_DATA_FILE));
         mDataSource = cmd.getOptionValue(AMPLICON_SOURCE);
+
+        mMaxFoldbackInvLength = Integer.parseInt(cmd.getOptionValue(MAX_INV_LENGTH, "100000"));
+        mMinClusterJcnThreshold = Double.parseDouble(cmd.getOptionValue(MIN_JCN_THRESHOLD, "3"));
 
         if(mDataSource.equals(AMPLICON_SOURCE_AMP_ARCHITECT) || mDataSource.equals(AMPLICON_SOURCE_JABBA))
         {
@@ -121,7 +130,7 @@ public class AmpliconCompare
         for(final DriverAmpData clusterAmpData : ampClusterCandidates)
         {
             // always keep the highest cluster found
-            if(clusterAmpData.Cluster.getMaxJcn() < MIN_CLUSTER_JCN_THRESHOLD)
+            if(clusterAmpData.Cluster.getMaxJcn() < mMinClusterJcnThreshold)
                 continue;
 
             if(Doubles.equal(clusterAmpData.NetCNChange, maxCnChange)
@@ -182,9 +191,12 @@ public class AmpliconCompare
             mResultsWriter.write(String.format(",%d,%s,%d,%d,%s",
                     ampData.ClusterId, ampData.Type, ampData.Breakends, ampData.HighBreakends, ampData.chromosomes()));
 
-            mResultsWriter.write(String.format(",%.1f,%.1f,%.1f,%d,%d",
+            StringJoiner regionsStr = new StringJoiner(";");
+            ampData.Regions.forEach(x -> regionsStr.add(String.format("%s:%d:%d", x.Chromosome, x.start(), x.end())));
+
+            mResultsWriter.write(String.format(",%.1f,%.1f,%.1f,%s,%d",
                     ampData.MaxCN, ampData.MaxJCN, ampData.FoldbackCN,
-                    ampData.Regions.size(), ampData.Regions.stream().mapToLong(x -> x.baseLength()).sum()));
+                    regionsStr.toString(), ampData.Regions.stream().mapToLong(x -> x.baseLength()).sum()));
 
             if(clusterAmpData != null)
             {
@@ -201,7 +213,7 @@ public class AmpliconCompare
                     maxCN = max(maxCN, max(var.copyNumber(true), var.copyNumber(false)));
                     maxJcn = max(maxJcn, var.jcn());
 
-                    if(var.type() == INV && var.length() <= MAX_FOLDBACK_INV_LENGTH)
+                    if(var.type() == INV && var.length() <= mMaxFoldbackInvLength)
                         shortInvJcn += var.jcn();
 
                     if(var.isFoldback())
@@ -209,7 +221,7 @@ public class AmpliconCompare
                         foldbackJcn += (var.isChainedFoldback() ? 0.5 : 1.0) * var.jcn();
                     }
 
-                    if(var.jcn() >= MIN_CLUSTER_JCN_THRESHOLD)
+                    if(var.jcn() >= mMinClusterJcnThreshold)
                     {
                         ++highJcnCount;
 
@@ -276,6 +288,8 @@ public class AmpliconCompare
     {
         options.addOption(AMPLICON_DATA_FILE, true, "Input file for Amplicon data");
         options.addOption(AMPLICON_SOURCE, true, "JABBA or AMPLICON_ARCHITECT");
+        options.addOption(MIN_JCN_THRESHOLD, true, "Min cluster JCN");
+        options.addOption(MAX_INV_LENGTH, true, "Max INV foldback length");
     }
 
     public void close()

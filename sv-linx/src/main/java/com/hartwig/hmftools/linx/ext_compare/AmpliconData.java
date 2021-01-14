@@ -26,10 +26,6 @@ public class AmpliconData
     public static final String AMPLICON_SOURCE_AMP_ARCHITECT = "AMPLICON_ARCHITECT";
     public static final String AMPLICON_SOURCE_JABBA = "JABBA";
 
-    // key thresholds and parameters for Jabba
-    public static final double MIN_CLUSTER_JCN_THRESHOLD = 3;
-    public static final int MAX_FOLDBACK_INV_LENGTH = 100000;
-
     public AmpliconData(final int clusterId, final String type, final double maxCN, final double maxJCN,
             final double foldbackCN, final int breakends, final int highBreakends)
     {
