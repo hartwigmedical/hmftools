@@ -9,6 +9,7 @@ import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.interpretator.drup.BaselineInterpretator;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -126,24 +127,9 @@ class BaselineReader {
                 String primaryTumorLocationBastType = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationBastTypeOther = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
 
-                String primaryTumorLocation = null;
-                if (primaryTumorLocationBastType != null && !primaryTumorLocationBastType.isEmpty()) {
-                    if (primaryTumorLocationBastType.equals("Other, specify")) {
-                        primaryTumorLocation = primaryTumorLocationBastTypeOther;
-                    } else {
-                        primaryTumorLocation = primaryTumorLocationBastType;
-                    }
-                }
-
-                // See DEV-1713 for why below choices have been made.
-                if (primaryTumorReg != null && !primaryTumorReg.isEmpty()) {
-                    if (primaryTumorLocation != null) {
-                        primaryTumorLocation = primaryTumorLocation + " + " + primaryTumorReg;
-                    } else {
-                        primaryTumorLocation = primaryTumorReg;
-                    }
-                }
-                return primaryTumorLocation;
+                return BaselineInterpretator.interpretationBaselinePrimaryTumorLocation(primaryTumorLocationBastType,
+                        primaryTumorLocationBastTypeOther,
+                        primaryTumorReg);
             }
         }
 
@@ -152,20 +138,7 @@ class BaselineReader {
 
     private void setPrimaryTumor(@NotNull ImmutableBaselineData.Builder builder, @Nullable String primaryTumorCohort,
             @Nullable String primaryTumorLocation) {
-        String finalPrimaryTumorLocation;
-        if (primaryTumorCohort != null && !primaryTumorCohort.isEmpty()) {
-            String lowerPrimaryTumorCohort = primaryTumorCohort.trim().toLowerCase();
-            if (primaryTumorLocation != null && (lowerPrimaryTumorCohort.contains("biliary tract") || lowerPrimaryTumorCohort.contains(
-                    "colon") || lowerPrimaryTumorCohort.contains("urinary organ") || lowerPrimaryTumorCohort.contains("head, face and neck")
-                    || lowerPrimaryTumorCohort.contains("salivary gland"))) {
-                finalPrimaryTumorLocation = primaryTumorCohort + " + " + primaryTumorLocation;
-            } else {
-                finalPrimaryTumorLocation = primaryTumorCohort;
-            }
-        } else {
-            finalPrimaryTumorLocation = primaryTumorLocation;
-        }
-
+        String finalPrimaryTumorLocation = BaselineInterpretator.setFinalPrimaryTumorLocation(primaryTumorCohort, primaryTumorLocation);
         builder.curatedPrimaryTumor(primaryTumorCurator.search(finalPrimaryTumorLocation));
     }
 

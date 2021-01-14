@@ -12,6 +12,7 @@ import com.hartwig.hmftools.patientdb.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.interpretator.cpct.BaselineInterpretator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -128,18 +129,19 @@ class BaselineReader {
             for (EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
                 primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationOther = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
-                // We always read additional info if there is any, see also DEV-1713
-                if (primaryTumorLocationCarcinoma != null && primaryTumorLocationOther != null && !primaryTumorLocationOther.isEmpty()) {
-                    primaryTumorLocationCarcinoma = primaryTumorLocationCarcinoma + " + " + primaryTumorLocationOther;
-                }
+                primaryTumorLocationCarcinoma = BaselineInterpretator.interpretationCarcinomaPrimaryTumorLocation(
+                        primaryTumorLocationCarcinoma,
+                        primaryTumorLocationOther);
                 primaryTumorLocationCarcinomaStatus = carcinomaForm.status();
             }
         }
 
-        // We prefer carcinoma form over sel crit form. See also DEV-540
         boolean useCarcinomaForm = primaryTumorLocationCarcinoma != null && !primaryTumorLocationCarcinoma.isEmpty();
-        String primaryTumorLocation = useCarcinomaForm ? primaryTumorLocationCarcinoma : primaryTumorLocationSelcrit;
         FormStatus primaryTumorFormStatus = useCarcinomaForm ? primaryTumorLocationCarcinomaStatus : primaryTumorLocationSelcritStatus;
+
+        String primaryTumorLocation = BaselineInterpretator.setFinalPrimaryTumorLocation(primaryTumorLocationCarcinoma,
+                primaryTumorLocationSelcrit,
+                useCarcinomaForm);
 
         builder.curatedPrimaryTumor(primaryTumorCurator.search(primaryTumorLocation));
         builder.primaryTumorStatus(primaryTumorFormStatus != null ? primaryTumorFormStatus : FormStatus.undefined());
