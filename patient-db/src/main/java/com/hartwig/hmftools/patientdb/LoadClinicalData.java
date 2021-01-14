@@ -179,6 +179,14 @@ public final class LoadClinicalData {
                             patient.patientIdentifier(),
                             patient.baselineData().curatedPrimaryTumor().searchTerm());
                 }
+
+                if (patient.patientIdentifier().startsWith("CORE") || patient.patientIdentifier().startsWith("WIDE")) {
+                    if (patient.baselineData().curatedPrimaryTumor().searchTerm().isEmpty() || patient.baselineData().curatedPrimaryTumor().searchTerm() == null) {
+                        LOGGER.warn("Could not extract tumor location {} of patient {}",
+                                patient.baselineData().curatedPrimaryTumor().searchTerm(),
+                                patient.patientIdentifier());
+                    }
+                }
             }
         }
     }

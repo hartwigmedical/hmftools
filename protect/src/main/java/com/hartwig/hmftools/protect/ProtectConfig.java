@@ -52,20 +52,20 @@ public interface ProtectConfig {
         Options options = new Options();
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
-        options.addOption(PRIMARY_TUMOR_DOIDS, true, "A comma-separated list of DOIDs representing the primary tumor of patient.");
+        options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
 
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
-        options.addOption(DOID_JSON, true, "Path to where the DOID definitions.");
+        options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
-        options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV.");
-        options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
-        options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
+        options.addOption(BACHELOR_TSV, true, "Path towards the bachelor germline TSV.");
+        options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
+        options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
         options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
@@ -131,7 +131,7 @@ public interface ProtectConfig {
 
         return ImmutableProtectConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
-                .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
+                .primaryTumorDoids(toStringSet(optionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
@@ -150,8 +150,17 @@ public interface ProtectConfig {
     }
 
     @NotNull
-    static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator) {
-        return Sets.newHashSet(paramValue.split(separator));
+    static Iterable<String> toStringSet(@Nullable String paramValue, @NotNull String separator) {
+        return paramValue != null ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
+    }
+
+    @Nullable
+    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
+        if (cmd.hasOption(param)) {
+            return cmd.getOptionValue(param);
+        } else {
+            return null;
+        }
     }
 
     @NotNull

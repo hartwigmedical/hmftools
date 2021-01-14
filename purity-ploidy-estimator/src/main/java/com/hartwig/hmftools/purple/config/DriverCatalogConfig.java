@@ -76,7 +76,7 @@ public interface DriverCatalogConfig {
                     refGenomeData.isHg38() ? DriverGenePanelAssembly.HG38 : DriverGenePanelAssembly.HG19;
             genePanel = DriverGenePanelFactory.create(driverGenePanelAssembly, driverGenes);
 
-            if (germlineConfig.file().isPresent()) {
+            if (germlineConfig.enabled()) {
                 if (germlineHotspotVcf.isEmpty()) {
                     throw new ParseException(GERMLINE_HOTSPOT + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
                 }

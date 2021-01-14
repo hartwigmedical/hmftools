@@ -16,10 +16,17 @@ public class DriverCatalogFile {
 
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
-    private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog.tsv";
-    private static final String GERMLINE_DRIVER_CATALOG_EXTENSION = ".germline.driver.catalog.tsv";
+    private static final String OLD_DRIVER_CATALOG_EXTENSION = ".driver.catalog.tsv";
+    private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog.somatic.tsv";
+    private static final String GERMLINE_DRIVER_CATALOG_EXTENSION = ".driver.catalog.germline.tsv";
 
-    public static String generateSomaticFilename(@NotNull final String basePath, @NotNull final String sample) {
+    @NotNull
+    public static String generateSomaticFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = generateSomaticFilenameForWriting(basePath, sample);
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + OLD_DRIVER_CATALOG_EXTENSION;
+    }
+
+    public static String generateSomaticFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + DRIVER_CATALOG_EXTENSION;
     }
 

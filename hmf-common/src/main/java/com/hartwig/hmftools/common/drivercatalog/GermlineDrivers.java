@@ -1,18 +1,25 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -21,52 +28,62 @@ public class GermlineDrivers {
     private final Map<String, DriverCategory> driverCatalogMap;
 
     public GermlineDrivers(final List<DriverGene> driverGenes) {
-        driverCatalogMap = driverGenes.stream()
-                .filter(DriverGene::reportGermline)
-                .collect(Collectors.toMap(DriverGene::gene, DriverGene::likelihoodType));
+        driverCatalogMap =
+                driverGenes.stream().filter(DriverGene::reportGermline).collect(toMap(DriverGene::gene, DriverGene::likelihoodType));
     }
 
     @NotNull
     public List<DriverCatalog> drivers(@NotNull final List<VariantContext> variants,
             @NotNull final List<GeneCopyNumber> geneCopyNumberList) {
-        final Map<String, GeneCopyNumber> geneCopyNumbers =
-                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::gene, x -> x));
-        final Set<DriverCatalog> driverCatalog = Sets.newHashSet();
 
-        for (VariantContext variant : variants) {
-            final VariantContextDecorator decorator = new VariantContextDecorator(variant);
-            final String gene = decorator.gene();
-            if (decorator.reported()) {
-                DriverCategory category = driverCatalogMap.get(gene);
-                GeneCopyNumber geneCopyNumber = geneCopyNumbers.get(gene);
-                if (category != null && geneCopyNumber != null) {
-                    driverCatalog.add(cnaDriver(category, geneCopyNumber, decorator.biallelic()));
-                }
+        final List<VariantContextDecorator> decoratedVariants = variants.stream().map(VariantContextDecorator::new).collect(toList());
+        final Set<String> genes = decoratedVariants.stream().map(VariantContextDecorator::gene).collect(toSet());
+        final Map<String, GeneCopyNumber> geneCopyNumbers = geneCopyNumberList.stream().collect(toMap(TranscriptRegion::gene, x -> x));
+        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        for (String gene : genes) {
+            GeneCopyNumber geneCopyNumber = geneCopyNumbers.get(gene);
+            DriverCategory category = driverCatalogMap.get(gene);
+            List<VariantContextDecorator> geneVariants = decoratedVariants.stream().filter(x -> x.gene().equals(gene)).collect(toList());
+            if (category != null) {
+                driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
             }
+
         }
+
         return new ArrayList<>(driverCatalog);
     }
 
     @NotNull
-    private DriverCatalog cnaDriver(DriverCategory category, GeneCopyNumber x, boolean isBiallelic) {
-        return ImmutableDriverCatalog.builder()
-                .chromosome(x.chromosome())
-                .chromosomeBand(x.chromosomeBand())
-                .gene(x.gene())
-                .missense(0)
-                .nonsense(0)
-                .inframe(0)
-                .frameshift(0)
-                .splice(0)
-                .dndsLikelihood(0)
-                .driverLikelihood(1)
-                .driver(DriverType.MUTATION)
-                .likelihoodMethod(LikelihoodMethod.GERMLINE)
+    static DriverCatalog germlineDriver(DriverCategory category, @NotNull final String gene,
+            @NotNull final List<VariantContextDecorator> geneVariants, @Nullable GeneCopyNumber geneCopyNumber) {
+
+        final Map<DriverImpact, Long> variantCounts =
+                geneVariants.stream().collect(groupingBy(VariantContextDecorator::impact, counting()));
+        long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
+        long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
+        long spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0L);
+        long inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0L);
+        long frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0L);
+
+        final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
+                .chromosome(geneVariants.get(0).chromosome())
+                .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
+                .gene(gene)
+                .driver(DriverType.GERMLINE)
                 .category(category)
-                .biallelic(isBiallelic)
-                .minCopyNumber(x.minCopyNumber())
-                .maxCopyNumber(x.maxCopyNumber())
-                .build();
+                .driverLikelihood(1)
+                .dndsLikelihood(0)
+                .missense(missenseVariants)
+                .nonsense(nonsenseVariants)
+                .splice(spliceVariants)
+                .inframe(inframeVariants)
+                .frameshift(frameshiftVariants)
+                .biallelic(geneVariants.stream().anyMatch(VariantContextDecorator::biallelic))
+                .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
+                .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
+                .likelihoodMethod(LikelihoodMethod.GERMLINE);
+
+        return builder.build();
     }
 
 }

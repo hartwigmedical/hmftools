@@ -261,7 +261,7 @@ public class PurityPloidyEstimateApplication {
                 final GermlineDrivers germlineDrivers = new GermlineDrivers(configSupplier.driverCatalogConfig().genePanel().driverGenes());
                 List<DriverCatalog> germlineDriverCatalog = germlineDrivers.drivers(germlineVariants.reportableVariants(), geneCopyNumbers);
 
-                DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(outputDirectory, tumorSample), somaticDriverCatalog);
+                DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilenameForWriting(outputDirectory, tumorSample), somaticDriverCatalog);
 
                 if (configSupplier.germlineConfig().enabled()) {
                     DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(outputDirectory, tumorSample), germlineDriverCatalog);
