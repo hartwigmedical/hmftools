@@ -87,6 +87,11 @@ public class ProtectApplication implements AutoCloseable {
         DoidParents doidParentModel = new DoidParents(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
 
         Set<String> initialDoids = config.primaryTumorDoids();
+        if (initialDoids.isEmpty()) {
+            LOGGER.warn("No doids provided. Every treatment will be considered off-label.");
+            return Sets.newHashSet();
+        }
+
         LOGGER.debug(" Starting doid resolving for patient with initial tumor doids '{}'", initialDoids);
         for (String initialDoid : initialDoids) {
             result.add(initialDoid);
