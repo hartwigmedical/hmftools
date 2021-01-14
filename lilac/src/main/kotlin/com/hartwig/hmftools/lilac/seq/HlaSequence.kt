@@ -22,6 +22,10 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
     }
 
     fun match(indicies: IntArray, sequence: CharArray): HlaSequenceMatch {
+        if (indicies.isEmpty()) {
+            return HlaSequenceMatch.NONE
+        }
+
         var wildCardCount = 0
         for (i in indicies.indices) {
             val index = indicies[i]

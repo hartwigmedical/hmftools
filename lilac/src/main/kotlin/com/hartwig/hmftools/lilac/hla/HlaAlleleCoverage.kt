@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.lilac.hla
 
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
+import kotlin.math.roundToInt
 
-data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val combinedCoverage: Double) : Comparable<HlaAlleleCoverage> {
+data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val sharedCoverage: Double) : Comparable<HlaAlleleCoverage> {
 
     companion object {
 
@@ -52,6 +53,12 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
         if (uniqueCompare != 0) {
             return uniqueCompare
         }
-        return combinedCoverage.compareTo(other.combinedCoverage)
+        return sharedCoverage.compareTo(other.sharedCoverage)
     }
+
+    override fun toString(): String {
+        return "$allele:[t=${(uniqueCoverage + sharedCoverage).roundToInt()}, u=$uniqueCoverage, s=${sharedCoverage.roundToInt()}]"
+    }
+
+
 }

@@ -4,26 +4,22 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
-import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.totalCoverage
-import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.uniqueCoverage
+import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.coverageString
 import com.hartwig.hmftools.lilac.hla.HlaComplex
 import com.hartwig.hmftools.lilac.nuc.SequenceCount
 import com.hartwig.hmftools.lilac.phase.HeterozygousEvidence
 import com.hartwig.hmftools.lilac.phase.PhasedEvidence
 import com.hartwig.hmftools.lilac.read.Fragment
-import com.hartwig.hmftools.lilac.read.FragmentAlleles
-import com.hartwig.hmftools.lilac.read.FragmentSequencesFile
 import com.hartwig.hmftools.lilac.read.SAMRecordRead
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.deflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
-import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFirstFourDigits
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.specificProteins
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import java.util.concurrent.Executors
 import kotlin.math.min
-import kotlin.math.roundToInt
 
 fun main(args: Array<String>) {
     LilacApplication2().use { x -> x.run() }
@@ -80,13 +76,11 @@ class LilacApplication2 : AutoCloseable, Runnable {
     override fun run() {
         logger.info("Starting")
 
-        val minKmerLength = 10
-        val maxKmerLength = 20
         val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
         val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
 
 
-        logger.info("Reading bam $bamFile")
+        logger.info("Reading fragments from  $bamFile")
         val readFragments = readFromBam(bamFile)
 
 
@@ -95,14 +89,16 @@ class LilacApplication2 : AutoCloseable, Runnable {
         aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
 
         val nucleotideCounts = SequenceCount.nucleotides(minBaseQual, readFragments)
+        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousIndices(minBaseCount)
         nucleotideCounts.writeVertically("/Users/jon/hmf/analysis/hla/nucleotides.count.txt")
 
-        val aminoAcidBoundaries = setOf(24, 114, 206, 298, 337, 348, 349, 362, 364, 365, 366)
 
         val aBoundaries = setOf(24, 114, 206, 298, 337, 348, 364, 365)
         val bBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
         val cBoundaries = setOf(24, 114, 206, 298, 338, 349, 365, 366)
         val allBoundaries = (aBoundaries + bBoundaries + cBoundaries)//.filter { it !in setOf(24, 114) }
+        val nucleotideLoci = allBoundaries.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) } intersect nucleotideHeterozygousLoci
+
         val commonBoundaries = aBoundaries intersect bBoundaries intersect cBoundaries
 
         val excludedIndices = allBoundaries.toSet()
@@ -115,13 +111,13 @@ class LilacApplication2 : AutoCloseable, Runnable {
         println(heterozygousIndices)
 
         LilacApplication.logger.info("Reading nucleotide files")
-        val nucleotideSequences = readSequenceFiles { "${resourcesDir}/${it}_nuc.txt" }
+        val nucleotideSequences = readNucleotideFiles(resourcesDir)
 
         logger.info("Reading protein files")
-        val allProteinSequences = readSequenceFiles { "${resourcesDir}/${it}_prot.txt" }
+        val allProteinSequences = readProteinFiles(resourcesDir)
 
 //        val initialNucleotideCandidates = initialNucleotideCandidates(nucleotideCounts, nucleotideSequences)
-        val boundaryNucleotideCandidates = filterCandidatesOnExonBoundaries(allBoundaries, 1, nucleotideSequences, readFragments)
+        val boundaryNucleotideCandidates = filterCandidatesOnExonBoundaries(allBoundaries, 2, nucleotideSequences, readFragments)
         val nucleotideFilteredAlleles = boundaryNucleotideCandidates.map { it.contig }
         println("${nucleotideSequences.size} types")
         println("${boundaryNucleotideCandidates.size} candidates after nucleotide filtering")
@@ -147,27 +143,31 @@ class LilacApplication2 : AutoCloseable, Runnable {
             println(consecutiveEvidenceCandidate)
         }
 
+        val candidateAlleles = consecutiveEvidenceCandidates.map { it.allele }
+        val candidateAlleleSpecificProteins = candidateAlleles.map { it.specificProtein() }
+
+        val aminoAcidCandidates = allProteinSequences.filter { it.allele in candidateAlleles }
+        val nucleotideCandidates = nucleotideSequences.filter { it.allele.specificProtein() in candidateAlleleSpecificProteins }
+
+        val coverageFactory = HlaAlleleCoverageFactory(readFragments, hetLoci, aminoAcidCandidates, nucleotideLoci, nucleotideCandidates)
+        val proteinCoverage = coverageFactory.proteinCoverage(candidateAlleles)
 
 
-        val coverageFactory = HlaAlleleCoverageFactory(hetLoci, readFragments)
-        val proteinCoverage = coverageFactory.proteinCoverage(consecutiveEvidenceCandidates)
+//        val fragmentSequences = FragmentAlleles.create(readFragments, hetLoci, consecutiveEvidenceCandidates)
 
 
-        val fragmentSequences = FragmentAlleles.create(readFragments, hetLoci, consecutiveEvidenceCandidates)
+//        FragmentSequencesFile.writeFile("/Users/jon/hmf/analysis/hla/fragments.txt", fragmentSequences)
 
-
-        FragmentSequencesFile.writeFile("/Users/jon/hmf/analysis/hla/fragments.txt", fragmentSequences)
-
-        val groupCoverage = coverageFactory.groupCoverage(consecutiveEvidenceCandidates)
+        val groupCoverage = coverageFactory.groupCoverage(candidateAlleles)
         println("SDFSD")
 
         val confirmedGroups = listOf(HlaAllele("B*08"), HlaAllele("C*07"), HlaAllele("C*01"), HlaAllele("B*56"), HlaAllele("A*11"), HlaAllele("A*01"))
         val confimedProtein = listOf(HlaAllele("C*01:02:01:01"), HlaAllele("A*01:01:01:01"), HlaAllele("B*56:01:01:01"))
         val complexes = HlaComplex.complexes(confirmedGroups, confimedProtein, consecutiveEvidenceCandidates.map { it.allele })
-        println("TotalCoverage\tUniqueCoverage\tComplex")
+        println("TotalCoverage\tUniqueCoverage\tSharedCoverage\tAllele1\tAllele2\tAllele3\tAllele4\tAllele5\tAllele6")
         for (complex in complexes) {
-            val complexCoverage = coverageFactory.proteinCoverage(consecutiveEvidenceCandidates.filter { it.allele in complex.alleles })
-            println(complexCoverage.totalCoverage().roundToInt().toString() + "\t" + complexCoverage.uniqueCoverage().toString() + "\t" + complex)
+            val complexCoverage = coverageFactory.proteinCoverage(complex.alleles)
+            println(complexCoverage.coverageString(confimedProtein))
         }
 //
 
@@ -526,22 +526,30 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
     fun unwrapFile(fileName: String) {
         val input = HlaSequenceFile.readFile(fileName)
-        val output = input.reduceToFirstFourDigits()
+        val output = input.specificProteins()
         val inflated = output.map { it.inflate(input[0].rawSequence) }
         val deflated = inflated.map { it.deflate(inflated[0].rawSequence) }
         HlaSequenceFile.writeFile(fileName.replace(".txt", ".unwrapped.txt"), output)
         HlaSequenceFile.writeFile(fileName.replace(".txt", ".deflated.txt"), deflated)
     }
 
-    private fun readSequenceFiles(filenameSupplier: (Char) -> String): List<HlaSequence> {
+    private fun readNucleotideFiles(resourcesDir: String): List<HlaSequence> {
+        return readSequenceFiles({ x -> "${resourcesDir}/${x}_nuc.txt" }, { x -> x })
+    }
+
+    private fun readProteinFiles(resourcesDir: String): List<HlaSequence> {
+        return readSequenceFiles({ x -> "${resourcesDir}/${x}_prot.txt" }, { x -> x.specificProteins() })
+    }
+
+    private fun readSequenceFiles(filenameSupplier: (Char) -> String, transform: (List<HlaSequence>) -> List<HlaSequence>): List<HlaSequence> {
 
         val aFile = filenameSupplier('A')
         val bFile = filenameSupplier('B')
         val cFile = filenameSupplier('C')
 
-        val aSequence = HlaSequenceFile.readFile(aFile).inflate().reduceToFirstFourDigits()
-        val bSequence = HlaSequenceFile.readFile(bFile).inflate().reduceToFirstFourDigits()
-        val cSequence = HlaSequenceFile.readFile(cFile).inflate().reduceToFirstFourDigits()
+        val aSequence = transform(HlaSequenceFile.readFile(aFile).inflate())
+        val bSequence = transform(HlaSequenceFile.readFile(bFile).inflate())
+        val cSequence = transform(HlaSequenceFile.readFile(cFile).inflate())
 
         val result = mutableListOf<HlaSequence>()
         result.addAll(aSequence)
