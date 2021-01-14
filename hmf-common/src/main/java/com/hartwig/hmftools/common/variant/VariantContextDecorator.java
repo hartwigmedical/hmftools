@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrich
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
@@ -41,6 +42,7 @@ public class VariantContextDecorator implements GenomePosition {
     private final String alt;
     private final VariantTier tier;
     private final SnpEffSummary snpEffSummary;
+    private final DriverImpact impact;
 
     public VariantContextDecorator(final VariantContext context) {
         this.context = context;
@@ -50,6 +52,7 @@ public class VariantContextDecorator implements GenomePosition {
         this.alt = context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
         this.tier = VariantTier.fromContext(context);
         this.snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
+        this.impact = DriverImpact.select(type, snpEffSummary.canonicalCodingEffect());
     }
 
     @NotNull
@@ -96,6 +99,11 @@ public class VariantContextDecorator implements GenomePosition {
     @NotNull
     public String gene() {
         return snpEffSummary.gene();
+    }
+
+    @NotNull
+    public DriverImpact impact() {
+        return impact;
     }
 
     public double qual() {

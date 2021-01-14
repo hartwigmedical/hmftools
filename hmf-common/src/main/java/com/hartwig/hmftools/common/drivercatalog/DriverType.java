@@ -5,5 +5,6 @@ public enum DriverType {
     PARTIAL_AMP,
     DEL,
     HOM_DISRUPTION,
-    MUTATION
+    MUTATION,
+    GERMLINE
 }

@@ -14,18 +14,22 @@ public enum DriverImpact {
     FRAMESHIFT,
     UNKNOWN;
 
-
     @NotNull
     public static DriverImpact select(@NotNull SomaticVariant variant) {
-        if (isFrameshift(variant)) {
+        return select(variant.type(), variant.canonicalCodingEffect());
+    }
+
+    @NotNull
+    public static DriverImpact select(VariantType variantType, CodingEffect canonicalCodingEffect) {
+        if (isFrameshift(variantType, canonicalCodingEffect)) {
             return FRAMESHIFT;
-        } else if (isNonsense(variant)) {
+        } else if (isNonsense(variantType, canonicalCodingEffect)) {
             return NONSENSE;
-        } else if (isMissense(variant)) {
+        } else if (isMissense(variantType, canonicalCodingEffect)) {
             return MISSENSE;
-        } else if (isSplice(variant)) {
+        } else if (isSplice(canonicalCodingEffect)) {
             return SPLICE;
-        } else if (isInframe(variant)) {
+        } else if (isInframe(variantType, canonicalCodingEffect)) {
             return INFRAME;
         }
 
@@ -33,22 +37,42 @@ public enum DriverImpact {
     }
 
     static boolean isFrameshift(SomaticVariant variant) {
-        return variant.type() == VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.NONSENSE_OR_FRAMESHIFT;
+        return isFrameshift(variant.type(), variant.canonicalCodingEffect());
     }
 
     static boolean isNonsense(SomaticVariant variant) {
-        return variant.type() != VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.NONSENSE_OR_FRAMESHIFT;
+        return isNonsense(variant.type(), variant.canonicalCodingEffect());
     }
 
     static boolean isMissense(SomaticVariant variant) {
-        return variant.type() != VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE;
+        return isMissense(variant.type(), variant.canonicalCodingEffect());
     }
 
     static boolean isInframe(SomaticVariant variant) {
-        return variant.type() == VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE;
+        return isInframe(variant.type(), variant.canonicalCodingEffect());
     }
 
     static boolean isSplice(SomaticVariant variant) {
-        return variant.canonicalCodingEffect() == CodingEffect.SPLICE;
+        return isSplice(variant.canonicalCodingEffect());
+    }
+
+    static boolean isFrameshift(VariantType variantType, CodingEffect canonicalCodingEffect) {
+        return variantType == VariantType.INDEL && canonicalCodingEffect == CodingEffect.NONSENSE_OR_FRAMESHIFT;
+    }
+
+    static boolean isNonsense(VariantType variantType, CodingEffect canonicalCodingEffect) {
+        return variantType != VariantType.INDEL && canonicalCodingEffect == CodingEffect.NONSENSE_OR_FRAMESHIFT;
+    }
+
+    static boolean isMissense(VariantType variantType, CodingEffect canonicalCodingEffect) {
+        return variantType != VariantType.INDEL && canonicalCodingEffect == CodingEffect.MISSENSE;
+    }
+
+    static boolean isInframe(VariantType variantType, CodingEffect canonicalCodingEffect) {
+        return variantType == VariantType.INDEL && canonicalCodingEffect == CodingEffect.MISSENSE;
+    }
+
+    static boolean isSplice(CodingEffect canonicalCodingEffect) {
+        return canonicalCodingEffect == CodingEffect.SPLICE;
     }
 }

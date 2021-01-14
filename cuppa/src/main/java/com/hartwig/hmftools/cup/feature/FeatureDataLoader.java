@@ -107,7 +107,7 @@ public class FeatureDataLoader
             final List<LinxFusion> fusions = Files.exists(Paths.get(fusionsFilename)) ?
                     LinxFusion.read(fusionsFilename) : Lists.newArrayList();
 
-            final String driverCatalogFilename = DriverCatalogFile.generateSomaticFilename(sampleDataDir, sampleId);
+            final String driverCatalogFilename = DriverCatalogFile.generateSomaticFilenameForReading(sampleDataDir, sampleId);
 
             final List<DriverCatalog> drivers = Files.exists(Paths.get(driverCatalogFilename)) ?
                     DriverCatalogFile.read(driverCatalogFilename) : Lists.newArrayList();
