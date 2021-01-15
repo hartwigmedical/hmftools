@@ -15,10 +15,10 @@ public class ActionableHotspotFileTest {
     @Test
     public void canReadFromFileAndConvert() throws IOException {
         String actionableHotspotTsv =
-                ActionableHotspotFile.actionableHotspotTsvPath(ActionabilityTestUtil.TEST_ACTIONABILITY_DIR, RefGenomeVersion.V37);
+                ActionableHotspotFile.actionableHotspotTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.V37);
         List<ActionableHotspot> actionableHotspots = ActionableHotspotFile.read(actionableHotspotTsv);
 
-        assertEquals(1, actionableHotspots.size());
+        assertEquals(2, actionableHotspots.size());
 
         List<String> lines = ActionableHotspotFile.toLines(actionableHotspots);
         List<ActionableHotspot> regeneratedHotspots = ActionableHotspotFile.fromLines(lines);

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ActionabilityTestUtil {
 
-    public static final String TEST_ACTIONABILITY_DIR = Resources.getResource("actionability").getPath();
+    public static final String TEST_SERVE_OUTPUT_DIR = Resources.getResource("serve_output").getPath();
 
     private ActionabilityTestUtil() {
     }
