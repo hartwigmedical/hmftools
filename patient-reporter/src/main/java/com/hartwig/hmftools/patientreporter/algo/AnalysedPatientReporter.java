@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -17,10 +17,11 @@ import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzer
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.patientreporter.QsFormNumber;
+import com.hartwig.hmftools.patientreporter.SampleMetadata;
+import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.protect.GenomicAnalysis;
-import com.hartwig.hmftools.protect.GenomicAnalyzer;
-import com.hartwig.hmftools.protect.ImmutableGenomicAnalysis;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
 import com.hartwig.hmftools.protect.viralinsertion.ViralInsertion;
@@ -32,19 +33,19 @@ import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class AnalysedPatientReporter {
+public class AnalysedPatientReporter {
 
     private static final Logger LOGGER = LogManager.getLogger(AnalysedPatientReporter.class);
 
     @NotNull
     private final AnalysedReportData reportData;
 
-    AnalysedPatientReporter(@NotNull final AnalysedReportData reportData) {
+    public AnalysedPatientReporter(@NotNull final AnalysedReportData reportData) {
         this.reportData = reportData;
     }
 
     @NotNull
-    AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
+    public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
             @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile, @Nullable String comments,

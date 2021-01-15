@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -12,12 +12,17 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
+import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
+import com.hartwig.hmftools.patientreporter.QsFormNumber;
+import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariant;
 import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class AnalysedPatientReporterTest {
@@ -72,7 +77,7 @@ public class AnalysedPatientReporterTest {
         double purityCorrect = 0.40;
         boolean hasReliablePurityCorrect = true;
 
-        assertEquals(QsFormNumber.FOR_080.display(), AnalysedPatientReporter.determineForNumber(hasReliablePurityCorrect, purityCorrect));
+        Assert.assertEquals(QsFormNumber.FOR_080.display(), AnalysedPatientReporter.determineForNumber(hasReliablePurityCorrect, purityCorrect));
 
         double purityNotCorrect = 0.10;
         boolean hasReliablePurityNotCorrect = false;

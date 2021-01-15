@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.net.MalformedURLException;
 
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.io.IOException;

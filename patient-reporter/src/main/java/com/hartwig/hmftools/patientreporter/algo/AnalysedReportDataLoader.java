@@ -1,8 +1,9 @@
-package com.hartwig.hmftools.patientreporter;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.protect.variants.germline.GermlineReportingFile;
@@ -10,13 +11,13 @@ import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
 
-final class AnalysedReportDataLoader {
+public final class AnalysedReportDataLoader {
 
     private AnalysedReportDataLoader() {
     }
 
     @NotNull
-    static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String knowledgebaseDir,
+    public static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String knowledgebaseDir,
             @NotNull String germlineReportingTsv, @NotNull String sampleSummaryTsv) throws IOException {
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 

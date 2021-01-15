@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.IOException;
 import java.text.DecimalFormat;

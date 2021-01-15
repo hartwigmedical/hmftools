@@ -1,12 +1,16 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.patientreporter.algo;
 
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
+import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
+import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GenomicAnalyzerTest {
@@ -25,12 +29,13 @@ public class GenomicAnalyzerTest {
 
     @Test
     public void canRunOnTestRun() throws IOException {
-        GenomicAnalyzer analyzer = new GenomicAnalyzer(ProtectTestFactory.loadTestActionabilityAnalyzer(),
-                ProtectTestFactory.createEmptyGermlineReportingModel());
+        GenomicAnalyzer analyzer =
+                new GenomicAnalyzer(PatientReporterTestFactory.loadTestActionabilityAnalyzer(), createEmptyGermlineReportingModel());
 
         PatientPrimaryTumor patientPrimaryTumor = null;
 
-        assertNotNull(analyzer.run("sample", patientPrimaryTumor,
+        assertNotNull(analyzer.run("sample",
+                patientPrimaryTumor,
                 PURPLE_PURITY_TSV,
                 PURPLE_QC_FILE,
                 PURPLE_DRIVER_CATALOG_TSV,
@@ -41,5 +46,10 @@ public class GenomicAnalyzerTest {
                 LINX_VIRAL_INSERTION_TSV,
                 LINX_DRIVERS_TSV,
                 CHORD_PREDICTION_TXT));
+    }
+
+    @NotNull
+    private static GermlineReportingModel createEmptyGermlineReportingModel() {
+        return new GermlineReportingModel(Lists.newArrayList());
     }
 }
