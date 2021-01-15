@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 

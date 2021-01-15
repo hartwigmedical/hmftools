@@ -6,6 +6,10 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.common.actionability.ActionabilitySource;
+import com.hartwig.hmftools.common.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.actionability.EvidenceScope;
+import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -14,8 +18,9 @@ import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class PatientReporterTestFactory {
@@ -38,6 +43,21 @@ public final class PatientReporterTestFactory {
         } catch (IOException exception) {
             throw new IllegalStateException("Could not load test actionability analyzer: " + exception.getMessage());
         }
+    }
+
+    @NotNull
+    public static ImmutableEvidenceItem.Builder createTestEvidenceBuilder() {
+        return ImmutableEvidenceItem.builder()
+                .event(Strings.EMPTY)
+                .source(ActionabilitySource.CIVIC)
+                .reference(Strings.EMPTY)
+                .drug(Strings.EMPTY)
+                .drugsType(Strings.EMPTY)
+                .level(EvidenceLevel.LEVEL_A)
+                .response(Strings.EMPTY)
+                .isOnLabel(false)
+                .cancerType(Strings.EMPTY)
+                .scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull

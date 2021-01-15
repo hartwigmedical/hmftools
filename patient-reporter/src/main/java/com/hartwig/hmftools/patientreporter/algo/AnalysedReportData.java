@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

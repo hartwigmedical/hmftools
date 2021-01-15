@@ -22,9 +22,9 @@ import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
-import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
-import com.hartwig.hmftools.protect.viralinsertion.ViralInsertion;
+import com.hartwig.hmftools.protect.linx.ViralInsertion;
+import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

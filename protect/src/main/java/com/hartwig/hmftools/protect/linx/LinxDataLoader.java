@@ -9,13 +9,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.protect.ProtectConfig;
-import com.hartwig.hmftools.protect.homozygousdisruption.HomozygousDisruptionAnalyzer;
-import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
-import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.protect.structural.ReportableGeneDisruptionFactory;
-import com.hartwig.hmftools.protect.viralinsertion.ViralInsertion;
-import com.hartwig.hmftools.protect.viralinsertion.ViralInsertionAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

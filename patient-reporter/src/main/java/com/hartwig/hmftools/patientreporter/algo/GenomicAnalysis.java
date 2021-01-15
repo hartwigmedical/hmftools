@@ -9,10 +9,10 @@ import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
-import com.hartwig.hmftools.protect.viralinsertion.ViralInsertion;
+import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
+import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.linx.ViralInsertion;
+import com.hartwig.hmftools.protect.purple.ReportableVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

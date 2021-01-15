@@ -8,10 +8,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.protect.variants.DriverInterpretation;
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
-import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
+import com.hartwig.hmftools.protect.purple.DriverInterpretation;
+import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.protect.bachelor;
 
 import java.util.List;
 
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

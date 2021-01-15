@@ -16,9 +16,9 @@ import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
-import com.hartwig.hmftools.protect.variants.ImmutableReportableVariant;
-import com.hartwig.hmftools.protect.variants.ReportableVariant;
-import com.hartwig.hmftools.protect.variants.ReportableVariantSource;
+import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

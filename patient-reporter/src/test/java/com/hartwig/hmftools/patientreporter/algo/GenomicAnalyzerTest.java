@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
