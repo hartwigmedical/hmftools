@@ -20,19 +20,13 @@ public final class SvAnalyzer {
     }
 
     @NotNull
-    public static SvAnalysis run(@NotNull LinxData linxData, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+    public static List<EvidenceItem> run(@NotNull LinxData linxData, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientPrimaryTumor patientPrimaryTumor) {
         String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.location() : null;
         Map<LinxFusion, List<EvidenceItem>> evidencePerFusion =
                 actionabilityAnalyzer.evidenceForFusions(linxData.fusions(), primaryTumorLocation);
 
-        List<EvidenceItem> filteredEvidence = ReportableEvidenceItemFactory.toReportableFlatList(evidencePerFusion);
-
-        return ImmutableSvAnalysis.builder()
-                .reportableFusions(linxData.fusions())
-                .reportableDisruptions(linxData.geneDisruptions())
-                .evidenceItems(filteredEvidence)
-                .build();
+        return ReportableEvidenceItemFactory.toReportableFlatList(evidencePerFusion);
     }
 
     @NotNull

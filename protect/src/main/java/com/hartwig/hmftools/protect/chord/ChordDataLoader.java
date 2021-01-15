@@ -20,8 +20,13 @@ public final class ChordDataLoader {
 
     @NotNull
     public static ChordAnalysis load(@NotNull ProtectConfig config) throws IOException {
-        LOGGER.info("Loading CHORD data from {}", new File(config.chordPredictionTxt()).getParent());
-        ChordAnalysis chordAnalysis = ChordFileReader.read(config.chordPredictionTxt());
+        return load(config.chordPredictionTxt());
+    }
+
+    @NotNull
+    public static ChordAnalysis load(@NotNull String chordPredictionTxt) throws IOException {
+        LOGGER.info("Loading CHORD data from {}", new File(chordPredictionTxt).getParent());
+        ChordAnalysis chordAnalysis = ChordFileReader.read(chordPredictionTxt);
         LOGGER.info(" HR Status: {}", chordAnalysis.hrStatus().display());
         return chordAnalysis;
     }

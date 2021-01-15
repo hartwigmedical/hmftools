@@ -17,6 +17,10 @@ public interface PurpleData {
 
     double purity();
 
+    boolean hasReliablePurity();
+
+    boolean hasReliableQuality();
+
     double ploidy();
 
     double microsatelliteIndelsPerMb();

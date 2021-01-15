@@ -24,6 +24,16 @@ public final class PurpleAnalyzer {
     }
 
     @NotNull
+    public static List<EvidenceItem> run(@NotNull PurpleData purpleData,
+            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientPrimaryTumor patientPrimaryTumor) {
+        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.location() : null;
+        Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber =
+                actionabilityAnalyzer.evidenceForCopyNumbers(purpleData.copyNumberAlterations(), primaryTumorLocation);
+
+        return ReportableEvidenceItemFactory.toReportableFlatList(evidencePerGeneCopyNumber);
+    }
+
+    @NotNull
     public static PurpleAnalysis run(@NotNull PurityContext purityContext, @NotNull PurpleQC purpleQC,
             @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientPrimaryTumor patientPrimaryTumor,
             @NotNull List<DriverCatalog> purpleDriverCatalog) {

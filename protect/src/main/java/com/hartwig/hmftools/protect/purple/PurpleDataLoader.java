@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
@@ -41,11 +42,11 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static PurpleData load(@NotNull String sample, @NotNull String qcFile, @NotNull String purityFile,
-            @NotNull String driverCatalogFile, @NotNull String somaticVcf) throws IOException {
-        LOGGER.info("Loading PURPLE data from {}", new File(purityFile).getParent());
+    public static PurpleData load(@NotNull String sample, @NotNull String qcFile, @NotNull String purityTsv,
+            @NotNull String driverCatalogTsv, @NotNull String somaticVcf) throws IOException {
+        LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
-        PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityFile);
+        PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
         LOGGER.info("  QC status: {}", purityContext.qc().toString());
         LOGGER.info("  Tumor purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
         LOGGER.info("  Fit method: {}", purityContext.method());
@@ -54,8 +55,8 @@ public final class PurpleDataLoader {
         LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
         LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
 
-        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogFile);
-        LOGGER.info(" Loaded {} driver catalog entries from {}", driverCatalog.size(), driverCatalogFile);
+        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogTsv);
+        LOGGER.info(" Loaded {} driver catalog entries from {}", driverCatalog.size(), driverCatalogTsv);
 
         List<ReportableGainLoss> copyNumberAlterations = driverCatalog.stream()
                 .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.DEL)
@@ -69,6 +70,8 @@ public final class PurpleDataLoader {
 
         return ImmutablePurpleData.builder()
                 .purity(purityContext.bestFit().purity())
+                .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
+                .hasReliableQuality(purityContext.qc().pass())
                 .ploidy(purityContext.bestFit().ploidy())
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purityContext.microsatelliteStatus())

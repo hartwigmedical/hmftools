@@ -40,7 +40,7 @@ public final class BachelorDataLoader {
     }
 
     @NotNull
-    private static BachelorData load(@NotNull String bachelorTsv, @NotNull PurpleData purpleData, @NotNull LinxData linxData,
+    public static BachelorData load(@NotNull String bachelorTsv, @NotNull PurpleData purpleData, @NotNull LinxData linxData,
             @NotNull GermlineReportingModel germlineReportingModel) throws IOException {
         LOGGER.info("Loading BACHELOR data from {}", new File(bachelorTsv).getParent());
         List<ReportableGermlineVariant> germlineVariants = ReportableGermlineVariantFile.read(bachelorTsv);
