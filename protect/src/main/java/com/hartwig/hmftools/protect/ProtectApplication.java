@@ -88,7 +88,7 @@ public class ProtectApplication implements AutoCloseable {
 
         Set<String> initialDoids = config.primaryTumorDoids();
         if (initialDoids.isEmpty()) {
-            LOGGER.warn("No doids provided. Every treatment will be considered off-label.");
+            LOGGER.warn("No doids provided for {}. Every treatment will be considered off-label.", config.tumorSampleId());
             return Sets.newHashSet();
         }
 

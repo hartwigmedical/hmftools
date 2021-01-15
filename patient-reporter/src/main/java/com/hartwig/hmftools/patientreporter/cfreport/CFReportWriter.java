@@ -7,9 +7,10 @@ import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
+import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.CircosChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.DetailsAndDisclaimerChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ExplanationChapter;
@@ -21,8 +22,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChap
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOnLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.protect.GenomicAnalysis;
-import com.hartwig.hmftools.protect.variants.germline.GermlineReportingModel;
+import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;

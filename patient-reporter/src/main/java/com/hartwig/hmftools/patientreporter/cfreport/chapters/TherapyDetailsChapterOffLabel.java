@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.protect.GenomicAnalysis;
+import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.Cell;

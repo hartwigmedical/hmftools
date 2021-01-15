@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
+import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
-import com.hartwig.hmftools.protect.GenomicAnalysis;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;

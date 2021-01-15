@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.patientreporter.PatientReportUtils;
+import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ public class SummaryFileTest {
         assertEquals(1, summaryModel.summaryCount());
 
         LimsCohortConfig cohortConfig =
-                PatientReportUtils.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
+                PatientReporterTestFactory.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
 
         String summary = summaryModel.findSummaryForSample("sample", cohortConfig);
 

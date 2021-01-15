@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;

@@ -9,13 +9,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.protect.ProtectConfig;
-import com.hartwig.hmftools.protect.homozygousdisruption.HomozygousDisruptionAnalyzer;
-import com.hartwig.hmftools.protect.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
-import com.hartwig.hmftools.protect.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.protect.structural.ReportableGeneDisruptionFactory;
-import com.hartwig.hmftools.protect.viralinsertion.ViralInsertion;
-import com.hartwig.hmftools.protect.viralinsertion.ViralInsertionAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,7 +28,7 @@ public final class LinxDataLoader {
     }
 
     @NotNull
-    private static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
+    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv) throws IOException {
         LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
         List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv).stream().filter(LinxFusion::reported).collect(Collectors.toList());
@@ -50,7 +44,7 @@ public final class LinxDataLoader {
         LOGGER.info(" Loaded {} reportable viral insertions from {}", reportableViralInsertions.size(), linxViralInsertionTsv);
 
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions =
-                HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(linxDriversTsv);
+                ReportableHomozygousDisruptionFactory.extractFromLinxDriversTsv(linxDriversTsv);
         LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", reportableHomozygousDisruptions.size(), linxDriversTsv);
 
         return ImmutableLinxData.builder()

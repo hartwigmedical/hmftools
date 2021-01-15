@@ -59,6 +59,8 @@ public class PurpleSignatureEvidenceTest {
     private static PurpleData createPurpleData(@NotNull MicrosatelliteStatus msStatus, @NotNull TumorMutationalStatus tmlStatus) {
         return ImmutablePurpleData.builder()
                 .purity(0D)
+                .hasReliablePurity(true)
+                .hasReliableQuality(true)
                 .ploidy(0D)
                 .microsatelliteIndelsPerMb(0D)
                 .microsatelliteStatus(msStatus)
