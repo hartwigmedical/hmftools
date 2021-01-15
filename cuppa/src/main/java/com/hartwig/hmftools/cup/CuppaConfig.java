@@ -57,7 +57,6 @@ public class CuppaConfig
 
     public final String RefGeneExpCancerFile;
     public final String RefGeneExpSampleFile;
-    public final String RefGeneExpPercFile;
     public final String RefAltSjPrevFile;
 
     // sample data, if not sourced from the database
@@ -112,7 +111,6 @@ public class CuppaConfig
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
     private static final String REF_RNA_GENE_EXP_CANCER_FILE = "ref_gene_exp_cancer_file";
     private static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
-    private static final String REF_RNA_GENE_EXP_CANCER_PERC_FILE = "ref_gene_exp_cancer_perc_file";
     private static final String REF_RNA_ALT_SJ_PREV_FILE = "ref_alt_sj_prev_file";
 
     public static final String WRITE_SIMS = "write_similarities";
@@ -180,7 +178,6 @@ public class CuppaConfig
 
         RefGeneExpCancerFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_CANCER_FILE, REF_FILE_GENE_EXP_CANCER);
         RefGeneExpSampleFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_SAMPLE_FILE, REF_FILE_GENE_EXP_SAMPLE);
-        RefGeneExpPercFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_CANCER_PERC_FILE, REF_FILE_GENE_EXP_PERC);
         RefAltSjPrevFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_PREV_FILE, REF_FILE_ALT_SJ_PREV);
 
         OutputDir = parseOutputDir(cmd);
@@ -250,7 +247,6 @@ public class CuppaConfig
         options.addOption(REF_DRIVER_AVG_FILE, true, "Reference features per sample file, default: " + REF_FILE_DRIVER_AVG);
         options.addOption(REF_RNA_GENE_EXP_CANCER_FILE, true, "Reference RNA cancer gene expression file, default: " + REF_FILE_GENE_EXP_CANCER);
         options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Reference RNA sample gene expression file, default: " + REF_FILE_GENE_EXP_SAMPLE);
-        options.addOption(REF_RNA_GENE_EXP_CANCER_PERC_FILE, true, "Reference RNA cancer percentiles gene expression file, default: " + REF_FILE_GENE_EXP_PERC);
         options.addOption(REF_RNA_ALT_SJ_PREV_FILE, true, "Reference RNA alternative splice-junction file, default: " + REF_FILE_ALT_SJ_PREV);
 
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");

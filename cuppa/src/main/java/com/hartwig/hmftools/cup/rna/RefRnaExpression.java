@@ -12,8 +12,10 @@ import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -196,61 +198,29 @@ public class RefRnaExpression implements RefClassifier
         }
     }
 
-    public static boolean loadRefPercentileData(
-            final String filename, final Map<String,Map<String,double[]>> refPercentiles, final Map<String,String> geneIdNameMap)
+    public static boolean loadGeneIdIndices(final String filename, final Map<String,Integer> geneIdIndices)
     {
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String header = fileReader.readLine();
-
-            // SampleId,CancerType,GeneId,GeneName,TPM
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+            String header = fileData.get(0);
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+            fileData.remove(0);
 
-            int cancerCol = fieldsIndexMap.get("CancerType");
+            // GeneId,GeneName,CancerTypes..
+
             int geneIdCol = fieldsIndexMap.get("GeneId");
-            int geneNameCol = fieldsIndexMap.get("GeneName");
 
-            String line = fileReader.readLine();
-
-            String currentGeneId = "";
-            Map<String,double[]> cancerPercMap = null;
-
-            while(line != null)
+            for(int i = 0; i < fileData.size(); ++i)
             {
-                final String[] items = line.split(DATA_DELIM, -1);
-
+                final String[] items = fileData.get(i).split(DATA_DELIM, -1);
                 final String geneId = items[geneIdCol];
-                final String geneName = items[geneNameCol];
-
-                if(!currentGeneId.equals(geneId))
-                {
-                    currentGeneId = geneId;
-                    geneIdNameMap.put(geneId,geneName);
-                    cancerPercMap = Maps.newHashMap();
-                    refPercentiles.put(geneId,cancerPercMap);
-                }
-
-                final String cancerType = items[cancerCol];
-                double[] percentileData = new double[PERCENTILE_COUNT];
-
-                int startIndex = 3;
-
-                for(int i = startIndex; i < items.length; ++i)
-                {
-                    double value = Double.parseDouble(items[i]);
-                    percentileData[i - startIndex] = value;
-                }
-
-                cancerPercMap.put(cancerType, percentileData);
-
-                line = fileReader.readLine();
+                geneIdIndices.put(geneId, i);
             }
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read RNA exp cancer percentile data file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("failed to read RNA gene Ids from file({}): {}", filename, e.toString());
             return false;
         }
 

@@ -1,21 +1,19 @@
 package com.hartwig.hmftools.cup.rna;
 
-import static java.lang.Math.exp;
+import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
-import static com.hartwig.hmftools.cup.common.CupCalcs.adjustLowProbabilities;
-import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
-import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXPONENT;
@@ -24,8 +22,11 @@ import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MA
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
-import static com.hartwig.hmftools.cup.rna.RefRnaExpression.loadRefPercentileData;
+import static com.hartwig.hmftools.cup.rna.RefRnaExpression.loadGeneIdIndices;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +55,7 @@ public class RnaExpression implements CuppaClassifier
 
     private final Map<String,Map<String,double[]>> mRefGeneCancerPercentiles;
     private final Map<String,String> mGeneIdNameMap;
-    private final List<String> mGeneIdList;
+    private final Map<String,Integer> mGeneIdIndexMap;
 
     private Matrix mRefSampleGeneExpression;
     private final Map<String,Integer> mRefSampleGeneExpIndexMap;
@@ -64,12 +65,10 @@ public class RnaExpression implements CuppaClassifier
 
     private final boolean mRunPairwiseCss;
     private final boolean mRunCancerCss;
-    private final boolean mRunGenePrevalence;
 
     private static final String RNA_METHODS = "rna_methods";
     private static final String RNA_METHOD_PAIRWISE_CSS = "pairwise_css";
     private static final String RNA_METHOD_CANCER_CSS = "cancer_css";
-    private static final String RNA_METHOD_GENE_PREV = "gene_prevalence";
 
     private boolean mIsValid;
 
@@ -85,7 +84,7 @@ public class RnaExpression implements CuppaClassifier
 
         mRefCancerTypeGeneExpression = null;
         mRefCancerTypes = Lists.newArrayList();
-        mGeneIdList = Lists.newArrayList();
+        mGeneIdIndexMap = Maps.newHashMap();
 
         mRefGeneCancerPercentiles = Maps.newHashMap();
         mGeneIdNameMap = Maps.newHashMap();
@@ -97,7 +96,6 @@ public class RnaExpression implements CuppaClassifier
 
         mRunPairwiseCss = rnaMethods != null && rnaMethods.contains(RNA_METHOD_PAIRWISE_CSS);
         mRunCancerCss = rnaMethods == null || rnaMethods.contains(RNA_METHOD_CANCER_CSS);
-        mRunGenePrevalence = rnaMethods != null && rnaMethods.contains(RNA_METHOD_GENE_PREV);
 
         mIsValid = true;
 
@@ -108,9 +106,6 @@ public class RnaExpression implements CuppaClassifier
             return;
 
         if(mRunCancerCss && mConfig.RefGeneExpCancerFile.isEmpty())
-            return;
-
-        if(mRunGenePrevalence && mConfig.RefGeneExpPercFile.isEmpty())
             return;
 
         final List<String> ignoreFields = Lists.newArrayList("GeneId", "GeneName");
@@ -131,8 +126,8 @@ public class RnaExpression implements CuppaClassifier
 
         if(mRunCancerCss && !mConfig.RefGeneExpCancerFile.isEmpty())
         {
-            mRefCancerTypeGeneExpression =
-                    loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, ignoreFields);
+            loadGeneIdIndices(mConfig.RefGeneExpCancerFile, mGeneIdIndexMap);
+            mRefCancerTypeGeneExpression = loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, ignoreFields);
 
             if(mRefCancerTypeGeneExpression ==  null)
             {
@@ -141,12 +136,6 @@ public class RnaExpression implements CuppaClassifier
             }
 
             mRefCancerTypeGeneExpression.cacheTranspose();
-        }
-
-        if(mRunGenePrevalence && !mConfig.RefGeneExpPercFile.isEmpty())
-        {
-            mIsValid &= loadRefPercentileData(mConfig.RefGeneExpPercFile, mRefGeneCancerPercentiles, mGeneIdNameMap);
-            // populateGeneIdList(mConfig.RefGeneExpCancerFile, mGeneIdList);
         }
 
         buildCancerSampleCounts();
@@ -158,15 +147,22 @@ public class RnaExpression implements CuppaClassifier
         }
         else
         {
-            mSampleRnaExpression = loadMatrixDataFile(mConfig.SampleRnaExpFile, mSampleIndexMap, ignoreFields);
-
-            if(mSampleRnaExpression == null || mRefCancerTypeGeneExpression ==  null)
+            if(mConfig.SampleRnaExpFile.endsWith("isf.gene_data.csv") && mSampleDataCache.isSingleSample())
             {
-                mIsValid = false;
-                return;
+                loadSampleGeneExpressionData(mConfig.SampleRnaExpFile);
             }
+            else
+            {
+                mSampleRnaExpression = loadMatrixDataFile(mConfig.SampleRnaExpFile, mSampleIndexMap, ignoreFields);
 
-            mSampleRnaExpression.cacheTranspose();
+                if(mSampleRnaExpression == null || mRefCancerTypeGeneExpression == null)
+                {
+                    mIsValid = false;
+                    return;
+                }
+
+                mSampleRnaExpression.cacheTranspose();
+            }
         }
     }
 
@@ -227,9 +223,6 @@ public class RnaExpression implements CuppaClassifier
 
         if(mRunPairwiseCss)
             addSampleCssResults(sample, sampleGeneTPMs, results, similarities);
-
-        if(mRunGenePrevalence && !mRefGeneCancerPercentiles.isEmpty())
-            addPrevalenceResults(sample, sampleGeneTPMs, results);
     }
 
     private void addCancerCssResults(final SampleData sample, final double[] sampleGeneTPMs, final List<SampleResult> results)
@@ -351,65 +344,49 @@ public class RnaExpression implements CuppaClassifier
         return adjustedTPMs;
     }
 
-    private static final double MAX_PERC_THRESHOLD = 0.50;
-    private static final double MIN_TPM_THRESHOLD = 0.1;
-
-    private void addPrevalenceResults(final SampleData sample, final double[] sampleGeneTPMs, final List<SampleResult> results)
+    private void loadSampleGeneExpressionData(final String filename)
     {
-        int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.CancerType) : 0;
-
-        final Map<String,Double> summaryCancerPrevs = Maps.newHashMap();
-
-        for(int i = 0; i < mGeneIdList.size(); ++i)
+        try
         {
-            final String geneId = mGeneIdList.get(i);
-            final String geneName = mGeneIdNameMap.get(geneId);
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+            String header = fileData.get(0);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+            fileData.remove(0);
 
-            if(geneName == null)
-                continue;
+            mSampleRnaExpression = new Matrix(mGeneIdIndexMap.size(), 1);
+            mSampleIndexMap.put(mSampleDataCache.SampleIds.get(0), 0);
 
-            double sampleLogTpm = sampleGeneTPMs[i];
-            double sampleTpm = exp(sampleLogTpm) - 1; // revert to TPM from log(TPM+1)
+            // GeneId,GeneName, etc AdjTPM
 
-            if(sampleTpm < MIN_TPM_THRESHOLD)
-                continue;
+            int geneIdCol = fieldsIndexMap.get("GeneId");
+            int adjTPM = fieldsIndexMap.get("AdjTPM");
 
-            final Map<String,double[]> cancerPercentiles = mRefGeneCancerPercentiles.get(geneId);
-
-            final Map<String,Double> cancerPrevs = calcPercentilePrevalence(
-                    sample, cancerSampleCount,  cancerTypeCount, cancerPercentiles, sampleTpm, false);
-
-
-            /*
-            double maxPercentage = cancerPrevs.values().stream().mapToDouble(x -> x).max().orElse(0);
-            final String dataType = String.format("%s:%s", geneId, geneName);
-
-            if(maxPercentage >= MAX_PERC_THRESHOLD)
+            for(String line : fileData)
             {
-                results.add(new SampleResult(sample.Id, GENE_EXP, PERCENTILE, dataType, String.format("%.3g", sampleTpm), cancerPrevs));
-            }
-            */
+                final String[] items = line.split(DATA_DELIM, -1);
 
-            for(Map.Entry<String,Double> entry : cancerPrevs.entrySet())
-            {
-                Double prev = summaryCancerPrevs.get(entry.getKey());
-                if(prev == null)
-                    summaryCancerPrevs.put(entry.getKey(), entry.getValue());
-                else
-                    summaryCancerPrevs.put(entry.getKey(), prev * entry.getValue());
+                String geneId = items[geneIdCol];
+                double adjTpm = Double.parseDouble(items[adjTPM]);
+                Integer geneIdIndex = mGeneIdIndexMap.get(geneId);
+
+                if(geneIdIndex == null)
+                {
+                    CUP_LOGGER.error("unknown geneId({}) in sample file({})", geneId, filename);
+                    return;
+                }
+
+                double logTpm = log(adjTpm + 1);
+
+                mSampleRnaExpression.set(geneIdIndex, 0, logTpm);
             }
 
-            adjustLowProbabilities(summaryCancerPrevs);
+            mSampleRnaExpression.cacheTranspose();
         }
-
-        // form a likelihood value from all gene entries
-        double totalPrevalence = summaryCancerPrevs.values().stream().mapToDouble(x -> x).sum();
-
-        if(totalPrevalence > 0)
+        catch (IOException e)
         {
-            convertToPercentages(summaryCancerPrevs);
-            results.add(new SampleResult(sample.Id, GENE_EXP, LIKELIHOOD, "GENE_EXP_LIKELIHOOD", "", summaryCancerPrevs));
+            CUP_LOGGER.error("failed to read RNA sample gene data file({}): {}", filename, e.toString());
+            return;
         }
     }
+
 }

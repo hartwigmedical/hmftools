@@ -60,7 +60,6 @@ public class FeatureDataLoader
         try
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
             fileData.remove(0);
 
             for(final String line : fileData)
