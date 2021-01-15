@@ -13,7 +13,7 @@ import java.util.List;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
-import com.hartwig.hmftools.patientreporter.PatientReportUtils;
+import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class ReportingDbTest {
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
-            LimsCohortConfig cohortConfig = PatientReportUtils.createCohortConfig("CPCT",
+            LimsCohortConfig cohortConfig = PatientReporterTestFactory.createCohortConfig("CPCT",
                     true,
                     false,
                     false,
@@ -84,7 +84,7 @@ public class ReportingDbTest {
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("WIDE",
+        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("WIDE",
                 true,
                 true,
                 true,
@@ -95,7 +95,7 @@ public class ReportingDbTest {
                 true,
                 false,
                 true)));
-        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CPCT",
+        assertFalse(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CPCT",
                 true,
                 false,
                 false,
@@ -106,7 +106,7 @@ public class ReportingDbTest {
                 true,
                 false,
                 false)));
-        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CORE",
+        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CORE",
                 true,
                 true,
                 false,
@@ -117,7 +117,7 @@ public class ReportingDbTest {
                 false,
                 true,
                 true)));
-        assertFalse(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CORE",
+        assertFalse(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CORE",
                 true,
                 true,
                 false,
@@ -128,7 +128,7 @@ public class ReportingDbTest {
                 false,
                 true,
                 true)));
-        assertTrue(ReportingDb.requiresSummary(PatientReportUtils.createCohortConfig("CORE",
+        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CORE",
                 true,
                 true,
                 false,

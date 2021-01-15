@@ -13,6 +13,8 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
@@ -37,15 +39,6 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static ActionabilityAnalyzer loadTestActionabilityAnalyzer() {
-        try {
-            return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_DIRECTORY);
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not load test actionability analyzer: " + exception.getMessage());
-        }
-    }
-
-    @NotNull
     public static ImmutableEvidenceItem.Builder createTestEvidenceBuilder() {
         return ImmutableEvidenceItem.builder()
                 .event(Strings.EMPTY)
@@ -58,6 +51,35 @@ public final class PatientReporterTestFactory {
                 .isOnLabel(false)
                 .cancerType(Strings.EMPTY)
                 .scope(EvidenceScope.SPECIFIC);
+    }
+
+    @NotNull
+    public static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
+            boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
+            boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
+            boolean requireAdditionalInformationForSidePanel) {
+        return ImmutableLimsCohortConfig.builder()
+                .cohortId(cohortId)
+                .sampleContainsHospitalCenterId(sampleContainsHospitalCenterId)
+                .reportGermline(reportGermline)
+                .reportGermlineFlag(reportGermlineFlag)
+                .reportConclusion(reportConclusion)
+                .reportViral(reportViral)
+                .requireHospitalId(requireHospitalId)
+                .requireHospitalPAId(requireHospitalPAId)
+                .requireHospitalPersonsStudy(requireHospitalPersonsStudy)
+                .requireHospitalPersonsRequester(requireHospitalPersonsRequester)
+                .requireAdditionalInformationForSidePanel(requireAdditionalInformationForSidePanel)
+                .build();
+    }
+
+    @NotNull
+    public static ActionabilityAnalyzer loadTestActionabilityAnalyzer() {
+        try {
+            return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_DIRECTORY);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not load test actionability analyzer: " + exception.getMessage());
+        }
     }
 
     @NotNull
