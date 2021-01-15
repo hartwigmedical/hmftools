@@ -325,7 +325,6 @@ public class BamFragmentReader implements Callable
             for (RegionReadData region : geneCollection.getExonRegions())
             {
                 final String regionRefBases = mConfig.RefGenome.getBaseString(region.chromosome(), region.start(), region.end());
-
                 region.setRefBases(regionRefBases);
             }
 

@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.fusionInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.MISSENSE;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
@@ -17,6 +19,9 @@ import static com.hartwig.hmftools.isofox.TestUtils.POS_STRAND;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.generateRandomBases;
+import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.calcBaseOverlap;
+import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.calcCoordinatesOverlap;
+import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.expandRange;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findFusionSupport;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findPointMutationSupport;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
@@ -25,12 +30,15 @@ import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.PARTIAL_MATCH;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.neo.NeoEpitopeData;
 import com.hartwig.hmftools.isofox.neo.NeoFragmentSupport;
 
+import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
@@ -39,36 +47,64 @@ import htsjdk.samtools.CigarOperator;
 
 public class NeoEpitopesTest
 {
-
-    private NeoEpitopeData createFusionNeoEpitope(
-            final NeoEpitopeType varType, final String chrUp, int posUp, byte orientUp, final String chrDown, int posDown, byte orientDown,
-            final String geneIdUp, final String geneIdDown, final String transcriptsUp, final String transcriptsDown,
-            int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
-            int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown)
+    @Test
+    public void testNovelRanges()
     {
-        final String varInfo = fusionInfo(new String[] {chrUp, chrDown}, new int[] { posUp, posDown}, new byte[] { orientUp, orientDown });
+        List<int[]> coords = Lists.newArrayList();
 
-        final NeoEpitopeFile neFile = new NeoEpitopeFile(varType, varInfo, 1, geneIdUp, geneIdDown, geneIdUp, geneIdDown,
-                "", "", "", 0, 0, transcriptsUp, transcriptsDown, "",
-                codingBaseUpPosStart, codingBaseUpPosEnd, codingBasesUp, codingBaseCigarUp,
-                codingBaseDownPosStart, codingBaseDownPosEnd, codingBasesDown, codingBaseCigarDown);
+        coords.add(new int[] {10, 20});
+        coords.add(new int[] {30, 40});
+        coords.add(new int[] {50, 60});
+        coords.add(new int[] {70, 80});
 
-        return new NeoEpitopeData(neFile);
+        List<int[]> novelRanges = Lists.newArrayList();
+        novelRanges.add(new int[] { 35, 35 });
+        expandRange(novelRanges, 35, coords, 5, false);
+        expandRange(novelRanges, 35, coords, 5, true);
+
+        assertEquals(1, novelRanges.size());
+        assertEquals(30, novelRanges.get(0)[SE_START]);
+        assertEquals(40, novelRanges.get(0)[SE_END]);
+
+        expandRange(novelRanges, 30, coords, 10, false);
+        expandRange(novelRanges, 40, coords, 17, true);
+
+        assertEquals(4, novelRanges.size());
+        assertEquals(11, novelRanges.get(0)[SE_START]);
+        assertEquals(75, novelRanges.get(3)[SE_END]);
     }
 
-    private NeoEpitopeData createPointMutationNeoEpitope(
-            final NeoEpitopeType varType, final String chromosome, int position, byte geneStrand,
-            final String geneId, final String transcripts, int codingBasePosStart, int codingBasePosEnd, final String codingBases, final String codingBaseCigar)
+    @Test
+    public void testCoordsOverlap()
     {
-        final String varInfo = pointMutationInfo(chromosome, position, "A", "A");
 
-        final NeoEpitopeFile neFile = new NeoEpitopeFile(varType, varInfo, 1, geneId, geneId, geneId, geneId,
-                "", "", "", 0, 0, transcripts, transcripts, "",
-                codingBasePosStart, codingBasePosEnd, codingBases, codingBaseCigar, 0, 0, "", "");
+        int[] range1 = new int[] {10, 20};
+        int[] range2 = new int[] {30, 40};
+        assertEquals(0, calcBaseOverlap(range1, range2));
 
-        NeoEpitopeData neData = new NeoEpitopeData(neFile);
-        neData.setOrientation(geneStrand);
-        return neData;
+        range2 = new int[] {20, 30};
+        assertEquals(1, calcBaseOverlap(range1, range2));
+
+        range2 = new int[] {0, 11};
+        assertEquals(2, calcBaseOverlap(range1, range2));
+
+        range2 = new int[] {5, 25};
+        assertEquals(11, calcBaseOverlap(range1, range2));
+
+        List<int[]> coords1 = Lists.newArrayList();
+        coords1.add(new int[] {10, 20});
+        coords1.add(new int[] {30, 40});
+        coords1.add(new int[] {50, 60});
+        coords1.add(new int[] {70, 80});
+
+        assertEquals(44, calcCoordinatesOverlap(coords1, coords1));
+
+        List<int[]> coords2 = Lists.newArrayList();
+        coords2.add(new int[] {0, 10});
+        coords2.add(new int[] {21, 30});
+        coords2.add(new int[] {41, 50});
+
+        assertEquals(3, calcCoordinatesOverlap(coords1, coords2));
     }
 
     @Test
@@ -333,6 +369,36 @@ public class NeoEpitopesTest
 
     }
 
+    private NeoEpitopeData createFusionNeoEpitope(
+            final NeoEpitopeType varType, final String chrUp, int posUp, byte orientUp, final String chrDown, int posDown, byte orientDown,
+            final String geneIdUp, final String geneIdDown, final String transcriptsUp, final String transcriptsDown,
+            int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
+            int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown)
+    {
+        final String varInfo = fusionInfo(new String[] {chrUp, chrDown}, new int[] { posUp, posDown}, new byte[] { orientUp, orientDown });
+
+        final NeoEpitopeFile neFile = new NeoEpitopeFile(varType, varInfo, 1, geneIdUp, geneIdDown, geneIdUp, geneIdDown,
+                "", "", "", 0, 0, transcriptsUp, transcriptsDown, "",
+                codingBaseUpPosStart, codingBaseUpPosEnd, codingBasesUp, codingBaseCigarUp,
+                codingBaseDownPosStart, codingBaseDownPosEnd, codingBasesDown, codingBaseCigarDown);
+
+        return new NeoEpitopeData(neFile);
+    }
+
+    private NeoEpitopeData createPointMutationNeoEpitope(
+            final NeoEpitopeType varType, final String chromosome, int position, byte geneStrand,
+            final String geneId, final String transcripts, int codingBasePosStart, int codingBasePosEnd, final String codingBases, final String codingBaseCigar)
+    {
+        final String varInfo = pointMutationInfo(chromosome, position, "A", "A");
+
+        final NeoEpitopeFile neFile = new NeoEpitopeFile(varType, varInfo, 1, geneId, geneId, geneId, geneId,
+                "", "", "", 0, 0, transcripts, transcripts, "",
+                codingBasePosStart, codingBasePosEnd, codingBases, codingBaseCigar, 0, 0, "", "");
+
+        NeoEpitopeData neData = new NeoEpitopeData(neFile);
+        neData.setOrientation(geneStrand);
+        return neData;
+    }
 
 
 }

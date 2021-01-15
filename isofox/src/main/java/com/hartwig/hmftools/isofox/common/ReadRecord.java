@@ -624,31 +624,35 @@ public class ReadRecord
         if(mSupplementaryAlignment != null)
             return;
 
-        // check for reads either soft-clipped or apparently unspliced, where the extra bases can match with the next exon
+        // check for reads either soft-clipped or seemingly unspliced, where the extra bases can match with the next exon
 
         // check start of read
         int[] readSection = mLowerInferredAdded ? mMappedCoords.get(1) : mMappedCoords.get(0);
         int readStartPos = readSection[SE_START];
         int readEndPos = readSection[SE_END];
 
-        int deletedLength = Cigar.getCigarElements().stream().filter(x -> x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
+        // don't understand why any deleted bases were taken into account, no longer appears correct or relevant
+        // int deletedLength = Cigar.getCigarElements().stream().filter(x -> x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
 
         int extraBaseLength = 0;
         int scLength = 0;
 
-        if(region.start() > readStartPos && readEndPos > region.start())
+        boolean hasRegionOverhang = region.start() > readStartPos && readEndPos > region.start()
+                && region.start() - readStartPos <= MAX_SC_BASE_MATCH;
+
+        if(hasRegionOverhang)
         {
             extraBaseLength = region.start() - readStartPos;
         }
 
-        if(Cigar.getFirstCigarElement().getOperator() == CigarOperator.S && readStartPos == region.start())
+        if(Cigar.getFirstCigarElement().getOperator() == CigarOperator.S && readStartPos <= region.start())
         {
             scLength = Cigar.getFirstCigarElement().getLength();
             extraBaseLength += scLength;
         }
 
         // less any deleted bases
-        extraBaseLength = max(extraBaseLength - deletedLength, 0);
+        // extraBaseLength = max(extraBaseLength - deletedLength, 0);
 
         // allow a single base match if only 1 region matches
         if(extraBaseLength >= 1 && extraBaseLength <= MAX_SC_BASE_MATCH && scLength <= MAX_SC_BASE_MATCH)
@@ -664,19 +668,20 @@ public class ReadRecord
                 mSoftClipRegionsMatched[SE_START] = matchedRegions.size();
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
-                if (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH && region.start() > readStartPos)
+                if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH))
                 {
-                    // treat the splice support as ambiguous and truncate the read positions
-                    if (!mLowerInferredAdded)
-                    {
+                    // truncate the read positions back to match the exon boundary
+                    if (!mLowerInferredAdded && hasRegionOverhang)
                         readSection[SE_START] += region.start() - readStartPos;
-                    }
                 }
-                else if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
+
+                // if only one region is matched or the min bases matched is satisfied, then create a mapping to the next region,
+                // otherwise treat the splice support as ambiguous (it not mapped to the next region)
+                if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
                 {
                     for (RegionReadData preRegion : matchedRegions)
                     {
-                        // add matched coordinates for this exon and it as a region
+                        // add matched coordinates for this exon and add it as a region
                         mMappedRegions.put(preRegion, EXON_BOUNDARY);
                         addInferredMappingRegion(true, preRegion.end() - extraBaseLength + 1, preRegion.end());
                     }
@@ -692,18 +697,20 @@ public class ReadRecord
         extraBaseLength = 0;
         scLength = 0;
 
-        if(readEndPos > region.end() && readStartPos < region.end())
+        hasRegionOverhang = readEndPos > region.end() && readStartPos < region.end() && readEndPos - region.end() <= MAX_SC_BASE_MATCH;
+
+        if(hasRegionOverhang)
         {
             extraBaseLength = readEndPos - region.end();
         }
 
-        if(Cigar.getLastCigarElement().getOperator() == CigarOperator.S && readEndPos == region.end())
+        if(Cigar.getLastCigarElement().getOperator() == CigarOperator.S && readEndPos >= region.end())
         {
             scLength = Cigar.getLastCigarElement().getLength();
             extraBaseLength += scLength;
         }
 
-        extraBaseLength = max(extraBaseLength - deletedLength, 0);
+        // extraBaseLength = max(extraBaseLength - deletedLength, 0);
 
         if(extraBaseLength >= 1 && extraBaseLength <= MAX_SC_BASE_MATCH && scLength <= MAX_SC_BASE_MATCH)
         {
@@ -719,14 +726,13 @@ public class ReadRecord
 
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
-                if (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH && readEndPos > region.end())
+                if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH))
                 {
-                    if (!mUpperInferredAdded)
-                    {
+                    if (!mUpperInferredAdded && hasRegionOverhang)
                         readSection[SE_END] -= readEndPos - region.end();
-                    }
                 }
-                else if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
+
+                if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
                 {
                     for (RegionReadData postRegion : matchedRegions)
                     {

@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.VAR_INFO_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -38,11 +37,12 @@ public class NeoFragmentMatcher
 
         // reads with soft-clipped bases to another gene will match the coding bases starting midway through the coding bases
         // the read may cross any part of of the coding base region, which will cover all neo-epitope bases (up, down & novel)
-        int overlapBases = calcCoordinatesOverlap(read.getMappedRegionCoords(false), neData.CodingBaseCoords[FS_UP]);
+        int overlapBases = calcCoordinatesOverlap(read.getMappedRegionCoords(), neData.CodingBaseCoords[FS_UP]);
 
         if(overlapBases < MIN_BASE_OVERLAP)
             return support;
 
+        int mutationPosition = neData.Positions[FS_UP];
         int maxStartPos = max(read.PosStart, codingBaseRange[SE_START]);
         int minEndPos = min(read.PosEnd, codingBaseRange[SE_END]);
 
@@ -50,12 +50,6 @@ public class NeoFragmentMatcher
 
         if(matchLevel == MISMATCH)
             return support;
-
-        int mutationPosition = neData.Positions[FS_UP];
-
-        int[] novelRange = new int[SE_PAIR];
-
-        novelRange[SE_START] = shiftPosition(mutationPosition, neData.CodingBaseCoords[FS_UP], NOVEL_BASE_OVERLAP, false);
 
         final String[] varData = neData.Source.VariantInfo.split(VAR_INFO_DELIM);
         int refLength = varData[2].length();
@@ -78,21 +72,26 @@ public class NeoFragmentMatcher
             novelLength = refLength + NOVEL_BASE_OVERLAP;
         }
 
-        novelRange[SE_END] = shiftPosition(mutationPosition, neData.CodingBaseCoords[FS_UP], novelLength, true);
+        List<int[]> novelRanges = Lists.newArrayList();
+        novelRanges.add(new int[] { mutationPosition, mutationPosition });
+        expandRange(novelRanges, mutationPosition, neData.CodingBaseCoords[FS_UP], NOVEL_BASE_OVERLAP, false);
+        expandRange(novelRanges, mutationPosition, neData.CodingBaseCoords[FS_UP], novelLength, true);
 
-        int novelOverlap = read.getMappedRegionCoords().stream().map(x -> calcBaseOverlap(x, novelRange)).mapToInt(x -> x).sum();
+        int novelOverlap = calcCoordinatesOverlap(read.getMappedRegionCoords(), novelRanges);
 
         if(novelOverlap >= MIN_BASE_OVERLAP)
         {
             ++support.NovelFragments[matchLevel];
         }
-        else if((read.PosEnd < novelRange[SE_END] && neData.posStrand(FS_UP)) || (read.PosStart > novelRange[SE_START] && !neData.posStrand(FS_UP)))
-        {
-            ++support.UpFragments[matchLevel];
-        }
         else
         {
-            ++support.DownFragments[matchLevel];
+            int novelRangeStart = novelRanges.get(0)[SE_START];
+            int novelRangeEnd = novelRanges.get(novelRanges.size() - 1)[SE_END];
+
+            if((read.PosEnd < novelRangeEnd && neData.posStrand(FS_UP)) || (read.PosStart > novelRangeStart && !neData.posStrand(FS_UP)))
+                ++support.UpFragments[matchLevel];
+            else
+                ++support.DownFragments[matchLevel];
         }
 
         return support;
@@ -117,7 +116,7 @@ public class NeoFragmentMatcher
         {
             final String neoCodingBases = neData.Source.CodingBases[stream];
 
-            int overlapBases = calcCoordinatesOverlap(read.getMappedRegionCoords(false), neData.CodingBaseCoords[stream]);
+            int overlapBases = calcCoordinatesOverlap(read.getMappedRegionCoords(), neData.CodingBaseCoords[stream]);
 
             if(overlapBases < MIN_BASE_OVERLAP)
                 return support;
@@ -185,7 +184,7 @@ public class NeoFragmentMatcher
                 codingBaseCoords.addAll(neData.CodingBaseCoords[FS_UP]);
             }
 
-            int overlapBases = calcCoordinatesOverlap(read.getMappedRegionCoords(false), neData.CodingBaseCoords[stream]);
+            int overlapBases = calcCoordinatesOverlap(read.getMappedRegionCoords(), neData.CodingBaseCoords[stream]);
 
             if(overlapBases < MIN_BASE_OVERLAP)
                 return support;
@@ -214,7 +213,7 @@ public class NeoFragmentMatcher
         return support;
     }
 
-    private static int calcCoordinatesOverlap(final List<int[]> coords1, final List<int[]> coords2)
+    public static int calcCoordinatesOverlap(final List<int[]> coords1, final List<int[]> coords2)
     {
         int overlapBases = 0;
 
@@ -229,7 +228,7 @@ public class NeoFragmentMatcher
         return overlapBases;
     }
 
-    private static int calcBaseOverlap(final int[] range1, final int[] range2)
+    public static int calcBaseOverlap(final int[] range1, final int[] range2)
     {
         int maxStart = max(range1[SE_START], range2[SE_START]);
         int minEnd = min(range1[SE_END], range2[SE_END]);
@@ -237,7 +236,7 @@ public class NeoFragmentMatcher
         return maxStart <= minEnd ? minEnd - maxStart + 1 : 0;
     }
 
-    private static int shiftPosition(int position, final List<int[]> coordsList, int shiftCount, boolean shiftUp)
+    public static void expandRange(final List<int[]> ranges, int position, final List<int[]> coordsList, int shiftCount, boolean shiftUp)
     {
         int coordIndex = 0;
 
@@ -252,7 +251,9 @@ public class NeoFragmentMatcher
         }
 
         if(coordIndex >= coordsList.size())
-            return -1;
+            return;
+
+        int[] currentRange = !shiftUp ? ranges.get(0) : ranges.get(ranges.size() - 1);
 
         int currentPos = position;
         int shiftedBases = 0;
@@ -267,10 +268,13 @@ public class NeoFragmentMatcher
                     --coordIndex;
 
                     if(coordIndex < 0)
-                        return -1;
+                        return;
 
                     currentCoords = coordsList.get(coordIndex);
                     currentPos = currentCoords[SE_END];
+
+                    currentRange = new int[] { currentPos, currentPos };
+                    ranges.add(0, currentRange);
                 }
                 else
                 {
@@ -284,10 +288,14 @@ public class NeoFragmentMatcher
                     ++coordIndex;
 
                     if(coordIndex >= coordsList.size())
-                        return -1;
+                        return;
 
                     currentCoords = coordsList.get(coordIndex);
                     currentPos = currentCoords[SE_START];
+
+                    currentRange = new int[] { currentPos, currentPos };
+                    ranges.add(currentRange);
+
                 }
                 else
                 {
@@ -298,7 +306,10 @@ public class NeoFragmentMatcher
             ++shiftedBases;
         }
 
-        return currentPos;
+        if(shiftUp)
+            currentRange[SE_END] = currentPos;
+        else
+            currentRange[SE_START] = currentPos;
     }
 
     public static int compareCodingBases(
@@ -311,7 +322,7 @@ public class NeoFragmentMatcher
         if(read.isSoftClipped(SE_START))
             readBaseIndex += read.Cigar.getFirstCigarElement().getLength();
 
-        for(int[] mappedCoords : read.getMappedRegionCoords(false))
+        for(int[] mappedCoords : read.getMappedRegionCoords())
         {
             if(posStart > mappedCoords[SE_END])
             {

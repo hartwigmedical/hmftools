@@ -12,10 +12,12 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.configPathValid;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
+import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.neo.CohortTpmData.CANCER_VALUE;
 import static com.hartwig.hmftools.isofox.neo.CohortTpmData.COHORT_VALUE;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.checkBaseCoverage;
@@ -115,12 +117,25 @@ public class NeoEpitopeReader
         mReadGroups.clear();
     }
 
+    private boolean filterOnRestrictedGenes(final NeoEpitopeData neData)
+    {
+        if(mConfig.RestrictedGeneIds.isEmpty())
+            return true;
+
+        return mConfig.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_UP])
+                && mConfig.RestrictedGeneIds.contains(neData.Source.GeneIds[FS_DOWN]);
+    }
+
     public void calcFragmentSupport()
     {
         for(final NeoEpitopeData neData : mNeoEpitopes)
         {
-            mCurrentNeoData = neData;
             clearCache();
+
+            if(!filterOnRestrictedGenes(neData))
+                continue;
+
+            mCurrentNeoData = neData;
 
             if(neData.isFusion())
             {
@@ -128,7 +143,6 @@ public class NeoEpitopeReader
             }
             else
             {
-                neData.setOrientation(mCurrentGenes.genes().get(0).GeneData.Strand);
                 calcPointMutationSupport();
             }
 
@@ -157,6 +171,11 @@ public class NeoEpitopeReader
     {
         initialiseGeneData(mCurrentNeoData.Source.GeneIds[FS_UP]);
 
+        if(mCurrentGenes == null)
+            return;
+
+        mCurrentNeoData.setOrientation(mCurrentGenes.genes().get(0).GeneData.Strand);
+
         // the 'UP' stream caches the full coding base= sequence since relates to a single gene
         final BaseRegion readRegion = new BaseRegion(mCurrentNeoData.Chromosomes[FS_UP],mCurrentNeoData.Source.CodingBasePositions[FS_UP]);
         mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
@@ -166,6 +185,8 @@ public class NeoEpitopeReader
 
     private void initialiseGeneData(final String geneId)
     {
+        mCurrentGenes = null;
+
         final EnsemblGeneData geneData = mGeneTransCache.getGeneDataById(geneId);
 
         if(geneData == null)
@@ -176,6 +197,15 @@ public class NeoEpitopeReader
 
         final List<GeneReadData> geneReadDataList = createGeneReadData(Lists.newArrayList(geneData), mGeneTransCache);
         mCurrentGenes = new GeneCollection(0, Lists.newArrayList(geneReadDataList));
+
+        if(mConfig.RefGenomeFile != null)
+        {
+            for (RegionReadData region : mCurrentGenes.getExonRegions())
+            {
+                final String regionRefBases = mConfig.RefGenome.getBaseString(region.chromosome(), region.start(), region.end());
+                region.setRefBases(regionRefBases);
+            }
+        }
     }
 
     private void processSamRecord(@NotNull final SAMRecord record)

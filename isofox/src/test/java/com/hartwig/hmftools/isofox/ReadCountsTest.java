@@ -160,7 +160,8 @@ public class ReadCountsTest
         region1.addPostRegion(region2);
         region2.addPreRegion(region1);
 
-        ReadRecord read = createReadRecord(1, "1", 200, 209, REF_BASE_STR_1.substring(5, 19), createCigar(5, 10, 0));
+        ReadRecord read = createReadRecord(1, "1", 200, 209, REF_BASE_STR_1.substring(5, 19),
+                createCigar(5, 10, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region2);
         read.processOverlappingRegions(regions);
@@ -171,7 +172,8 @@ public class ReadCountsTest
         assertEquals(150, read.getMappedRegionCoords().get(0)[SE_END]);
 
         // test again on the up side, with 2 different regions matching the inferred bases
-        read = createReadRecord(1, "1", 141, 155, REF_BASE_STR_1.substring(0, 15), createCigar(0, 15, 0));
+        read = createReadRecord(1, "1", 141, 155, REF_BASE_STR_1.substring(0, 15),
+                createCigar(0, 15, 0));
 
         RegionReadData region3 = new RegionReadData("1", 200, 229);
         region3.setRefBases(REF_BASE_STR_1.substring(10, 19) + REF_BASE_STR_1);
@@ -188,6 +190,20 @@ public class ReadCountsTest
         region3.addPreRegion(region4);
 
         regions = Lists.newArrayList(region1, region4);
+        read.processOverlappingRegions(regions);
+
+        assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region1));
+        assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region2));
+        assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region3));
+        assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region4));
+        assertEquals(2, read.getMappedRegionCoords().size());
+        assertEquals(200, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_START]);
+        assertEquals(204, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_END]);
+
+        // test with a soft-clipped and overhanging base together
+        read = createReadRecord(1, "1", 141, 152, REF_BASE_STR_1.substring(0, 15),
+                createCigar(0, 12, 3));
+
         read.processOverlappingRegions(regions);
 
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region1));
