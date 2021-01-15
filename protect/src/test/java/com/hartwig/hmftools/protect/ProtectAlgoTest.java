@@ -4,12 +4,16 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.serve.actionability.ActionableEvents;
+import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
+import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class ProtectApplicationTest {
+public class ProtectAlgoTest {
 
     private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline/germline_reporting.tsv").getPath();
     private static final String DOID_JSON = Resources.getResource("doid/example_doid.json").getPath();
@@ -28,7 +32,7 @@ public class ProtectApplicationTest {
     private static final String CHORD_PREDICTION_TXT  = Resources.getResource("test_run/chord/sample_chord_prediction.txt").getPath();
 
     @Test
-    public void canLoadAndRun() throws IOException {
+    public void canRunProtectAlgo() throws IOException {
         ProtectConfig config = ImmutableProtectConfig.builder()
                 .tumorSampleId("sample")
                 .outputDir(Strings.EMPTY)
@@ -47,7 +51,10 @@ public class ProtectApplicationTest {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .build();
 
-        assertNotNull(ProtectApplication.protectEvidence(config));
+        ActionableEvents events = ActionableEventsLoader.readFromDir(SERVE_DIR, RefGenomeVersion.V37);
+        ProtectAlgo algo = ProtectAlgo.buildAlgoFromServeActionability(events, Sets.newHashSet());
+
+        assertNotNull(algo.run(config));
     }
 
 }

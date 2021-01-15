@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.protect;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -8,6 +9,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.protect.bachelor.BachelorData;
+import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
+import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.evidence.ChordEvidence;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
 import com.hartwig.hmftools.protect.evidence.DisruptionEvidence;
@@ -16,7 +19,9 @@ import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
 import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
 import com.hartwig.hmftools.protect.linx.LinxData;
+import com.hartwig.hmftools.protect.linx.LinxDataLoader;
 import com.hartwig.hmftools.protect.purple.PurpleData;
+import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 
 import org.apache.logging.log4j.LogManager;
@@ -77,7 +82,17 @@ public class ProtectAlgo {
     }
 
     @NotNull
-    public List<ProtectEvidence> determineEvidence(@NotNull PurpleData purpleData, @NotNull LinxData linxData,
+    public List<ProtectEvidence> run(@NotNull ProtectConfig config) throws IOException {
+        PurpleData purpleData = PurpleDataLoader.load(config);
+        LinxData linxData = LinxDataLoader.load(config);
+        BachelorData bachelorData = BachelorDataLoader.load(config, purpleData, linxData);
+        ChordAnalysis chordAnalysis = ChordDataLoader.load(config);
+
+        return determineEvidence(purpleData, linxData, bachelorData, chordAnalysis);
+    }
+
+    @NotNull
+    private List<ProtectEvidence> determineEvidence(@NotNull PurpleData purpleData, @NotNull LinxData linxData,
             @NotNull BachelorData bachelorData, @NotNull ChordAnalysis chordAnalysis) {
         LOGGER.info("Evidence extraction started");
         List<ProtectEvidence> variantEvidence =

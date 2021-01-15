@@ -1,2 +1,3 @@
 chromosome	position	ref	alt	source	treatment	cancerType	doid	level	direction	url
 7	140453136	A	T	VICC_CGI	Vemurafenib	Skin Melanoma	X	A	RESPONSIVE	http
+7	140453137	A	T	VICC_CGI	Vemurafenib	Skin Melanoma	X	C	RESISTANT

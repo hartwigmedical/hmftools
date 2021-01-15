@@ -5,21 +5,12 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.protect.bachelor.BachelorData;
-import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
-import com.hartwig.hmftools.protect.chord.ChordDataLoader;
-import com.hartwig.hmftools.protect.linx.LinxData;
-import com.hartwig.hmftools.protect.linx.LinxDataLoader;
-import com.hartwig.hmftools.protect.purple.PurpleData;
-import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
@@ -81,6 +72,17 @@ public class ProtectApplication implements AutoCloseable {
     }
 
     @NotNull
+    private static List<ProtectEvidence> protectEvidence(@NotNull ProtectConfig config) throws IOException {
+        Set<String> patientTumorDoids = patientTumorDoids(config);
+
+        ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), REF_GENOME_VERSION);
+
+        ProtectAlgo algo = ProtectAlgo.buildAlgoFromServeActionability(actionableEvents, patientTumorDoids);
+
+        return algo.run(config);
+    }
+
+    @NotNull
     private static Set<String> patientTumorDoids(@NotNull ProtectConfig config) throws IOException {
         Set<String> result = Sets.newHashSet();
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
@@ -100,22 +102,6 @@ public class ProtectApplication implements AutoCloseable {
 
         LOGGER.info(" Doids which are considered on-label for patient: '{}'", result);
         return result;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static List<ProtectEvidence> protectEvidence(@NotNull ProtectConfig config) throws IOException {
-        PurpleData purpleData = PurpleDataLoader.load(config);
-        LinxData linxData = LinxDataLoader.load(config);
-        BachelorData bachelorData = BachelorDataLoader.load(config, purpleData, linxData);
-        ChordAnalysis chordAnalysis = ChordDataLoader.load(config);
-        Set<String> patientTumorDoids = patientTumorDoids(config);
-
-        ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), REF_GENOME_VERSION);
-
-        ProtectAlgo algo = ProtectAlgo.buildAlgoFromServeActionability(actionableEvents, patientTumorDoids);
-
-        return algo.determineEvidence(purpleData, linxData, bachelorData, chordAnalysis);
     }
 
     @Override
