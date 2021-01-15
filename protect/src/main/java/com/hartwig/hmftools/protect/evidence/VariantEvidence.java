@@ -110,6 +110,8 @@ public class VariantEvidence {
                 return effect == CodingEffect.MISSENSE && isInsert(variant);
             case MISSENSE:
                 return effect == CodingEffect.MISSENSE;
+            case ANY:
+                return effect == CodingEffect.MISSENSE || effect == CodingEffect.NONSENSE_OR_FRAMESHIFT || effect == CodingEffect.SPLICE;
             default: {
                 LOGGER.warn("Unrecognized mutation type filter: '{}'", filter);
                 return false;
