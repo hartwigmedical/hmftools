@@ -18,7 +18,6 @@ import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariantFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,7 +54,7 @@ public final class BachelorDataLoader {
                 .map(ReportableGainLoss::gene)
                 .forEach(genesWithInactivationEvent::add);
 
-        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableGermlineVariants(germlineVariants,
+        List<ReportableVariant> reportableVariants = GermlineVariantFunctions.reportableGermlineVariants(germlineVariants,
                 genesWithInactivationEvent,
                 germlineReportingModel);
 

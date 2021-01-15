@@ -12,11 +12,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class HomozygousDisruptionAnalyzer {
+public final class ReportableHomozygousDisruptionFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(HomozygousDisruptionAnalyzer.class);
+    private static final Logger LOGGER = LogManager.getLogger(ReportableHomozygousDisruptionFactory.class);
 
-    private HomozygousDisruptionAnalyzer() {
+    private ReportableHomozygousDisruptionFactory() {
     }
 
     @NotNull

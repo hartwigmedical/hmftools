@@ -44,7 +44,7 @@ public final class LinxDataLoader {
         LOGGER.info(" Loaded {} reportable viral insertions from {}", reportableViralInsertions.size(), linxViralInsertionTsv);
 
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions =
-                HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(linxDriversTsv);
+                ReportableHomozygousDisruptionFactory.extractFromLinxDriversTsv(linxDriversTsv);
         LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", reportableHomozygousDisruptions.size(), linxDriversTsv);
 
         return ImmutableLinxData.builder()

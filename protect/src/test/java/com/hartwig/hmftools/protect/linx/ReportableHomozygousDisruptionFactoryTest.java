@@ -9,14 +9,14 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class HomozygousDisruptionAnalyzerTest {
+public class ReportableHomozygousDisruptionFactoryTest {
 
     private static final String LINX_DRIVERS_CATALOG_TSV = Resources.getResource("test_run/linx/sample.drivers.catalog.tsv").getPath();
 
     @Test
     public void canExtractHomozygousDisruptions() throws IOException {
         List<ReportableHomozygousDisruption> homozygousDisruptions =
-                HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(LINX_DRIVERS_CATALOG_TSV);
+                ReportableHomozygousDisruptionFactory.extractFromLinxDriversTsv(LINX_DRIVERS_CATALOG_TSV);
 
         assertEquals(1, homozygousDisruptions.size());
 
