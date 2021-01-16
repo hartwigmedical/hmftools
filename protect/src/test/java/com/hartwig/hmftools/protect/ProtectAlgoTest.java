@@ -56,5 +56,4 @@ public class ProtectAlgoTest {
 
         assertNotNull(algo.run(config));
     }
-
 }
