@@ -21,7 +21,7 @@ public final class ActionableEventUrlMerger {
             T key = consolidator.stripUrls(event);
             Set<String> urls = urlsPerEvent.get(key);
             if (urls == null) {
-                urls = Sets.newHashSet();
+                urls = Sets.newTreeSet();
             }
             urls.addAll(event.urls());
             urlsPerEvent.put(key, urls);
