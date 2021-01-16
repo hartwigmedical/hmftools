@@ -9,7 +9,10 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CodingRegions {
+public final class CodingRegions {
+
+    private CodingRegions() {
+    }
 
     @NotNull
     public static List<NamedBed> codingRegions(@NotNull final HmfTranscriptRegion transcript) {
@@ -36,5 +39,4 @@ public class CodingRegions {
 
         return result;
     }
-
 }

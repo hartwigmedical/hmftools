@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class NamedBedBuilder implements Consumer<NamedBed> {
@@ -48,7 +48,7 @@ public class NamedBedBuilder implements Consumer<NamedBed> {
 
         public NamedBedBuilderChromosome(@NotNull final String chromosome) {
             this.chromosome = chromosome;
-            this.regions = com.google.common.collect.Lists.newArrayList();
+            this.regions = Lists.newArrayList();
         }
 
         @NotNull

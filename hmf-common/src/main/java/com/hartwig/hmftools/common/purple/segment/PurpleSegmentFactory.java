@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class PurpleSegmentFactory {
+public class PurpleSegmentFactory {
 
     private final int windowSize;
     private final Map<Chromosome, GenomePosition> lengths;
@@ -49,7 +49,6 @@ public final class PurpleSegmentFactory {
 
     @NotNull
     private Multimap<Chromosome, PurpleSegment> segmentMap(@NotNull final Multimap<Chromosome, Cluster> clusters) {
-
         final Multimap<Chromosome, PurpleSegment> segments = ArrayListMultimap.create();
         for (Chromosome chromosome : clusters.keySet()) {
 
@@ -119,7 +118,6 @@ public final class PurpleSegmentFactory {
 
     @NotNull
     private static ModifiablePurpleSegment create(@NotNull String chromosome, long start, @NotNull final List<PCFPosition> pcfPositions) {
-
         long minStart = pcfPositions.stream()
                 .filter(x -> x.source() == PCFSource.TUMOR_RATIO)
                 .mapToLong(PCFPosition::minPosition)

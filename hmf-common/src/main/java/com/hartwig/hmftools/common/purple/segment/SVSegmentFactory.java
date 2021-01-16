@@ -32,5 +32,4 @@ final class SVSegmentFactory {
     private static SVSegment create(@NotNull final StructuralVariantType type, @NotNull final StructuralVariantLeg leg) {
         return ImmutableSVSegment.builder().chromosome(leg.chromosome()).position(leg.cnaPosition()).type(type).build();
     }
-
 }

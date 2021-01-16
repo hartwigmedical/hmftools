@@ -24,10 +24,12 @@ public final class HmfExonPanelBed {
 
     private static final Logger LOGGER = LogManager.getLogger(HmfExonPanelBed.class);
 
+    private HmfExonPanelBed() {
+    }
+
     @NotNull
     public static List<NamedBed> createRegions(boolean includeUTR, @NotNull final Set<String> actionableGenes,
             @NotNull final List<HmfTranscriptRegion> regions) {
-
         final List<NamedBed> namedExons = regions.stream()
                 .distinct()
                 .filter(transcript -> transcript.codingStart() != 0 && actionableGenes.contains(transcript.gene()))
@@ -110,5 +112,4 @@ public final class HmfExonPanelBed {
 
         return false;
     }
-
 }
