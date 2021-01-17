@@ -11,8 +11,7 @@ class HeterozygousEvidence(val minBaseQual: Int, val heterozygousIndices: List<I
 
         for (i in 0..(heterozygousIndices.size - 2)) {
 
-            val evidence = PhasedEvidence.evidence(minBaseQual, readFragments,
-                    heterozygousIndices[i],
+            val evidence = PhasedEvidence.evidence(readFragments, heterozygousIndices[i],
                     heterozygousIndices[i + 1]
 //                    heterozygousIndices[i + 2]
 //                    heterozygousIndices[i + 3]
@@ -40,7 +39,7 @@ class HeterozygousEvidence(val minBaseQual: Int, val heterozygousIndices: List<I
             val newIndices = (existingIndices + i).sortedArray()
             val fake = PhasedEvidence(newIndices, Collections.emptyMap())
             if (!others.contains(fake)) {
-                val evidence = PhasedEvidence.evidence(minBaseQual, readFragments, *newIndices)
+                val evidence = PhasedEvidence.evidence(readFragments, *newIndices)
                 if (evidence.evidence.isNotEmpty() && evidence.minEvidence() > 2) {
                     result.add(evidence)
                 }
@@ -65,17 +64,17 @@ class HeterozygousEvidence(val minBaseQual: Int, val heterozygousIndices: List<I
         if (remainingIndicesAbove.isNotEmpty()) {
             val newIndices = current.unambiguousTailIndices() + remainingIndicesAbove[0]
             val fake = PhasedEvidence(newIndices, Collections.emptyMap())
-//            if (!others.contains(fake)) {
-            val newEvidence = PhasedEvidence.evidence(minBaseQual, readFragments, *newIndices)
-            if (newEvidence.evidence.isNotEmpty() && newEvidence.minEvidence() >= 2) {
-                if (newEvidence.aminoAcidIndices.size == current.aminoAcidIndices.size + 1) {
-                    result.add(newEvidence)
-                } else {
-                    val combinedEvidence = PhasedEvidence.combineOverlapping(current, newEvidence)
+            if (!others.contains(fake)) {
+                val newEvidence = PhasedEvidence.evidence(readFragments, *newIndices)
+                if (newEvidence.evidence.isNotEmpty() && newEvidence.minEvidence() >= 2) {
+                    if (newEvidence.aminoAcidIndices.size == current.aminoAcidIndices.size + 1) {
+                        result.add(newEvidence)
+                    } else {
+                        val combinedEvidence = PhasedEvidence.combineOverlapping(current, newEvidence)
 //                    println("Combined un-ambiguous match: $combinedEvidence")
-                    result.add(combinedEvidence)
+                        result.add(combinedEvidence)
+                    }
                 }
-//                }
             }
         }
 
@@ -84,7 +83,7 @@ class HeterozygousEvidence(val minBaseQual: Int, val heterozygousIndices: List<I
             val fake = PhasedEvidence(newIndices, Collections.emptyMap())
 //            if (!others.contains(fake)) {
 
-            val newEvidence = PhasedEvidence.evidence(minBaseQual, readFragments, *newIndices)
+            val newEvidence = PhasedEvidence.evidence(readFragments, *newIndices)
             if (newEvidence.evidence.isNotEmpty() && newEvidence.minEvidence() >= 2) {
                 if (newEvidence.aminoAcidIndices.size == current.aminoAcidIndices.size + 1) {
                     result.add(newEvidence)
@@ -119,7 +118,7 @@ class HeterozygousEvidence(val minBaseQual: Int, val heterozygousIndices: List<I
             val newIndices = existingIndices + remainingIndicesAbove[0]
             val fake = PhasedEvidence(newIndices, Collections.emptyMap())
             if (!others.contains(fake)) {
-                val evidence = PhasedEvidence.evidence(minBaseQual, readFragments, *newIndices)
+                val evidence = PhasedEvidence.evidence(readFragments, *newIndices)
                 if (evidence.evidence.isNotEmpty() && evidence.minEvidence() >= 3) {
                     result.add(evidence)
                 }
@@ -131,7 +130,7 @@ class HeterozygousEvidence(val minBaseQual: Int, val heterozygousIndices: List<I
             val fake = PhasedEvidence(newIndices, Collections.emptyMap())
             if (!others.contains(fake)) {
 
-                val evidence = PhasedEvidence.evidence(minBaseQual, readFragments, *newIndices)
+                val evidence = PhasedEvidence.evidence(readFragments, *newIndices)
                 if (evidence.evidence.isNotEmpty() && evidence.minEvidence() >= 3) {
                     result.add(evidence)
                 }

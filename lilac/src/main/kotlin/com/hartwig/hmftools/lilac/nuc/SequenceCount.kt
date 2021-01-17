@@ -1,31 +1,32 @@
 package com.hartwig.hmftools.lilac.nuc
 
 import com.hartwig.hmftools.lilac.read.Fragment
+import com.hartwig.hmftools.lilac.read.NucleotideFragment
 import java.io.File
 import java.util.*
 import kotlin.math.min
 
-class SequenceCount(val length: Int) {
+class SequenceCount(private val minCount: Int, val length: Int) {
+
+    private val count = Array(length) { mutableMapOf<Char, Int>() }
 
     companion object {
-        fun nucleotides(minQual: Int, fragments: List<Fragment>): SequenceCount {
-            val length = fragments.map { it.nucleotideIndices().max() ?: -1 }.max()!! + 1
-            val result = SequenceCount(length)
+        fun nucleotides(minCount: Int, fragments: List<NucleotideFragment>): SequenceCount {
+            val length = fragments.map { it.nucleotideIndices().max()!! }.max()!! + 1
+            val result = SequenceCount(minCount, length)
 
             for (fragment in fragments) {
                 for (index in fragment.nucleotideIndices()) {
                     val nucleotide = fragment.nucleotide(index)
-                    if (nucleotide != '.') {
-                        result.increment(index, nucleotide)
-                    }
+                    result.increment(index, nucleotide)
                 }
             }
             return result
         }
 
-        fun aminoAcids(minQual: Int, fragments: List<Fragment>): SequenceCount {
+        fun aminoAcids(minCount: Int, fragments: List<Fragment>): SequenceCount {
             val length = fragments.map { it.aminoAcidIndices().max() ?: -1 }.max()!! + 1
-            val result = SequenceCount(length)
+            val result = SequenceCount(minCount, length)
 
             for (fragment in fragments) {
                 for (index in fragment.aminoAcidIndices()) {
@@ -39,31 +40,31 @@ class SequenceCount(val length: Int) {
         }
     }
 
-    private val count = Array(length) { mutableMapOf<Char, Int>() }
 
     private fun increment(index: Int, aminoAcid: Char) {
-        if (aminoAcid != '.') {
-            count[index].compute(aminoAcid) { _, u -> (u ?: 0) + 1 }
-        }
+        count[index].compute(aminoAcid) { _, u -> (u ?: 0) + 1 }
     }
 
-    fun heterozygousIndices(minCount: Int): List<Int> {
-        val result = mutableListOf<Int>()
-        for (i in count.indices) {
-            if (isHeterozygous(minCount, i)) {
-                result.add(i)
-            }
-        }
-
-        return result
+    fun heterozygousIndices(): List<Int> {
+        return count.indices.filter { isHeterozygous(it) }
     }
 
-    private fun isHeterozygous(minCount: Int, index: Int): Boolean {
+    fun homozygousIndices(): List<Int> {
+        return count.indices.filter { isHomozygous(it) }
+    }
+
+    private fun isHomozygous(index: Int): Boolean {
+        val mapAtIndex = count[index].filter { it.value >= minCount }
+        return mapAtIndex.size == 1
+    }
+
+
+    private fun isHeterozygous(index: Int): Boolean {
         val mapAtIndex = count[index].filter { it.value >= minCount }
         return mapAtIndex.size > 1
     }
 
-    fun sequenceAt(index: Int, minCount: Int = 2): Collection<Char> {
+    fun sequenceAt(index: Int): Collection<Char> {
         val result = mutableSetOf<Char>()
         val indexMap = count[index]
         for ((aa, count) in indexMap) {

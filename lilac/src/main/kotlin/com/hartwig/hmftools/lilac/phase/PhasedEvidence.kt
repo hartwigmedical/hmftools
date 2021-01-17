@@ -96,13 +96,13 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
 
     companion object {
 
-        fun evidence(minQual: Int, fragments: List<Fragment>, vararg indices: Int): PhasedEvidence {
+        fun evidence(fragments: List<Fragment>, vararg indices: Int): PhasedEvidence {
             val filteredFragments = fragments.filter { it.containsAll(indices) }
-            val aminoAcidEvidence = filteredFragments.map { it.toAminoAcids(minQual, indices) }.groupingBy { it }.eachCount()
+            val aminoAcidEvidence = filteredFragments.map { it.toAminoAcids(indices) }.groupingBy { it }.eachCount()
             return PhasedEvidence(indices, aminoAcidEvidence)
         }
 
-        private fun Fragment.toAminoAcids(minQual: Int, indices: IntArray): String {
+        private fun Fragment.toAminoAcids(indices: IntArray): String {
             return indices.map { this.aminoAcid(it) }.joinToString("")
         }
 
