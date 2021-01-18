@@ -57,7 +57,7 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
     }
 
     override fun toString(): String {
-        return "$allele:[t=${(uniqueCoverage + sharedCoverage).roundToInt()}, u=$uniqueCoverage, s=${sharedCoverage.roundToInt()}]"
+        return "$allele[t=${(uniqueCoverage + sharedCoverage).roundToInt()}, u=$uniqueCoverage, s=${sharedCoverage.roundToInt()}]"
     }
 
 

@@ -8,10 +8,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.coverageString
 import com.hartwig.hmftools.lilac.hla.HlaComplex
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentEnrichment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
-import com.hartwig.hmftools.lilac.phase.ExtendedEvidence
-import com.hartwig.hmftools.lilac.phase.PhasedEvidence
 import com.hartwig.hmftools.lilac.read.Fragment
 import com.hartwig.hmftools.lilac.read.SAMRecordRead
 import com.hartwig.hmftools.lilac.seq.HlaSequence
@@ -56,91 +53,70 @@ class LilacApplication2 : AutoCloseable, Runnable {
         val bProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
         val cProteinExonBoundaries = setOf(24, 114, 206, 298, 338, 349, 365, 366)
         val allProteinExonBoundaries = (aProteinExonBoundaries + bProteinExonBoundaries + cProteinExonBoundaries)
-
-
-        logger.info("Reading nucleotides from  $bamFile")
-        val rawNucleotideFragments = readFromBam(bamFile)
-        val nucleotideFragmentFactory = NucleotideFragmentFactory(minBaseCount, rawNucleotideFragments, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
-        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, rawNucleotideFragments)
-        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousIndices()
-
-
-        val aminoAcidFragments = nucleotideFragmentFactory.allNucleotides().map { it.toAminoAcidFragment() }
-        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
-
-
-//        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
-//        nucleotideCounts.writeVertically("/Users/jon/hmf/analysis/hla/nucleotides.count.txt")
-
-
-        val nucleotideLoci = allProteinExonBoundaries.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) } intersect nucleotideHeterozygousLoci
-        logger.info("Het nucleotide exon boundaries: $nucleotideLoci")
-
-
-        val excludedIndices = allProteinExonBoundaries.toSet()
-
-        val hetLoci = aminoAcidCounts.heterozygousIndices()
-        val heterozygousIndices = hetLoci
-                .filter { it !in excludedIndices }
-
-        println("Heterozygous locations")
-        println(heterozygousIndices)
+        val allNucleotideExonBoundaries = allProteinExonBoundaries.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
 
         logger.info("Reading nucleotide files")
         val nucleotideSequences = readNucleotideFiles(resourcesDir)
 
         logger.info("Reading protein files")
-        val allProteinSequences = readProteinFiles(resourcesDir)
+        val aminoAcidSequences = readProteinFiles(resourcesDir)
 
-        val candidateFactory = Candidates(minBaseCount, 30, nucleotideSequences, allProteinSequences)
-        val aCandidates  = candidateFactory.candidates("A", aProteinExonBoundaries, nucleotideFragmentFactory.typeANucleotides())
-        val bCandidates  = candidateFactory.candidates("B", bProteinExonBoundaries, nucleotideFragmentFactory.typeBNucleotides())
-        val cCandidates  = candidateFactory.candidates("C", cProteinExonBoundaries, nucleotideFragmentFactory.typeCNucleotides())
+        logger.info("Reading nucleotides from  $bamFile")
+        val rawNucleotideFragments = readFromBam(bamFile)
+        val nucleotideFragmentFactory = NucleotideFragmentFactory(minBaseCount, rawNucleotideFragments, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
 
-        val consecutiveEvidenceCandidates = aCandidates + bCandidates + cCandidates
+        // Candidates
+        val candidateFactory = Candidates(minBaseCount, 30, nucleotideSequences, aminoAcidSequences)
+        val aCandidates = candidateFactory.candidates("A", aProteinExonBoundaries, nucleotideFragmentFactory.typeANucleotides())
+        val bCandidates = candidateFactory.candidates("B", bProteinExonBoundaries, nucleotideFragmentFactory.typeBNucleotides())
+        val cCandidates = candidateFactory.candidates("C", cProteinExonBoundaries, nucleotideFragmentFactory.typeCNucleotides())
 
-        for (consecutiveEvidenceCandidate in consecutiveEvidenceCandidates) {
-            println(consecutiveEvidenceCandidate)
-        }
 
-        val candidateAlleles = consecutiveEvidenceCandidates.map { it.allele }
+        // Coverage
+        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, nucleotideFragmentFactory.allNucleotides())
+        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousIndices() intersect allNucleotideExonBoundaries
+        val aminoAcidFragments = nucleotideFragmentFactory.allNucleotides().map { it.toAminoAcidFragment() }
+        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
+
+
+        val candidates = aCandidates + bCandidates + cCandidates
+        val candidateAlleles = candidates.map { it.allele }
         val candidateAlleleSpecificProteins = candidateAlleles.map { it.specificProtein() }
 
-        val aminoAcidCandidates = allProteinSequences.filter { it.allele in candidateAlleles }
+        val aminoAcidCandidates = aminoAcidSequences.filter { it.allele in candidateAlleles }
         val nucleotideCandidates = nucleotideSequences.filter { it.allele.specificProtein() in candidateAlleleSpecificProteins }
 
-        val coverageFactory = HlaAlleleCoverageFactory(aminoAcidFragments, hetLoci, aminoAcidCandidates, nucleotideLoci, nucleotideCandidates)
-        val proteinCoverage = coverageFactory.proteinCoverage(candidateAlleles)
+        val coverageFactory = HlaAlleleCoverageFactory(aminoAcidFragments,
+                aminoAcidCounts.heterozygousIndices(), aminoAcidCandidates,
+                nucleotideHeterozygousLoci, nucleotideCandidates)
 
 
-//        val fragmentSequences = FragmentAlleles.create(readFragments, hetLoci, consecutiveEvidenceCandidates)
-
-
-//        FragmentSequencesFile.writeFile("/Users/jon/hmf/analysis/hla/fragments.txt", fragmentSequences)
-
+        logger.info("Calculating overall coverage")
         val groupCoverage = coverageFactory.groupCoverage(candidateAlleles)
-        println(groupCoverage)
+        val confirmedGroups = groupCoverage.filter { it.uniqueCoverage > 0 }.sortedDescending()
+        logger.info("... found ${confirmedGroups.size} uniquely identifiable groups: " + confirmedGroups.joinToString(", "))
 
-        println("SDFSD")
 
-        val confirmedGroups = listOf(HlaAllele("B*08"), HlaAllele("C*07"), HlaAllele("C*01"), HlaAllele("B*56"), HlaAllele("A*11"), HlaAllele("A*01"))
-        val confimedProtein = listOf(HlaAllele("C*01:02:01:01"), HlaAllele("A*01:01:01:01"), HlaAllele("B*56:01:01:01"))
-        val complexes = HlaComplex.complexes(confirmedGroups, confimedProtein, consecutiveEvidenceCandidates.map { it.allele })
+        val proteinCoverage = coverageFactory.proteinCoverage(candidateAlleles)
+        val confirmedProtein = proteinCoverage.filter { it.uniqueCoverage > 0 }.sortedDescending()
+        logger.info("... found ${confirmedProtein.size} uniquely identifiable proteins: " + confirmedProtein.joinToString(", "))
+
+
+        val complexes = HlaComplex.complexes(
+                confirmedGroups.take(6).map { it.allele },
+                confirmedProtein.take(6).map { it.allele },
+                candidates.map { it.allele })
+
+        logger.info("Calcuating coverage of ${complexes.size} complexes")
+
         println("TotalCoverage\tUniqueCoverage\tSharedCoverage\tAllele1\tAllele2\tAllele3\tAllele4\tAllele5\tAllele6")
         for (complex in complexes) {
             val complexCoverage = coverageFactory.proteinCoverage(complex.alleles)
-            println(complexCoverage.coverageString(confimedProtein))
+            println(complexCoverage.coverageString())
         }
 
 
-        val testCoverage = coverageFactory.proteinCoverage(
-                listOf(HlaAllele("C*01:02:01:01"), HlaAllele("A*01:01:01:01"), HlaAllele("B*56:01:01:01"), HlaAllele("B*08:01:01:01"), HlaAllele("C*07:01:01:01"),
-
-                        HlaAllele("A*11:01:01:01"), HlaAllele("A*11:303"), HlaAllele("A*11:353")))
-        println(testCoverage)
-
-
-        val sequences = consecutiveEvidenceCandidates.map { HlaSequence(it.contig, it.sequence) }
+        val sequences = candidates.map { HlaSequence(it.contig, it.sequence) }
         HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
         HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
         HlaSequenceFile.writeBoundary(aProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
@@ -150,97 +126,6 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
 
     }
-//
-
-    private fun filterCandidates(initialCandidates: List<HlaSequence>, evidence: List<PhasedEvidence>): List<HlaSequence> {
-        var candidates = initialCandidates
-        for (i in evidence.indices) {
-            val newEvidence = evidence[i]
-            candidates = matchingCandidates(newEvidence, candidates)
-//            println("$i ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $newEvidence ")
-        }
-
-        return candidates
-    }
-
-
-    private fun consecutiveEvidence(
-            aminoAcidBoundaries: Set<Int>,
-            aminoAcidCountsOld: SequenceCount,
-            rawNucleotideFragments: List<NucleotideFragment>,
-            aExcludedAminoAcidReads: Set<Int>,
-            bExcludedAminoAcidReads: Set<Int>,
-            cExcludedAminoAcidReads: Set<Int>,
-            initialCandidates: List<HlaSequence>): List<PhasedEvidence> {
-
-        fun exclude(fragment: NucleotideFragment, gene: String, excludedNucleotides: Collection<Int>): Boolean {
-            return fragment.alignedGene == gene && excludedNucleotides.any { fragment.containsNucleotide(it) }
-        }
-
-        val aExcludedNucleotides = aExcludedAminoAcidReads.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
-        val bExcludedNucleotides = bExcludedAminoAcidReads.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
-        val cExcludedNucleotides = cExcludedAminoAcidReads.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
-
-
-        val filteredNucleotideFragments = rawNucleotideFragments
-                .filter { !exclude(it, HLA_A, aExcludedNucleotides) && !exclude(it, HLA_B, bExcludedNucleotides) && !exclude(it, HLA_C, cExcludedNucleotides) }
-        val filteredNucleotideFragmentCounts = SequenceCount.nucleotides(minBaseCount, filteredNucleotideFragments)
-
-
-        println("ENRICHING")
-        val enrichedNucleotideFragments = NucleotideFragmentEnrichment(aminoAcidBoundaries.map { it * 3 }, filteredNucleotideFragmentCounts).enrichHomSpliceJunctions(filteredNucleotideFragments)
-        val aminoAcidFragments = enrichedNucleotideFragments.map { it.toAminoAcidFragment() }
-        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
-
-         var candidates = initialCandidates
-        val heterozygousIndices = aminoAcidCounts.heterozygousIndices()//.filter { it !in aminoAcidBoundaries }
-        val heterozygousEvidence = ExtendedEvidence(2, 20, heterozygousIndices, aminoAcidFragments)
-
-        val allEvidence = mutableSetOf<PhasedEvidence>()
-        val initialEvidence = heterozygousEvidence.initialEvidence()
-        var unprocessedEvidence = initialEvidence
-
-        allEvidence.addAll(initialEvidence)
-
-        val jon = PhasedEvidence.evidence(aminoAcidFragments, 337, 338)
-
-        var i = 0
-        while (unprocessedEvidence.isNotEmpty()) {
-            val topEvidence = unprocessedEvidence[0]
-            allEvidence.add(topEvidence)
-
-            candidates = matchingCandidates(topEvidence, candidates)
-//            println("${i++} ->  ${candidates.size} candidates includes ${checkCandidates(candidates)} actual types -> $topEvidence")
-
-
-            val newEvidence = heterozygousEvidence.extendConsecutive(topEvidence, allEvidence)
-            allEvidence.addAll(newEvidence)
-
-            val updatedEvidence = mutableSetOf<PhasedEvidence>()
-            updatedEvidence.addAll(unprocessedEvidence
-                    .drop(1)
-//                    .filter { !newEvidence.any { x -> x.contains(it) } }
-            )
-            updatedEvidence.addAll(newEvidence)
-
-            unprocessedEvidence = updatedEvidence.sorted()
-        }
-
-        return longestFullEvidence(allEvidence)
-
-    }
-
-    private fun longestFullEvidence(evidence: Collection<PhasedEvidence>): List<PhasedEvidence> {
-
-        fun Collection<PhasedEvidence>.otherContains(victim: PhasedEvidence): Boolean {
-            return this.any { it != victim && it.contains(victim) }
-        }
-
-        return evidence
-                .filter { !evidence.otherContains(it) }
-                .sortedBy { it.aminoAcidIndices[0] }
-    }
-
 
     private fun checkCandidates(candidates: Collection<HlaSequence>): Int {
         var count = 0
@@ -269,31 +154,6 @@ class LilacApplication2 : AutoCloseable, Runnable {
         return count;
     }
 
-    private fun initialCandidates(excludedLocations: Collection<Int>, aminoAcidCount: SequenceCount, candidates: List<HlaSequence>): List<HlaSequence> {
-        var result = candidates
-        val locations = (0 until aminoAcidCount.length).toSet() subtract excludedLocations
-        for (location in locations) {
-            result = filterCandidates(location, aminoAcidCount.sequenceAt(location), result)
-        }
-        return result
-    }
-
-    private fun initialNucleotideCandidates(aminoAcidCount: SequenceCount, candidates: List<HlaSequence>): List<HlaSequence> {
-        var result = candidates
-        val locations = (0 until aminoAcidCount.length).toSet()
-        for (location in locations) {
-            result = filterCandidates(location, aminoAcidCount.sequenceAt(location), result)
-        }
-        return result
-    }
-
-    private fun filterCandidates(index: Int, expectedCharacters: Collection<Char>, candidates: Collection<HlaSequence>): List<HlaSequence> {
-        return candidates.filter { it.length <= index || it.sequence[index] == '*' || it.sequence[index] in expectedCharacters }
-    }
-
-    private fun matchingCandidates(evidence: PhasedEvidence, candidates: Collection<HlaSequence>): List<HlaSequence> {
-        return candidates.filter { it.consistentWith(evidence) }
-    }
 
     private fun readFromBam(bamFile: String): List<NucleotideFragment> {
         val reads = mutableListOf<SAMRecordRead>()

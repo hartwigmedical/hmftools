@@ -23,7 +23,7 @@ class HlaAlleleCoverageFactory(
             return this.map { it.sharedCoverage + it.uniqueCoverage }.sum()
         }
 
-        fun List<HlaAlleleCoverage>.coverageString(confirmed: List<HlaAllele>): String {
+        fun List<HlaAlleleCoverage>.coverageString(): String {
             var shared = 0.0
             var unique = 0
             for (coverage in this) {
