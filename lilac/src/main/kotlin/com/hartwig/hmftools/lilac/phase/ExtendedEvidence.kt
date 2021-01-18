@@ -32,10 +32,11 @@ class ExtendedEvidence(private val minMinEvidence: Int, private val minTotalEvid
 
         val result = mutableListOf<PhasedEvidence>()
         if (remainingIndicesAbove.isNotEmpty()) {
-            val newIndices = current.unambiguousTailIndices() + remainingIndicesAbove[0]
-            val fake = PhasedEvidence(newIndices, Collections.emptyMap())
+            val unambiguousIndices = current.unambiguousTailIndices() + remainingIndicesAbove[0]
+            val allNewIndices = current.aminoAcidIndices + remainingIndicesAbove[0]
+            val fake = PhasedEvidence(allNewIndices, Collections.emptyMap())
             if (!others.contains(fake)) {
-                val newEvidence = PhasedEvidence.evidence(fragments, *newIndices)
+                val newEvidence = PhasedEvidence.evidence(fragments, *unambiguousIndices)
                 if (newEvidence.evidence.isNotEmpty() && newEvidence.minEvidence() >= minMinEvidence) {
                     if (newEvidence.aminoAcidIndices.size == current.aminoAcidIndices.size + 1) {
                         result.add(newEvidence)
@@ -48,10 +49,11 @@ class ExtendedEvidence(private val minMinEvidence: Int, private val minTotalEvid
         }
 
         if (remainingIndicesBelow.isNotEmpty()) {
-            val newIndices = (current.unambiguousHeadIndices() + remainingIndicesBelow[0]).sortedArray()
-            val fake = PhasedEvidence(newIndices, Collections.emptyMap())
+            val unambiguousIndices = (current.unambiguousHeadIndices() + remainingIndicesBelow[0]).sortedArray()
+            val allNewIndices = (current.aminoAcidIndices + remainingIndicesBelow[0]).sortedArray()
+            val fake = PhasedEvidence(allNewIndices, Collections.emptyMap())
             if (!others.contains(fake)) {
-                val newEvidence = PhasedEvidence.evidence(fragments, *newIndices)
+                val newEvidence = PhasedEvidence.evidence(fragments, *unambiguousIndices)
                 if (newEvidence.evidence.isNotEmpty() && newEvidence.minEvidence() >= minMinEvidence) {
                     if (newEvidence.aminoAcidIndices.size == current.aminoAcidIndices.size + 1) {
                         result.add(newEvidence)
