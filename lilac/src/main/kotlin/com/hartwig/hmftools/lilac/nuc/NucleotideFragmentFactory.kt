@@ -34,7 +34,7 @@ class NucleotideFragmentFactory(private val minBaseCount: Int, private val rawNu
         val aExcluded = inBNotInA union inANotInB
         val cExcluded = inBNotInC union inCNotInB
 
-        return allEvidence(aBoundaries, rawNucleotideFragments, aExcluded, setOf(), cExcluded)
+        return allEvidence(bBoundaries, rawNucleotideFragments, aExcluded, setOf(), cExcluded)
     }
 
     fun typeCNucleotides(): List<NucleotideFragment> {
@@ -47,7 +47,7 @@ class NucleotideFragmentFactory(private val minBaseCount: Int, private val rawNu
         val aExcluded = inCNotInA union inANotInC
         val bExcluded = inCNotInB union inBNotInC
 
-        return allEvidence(aBoundaries, rawNucleotideFragments, aExcluded, bExcluded, setOf())
+        return allEvidence(cBoundaries, rawNucleotideFragments, aExcluded, bExcluded, setOf())
     }
 
 
