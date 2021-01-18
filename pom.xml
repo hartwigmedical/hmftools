@@ -12,7 +12,6 @@
         <module>hmf-common</module>
         <module>patient-db</module>
         <module>hmf-extensions</module>
-        <module>api-clients</module>
         <module>hmf-gene-panel-builder</module>
         <module>hmf-id-generator</module>
         <module>bam-slicer</module>
@@ -55,7 +54,6 @@
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
-        <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
         <patient-db.version>3.55</patient-db.version>
@@ -201,11 +199,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>api-clients</artifactId>
-                <version>${hmf-api-clients.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
