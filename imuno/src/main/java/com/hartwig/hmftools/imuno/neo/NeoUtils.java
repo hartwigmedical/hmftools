@@ -266,10 +266,14 @@ public class NeoUtils
             boolean canStartInExon, boolean reqSpliceAcceptor, boolean reqAllBases)
     {
         if(requiredBases == 0)
-            return new CodingBaseExcerpt("", nePosition, nePosition, null);
+            return null;
 
         int codingStart = transData.CodingStart != null && nePosition >= transData.CodingStart ? transData.CodingStart : transData.TransStart;
         int codingEnd = transData.CodingEnd != null && nePosition <= transData.CodingEnd ? transData.CodingEnd : transData.TransEnd;
+
+        // if the position falls in the stop codon, take at least the last base
+        if((transData.Strand == POS_STRAND && nePosition >= transData.TransEnd) || (transData.Strand == NEG_STRAND && nePosition <= transData.TransStart))
+            return null;
 
         final List<ExonData> exonDataList = transData.exons();
 

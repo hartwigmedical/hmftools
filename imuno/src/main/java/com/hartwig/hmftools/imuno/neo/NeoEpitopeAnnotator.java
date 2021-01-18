@@ -229,6 +229,10 @@ public class NeoEpitopeAnnotator
                 if(!positionWithin(pointMutation.Position, transData.CodingStart, transData.CodingEnd))
                     continue;
 
+                // check for a mutation within the stop codon at the bounds of the transcript
+                if(pointMutation.Position <= transData.TransStart || pointMutation.Position >= transData.TransEnd)
+                    continue;
+
                 // must be exonic
                 if(transData.exons().stream().noneMatch(x -> positionWithin(pointMutation.Position, x.Start, x.End)))
                     continue;
@@ -263,6 +267,12 @@ public class NeoEpitopeAnnotator
             // filter out NEs with a novel stop codon
             if(neData.NovelAcid.equals(STOP_SYMBOL))
                 continue;
+
+            if(!neData.Valid)
+            {
+                IM_LOGGER.debug("skipping invalid neo: {}", neData);
+                continue;
+            }
 
             // filter out missense if in some transcripts their NE is the same as the wild-type
             if(neData.variantType() == NeoEpitopeType.MISSENSE && !neData.WildtypeAcids.isEmpty())

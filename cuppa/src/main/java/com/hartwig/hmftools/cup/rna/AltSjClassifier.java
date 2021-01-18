@@ -56,7 +56,7 @@ public class AltSjClassifier implements CuppaClassifier
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        if(!mIsValid)
+        if(!mIsValid || mRefAltSjPrevalence.isEmpty())
             return;
 
         final List<AltSjPrevData> sampleAltSJs = loadSampleAltSJs(sample.Id);

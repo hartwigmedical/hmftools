@@ -178,6 +178,12 @@ public class SvNeoEpitope extends NeoEpitope
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), position(FS_DOWN), orientation(FS_DOWN),
                 downRequiredBases, canStartInExon, true, !phaseMatched());
 
+        if(cbExcerpt == null)
+        {
+            Valid = false;
+            return;
+        }
+
         RawCodingBases[FS_DOWN] = cbExcerpt.Bases;
 
         // call again to get restricted downstream bases

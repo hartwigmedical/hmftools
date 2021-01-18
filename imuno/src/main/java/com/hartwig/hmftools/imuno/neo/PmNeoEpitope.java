@@ -256,6 +256,13 @@ public class PmNeoEpitope extends NeoEpitope
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
                 downRequiredBases, canStartInExon, false, !phaseMatched());
 
+        if(downExcerpt == null)
+        {
+            // at or past end of transcript is invalid
+            Valid = false;
+            return;
+        }
+
         downCodingBases = downExcerpt.Bases;
 
         if(isBaseChange())
@@ -331,6 +338,7 @@ public class PmNeoEpitope extends NeoEpitope
 
         List<CigarElement> cigarElements = Lists.newArrayList();
         cigarElements.addAll(lowerExcerpt.CigarRef.getCigarElements());
+
         CigarElement lastElement = cigarElements.get(cigarElements.size() - 1);
 
         if(isInsert())

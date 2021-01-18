@@ -55,6 +55,8 @@ public abstract class NeoEpitope
     public int NmdBasesMax;
     public String WildtypeAcids;
 
+    public boolean Valid;
+
     // data for RNA matching
     public String[] ExtCodingBases;
     public int[][] ExtPositions; // coding base up and down position
@@ -78,6 +80,7 @@ public abstract class NeoEpitope
         NmdBasesMin = 0;
         NmdBasesMax = 0;
         WildtypeAcids = "";
+        Valid = true;
 
         ExtCodingBases = new String[] {"", ""};
         ExtCigars = new Cigar[FS_PAIR];
