@@ -16,7 +16,8 @@ Genomic events are categorized in five categories and evidence is matched for ev
 
 #### SNVs and (small) INDELs
 
-For reportable small variants (SNVs and INDELs), the following matching is performed:
+For small variants (SNVs and INDELs) that are considered reportable by [PURPLE](../purity-ploidy-estimator/README.md) the following matching 
+is performed:
  - If the evidence is defined on the exact variant (hotspot) then evidence is always considered applicable
  - If the variant falls within the range in which the evidence is applicable then the evidence is applicable if the variant mutation type
  passes the filter defined as part of the SERVE evidence rule.
@@ -29,8 +30,8 @@ present in the germline already or has been acquired by the tumor somatically.
 #### Copy numbers
 
 Evidence on amplifications and deletions is considered applicable in case a gene has been classified as amplified or deleted by 
-[PURPLE](../purity-ploidy-estimator/README.md). In addition, a deep deletion is assumed to inactivate a gene and hence evidence on 
-gene inactivation is considered applicable in case of a deep deletion. 
+[PURPLE](../purity-ploidy-estimator/README.md). In addition, a deletion is assumed to inactivate a gene and hence evidence on 
+gene inactivation is considered applicable in case of a deletion. 
 
 #### Homozygous disruptions
 
@@ -59,22 +60,23 @@ since a solid tumor is a parent of colorectal cancer.
 PROTECT uses DOID exclusively for matching and expects every evidence to be defined for a single DOID entry. 
 
 Some additional notes:
- - Since tumors could belong to multiple separate branches in the DOID tree, a tumor sample is allowed to have multiple DOIDs. 
- - The tumor sample DOIDs are optional in the PROTECT algorithms. If they are not provided, all evidence is considered off-label 
+ - Since tumors could belong to multiple separate branches in the DOID tree, a tumor sample is allowed to have multiple DOIDs. In this case
+ evidence is on-label in case one of the DOIDs matches with the evidence tumor type (or is child thereof).
+ - The tumor sample DOIDs are optional in the PROTECT algorithm. If they are not provided, all evidence is considered off-label 
  (including evidence that is applicable pan-cancer).
 
 ## Evidence consolidation, filtering and reporting
 
 After evidence has been collected based on the five distinct categories of genomic mutations and has been labeled as on-label or off-label,
 evidence is consolidated and evaluated for reporting. The following steps are executed:
- 1. Evidence is consolidated on source level. If the exact same evidence for the same event is found in multiple sources, this evidence is 
- consolidated in a single instance of applicable evidence. PROTECT has no preference for any source, though sorts sources alphabetically 
- for consistency.
+ 1. Evidence is consolidated on source level. If the exact same evidence for the same event is found across multiple sources, 
+ this evidence is consolidated in a single instance of applicable evidence. PROTECT has no preference for any source, though sorts sources 
+ alphabetically for consistency.
  1. There is some evidence that is never reported regardless of what event caused them or what their evidence level is. These are:
     - Evidence based on an event affecting TP53.
     - Evidence for non-specific chemotherapy, aspirin or steroids. 
  1. Clinical trials are only reported when they are on-label.
- 1. All C and lower level evidence is removed for reporting.
+ 1. Evidence is only reported when the level is either A or B. 
  1. For every event/treatment/direction combination only the highest level of evidence is reported:
     - Off-label evidence is only reported in case the evidence level is higher than the highest on-label evidence.
     
