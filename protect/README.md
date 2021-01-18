@@ -21,7 +21,7 @@ For reportable small variants (SNVs and INDELs), the following matching is perfo
  - If the variant falls within the range in which the evidence is applicable then the evidence is applicable if the variant mutation type
  passes the filter defined as part of the evidence.
  - If a variant affects a gene for which evidence is applicable on a gene level (activation, inactivation, or any mutation), 
- then the evidence is considered applicable if the combination of variants affecting that gene have a high driver likelihood (> 80%).
+ then the evidence is considered applicable if the combination of variants affecting that gene have a high driver likelihood (> 80%). 
  
 Do note that germline and somatic variants are treated equally. It is not considered relevant for clinical evidence whether the variant is 
 present in the germline already or has been acquired by the tumor somatically.   
@@ -66,7 +66,7 @@ Some specific additional notes:
 ## Evidence consolidation, filtering and reporting
 
 After evidence has been collected based on the five distinct categories op genomic mutations, and has been labeled as on-label or off-label,
-evidence is consolidated and filtered down for reporting, using the following steps:
+evidence is consolidated and evaluated for reporting, using the following steps:
  1. Evidence is consolidated on source level. If the exact same evidence for the same event is found in multiple sources, this is 
  consolidated in a single instance of applicable evidence. PROTECT has no preference for any source, though sorts sources alphabetically 
  for consistency.
@@ -77,9 +77,23 @@ evidence is consolidated and filtered down for reporting, using the following st
     - Evidence for steroids is never reported. 
  1. Clinical trials are only reported when they are on-label. On-label for a trial in this context means: The patient is eligible for the 
  clinical trial. The treatment given in the clinical trial does not necessarily have to be on-label.
+ 1. All C and lower level evidence is removed for reporting
  1. For every event/treatment/direction combination only the highest level of evidence is reported:
     - Off-label evidence is only reported in case the evidence level is higher than the highest on-label evidence.
+    
     
 ## PROTECT output
 
 PROTECT produces a tsv with every applicable evidence after consolidation has been performed. 
+
+Field  | Description | Example
+---|---|---
+genomicEvent  | The genomic event for which evidence is applicable | BRAF p.Val600Glu  
+germline | Whether the genomic event is present in the germline or was acquired somatically | true/false
+reported | Whether the evidence passed all filters for reporting | true/false
+treatment | Name of the treatment (trial or drug(s)) | Nivolumab
+onLabel | Whether the evidence is valid for the specific tumor for which the match has been made | true/false 
+level | Evidence level (from A to D) | B
+direction | Whether the evidence is responsive or resistant | RESPONSIVE
+sources | A list of sources from where the evidence has been extracted | cgi,civic
+urls | A list of urls with additional information about the evidence | https://www.information.com
