@@ -89,9 +89,9 @@ Field  | Description | Example
 genomicEvent  | The genomic event for which evidence is applicable | BRAF p.Val600Glu  
 germline | Whether the genomic event is present in the germline or was acquired somatically | true/false
 reported | Whether the evidence passed all filters for reporting | true/false
-treatment | Name of the treatment (trial or drug(s)) | Nivolumab
+treatment | Name of the treatment (trial or drug(s)) | Vemurafenib
 onLabel | Whether the evidence is valid for the specific tumor for which the match has been made | true/false 
-level | Evidence level (from A to D) | B
+level | Evidence level (from A to D) | A
 direction | Whether the evidence is responsive or resistant | RESPONSIVE
 sources | A list of sources from where the evidence has been extracted | cgi,civic
 urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
