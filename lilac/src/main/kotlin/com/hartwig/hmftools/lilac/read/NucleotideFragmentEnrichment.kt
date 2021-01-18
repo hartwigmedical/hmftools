@@ -2,12 +2,11 @@ package com.hartwig.hmftools.lilac.read
 
 import com.hartwig.hmftools.lilac.nuc.SequenceCount
 
-class NucleotideFragmentEnrichment(nucleotideExonBoundaries: Collection<Int>, private var nucleotideCounts: SequenceCount) {
+class NucleotideFragmentEnrichment(nucleotideExonBoundaryStarts: Collection<Int>, private var nucleotideCounts: SequenceCount) {
 
     private val homLoci = nucleotideCounts.homozygousIndices().toSet()
-    private val homStarts = nucleotideExonBoundaries.filter { homLoci.contains(it) }
-    private val homEnds = nucleotideExonBoundaries.filter { homLoci.contains(it + 1) && homLoci.contains(it + 2) }
-
+    private val homStarts = nucleotideExonBoundaryStarts.filter { homLoci.contains(it) }
+    private val homEnds = nucleotideExonBoundaryStarts.filter { homLoci.contains(it + 1) && homLoci.contains(it + 2) }
 
     fun enrichHomSpliceJunctions(fragments: List<NucleotideFragment>): List<NucleotideFragment> {
         val result = mutableListOf<NucleotideFragment>()
@@ -16,6 +15,7 @@ class NucleotideFragmentEnrichment(nucleotideExonBoundaries: Collection<Int>, pr
             var enriched = fragment
 
             for (homStart in homStarts) {
+
                 if (missingStart(homStart, enriched)) {
                     enriched = enriched.addStart(homStart)
                 }

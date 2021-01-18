@@ -17,7 +17,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord) : Read {
+data class SAMRecordRead(val gene: String, val hlaNucIndexStart: Int, val readIndexStart: Int, val length: Int, val reverseStrand: Boolean, val samRecord: SAMRecord) : Read {
 
     private val hlaNucIndexEnd = hlaNucIndexStart + length - 1
     private val nucleotideIndices = IntRange(hlaNucIndexStart, hlaNucIndexEnd).toList()
@@ -111,7 +111,7 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
             val realignedRegions = mutableListOf<SAMRecordRead>()
             var length = 0
             for (codingRegion in codingRegions) {
-                realignedRegions.addAll(SAMRecordRead.realign(length, codingRegion, reverseStrand, bamFile))
+                realignedRegions.addAll(realign(transcript.gene(), length, codingRegion, reverseStrand, bamFile))
                 length += codingRegion.bases().toInt()
 //            println((length - 1) / 3)
             }
@@ -122,7 +122,7 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
             return CodingRegions.codingRegions(transcript)
         }
 
-        private fun realign(hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
+        private fun realign(gene: String, hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
             val slicer = SamSlicer(1)
             val result = mutableListOf<SAMRecordRead>()
             SamReaderFactory.makeDefault().open(File(bamFileName)).use { samReader ->
@@ -130,9 +130,9 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
                 val consumer = Consumer<SAMRecord> { samRecord ->
                     if (!samRecord.containsIndel()) {
                         if (reverseStrand) {
-                            result.add(realignReverseStrand(hlaCodingRegionOffset, region, samRecord))
+                            result.add(realignReverseStrand(gene, hlaCodingRegionOffset, region, samRecord))
                         } else {
-                            result.add(realignForwardStrand(hlaCodingRegionOffset, region, samRecord))
+                            result.add(realignForwardStrand(gene, hlaCodingRegionOffset, region, samRecord))
                         }
                     }
                 }
@@ -144,7 +144,7 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
         }
 
 
-        private fun realignForwardStrand(hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): SAMRecordRead {
+        private fun realignForwardStrand(gene: String, hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): SAMRecordRead {
             val hlaExonStartPosition = region.start().toInt()
             val hlaExonEndPosition = region.end().toInt()
 
@@ -158,10 +158,10 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
             val readIndex = samRecord.getReadPositionAtReferencePosition(hlaStart) - 1
             val hlaStartIndex = hlaStart - hlaExonStartPosition + hlaExonOffset
 
-            return SAMRecordRead(hlaStartIndex, readIndex, length, false, samRecord)
+            return SAMRecordRead(gene, hlaStartIndex, readIndex, length, false, samRecord)
         }
 
-        private fun realignReverseStrand(hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): SAMRecordRead {
+        private fun realignReverseStrand(gene: String, hlaExonOffset: Int, region: GenomeRegion, samRecord: SAMRecord): SAMRecordRead {
             val hlaExonStartPosition = region.end().toInt()
             val hlaExonEndPosition = region.start().toInt()
 
@@ -175,7 +175,7 @@ data class SAMRecordRead(val hlaNucIndexStart: Int, val readIndexStart: Int, val
             val readIndex = samRecord.getReadPositionAtReferencePosition(hlaStart) - 1
             val hlaStartIndex = hlaExonStartPosition - hlaStart + hlaExonOffset
 
-            return SAMRecordRead(hlaStartIndex, readIndex, length, true, samRecord)
+            return SAMRecordRead(gene, hlaStartIndex, readIndex, length, true, samRecord)
         }
 
     }

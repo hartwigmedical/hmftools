@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.read
 
-class Fragment(id: String, nucleotideLoci: List<Int>, nucleotides: List<Char>, private val aminoAcidLoci: List<Int>, private val aminoAcids: List<Char>) :
-        NucleotideFragment(id, nucleotideLoci, nucleotides) {
+class Fragment(alignedGene: String, id: String, nucleotideLoci: List<Int>, nucleotides: List<Char>, private val aminoAcidLoci: List<Int>, private val aminoAcids: List<Char>) :
+        NucleotideFragment(alignedGene, id, nucleotideLoci, nucleotides) {
 
     fun containsAminoAcid(index: Int): Boolean {
         return aminoAcidLoci.contains(index)

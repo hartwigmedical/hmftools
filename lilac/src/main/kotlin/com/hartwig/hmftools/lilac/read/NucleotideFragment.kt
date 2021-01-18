@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.read
 
 import com.hartwig.hmftools.common.codon.Codons
 
-open class NucleotideFragment(val id: String, private val nucleotideLoci: List<Int>, private val nucleotides: List<Char>) {
+open class NucleotideFragment(val alignedGene: String, val id: String, private val nucleotideLoci: List<Int>, private val nucleotides: List<Char>) {
 
     companion object {
 
@@ -27,8 +27,13 @@ open class NucleotideFragment(val id: String, private val nucleotideLoci: List<I
 
             val nucleotides = nucleotideIndices.map { nucleotide(it) }
             val id = reads[0].samRecord.readName + " -> " + reads[0].samRecord.alignmentStart
+            val gene = reads[0].gene
+            if (reads.size > 1 && reads[1].gene != gene) {
+                println("sdfsdf") // TODO
+            }
 
-            return NucleotideFragment(id, nucleotideIndices, nucleotides)
+
+            return NucleotideFragment(gene, id, nucleotideIndices, nucleotides)
         }
     }
 
@@ -65,12 +70,12 @@ open class NucleotideFragment(val id: String, private val nucleotideLoci: List<I
 
         val aminoAcids = aminoAcidIndices.map { aminoAcid(it) }
 
-        return Fragment(id, nucleotideLoci, nucleotides, aminoAcidIndices, aminoAcids)
+        return Fragment(alignedGene, id, nucleotideLoci, nucleotides, aminoAcidIndices, aminoAcids)
     }
 
     fun enrich(index: Int, nucleotide: Char): NucleotideFragment {
         assert(!containsNucleotide(index))
-        return NucleotideFragment(id, nucleotideLoci + index, nucleotides + nucleotide)
+        return NucleotideFragment(alignedGene, id, nucleotideLoci + index, nucleotides + nucleotide)
     }
 
 }

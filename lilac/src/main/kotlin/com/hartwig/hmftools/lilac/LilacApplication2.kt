@@ -7,19 +7,16 @@ import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.coverageString
 import com.hartwig.hmftools.lilac.hla.HlaComplex
 import com.hartwig.hmftools.lilac.nuc.SequenceCount
-import com.hartwig.hmftools.lilac.phase.HeterozygousEvidence
+import com.hartwig.hmftools.lilac.phase.ExtendedEvidence
 import com.hartwig.hmftools.lilac.phase.PhasedEvidence
-import com.hartwig.hmftools.lilac.read.Fragment
-import com.hartwig.hmftools.lilac.read.NucleotideFragment
-import com.hartwig.hmftools.lilac.read.NucleotideFragmentEnrichment
-import com.hartwig.hmftools.lilac.read.SAMRecordRead
+import com.hartwig.hmftools.lilac.phase.TypeEvidence
+import com.hartwig.hmftools.lilac.read.*
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.deflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.specificProteins
 import org.apache.logging.log4j.LogManager
-import java.util.*
 import java.util.concurrent.Executors
 
 fun main(args: Array<String>) {
@@ -30,6 +27,9 @@ fun main(args: Array<String>) {
 class LilacApplication2 : AutoCloseable, Runnable {
     companion object {
         val logger = LogManager.getLogger(this::class.java)
+        const val HLA_A = "HLA-A"
+        const val HLA_B = "HLA-B"
+        const val HLA_C = "HLA-C"
     }
 
     private val startTime = System.currentTimeMillis()
@@ -47,10 +47,12 @@ class LilacApplication2 : AutoCloseable, Runnable {
         logger.info("Starting")
 
         val aProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 364, 365)
-        val bProteainExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
+        val bProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
         val cProteinExonBoundaries = setOf(24, 114, 206, 298, 338, 349, 365, 366)
-        val allProteinExonBoundaries = (aProteinExonBoundaries + bProteainExonBoundaries + cProteinExonBoundaries)
+        val allProteinExonBoundaries = (aProteinExonBoundaries + bProteinExonBoundaries + cProteinExonBoundaries)
         val allNucleotideExonBoundaryStarts = allProteinExonBoundaries.map { it * 3 }
+
+
 
         val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
         val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
@@ -58,6 +60,8 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
         logger.info("Reading nucleotides from  $bamFile")
         val rawNucleotideFragments = readFromBam(bamFile)
+        val nucleotideFragmentFactory = NucleotideFragmentFactory(minBaseCount, rawNucleotideFragments, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+
         val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, rawNucleotideFragments)
         val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousIndices()
         val nucleotideFragments = NucleotideFragmentEnrichment(allNucleotideExonBoundaryStarts, nucleotideCounts)
@@ -78,7 +82,7 @@ class LilacApplication2 : AutoCloseable, Runnable {
         val nucleotideLoci = allProteinExonBoundaries.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) } intersect nucleotideHeterozygousLoci
         logger.info("Het nucleotide exon boundaries: " + nucleotideLoci)
 
-        val commonBoundaries = aProteinExonBoundaries intersect bProteainExonBoundaries intersect cProteinExonBoundaries
+        val commonBoundaries = aProteinExonBoundaries intersect bProteinExonBoundaries intersect cProteinExonBoundaries
 
         val excludedIndices = allProteinExonBoundaries.toSet()
 
@@ -106,24 +110,16 @@ class LilacApplication2 : AutoCloseable, Runnable {
         println("${allProteinSequences.size} types")
         println("${initialCandidates.size} candidates after amino acid filtering")
 
-        val jon = PhasedEvidence.evidence(aminoAcidFragments, 335, 336)
+        val typeEvidenceFactory = TypeEvidence(minBaseCount, 20, rawNucleotideFragments, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+
+        val typeAEvidence = typeEvidenceFactory.typeAEvidence()
+        val typeBEvidence = typeEvidenceFactory.typeBEvidence()
+        val typeCEvidence = typeEvidenceFactory.typeCEvidence()
 
 
-        val aConsecutiveEvidence = consecutiveEvidence(aProteinExonBoundaries, aminoAcidCounts, aminoAcidFragments, Collections.emptyList())
-        val aCandidates = filterCandidates(initialCandidates.filter { it.allele.gene == "A" }, aConsecutiveEvidence)
-
-        println("EVIDENCE: ${aConsecutiveEvidence.size}")
-        for (phasedEvidence in aConsecutiveEvidence) {
-            println(phasedEvidence)
-        }
-
-
-        val bConsecutiveEvidence = consecutiveEvidence(bProteainExonBoundaries, aminoAcidCounts, aminoAcidFragments, Collections.emptyList())
-        val bCandidates = filterCandidates(initialCandidates.filter { it.allele.gene == "B" }, bConsecutiveEvidence)
-
-        val cConsecutiveEvidence = consecutiveEvidence(cProteinExonBoundaries, aminoAcidCounts, aminoAcidFragments, Collections.emptyList())
-        val cCandidates = filterCandidates(initialCandidates.filter { it.allele.gene == "C" }, cConsecutiveEvidence)
-
+        val aCandidates = filterCandidates(initialCandidates.filter { it.allele.gene == "A" }, typeAEvidence)
+        val bCandidates = filterCandidates(initialCandidates.filter { it.allele.gene == "B" }, typeBEvidence)
+        val cCandidates = filterCandidates(initialCandidates.filter { it.allele.gene == "C" }, typeCEvidence)
         val consecutiveEvidenceCandidates = aCandidates + bCandidates + cCandidates
 
         for (consecutiveEvidenceCandidate in consecutiveEvidenceCandidates) {
@@ -169,7 +165,7 @@ class LilacApplication2 : AutoCloseable, Runnable {
         HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
         HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
         HlaSequenceFile.writeBoundary(aProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(bProteainExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(bProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
         HlaSequenceFile.writeBoundary(cProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
         HlaSequenceFile.appendFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
 
@@ -189,17 +185,45 @@ class LilacApplication2 : AutoCloseable, Runnable {
     }
 
 
-    private fun consecutiveEvidence(excludedIndices: Set<Int>, aminoAcidCounts: SequenceCount, readFragments: List<Fragment>, initialCandidates: List<HlaSequence>): List<PhasedEvidence> {
+    private fun consecutiveEvidence(
+            aminoAcidBoundaries: Set<Int>,
+            aminoAcidCountsOld: SequenceCount,
+            rawNucleotideFragments: List<NucleotideFragment>,
+            aExcludedAminoAcidReads: Set<Int>,
+            bExcludedAminoAcidReads: Set<Int>,
+            cExcludedAminoAcidReads: Set<Int>,
+            initialCandidates: List<HlaSequence>): List<PhasedEvidence> {
 
-        var candidates = initialCandidates
-        val heterozygousIndices = aminoAcidCounts.heterozygousIndices().filter { it !in excludedIndices }
-        val heterozygousEvidence = HeterozygousEvidence(minBaseQual, heterozygousIndices, readFragments)
+        fun exclude(fragment: NucleotideFragment, gene: String, excludedNucleotides: Collection<Int>): Boolean {
+            return fragment.alignedGene == gene && excludedNucleotides.any { fragment.containsNucleotide(it) }
+        }
+
+        val aExcludedNucleotides = aExcludedAminoAcidReads.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
+        val bExcludedNucleotides = bExcludedAminoAcidReads.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
+        val cExcludedNucleotides = cExcludedAminoAcidReads.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
+
+
+        val filteredNucleotideFragments = rawNucleotideFragments
+                .filter { !exclude(it, HLA_A, aExcludedNucleotides) && !exclude(it, HLA_B, bExcludedNucleotides) && !exclude(it, HLA_C, cExcludedNucleotides) }
+        val filteredNucleotideFragmentCounts = SequenceCount.nucleotides(minBaseCount, filteredNucleotideFragments)
+
+
+        println("ENRICHING")
+        val enrichedNucleotideFragments = NucleotideFragmentEnrichment(aminoAcidBoundaries.map { it * 3 }, filteredNucleotideFragmentCounts).enrichHomSpliceJunctions(filteredNucleotideFragments)
+        val aminoAcidFragments = enrichedNucleotideFragments.map { it.toAminoAcidFragment() }
+        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
+
+         var candidates = initialCandidates
+        val heterozygousIndices = aminoAcidCounts.heterozygousIndices()//.filter { it !in aminoAcidBoundaries }
+        val heterozygousEvidence = ExtendedEvidence(2, 20, heterozygousIndices, aminoAcidFragments)
 
         val allEvidence = mutableSetOf<PhasedEvidence>()
-        val initialEvidence = heterozygousEvidence.consecutiveEvidence()
+        val initialEvidence = heterozygousEvidence.initialEvidence()
         var unprocessedEvidence = initialEvidence
 
         allEvidence.addAll(initialEvidence)
+
+        val jon = PhasedEvidence.evidence(aminoAcidFragments, 337, 338)
 
         var i = 0
         while (unprocessedEvidence.isNotEmpty()) {
@@ -294,9 +318,9 @@ class LilacApplication2 : AutoCloseable, Runnable {
 
     private fun readFromBam(bamFile: String): List<NucleotideFragment> {
         val reads = mutableListOf<SAMRecordRead>()
-        reads.addAll(SAMRecordRead.readFromBam(transcripts["HLA-A"]!!, bamFile))
-        reads.addAll(SAMRecordRead.readFromBam(transcripts["HLA-B"]!!, bamFile))
-        reads.addAll(SAMRecordRead.readFromBam(transcripts["HLA-C"]!!, bamFile))
+        reads.addAll(SAMRecordRead.readFromBam(transcripts[HLA_A]!!, bamFile))
+        reads.addAll(SAMRecordRead.readFromBam(transcripts[HLA_B]!!, bamFile))
+        reads.addAll(SAMRecordRead.readFromBam(transcripts[HLA_C]!!, bamFile))
 
         return NucleotideFragment.fromReads(minBaseQual, reads)
     }

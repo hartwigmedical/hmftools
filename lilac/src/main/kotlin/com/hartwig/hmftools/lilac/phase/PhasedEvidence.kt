@@ -7,27 +7,6 @@ import kotlin.math.min
 
 data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<String, Int>) : Comparable<PhasedEvidence> {
 
-    fun reduceInLightOfNewEvidence(newEvidence: PhasedEvidence): PhasedEvidence {
-        val newEvidenceStrings = newEvidence.evidence.map { it.key }.toSet()
-
-        val evidenceIndices = aminoAcidIndices
-                .mapIndexed {x, y -> Pair(x, y)}
-                .filter { it.second in newEvidence.aminoAcidIndices }
-                .map { it.first }
-
-        fun jonjon(largeEvidence: String): String {
-            return evidenceIndices.map { largeEvidence[it] }.joinToString("")
-        }
-
-        val jonjon2 = evidence.keys.map { jonjon(it) }
-
-
-        val filteredEvidence = evidence.filter { jonjon(it.key) in newEvidenceStrings }
-        return PhasedEvidence(aminoAcidIndices, filteredEvidence)
-
-    }
-
-
     fun unambiguousHeadIndices(): IntArray {
         return aminoAcidIndices.filterIndexed { index, _ -> index < unambiguousHeadLength() }.toIntArray()
     }
@@ -51,7 +30,7 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
         return aminoAcidIndices.size
     }
 
-    fun unambiguousHeadLength(): Int {
+    private fun unambiguousHeadLength(): Int {
         for (i in aminoAcidIndices.indices) {
             val length = i + 1
             val evidenceTails = evidence.keys.map { it.substring(0, length) }.toSet()
@@ -64,16 +43,6 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
         return aminoAcidIndices.size
     }
 
-    private fun evidenceIndex(index: Int): Int {
-        for (i in aminoAcidIndices.indices) {
-            if (aminoAcidIndices[i] == index) {
-                return i
-            }
-        }
-
-        return -1
-    }
-
     fun contains(other: PhasedEvidence): Boolean {
         val overlap = (other.aminoAcidIndices.toSet() intersect aminoAcidIndices.toSet()).size
         return overlap == other.aminoAcidIndices.size
@@ -83,7 +52,6 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
         val overlap = (other.aminoAcidIndices.toSet() intersect aminoAcidIndices.toSet()).size
         return overlap > 0 && overlap < aminoAcidIndices.size && overlap < other.aminoAcidIndices.size
     }
-
 
     fun minEvidence(): Int {
         return evidence.values.min() ?: 0
@@ -141,16 +109,16 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
 
     }
 
-    fun evidenceString():String {
+    fun evidenceString(): String {
         val resultBuilder = StringJoiner(" ")
-        evidence.forEach {(evidence, count) -> resultBuilder.add(toEvidenceString(evidence, count))}
+        evidence.forEach { (evidence, count) -> resultBuilder.add(toEvidenceString(evidence, count)) }
         return "{$resultBuilder}"
     }
 
     fun toEvidenceString(evidence: String, count: Int): String {
         val resultBuilder = StringJoiner("")
         var evidenceIndex = 0
-        for (i in aminoAcidIndices[0]..aminoAcidIndices[aminoAcidIndices.lastIndex])        {
+        for (i in aminoAcidIndices[0]..aminoAcidIndices[aminoAcidIndices.lastIndex]) {
             if (i in aminoAcidIndices) {
                 resultBuilder.add(evidence[evidenceIndex].toString())
                 evidenceIndex++
