@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
@@ -36,7 +37,8 @@ public final class KnownCodonFile {
     }
 
     @NotNull
-    private static List<KnownCodon> fromLines(@NotNull List<String> lines) {
+    @VisibleForTesting
+    static List<KnownCodon> fromLines(@NotNull List<String> lines) {
         List<KnownCodon> codons = Lists.newArrayList();
         for (String line : lines) {
             codons.add(fromLine(line));
@@ -83,7 +85,8 @@ public final class KnownCodonFile {
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull Iterable<KnownCodon> codons) {
+    @VisibleForTesting
+    static List<String> toLines(@NotNull Iterable<KnownCodon> codons) {
         List<String> lines = Lists.newArrayList();
         for (KnownCodon codon : sort(codons)) {
             lines.add(toLine(codon));

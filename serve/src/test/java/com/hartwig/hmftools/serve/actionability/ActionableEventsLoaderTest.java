@@ -12,6 +12,6 @@ public class ActionableEventsLoaderTest {
 
     @Test
     public void canLoadFromTestDir() throws IOException {
-        assertNotNull(ActionableEventsLoader.readFromDir(ActionabilityTestUtil.TEST_ACTIONABILITY_DIR, RefGenomeVersion.V37));
+        assertNotNull(ActionableEventsLoader.readFromDir(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.V37));
     }
 }

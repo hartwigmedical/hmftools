@@ -12,6 +12,7 @@ public final class WGSMetricQC {
     private WGSMetricQC() {
     }
 
+    @NotNull
     public static ImmutableWGSMetricWithQC buildWithQCMetric(@NotNull WGSMetrics metrics) {
         // This function is only expected to be called for somatic runs.
         Double tumor30xCoveragePercentage = metrics.tumor30xCoveragePercentage();

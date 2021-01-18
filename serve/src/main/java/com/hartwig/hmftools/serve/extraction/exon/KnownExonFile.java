@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
@@ -36,7 +37,8 @@ public final class KnownExonFile {
     }
 
     @NotNull
-    private static List<KnownExon> fromLines(@NotNull List<String> lines) {
+    @VisibleForTesting
+    static List<KnownExon> fromLines(@NotNull List<String> lines) {
         List<KnownExon> exons = Lists.newArrayList();
         for (String line : lines) {
             exons.add(fromLine(line));
@@ -83,7 +85,8 @@ public final class KnownExonFile {
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull Iterable<KnownExon> exons) {
+    @VisibleForTesting
+    static List<String> toLines(@NotNull Iterable<KnownExon> exons) {
         List<String> lines = Lists.newArrayList();
         for (KnownExon exon : sort(exons)) {
             lines.add(toLine(exon));

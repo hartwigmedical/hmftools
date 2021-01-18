@@ -15,10 +15,10 @@ public class ActionableSignatureFileTest {
     @Test
     public void canReadFromFileAndConvert() throws IOException {
         String actionableSignatureTsv =
-                ActionableSignatureFile.actionableSignatureTsvPath(ActionabilityTestUtil.TEST_ACTIONABILITY_DIR, RefGenomeVersion.V37);
+                ActionableSignatureFile.actionableSignatureTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.V37);
         List<ActionableSignature> actionableSignatures = ActionableSignatureFile.read(actionableSignatureTsv);
 
-        assertEquals(1, actionableSignatures.size());
+        assertEquals(2, actionableSignatures.size());
 
         List<String> lines = ActionableSignatureFile.toLines(actionableSignatures);
         List<ActionableSignature> regeneratedSignatures = ActionableSignatureFile.fromLines(lines);

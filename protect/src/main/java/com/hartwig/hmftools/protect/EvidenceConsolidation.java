@@ -46,9 +46,9 @@ public final class EvidenceConsolidation {
     private static class ConsolidatedData {
 
         @NotNull
-        private final Set<Knowledgebase> sources = Sets.newHashSet();
+        private final Set<Knowledgebase> sources = Sets.newTreeSet();
         @NotNull
-        private final Set<String> urls = Sets.newHashSet();
+        private final Set<String> urls = Sets.newTreeSet();
 
         public ConsolidatedData() {
         }
