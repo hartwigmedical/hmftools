@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.lilac.read
+package com.hartwig.hmftools.lilac.nuc
 
 import com.hartwig.hmftools.lilac.LilacApplication2
-import com.hartwig.hmftools.lilac.nuc.SequenceCount
+import com.hartwig.hmftools.lilac.SequenceCount
 
 class NucleotideFragmentFactory(private val minBaseCount: Int, private val rawNucleotideFragments: List<NucleotideFragment>, private val aBoundaries: Set<Int>,
                                 private val bBoundaries: Set<Int>, private val cBoundaries: Set<Int>) {
@@ -10,7 +10,6 @@ class NucleotideFragmentFactory(private val minBaseCount: Int, private val rawNu
         val allProteinExonBoundaries = (aBoundaries + bBoundaries + cBoundaries)
         return allEvidence(allProteinExonBoundaries, rawNucleotideFragments, setOf(), setOf(), setOf())
     }
-
 
     fun typeANucleotides(): List<NucleotideFragment> {
         val inANotInB = aBoundaries subtract bBoundaries

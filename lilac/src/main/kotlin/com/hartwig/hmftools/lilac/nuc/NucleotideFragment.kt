@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.lilac.read
+package com.hartwig.hmftools.lilac.nuc
 
 import com.hartwig.hmftools.common.codon.Codons
+import com.hartwig.hmftools.lilac.read.Fragment
+import com.hartwig.hmftools.lilac.read.SAMRecordRead
 
 open class NucleotideFragment(val alignedGene: String, val id: String, private val nucleotideLoci: List<Int>, private val nucleotides: List<Char>) {
 
@@ -31,7 +33,6 @@ open class NucleotideFragment(val alignedGene: String, val id: String, private v
             if (reads.size > 1 && reads[1].gene != gene) {
                 println("sdfsdf") // TODO
             }
-
 
             return NucleotideFragment(gene, id, nucleotideIndices, nucleotides)
         }

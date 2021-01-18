@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.lilac.nuc
+package com.hartwig.hmftools.lilac
 
+import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.read.Fragment
-import com.hartwig.hmftools.lilac.read.NucleotideFragment
 import java.io.File
 import java.util.*
 import kotlin.math.min

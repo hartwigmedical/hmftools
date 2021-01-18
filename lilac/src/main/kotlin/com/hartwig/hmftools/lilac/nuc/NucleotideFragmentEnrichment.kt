@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.lilac.read
+package com.hartwig.hmftools.lilac.nuc
 
-import com.hartwig.hmftools.lilac.nuc.SequenceCount
+import com.hartwig.hmftools.lilac.SequenceCount
 
 class NucleotideFragmentEnrichment(nucleotideExonBoundaryStarts: Collection<Int>, private var nucleotideCounts: SequenceCount) {
 
