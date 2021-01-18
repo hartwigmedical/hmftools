@@ -1,4 +1,4 @@
-# **S**earch **E**xternal **R**esources for **V**ariant **E**vidence (SERVE)
+# Search External Resources for Variant Evidence
 
 SERVE harmonizes various sources of evidence into a single unified model that can be readily used in genomic analyses.  
 The model provides a mapping from genomic events to clinical evidence. 
@@ -228,22 +228,9 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
  - All known events are aggregated on a per-event level where every event has a set of knowledgebases in which the event has been defined as pathogenic.
  - All actionable events are concatenated. Every actionable event that is present in multiple knowledgebases will be present multiple times in 
  the actionable output. 
-
-
-
-
   
- 
- 
- 
+ Within the Hartwig pipeline, SERVE output is used in the following manner:
+  - The known output is used in various algorithms for specific reasons. For example, the known hotspots produced by SERVE are used by 
+  [SAGE](../sage/README.md) as the definition of the highest tier of calling.
+  - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
-
- 
- 
- 
- 
-     
-
-
-  
- 
