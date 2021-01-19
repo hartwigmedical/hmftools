@@ -8,7 +8,7 @@ In addition, SERVE generates output containing all genomic events that are impli
 
 * [Which knowledgebases are supported?](#supported-input-knowledgebases)
 * [What is generated as final SERVE output?](#outputs)
-* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-from-knowledgebases)
+* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-and-signatures-from-knowledgebases)
 * [What is done in terms of curation and harmonization?](#curation-and-harmonization-of-individual-knowledgebases)
 * [How does everything come together?](#overview-of-the-serve-algorithm)
 
@@ -17,6 +17,8 @@ In addition, SERVE generates output containing all genomic events that are impli
 SERVE supports the ingestion of the following knowledgebases:
  - [CGI](https://www.cancergenomeinterpreter.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [CIViC](https://civicdb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
+ - [CKB CORE](https://ckb.jax.org) - part of CKB's knowledgebase that is supported through [VICC](http://cancervariants.org)
+ - [OncoKB](https://www.oncokb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [DoCM](http://www.docm.info) - database containing pathogenic mutations in cancer
  - [iClusion](https://iclusion.org) - a database with all actively recruiting clinical trials in the Netherlands 
  along with cancer types and molecular inclusion criteria for these trials.
@@ -59,8 +61,7 @@ The following genomic events and signatures can be mapped to clinical evidence:
  
 In addition to generating a mapping from various genomic events to clinical evidence, SERVE generates the following outputs describing 
 genomic events implied to be able to driver cancer:
- - Specific known fusion genes including individual genes that are believed to be able to drive cancer when fused with any other gene 
- (in either 5' or 3' position)
+ - Specific known fusion pairs
  - Known amplifications and deletions
  - Known hotspots (specific mutations on specific loci)
  - Known codons (codons for which generic mutations are implied to be pathogenic)
@@ -158,7 +159,7 @@ DELETION | Evidence is applicable when the gene has been completely deleted from
 ACTIVATION | Evidence is applicable when a gene has been activated. Downstream algorithms are expected to interpret this.
 INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
-FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5' promiscuous fusion) .
+FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5') .
 
 ### Exonic ranges specific for fusion pairs
 
