@@ -228,7 +228,7 @@ Finally, similar to VICC, cancer types for which no DOIDs have been specified ge
 SERVE starts with reading the various knowledgebases and after filtering and curation, knowledge is extracted.
 A knowledgebase can contribute to known and/or actionable events. Current configuration as follows:
       
-Knowledgebase  | Contributes to Known events? | Contributes to Actionable events?
+Knowledgebase  | Contributes to known events? | Contributes to actionable events?
 ---|---|---
 DoCM | Yes | No 
 Hartwig Cohort | Yes | No
