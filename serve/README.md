@@ -17,8 +17,6 @@ In addition, SERVE generates output containing all genomic events that are impli
 SERVE supports the ingestion of the following knowledgebases:
  - [CGI](https://www.cancergenomeinterpreter.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [CIViC](https://civicdb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
- - [CKB CORE](https://ckb.jax.org) - part of CKB's knowledgebase that is supported through [VICC](http://cancervariants.org)
- - [OncoKB](https://www.oncokb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [DoCM](http://www.docm.info) - database containing pathogenic mutations in cancer
  - [iClusion](https://iclusion.org) - a database with all actively recruiting clinical trials in the Netherlands 
  along with cancer types and molecular inclusion criteria for these trials.
@@ -43,13 +41,13 @@ they are compliant with the usage of the data itself.
 ## Outputs
 
 SERVE generates clinical evidence in the following datamodel:
- - Treatment
+ - Treatment (name of trial or drug(s))
  - Cancer type (including DOID) for which the treatment is on-label.
- - Tier / Evidence level of the treatment
- - Direction (Responsive for the treatment or resistant to the treatment)
+ - Tier / Evidence level of the treatment/trial
+ - Direction (Responsive for the treatment/trial or resistant to the treatment/trial)
  - A set of URLs with extra information about the evidence (could be a publication, or a general website)
  
-The following genomic events can be mapped to clinical evidence:
+The following genomic events and signatures can be mapped to clinical evidence:
  - Genome-wide events such as signatures or MSI status
  - Multi-gene events such as gene fusions
  - Single gene events such as amplification or general (in)activation of a gene
@@ -70,7 +68,7 @@ genomic events implied to be able to driver cancer:
 
 SERVE can be configured to generate its output either for reference genome version 37 or version 38.  
 
-## Extraction of genomic events from knowledgebases
+## Extraction of genomic events and signatures from knowledgebases
  
 ### Gene checking
 
@@ -160,7 +158,7 @@ DELETION | Evidence is applicable when the gene has been completely deleted from
 ACTIVATION | Evidence is applicable when a gene has been activated. Downstream algorithms are expected to interpret this.
 INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
-FUSION | Evidence is applicable in case the gene has fused with another gene.
+FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5' promiscuous fusion) .
 
 ### Exonic ranges specific for fusion pairs
 
@@ -168,6 +166,17 @@ For evidence on fusion pairs, SERVE can add restrictions on which exons are allo
 This is to support evidence on fusions like EGFRvII. 
 
 Evidence on fusion pairs where these restrictions are missing can be assumed to be valid for any fusion between the two genes specified. 
+
+### Genome wide events
+
+For evidence that is applicable when a genome wide event has happened, the type of event required to match evidence to the event 
+is derived from the knowledgebase event.
+
+Genome wide event  | Description
+---|---
+MICROSATELLITE_UNSTABLE  | Evidence is applicable when the genome has a MSI status
+HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high tumor mutational load status
+HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status
 
 ## Curation and harmonization of individual knowledgebases
 
