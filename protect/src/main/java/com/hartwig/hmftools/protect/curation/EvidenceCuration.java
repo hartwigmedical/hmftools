@@ -22,6 +22,8 @@ public final class EvidenceCuration {
     static final Set<CurationKey> BLACKLIST_KEYS = Sets.newHashSet();
 
     static {
+        // TODO These curations should move into SERVE (see DEV-1710).
+
         // This evidence is plain wrong
         BLACKLIST_KEYS.add(ImmutableCurationKey.builder()
                 .source(Knowledgebase.VICC_CIVIC)
