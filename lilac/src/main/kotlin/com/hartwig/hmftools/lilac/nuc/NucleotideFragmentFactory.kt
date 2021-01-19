@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.nuc
 
-import com.hartwig.hmftools.lilac.LilacApplication2
+import com.hartwig.hmftools.lilac.LilacApplication
 import com.hartwig.hmftools.lilac.SequenceCount
 
 class NucleotideFragmentFactory(private val minBaseCount: Int, private val rawNucleotideFragments: List<NucleotideFragment>, private val aBoundaries: Set<Int>,
@@ -60,7 +60,7 @@ class NucleotideFragmentFactory(private val minBaseCount: Int, private val rawNu
         val cExcludedNucleotides = cExcludedAminoAcidReads.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
 
         val filteredNucleotideFragments = rawNucleotideFragments
-                .filter { !exclude(it, LilacApplication2.HLA_A, aExcludedNucleotides) && !exclude(it, LilacApplication2.HLA_B, bExcludedNucleotides) && !exclude(it, LilacApplication2.HLA_C, cExcludedNucleotides) }
+                .filter { !exclude(it, LilacApplication.HLA_A, aExcludedNucleotides) && !exclude(it, LilacApplication.HLA_B, bExcludedNucleotides) && !exclude(it, LilacApplication.HLA_C, cExcludedNucleotides) }
         val filteredNucleotideFragmentCounts = SequenceCount.nucleotides(minBaseCount, filteredNucleotideFragments)
 
         return NucleotideFragmentEnrichment(aminoAcidBoundaries.map { it * 3 }, filteredNucleotideFragmentCounts).enrichHomSpliceJunctions(filteredNucleotideFragments)

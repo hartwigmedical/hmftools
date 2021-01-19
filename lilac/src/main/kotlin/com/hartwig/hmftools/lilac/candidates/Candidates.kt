@@ -40,6 +40,11 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
 
         val result = filterCandidates(aminoAcidCandidates, typeEvidence)
         logger.info(" ... ${result.size} candidates after phasing: " + result.map { it.allele }.joinToString(", "))
+
+        for (phasedEvidence in typeEvidence) {
+            logger.debug(" ... $phasedEvidence")
+        }
+
         return result
 
     }
@@ -71,10 +76,20 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
         return count;
     }
 
+    private fun checkColo8289Candidates(candidates: Collection<HlaSequence>): Int {
+        var count = 0
+
+        if (candidates.any { it.allele == HlaAllele("C*03:04:01:01") }) {
+            count++;
+        }
+
+        return count;
+    }
+
 
     private fun initialCandidates(aminoAcidCount: SequenceCount, candidates: List<HlaSequence>): List<HlaSequence> {
         var result = candidates
-        val locations = (0 until aminoAcidCount.length).toSet()
+        val locations = (0 until aminoAcidCount.length).toSet().filter { aminoAcidCount.depth(it) >= 20 }
         for (location in locations) {
             result = filterCandidates(location, aminoAcidCount.sequenceAt(location), result)
         }

@@ -31,11 +31,19 @@ open class NucleotideFragment(val alignedGene: String, val id: String, private v
             val id = reads[0].samRecord.readName + " -> " + reads[0].samRecord.alignmentStart
             val gene = reads[0].gene
             if (reads.size > 1 && reads[1].gene != gene) {
-                println("sdfsdf") // TODO
+                println("TODO: FIX") // TODO
             }
 
             return NucleotideFragment(gene, id, nucleotideIndices, nucleotides)
         }
+    }
+
+    fun isEmpty(): Boolean {
+        return nucleotideLoci.isEmpty()
+    }
+
+    fun isNotEmpty(): Boolean {
+        return !isEmpty()
     }
 
     fun containsNucleotide(index: Int): Boolean {

@@ -10,7 +10,7 @@ import com.hartwig.hmftools.lilac.hla.HlaComplex
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.read.Fragment
-import com.hartwig.hmftools.lilac.read.SAMRecordRead
+import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.deflate
@@ -43,8 +43,10 @@ class LilacApplication : AutoCloseable, Runnable {
 
     val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
     val outputDir = "/Users/jon/hmf/analysis/hla/resources"
-    val bamFileG = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
-    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003R.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
+    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001R.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002R.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003R.hla.bam"
 
 
     override fun run() {
@@ -62,9 +64,10 @@ class LilacApplication : AutoCloseable, Runnable {
         logger.info("Reading protein files")
         val aminoAcidSequences = readProteinFiles(resourcesDir)
 
-        logger.info("Reading nucleotides from  $bamFile")
+        logger.info("Querying records from $bamFile")
         val rawNucleotideFragments = readFromBam(bamFile)
         val nucleotideFragmentFactory = NucleotideFragmentFactory(minBaseCount, rawNucleotideFragments, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+
 
         // Candidates
         val candidateFactory = Candidates(minBaseCount, 30, nucleotideSequences, aminoAcidSequences)
@@ -78,6 +81,7 @@ class LilacApplication : AutoCloseable, Runnable {
         val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousIndices() intersect allNucleotideExonBoundaries
         val aminoAcidFragments = nucleotideFragmentFactory.allNucleotides().map { it.toAminoAcidFragment() }
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
+        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
 
 
         val candidates = aCandidates + bCandidates + cCandidates
@@ -117,7 +121,7 @@ class LilacApplication : AutoCloseable, Runnable {
         }
 
 
-        val sequences = candidates.map { HlaSequence(it.contig, it.sequence) }
+        val sequences = (candidates union (aminoAcidSequences.filter { it.allele == HlaAllele("C*03:04:01:01") })).map { HlaSequence(it.contig, it.sequence) }
         HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
         HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
         HlaSequenceFile.writeBoundary(aProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
@@ -157,14 +161,11 @@ class LilacApplication : AutoCloseable, Runnable {
 
 
     private fun readFromBam(bamFile: String): List<NucleotideFragment> {
-        val reads = mutableListOf<SAMRecordRead>()
-        reads.addAll(SAMRecordRead.readFromBam(transcripts[HLA_A]!!, bamFile))
-        reads.addAll(SAMRecordRead.readFromBam(transcripts[HLA_B]!!, bamFile))
-        reads.addAll(SAMRecordRead.readFromBam(transcripts[HLA_C]!!, bamFile))
-
-        return NucleotideFragment.fromReads(minBaseQual, reads)
+        val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
+        val reader = SAMRecordReader(1000, transcripts)
+        val reads =  reader.readFromBam(bamFile)
+        return NucleotideFragment.fromReads(minBaseQual, reads).filter { it.isNotEmpty() }
     }
-
 
     fun unwrapFile(fileName: String) {
         val input = HlaSequenceFile.readFile(fileName)
