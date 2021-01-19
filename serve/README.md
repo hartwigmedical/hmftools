@@ -158,7 +158,7 @@ DELETION | Evidence is applicable when the gene has been completely deleted from
 ACTIVATION | Evidence is applicable when a gene has been activated. Downstream algorithms are expected to interpret this.
 INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
-FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5') .
+FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5' promiscuous fusion) .
 
 ### Exonic ranges specific for fusion pairs
 
