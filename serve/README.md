@@ -230,6 +230,8 @@ A knowledgebase can contribute to known and/or actionable events. Current config
       
 Knowledgebase  | Contributes to Known events? | Contributes to Actionable events?
 ---|---|---
+Hartwig Curated | Yes | No
+Hartwig Cohort | Yes | No
 DoCM | Yes | No 
 iClusion | No | Yes
 VICC | Yes | Yes
