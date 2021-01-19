@@ -8,7 +8,8 @@ import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.coverageString
 import com.hartwig.hmftools.lilac.hla.HlaComplex
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
+import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
+import com.hartwig.hmftools.lilac.nuc.NucleotideSpliceEnrichmentFactory
 import com.hartwig.hmftools.lilac.read.Fragment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequence
@@ -40,11 +41,13 @@ class LilacApplication : AutoCloseable, Runnable {
 
     val minBaseQual = 30
     val minBaseCount = 2
+    val minFragmentCount = 25
 
     val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
     val outputDir = "/Users/jon/hmf/analysis/hla/resources"
-//    val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
-    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001R.hla.bam"
+
+        val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001R.hla.bam"
 //    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002R.hla.bam"
 //    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003R.hla.bam"
 
@@ -58,28 +61,30 @@ class LilacApplication : AutoCloseable, Runnable {
         val allProteinExonBoundaries = (aProteinExonBoundaries + bProteinExonBoundaries + cProteinExonBoundaries)
         val allNucleotideExonBoundaries = allProteinExonBoundaries.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
 
+        logger.info("Querying records from $bamFile")
+        val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+        val rawNucleotideFragments = readFromBam(bamFile)
+        val geneEnrichedNucleotides = nucleotideGeneEnrichment.enrich(rawNucleotideFragments)
+        val nucleotideSpliceEnrichment = NucleotideSpliceEnrichmentFactory(minBaseCount, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+
         logger.info("Reading nucleotide files")
         val nucleotideSequences = readNucleotideFiles(resourcesDir)
 
         logger.info("Reading protein files")
         val aminoAcidSequences = readProteinFiles(resourcesDir)
 
-        logger.info("Querying records from $bamFile")
-        val rawNucleotideFragments = readFromBam(bamFile)
-        val nucleotideFragmentFactory = NucleotideFragmentFactory(minBaseCount, rawNucleotideFragments, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
-
-
         // Candidates
-        val candidateFactory = Candidates(minBaseCount, 30, nucleotideSequences, aminoAcidSequences)
-        val aCandidates = candidateFactory.candidates("A", aProteinExonBoundaries, nucleotideFragmentFactory.typeANucleotides())
-        val bCandidates = candidateFactory.candidates("B", bProteinExonBoundaries, nucleotideFragmentFactory.typeBNucleotides())
-        val cCandidates = candidateFactory.candidates("C", cProteinExonBoundaries, nucleotideFragmentFactory.typeCNucleotides())
-
+        val candidateFactory = Candidates(minBaseCount, minFragmentCount, nucleotideSequences, aminoAcidSequences)
+        val aCandidates = candidateFactory.candidates("A", aProteinExonBoundaries, nucleotideSpliceEnrichment.typeANucleotides(geneEnrichedNucleotides))
+        val bCandidates = candidateFactory.candidates("B", bProteinExonBoundaries, nucleotideSpliceEnrichment.typeBNucleotides(geneEnrichedNucleotides))
+        val cCandidates = candidateFactory.candidates("C", cProteinExonBoundaries, nucleotideSpliceEnrichment.typeCNucleotides(geneEnrichedNucleotides))
+//listOf<HlaSequence>()//
 
         // Coverage
-        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, nucleotideFragmentFactory.allNucleotides())
+        val enrichedNucleotides = nucleotideSpliceEnrichment.allNucleotides(geneEnrichedNucleotides)
+        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, enrichedNucleotides)
         val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousIndices() intersect allNucleotideExonBoundaries
-        val aminoAcidFragments = nucleotideFragmentFactory.allNucleotides().map { it.toAminoAcidFragment() }
+        val aminoAcidFragments = enrichedNucleotides.map { it.toAminoAcidFragment() }
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
         aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
 
@@ -163,7 +168,7 @@ class LilacApplication : AutoCloseable, Runnable {
     private fun readFromBam(bamFile: String): List<NucleotideFragment> {
         val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
         val reader = SAMRecordReader(1000, transcripts)
-        val reads =  reader.readFromBam(bamFile)
+        val reads = reader.readFromBam(bamFile)
         return NucleotideFragment.fromReads(minBaseQual, reads).filter { it.isNotEmpty() }
     }
 

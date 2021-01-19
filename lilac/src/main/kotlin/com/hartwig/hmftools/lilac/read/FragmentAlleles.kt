@@ -23,6 +23,7 @@ class FragmentAlleles(val fragment: Fragment, val full: Collection<HlaAllele>, v
             val matchingNucleotideSequences = nucleotideSequences
                     .map { Pair(it.allele, it.match(fragmentNucleotideLoci, fragmentNucleotides)) }
                     .filter { it.second != HlaSequenceMatch.NONE }
+                    .filter { fragment.genes.contains("HLA-${it.first.gene}") }
                     .map { Pair(it.first.specificProtein(), it.second) }
                     .distinct()
 
@@ -35,6 +36,7 @@ class FragmentAlleles(val fragment: Fragment, val full: Collection<HlaAllele>, v
             val matchingAminoAcidSequences = aminoAcidSequences
                     .map { Pair(it.allele, it.match(fragmentAminoAcidLoci, fragmentAminoAcids)) }
                     .filter { it.second != HlaSequenceMatch.NONE }
+                    .filter { fragment.genes.contains("HLA-${it.first.gene}") }
 
             val fullAminoAcidMatch = matchingAminoAcidSequences.filter { it.second == HlaSequenceMatch.FULL }.map { it.first }.toSet()
             val partialAminoAcidMatch = matchingAminoAcidSequences.filter { it.second == HlaSequenceMatch.PARTIAL }.map { it.first }.toSet()

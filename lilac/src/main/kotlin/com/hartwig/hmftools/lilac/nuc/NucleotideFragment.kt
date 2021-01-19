@@ -4,7 +4,7 @@ import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.lilac.read.Fragment
 import com.hartwig.hmftools.lilac.read.SAMRecordRead
 
-open class NucleotideFragment(val alignedGene: String, val id: String, private val nucleotideLoci: List<Int>, private val nucleotides: List<Char>) {
+open class NucleotideFragment(val id: String, private val nucleotideLoci: List<Int>, private val nucleotides: List<Char>, val genes: Set<String>) {
 
     companion object {
 
@@ -29,12 +29,13 @@ open class NucleotideFragment(val alignedGene: String, val id: String, private v
 
             val nucleotides = nucleotideIndices.map { nucleotide(it) }
             val id = reads[0].samRecord.readName + " -> " + reads[0].samRecord.alignmentStart
-            val gene = reads[0].gene
-            if (reads.size > 1 && reads[1].gene != gene) {
-                println("TODO: FIX") // TODO
+            val genes = mutableSetOf<String>()
+            genes.add(reads[0].gene)
+            if (reads.size > 1) {
+                genes.add(reads[1].gene)
             }
 
-            return NucleotideFragment(gene, id, nucleotideIndices, nucleotides)
+            return NucleotideFragment(id, nucleotideIndices, nucleotides, genes)
         }
     }
 
@@ -62,6 +63,8 @@ open class NucleotideFragment(val alignedGene: String, val id: String, private v
         return nucleotides[nucleotideLoci.indexOf(loci)]
     }
 
+    fun nucleotides(): List<Char> = nucleotides
+
     fun nucleotideIndices(): List<Int> = nucleotideLoci
 
     fun toAminoAcidFragment(): Fragment {
@@ -79,12 +82,12 @@ open class NucleotideFragment(val alignedGene: String, val id: String, private v
 
         val aminoAcids = aminoAcidIndices.map { aminoAcid(it) }
 
-        return Fragment(alignedGene, id, nucleotideLoci, nucleotides, aminoAcidIndices, aminoAcids)
+        return Fragment(id, nucleotideLoci, nucleotides, genes, aminoAcidIndices, aminoAcids)
     }
 
     fun enrich(index: Int, nucleotide: Char): NucleotideFragment {
         assert(!containsNucleotide(index))
-        return NucleotideFragment(alignedGene, id, nucleotideLoci + index, nucleotides + nucleotide)
+        return NucleotideFragment(id, nucleotideLoci + index, nucleotides + nucleotide, genes)
     }
 
 }

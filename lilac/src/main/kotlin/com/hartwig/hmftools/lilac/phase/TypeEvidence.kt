@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.lilac.phase
 
 import com.hartwig.hmftools.lilac.SequenceCount
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.read.Fragment
 
 class TypeEvidence(private val minBaseCount: Int, private val minFragmentCount: Int) {
@@ -43,11 +42,6 @@ class TypeEvidence(private val minBaseCount: Int, private val minFragmentCount: 
         return evidence
                 .filter { !evidence.otherContains(it) }
                 .sortedBy { it.aminoAcidIndices[0] }
-    }
-
-
-    private fun exclude(fragment: NucleotideFragment, gene: String, excludedNucleotides: Collection<Int>): Boolean {
-        return fragment.alignedGene == gene && excludedNucleotides.any { fragment.containsNucleotide(it) }
     }
 
 }

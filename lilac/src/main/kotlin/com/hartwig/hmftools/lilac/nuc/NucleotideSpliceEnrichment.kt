@@ -2,31 +2,31 @@ package com.hartwig.hmftools.lilac.nuc
 
 import com.hartwig.hmftools.lilac.SequenceCount
 
-class NucleotideFragmentEnrichment(nucleotideExonBoundaryStarts: Collection<Int>, private var nucleotideCounts: SequenceCount) {
+class NucleotideSpliceEnrichment(private val minBaseCount: Int, private val aminoAcidBoundary: Set<Int>) {
 
-    private val homLoci = nucleotideCounts.homozygousIndices().toSet()
-    private val homStarts = nucleotideExonBoundaryStarts.filter { homLoci.contains(it) }
-    private val homEnds = nucleotideExonBoundaryStarts.filter { homLoci.contains(it + 1) && homLoci.contains(it + 2) }
+    fun enrich(fragments: List<NucleotideFragment>): List<NucleotideFragment> {
 
-    fun enrichHomSpliceJunctions(fragments: List<NucleotideFragment>): List<NucleotideFragment> {
+        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, fragments)
+        val nucleotideExonBoundaryStarts = aminoAcidBoundary.map { 3 * it }
+        val homLoci = nucleotideCounts.homozygousIndices().toSet()
+        val homStarts = nucleotideExonBoundaryStarts.filter { homLoci.contains(it) }
+        val homEnds = nucleotideExonBoundaryStarts.filter { homLoci.contains(it + 1) && homLoci.contains(it + 2) }
+
         val result = mutableListOf<NucleotideFragment>()
 
         for (fragment in fragments) {
             var enriched = fragment
-
             for (homStart in homStarts) {
-
                 if (missingStart(homStart, enriched)) {
-                    enriched = enriched.addStart(homStart)
+                    enriched = enriched.addStart(homStart, nucleotideCounts)
                 }
             }
 
             for (homEnd in homEnds) {
                 if (missingEnd(homEnd, enriched)) {
-                    enriched = enriched.addEnd(homEnd)
+                    enriched = enriched.addEnd(homEnd, nucleotideCounts)
                 }
             }
-
             result.add(enriched)
         }
 
@@ -41,11 +41,11 @@ class NucleotideFragmentEnrichment(nucleotideExonBoundaryStarts: Collection<Int>
         return fragment.containsNucleotide(index) && !fragment.containsNucleotide(index + 1) && !fragment.containsNucleotide(index + 2)
     }
 
-    private fun NucleotideFragment.addStart(index: Int): NucleotideFragment {
+    private fun NucleotideFragment.addStart(index: Int, nucleotideCounts: SequenceCount): NucleotideFragment {
         return this.enrich(index, nucleotideCounts.sequenceAt(index).first())
     }
 
-    private fun NucleotideFragment.addEnd(index: Int): NucleotideFragment {
+    private fun NucleotideFragment.addEnd(index: Int, nucleotideCounts: SequenceCount): NucleotideFragment {
         return this
                 .enrich(index + 1, nucleotideCounts.sequenceAt(index + 1).first())
                 .enrich(index + 2, nucleotideCounts.sequenceAt(index + 2).first())

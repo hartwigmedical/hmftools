@@ -21,6 +21,11 @@ class ExtendedEvidence(private val minMinEvidence: Int, private val minTotalEvid
 
     fun extendConsecutive(current: PhasedEvidence, others: Set<PhasedEvidence>): List<PhasedEvidence> {
 
+//        val expected = setOf(117, 118, 120)
+//        if (expected.all { current.aminoAcidIndices.contains(it) }) {
+//            println("HERE")
+//        }
+
         val existingIndices = current.aminoAcidIndices
         val remainingIndices = heterozygousIndices.filter { it !in existingIndices }
 
@@ -65,7 +70,7 @@ class ExtendedEvidence(private val minMinEvidence: Int, private val minTotalEvid
             }
         }
 
-        return result.sorted().filter { it.totalEvidence() > minTotalEvidence }
+        return result.sorted().filter { it.totalEvidence() >= minTotalEvidence }
     }
 
 }
