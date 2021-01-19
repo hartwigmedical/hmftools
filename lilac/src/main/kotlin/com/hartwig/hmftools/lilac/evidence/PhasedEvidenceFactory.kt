@@ -1,15 +1,15 @@
-package com.hartwig.hmftools.lilac.phase
+package com.hartwig.hmftools.lilac.evidence
 
 import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.read.Fragment
 
-class TypeEvidence(private val minBaseCount: Int, private val minFragmentCount: Int) {
+class PhasedEvidenceFactory(private val minBaseCount: Int, private val minFragmentCount: Int) {
 
     fun evidence(aminoAcidFragments: List<Fragment>): List<PhasedEvidence> {
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
 
         val heterozygousIndices = aminoAcidCounts.heterozygousIndices()
-        val heterozygousEvidence = ExtendedEvidence(minBaseCount, minFragmentCount, heterozygousIndices, aminoAcidFragments)
+        val heterozygousEvidence = ExtendEvidence(minBaseCount, minFragmentCount, heterozygousIndices, aminoAcidFragments)
 
         val allEvidence = mutableSetOf<PhasedEvidence>()
         val initialEvidence = heterozygousEvidence.initialEvidence()

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.seq
 
+import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
 import com.hartwig.hmftools.lilac.hla.HlaAllele
-import com.hartwig.hmftools.lilac.phase.PhasedEvidence
 
 data class HlaSequence(val contig: String, val rawSequence: String) {
     val allele = HlaAllele(contig)

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.phase
+package com.hartwig.hmftools.lilac.evidence
 
 import com.hartwig.hmftools.lilac.read.Fragment
 import java.util.*

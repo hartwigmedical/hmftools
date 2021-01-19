@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.lilac.phase
+package com.hartwig.hmftools.lilac.evidence
 
 import com.hartwig.hmftools.lilac.read.Fragment
 import java.util.*
 
-class ExtendedEvidence(private val minMinEvidence: Int, private val minTotalEvidence: Int, private val heterozygousIndices: List<Int>, private val fragments: List<Fragment>) {
+class ExtendEvidence(private val minMinEvidence: Int, private val minTotalEvidence: Int, private val heterozygousIndices: List<Int>, private val fragments: List<Fragment>) {
 
     fun initialEvidence(): List<PhasedEvidence> {
         val result = mutableListOf<PhasedEvidence>()

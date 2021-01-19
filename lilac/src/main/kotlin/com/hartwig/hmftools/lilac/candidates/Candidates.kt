@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.lilac.candidates
 
 import com.hartwig.hmftools.lilac.SequenceCount
+import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
+import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.nuc.NucleotideFiltering
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
-import com.hartwig.hmftools.lilac.phase.PhasedEvidence
-import com.hartwig.hmftools.lilac.phase.TypeEvidence
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import org.apache.logging.log4j.LogManager
 
@@ -35,7 +35,7 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
         val aminoAcidCandidates = initialCandidates(aminoAcidCounts, nucleotideCandidates)
         logger.info(" ... ${aminoAcidCandidates.size} candidates after amino acid filtering")
 
-        val typeEvidenceFactory = TypeEvidence(minBaseCount, minFragmentCount)
+        val typeEvidenceFactory = PhasedEvidenceFactory(minBaseCount, minFragmentCount)
         val typeEvidence = typeEvidenceFactory.evidence(aminoAcidFragments)
 
         val result = filterCandidates(aminoAcidCandidates, typeEvidence)
