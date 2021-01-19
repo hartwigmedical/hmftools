@@ -52,7 +52,9 @@ public class EvidenceCurationTest {
     public void canFilterBlacklistKeys() {
         CurationKey firstKey = EvidenceCuration.BLACKLIST_KEYS.iterator().next();
         ProtectEvidence evidence1 = createTestBuilder().treatment(firstKey.treatment())
+                .addSources(firstKey.source())
                 .genomicEvent(firstKey.eventKeyword() + " event")
+                .level(firstKey.level())
                 .direction(firstKey.direction())
                 .reported(true)
                 .build();

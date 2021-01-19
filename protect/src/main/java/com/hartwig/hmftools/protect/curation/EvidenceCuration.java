@@ -8,7 +8,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,9 +22,30 @@ public final class EvidenceCuration {
     static final Set<CurationKey> BLACKLIST_KEYS = Sets.newHashSet();
 
     static {
+        // This evidence is plain wrong
         BLACKLIST_KEYS.add(ImmutableCurationKey.builder()
+                .source(Knowledgebase.VICC_CIVIC)
                 .eventKeyword("PIK3CA")
                 .treatment("Trastuzumab")
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .build());
+
+        // This evidence is defined pan-cancer which is incorrect
+        BLACKLIST_KEYS.add(ImmutableCurationKey.builder()
+                .source(Knowledgebase.VICC_CIVIC)
+                .eventKeyword("BRCA")
+                .treatment("Olaparib")
+                .level(EvidenceLevel.A)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .build());
+
+        // This key blocks several evidences of which at least some seem dubious
+        BLACKLIST_KEYS.add(ImmutableCurationKey.builder()
+                .source(Knowledgebase.VICC_CIVIC)
+                .eventKeyword("PTEN")
+                .treatment("Everolimus")
+                .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .build());
     }
@@ -64,7 +87,8 @@ public final class EvidenceCuration {
 
     private static boolean keyIsBlacklisted(@NotNull ProtectEvidence evidence) {
         for (CurationKey key : BLACKLIST_KEYS) {
-            if (evidence.genomicEvent().contains(key.eventKeyword()) && evidence.treatment().equals(key.treatment()) && evidence.direction() == key.direction()) {
+            if (evidence.sources().contains(key.source()) && evidence.genomicEvent().contains(key.eventKeyword()) && evidence.treatment()
+                    .equals(key.treatment()) && evidence.level() == key.level() && evidence.direction() == key.direction()) {
                 return true;
             }
         }
