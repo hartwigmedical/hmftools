@@ -174,8 +174,7 @@ public final class LoadClinicalData {
         }
         for (List<SampleData> sampleDataList : sampleDataPerPatient.values()) {
             for (SampleData sampleData : sampleDataList) {
-                if (!reportedSamples.contains(sampleData.sampleBarcode())) {
-                    //TODO: Add check for lab status
+                if (!reportedSamples.contains(sampleData.sampleBarcode()) && sampleData.isSomaticTumorSample()) {
                     patientsInLims.add(sampleData.sampleId().substring(0, 12));
                 }
             }
