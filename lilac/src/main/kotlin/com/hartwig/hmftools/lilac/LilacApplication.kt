@@ -46,10 +46,10 @@ class LilacApplication : AutoCloseable, Runnable {
     val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
     val outputDir = "/Users/jon/hmf/analysis/hla/resources"
 
-        val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
+//        val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
 //    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001R.hla.bam"
 //    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002R.hla.bam"
-//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003R.hla.bam"
+    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003R.hla.bam"
 
 
     override fun run() {
@@ -119,7 +119,7 @@ class LilacApplication : AutoCloseable, Runnable {
 
         logger.info("Calcuating coverage of ${complexes.size} complexes")
 
-        println("TotalCoverage\tUniqueCoverage\tSharedCoverage\tAllele1\tAllele2\tAllele3\tAllele4\tAllele5\tAllele6")
+        println("TotalCoverage\tUniqueCoverage\tSharedCoverage\tWild\tAllele1\tAllele2\tAllele3\tAllele4\tAllele5\tAllele6")
         for (complex in complexes) {
             val complexCoverage = coverageFactory.proteinCoverage(complex.alleles)
             println(complexCoverage.coverageString())

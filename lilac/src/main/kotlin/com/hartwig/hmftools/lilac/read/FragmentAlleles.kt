@@ -5,7 +5,7 @@ import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceMatch
 
 
-class FragmentAlleles(val fragment: Fragment, val full: Collection<HlaAllele>, val partial: Collection<HlaAllele>) {
+class FragmentAlleles(val fragment: Fragment, val full: Collection<HlaAllele>, val partial: Collection<HlaAllele>, val wild: Collection<HlaAllele>) {
 
 
     companion object {
@@ -28,8 +28,10 @@ class FragmentAlleles(val fragment: Fragment, val full: Collection<HlaAllele>, v
                     .distinct()
 
             val fullNucleotideMatch = matchingNucleotideSequences.filter { it.second == HlaSequenceMatch.FULL }.map { it.first }.toSet()
-            val partialNucleotideMatch = matchingNucleotideSequences.filter { it.second == HlaSequenceMatch.PARTIAL }.map { it.first }.toSet() subtract fullNucleotideMatch
-
+            val partialNucleotideMatch = matchingNucleotideSequences
+                    .filter { it.second == HlaSequenceMatch.PARTIAL  || it.second == HlaSequenceMatch.WILD}
+                    .map { it.first }
+                    .toSet() subtract fullNucleotideMatch
 
             val fragmentAminoAcidLoci = (fragment.aminoAcidIndices() intersect aminoAcidLoci).sorted().toIntArray()
             val fragmentAminoAcids = fragmentAminoAcidLoci.map { fragment.aminoAcid(it) }.toCharArray()
@@ -40,34 +42,17 @@ class FragmentAlleles(val fragment: Fragment, val full: Collection<HlaAllele>, v
 
             val fullAminoAcidMatch = matchingAminoAcidSequences.filter { it.second == HlaSequenceMatch.FULL }.map { it.first }.toSet()
             val partialAminoAcidMatch = matchingAminoAcidSequences.filter { it.second == HlaSequenceMatch.PARTIAL }.map { it.first }.toSet()
+            val wildAminoAcidMatch = matchingAminoAcidSequences.filter { it.second == HlaSequenceMatch.WILD }.map { it.first }.toSet()
 
-//            if (fullAminoAcidMatch.size == 1 && fullAminoAcidMatch.contains(HlaAllele("C*07:57"))) {
-//                println(fragment.id + " [" + fragmentAminoAcidLoci.joinToString(", ") + "] [" + fragmentAminoAcids.joinToString(", ") + "]")
-//            }
-//
-//            if(fragment.id == "A00624:8:HHKYHDSXX:1:1549:11858:36307 -> 29911268") {
-//                println("sdf")
-//            }
 
             if (fullNucleotideMatch.isEmpty() && partialNucleotideMatch.isEmpty()) {
-                return FragmentAlleles(fragment, fullAminoAcidMatch, partialAminoAcidMatch)
+                return FragmentAlleles(fragment, fullAminoAcidMatch, partialAminoAcidMatch, wildAminoAcidMatch)
             }
 
             val consistentFull = fullAminoAcidMatch.filter { it.specificProtein() in fullNucleotideMatch }
-            val remainingFull = fullAminoAcidMatch.filter { it.specificProtein() in partialNucleotideMatch }
-            val consistentPartial = partialAminoAcidMatch.filter { it.specificProtein() in fullNucleotideMatch || it.specificProtein() in partialNucleotideMatch }
+            val remainingFull = fullAminoAcidMatch.filter { it.specificProtein() !in fullNucleotideMatch }
 
-
-
-            if (fragmentNucleotideLoci.contains(1012) || fragmentNucleotideLoci.contains(1013)) {
-//                println("Sdf")
-            }
-
-            if (!consistentFull.containsAll(fullAminoAcidMatch)) {
-//                println("Sdf")
-            }
-            return FragmentAlleles(fragment, consistentFull, remainingFull union consistentPartial)
-//            return FragmentAlleles(fragment, fullAminoAcidMatch, partialAminoAcidMatch)
+            return FragmentAlleles(fragment, consistentFull, remainingFull union partialAminoAcidMatch, wildAminoAcidMatch)
 
         }
     }

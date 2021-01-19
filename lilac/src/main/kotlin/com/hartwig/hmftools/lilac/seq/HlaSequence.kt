@@ -40,7 +40,11 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
             }
         }
 
-        return if (wildCardCount > 0) HlaSequenceMatch.PARTIAL else HlaSequenceMatch.FULL
+        if (wildCardCount > 0) {
+            return if (wildCardCount == indicies.size) return HlaSequenceMatch.WILD else HlaSequenceMatch.PARTIAL
+        }
+
+        return HlaSequenceMatch.FULL
     }
 
     fun copyWithAdditionalSequence(additionalSequence: String): HlaSequence {

@@ -26,14 +26,16 @@ class HlaAlleleCoverageFactory(
         fun List<HlaAlleleCoverage>.coverageString(): String {
             var shared = 0.0
             var unique = 0
+            var wild = 0.0
             for (coverage in this) {
 //                if (coverage.allele !in confirmed) {
                     shared += coverage.sharedCoverage
                     unique += coverage.uniqueCoverage
+                    wild += coverage.wildCoverage
 //                }
             }
 
-            return "${(shared + unique).roundToInt()}\t${unique}\t${shared.roundToInt()}\t${this.sortedBy { x -> x.allele }.joinToString ("\t")}"
+            return "${(shared + unique + wild).roundToInt()}\t${unique}\t${shared.roundToInt()}\t${wild.roundToInt()}\t${this.sortedBy { x -> x.allele }.joinToString ("\t")}"
 
         }
 
