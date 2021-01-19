@@ -45,8 +45,8 @@ they are compliant with the usage of the data itself.
 SERVE generates clinical evidence in the following datamodel:
  - Treatment (name of trial or drug(s))
  - Cancer type (including DOID) for which the treatment is on-label.
- - Tier / Evidence level of the treatment/trial
- - Direction (Responsive for the treatment/trial or resistant to the treatment/trial)
+ - Tier / Evidence level of the treatment
+ - Direction (Responsive for the treatment or resistant to the treatment)
  - A set of URLs with extra information about the evidence (could be a publication, or a general website)
  
 The following genomic events and signatures can be mapped to clinical evidence:
