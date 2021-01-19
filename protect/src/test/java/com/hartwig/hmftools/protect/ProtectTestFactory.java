@@ -37,12 +37,6 @@ public final class ProtectTestFactory {
     }
 
     @NotNull
-    public static ImmutableProtectEvidence.Builder createTestEvidence(boolean onLabel, @NotNull EvidenceDirection direction,
-            @NotNull com.hartwig.hmftools.common.serve.actionability.EvidenceLevel level) {
-        return createTestBuilder().onLabel(onLabel).level(level).direction(direction);
-    }
-
-    @NotNull
     public static ImmutableProtectEvidence.Builder createTestBuilder() {
         return ImmutableProtectEvidence.builder()
                 .genomicEvent(Strings.EMPTY)
