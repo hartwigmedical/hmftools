@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.protect.curation;
 
 import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestBuilder;
 
@@ -45,6 +45,22 @@ public class EvidenceCurationTest {
         assertTrue(evidence.contains(evidence2));
 
         ProtectEvidence blacklisted = findByTreatment(evidence, treatment1);
+        assertFalse(blacklisted.reported());
+    }
+
+    @Test
+    public void canFilterBlacklistKeys() {
+        CurationKey firstKey = EvidenceCuration.BLACKLIST_KEYS.iterator().next();
+        ProtectEvidence evidence1 = createTestBuilder().treatment(firstKey.treatment())
+                .genomicEvent(firstKey.eventKeyword() + " event")
+                .direction(firstKey.direction())
+                .reported(true)
+                .build();
+
+        List<ProtectEvidence> evidence = EvidenceCuration.applyReportingBlacklist(Lists.newArrayList(evidence1));
+        assertEquals(1, evidence.size());
+
+        ProtectEvidence blacklisted = findByTreatment(evidence, firstKey.treatment());
         assertFalse(blacklisted.reported());
     }
 
