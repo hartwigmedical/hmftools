@@ -86,7 +86,7 @@ PROTECT produces a tsv with every applicable evidence after consolidation has be
 
 Field  | Description | Example
 ---|---|---
-genomicEvent  | The genomic event for which evidence is applicable | BRAF p.Val600Glu  
+event  | The genomic event for which evidence is applicable | BRAF p.Val600Glu  
 germline | Whether the genomic event is present in the germline or was acquired somatically | true/false
 reported | Whether the evidence passed all filters for reporting | true/false
 treatment | Name of the treatment (trial or drug(s)) | Vemurafenib
