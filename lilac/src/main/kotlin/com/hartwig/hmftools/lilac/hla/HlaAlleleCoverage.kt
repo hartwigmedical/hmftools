@@ -30,6 +30,10 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
 
                 if (fullAlleles.size == 1 && partialAlleles.isEmpty() && wildAlleles.isEmpty())  {
                     uniqueCoverageMap.compute(fullAlleles.first()) {_, oldValue ->  (oldValue ?: 0) + 1}
+//                    if (fullAlleles.first() == HlaAllele("C*03:326")) {
+//                        println("sdf")
+//                    }
+
                 } else {
                     val contribution = 1.0 / (fullAlleles.size + partialAlleles.size + wildAlleles.size)
                     fullAlleles.forEach {combinedCoverageMap.compute(it) {_, oldValue -> (oldValue ?: 0.0) + contribution} }

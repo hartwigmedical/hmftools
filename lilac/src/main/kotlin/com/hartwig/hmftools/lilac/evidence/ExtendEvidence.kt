@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.lilac.evidence
 
-import com.hartwig.hmftools.lilac.read.Fragment
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import java.util.*
 
-class ExtendEvidence(private val minMinEvidence: Int, private val minTotalEvidence: Int, private val heterozygousIndices: List<Int>, private val fragments: List<Fragment>) {
+class ExtendEvidence(private val minMinEvidence: Int, private val minTotalEvidence: Int, private val heterozygousIndices: List<Int>, private val aminoAcidFragments: List<AminoAcidFragment>) {
 
     fun initialEvidence(): List<PhasedEvidence> {
         val result = mutableListOf<PhasedEvidence>()
 
         for (i in 0..(heterozygousIndices.size - 2)) {
-            val evidence = PhasedEvidence.evidence(fragments, heterozygousIndices[i], heterozygousIndices[i + 1]
+            val evidence = PhasedEvidence.evidence(aminoAcidFragments, heterozygousIndices[i], heterozygousIndices[i + 1]
             )
             if (evidence.evidence.isNotEmpty()) {
                 result.add(evidence)
@@ -21,7 +21,7 @@ class ExtendEvidence(private val minMinEvidence: Int, private val minTotalEviden
 
     fun extendConsecutive(current: PhasedEvidence, others: Set<PhasedEvidence>): List<PhasedEvidence> {
 
-//        val expected = setOf(117, 118, 120)
+//        val expected = setOf(1, 3)
 //        if (expected.all { current.aminoAcidIndices.contains(it) }) {
 //            println("HERE")
 //        }
@@ -41,8 +41,8 @@ class ExtendEvidence(private val minMinEvidence: Int, private val minTotalEviden
             val allNewIndices = current.aminoAcidIndices + remainingIndicesAbove[0]
             val fake = PhasedEvidence(allNewIndices, Collections.emptyMap())
             if (!others.contains(fake)) {
-                val newEvidence = PhasedEvidence.evidence(fragments, *unambiguousIndices)
-                if (newEvidence.evidence.isNotEmpty() && newEvidence.minEvidence() >= minMinEvidence) {
+                val newEvidence = PhasedEvidence.evidence(aminoAcidFragments, *unambiguousIndices)
+                if (newEvidence.evidence.isNotEmpty() && newEvidence.minEvidence() >= 1) {
                     if (newEvidence.aminoAcidIndices.size == current.aminoAcidIndices.size + 1) {
                         result.add(newEvidence)
                     } else {
@@ -58,8 +58,8 @@ class ExtendEvidence(private val minMinEvidence: Int, private val minTotalEviden
             val allNewIndices = (current.aminoAcidIndices + remainingIndicesBelow[0]).sortedArray()
             val fake = PhasedEvidence(allNewIndices, Collections.emptyMap())
             if (!others.contains(fake)) {
-                val newEvidence = PhasedEvidence.evidence(fragments, *unambiguousIndices)
-                if (newEvidence.evidence.isNotEmpty() && newEvidence.minEvidence() >= minMinEvidence) {
+                val newEvidence = PhasedEvidence.evidence(aminoAcidFragments, *unambiguousIndices)
+                if (newEvidence.evidence.isNotEmpty() && newEvidence.minEvidence() >= 1) {
                     if (newEvidence.aminoAcidIndices.size == current.aminoAcidIndices.size + 1) {
                         result.add(newEvidence)
                     } else {

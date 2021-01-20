@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.nuc
 
 import com.hartwig.hmftools.common.codon.Codons
-import com.hartwig.hmftools.lilac.read.Fragment
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.read.SAMRecordRead
 
 open class NucleotideFragment(
@@ -36,9 +36,8 @@ open class NucleotideFragment(
                 throw IllegalArgumentException("Fragment does not contain nucleotide at location $index")
             }
 
-
             val nucleotideIndices = reads
-                    .flatMap { it.nucleotideIndices(minBaseQual).toList() }
+                    .flatMap { it.nucleotideIndices() }
                     .distinct()
                     .sorted()
 
@@ -99,7 +98,7 @@ open class NucleotideFragment(
         return NucleotideFragment(id, genes, qualityFilteredNucleotideLoci, qualityFilteredNucleotideQuality, qualityFilteredNucleotides)
     }
 
-    fun toAminoAcidFragment(): Fragment {
+    fun toAminoAcidFragment(): AminoAcidFragment {
         fun aminoAcid(index: Int): Char {
             val first = nucleotide(index * 3)
             val second = nucleotide(index * 3 + 1)
@@ -114,12 +113,12 @@ open class NucleotideFragment(
 
         val aminoAcids = aminoAcidIndices.map { aminoAcid(it) }
 
-        return Fragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides, aminoAcidIndices, aminoAcids)
+        return AminoAcidFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides, aminoAcidIndices, aminoAcids)
     }
 
-    fun enrich(index: Int, nucleotide: Char): NucleotideFragment {
-        assert(!containsNucleotide(index))
-        return NucleotideFragment(id, genes, nucleotideLoci + index, nucleotideQuality + 0, nucleotides + nucleotide)
+    fun enrich(loci: Int, nucleotide: Char, quality: Int): NucleotideFragment {
+        assert(!containsNucleotide(loci))
+        return NucleotideFragment(id, genes, nucleotideLoci + loci, nucleotideQuality + quality, nucleotides + nucleotide)
     }
 
 }

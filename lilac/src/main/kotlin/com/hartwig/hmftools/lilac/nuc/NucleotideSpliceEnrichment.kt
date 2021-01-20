@@ -2,11 +2,12 @@ package com.hartwig.hmftools.lilac.nuc
 
 import com.hartwig.hmftools.lilac.SequenceCount
 
-class NucleotideSpliceEnrichment(private val minBaseCount: Int, private val aminoAcidBoundary: Set<Int>) {
+class NucleotideSpliceEnrichment(private val minBaseQuality: Int, private val minBaseCount: Int, private val aminoAcidBoundary: Set<Int>) {
 
     fun enrich(fragments: List<NucleotideFragment>): List<NucleotideFragment> {
+        val filteredNucleotides = fragments.map { it.qualityFilter(minBaseQuality) }.filter { it.isNotEmpty() }
 
-        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, fragments)
+        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, filteredNucleotides)
         val nucleotideExonBoundaryStarts = aminoAcidBoundary.map { 3 * it }
         val homLoci = nucleotideCounts.homozygousIndices().toSet()
         val homStarts = nucleotideExonBoundaryStarts.filter { homLoci.contains(it) }
@@ -42,12 +43,12 @@ class NucleotideSpliceEnrichment(private val minBaseCount: Int, private val amin
     }
 
     private fun NucleotideFragment.addStart(index: Int, nucleotideCounts: SequenceCount): NucleotideFragment {
-        return this.enrich(index, nucleotideCounts.sequenceAt(index).first())
+        return this.enrich(index, nucleotideCounts.sequenceAt(index).first(), minBaseQuality)
     }
 
     private fun NucleotideFragment.addEnd(index: Int, nucleotideCounts: SequenceCount): NucleotideFragment {
         return this
-                .enrich(index + 1, nucleotideCounts.sequenceAt(index + 1).first())
-                .enrich(index + 2, nucleotideCounts.sequenceAt(index + 2).first())
+                .enrich(index + 1, nucleotideCounts.sequenceAt(index + 1).first(), minBaseQuality)
+                .enrich(index + 2, nucleotideCounts.sequenceAt(index + 2).first(), minBaseQuality)
     }
 }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.evidence
 
-import com.hartwig.hmftools.lilac.read.Fragment
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import java.util.*
 import kotlin.math.min
 
@@ -64,17 +64,17 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
 
     companion object {
 
-        fun evidence(fragments: List<Fragment>, vararg indices: Int): PhasedEvidence {
-            val filteredFragments = fragments.filter { it.containsAll(indices) }
+        fun evidence(aminoAcidFragments: List<AminoAcidFragment>, vararg indices: Int): PhasedEvidence {
+            val filteredFragments = aminoAcidFragments.filter { it.containsAll(indices) }
             val aminoAcidEvidence = filteredFragments.map { it.toAminoAcids(indices) }.groupingBy { it }.eachCount()
             return PhasedEvidence(indices, aminoAcidEvidence)
         }
 
-        private fun Fragment.toAminoAcids(indices: IntArray): String {
+        private fun AminoAcidFragment.toAminoAcids(indices: IntArray): String {
             return indices.map { this.aminoAcid(it) }.joinToString("")
         }
 
-        private fun Fragment.containsAll(indices: IntArray): Boolean {
+        private fun AminoAcidFragment.containsAll(indices: IntArray): Boolean {
             return indices.all { this.containsAminoAcid(it) && this.aminoAcid(it) != '.' }
         }
 

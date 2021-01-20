@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.lilac.read
+package com.hartwig.hmftools.lilac.amino
 
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 
-class Fragment(id: String, genes: Set<String>, nucleotideLoci: List<Int>, nucleotideQuality: List<Int>, nucleotides: List<Char>,
-               private val aminoAcidLoci: List<Int>, private val aminoAcids: List<Char>) : NucleotideFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides) {
+class AminoAcidFragment(id: String, genes: Set<String>, nucleotideLoci: List<Int>, nucleotideQuality: List<Int>, nucleotides: List<Char>,
+                        private val aminoAcidLoci: List<Int>, private val aminoAcids: List<Char>) : NucleotideFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides) {
 
     fun containsAminoAcid(index: Int): Boolean {
         return aminoAcidLoci.contains(index)
@@ -15,7 +15,7 @@ class Fragment(id: String, genes: Set<String>, nucleotideLoci: List<Int>, nucleo
 
     fun aminoAcidIndices(): List<Int> = aminoAcidLoci
 
-    fun intersectAminoAcidLoci(otherAminoAcidLoci: Collection<Int>): Fragment {
+    fun intersectAminoAcidLoci(otherAminoAcidLoci: Collection<Int>): AminoAcidFragment {
         val filteredIndexes = aminoAcidLoci
                 .mapIndexed { index: Int, loci: Int -> Pair(index, loci) }
                 .filter { (_, loci) -> loci in otherAminoAcidLoci }
@@ -24,7 +24,7 @@ class Fragment(id: String, genes: Set<String>, nucleotideLoci: List<Int>, nucleo
         val filteredAminoAcidLoci = filteredIndexes.map { aminoAcidLoci[it] }
         val filteredAminoAcids = filteredIndexes.map { aminoAcids[it] }
 
-        return Fragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides, filteredAminoAcidLoci, filteredAminoAcids)
+        return AminoAcidFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides, filteredAminoAcidLoci, filteredAminoAcids)
     }
 
 }

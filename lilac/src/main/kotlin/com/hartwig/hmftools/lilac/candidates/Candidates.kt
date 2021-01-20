@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.lilac.candidates
 
 import com.hartwig.hmftools.lilac.SequenceCount
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.nuc.NucleotideFiltering
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import org.apache.logging.log4j.LogManager
 
@@ -15,8 +15,7 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
         val logger = LogManager.getLogger(this::class.java)
     }
 
-    fun candidates(gene: String, aminoAcidBoundary: Set<Int>, nucleotideFragments: List<NucleotideFragment>): List<HlaSequence> {
-        val aminoAcidFragments = nucleotideFragments.map { it.toAminoAcidFragment() }
+    fun candidates(gene: String, aminoAcidBoundary: Set<Int>, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
 
         logger.info("Determining initial candidate set for gene HLA-$gene")
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
@@ -35,17 +34,17 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
         val aminoAcidCandidates = initialCandidates(aminoAcidCounts, nucleotideCandidates)
         logger.info(" ... ${aminoAcidCandidates.size} candidates after amino acid filtering")
 
-        val typeEvidenceFactory = PhasedEvidenceFactory(minBaseCount, minFragmentCount)
-        val typeEvidence = typeEvidenceFactory.evidence(aminoAcidFragments)
+        val phasedEvidenceFactory = PhasedEvidenceFactory(minBaseCount, minFragmentCount)
+        val phasedEvidence = phasedEvidenceFactory.evidence(aminoAcidFragments)
 
-        val result = filterCandidates(aminoAcidCandidates, typeEvidence)
-        logger.info(" ... ${result.size} candidates after phasing: " + result.map { it.allele }.joinToString(", "))
+        val phasedCandidates = filterCandidates(aminoAcidCandidates, phasedEvidence)
+        logger.info(" ... ${phasedCandidates.size} candidates after phasing: " + phasedCandidates.map { it.allele }.joinToString(", "))
 
-        for (phasedEvidence in typeEvidence) {
-            logger.debug(" ... $phasedEvidence")
+        for (phasedEvidence in phasedEvidence) {
+            logger.info(" ... $phasedEvidence")
         }
 
-        return result
+        return phasedCandidates
 
     }
 
@@ -89,7 +88,7 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
 
     private fun initialCandidates(aminoAcidCount: SequenceCount, candidates: List<HlaSequence>): List<HlaSequence> {
         var result = candidates
-        val locations = (0 until aminoAcidCount.length).toSet().filter { aminoAcidCount.depth(it) >= 20 }
+        val locations = (0 until aminoAcidCount.length).toSet().filter { aminoAcidCount.depth(it) >= minFragmentCount }
         for (location in locations) {
             result = filterCandidates(location, aminoAcidCount.sequenceAt(location), result)
         }

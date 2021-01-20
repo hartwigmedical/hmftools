@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac
 
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
-import com.hartwig.hmftools.lilac.read.Fragment
 import java.io.File
 import java.util.*
 import kotlin.math.min
@@ -24,11 +24,11 @@ class SequenceCount(private val minCount: Int, val length: Int) {
             return result
         }
 
-        fun aminoAcids(minCount: Int, fragments: List<Fragment>): SequenceCount {
-            val length = fragments.map { it.aminoAcidIndices().max() ?: -1 }.max()!! + 1
+        fun aminoAcids(minCount: Int, aminoAcidFragments: List<AminoAcidFragment>): SequenceCount {
+            val length = aminoAcidFragments.map { it.aminoAcidIndices().max() ?: -1 }.max()!! + 1
             val result = SequenceCount(minCount, length)
 
-            for (fragment in fragments) {
+            for (fragment in aminoAcidFragments) {
                 for (index in fragment.aminoAcidIndices()) {
                     val aminoAcid = fragment.aminoAcid(index)
                     if (aminoAcid != '.') {

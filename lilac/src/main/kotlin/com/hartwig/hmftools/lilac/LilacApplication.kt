@@ -2,6 +2,8 @@ package com.hartwig.hmftools.lilac
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
@@ -9,8 +11,6 @@ import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.coverag
 import com.hartwig.hmftools.lilac.hla.HlaComplex
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
-import com.hartwig.hmftools.lilac.nuc.NucleotideSpliceEnrichmentFactory
-import com.hartwig.hmftools.lilac.read.Fragment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
@@ -42,14 +42,15 @@ class LilacApplication : AutoCloseable, Runnable {
     val minBaseQual = 30
     val minBaseCount = 2
     val minFragmentCount = 25
+    val minConfirmedUniqueCoverage = 1
 
     val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
     val outputDir = "/Users/jon/hmf/analysis/hla/resources"
 
-    //        val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
-    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001R.hla.bam"
-//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002R.hla.bam"
-//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003R.hla.bam"
+//            val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004T.hla.bam"
+    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001T.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002T.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003T.hla.bam"
 
 
     override fun run() {
@@ -65,7 +66,8 @@ class LilacApplication : AutoCloseable, Runnable {
         val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
         val rawNucleotideFragments = readFromBam(bamFile)
         val geneEnrichedNucleotides = nucleotideGeneEnrichment.enrich(rawNucleotideFragments)
-        val nucleotideSpliceEnrichment = NucleotideSpliceEnrichmentFactory(minBaseCount, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+        val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minBaseCount, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, rawNucleotideFragments)
+
 
         logger.info("Reading nucleotide files")
         val nucleotideSequences = readNucleotideFiles(resourcesDir)
@@ -75,22 +77,23 @@ class LilacApplication : AutoCloseable, Runnable {
 
         // Candidates
         val candidateFactory = Candidates(minBaseCount, minFragmentCount, nucleotideSequences, aminoAcidSequences)
-        val aCandidates = candidateFactory.candidates("A", aProteinExonBoundaries, nucleotideSpliceEnrichment.typeANucleotides(geneEnrichedNucleotides))
-        val bCandidates = candidateFactory.candidates("B", bProteinExonBoundaries, nucleotideSpliceEnrichment.typeBNucleotides(geneEnrichedNucleotides))
-        val cCandidates = candidateFactory.candidates("C", cProteinExonBoundaries, nucleotideSpliceEnrichment.typeCNucleotides(geneEnrichedNucleotides))
+        val aCandidates = candidateFactory.candidates("A", aProteinExonBoundaries, aminoAcidPipeline.typeA())
+        val bCandidates = candidateFactory.candidates("B", bProteinExonBoundaries, aminoAcidPipeline.typeB())
+        val cCandidates = candidateFactory.candidates("C", cProteinExonBoundaries, aminoAcidPipeline.typeC())
+        val candidates = aCandidates + bCandidates + cCandidates
 //listOf<HlaSequence>()//
 
         // Coverage
-        val enrichedNucleotides = nucleotideSpliceEnrichment.allNucleotides(geneEnrichedNucleotides)
-        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, enrichedNucleotides)
-        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect allNucleotideExonBoundaries
-        val aminoAcidFragments = enrichedNucleotides.map { it.toAminoAcidFragment() }
+        val aminoAcidFragments = aminoAcidPipeline.combined()
+        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, aminoAcidFragments)
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
+
+        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect allNucleotideExonBoundaries
         aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
         nucleotideCounts.writeVertically("/Users/jon/hmf/analysis/hla/nucleotides.count.txt")
 
 
-        val candidates = aCandidates + bCandidates + cCandidates
+
         val candidateAlleles = candidates.map { it.allele }
         val candidateAlleleSpecificProteins = candidateAlleles.map { it.specificProtein() }
 
@@ -102,12 +105,12 @@ class LilacApplication : AutoCloseable, Runnable {
 
         logger.info("Calculating overall coverage")
         val groupCoverage = coverageFactory.groupCoverage(candidateAlleles)
-        val confirmedGroups = groupCoverage.filter { it.uniqueCoverage > 0 }.sortedDescending()
+        val confirmedGroups = groupCoverage.filter { it.uniqueCoverage > minConfirmedUniqueCoverage }.sortedDescending()
         logger.info("... found ${confirmedGroups.size} uniquely identifiable groups: " + confirmedGroups.joinToString(", "))
 
 
         val proteinCoverage = coverageFactory.proteinCoverage(candidateAlleles)
-        val confirmedProtein = proteinCoverage.filter { it.uniqueCoverage > 0 }.sortedDescending()
+        val confirmedProtein = proteinCoverage.filter { it.uniqueCoverage > minConfirmedUniqueCoverage }.sortedDescending()
         logger.info("... found ${confirmedProtein.size} uniquely identifiable proteins: " + confirmedProtein.joinToString(", "))
 
 
@@ -232,15 +235,15 @@ class LilacApplication : AutoCloseable, Runnable {
 
     }
 
-    private fun filterCandidatesOnExonBoundaryNucleotide(aminoAcidIndex: Int, minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<Fragment>): List<HlaSequence> {
-        val firstBaseCandidates = filterCandidatesOnNucleotides(minEvidence, candidates, fragments, aminoAcidIndex * 3)
-        return filterCandidatesOnNucleotides(minEvidence, firstBaseCandidates, fragments, aminoAcidIndex * 3 + 1, aminoAcidIndex * 3 + 2)
+    private fun filterCandidatesOnExonBoundaryNucleotide(aminoAcidIndex: Int, minEvidence: Int, candidates: Collection<HlaSequence>, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
+        val firstBaseCandidates = filterCandidatesOnNucleotides(minEvidence, candidates, aminoAcidFragments, aminoAcidIndex * 3)
+        return filterCandidatesOnNucleotides(minEvidence, firstBaseCandidates, aminoAcidFragments, aminoAcidIndex * 3 + 1, aminoAcidIndex * 3 + 2)
     }
 
-    private fun filterCandidatesOnExonBoundaries(exonBoundaries: Collection<Int>, minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<Fragment>): List<HlaSequence> {
+    private fun filterCandidatesOnExonBoundaries(exonBoundaries: Collection<Int>, minEvidence: Int, candidates: Collection<HlaSequence>, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
         var result = candidates.toList()
         for (exonBoundary in exonBoundaries) {
-            result = filterCandidatesOnExonBoundaryNucleotide(exonBoundary, minEvidence, result, fragments)
+            result = filterCandidatesOnExonBoundaryNucleotide(exonBoundary, minEvidence, result, aminoAcidFragments)
         }
 
         return result

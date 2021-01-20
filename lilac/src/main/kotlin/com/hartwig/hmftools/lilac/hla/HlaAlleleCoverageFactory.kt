@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.lilac.hla
 
-import com.hartwig.hmftools.lilac.read.Fragment
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import kotlin.math.roundToInt
 
 class HlaAlleleCoverageFactory(
-        private val fragments: List<Fragment>,
+        private val aminoAcidFragments: List<AminoAcidFragment>,
         private val aminoAcidLoci: Collection<Int>, private val aminoAcidSequences: Collection<HlaSequence>,
         private val nucleotideLoci: Collection<Int>, private val nucleotideSequences: Collection<HlaSequence>) {
 
@@ -56,7 +56,7 @@ class HlaAlleleCoverageFactory(
         val aminoAcids = aminoAcidSequences.filter { it.allele in alleles }
         val nucleotides = nucleotideSequences.filter { it.allele.specificProtein() in specificProteins }
 
-        return FragmentAlleles.create(fragments, aminoAcidLoci, aminoAcids, nucleotideLoci, nucleotides)
+        return FragmentAlleles.create(aminoAcidFragments, aminoAcidLoci, aminoAcids, nucleotideLoci, nucleotides)
     }
 
 
