@@ -38,6 +38,8 @@ public class Lims {
     @NotNull
     private final Set<String> blacklistedPatients;
     @NotNull
+    private final Set<String> blacklistedPatientsForCurationTumorLocations;
+    @NotNull
     private final HospitalModel hospitalModel;
     @NotNull
     private final LimsCohortModel limsCohortModel;
@@ -46,14 +48,15 @@ public class Lims {
             @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
             @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode,
             @NotNull final Map<String, LocalDate> preLimsArrivalDatesPerSampleId, @NotNull final Set<String> samplesIdsWithoutSamplingDate,
-            @NotNull final Set<String> blacklistedPatients, @NotNull final HospitalModel hospitalModel,
-            @NotNull final LimsCohortModel limsCohortModel) {
+            @NotNull final Set<String> blacklistedPatients, @NotNull final Set<String> blacklistedPatientsForCurationTumorLocations,
+            @NotNull final HospitalModel hospitalModel, @NotNull final LimsCohortModel limsCohortModel) {
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
         this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
         this.preLimsArrivalDatesPerSampleId = preLimsArrivalDatesPerSampleId;
         this.samplesIdsWithoutSamplingDate = samplesIdsWithoutSamplingDate;
         this.blacklistedPatients = blacklistedPatients;
+        this.blacklistedPatientsForCurationTumorLocations = blacklistedPatientsForCurationTumorLocations;
         this.hospitalModel = hospitalModel;
         this.limsCohortModel = limsCohortModel;
     }
@@ -131,6 +134,10 @@ public class Lims {
 
     public boolean isBlacklisted(@NotNull String patientId) {
         return blacklistedPatients.contains(patientId);
+    }
+
+    public boolean isBlacklistedForCurationTumorLocations(@NotNull String patientId) {
+        return blacklistedPatientsForCurationTumorLocations.contains(patientId);
     }
 
     @NotNull

@@ -141,7 +141,7 @@ public final class LoadClinicalData {
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, lims);
 
         LOGGER.info("Check for missing curation tumor location when info is known");
-        checkForMissingCuratedTumorLocations(sampleDataPerPatient, patients.values(), cmd.getOptionValue(REPORTING_DB_TSV));
+        checkForMissingCuratedTumorLocations(sampleDataPerPatient, patients.values(), cmd.getOptionValue(REPORTING_DB_TSV), lims);
 
         LOGGER.info("Writing curated primary tumors");
         DumpPrimaryTumorData.writeCuratedPrimaryTumorsToTSV(cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV), patients.values());
@@ -164,7 +164,7 @@ public final class LoadClinicalData {
     }
 
     private static void checkForMissingCuratedTumorLocations(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull Collection<Patient> patients, @NotNull String reportingDBTSv) throws IOException{
+            @NotNull Collection<Patient> patients, @NotNull String reportingDBTSv, @NotNull Lims lims) throws IOException{
         List<String> patientsInLims = Lists.newArrayList();
 
         List<String> reportedSamples = Lists.newArrayList();
@@ -174,9 +174,12 @@ public final class LoadClinicalData {
         }
         for (List<SampleData> sampleDataList : sampleDataPerPatient.values()) {
             for (SampleData sampleData : sampleDataList) {
-                if (!reportedSamples.contains(sampleData.sampleBarcode()) && sampleData.isSomaticTumorSample()) {
-                    patientsInLims.add(sampleData.sampleId().substring(0, 12));
+                if (!lims.isBlacklistedForCurationTumorLocations(sampleData.sampleId().substring(0, 12))) {
+                    if (!reportedSamples.contains(sampleData.sampleBarcode()) && sampleData.isSomaticTumorSample()) {
+                        patientsInLims.add(sampleData.sampleId().substring(0, 12));
+                    }
                 }
+
             }
         }
 

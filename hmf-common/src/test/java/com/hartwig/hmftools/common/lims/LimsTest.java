@@ -350,6 +350,7 @@ public class LimsTest {
         Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
         Set<String> sampleIdsWithoutSamplingDates = Sets.newHashSet();
         Set<String> blacklistedPatients = Sets.newHashSet();
+        Set<String> blacklistedPatientsCurationTumorLocation = Sets.newHashSet();
         HospitalModel hospitalModel = ImmutableHospitalModel.builder().build();
 
         return new Lims(dataPerSampleBarcode,
@@ -358,6 +359,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDates,
                 blacklistedPatients,
+                blacklistedPatientsCurationTumorLocation,
                 hospitalModel,
                 buildCohortModelFromSampleCohort(sample.cohort()));
     }
@@ -372,6 +374,7 @@ public class LimsTest {
         Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
         Set<String> sampleIdsWithoutSamplingDate = Sets.newHashSet();
         Set<String> blacklistedPatients = Sets.newHashSet();
+        Set<String> blacklistedPatientsCurationTumorLocation = Sets.newHashSet();
         HospitalModel hospitalModel = ImmutableHospitalModel.builder().build();
 
         return new Lims(dataPerSampleBarcode,
@@ -380,6 +383,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
+                blacklistedPatientsCurationTumorLocation,
                 hospitalModel,
                 buildCohortModelFromSampleCohort(sample.cohort()));
     }
@@ -398,6 +402,7 @@ public class LimsTest {
         Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
         Set<String> sampleIdsWithoutSamplingDate = Sets.newHashSet();
         Set<String> blacklistedPatients = Sets.newHashSet();
+        Set<String> blacklistedPatientsCurationTumorLocation = Sets.newHashSet();
         HospitalModel hospitalModel = ImmutableHospitalModel.builder().build();
 
         return new Lims(dataPerSampleBarcode,
@@ -406,6 +411,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
+                blacklistedPatientsCurationTumorLocation,
                 hospitalModel,
                 buildCohortModelFromSampleCohort(sample.cohort()));
     }
@@ -421,6 +427,7 @@ public class LimsTest {
 
         Set<String> sampleIdsWithoutSamplingDate = Sets.newHashSet();
         Set<String> blacklistedPatients = Sets.newHashSet();
+        Set<String> blacklistedPatientsCurationTumorLocation = Sets.newHashSet();
         HospitalModel hospitalModel = ImmutableHospitalModel.builder().build();
         LimsCohortModel cohortModel = ImmutableLimsCohortModel.builder().build();
 
@@ -430,6 +437,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
+                blacklistedPatientsCurationTumorLocation,
                 hospitalModel,
                 cohortModel);
     }
@@ -444,6 +452,7 @@ public class LimsTest {
         Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
         Set<String> sampleIdsWithoutSamplingDate = Sets.newHashSet();
         Set<String> blacklistedPatients = Sets.newHashSet();
+        Set<String> blacklistedPatientsCurationTumorLocation = Sets.newHashSet();
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
@@ -451,6 +460,7 @@ public class LimsTest {
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
                 blacklistedPatients,
+                blacklistedPatientsCurationTumorLocation,
                 hospitalModel,
                 buildCohortModelFromSampleCohort(sample.cohort()));
     }
