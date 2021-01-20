@@ -53,8 +53,6 @@ public class RnaExpression implements CuppaClassifier
     private final List<String> mRefCancerTypes;
     private final Map<String,Integer> mRefCancerSampleCounts; // needs to be build from the RNAs if less than the DNA samples available
 
-    private final Map<String,Map<String,double[]>> mRefGeneCancerPercentiles;
-    private final Map<String,String> mGeneIdNameMap;
     private final Map<String,Integer> mGeneIdIndexMap;
 
     private Matrix mRefSampleGeneExpression;
@@ -85,9 +83,6 @@ public class RnaExpression implements CuppaClassifier
         mRefCancerTypeGeneExpression = null;
         mRefCancerTypes = Lists.newArrayList();
         mGeneIdIndexMap = Maps.newHashMap();
-
-        mRefGeneCancerPercentiles = Maps.newHashMap();
-        mGeneIdNameMap = Maps.newHashMap();
 
         mSampleRnaExpression = null;
         mSampleIndexMap = Maps.newHashMap();

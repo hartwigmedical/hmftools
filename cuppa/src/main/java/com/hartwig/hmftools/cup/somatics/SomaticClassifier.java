@@ -446,39 +446,40 @@ public class SomaticClassifier implements CuppaClassifier
 
     private void addSnvPosSimilarities(final SampleData sample, final double[] sampleCounts, final List<SampleSimilarity> similarities)
     {
-        if(mRefSampleSnvPosFrequencies != null && mConfig.WriteSimilarities)
+        // not currently used
+        if(mRefSampleSnvPosFrequencies == null || !mConfig.WriteSimilarities)
+            return;
+
+        final List<SampleSimilarity> topMatches = Lists.newArrayList();
+
+        for(Map.Entry<String,Integer> entry : mRefSamplePosFreqIndex.entrySet())
         {
-            final List<SampleSimilarity> topMatches = Lists.newArrayList();
+            final String refSampleId = entry.getKey();
 
-            for(Map.Entry<String,Integer> entry : mRefSamplePosFreqIndex.entrySet())
+            if(refSampleId.equals(sample.Id))
+                continue;
+
+            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
+
+            if(refCancerType == null || !sample.isCandidateCancerType(refCancerType))
+                continue;
+
+            final double[] otherSampleCounts = mRefSampleSnvPosFrequencies.getCol(entry.getValue());
+
+            double css = calcCosineSim(sampleCounts, otherSampleCounts);
+
+            if(css < SNV_CSS_THRESHOLD)
+                continue;
+
+            if(mConfig.WriteSimilarities)
             {
-                final String refSampleId = entry.getKey();
-
-                if(refSampleId.equals(sample.Id))
-                    continue;
-
-                final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
-
-                if(refCancerType == null || !sample.isCandidateCancerType(refCancerType))
-                    continue;
-
-                final double[] otherSampleCounts = mRefSampleSnvPosFrequencies.getCol(entry.getValue());
-
-                double css = calcCosineSim(sampleCounts, otherSampleCounts);
-
-                if(css < SNV_CSS_THRESHOLD)
-                    continue;
-
-                if(mConfig.WriteSimilarities)
-                {
-                    recordCssSimilarity(
-                            topMatches, sample.Id, refSampleId, css, GENOMIC_POSITION_SIMILARITY.toString(),
-                            CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
-                }
+                recordCssSimilarity(
+                        topMatches, sample.Id, refSampleId, css, GENOMIC_POSITION_SIMILARITY.toString(),
+                        CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
             }
-
-            similarities.addAll(topMatches);
         }
+
+        similarities.addAll(topMatches);
     }
 
     private static final String SIG_NAME_2 = "Sig2";

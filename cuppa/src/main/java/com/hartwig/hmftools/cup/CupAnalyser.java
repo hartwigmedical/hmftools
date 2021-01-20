@@ -84,8 +84,8 @@ public class CupAnalyser
         if(mConfig.runClassifier(GENE_EXP))
             mClassifiers.add(new RnaExpression(mConfig, mSampleDataCache, cmd));
 
-        if(mConfig.runClassifier(CategoryType.ALT_SJ))
-            mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache));
+        //if(mConfig.runClassifier(CategoryType.ALT_SJ))
+        //    mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache));
 
         mSampleDataWriter = null;
         mSampleSimilarityWriter = null;

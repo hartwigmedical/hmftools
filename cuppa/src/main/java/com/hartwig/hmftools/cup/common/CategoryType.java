@@ -10,6 +10,9 @@ public enum CategoryType
     ALT_SJ,
     CLASSIFIER;
 
+    public static final String ALL_CATEGORIES = "ALL";
+    public static final String DNA_CATEGORIES = "DNA";
+
     public static boolean isDna(final CategoryType type)
     {
         return type == SNV || type == SV || type == SAMPLE_TRAIT || type == FEATURE;

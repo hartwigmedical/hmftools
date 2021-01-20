@@ -17,10 +17,13 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
+import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
+import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
+import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -110,7 +113,7 @@ public class CuppaConfig
     private static final String REF_TRAIT_RATE_FILE = "ref_trait_rate_file";
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
     private static final String REF_RNA_GENE_EXP_CANCER_FILE = "ref_gene_exp_cancer_file";
-    private static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
+    public static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
     private static final String REF_RNA_ALT_SJ_PREV_FILE = "ref_alt_sj_prev_file";
 
     public static final String WRITE_SIMS = "write_similarities";
@@ -131,9 +134,13 @@ public class CuppaConfig
 
         if(cmd.hasOption(CATEGORIES))
         {
-            if(cmd.getOptionValue(CATEGORIES).equals("ALL"))
+            if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
             {
-                // will run all classifiers
+                Arrays.stream(CategoryType.values()).forEach(x -> IncludedCategories.add(x));
+            }
+            else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
+            {
+                Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> IncludedCategories.add(x));
             }
             else
             {
@@ -143,10 +150,8 @@ public class CuppaConfig
         }
         else
         {
-            IncludedCategories.add(SNV);
-            IncludedCategories.add(SV);
-            IncludedCategories.add(FEATURE);
-            IncludedCategories.add(SAMPLE_TRAIT);
+            // just DNA by default
+            Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> IncludedCategories.add(x));
         }
 
         CUP_LOGGER.info("running classifiers: {}", IncludedCategories.isEmpty() ? "ALL" : IncludedCategories.toString());
