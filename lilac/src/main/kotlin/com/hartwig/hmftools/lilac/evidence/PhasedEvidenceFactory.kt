@@ -9,7 +9,7 @@ class PhasedEvidenceFactory(private val minBaseCount: Int, private val minFragme
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidAminoAcidFragments)
 
         val heterozygousIndices = aminoAcidCounts.heterozygousLoci()
-        val heterozygousEvidence = ExtendEvidence(minBaseCount, minFragmentCount, heterozygousIndices, aminoAcidAminoAcidFragments)
+        val heterozygousEvidence = ExtendEvidence(minFragmentCount, heterozygousIndices, aminoAcidAminoAcidFragments)
 
         val allEvidence = mutableSetOf<PhasedEvidence>()
         val initialEvidence = heterozygousEvidence.initialEvidence()
