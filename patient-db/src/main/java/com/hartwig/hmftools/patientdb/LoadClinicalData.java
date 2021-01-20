@@ -74,7 +74,7 @@ public final class LoadClinicalData {
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
     private static final String PIPELINE_VERSION = "pipeline_version_file";
 
-    private static final String REPORTING_DB_TSV  = "reporting_db_tsv";
+    private static final String REPORTING_DB_TSV = "reporting_db_tsv";
 
     private static final String RUNS_DIRECTORY = "runs_dir";
 
@@ -141,7 +141,7 @@ public final class LoadClinicalData {
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, lims);
 
         LOGGER.info("Check for missing curation tumor location when info is known");
-        checkForMissingCuratedTumorLocations(sampleDataPerPatient, patients.values(), cmd.getOptionValue(REPORTING_DB_TSV));
+        checkForMissingCuratedTumorLocations(sampleDataPerPatient, patients.values(), cmd.getOptionValue(REPORTING_DB_TSV), lims);
 
         LOGGER.info("Writing curated primary tumors");
         DumpPrimaryTumorData.writeCuratedPrimaryTumorsToTSV(cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV), patients.values());
@@ -164,21 +164,8 @@ public final class LoadClinicalData {
     }
 
     private static void checkForMissingCuratedTumorLocations(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull Collection<Patient> patients, @NotNull String reportingDBTSv) throws IOException{
-        List<String> patientsInLims = Lists.newArrayList();
-
-        List<String> reportedSamples = Lists.newArrayList();
-        for (ReportingEntry entry : ReportingDatabase.read(reportingDBTSv)) {
-            reportedSamples.add(entry.tumorBarcode());
-
-        }
-        for (List<SampleData> sampleDataList : sampleDataPerPatient.values()) {
-            for (SampleData sampleData : sampleDataList) {
-                if (!reportedSamples.contains(sampleData.sampleBarcode()) && sampleData.isSomaticTumorSample()) {
-                    patientsInLims.add(sampleData.sampleId().substring(0, 12));
-                }
-            }
-        }
+            @NotNull Collection<Patient> patients, @NotNull String reportingDBTSv, @NotNull Lims lims) throws IOException {
+        List<String> patientsInLims = determinePatientsForChecking(reportingDBTSv, sampleDataPerPatient, lims);
 
         for (Patient patient : patients) {
             if (patientsInLims.contains(patient.patientIdentifier())) {
@@ -193,7 +180,8 @@ public final class LoadClinicalData {
                 }
 
                 if (patient.patientIdentifier().startsWith("CORE") || patient.patientIdentifier().startsWith("WIDE")) {
-                    if (patient.baselineData().curatedPrimaryTumor().searchTerm().isEmpty() || patient.baselineData().curatedPrimaryTumor().searchTerm() == null) {
+                    if (patient.baselineData().curatedPrimaryTumor().searchTerm().isEmpty()
+                            || patient.baselineData().curatedPrimaryTumor().searchTerm() == null) {
                         LOGGER.warn("Could not extract tumor location {} of patient {}",
                                 patient.baselineData().curatedPrimaryTumor().searchTerm(),
                                 patient.patientIdentifier());
@@ -201,6 +189,29 @@ public final class LoadClinicalData {
                 }
             }
         }
+    }
+
+    @NotNull
+    private static List<String> determinePatientsForChecking(@NotNull String reportingDBTSv,
+            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull Lims lims) throws IOException{
+        List<String> patientsInLims = Lists.newArrayList();
+
+        List<String> reportedSamples = Lists.newArrayList();
+        for (ReportingEntry entry : ReportingDatabase.read(reportingDBTSv)) {
+            reportedSamples.add(entry.tumorBarcode());
+
+        }
+        for (List<SampleData> sampleDataList : sampleDataPerPatient.values()) {
+            for (SampleData sampleData : sampleDataList) {
+                if (!lims.isBlacklistedForCurationTumorLocations(sampleData.sampleId().substring(0, 12))) {
+                    if (!reportedSamples.contains(sampleData.sampleBarcode()) && sampleData.isSomaticTumorSample()) {
+                        patientsInLims.add(sampleData.sampleId().substring(0, 12));
+                    }
+                }
+
+            }
+        }
+        return patientsInLims;
     }
 
     @NotNull
@@ -593,7 +604,8 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV),
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV),
                 cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV),
-                cmd.getOptionValue(DOID_JSON), cmd.getOptionValue(REPORTING_DB_TSV));
+                cmd.getOptionValue(DOID_JSON),
+                cmd.getOptionValue(REPORTING_DB_TSV));
 
         if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
             allParamsPresent = allParamsPresent && DatabaseAccess.hasDatabaseConfig(cmd);
@@ -629,7 +641,7 @@ public final class LoadClinicalData {
 
         options.addOption(REPORTING_DB_TSV, true, "Path towards the reporting db tsv file.");
 
-                options.addOption(CPCT_ECRF_FILE, true, "Path towards the CPCT ecrf file.");
+        options.addOption(CPCT_ECRF_FILE, true, "Path towards the CPCT ecrf file.");
         options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the CPCT form status csv file.");
         options.addOption(DRUP_ECRF_FILE, true, "Path towards the DRUP ecrf file.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database.");
