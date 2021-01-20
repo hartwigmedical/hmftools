@@ -10,6 +10,8 @@ import com.hartwig.hmftools.ckb.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.drugclass.DrugClassFactory;
 import com.hartwig.hmftools.ckb.drug.Drug;
 import com.hartwig.hmftools.ckb.drug.DrugFactory;
+import com.hartwig.hmftools.ckb.gene.Gene;
+import com.hartwig.hmftools.ckb.gene.GeneFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -53,10 +55,10 @@ public class CkbImporterTestApp {
     }
 
     private static void readJsonData(@NotNull String ckbPath) throws IOException {
-        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
-        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
-//        readingGenes(ckbPath + GENES);
+       // List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
+      //  List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
+       // List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
+        List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
 //        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
 //        readingIndications(ckbPath + INDICATIONS);
 //        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
