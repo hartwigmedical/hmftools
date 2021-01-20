@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +44,8 @@ public class IndicationFactory {
 
                 while (reader.peek() != JsonToken.END_DOCUMENT) {
                     JsonObject indicationEntryObject = parser.parse(reader).getAsJsonObject();
+                    JsonDatamodelChecker indicationChecker = IndicationDataModelChecker.indicationObjectChecker();
+                    indicationChecker.check(indicationEntryObject);
 
                     indications.add(ImmutableIndication.builder()
                             .id(JsonFunctions.string(indicationEntryObject, "id"))
@@ -65,8 +68,11 @@ public class IndicationFactory {
     @NotNull
     public static List<IndicationEvidence> extractEvidence(@NotNull JsonArray jsonArray) {
         List<IndicationEvidence> evidences = Lists.newArrayList();
+        JsonDatamodelChecker indicationEvidenceChecker = IndicationDataModelChecker.indicationEvidenceObjectChecker();
+
         for (JsonElement evidence : jsonArray) {
             JsonObject evidenceJsonObject = evidence.getAsJsonObject();
+            indicationEvidenceChecker.check(evidenceJsonObject);
 
             evidences.add(ImmutableIndicationEvidence.builder()
                     .id(JsonFunctions.string(evidenceJsonObject, "id"))
@@ -87,6 +93,9 @@ public class IndicationFactory {
 
     @NotNull
     public static IndicationMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker indicationEvidenceMolecularProfileChecker = IndicationDataModelChecker.indicationEvidenceMolecularProfileObjectChecker();
+        indicationEvidenceMolecularProfileChecker.check(jsonObject);
+
         return ImmutableIndicationMolecularProfile.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
@@ -95,6 +104,9 @@ public class IndicationFactory {
 
     @NotNull
     public static IndicationTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker indicationEvidenceTherapyChecker = IndicationDataModelChecker.indicationEvidenceTherapyObjectChecker();
+        indicationEvidenceTherapyChecker.check(jsonObject);
+
         return ImmutableIndicationTherapy.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
@@ -104,6 +116,9 @@ public class IndicationFactory {
 
     @NotNull
     public static IndicationIndication extractIndication(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker indicationEvidenceIndicationChecker = IndicationDataModelChecker.indicationEvidenceIndicationObjectChecker();
+        indicationEvidenceIndicationChecker.check(jsonObject);
+
         return ImmutableIndicationIndication.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
@@ -114,8 +129,12 @@ public class IndicationFactory {
     @NotNull
     public static List<IndicationReference> extractReference(@NotNull JsonArray jsonArray) {
         List<IndicationReference> references = Lists.newArrayList();
+        JsonDatamodelChecker indicationEvidenceReferenceChecker = IndicationDataModelChecker.indicationEvidenceReferenceObjectChecker();
+
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
+            indicationEvidenceReferenceChecker.check(referenceJsonObject);
+
             references.add(ImmutableIndicationReference.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
@@ -129,8 +148,12 @@ public class IndicationFactory {
     @NotNull
     public static List<IndicationClinicalTrial> extractClinicalTrials(@NotNull JsonArray jsonArray) {
         List<IndicationClinicalTrial> clinicalTrials = Lists.newArrayList();
+        JsonDatamodelChecker indicationClinicalTrialChecker = IndicationDataModelChecker.indicationClinicaltrialObjectChecker();
+
         for (JsonElement clinicalTrial : jsonArray) {
             JsonObject clinicalTrialJsonObject = clinicalTrial.getAsJsonObject();
+            indicationClinicalTrialChecker.check(clinicalTrialJsonObject);
+
             clinicalTrials.add(ImmutableIndicationClinicalTrial.builder()
                     .nctId(JsonFunctions.string(clinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
@@ -144,16 +167,20 @@ public class IndicationFactory {
 
     @NotNull
     public static List<IndicationTherapy> extractTherapyList(@NotNull JsonArray jsonArray) {
-        List<IndicationTherapy> indications = Lists.newArrayList();
-        for (JsonElement indication : jsonArray) {
-            JsonObject indicationJsonObject = indication.getAsJsonObject();
-            indications.add(ImmutableIndicationTherapy.builder()
-                    .id(JsonFunctions.string(indicationJsonObject, "id"))
-                    .therapyName(JsonFunctions.string(indicationJsonObject, "therapyName"))
-                    .synonyms(JsonFunctions.nullableString(indicationJsonObject, "synonyms"))
+        List<IndicationTherapy> therapies = Lists.newArrayList();
+        JsonDatamodelChecker indicationClinicalTrialTherapiesChecker = IndicationDataModelChecker.indicationEvidenceTherapyObjectChecker();
+
+        for (JsonElement therapy : jsonArray) {
+            JsonObject therapyJsonObject = therapy.getAsJsonObject();
+            indicationClinicalTrialTherapiesChecker.check(therapyJsonObject);
+
+            therapies.add(ImmutableIndicationTherapy.builder()
+                    .id(JsonFunctions.string(therapyJsonObject, "id"))
+                    .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
+                    .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))
                     .build());
         }
-        return indications;
+        return therapies;
 
     }
 }
