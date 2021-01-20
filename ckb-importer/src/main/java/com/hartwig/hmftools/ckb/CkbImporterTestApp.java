@@ -14,6 +14,8 @@ import com.hartwig.hmftools.ckb.gene.Gene;
 import com.hartwig.hmftools.ckb.gene.GeneFactory;
 import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
 import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatusFactory;
+import com.hartwig.hmftools.ckb.indication.Indication;
+import com.hartwig.hmftools.ckb.indication.IndicationFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -61,9 +63,9 @@ public class CkbImporterTestApp {
         //  List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
         // List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
         // List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
-        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
-                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
-        //        readingIndications(ckbPath + INDICATIONS);
+      //  List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
+        //        GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
+                List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
         //        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
         //        readingReferences(ckbPath + REFERENCES);
         //        readingTherapies(ckbPath + THERAPIES);
@@ -71,11 +73,6 @@ public class CkbImporterTestApp {
         //        readingVariants(ckbPath + VARIANTS);
     }
 
-    private static void readingIndications(@NotNull String indicationsDir) throws IOException {
-        LOGGER.info("Start reading indications");
-
-        LOGGER.info("Finished reading indications");
-    }
 
     private static void readingMolecularProfiles(@NotNull String molecularProfilesDir) throws IOException {
         LOGGER.info("Start reading molecular profiles");
