@@ -46,7 +46,7 @@ class LilacApplication : AutoCloseable, Runnable {
     val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
     val outputDir = "/Users/jon/hmf/analysis/hla/resources"
 
-//        val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
+    //        val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
     val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001R.hla.bam"
 //    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002R.hla.bam"
 //    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003R.hla.bam"
@@ -83,7 +83,7 @@ class LilacApplication : AutoCloseable, Runnable {
         // Coverage
         val enrichedNucleotides = nucleotideSpliceEnrichment.allNucleotides(geneEnrichedNucleotides)
         val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, enrichedNucleotides)
-        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousIndices() intersect allNucleotideExonBoundaries
+        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect allNucleotideExonBoundaries
         val aminoAcidFragments = enrichedNucleotides.map { it.toAminoAcidFragment() }
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
         aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
@@ -97,9 +97,7 @@ class LilacApplication : AutoCloseable, Runnable {
         val aminoAcidCandidates = aminoAcidSequences.filter { it.allele in candidateAlleles }
         val nucleotideCandidates = nucleotideSequences.filter { it.allele.specificProtein() in candidateAlleleSpecificProteins }
 
-        val coverageFactory = HlaAlleleCoverageFactory(aminoAcidFragments,
-                aminoAcidCounts.heterozygousIndices(), aminoAcidCandidates,
-                nucleotideHeterozygousLoci, nucleotideCandidates)
+        val coverageFactory = HlaAlleleCoverageFactory(aminoAcidFragments, aminoAcidCounts.heterozygousLoci(), aminoAcidCandidates, nucleotideHeterozygousLoci, nucleotideCandidates)
 
 
         logger.info("Calculating overall coverage")

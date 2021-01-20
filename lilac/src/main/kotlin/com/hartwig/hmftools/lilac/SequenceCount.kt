@@ -45,7 +45,7 @@ class SequenceCount(private val minCount: Int, val length: Int) {
         count[index].compute(aminoAcid) { _, u -> (u ?: 0) + 1 }
     }
 
-    fun heterozygousIndices(): List<Int> {
+    fun heterozygousLoci(): List<Int> {
         return count.indices.filter { isHeterozygous(it) }
     }
 
