@@ -16,6 +16,6 @@ public abstract class GeneMolecularProfile {
     @NotNull
     public abstract String profileName();
 
-    @NotNull
+    @Nullable
     public abstract List<GeneProfileTreatmentApproache> profileTreatmentApproache();
 }

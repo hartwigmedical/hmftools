@@ -70,24 +70,6 @@ public class CkbImporterTestApp {
 
 
 
-    private static void readingDrugsClasses(@NotNull String drugsClassesDir) throws IOException {
-        LOGGER.info("Start reading drug classes");
-
-        LOGGER.info("Finished reading drug classes");
-    }
-
-    private static void readingDrugs(@NotNull String drugsDir) throws IOException {
-        LOGGER.info("Start reading drug");
-
-        LOGGER.info("Finished reading drug");
-    }
-
-    private static void readingGenes(@NotNull String genesDir) throws IOException {
-        LOGGER.info("Start reading genes");
-
-        LOGGER.info("Finished reading genes");
-    }
-
     private static void readingGlobalTherapyApprovalStatuses(@NotNull String globalTherpyApprovalStatusesDir) throws IOException {
         LOGGER.info("Start reading global therpy approval statuses");
 
