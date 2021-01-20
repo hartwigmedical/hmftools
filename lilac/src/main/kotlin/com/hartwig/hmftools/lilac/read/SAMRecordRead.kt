@@ -31,6 +31,11 @@ data class SAMRecordRead(val gene: String, val hlaNucIndexStart: Int, val readIn
         return if (reverseStrand) readBase.reverseCompliment() else readBase
     }
 
+    fun quality(loci: Int): Int {
+        val readIndex = readIndex(loci)
+        return samRecord.baseQualities[readIndex].toInt()
+    }
+
     override fun nucleotide(index: Int, minQual: Int): Char {
         val adjustedIndex = if (reverseStrand) readIndexStart - index + hlaNucIndexStart else index - hlaNucIndexStart + readIndexStart
         val quality = samRecord.baseQualities[adjustedIndex]

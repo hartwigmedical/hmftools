@@ -87,6 +87,7 @@ class LilacApplication : AutoCloseable, Runnable {
         val aminoAcidFragments = enrichedNucleotides.map { it.toAminoAcidFragment() }
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
         aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
+        nucleotideCounts.writeVertically("/Users/jon/hmf/analysis/hla/nucleotides.count.txt")
 
 
         val candidates = aCandidates + bCandidates + cCandidates

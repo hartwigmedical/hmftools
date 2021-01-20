@@ -4,7 +4,7 @@ import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.lilac.read.Fragment
 import com.hartwig.hmftools.lilac.read.SAMRecordRead
 
-open class NucleotideFragment(val id: String, private val nucleotideLoci: List<Int>, private val nucleotides: List<Char>, val genes: Set<String>) {
+open class NucleotideFragment(val id: String, private val nucleotideLoci: List<Int>, private val nucleotideQuality: List<Int>, private val nucleotides: List<Char>, val genes: Set<String>) {
 
     companion object {
 
@@ -22,12 +22,24 @@ open class NucleotideFragment(val id: String, private val nucleotideLoci: List<I
                 throw IllegalArgumentException("Fragment does not contain nucleotide at location $index")
             }
 
+            fun quality(index: Int): Int {
+                for (read in reads) {
+                    if (read.nucleotideIndices().contains(index)) {
+                        return read.quality(index)
+                    }
+                }
+                throw IllegalArgumentException("Fragment does not contain nucleotide at location $index")
+            }
+
+
             val nucleotideIndices = reads
                     .flatMap { it.nucleotideIndices(minBaseQual).toList() }
                     .distinct()
                     .sorted()
 
             val nucleotides = nucleotideIndices.map { nucleotide(it) }
+            val nucleotideQuality = nucleotideIndices.map { quality(it) }
+
             val id = reads[0].samRecord.readName + " -> " + reads[0].samRecord.alignmentStart
             val genes = mutableSetOf<String>()
             genes.add(reads[0].gene)
@@ -35,7 +47,7 @@ open class NucleotideFragment(val id: String, private val nucleotideLoci: List<I
                 genes.add(reads[1].gene)
             }
 
-            return NucleotideFragment(id, nucleotideIndices, nucleotides, genes)
+            return NucleotideFragment(id, nucleotideIndices, nucleotideQuality, nucleotides, genes)
         }
     }
 
@@ -67,6 +79,21 @@ open class NucleotideFragment(val id: String, private val nucleotideLoci: List<I
 
     fun nucleotideIndices(): List<Int> = nucleotideLoci
 
+    fun nucleotideQuality(): List<Int> = nucleotideQuality
+
+    fun qualityFilter(minBaseQual: Int): NucleotideFragment {
+        val qualityFilteredIndexes = nucleotideQuality
+                .mapIndexed {index:Int, quality: Int -> Pair(index, quality)}
+                .filter { (_, quality) -> quality >= minBaseQual }
+                .map {  (index, _) -> index}
+
+        val qualityFilteredNucleotideLoci = qualityFilteredIndexes.map { nucleotideLoci[it] }
+        val qualityFilteredNucleotides = qualityFilteredIndexes.map { nucleotides[it] }
+        val qualityFilteredNucleotideQuality = qualityFilteredIndexes.map { nucleotideQuality[it] }
+
+        return NucleotideFragment(id, qualityFilteredNucleotideLoci, qualityFilteredNucleotideQuality, qualityFilteredNucleotides, genes)
+    }
+
     fun toAminoAcidFragment(): Fragment {
         fun aminoAcid(index: Int): Char {
             val first = nucleotide(index * 3)
@@ -82,12 +109,12 @@ open class NucleotideFragment(val id: String, private val nucleotideLoci: List<I
 
         val aminoAcids = aminoAcidIndices.map { aminoAcid(it) }
 
-        return Fragment(id, nucleotideLoci, nucleotides, genes, aminoAcidIndices, aminoAcids)
+        return Fragment(id, nucleotideLoci, nucleotideQuality, nucleotides, genes, aminoAcidIndices, aminoAcids)
     }
 
     fun enrich(index: Int, nucleotide: Char): NucleotideFragment {
         assert(!containsNucleotide(index))
-        return NucleotideFragment(id, nucleotideLoci + index, nucleotides + nucleotide, genes)
+        return NucleotideFragment(id, nucleotideLoci + index, nucleotideQuality + 0, nucleotides + nucleotide, genes)
     }
 
 }
