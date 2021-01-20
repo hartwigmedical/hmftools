@@ -30,13 +30,13 @@ public class GlobalTherapyApprovalStatusFactory {
     @NotNull
     public static List<GlobalTherapyApprovalStatus> readingGlobalTherapyApprovalStatus(@NotNull String globalTherapyApprovalStatusDir)
             throws IOException {
-        LOGGER.info("Start reading genes");
+        LOGGER.info("Start reading global therapy approval status");
 
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusses = Lists.newArrayList();
         File[] filesGlobalTherapyApprovalStatus = new File(globalTherapyApprovalStatusDir).listFiles();
 
         if (filesGlobalTherapyApprovalStatus != null) {
-            LOGGER.info("The total files in the genes dir is {}", filesGlobalTherapyApprovalStatus.length);
+            LOGGER.info("The total files in the global therapy approval therapy status dir is {}", filesGlobalTherapyApprovalStatus.length);
 
             for (File globalTherapyApprovalStatus : filesGlobalTherapyApprovalStatus) {
                 JsonParser parser = new JsonParser();
@@ -57,6 +57,8 @@ public class GlobalTherapyApprovalStatusFactory {
                 }
             }
         }
+        LOGGER.info("Finished reading global therapy approval status");
+
         return globalTherapyApprovalStatusses;
     }
 

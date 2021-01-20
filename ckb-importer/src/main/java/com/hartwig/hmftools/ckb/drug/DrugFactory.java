@@ -66,6 +66,8 @@ public class DrugFactory {
                 }
             }
         }
+        LOGGER.info("Finished reading drug");
+
         return drugs;
     }
 

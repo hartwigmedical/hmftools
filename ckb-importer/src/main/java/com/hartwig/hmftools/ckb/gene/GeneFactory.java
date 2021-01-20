@@ -69,6 +69,8 @@ public class GeneFactory {
                 }
             }
         }
+        LOGGER.info("Finished reading genes");
+
         return genes;
     }
 

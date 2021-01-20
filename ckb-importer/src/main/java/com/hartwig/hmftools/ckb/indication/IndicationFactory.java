@@ -35,7 +35,7 @@ public class IndicationFactory {
         File[] filesIndications = new File(indicationDir).listFiles();
 
         if (filesIndications != null) {
-            LOGGER.info("The total files in the genes dir is {}", filesIndications.length);
+            LOGGER.info("The total files in the indication dir is {}", filesIndications.length);
 
             for (File indication : filesIndications) {
                 JsonParser parser = new JsonParser();
@@ -62,6 +62,8 @@ public class IndicationFactory {
                 }
             }
         }
+        LOGGER.info("Finished reading indications");
+
         return indications;
     }
 

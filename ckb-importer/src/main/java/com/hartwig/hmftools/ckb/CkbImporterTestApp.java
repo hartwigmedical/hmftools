@@ -28,8 +28,8 @@ public class CkbImporterTestApp {
     private static final Logger LOGGER = LogManager.getLogger(CkbImporterTestApp.class);
 
     private static final String CLINICAL_TRIALS = "clinicalTrials";
-    private static final String DRUG_CLASSES = "drugclass";
-    private static final String DRUGS = "drug";
+    private static final String DRUG_CLASSES = "drugclasses";
+    private static final String DRUGS = "drugs";
     private static final String GENES = "genes";
     private static final String GLOBAL_THERAPY_APPROVAL_STATUSES = "globalTherapyApprovalStatuses";
     private static final String INDICATIONS = "indications";
@@ -59,20 +59,19 @@ public class CkbImporterTestApp {
     }
 
     private static void readJsonData(@NotNull String ckbPath) throws IOException {
-        // List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        //  List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
-        // List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
-        // List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
-      //  List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
-        //        GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
-                List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
+        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
+        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
+        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
+        List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
+        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
+                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
+        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
         //        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
         //        readingReferences(ckbPath + REFERENCES);
         //        readingTherapies(ckbPath + THERAPIES);
         //        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
         //        readingVariants(ckbPath + VARIANTS);
     }
-
 
     private static void readingMolecularProfiles(@NotNull String molecularProfilesDir) throws IOException {
         LOGGER.info("Start reading molecular profiles");
