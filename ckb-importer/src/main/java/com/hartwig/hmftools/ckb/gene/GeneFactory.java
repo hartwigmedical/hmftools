@@ -38,7 +38,6 @@ public class GeneFactory {
             LOGGER.info("The total files in the genes dir is {}", filesGenes.length);
 
             for (File gene : filesGenes) {
-                LOGGER.info(gene);
                 JsonParser parser = new JsonParser();
                 JsonReader reader = new JsonReader(new FileReader(gene));
                 reader.setLenient(true);

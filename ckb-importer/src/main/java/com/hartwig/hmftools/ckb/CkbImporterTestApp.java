@@ -12,6 +12,8 @@ import com.hartwig.hmftools.ckb.drug.Drug;
 import com.hartwig.hmftools.ckb.drug.DrugFactory;
 import com.hartwig.hmftools.ckb.gene.Gene;
 import com.hartwig.hmftools.ckb.gene.GeneFactory;
+import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
+import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatusFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -55,25 +57,18 @@ public class CkbImporterTestApp {
     }
 
     private static void readJsonData(@NotNull String ckbPath) throws IOException {
-       // List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-      //  List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
-       // List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
-        List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
-//        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
-//        readingIndications(ckbPath + INDICATIONS);
-//        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
-//        readingReferences(ckbPath + REFERENCES);
-//        readingTherapies(ckbPath + THERAPIES);
-//        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
-//        readingVariants(ckbPath + VARIANTS);
-    }
-
-
-
-    private static void readingGlobalTherapyApprovalStatuses(@NotNull String globalTherpyApprovalStatusesDir) throws IOException {
-        LOGGER.info("Start reading global therpy approval statuses");
-
-        LOGGER.info("Finished reading global therpy approval statuses");
+        // List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
+        //  List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
+        // List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
+        // List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
+        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
+                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
+        //        readingIndications(ckbPath + INDICATIONS);
+        //        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
+        //        readingReferences(ckbPath + REFERENCES);
+        //        readingTherapies(ckbPath + THERAPIES);
+        //        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
+        //        readingVariants(ckbPath + VARIANTS);
     }
 
     private static void readingIndications(@NotNull String indicationsDir) throws IOException {
