@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
@@ -109,8 +108,6 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final ChordDAO chordDAO;
     @NotNull
-    private final ClinicalEvidenceDAO clinicalEvidenceDAO;
-    @NotNull
     private final ProtectDAO protectDAO;
     @NotNull
     private final DriverGenePanelDAO driverGenePanelDAO;
@@ -144,7 +141,6 @@ public class DatabaseAccess implements AutoCloseable {
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
-        clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
         driverGenePanelDAO = new DriverGenePanelDAO(context);
         germlineVariantDAO = new GermlineVariantDAO(context);
     }
@@ -410,10 +406,6 @@ public class DatabaseAccess implements AutoCloseable {
         chordDAO.writeChord(sample, chordAnalysis);
     }
 
-    public void writeClinicalEvidence(@NotNull String sample, @NotNull List<EvidenceItem> items) {
-        clinicalEvidenceDAO.writeClinicalEvidence(sample, items);
-    }
-
     public void writeRNA(@NotNull Set<String> samples) {
         rnaDAO.write(samples);
     }
@@ -474,7 +466,7 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Deleting CHORD data for sample: {}", sample);
         chordDAO.deleteChordForSample(sample);
 
-        LOGGER.info("Deleting amber data for sample: {}", sample);
+        LOGGER.info("Deleting AMBER data for sample: {}", sample);
         amberDAO.deleteAmberRecordsForSample(sample);
 
         LOGGER.info("Deleting purity data for sample: {}", sample);
@@ -504,8 +496,7 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Deleting signatures for sample: {}", sample);
         signatureDAO.deleteSignatureDataForSample(sample);
 
-        LOGGER.info("Deleting evidence data for sample: {}", sample);
-        clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
+        LOGGER.info("Deleting PROTECT data for sample: {}", sample);
         protectDAO.deleteEvidenceForSample(sample);
 
         LOGGER.info("Deleting driver catalog for sample: {}", sample);
