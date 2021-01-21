@@ -49,7 +49,7 @@ public class Coverage {
     }
 
     @NotNull
-    private List<GeneCoverage> createGeneCoverage(Set<String> genes, Collection<NamedBed> panel) {
+    private List<GeneCoverage> createGeneCoverage(@NotNull Set<String> genes, @NotNull Collection<NamedBed> panel) {
         final List<GeneCoverage> result = Lists.newArrayList();
         for (String gene : genes) {
             List<NamedBed> exons = panel.stream().filter(x -> x.name().equals(gene)).collect(Collectors.toList());
@@ -60,5 +60,4 @@ public class Coverage {
 
         return result;
     }
-
 }
