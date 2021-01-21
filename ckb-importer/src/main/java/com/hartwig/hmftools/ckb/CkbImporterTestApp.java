@@ -16,6 +16,8 @@ import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprova
 import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatusFactory;
 import com.hartwig.hmftools.ckb.indication.Indication;
 import com.hartwig.hmftools.ckb.indication.IndicationFactory;
+import com.hartwig.hmftools.ckb.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.molecularprofile.MolecularprofileFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -59,14 +61,14 @@ public class CkbImporterTestApp {
     }
 
     private static void readJsonData(@NotNull String ckbPath) throws IOException {
-        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
-        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
-        List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
-        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
-                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
-        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
-        //        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
+//        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
+//        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
+//        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
+//        List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
+//        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
+//                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
+//        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
+         List<MolecularProfile> molecularProfiles = MolecularprofileFactory.readingMolecularprofile(ckbPath + MOLECULAR_PROFILES);
         //        readingReferences(ckbPath + REFERENCES);
         //        readingTherapies(ckbPath + THERAPIES);
         //        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
