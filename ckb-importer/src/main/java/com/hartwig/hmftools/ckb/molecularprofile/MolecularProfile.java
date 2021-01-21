@@ -31,4 +31,16 @@ public abstract class MolecularProfile {
     @NotNull
     public abstract MolecularProfileComplexMolecularProfileEvidence complexMolecularProfileEvidence();
 
+    @NotNull
+    public abstract MolecularProfileTreatmentApproachEvidence treatmentApproachEvidence();
+
+    @NotNull
+    public abstract List<MolecularProfileVariantAssociatedClinicalTrials> variantAssociatedClinicalTrial();
+
+    @NotNull
+    public abstract MolecularProfileVariantLevelEvidence variantLevelEvidence();
+
+    @NotNull
+    public abstract MolecularProfileExtendedEvidence extendedEvidence();
+
 }

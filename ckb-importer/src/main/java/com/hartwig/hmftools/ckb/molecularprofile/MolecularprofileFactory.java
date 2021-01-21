@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +44,8 @@ public class MolecularprofileFactory {
 
                 while (reader.peek() != JsonToken.END_DOCUMENT) {
                     JsonObject molecularProfileEntryObject = parser.parse(reader).getAsJsonObject();
+                    JsonDatamodelChecker molecularProfileChecker = MolecularProfileDataModelChecker.molecularProfileObjectChecker();
+                    molecularProfileChecker.check(molecularProfileEntryObject);
 
                     molecularProfiles.add(ImmutableMolecularProfile.builder()
                             .id(JsonFunctions.string(molecularProfileEntryObject, "id"))
@@ -54,6 +57,12 @@ public class MolecularprofileFactory {
                             .updateDate(JsonFunctions.string(molecularProfileEntryObject, "updateDate"))
                             .complexMolecularProfileEvidence(extractComplexMolecularProfileEvidence(molecularProfileEntryObject.getAsJsonObject(
                                     "complexMolecularProfileEvidence")))
+                            .treatmentApproachEvidence(extractTreatmentApproachEvidence(molecularProfileEntryObject.getAsJsonObject(
+                                    "treatmentApproachEvidence")))
+                            .variantAssociatedClinicalTrial(extractVariantAssociatedClinicalTrials(molecularProfileEntryObject.getAsJsonArray(
+                                    "variantAssociatedClinicalTrials")))
+                            .variantLevelEvidence(extractVariantlevelEvidence(molecularProfileEntryObject.getAsJsonObject("variantLevelEvidence")))
+                            .extendedEvidence(extractExtendedEvidence(molecularProfileEntryObject.getAsJsonObject("extendedEvidence")))
                             .build());
                 }
             }
@@ -66,9 +75,11 @@ public class MolecularprofileFactory {
     @NotNull
     public static List<MolecularProfileGeneVariant> extractGeneVariant(@NotNull JsonArray jsonArray) {
         List<MolecularProfileGeneVariant> geneVariants = Lists.newArrayList();
+        JsonDatamodelChecker geneVariantChecker = MolecularProfileDataModelChecker.molecularProfileGeneVariantObjectChecker();
 
         for (JsonElement geneVariant : jsonArray) {
             JsonObject geneVariantJsonObject = geneVariant.getAsJsonObject();
+            geneVariantChecker.check(geneVariantJsonObject);
 
             geneVariants.add(ImmutableMolecularProfileGeneVariant.builder()
                     .id(JsonFunctions.string(geneVariantJsonObject, "id"))
@@ -83,14 +94,17 @@ public class MolecularprofileFactory {
     @NotNull
     public static List<MolecularProfileProfileTreatmentApproache> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
         List<MolecularProfileProfileTreatmentApproache> profileTreatmentApproaches = Lists.newArrayList();
+        JsonDatamodelChecker profileTreatmentApproachChecker =
+                MolecularProfileDataModelChecker.molecularProfileProfileTreatmentApproacjObjectChecker();
 
         for (JsonElement profileTreatmentApproach : jsonArray) {
             JsonObject profileTreatmentApproachJsonObject = profileTreatmentApproach.getAsJsonObject();
+            profileTreatmentApproachChecker.check(profileTreatmentApproachJsonObject);
 
             profileTreatmentApproaches.add(ImmutableMolecularProfileProfileTreatmentApproache.builder()
                     .id(JsonFunctions.string(profileTreatmentApproachJsonObject, "id"))
-                    .name(JsonFunctions.string(profileTreatmentApproachJsonObject, "id"))
-                    .profileName(JsonFunctions.string(profileTreatmentApproachJsonObject, "id"))
+                    .name(JsonFunctions.string(profileTreatmentApproachJsonObject, "name"))
+                    .profileName(JsonFunctions.string(profileTreatmentApproachJsonObject, "profileName"))
                     .build());
         }
         return profileTreatmentApproaches;
@@ -98,6 +112,10 @@ public class MolecularprofileFactory {
 
     @NotNull
     public static MolecularProfileComplexMolecularProfileEvidence extractComplexMolecularProfileEvidence(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker complexMolecularProfileEvidenceChecker =
+                MolecularProfileDataModelChecker.molecularProfileComplexMolecularProfileEvidence();
+        complexMolecularProfileEvidenceChecker.check(jsonObject);
+
         return ImmutableMolecularProfileComplexMolecularProfileEvidence.builder()
                 .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
                 .complexMolecularProfileEvidence(extractComplexMolecularProfileEvidenceList(jsonObject.getAsJsonArray(
@@ -109,9 +127,13 @@ public class MolecularprofileFactory {
     public static List<MolecularProfileComplexMolecularProfileEvidenceList> extractComplexMolecularProfileEvidenceList(
             @NotNull JsonArray jsonArray) {
         List<MolecularProfileComplexMolecularProfileEvidenceList> complexMolecularProfileEvidenceList = Lists.newArrayList();
+        JsonDatamodelChecker complexMolecularProfileEvidenceListChecker =
+                MolecularProfileDataModelChecker.molecularProfileComplexMolecularProfileEvidenceList();
 
         for (JsonElement complexMolecularProfileEvidence : jsonArray) {
             JsonObject complexMolecularProfileEvidenceJsonObject = complexMolecularProfileEvidence.getAsJsonObject();
+            complexMolecularProfileEvidenceListChecker.check(complexMolecularProfileEvidenceJsonObject);
+
             complexMolecularProfileEvidenceList.add(ImmutableMolecularProfileComplexMolecularProfileEvidenceList.builder()
                     .id(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "approvalStatus"))
@@ -133,6 +155,9 @@ public class MolecularprofileFactory {
 
     @NotNull
     public static MolecularProfileMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker molecularProfileChecker = MolecularProfileDataModelChecker.molecularProfileMolecularprofile();
+        molecularProfileChecker.check(jsonObject);
+
         return ImmutableMolecularProfileMolecularProfile.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
@@ -141,6 +166,9 @@ public class MolecularprofileFactory {
 
     @NotNull
     public static MolecularProfileTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.molecularProfileTherapy();
+        therapyChecker.check(jsonObject);
+
         return ImmutableMolecularProfileTherapy.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
@@ -150,6 +178,9 @@ public class MolecularprofileFactory {
 
     @NotNull
     public static MolecularProfileIndication extractIndication(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker indicationChecker = MolecularProfileDataModelChecker.molecularProfileIndication();
+        indicationChecker.check(jsonObject);
+
         return ImmutableMolecularProfileIndication.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
@@ -160,15 +191,17 @@ public class MolecularprofileFactory {
     @NotNull
     public static List<MolecularProfileReferences> extractReference(@NotNull JsonArray jsonArray) {
         List<MolecularProfileReferences> references = Lists.newArrayList();
+        JsonDatamodelChecker referenceChecker = MolecularProfileDataModelChecker.molecularProfileReference();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
+            referenceChecker.check(referenceJsonObject);
 
             references.add(ImmutableMolecularProfileReferences.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
-                    .pubMedId(JsonFunctions.string(referenceJsonObject, "id"))
-                    .title(JsonFunctions.string(referenceJsonObject, "id"))
-                    .url(JsonFunctions.string(referenceJsonObject, "id"))
+                    .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
+                    .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
+                    .url(JsonFunctions.nullableString(referenceJsonObject, "url"))
                     .build());
         }
         return references;
@@ -177,9 +210,12 @@ public class MolecularprofileFactory {
     @NotNull
     public static List<MolecularProfileRelevantTreatmentApproach> extractRelevantTreatmentApproach(@NotNull JsonArray jsonArray) {
         List<MolecularProfileRelevantTreatmentApproach> relevantTreatmentApproaches = Lists.newArrayList();
+        JsonDatamodelChecker relevantTreatmentApproachChecker =
+                MolecularProfileDataModelChecker.molecularProfileRelevantTreatmentApproach();
 
         for (JsonElement relevantTreatmentApproach : jsonArray) {
             JsonObject relevantTreatmentApproachJsonObject = relevantTreatmentApproach.getAsJsonObject();
+            relevantTreatmentApproachChecker.check(relevantTreatmentApproachJsonObject);
 
             relevantTreatmentApproaches.add(ImmutableMolecularProfileRelevantTreatmentApproach.builder()
                     .id(JsonFunctions.string(relevantTreatmentApproachJsonObject, "id"))
@@ -189,4 +225,172 @@ public class MolecularprofileFactory {
         }
         return relevantTreatmentApproaches;
     }
+
+    @NotNull
+    public static MolecularProfileTreatmentApproachEvidence extractTreatmentApproachEvidence(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker treatmentApproachEvidenceeChecker =
+                MolecularProfileDataModelChecker.molecularProfileTreatmentApproachEvidence();
+        treatmentApproachEvidenceeChecker.check(jsonObject);
+
+        return ImmutableMolecularProfileTreatmentApproachEvidence.builder()
+                .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
+                .treatmentApproachEvidenceList(extractTreatmentApproachEvidenceList(jsonObject.getAsJsonArray("treatmentApproachEvidence")))
+                .build();
+    }
+
+    @NotNull
+    public static List<MolecularProfileTreatmentApproachEvidenceList> extractTreatmentApproachEvidenceList(@NotNull JsonArray jsonArray) {
+        List<MolecularProfileTreatmentApproachEvidenceList> treatmentApproachEvidenceList = Lists.newArrayList();
+        JsonDatamodelChecker treatmentApproachEvidenceListChecker =
+                MolecularProfileDataModelChecker.molecularProfileTreatmentApproachEvidenceList();
+
+        for (JsonElement treatmentApproachEvidence : jsonArray) {
+            JsonObject treatmentApproachEvidenceJsonObject = treatmentApproachEvidence.getAsJsonObject();
+            treatmentApproachEvidenceListChecker.check(treatmentApproachEvidenceJsonObject);
+
+            treatmentApproachEvidenceList.add(ImmutableMolecularProfileTreatmentApproachEvidenceList.builder()
+                    .id(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "id"))
+                    .approvalStatus(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "approvalStatus"))
+                    .evidenceType(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "evidenceType"))
+                    .efficacyEvidence(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "efficacyEvidence"))
+                    .molecularProfile(extractMolecularProfile(treatmentApproachEvidenceJsonObject.getAsJsonObject("molecularProfile")))
+                    .therapy(extractTherapy(treatmentApproachEvidenceJsonObject.getAsJsonObject("therapy")))
+                    .indication(extractIndication(treatmentApproachEvidenceJsonObject.getAsJsonObject("indication")))
+                    .responseType(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "responseType"))
+                    .reference(extractReference(treatmentApproachEvidenceJsonObject.getAsJsonArray("references")))
+                    .ampCapAscoEvidenceLevel(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
+                    .ampCapAscoInferredTier(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "ampCapAscoInferredTier"))
+                    .relevantTreatmentApproach(extractRelevantTreatmentApproach(treatmentApproachEvidenceJsonObject.getAsJsonArray(
+                            "relevantTreatmentApproaches")))
+                    .build());
+        }
+        return treatmentApproachEvidenceList;
+    }
+
+    @NotNull
+    public static List<MolecularProfileVariantAssociatedClinicalTrials> extractVariantAssociatedClinicalTrials(
+            @NotNull JsonArray jsonArray) {
+        List<MolecularProfileVariantAssociatedClinicalTrials> variantAssociatedClinicalTrials = Lists.newArrayList();
+        JsonDatamodelChecker variantAssociatedClinicalTrialChecker = MolecularProfileDataModelChecker.variantAssociatedClinicalTrial();
+
+        for (JsonElement variantAssociatedClinicalTrial : jsonArray) {
+            JsonObject variantAssociatedClinicalTrialJsonObject = variantAssociatedClinicalTrial.getAsJsonObject();
+            variantAssociatedClinicalTrialChecker.check(variantAssociatedClinicalTrialJsonObject);
+
+            variantAssociatedClinicalTrials.add(ImmutableMolecularProfileVariantAssociatedClinicalTrials.builder()
+                    .nctId(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "nctId"))
+                    .title(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "title"))
+                    .phase(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "phase"))
+                    .recruitment(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "recruitment"))
+                    .therapy(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .build());
+        }
+        return variantAssociatedClinicalTrials;
+    }
+
+    @NotNull
+    public static List<MolecularProfileTherapy> extractTherapyList(@NotNull JsonArray jsonArray) {
+        List<MolecularProfileTherapy> therapies = Lists.newArrayList();
+        JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.molecularProfileTherapy();
+
+        for (JsonElement therapy : jsonArray) {
+            JsonObject therapyJsonObject = therapy.getAsJsonObject();
+            therapyChecker.check(therapyJsonObject);
+
+            therapies.add(ImmutableMolecularProfileTherapy.builder()
+                    .id(JsonFunctions.string(therapyJsonObject, "id"))
+                    .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
+                    .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))
+                    .build());
+        }
+        return therapies;
+
+    }
+
+    @NotNull
+    public static MolecularProfileVariantLevelEvidence extractVariantlevelEvidence(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker variantLevelEvidenceChecker =
+                MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidence();
+        variantLevelEvidenceChecker.check(jsonObject);
+
+        return ImmutableMolecularProfileVariantLevelEvidence.builder()
+                .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
+                .variantLevelEvidenceList(extractVariantlevelEvidenceList(jsonObject.getAsJsonArray("variantLevelEvidences")))
+                .build();
+    }
+
+    @NotNull
+    public static List<MolecularProfileVariantLevelEvidenceList> extractVariantlevelEvidenceList(@NotNull JsonArray jsonArray) {
+        List<MolecularProfileVariantLevelEvidenceList> variantlevelEvidenceList = Lists.newArrayList();
+        JsonDatamodelChecker variantlevelEvidenceListChecker =
+                MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidenceList();
+
+        for (JsonElement variantLevelEvidence : jsonArray) {
+            JsonObject variantLevelEvidenceJsonObject = variantLevelEvidence.getAsJsonObject();
+            variantlevelEvidenceListChecker.check(variantLevelEvidenceJsonObject);
+
+            variantlevelEvidenceList.add(ImmutableMolecularProfileVariantLevelEvidenceList.builder()
+                    .id(JsonFunctions.string(variantLevelEvidenceJsonObject, "id"))
+                    .approvalStatus(JsonFunctions.string(variantLevelEvidenceJsonObject, "approvalStatus"))
+                    .evidenceType(JsonFunctions.string(variantLevelEvidenceJsonObject, "evidenceType"))
+                    .efficacyEvidence(JsonFunctions.string(variantLevelEvidenceJsonObject, "efficacyEvidence"))
+                    .molecularProfile(extractMolecularProfile(variantLevelEvidenceJsonObject.getAsJsonObject("molecularProfile")))
+                    .therapy(extractTherapy(variantLevelEvidenceJsonObject.getAsJsonObject("therapy")))
+                    .indication(extractIndication(variantLevelEvidenceJsonObject.getAsJsonObject("indication")))
+                    .responseType(JsonFunctions.string(variantLevelEvidenceJsonObject, "responseType"))
+                    .reference(extractReference(variantLevelEvidenceJsonObject.getAsJsonArray("references")))
+                    .ampCapAscoEvidenceLevel(JsonFunctions.string(variantLevelEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
+                    .ampCapAscoInferredTier(JsonFunctions.string(variantLevelEvidenceJsonObject, "ampCapAscoInferredTier"))
+                    .relevantTreatmentApproach(extractRelevantTreatmentApproach(variantLevelEvidenceJsonObject.getAsJsonArray(
+                            "relevantTreatmentApproaches")))
+                    .build());
+        }
+        return variantlevelEvidenceList;
+    }
+
+    @NotNull
+    public static MolecularProfileExtendedEvidence extractExtendedEvidence(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker extendedEvidenceChecker =
+                MolecularProfileDataModelChecker.extendedEvidenceEvidence();
+        extendedEvidenceChecker.check(jsonObject);
+
+        return ImmutableMolecularProfileExtendedEvidence.builder()
+                .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
+                .extendedEvidenceList(extractExtendedEvidenceList(jsonObject.getAsJsonArray("extendedEvidence")))
+                .build();
+    }
+
+    @NotNull
+    public static List<MolecularProfileExtendedEvidenceList> extractExtendedEvidenceList(@NotNull JsonArray jsonArray) {
+        List<MolecularProfileExtendedEvidenceList> extendedEvidenceList = Lists.newArrayList();
+        JsonDatamodelChecker extendedEvidenceListChecker =
+                MolecularProfileDataModelChecker.extendedEvidenceList();
+
+        for (JsonElement extendedEvidence : jsonArray) {
+            JsonObject extendedEvidenceJsonObject = extendedEvidence.getAsJsonObject();
+            extendedEvidenceListChecker.check(extendedEvidenceJsonObject);
+
+            extendedEvidenceList.add(ImmutableMolecularProfileExtendedEvidenceList.builder()
+                    .id(JsonFunctions.string(extendedEvidenceJsonObject, "id"))
+                    .approvalStatus(JsonFunctions.string(extendedEvidenceJsonObject, "approvalStatus"))
+                    .evidenceType(JsonFunctions.string(extendedEvidenceJsonObject, "evidenceType"))
+                    .efficacyEvidence(JsonFunctions.string(extendedEvidenceJsonObject, "efficacyEvidence"))
+                    .molecularProfile(extractMolecularProfile(extendedEvidenceJsonObject.getAsJsonObject("molecularProfile")))
+                    .therapy(extractTherapy(extendedEvidenceJsonObject.getAsJsonObject("therapy")))
+                    .indication(extractIndication(extendedEvidenceJsonObject.getAsJsonObject("indication")))
+                    .responseType(JsonFunctions.string(extendedEvidenceJsonObject, "responseType"))
+                    .reference(extractReference(extendedEvidenceJsonObject.getAsJsonArray("references")))
+                    .ampCapAscoEvidenceLevel(JsonFunctions.string(extendedEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
+                    .ampCapAscoInferredTier(JsonFunctions.string(extendedEvidenceJsonObject, "ampCapAscoInferredTier"))
+
+                    .build());
+        }
+        return extendedEvidenceList;
+    }
+
+
+
+
+
+
 }
