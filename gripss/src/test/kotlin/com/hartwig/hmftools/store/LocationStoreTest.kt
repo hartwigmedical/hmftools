@@ -15,6 +15,17 @@ class LocationStoreTest {
     private val contigComparator = ContigComparator(defaultContigs)
 
     @Test
+    fun testLargeBreakend() {
+        val entry1 = Breakend.fromBed("1\t999999\t5000000\t.\t.\t+")
+        val store = LocationStore(contigComparator, listOf(entry1), listOf())
+        Assert.assertTrue(store.contains(Breakend("1", 1_000_000, 1_000_000, 1)))
+        Assert.assertTrue(store.contains(Breakend("1", 2_000_000, 2_000_000, 1)))
+        Assert.assertTrue(store.contains(Breakend("1", 3_000_000, 3_000_000, 1)))
+        Assert.assertTrue(store.contains(Breakend("1", 4_000_000, 4_000_000, 1)))
+        Assert.assertTrue(store.contains(Breakend("1", 5_000_000, 5_000_000, 1)))
+    }
+
+    @Test
     fun testContainSingle() {
         val entry1 = Breakend.fromBed("1\t665\t666\t.\t440\t+")
         val entry2 = Breakend.fromBed("1\t766\t767\t.\t440\t+")

@@ -130,6 +130,8 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
+- Upcoming
+ - Fix hotspot matching
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.10)
   - Removed viral insertion exception from normal relative support filter
   - Add EventType flag [DEL, INS, DUP, INV, SGL, BND]

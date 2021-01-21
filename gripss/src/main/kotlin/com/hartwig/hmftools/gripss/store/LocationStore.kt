@@ -32,12 +32,11 @@ class LocationStore private constructor(private val compare: ContigComparator, p
 
         private fun Breakend.locationKey(): List<String> {
             val startPositionKey = roundedPosition(this.start)
-            val endPositionKey = roundedPosition(this.start)
+            val endPositionKey = roundedPosition(this.end)
 
             val result = mutableListOf<String>()
-            result.add("${this.contig}:${this.orientation}:${startPositionKey}")
-            if (startPositionKey != endPositionKey) {
-                result.add("${this.contig}:${this.orientation}:${endPositionKey}")
+            for (key in startPositionKey..endPositionKey) {
+                result.add("${this.contig}:${this.orientation}:${key}")
             }
 
             return result
