@@ -48,9 +48,9 @@ class LilacApplication : AutoCloseable, Runnable {
     val outputDir = "/Users/jon/hmf/analysis/hla/resources"
 
 //            val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004T.hla.bam"
-//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001T.hla.bam"
+    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001R.hla.bam"
 //    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002T.hla.bam"
-    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003R.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003R.hla.bam"
 
 
     override fun run() {

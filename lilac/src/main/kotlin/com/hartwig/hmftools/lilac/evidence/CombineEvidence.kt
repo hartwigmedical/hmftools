@@ -12,22 +12,20 @@ object CombineEvidence {
         }
 
         val uniqueToLeft = left.aminoAcidIndices.filter { it !in indexIntersection }
-        if (uniqueToLeft.isEmpty()) {
-            return false
-        }
-
         val uniqueToRight = right.aminoAcidIndices.filter { it !in indexIntersection }
-        if (uniqueToLeft.isEmpty()) {
+        if (uniqueToLeft.isEmpty() && uniqueToRight.isEmpty()) {
             return false
         }
 
-        val maxUniqueToLeft = uniqueToLeft.max()!!
-        val minUniqueToRight = uniqueToRight.min()!!
-        if (maxUniqueToLeft > minUniqueToRight) {
+        if (uniqueToRight.isNotEmpty() && uniqueToLeft.any { it > uniqueToRight.min()!! }) {
             return false
         }
 
-        val leftCommon = left.evidence.keys.map { it.substring(uniqueToLeft.size) }.toSet()
+        if (uniqueToLeft.isNotEmpty() && uniqueToRight.any { it < uniqueToLeft.max()!! }) {
+            return false
+        }
+
+        val leftCommon = left.evidence.keys.map { it.substring(left.aminoAcidIndices.size - indexIntersection.size) }.toSet()
         val rightCommon = right.evidence.keys.map { it.substring(0, indexIntersection.size) }.toSet()
 
         return leftCommon == rightCommon
@@ -35,7 +33,6 @@ object CombineEvidence {
 
 
     fun combineOverlapping(left: PhasedEvidence, right: PhasedEvidence): PhasedEvidence {
-        assert(canCombine(left, right))
 
         val indexUnion = (left.aminoAcidIndices.toSet() union right.aminoAcidIndices.toSet()).toList().sorted()
         val indexIntersection = (left.aminoAcidIndices.toSet() intersect right.aminoAcidIndices.toSet()).toList().sorted()

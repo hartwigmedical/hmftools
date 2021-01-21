@@ -3,20 +3,24 @@ package com.hartwig.hmftools.lilac.evidence
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import java.util.*
 
-class ExtendEvidence(private val minTotalEvidence: Int, private val heterozygousLoci: List<Int>, private val aminoAcidFragments: List<AminoAcidFragment>) {
+class ExtendEvidence(private val minEvidenceTotal: Int, private val heterozygousLoci: List<Int>, private val aminoAcidFragments: List<AminoAcidFragment>) {
+
+    companion object {
+        const val MIN_EVIDENCE_SEQUENCE = 1
+    }
 
     fun initialEvidence(): List<PhasedEvidence> {
         val result = mutableListOf<PhasedEvidence>()
 
         for (i in 0..(heterozygousLoci.size - 2)) {
-            val evidence = PhasedEvidence.evidence(aminoAcidFragments, heterozygousLoci[i], heterozygousLoci[i + 1]
+            val evidence = PhasedEvidence.evidence(MIN_EVIDENCE_SEQUENCE, aminoAcidFragments, heterozygousLoci[i], heterozygousLoci[i + 1]
             )
             if (evidence.evidence.isNotEmpty()) {
                 result.add(evidence)
             }
         }
 
-        return result.sorted().filter { it.totalEvidence() > minTotalEvidence }
+        return result.sorted().filter { it.totalEvidence() > minEvidenceTotal }
     }
 
     fun extendConsecutive(current: PhasedEvidence, others: Set<PhasedEvidence>): List<PhasedEvidence> {
@@ -39,7 +43,7 @@ class ExtendEvidence(private val minTotalEvidence: Int, private val heterozygous
         if (remainingIndicesAbove.isNotEmpty()) {
             val unambiguousIndices = current.unambiguousTailIndices() + remainingIndicesAbove[0]
             val allNewIndices = current.aminoAcidIndices + remainingIndicesAbove[0]
-            val next = next(current, unambiguousIndices, allNewIndices, others)
+            val next = next(true, current, unambiguousIndices, allNewIndices, others)
             if (next != null) {
                 result.add(next)
             }
@@ -48,25 +52,38 @@ class ExtendEvidence(private val minTotalEvidence: Int, private val heterozygous
         if (remainingIndicesBelow.isNotEmpty()) {
             val unambiguousIndices = (current.unambiguousHeadIndices() + remainingIndicesBelow[0]).sortedArray()
             val allNewIndices = (current.aminoAcidIndices + remainingIndicesBelow[0]).sortedArray()
-            val next = next(current, unambiguousIndices, allNewIndices, others)
+            val next = next(false, current, unambiguousIndices, allNewIndices, others)
             if (next != null) {
                 result.add(next)
             }
         }
 
-        return result.sorted().filter { it.totalEvidence() >= minTotalEvidence }
+        return result.sorted().filter { it.totalEvidence() >= minEvidenceTotal }
     }
 
-    private fun next(current: PhasedEvidence, unambiguousIndices: IntArray, allIndices: IntArray, others: Set<PhasedEvidence>): PhasedEvidence? {
+    private fun next(currentIsLeft: Boolean, current: PhasedEvidence, unambiguousIndices: IntArray, allIndices: IntArray, others: Set<PhasedEvidence>): PhasedEvidence? {
         val fake = PhasedEvidence(allIndices, Collections.emptyMap())
         if (!others.contains(fake)) {
-            val newEvidence = PhasedEvidence.evidence(aminoAcidFragments, *unambiguousIndices)
+            val newEvidence = PhasedEvidence.evidence(MIN_EVIDENCE_SEQUENCE, aminoAcidFragments, *unambiguousIndices)
+            if (newEvidence.totalEvidence() < minEvidenceTotal) {
+                return null
+            }
+
             if (newEvidence.evidence.isNotEmpty()) {
-                if (newEvidence.aminoAcidIndices.size == current.aminoAcidIndices.size + 1) {
-                    return newEvidence
+                val allIndicesInNewEvidence = newEvidence.aminoAcidIndices.size == allIndices.size
+                val left = if (currentIsLeft) current else newEvidence
+                val right = if (currentIsLeft) newEvidence else current
+                if (!CombineEvidence.canCombine(left, right)) {
+//                    println("BAD MERGE: $allIndicesInNewEvidence")
+//                    println(left)
+//                    println(right)
+                    return null
+                }
+
+                return if (allIndicesInNewEvidence) {
+                    newEvidence
                 } else {
-                    val combinedEvidence = CombineEvidence.combineOverlapping(current, newEvidence)
-                    return combinedEvidence
+                    CombineEvidence.combineOverlapping(left, right)
                 }
             }
         }

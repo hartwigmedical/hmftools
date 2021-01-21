@@ -47,10 +47,6 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
         return overlap == other.aminoAcidIndices.size
     }
 
-    fun overlaps(other: PhasedEvidence): Boolean {
-        val overlap = (other.aminoAcidIndices.toSet() intersect aminoAcidIndices.toSet()).size
-        return overlap > 0 && overlap < aminoAcidIndices.size && overlap < other.aminoAcidIndices.size
-    }
 
     fun minEvidence(): Int {
         return evidence.values.min() ?: 0
@@ -60,13 +56,13 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
         return evidence.values.sum()
     }
 
-
     companion object {
 
-        fun evidence(aminoAcidFragments: List<AminoAcidFragment>, vararg indices: Int): PhasedEvidence {
+        fun evidence(minEvidence: Int, aminoAcidFragments: List<AminoAcidFragment>, vararg indices: Int): PhasedEvidence {
             val filteredFragments = aminoAcidFragments.filter { it.containsAll(indices) }
             val aminoAcidEvidence = filteredFragments.map { it.toAminoAcids(indices) }.groupingBy { it }.eachCount()
-            return PhasedEvidence(indices, aminoAcidEvidence)
+            val filteredEvidence = aminoAcidEvidence.filter { it.value >= minEvidence }
+            return PhasedEvidence(indices, filteredEvidence)
         }
 
         private fun AminoAcidFragment.toAminoAcids(indices: IntArray): String {
@@ -103,9 +99,6 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
     override fun toString(): String {
         val uniqueTail = unambiguousTailLength()
         val uniqueHead = unambiguousHeadLength()
-        val bases = 3 * (aminoAcidIndices[aminoAcidIndices.size - 1] - aminoAcidIndices[0])
-
-//        return "PhasedEvidence(head=${uniqueHead} tail=${uniqueTail} loci=${aminoAcidIndices.size} types=${evidence.size} indices=${aminoAcidIndices.contentToString()}, evidence=${evidenceString()}, total=${totalEvidence()})"
         return "PhasedEvidence(head=${uniqueHead} tail=${uniqueTail} loci=${aminoAcidIndices.size} types=${evidence.size} indices=${aminoAcidIndices.contentToString()}, evidence=${evidence}, total=${totalEvidence()})"
     }
 
