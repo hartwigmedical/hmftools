@@ -27,7 +27,7 @@ class NucleotideGeneEnrichment(aBoundaries: Set<Int>, bBoundaries: Set<Int>, cBo
             genes.add("HLA-C")
         }
 
-        return NucleotideFragment(this.id, genes, this.nucleotideIndices(), this.nucleotideQuality(), this.nucleotides())
+        return NucleotideFragment(this.id, genes, this.nucleotideLoci(), this.nucleotideQuality(), this.nucleotides())
     }
 
     private fun NucleotideFragment.matchToA(): Boolean {

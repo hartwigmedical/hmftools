@@ -27,4 +27,15 @@ class AminoAcidFragment(id: String, genes: Set<String>, nucleotideLoci: List<Int
         return AminoAcidFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides, filteredAminoAcidLoci, filteredAminoAcids)
     }
 
+    fun qualityFilterNucleotides(minBaseQuality: Int): AminoAcidFragment {
+        val qualityFilteredNucleoties = this.qualityFilter(minBaseQuality)
+        return AminoAcidFragment(id,
+                genes,
+                qualityFilteredNucleoties.nucleotideLoci(),
+                qualityFilteredNucleoties.nucleotideQuality(),
+                qualityFilteredNucleoties.nucleotides(),
+                aminoAcidLoci,
+                aminoAcids)
+    }
+
 }

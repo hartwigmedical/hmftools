@@ -19,7 +19,7 @@ class FragmentAlleles(val aminoAcidFragment: AminoAcidFragment, val full: Collec
                 aminoAcidLoci: Collection<Int>, aminoAcidSequences: Collection<HlaSequence>,
                 nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequence>): FragmentAlleles {
 
-            val fragmentNucleotideLoci = (aminoAcidFragment.nucleotideIndices() intersect nucleotideLoci).sorted().toIntArray()
+            val fragmentNucleotideLoci = (aminoAcidFragment.nucleotideLoci() intersect nucleotideLoci).sorted().toIntArray()
             val fragmentNucleotides = fragmentNucleotideLoci.map { aminoAcidFragment.nucleotide(it) }.toCharArray()
             val matchingNucleotideSequences = nucleotideSequences
                     .map { Pair(it.allele, it.match(fragmentNucleotideLoci, fragmentNucleotides)) }

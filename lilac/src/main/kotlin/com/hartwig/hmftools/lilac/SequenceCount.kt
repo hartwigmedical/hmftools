@@ -12,11 +12,11 @@ class SequenceCount(private val minCount: Int, val length: Int) {
 
     companion object {
         fun nucleotides(minCount: Int, fragments: List<NucleotideFragment>): SequenceCount {
-            val length = fragments.map { it.nucleotideIndices().max()!! }.max()!! + 1
+            val length = fragments.map { it.nucleotideLoci().max() ?: -1 }.max()!! + 1
             val result = SequenceCount(minCount, length)
 
             for (fragment in fragments) {
-                for (index in fragment.nucleotideIndices()) {
+                for (index in fragment.nucleotideLoci()) {
                     val nucleotide = fragment.nucleotide(index)
                     result.increment(index, nucleotide)
                 }

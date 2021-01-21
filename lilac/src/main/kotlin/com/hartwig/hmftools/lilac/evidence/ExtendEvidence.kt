@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac.evidence
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import java.util.*
 
-class ExtendEvidence(private val minEvidenceTotal: Int, private val heterozygousLoci: List<Int>, private val aminoAcidFragments: List<AminoAcidFragment>) {
+class ExtendEvidence(private val minFragments: Int, private val heterozygousLoci: List<Int>, private val aminoAcidFragments: List<AminoAcidFragment>) {
 
     companion object {
         const val MIN_EVIDENCE_SEQUENCE = 1
@@ -20,7 +20,7 @@ class ExtendEvidence(private val minEvidenceTotal: Int, private val heterozygous
             }
         }
 
-        return result.sorted().filter { it.totalEvidence() > minEvidenceTotal }
+        return result.sorted().filter { it.totalEvidence() > minFragments }
     }
 
     fun extendConsecutive(current: PhasedEvidence, others: Set<PhasedEvidence>): List<PhasedEvidence> {
@@ -58,14 +58,14 @@ class ExtendEvidence(private val minEvidenceTotal: Int, private val heterozygous
             }
         }
 
-        return result.sorted().filter { it.totalEvidence() >= minEvidenceTotal }
+        return result.sorted().filter { it.totalEvidence() >= minFragments }
     }
 
     private fun next(currentIsLeft: Boolean, current: PhasedEvidence, unambiguousIndices: IntArray, allIndices: IntArray, others: Set<PhasedEvidence>): PhasedEvidence? {
         val fake = PhasedEvidence(allIndices, Collections.emptyMap())
         if (!others.contains(fake)) {
             val newEvidence = PhasedEvidence.evidence(MIN_EVIDENCE_SEQUENCE, aminoAcidFragments, *unambiguousIndices)
-            if (newEvidence.totalEvidence() < minEvidenceTotal) {
+            if (newEvidence.totalEvidence() < minFragments) {
                 return null
             }
 
