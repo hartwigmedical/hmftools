@@ -20,6 +20,8 @@ import com.hartwig.hmftools.ckb.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.molecularprofile.MolecularprofileFactory;
 import com.hartwig.hmftools.ckb.reference.Reference;
 import com.hartwig.hmftools.ckb.reference.ReferenceFactory;
+import com.hartwig.hmftools.ckb.therapy.Therapy;
+import com.hartwig.hmftools.ckb.therapy.TherapyFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -71,8 +73,8 @@ public class CkbImporterTestApp {
 //                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
 //        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
   //       List<MolecularProfile> molecularProfiles = MolecularprofileFactory.readingMolecularprofile(ckbPath + MOLECULAR_PROFILES);
-            List<Reference> references = ReferenceFactory.readingReference(ckbPath + REFERENCES);
-        //        readingTherapies(ckbPath + THERAPIES);
+      //      List<Reference> references = ReferenceFactory.readingReference(ckbPath + REFERENCES);
+              List<Therapy> therapies = TherapyFactory.readingTherapy(ckbPath + THERAPIES);
         //        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
         //        readingVariants(ckbPath + VARIANTS);
     }
@@ -81,12 +83,6 @@ public class CkbImporterTestApp {
         LOGGER.info("Start reading therapies");
 
         LOGGER.info("Finished reading therapies");
-    }
-
-    private static void readingTherapies(@NotNull String treatmentApproachesDir) throws IOException {
-        LOGGER.info("Start reading treatment approaches");
-
-        LOGGER.info("Finished reading treatment approaches");
     }
 
     private static void readingVariants(@NotNull String variantsDir) throws IOException {
