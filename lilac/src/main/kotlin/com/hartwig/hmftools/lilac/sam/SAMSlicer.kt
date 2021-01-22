@@ -5,7 +5,7 @@ import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SamReader
 import java.util.function.Consumer
 
-class SamSlicer(private val minMappingQuality: Int) {
+class SAMSlicer(private val minMappingQuality: Int) {
 
     fun slice(region: GenomeRegion, samReader: SamReader, consumer: Consumer<SAMRecord>) {
         slice(region.chromosome(), region.start().toInt(), region.end().toInt(), samReader, consumer)

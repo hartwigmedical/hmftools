@@ -40,15 +40,15 @@ class LilacApplication : AutoCloseable, Runnable {
 
     val minBaseQual = 30
     val minEvidence = 2
-    val minFragments = 25
+    val minFragments = 30
 
-    val minConfirmedUniqueCoverage = 15
+    val minConfirmedUniqueCoverage = 2
 
     val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
     val outputDir = "/Users/jon/hmf/analysis/hla/resources"
 
 //            val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
-    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001T.hla.bam"
+    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001R.hla.bam"
 //    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002T.hla.bam"
 //    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003T.hla.bam"
 
@@ -125,7 +125,7 @@ class LilacApplication : AutoCloseable, Runnable {
         }
 
 
-        val sequences = (candidates union (aminoAcidSequences.filter { it.allele == HlaAllele("C*03:04:01:01") })).map { HlaSequence(it.contig, it.sequence) }
+        val sequences = (candidates union (aminoAcidSequences.filter { it.allele == HlaAllele("B*08:01:04") })).map { HlaSequence(it.contig, it.sequence) }
         HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
         HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
         HlaSequenceFile.writeBoundary(aProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
@@ -134,33 +134,6 @@ class LilacApplication : AutoCloseable, Runnable {
         HlaSequenceFile.appendFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
 
 
-    }
-
-    private fun checkCandidates(candidates: Collection<HlaSequence>): Int {
-        var count = 0
-
-        if (candidates.any { it.allele == HlaAllele("A*01:01:01:01") }) {
-            count++;
-        }
-
-        if (candidates.any { it.allele == HlaAllele("A*11:01:01:01") }) {
-            count++;
-        }
-        if (candidates.any { it.allele == HlaAllele("B*08:01:01:01") }) {
-            count++;
-        }
-        if (candidates.any { it.allele == HlaAllele("B*56:01:01:01") }) {
-            count++;
-        }
-        if (candidates.any { it.allele == HlaAllele("C*01:02:01:01") }) {
-            count++;
-        }
-        if (candidates.any { it.allele == HlaAllele("C*07:01:01:01") }) {
-            count++;
-        }
-
-
-        return count;
     }
 
 

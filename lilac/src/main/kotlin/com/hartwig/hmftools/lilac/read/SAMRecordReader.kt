@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.read
 
 import com.hartwig.hmftools.common.genome.bed.NamedBed
 import com.hartwig.hmftools.common.genome.region.*
-import com.hartwig.hmftools.lilac.sam.SamSlicer
+import com.hartwig.hmftools.lilac.sam.SAMSlicer
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SamReaderFactory
 import org.apache.logging.log4j.LogManager
@@ -42,7 +42,7 @@ class SAMRecordReader(maxDistance: Int, private val transcripts: List<HmfTranscr
     }
 
     private fun realign(gene: String, hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
-        val slicer = SamSlicer(1)
+        val slicer = SAMSlicer(1)
         val result = mutableListOf<SAMRecordRead>()
         SamReaderFactory.makeDefault().open(File(bamFileName)).use { samReader ->
 

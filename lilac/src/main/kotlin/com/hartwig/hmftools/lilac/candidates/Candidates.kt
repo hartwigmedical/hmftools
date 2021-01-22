@@ -19,7 +19,8 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
 
         logger.info("Determining initial candidate set for gene HLA-$gene")
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
-        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, aminoAcidFragments)
+//        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.${gene}.count.txt")
+//        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, aminoAcidFragments)
 
         val geneCandidates = aminoAcidSequences.filter { it.allele.gene == gene }
         logger.info(" ... ${geneCandidates.size} candidates before filtering")
@@ -39,10 +40,6 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
 
         val phasedCandidates = filterCandidates(aminoAcidCandidates, phasedEvidence)
         logger.info(" ... ${phasedCandidates.size} candidates after phasing: " + phasedCandidates.map { it.allele }.joinToString(", "))
-
-        for (phasedEvidence in phasedEvidence) {
-            logger.info(" ... $phasedEvidence")
-        }
 
         return phasedCandidates
 
@@ -82,6 +79,14 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
             count++;
         }
 
+        if (candidates.any { it.allele == HlaAllele("B*08:01:01:01") }) {
+            count++;
+        }
+
+        if (candidates.any { it.allele == HlaAllele("B*40:02:01:01") }) {
+            count++;
+        }
+
         return count;
     }
 
@@ -103,7 +108,10 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
         var candidates = initialCandidates
         for (i in evidence.indices) {
             val newEvidence = evidence[i]
+//            logger.info(" ... $newEvidence")
             candidates = matchingCandidates(newEvidence, candidates)
+//            logger.info(" ... contains ${(checkColo8289Candidates(candidates))} COLO829 ")
+
         }
 
         return candidates
