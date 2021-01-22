@@ -66,6 +66,7 @@ public class ReferenceFactory {
                             .variant(extarctVariant(referenceEntryObject.getAsJsonArray("variants")))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading reference");

@@ -60,6 +60,7 @@ public class IndicationFactory {
                             .clinicalTrial(extractClinicalTrials(indicationEntryObject.getAsJsonArray("clinicalTrials")))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading indications");

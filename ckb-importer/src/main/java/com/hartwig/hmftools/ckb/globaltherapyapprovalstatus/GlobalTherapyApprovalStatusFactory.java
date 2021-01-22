@@ -55,6 +55,7 @@ public class GlobalTherapyApprovalStatusFactory {
                                     "globalTherapyApprovalStatuses")))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading global therapy approval status");

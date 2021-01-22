@@ -66,6 +66,7 @@ public class ClinicalTrialFactory {
                                     "clinicalTrialLocations")))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading clinical trials");

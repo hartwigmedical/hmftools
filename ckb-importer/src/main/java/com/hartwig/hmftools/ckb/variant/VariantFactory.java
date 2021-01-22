@@ -72,6 +72,7 @@ public class VariantFactory {
                             .memberVariant(extractMemberVariants(variantEntryObject.getAsJsonArray("memberVariants")))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading variant");

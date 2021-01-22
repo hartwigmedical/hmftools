@@ -67,6 +67,7 @@ public class GeneFactory {
                             .categoryVariants(extractCategoryVariant(geneEntryObject.getAsJsonArray("categoryVariants")))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading genes");

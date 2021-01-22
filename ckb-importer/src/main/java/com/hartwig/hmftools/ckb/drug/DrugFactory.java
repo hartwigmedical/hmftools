@@ -64,6 +64,7 @@ public class DrugFactory {
                             .globalApprovaStatus(drugsEntryObject.has("globalApprovaStatus") ? extractGlobalApprovaStatus(drugsEntryObject.getAsJsonArray("globalApprovaStatus")) : null)
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading drug");

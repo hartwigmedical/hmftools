@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -40,8 +41,8 @@ public class CkbImporterApplication {
     public static final String VERSION = CkbImporterApplication.class.getPackage().getImplementationVersion();
 
     private static final String CLINICAL_TRIALS = "clinicalTrials";
-    private static final String DRUG_CLASSES = "drugclass";
-    private static final String DRUGS = "drug";
+    private static final String DRUG_CLASSES = "drugClasses";
+    private static final String DRUGS = "drugs";
     private static final String GENES = "genes";
     private static final String GLOBAL_THERAPY_APPROVAL_STATUSES = "globalTherapyApprovalStatuses";
     private static final String INDICATIONS = "indications";
@@ -76,18 +77,21 @@ public class CkbImporterApplication {
 
         String ckbPath = config.cbkDir();
 
-        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
-        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
-        List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
+        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + File.separator + CLINICAL_TRIALS);
+        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + File.separator + DRUGS);
+        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + File.separator + DRUG_CLASSES);
+        List<Gene> genes = GeneFactory.readingGenes(ckbPath + File.separator + GENES);
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
-                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
-        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
-        List<MolecularProfile> molecularProfiles = MolecularprofileFactory.readingMolecularprofile(ckbPath + MOLECULAR_PROFILES);
-        List<Reference> references = ReferenceFactory.readingReference(ckbPath + REFERENCES);
-        List<Therapy> therapies = TherapyFactory.readingTherapy(ckbPath + THERAPIES);
-        List<TreatmentApproach> treatmentApproaches = TreatmentApproachFactory.readingTreatmentApproch(ckbPath + TREATMENT_APPROACHES);
-        List<Variant> variants = VariantFactory.readingVariant(ckbPath + VARIANTS);
+                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(
+                        ckbPath + File.separator + GLOBAL_THERAPY_APPROVAL_STATUSES);
+        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + File.separator + INDICATIONS);
+        List<MolecularProfile> molecularProfiles =
+                MolecularprofileFactory.readingMolecularprofile(ckbPath + File.separator + MOLECULAR_PROFILES);
+        List<Reference> references = ReferenceFactory.readingReference(ckbPath + File.separator + REFERENCES);
+        List<Therapy> therapies = TherapyFactory.readingTherapy(ckbPath + File.separator + THERAPIES);
+        List<TreatmentApproach> treatmentApproaches =
+                TreatmentApproachFactory.readingTreatmentApproch(ckbPath + File.separator + TREATMENT_APPROACHES);
+        List<Variant> variants = VariantFactory.readingVariant(ckbPath + File.separator + VARIANTS);
 
         return ImmutableCkbEntry.builder()
                 .clinicalTrial(clinicalTrials)

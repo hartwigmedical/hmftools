@@ -54,6 +54,7 @@ public class DrugClassFactory {
                             .treatmentApproaches(retrieveTreatmentApproaches(drugClassEntryObject.getAsJsonArray("treatmentApproaches")))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading drug classes");

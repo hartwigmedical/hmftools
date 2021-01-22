@@ -61,6 +61,7 @@ public class TreatmentApproachFactory {
                             .updateDate(JsonFunctions.string(treatmentApprochEntryObject, "updateDate"))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading treatment approach");

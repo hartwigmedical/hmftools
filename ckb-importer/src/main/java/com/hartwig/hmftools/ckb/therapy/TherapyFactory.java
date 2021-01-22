@@ -60,6 +60,7 @@ public class TherapyFactory {
                             .globalApprovalStatus(extractGlobalApprovalStatus(therapyEntryObject.getAsJsonArray("globalApprovalStatus")))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading therapy");

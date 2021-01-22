@@ -65,6 +65,7 @@ public class MolecularprofileFactory {
                             .extendedEvidence(extractExtendedEvidence(molecularProfileEntryObject.getAsJsonObject("extendedEvidence")))
                             .build());
                 }
+                reader.close();
             }
         }
         LOGGER.info("Finished reading molecular profiles");
