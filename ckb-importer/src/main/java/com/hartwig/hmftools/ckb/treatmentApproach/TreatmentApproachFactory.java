@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,13 +38,14 @@ public class TreatmentApproachFactory {
             LOGGER.info("The total files in the treatment approch dir is {}", filesTreatmentApproch.length);
 
             for (File treatmentApproch : filesTreatmentApproch) {
-                LOGGER.info(treatmentApproch);
                 JsonParser parser = new JsonParser();
                 JsonReader reader = new JsonReader(new FileReader(treatmentApproch));
                 reader.setLenient(true);
 
                 while (reader.peek() != JsonToken.END_DOCUMENT) {
                     JsonObject treatmentApprochEntryObject = parser.parse(reader).getAsJsonObject();
+                    JsonDatamodelChecker treatmentApprochObjectChecker = TreatmentApprochDataModelChecker.treatmentApprochObjectChecker();
+                    treatmentApprochObjectChecker.check(treatmentApprochEntryObject);
 
                     treatmentAppraoch.add(ImmutableTreatmentApproach.builder()
                             .id(JsonFunctions.string(treatmentApprochEntryObject, "id"))
@@ -68,6 +70,9 @@ public class TreatmentApproachFactory {
 
     @NotNull
     public static TreatmentApprochDrugClass createDrugClass(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker drugClassObjectChecker = TreatmentApprochDataModelChecker.drugClassObjectChecker();
+        drugClassObjectChecker.check(jsonObject);
+
         return ImmutableTreatmentApprochDrugClass.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .drugClass(JsonFunctions.string(jsonObject, "drugClass"))
@@ -76,6 +81,9 @@ public class TreatmentApproachFactory {
 
     @NotNull
     public static TreatmentApproachTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker therapyObjectChecker = TreatmentApprochDataModelChecker.therapyObjectChecker();
+        therapyObjectChecker.check(jsonObject);
+
         return ImmutableTreatmentApproachTherapy.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
@@ -86,9 +94,11 @@ public class TreatmentApproachFactory {
     @NotNull
     public static List<TreatmentApprochReference> extractReference(@NotNull JsonArray jsonArray) {
         List<TreatmentApprochReference> references = Lists.newArrayList();
+        JsonDatamodelChecker referenceObjectChecker = TreatmentApprochDataModelChecker.referenceObjectChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
+            referenceObjectChecker.check(referenceJsonObject);
 
             references.add(ImmutableTreatmentApprochReference.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
