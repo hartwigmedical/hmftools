@@ -3,11 +3,13 @@ package com.hartwig.hmftools.patientdb;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
+import com.hartwig.hmftools.common.clinical.PatientMissingDoidFile;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -23,6 +25,11 @@ final class DumpPrimaryTumorData {
     private static final Logger LOGGER = LogManager.getLogger(DumpPrimaryTumorData.class);
 
     private DumpPrimaryTumorData() {
+    }
+
+    static void writePatientsWithMissingDoidToTSV(@NotNull String outputTsv, @NotNull Set<String> patients) throws IOException {
+        PatientMissingDoidFile.writeMissingDoid(outputTsv, patients);
+        LOGGER.info(" Written {} primary tumors to {}", patients.size(), outputTsv);
     }
 
     static void writeCuratedPrimaryTumorsToTSV(@NotNull String outputTsv, @NotNull Collection<Patient> patients) throws IOException {
