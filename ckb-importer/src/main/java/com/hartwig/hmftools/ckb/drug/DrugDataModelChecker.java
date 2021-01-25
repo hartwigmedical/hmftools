@@ -28,7 +28,7 @@ public final class DrugDataModelChecker {
         map.put("clinicalTrials", true);
         map.put("evidence", true);
         map.put("therapies", true);
-        map.put("globalApprovaStatus", true);
+        map.put("globalApprovalStatus", true);
 
         return new JsonDatamodelChecker("DrugObject", map);
     }

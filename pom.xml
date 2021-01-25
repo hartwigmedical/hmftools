@@ -12,7 +12,6 @@
         <module>hmf-common</module>
         <module>patient-db</module>
         <module>hmf-extensions</module>
-        <module>api-clients</module>
         <module>hmf-gene-panel-builder</module>
         <module>hmf-id-generator</module>
         <module>bam-slicer</module>
@@ -33,7 +32,6 @@
         <module>cuppa</module>
         <module>isofox</module>
         <module>stat-calcs</module>
-        <module>knowledgebase-importer</module>
         <module>ckb-importer</module>
         <module>iclusion-importer</module>
         <module>vicc-importer</module>
@@ -56,7 +54,6 @@
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
-        <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
         <patient-db.version>3.55</patient-db.version>
@@ -78,12 +75,11 @@
         <cuppa.version>1.2</cuppa.version>
         <isofox.version>1.1</isofox.version>
         <paddle.version>0.1</paddle.version>
-        <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <vicc-importer.version>1.1</vicc-importer.version>
         <iclusion-importer.version>1.3</iclusion-importer.version>
         <ckb-importer.version>0.1</ckb-importer.version>
-        <serve.version>0.1</serve.version>
-        <protect.version>0.1</protect.version>
+        <serve.version>1.0</serve.version>
+        <protect.version>1.0</protect.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>
@@ -203,11 +199,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>api-clients</artifactId>
-                <version>${hmf-api-clients.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

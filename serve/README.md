@@ -1,4 +1,4 @@
-# **S**earch **E**xternal **R**esources for **V**ariant **E**vidence (SERVE)
+# Search External Resources for Variant Evidence
 
 SERVE harmonizes various sources of evidence into a single unified model that can be readily used in genomic analyses.  
 The model provides a mapping from genomic events to clinical evidence. 
@@ -8,7 +8,7 @@ In addition, SERVE generates output containing all genomic events that are impli
 
 * [Which knowledgebases are supported?](#supported-input-knowledgebases)
 * [What is generated as final SERVE output?](#outputs)
-* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-from-knowledgebases)
+* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-and-signatures-from-knowledgebases)
 * [What is done in terms of curation and harmonization?](#curation-and-harmonization-of-individual-knowledgebases)
 * [How does everything come together?](#overview-of-the-serve-algorithm)
 
@@ -43,13 +43,13 @@ they are compliant with the usage of the data itself.
 ## Outputs
 
 SERVE generates clinical evidence in the following datamodel:
- - Treatment
+ - Treatment (name of trial or drug(s))
  - Cancer type (including DOID) for which the treatment is on-label.
  - Tier / Evidence level of the treatment
  - Direction (Responsive for the treatment or resistant to the treatment)
  - A set of URLs with extra information about the evidence (could be a publication, or a general website)
  
-The following genomic events can be mapped to clinical evidence:
+The following genomic events and signatures can be mapped to clinical evidence:
  - Genome-wide events such as signatures or MSI status
  - Multi-gene events such as gene fusions
  - Single gene events such as amplification or general (in)activation of a gene
@@ -61,8 +61,7 @@ The following genomic events can be mapped to clinical evidence:
  
 In addition to generating a mapping from various genomic events to clinical evidence, SERVE generates the following outputs describing 
 genomic events implied to be able to driver cancer:
- - Specific known fusion genes including individual genes that are believed to be able to drive cancer when fused with any other gene 
- (in either 5' or 3' position)
+ - Specific known fusion pairs
  - Known amplifications and deletions
  - Known hotspots (specific mutations on specific loci)
  - Known codons (codons for which generic mutations are implied to be pathogenic)
@@ -70,7 +69,7 @@ genomic events implied to be able to driver cancer:
 
 SERVE can be configured to generate its output either for reference genome version 37 or version 38.  
 
-## Extraction of genomic events from knowledgebases
+## Extraction of genomic events and signatures from knowledgebases
  
 ### Gene checking
 
@@ -160,7 +159,7 @@ DELETION | Evidence is applicable when the gene has been completely deleted from
 ACTIVATION | Evidence is applicable when a gene has been activated. Downstream algorithms are expected to interpret this.
 INACTIVATION | Evidence is applicable when a gene has been inactivated. Downstream algorithms are expected to interpret this.
 ANY_MUTATION | SERVE does not restrict this evidence based on the type of mutation and considers every type of mutation applicable for this evidence.
-FUSION | Evidence is applicable in case the gene has fused with another gene.
+FUSION | Evidence is applicable in case the gene has fused with another gene (either 3' or 5') .
 
 ### Exonic ranges specific for fusion pairs
 
@@ -168,6 +167,17 @@ For evidence on fusion pairs, SERVE can add restrictions on which exons are allo
 This is to support evidence on fusions like EGFRvII. 
 
 Evidence on fusion pairs where these restrictions are missing can be assumed to be valid for any fusion between the two genes specified. 
+
+### Genome wide events
+
+For evidence that is applicable when a genome wide event has happened, the type of event required to match evidence to the event 
+is derived from the knowledgebase event.
+
+Genome wide event  | Description
+---|---
+MICROSATELLITE_UNSTABLE  | Evidence is applicable when the genome has a MSI status
+HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high tumor mutational load status
+HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status
 
 ## Curation and harmonization of individual knowledgebases
 
@@ -218,9 +228,11 @@ Finally, similar to VICC, cancer types for which no DOIDs have been specified ge
 SERVE starts with reading the various knowledgebases and after filtering and curation, knowledge is extracted.
 A knowledgebase can contribute to known and/or actionable events. Current configuration as follows:
       
-Knowledgebase  | Contributes to Known events? | Contributes to Actionable events?
+Knowledgebase  | Contributes to known events? | Contributes to actionable events?
 ---|---|---
 DoCM | Yes | No 
+Hartwig Cohort | Yes | No
+Hartwig Curated | Yes | No
 iClusion | No | Yes
 VICC | Yes | Yes
 
@@ -228,22 +240,9 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
  - All known events are aggregated on a per-event level where every event has a set of knowledgebases in which the event has been defined as pathogenic.
  - All actionable events are concatenated. Every actionable event that is present in multiple knowledgebases will be present multiple times in 
  the actionable output. 
-
-
-
-
   
- 
- 
- 
+ Within the Hartwig pipeline, SERVE output is used in the following manner:
+  - The known output is used in various algorithms for various purposes. For example, the known hotspots produced by SERVE are used by 
+  [SAGE](../sage/README.md) as the definition of the highest tier of calling.
+  - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
-
- 
- 
- 
- 
-     
-
-
-  
- 

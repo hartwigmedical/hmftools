@@ -6,82 +6,86 @@ import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.B;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.C;
 import static com.hartwig.hmftools.protect.EvidenceReportingFunctions.highestReportableLevel;
 import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestBuilder;
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class EvidenceReportingFunctionsTest {
 
-    private final ProtectEvidence onLabelResponsiveA = createTestEvidence(true, RESPONSIVE, A).build();
-    private final ProtectEvidence onLabelResponsiveB = createTestEvidence(true, RESPONSIVE, B).build();
-    private final ProtectEvidence onLabelResponsiveC = createTestEvidence(true, RESPONSIVE, C).build();
-    private final ProtectEvidence offLabelResponsiveA = createTestEvidence(false, RESPONSIVE, A).build();
-    private final ProtectEvidence offLabelResponsiveB = createTestEvidence(false, RESPONSIVE, B).build();
-    private final ProtectEvidence offLabelResponsiveC = createTestEvidence(false, RESPONSIVE, C).build();
+    private final ProtectEvidence onLabelResponsiveA = createTestEvidence(true, RESPONSIVE, A);
+    private final ProtectEvidence onLabelResponsiveB = createTestEvidence(true, RESPONSIVE, B);
+    private final ProtectEvidence onLabelResponsiveC = createTestEvidence(true, RESPONSIVE, C);
+    private final ProtectEvidence offLabelResponsiveA = createTestEvidence(false, RESPONSIVE, A);
+    private final ProtectEvidence offLabelResponsiveB = createTestEvidence(false, RESPONSIVE, B);
+    private final ProtectEvidence offLabelResponsiveC = createTestEvidence(false, RESPONSIVE, C);
 
     @Test
     public void canDetermineHighestReportableLevel() {
-        assertEquals(Optional.of(A),
-                highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
-        assertEquals(Optional.of(B), highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveB, offLabelResponsiveA)));
-        assertEquals(Optional.of(A),
-                highestReportableLevel(false, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
-        assertEquals(Optional.of(A), highestReportableLevel(false, Lists.newArrayList(offLabelResponsiveA)));
+        assertEquals(A, highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
+        assertEquals(B, highestReportableLevel(true, Lists.newArrayList(onLabelResponsiveB, offLabelResponsiveA)));
+        assertEquals(A, highestReportableLevel(false, Lists.newArrayList(onLabelResponsiveA, onLabelResponsiveB, offLabelResponsiveA)));
+        assertEquals(A, highestReportableLevel(false, Lists.newArrayList(offLabelResponsiveA)));
     }
 
     @Test
     public void doNotReportC() {
-        List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveC);
-        Set<ProtectEvidence> victims = Sets.newHashSet(EvidenceReportingFunctions.reportHighestLevelEvidence(evidence));
-        assertEquals(2, victims.size());
-        for (ProtectEvidence victim : victims) {
-            assertFalse(victim.reported());
+        List<ProtectEvidence> evidences = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveC);
+        List<ProtectEvidence> filtered = EvidenceReportingFunctions.reportHighestLevelEvidence(evidences);
+        assertEquals(2, filtered.size());
+        for (ProtectEvidence evidence : filtered) {
+            assertFalse(evidence.reported());
         }
     }
 
     @Test
     public void doNoReportOffLabelAtSameLevelAsOnLabel() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveA, offLabelResponsiveA);
-        Set<ProtectEvidence> victims = Sets.newHashSet(EvidenceReportingFunctions.reportHighestLevelEvidence(evidence));
-        assertEquals(2, victims.size());
-        assertTrue(victims.contains(onLabelResponsiveA));
-        assertFalse(victims.contains(offLabelResponsiveA));
+        List<ProtectEvidence> filtered = EvidenceReportingFunctions.reportHighestLevelEvidence(evidence);
+        assertEquals(2, filtered.size());
+        assertTrue(filtered.contains(onLabelResponsiveA));
+        assertFalse(filtered.contains(offLabelResponsiveA));
     }
 
     @Test
     public void reportHighestOffLabelIfHigherThanOnLabel() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveA, offLabelResponsiveB);
-        Set<ProtectEvidence> victims = Sets.newHashSet(EvidenceReportingFunctions.reportHighestLevelEvidence(evidence));
-        assertEquals(3, victims.size());
-        assertTrue(victims.contains(offLabelResponsiveA));
-        assertFalse(victims.contains(offLabelResponsiveB));
-        assertFalse(victims.contains(onLabelResponsiveC));
+        List<ProtectEvidence> filtered = EvidenceReportingFunctions.reportHighestLevelEvidence(evidence);
+        assertEquals(3, filtered.size());
+        assertTrue(filtered.contains(offLabelResponsiveA));
+        assertFalse(filtered.contains(offLabelResponsiveB));
+        assertFalse(filtered.contains(onLabelResponsiveC));
     }
 
     @Test
     public void neverSetReportToTrue() {
         ProtectEvidence reported = onLabelResponsiveA;
-        ProtectEvidence reportedVictim = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(reported)).get(0);
-        assertTrue(reportedVictim.reported());
+        ProtectEvidence reportedFiltered = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(reported)).get(0);
+        assertTrue(reportedFiltered.reported());
 
         ProtectEvidence notReported = ImmutableProtectEvidence.builder().from(reported).reported(false).build();
-        ProtectEvidence notReportedVictim = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(notReported)).get(0);
-        assertFalse(notReportedVictim.reported());
+        ProtectEvidence notReportedFiltered = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(notReported)).get(0);
+        assertFalse(notReportedFiltered.reported());
+
+        ProtectEvidence evidence1 =
+                ImmutableProtectEvidence.builder().from(createTestEvidence(true, RESPONSIVE, A)).reported(false).build();
+        ProtectEvidence evidence2 = createTestEvidence(false, RESPONSIVE, A);
+
+        List<ProtectEvidence> filtered = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(evidence1, evidence2));
+        assertTrue(filtered.contains(evidence1));
+        assertTrue(filtered.contains(evidence2));
     }
 
     @Test
@@ -124,5 +128,10 @@ public class EvidenceReportingFunctionsTest {
         }
 
         throw new IllegalStateException("Could not find evidence with genomic event: " + event);
+    }
+
+    @NotNull
+    private static ProtectEvidence createTestEvidence(boolean onLabel, @NotNull EvidenceDirection direction, @NotNull EvidenceLevel level) {
+        return createTestBuilder().onLabel(onLabel).level(level).direction(direction).build();
     }
 }

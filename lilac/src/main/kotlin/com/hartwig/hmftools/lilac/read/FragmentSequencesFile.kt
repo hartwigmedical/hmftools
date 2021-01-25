@@ -11,7 +11,7 @@ object FragmentSequencesFile {
         file.writeText("Fragment\t" + alleles.joinToString("\t") + "\n")
 
         for (fragment in fragmentSequences) {
-            file.appendText(fragment.fragment.id + "\t" + alleles.map { toChar(fragment, it) }.joinToString("\t") + "\n")
+            file.appendText(fragment.aminoAcidFragment.id + "\t" + alleles.map { toChar(fragment, it) }.joinToString("\t") + "\n")
         }
 
     }

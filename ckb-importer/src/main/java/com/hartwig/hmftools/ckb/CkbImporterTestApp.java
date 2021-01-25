@@ -4,12 +4,29 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialFactory;
 import com.hartwig.hmftools.ckb.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.drugclass.DrugClassFactory;
 import com.hartwig.hmftools.ckb.drug.Drug;
 import com.hartwig.hmftools.ckb.drug.DrugFactory;
+import com.hartwig.hmftools.ckb.gene.Gene;
+import com.hartwig.hmftools.ckb.gene.GeneFactory;
+import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
+import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatusFactory;
+import com.hartwig.hmftools.ckb.indication.Indication;
+import com.hartwig.hmftools.ckb.indication.IndicationFactory;
+import com.hartwig.hmftools.ckb.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.molecularprofile.MolecularprofileFactory;
+import com.hartwig.hmftools.ckb.reference.Reference;
+import com.hartwig.hmftools.ckb.reference.ReferenceFactory;
+import com.hartwig.hmftools.ckb.therapy.Therapy;
+import com.hartwig.hmftools.ckb.therapy.TherapyFactory;
+import com.hartwig.hmftools.ckb.treatmentApproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.treatmentApproach.TreatmentApproachFactory;
+import com.hartwig.hmftools.ckb.variant.Variant;
+import com.hartwig.hmftools.ckb.variant.VariantFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -22,8 +39,8 @@ public class CkbImporterTestApp {
     private static final Logger LOGGER = LogManager.getLogger(CkbImporterTestApp.class);
 
     private static final String CLINICAL_TRIALS = "clinicalTrials";
-    private static final String DRUG_CLASSES = "drugclass";
-    private static final String DRUGS = "drug";
+    private static final String DRUG_CLASSES = "drugclasses";
+    private static final String DRUGS = "drugs";
     private static final String GENES = "genes";
     private static final String GLOBAL_THERAPY_APPROVAL_STATUSES = "globalTherapyApprovalStatuses";
     private static final String INDICATIONS = "indications";
@@ -47,85 +64,56 @@ public class CkbImporterTestApp {
             ckbPath = System.getProperty("user.home") + "/hmf/projects/serve/ckb/";
         }
 
-        readJsonData(ckbPath);
+        CkbEntry ckbEntry = readJsonData(ckbPath);
+        writingDataToDatabase(ckbEntry);
+
         LOGGER.info("Complete!");
 
     }
 
-    private static void readJsonData(@NotNull String ckbPath) throws IOException {
+    @NotNull
+    private static CkbEntry readJsonData(@NotNull String ckbPath) throws IOException {
+
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
         List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
-//        readingGenes(ckbPath + GENES);
-//        readingGlobalTherapyApprovalStatuses(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
-//        readingIndications(ckbPath + INDICATIONS);
-//        readingMolecularProfiles(ckbPath + MOLECULAR_PROFILES);
-//        readingReferences(ckbPath + REFERENCES);
-//        readingTherapies(ckbPath + THERAPIES);
-//        readingTreatmentApproaches(ckbPath + TREATMENT_APPROACHES);
-//        readingVariants(ckbPath + VARIANTS);
+        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
+        List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
+        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
+                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
+        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
+        List<MolecularProfile> molecularProfiles = MolecularprofileFactory.readingMolecularprofile(ckbPath + MOLECULAR_PROFILES);
+        List<Reference> references = ReferenceFactory.readingReference(ckbPath + REFERENCES);
+        List<Therapy> therapies = TherapyFactory.readingTherapy(ckbPath + THERAPIES);
+        List<TreatmentApproach> treatmentApproaches = TreatmentApproachFactory.readingTreatmentApproch(ckbPath + TREATMENT_APPROACHES);
+        List<Variant> variants = VariantFactory.readingVariant(ckbPath + VARIANTS);
+
+        return ImmutableCkbEntry.builder()
+                .clinicalTrial(clinicalTrials)
+                .drug(drugs)
+                .drugClass(drugClasses)
+                .gene(genes)
+                .globalTherapyApprovalStatus(globalTherapyApprovalStatuses)
+                .indication(indications)
+                .molecularProfile(molecularProfiles)
+                .reference(references)
+                .therapy(therapies)
+                .treatmentApproach(treatmentApproaches)
+                .variant(variants)
+                .build();
     }
 
-
-
-    private static void readingDrugsClasses(@NotNull String drugsClassesDir) throws IOException {
-        LOGGER.info("Start reading drug classes");
-
-        LOGGER.info("Finished reading drug classes");
-    }
-
-    private static void readingDrugs(@NotNull String drugsDir) throws IOException {
-        LOGGER.info("Start reading drug");
-
-        LOGGER.info("Finished reading drug");
-    }
-
-    private static void readingGenes(@NotNull String genesDir) throws IOException {
-        LOGGER.info("Start reading genes");
-
-        LOGGER.info("Finished reading genes");
-    }
-
-    private static void readingGlobalTherapyApprovalStatuses(@NotNull String globalTherpyApprovalStatusesDir) throws IOException {
-        LOGGER.info("Start reading global therpy approval statuses");
-
-        LOGGER.info("Finished reading global therpy approval statuses");
-    }
-
-    private static void readingIndications(@NotNull String indicationsDir) throws IOException {
-        LOGGER.info("Start reading indications");
-
-        LOGGER.info("Finished reading indications");
-    }
-
-    private static void readingMolecularProfiles(@NotNull String molecularProfilesDir) throws IOException {
-        LOGGER.info("Start reading molecular profiles");
-
-        LOGGER.info("Finished reading molecular profiles");
-    }
-
-    private static void readingReferences(@NotNull String referencesDir) throws IOException {
-        LOGGER.info("Start reading references");
-
-        LOGGER.info("Finished reading references");
-    }
-
-    private static void readingTreatmentApproaches(@NotNull String therapiesDir) throws IOException {
-        LOGGER.info("Start reading therapies");
-
-        LOGGER.info("Finished reading therapies");
-    }
-
-    private static void readingTherapies(@NotNull String treatmentApproachesDir) throws IOException {
-        LOGGER.info("Start reading treatment approaches");
-
-        LOGGER.info("Finished reading treatment approaches");
-    }
-
-    private static void readingVariants(@NotNull String variantsDir) throws IOException {
-        LOGGER.info("Start reading variants");
-
-        LOGGER.info("Finished reading variants");
+    private static void writingDataToDatabase(@NotNull CkbEntry ckbEntry) {
+        LOGGER.info("ClinicalTrial {}", ckbEntry.clinicalTrial().get(0));
+        LOGGER.info("Drug {}", ckbEntry.drug().get(0));
+        LOGGER.info("DrugClass {}", ckbEntry.drugClass().get(0));
+        LOGGER.info("Gene {}", ckbEntry.gene().get(0));
+        LOGGER.info("GlobalTherapyApprovalStatus {}", ckbEntry.globalTherapyApprovalStatus().get(0));
+        LOGGER.info("Indication {}", ckbEntry.indication().get(0));
+        LOGGER.info("MolecularProfile {}", ckbEntry.molecularProfile().get(0));
+        LOGGER.info("Reference {}", ckbEntry.reference().get(0));
+        LOGGER.info("Therapy {}", ckbEntry.therapy().get(0));
+        LOGGER.info("TreatmentApproach {}", ckbEntry.treatmentApproach().get(0));
+        LOGGER.info("Variant {}", ckbEntry.variant().get(0));
     }
 
 }

@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneDepthFile {
+
     private static final String DELIMITER = "\t";
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("0.00'%'");
 

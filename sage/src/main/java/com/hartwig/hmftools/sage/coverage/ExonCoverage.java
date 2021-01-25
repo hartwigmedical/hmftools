@@ -20,7 +20,6 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion> {
     @Override
     public void accept(final GenomeRegion alignment) {
         if (alignment.start() <= exon.end() && alignment.end() >= exon.start()) {
-
             int startPosition = (int) Math.max(start(), alignment.start());
             int endPosition = (int) Math.min(end(), alignment.end());
 

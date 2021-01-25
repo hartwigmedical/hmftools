@@ -113,11 +113,9 @@ public class SageApplication implements AutoCloseable {
             samples.addAll(config.tumor());
         }
         return new Coverage(samples, coveragePanel.values());
-
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
-
         long timeStamp = System.currentTimeMillis();
         final Coverage coverage = createCoverage();
 

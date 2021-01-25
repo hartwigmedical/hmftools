@@ -19,6 +19,7 @@ public final class TestDatamodelFactory {
                 .sampleBarcode("ABC")
                 .setName(Strings.EMPTY)
                 .sequenced(false)
+                .isSomaticTumorSample(true)
                 .arrivalDate(arrivalDate)
                 .pathologyTumorPercentage("N/A")
                 .pathologySampleId("N/A");

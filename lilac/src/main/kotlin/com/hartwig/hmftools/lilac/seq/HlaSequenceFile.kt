@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.seq
 
+import com.hartwig.hmftools.lilac.hla.HlaAllele
 import org.apache.logging.log4j.LogManager
 import java.io.File
 
@@ -41,11 +42,11 @@ object HlaSequenceFile {
         return listOf(this[0]) + this.drop(1).map { it.deflate(template) }
     }
 
-    fun List<HlaSequence>.reduceToFirstFourDigits(): List<HlaSequence> {
-        val resultMap = LinkedHashMap<String, HlaSequence>()
+    fun List<HlaSequence>.specificProteins(): List<HlaSequence> {
+        val resultMap = LinkedHashMap<HlaAllele, HlaSequence>()
 
         for (sequence in this) {
-            val fourDigitName = sequence.allele.fourDigitName()
+            val fourDigitName = sequence.allele.specificProtein()
             if (!resultMap.containsKey(fourDigitName)) {
                 resultMap[fourDigitName] = sequence
             } else {

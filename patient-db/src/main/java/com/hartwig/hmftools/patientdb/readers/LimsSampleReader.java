@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsAnalysisType;
 import com.hartwig.hmftools.patientdb.data.ImmutableSampleData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
@@ -58,6 +59,7 @@ public class LimsSampleReader {
                 .sampleId(sampleId)
                 .sampleBarcode(sampleBarcode)
                 .sequenced(isSequenced)
+                .isSomaticTumorSample(lims.extractAnalysisType(sampleBarcode) == LimsAnalysisType.SOMATIC_T)
                 .setName(setName != null ? setName : Strings.EMPTY)
                 .arrivalDate(arrivalDate)
                 .samplingDate(samplingDate)
@@ -91,6 +93,7 @@ public class LimsSampleReader {
                 .sampleId(sampleId)
                 .sampleBarcode(Strings.EMPTY)
                 .sequenced(true)
+                .isSomaticTumorSample(true)
                 .setName(setName != null ? setName : Strings.EMPTY)
                 .arrivalDate(arrivalDate)
                 .samplingDate(null)

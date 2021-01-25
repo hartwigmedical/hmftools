@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.patientreporter.reportingdb;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.DecimalFormat;
-import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
+import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -25,7 +23,6 @@ public final class ReportingDb {
 
     private static final Logger LOGGER = LogManager.getLogger(ReportingDb.class);
 
-    private static final String DELIMITER = "\t";
     private static final String NA_STRING = "N/A";
 
     private ReportingDb() {
@@ -80,7 +77,7 @@ public final class ReportingDb {
             @NotNull LimsCohortConfig cohort, @NotNull String reportType, @NotNull String reportDate, @NotNull String purity,
             boolean hasReliableQuality, boolean hasReliablePurity) throws IOException {
         boolean present = false;
-        for (ReportingEntry entry : read(reportingDbTsv)) {
+        for (ReportingEntry entry : ReportingDatabase.read(reportingDbTsv)) {
             if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
                     && reportType.equals(entry.reportType())) {
                 LOGGER.warn("Sample {} has already been reported with report type '{}'!", sampleId, reportType);
@@ -107,7 +104,7 @@ public final class ReportingDb {
 
         if (!cohort.cohortId().isEmpty()) {
             boolean present = false;
-            for (ReportingEntry entry : read(reportingDbTsv)) {
+            for (ReportingEntry entry : ReportingDatabase.read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
                         && reportType.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
                     LOGGER.warn("Sample {} has already been reported with report type '{}' on {}!", sampleId, reportType, reportDate);
@@ -125,28 +122,7 @@ public final class ReportingDb {
         }
     }
 
-    @NotNull
-    @VisibleForTesting
-    static List<ReportingEntry> read(@NotNull String reportingDbTsv) throws IOException {
-        List<String> linesReportDates = Files.readAllLines(new File(reportingDbTsv).toPath());
-        List<ReportingEntry> reportingEntryList = Lists.newArrayList();
 
-        for (String line : linesReportDates.subList(1, linesReportDates.size())) {
-            String[] values = line.split(DELIMITER);
-
-            reportingEntryList.add(ImmutableReportingEntry.builder()
-                    .tumorBarcode(values[0])
-                    .sampleId(values[1])
-                    .cohort(values[2])
-                    .reportDate(values[3])
-                    .reportType(values[4])
-                    .purity(values[5])
-                    .hasReliableQuality(values[6])
-                    .hasReliablePurity(values[7])
-                    .build());
-        }
-        return reportingEntryList;
-    }
 
     private static void appendToTsv(@NotNull String reportDatesTsv, @NotNull String stringToAppend) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));

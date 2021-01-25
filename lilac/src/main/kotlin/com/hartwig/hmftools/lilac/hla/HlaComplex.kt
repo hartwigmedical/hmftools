@@ -5,9 +5,9 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
     companion object {
 
         fun complexes(confirmedGroups: List<HlaAllele>, confirmedProteins: List<HlaAllele>, candidates: List<HlaAllele>): List<HlaComplex> {
-            val a = gene(confirmedGroups.filter { it.gene == "A" }, confirmedProteins.filter { it.gene == "A" }, candidates.filter { it.gene == "A" })
-            val b = gene(confirmedGroups.filter { it.gene == "B" }, confirmedProteins.filter { it.gene == "B" }, candidates.filter { it.gene == "B" })
-            val c = gene(confirmedGroups.filter { it.gene == "C" }, confirmedProteins.filter { it.gene == "C" }, candidates.filter { it.gene == "C" })
+            val a = gene(confirmedGroups.filter { it.gene == "A" }.take(2), confirmedProteins.filter { it.gene == "A" }.take(2), candidates.filter { it.gene == "A" })
+            val b = gene(confirmedGroups.filter { it.gene == "B" }.take(2), confirmedProteins.filter { it.gene == "B" }.take(2), candidates.filter { it.gene == "B" })
+            val c = gene(confirmedGroups.filter { it.gene == "C" }.take(2), confirmedProteins.filter { it.gene == "C" }.take(2), candidates.filter { it.gene == "C" })
 
             return combineComplexes(combineComplexes(a, b), c)
         }

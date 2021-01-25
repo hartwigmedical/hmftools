@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.protect;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -17,10 +14,12 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class EvidenceReportingFunctions {
 
     private static final Set<Knowledgebase> TRIAL_SOURCES = Sets.newHashSet(Knowledgebase.ICLUSION);
+    private static final EvidenceLevel MAX_REPORTABLE_LEVEL = EvidenceLevel.B;
 
     private EvidenceReportingFunctions() {
     }
@@ -47,28 +46,46 @@ public final class EvidenceReportingFunctions {
     }
 
     @NotNull
-    private static List<ProtectEvidence> reportHighestPerEventTreatmentDirection(@NotNull List<ProtectEvidence> evidence) {
-        Optional<EvidenceLevel> highestOnLabel = highestReportableLevel(true, evidence);
-        Optional<EvidenceLevel> highestOffLabel = highestReportableLevel(false, evidence);
-        Predicate<ProtectEvidence> report = x -> x.reported() && x.onLabel()
-                ? highestOnLabel.filter(highest -> x.level().ordinal() == highest.ordinal()).isPresent()
-                : highestOffLabel.filter(highest -> x.level().ordinal() == highest.ordinal()).isPresent()
-                        && !highestOnLabel.filter(highest -> x.level().ordinal() >= highest.ordinal()).isPresent();
+    private static List<ProtectEvidence> reportHighestPerEventTreatmentDirection(@NotNull List<ProtectEvidence> evidences) {
+        EvidenceLevel highestOnLabel = highestReportableLevel(true, evidences);
+        EvidenceLevel highestOffLabel = highestReportableLevel(false, evidences);
 
-        return evidence.stream()
-                .map(x -> ImmutableProtectEvidence.builder().from(x).reported(report.test(x)).build())
-                .collect(Collectors.toList());
+        List<ProtectEvidence> filtered = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            filtered.add(ImmutableProtectEvidence.builder()
+                    .from(evidence)
+                    .reported(reportEvidence(evidence, highestOnLabel, highestOffLabel))
+                    .build());
+        }
+
+        return filtered;
     }
 
-    @NotNull
+    private static boolean reportEvidence(@NotNull ProtectEvidence evidence, @Nullable EvidenceLevel highestOnLabel,
+            @Nullable EvidenceLevel highestOffLabel) {
+        if (evidence.reported() && evidence.level().ordinal() <= MAX_REPORTABLE_LEVEL.ordinal()) {
+            if (evidence.onLabel()) {
+                assert highestOnLabel != null;
+                return evidence.level() == highestOnLabel;
+            } else if (evidence.level() == highestOffLabel){
+                return highestOnLabel == null || evidence.level().ordinal() < highestOnLabel.ordinal();
+            }
+        }
+        return false;
+    }
+
+    @Nullable
     @VisibleForTesting
-    static Optional<EvidenceLevel> highestReportableLevel(boolean isOnLabel, @NotNull List<ProtectEvidence> actionable) {
-        return actionable.stream()
-                .filter(x -> x.level().ordinal() <= EvidenceLevel.B.ordinal())
-                .filter(x -> x.onLabel() == isOnLabel)
-                .filter(x -> x.reported())
-                .min(Comparator.comparing(ProtectEvidence::level))
-                .map(ProtectEvidence::level);
+    static EvidenceLevel highestReportableLevel(boolean isOnLabel, @NotNull List<ProtectEvidence> evidences) {
+        EvidenceLevel highest = null;
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.reported() && evidence.onLabel() == isOnLabel) {
+                if (highest == null || evidence.level().ordinal() < highest.ordinal()) {
+                    highest = evidence.level();
+                }
+            }
+        }
+        return highest;
     }
 
     @NotNull

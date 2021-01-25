@@ -1,335 +1,216 @@
 package com.hartwig.hmftools.lilac
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.hartwig.hmftools.common.utils.SuffixTree
-import com.hartwig.hmftools.lilac.coverage.BamCoverage
-import com.hartwig.hmftools.lilac.coverage.BamCoverage3
-import com.hartwig.hmftools.lilac.coverage.ProteinCoverage
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
+import com.hartwig.hmftools.lilac.candidates.Candidates
 import com.hartwig.hmftools.lilac.hla.HlaAllele
-import com.hartwig.hmftools.lilac.kmer.BamKmer
-import com.hartwig.hmftools.lilac.kmer.HlaKmer
-import com.hartwig.hmftools.lilac.prot.ProteinSequence
-import com.hartwig.hmftools.lilac.prot.ProteinSequenceBoundaries
-import com.hartwig.hmftools.lilac.prot.ProteinSequenceFile
-import com.hartwig.hmftools.lilac.prot.ProteinSequenceFile.firstFourDigits
-import com.hartwig.hmftools.lilac.prot.ProteinSequenceFile.inflate
-import htsjdk.samtools.QueryInterval
-import htsjdk.samtools.SamReaderFactory
+import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
+import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.coverageString
+import com.hartwig.hmftools.lilac.hla.HlaComplex
+import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
+import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
+import com.hartwig.hmftools.lilac.read.SAMRecordReader
+import com.hartwig.hmftools.lilac.seq.HlaSequence
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.deflate
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.specificProteins
 import org.apache.logging.log4j.LogManager
-import java.io.File
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
 
 fun main(args: Array<String>) {
     LilacApplication().use { x -> x.run() }
 }
 
 
-
 class LilacApplication : AutoCloseable, Runnable {
     companion object {
         val logger = LogManager.getLogger(this::class.java)
+        const val HLA_A = "HLA-A"
+        const val HLA_B = "HLA-B"
+        const val HLA_C = "HLA-C"
     }
 
     private val startTime = System.currentTimeMillis()
+    private val transcripts = HmfGenePanelSupplier.allGenesMap37()
 
     val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("LILAC-%d").build()
     val executorService = Executors.newFixedThreadPool(7, namedThreadFactory)
 
+    val minBaseQual = 30
+    val minBaseCount = 2
+    val minFragmentCount = 25
+    val minConfirmedUniqueCoverage = 1
 
-    fun coverage(boundaries: List<Int>, proteins: List<ProteinSequence>): List<ProteinCoverage> {
-        return proteins.map { ProteinCoverage(it.allele, it.exonicProteins(boundaries).filter { it.length >= 40 }) }
-    }
+    val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
+    val outputDir = "/Users/jon/hmf/analysis/hla/resources"
+
+//            val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004T.hla.bam"
+    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001T.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002T.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003T.hla.bam"
+
 
     override fun run() {
+        logger.info("Starting LILAC")
 
-        val minKmerLength = 10
-        val maxKmerLength = 20
-        val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
-        val sequenceAFile = "${resourcesDir}/A_prot.txt"
-        val sequenceBFile = "${resourcesDir}/B_prot.txt"
-        val sequenceCFile = "${resourcesDir}/C_prot.txt"
-        val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
-        // 6:29812305-33068473
+        val aProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 364, 365)
+        val bProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
+        val cProteinExonBoundaries = setOf(24, 114, 206, 298, 338, 349, 365, 366)
+        val allProteinExonBoundaries = (aProteinExonBoundaries + bProteinExonBoundaries + cProteinExonBoundaries)
+        val allNucleotideExonBoundaries = allProteinExonBoundaries.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
 
-        writeUnwrappedFiles(sequenceAFile, sequenceBFile, sequenceCFile)
-
-        logger.info("Reading protein alignment files")
-        val aSequences = ProteinSequenceFile.readFile(sequenceAFile).inflate().firstFourDigits()
-        val bSequences = ProteinSequenceFile.readFile(sequenceBFile).inflate().firstFourDigits()
-        val cSequences = ProteinSequenceFile.readFile(sequenceCFile).inflate().firstFourDigits()
-
-//        val jon = bSequences.filter { it.allele == HlaAllele("B*56:68") }[0]
-//        println(jon.exonicProteins(ProteinSequenceBoundaries.bBoundaries()))
-
-        for (i in 1 until aSequences.size) {
-            println("$i of ${aSequences.size}")
-            aSequences[i].exonicProteins(ProteinSequenceBoundaries.aBoundaries()).map { SuffixTree(it) }
-        }
+        logger.info("Querying records from $bamFile")
+        val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+        val rawNucleotideFragments = readFromBam(bamFile)
+        val geneEnrichedNucleotides = nucleotideGeneEnrichment.enrich(rawNucleotideFragments)
+        val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minBaseCount, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, rawNucleotideFragments)
 
 
+        logger.info("Reading nucleotide files")
+        val nucleotideSequences = readNucleotideFiles(resourcesDir)
 
-        logger.info("Extracting kmers between ${minKmerLength} and ${maxKmerLength} in length")
-        val aKmerMap = aSequences.map { Pair(it, it.exonicKmers(minKmerLength, maxKmerLength, ProteinSequenceBoundaries.aBoundaries())) }.filter { it.second.isNotEmpty() }.toMap()
-        val bKmerMap = bSequences.map { Pair(it, it.exonicKmers(minKmerLength, maxKmerLength, ProteinSequenceBoundaries.bBoundaries())) }.filter { it.second.isNotEmpty() }.toMap()
-        val cKmerMap = cSequences.map { Pair(it, it.exonicKmers(minKmerLength, maxKmerLength, ProteinSequenceBoundaries.cBoundaries())) }.filter { it.second.isNotEmpty() }.toMap()
+        logger.info("Reading protein files")
+        val aminoAcidSequences = readProteinFiles(resourcesDir)
 
-        val hlaKmers = HlaKmer(listOf(aKmerMap, bKmerMap, cKmerMap))
-
-
-        for (i in hlaKmers.sequences) {
-            for (j in hlaKmers.sequences) {
-                if (i.key != j.key && i.value == j.value) {
-                    logger.warn("${i.key.allele} is indistingusable from ${j.key.allele}")
-                }
-            }
-        }
-
-
-        logger.info("Kmers: ${hlaKmers.kmers().size}")
-        logger.info("Unique kmers: ${hlaKmers.uniqueKmers().size}")
-
-        val specificSequencesA = setOf(HlaAllele("A*01:01:01:01"), HlaAllele("A*11:01:01:01"))
-        val specificSequencesB = setOf(HlaAllele("B*08:01:01:01"), HlaAllele("B*56:01:01:01"))
-        val specificSequencesC = setOf(HlaAllele("C*01:02:01:01"), HlaAllele("C*07:01:01:01"))
-        val actualSequences = mutableSetOf<HlaAllele>()
-        actualSequences.addAll(specificSequencesA)
-        actualSequences.addAll(specificSequencesB)
-        actualSequences.addAll(specificSequencesC)
-
-        val bComplexLong = setOf(
-                HlaAllele("B*07:02:01:01"),
-                HlaAllele("B*08:01:01:01"),
-                HlaAllele("B*08:20:01"),
-                HlaAllele("B*08:26:03"),
-                HlaAllele("B*08:39"),
-                HlaAllele("B*08:132"),
-                HlaAllele("B*08:134"),
-                HlaAllele("B*08:151"),
-                HlaAllele("B*08:221"),
-                HlaAllele("B*08:225"),
-                HlaAllele("B*08:230"),
-                HlaAllele("B*08:233"),
-                HlaAllele("B*08:248"),
-                HlaAllele("B*42:21"),
-                HlaAllele("B*55:52"),
-                HlaAllele("B*56:01:01:01"),
-                HlaAllele("B*56:68"))
-
-
-        val bComplex = setOf(HlaAllele("B*08:01:01:01"), HlaAllele("B*56:01:01:01"), HlaAllele("B*56:68"))
-        val specificSequences = setOf(HlaAllele("C*01:02:01:01"), HlaAllele("C*07:01:01:01"), HlaAllele("C*07:877"), HlaAllele("C*07:879"), HlaAllele("C*07:882"))
-
-
-        val kmerCount = kmerCounts(bamFile, hlaKmers.kmers())
-        logger.info("Found ${kmerCount.size} distinct kmers with ${kmerCount.values.toIntArray().sum()} coverage")
-
-        val initialCandidates = initialCandidates(hlaKmers, kmerCount)
-        val initialCandidateAlleles = initialCandidates.map { it.key.allele }
-
-
-        logger.info("*********** Coverage ***********")
-
-
-        val aCoverage = coverage(ProteinSequenceBoundaries.aBoundaries(), aSequences).filter { it.hlaAllele in initialCandidateAlleles }
-        val bCoverage = coverage(ProteinSequenceBoundaries.bBoundaries(), bSequences).filter { it.hlaAllele in initialCandidateAlleles }
-        val cCoverage = coverage(ProteinSequenceBoundaries.cBoundaries(), cSequences).filter { it.hlaAllele in initialCandidateAlleles }
-        val allCoverage = mutableListOf<ProteinCoverage>()
-        allCoverage.addAll(aCoverage)
-        allCoverage.addAll(bCoverage)
-        allCoverage.addAll(cCoverage)
-
-
-
-//        for (proteinCoverage in allCoverage) {
-//            println(proteinCoverage.map.values.map { it.exonSequence })
-//
-//        }
+        // Candidates
+        val candidateFactory = Candidates(minBaseCount, minFragmentCount, nucleotideSequences, aminoAcidSequences)
+        val aCandidates = candidateFactory.candidates("A", aProteinExonBoundaries, aminoAcidPipeline.typeA())
+        val bCandidates = candidateFactory.candidates("B", bProteinExonBoundaries, aminoAcidPipeline.typeB())
+        val cCandidates = candidateFactory.candidates("C", cProteinExonBoundaries, aminoAcidPipeline.typeC())
+        val candidates = aCandidates + bCandidates + cCandidates
+//listOf<HlaSequence>()//
 
         // Coverage
-        calculateCoverage3(minKmerLength, bamFile, allCoverage)
-        val secondaryCandidates = allCoverage.filter { it.isCovered() }
+        val aminoAcidFragments = aminoAcidPipeline.combined()
+        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, aminoAcidFragments)
+        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
 
-        println("${initialCandidates.size} initial candidates")
-        println("${secondaryCandidates.size} secondary candidates")
+        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect allNucleotideExonBoundaries
+        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
+        nucleotideCounts.writeVertically("/Users/jon/hmf/analysis/hla/nucleotides.count.txt")
 
-        logger.info("Candidate\tMinCoverage\tMaxCoverage\tAvgCoverage")
-        for (coverage in secondaryCandidates) {
-            val minCoverage = coverage.minCoverage()
-                logger.info("${coverage.hlaAllele.toString().padEnd(14, ' ')}\t${minCoverage}\t${coverage.maxCoverage()}\t${coverage.avgCoverage()}")
 
+
+        val candidateAlleles = candidates.map { it.allele }
+        val candidateAlleleSpecificProteins = candidateAlleles.map { it.specificProtein() }
+
+        val aminoAcidCandidates = aminoAcidSequences.filter { it.allele in candidateAlleles }
+        val nucleotideCandidates = nucleotideSequences.filter { it.allele.specificProtein() in candidateAlleleSpecificProteins }
+
+        val coverageFactory = HlaAlleleCoverageFactory(aminoAcidFragments, aminoAcidCounts.heterozygousLoci(), aminoAcidCandidates, nucleotideHeterozygousLoci, nucleotideCandidates)
+
+
+        logger.info("Calculating overall coverage")
+        val groupCoverage = coverageFactory.groupCoverage(candidateAlleles)
+        val confirmedGroups = groupCoverage.filter { it.uniqueCoverage > minConfirmedUniqueCoverage }.sortedDescending()
+        logger.info("... found ${confirmedGroups.size} uniquely identifiable groups: " + confirmedGroups.joinToString(", "))
+
+
+        val proteinCoverage = coverageFactory.proteinCoverage(candidateAlleles)
+        val confirmedProtein = proteinCoverage.filter { it.uniqueCoverage > minConfirmedUniqueCoverage }.sortedDescending()
+        logger.info("... found ${confirmedProtein.size} uniquely identifiable proteins: " + confirmedProtein.joinToString(", "))
+
+
+        val complexes = HlaComplex.complexes(
+                confirmedGroups.take(6).map { it.allele },
+                confirmedProtein.take(6).map { it.allele },
+                candidates.map { it.allele })
+
+        logger.info("Calcuating coverage of ${complexes.size} complexes")
+
+        println("TotalCoverage\tUniqueCoverage\tSharedCoverage\tWild\tAllele1\tAllele2\tAllele3\tAllele4\tAllele5\tAllele6")
+        for (complex in complexes) {
+            val complexCoverage = coverageFactory.proteinCoverage(complex.alleles)
+            println(complexCoverage.coverageString())
         }
 
 
-        println("sdf")
+        val sequences = (candidates union (aminoAcidSequences.filter { it.allele == HlaAllele("C*03:04:01:01") })).map { HlaSequence(it.contig, it.sequence) }
+        HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
+        HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(aProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(bProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(cProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
+        HlaSequenceFile.appendFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
 
-
-
-//
-//
-//        logger.info("*********** Round 2 ***********")
-//        val candidateKmers = HlaKmer(listOf(initialCandidates))
-//        val uniqueCandidateKmers = candidateKmers.uniqueKmers
-//        round2(candidateKmers, kmerCount.filter { it.key in uniqueCandidateKmers })
-//
-////        val uniqueKmers = bamKmers intersect hlaKmers.uniqueKmers()
-////        println(uniqueKmers.size)
-////
-////        for (kmer in uniqueKmers) {
-////            val matches = kmerCount.kmerCount().filter { it.key in kmer }.map { it.value }.sum()
-////            logger.info("Found unique candidate ${hlaKmers.proteinSequence(kmer).allele.toString()} -> $matches -> $kmer")
-////        }
-//
-//        logger.info("Found ${initialCandidates.size} candidates")
 
     }
 
+    private fun checkCandidates(candidates: Collection<HlaSequence>): Int {
+        var count = 0
 
-
-    private fun initialCandidates(hlaKmers: HlaKmer, kmerCount: Map<String, Int>): Map<ProteinSequence, Set<String>> {
-        val result = mutableMapOf<ProteinSequence, Set<String>>()
-
-        val bamKmers = kmerCount.filter { it.value > 1 }.keys
-        val uniqueBamKmers = bamKmers intersect hlaKmers.uniqueKmers
-
-
-        logger.info("Candidate\tMinCoverage\tMaxCoverage\tTotalCoverage")
-        for ((proteinSequence, kmers) in hlaKmers.sequences()) {
-            val uniqueKmers = kmers intersect uniqueBamKmers
-
-            if (kmers.isNotEmpty() && bamKmers.containsAll(kmers)) {
-                result[proteinSequence] = kmers
-
-                val totalMatches = kmerCount.filter { it.key in kmers }.map { it.value }.sum()
-                val minMatch = kmerCount.filter { it.key in kmers }.map { it.value }.min()
-                val maxMatch = kmerCount.filter { it.key in kmers }.map { it.value }.max()
-                logger.info("${proteinSequence.allele.toString().padEnd(14, ' ')}\t$minMatch\t$maxMatch\t$totalMatches")
-//                for (kmer in kmers) {
-//                    logger.info("       Kmer $kmer count -> ${kmerCount[kmer]}")
-//                }
-//
-                for (kmer in uniqueKmers) {
-//                    logger.info("   includes unique kmer $kmer -> ${kmerCount[kmer]}")
-                }
-            }
+        if (candidates.any { it.allele == HlaAllele("A*01:01:01:01") }) {
+            count++;
         }
+
+        if (candidates.any { it.allele == HlaAllele("A*11:01:01:01") }) {
+            count++;
+        }
+        if (candidates.any { it.allele == HlaAllele("B*08:01:01:01") }) {
+            count++;
+        }
+        if (candidates.any { it.allele == HlaAllele("B*56:01:01:01") }) {
+            count++;
+        }
+        if (candidates.any { it.allele == HlaAllele("C*01:02:01:01") }) {
+            count++;
+        }
+        if (candidates.any { it.allele == HlaAllele("C*07:01:01:01") }) {
+            count++;
+        }
+
+
+        return count;
+    }
+
+
+    private fun readFromBam(bamFile: String): List<NucleotideFragment> {
+        val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
+        val reader = SAMRecordReader(1000, transcripts)
+        val reads = reader.readFromBam(bamFile)
+        return NucleotideFragment.fromReads(minBaseQual, reads).filter { it.isNotEmpty() }
+    }
+
+    fun unwrapFile(fileName: String) {
+        val input = HlaSequenceFile.readFile(fileName)
+        val output = input.specificProteins()
+        val inflated = output.map { it.inflate(input[0].rawSequence) }
+        val deflated = inflated.map { it.deflate(inflated[0].rawSequence) }
+        HlaSequenceFile.writeFile(fileName.replace(".txt", ".unwrapped.txt"), output)
+        HlaSequenceFile.writeFile(fileName.replace(".txt", ".deflated.txt"), deflated)
+    }
+
+    private fun readNucleotideFiles(resourcesDir: String): List<HlaSequence> {
+        return readSequenceFiles({ x -> "${resourcesDir}/${x}_nuc.txt" }, { x -> x })
+    }
+
+    private fun readProteinFiles(resourcesDir: String): List<HlaSequence> {
+        return readSequenceFiles({ x -> "${resourcesDir}/${x}_prot.txt" }, { x -> x.specificProteins() })
+    }
+
+    private fun readSequenceFiles(filenameSupplier: (Char) -> String, transform: (List<HlaSequence>) -> List<HlaSequence>): List<HlaSequence> {
+
+        val aFile = filenameSupplier('A')
+        val bFile = filenameSupplier('B')
+        val cFile = filenameSupplier('C')
+
+        val aSequence = transform(HlaSequenceFile.readFile(aFile).inflate())
+        val bSequence = transform(HlaSequenceFile.readFile(bFile).inflate())
+        val cSequence = transform(HlaSequenceFile.readFile(cFile).inflate())
+
+        val result = mutableListOf<HlaSequence>()
+        result.addAll(aSequence)
+        result.addAll(bSequence)
+        result.addAll(cSequence)
+
+        val maxLength = result.map { it.sequence.length }.max()!!
 
         return result
-//                .filter { it.key.allele != HlaAllele("B*56:01:01:01") }
-//                .filter { !it.key.allele.toString().endsWith("N") }
-    }
-
-    private fun round2(hlaKmers: HlaKmer, kmerCount: Map<String, Int>): Map<ProteinSequence, Set<String>> {
-        val result = mutableMapOf<ProteinSequence, Set<String>>()
-
-        val bamKmers = kmerCount.filter { it.value > 0 }.keys
-        val uniqueBamKmers = bamKmers intersect hlaKmers.uniqueKmers()
-
-
-        logger.info("Candidate\tMinCoverage\tMaxCoverage\tTotalCoverage")
-        for ((proteinSequence, kmers) in hlaKmers.sequences()) {
-            val uniqueKmers = kmers intersect uniqueBamKmers
-
-            if (uniqueKmers.isNotEmpty() && bamKmers.containsAll(uniqueKmers)) {
-                result[proteinSequence] = kmers
-
-                val totalMatches = kmerCount.filter { it.key in kmers }.map { it.value }.sum()
-                val minMatch = kmerCount.filter { it.key in kmers }.map { it.value }.min()
-                val maxMatch = kmerCount.filter { it.key in kmers }.map { it.value }.max()
-                logger.info("${proteinSequence.allele.toString().padEnd(14, ' ')}\t$minMatch\t$maxMatch\t$totalMatches")
-                for (kmer in uniqueKmers) {
-                    logger.info("       Kmer $kmer count -> ${kmerCount[kmer]}")
-                }
-//
-//                for (kmer in uniqueKmers) {
-//                    logger.info("   includes unique kmer $kmer -> ${kmerCount[kmer]}")
-//                }
-            } else {
-//                logger.info("${proteinSequence.allele.toString().padEnd(14, ' ')} has no unique kmers")
-            }
-        }
-
-        return result
-    }
-
-    private fun calculateCoverage(minMatch: Int, bamFile: String, coverage: Collection<ProteinCoverage>) {
-        val bamCoverage = BamCoverage(minMatch, coverage)
-        val futures = mutableListOf<Future<*>>()
-        SamReaderFactory.makeDefault().open(File(bamFile)).use {
-
-            val sequenceIndex = it.fileHeader.sequenceDictionary.getSequence("6").sequenceIndex
-            val hlaa = QueryInterval(sequenceIndex, 29910331, 29913232)
-            val hlac = QueryInterval(sequenceIndex, 31235946, 31240848)
-            val hlab = QueryInterval(sequenceIndex, 31321260, 31325935)
-
-            logger.info("Reading BAM file $bamFile")
-            for (samRecord in it.queryOverlapping(arrayOf(hlaa, hlac, hlab))) {
-                futures.add(executorService.submit { bamCoverage.accept(samRecord) })
-            }
-
-        }
-
-        logger.info("Calculating coverage")
-        futures.forEach { it.get() }
-
-    }
-
-    private fun calculateCoverage3(minMatch: Int, bamFile: String, coverage: Collection<ProteinCoverage>) {
-        logger.info("Stuff")
-
-        val bamCoverage = BamCoverage3(minMatch, coverage.flatMap { it.coverages })
-        val futures = mutableListOf<Future<*>>()
-        SamReaderFactory.makeDefault().open(File(bamFile)).use {
-
-            val sequenceIndex = it.fileHeader.sequenceDictionary.getSequence("6").sequenceIndex
-            val hlaa = QueryInterval(sequenceIndex, 29910331, 29913232)
-            val hlac = QueryInterval(sequenceIndex, 31235946, 31240848)
-            val hlab = QueryInterval(sequenceIndex, 31321260, 31325935)
-
-            logger.info("Reading BAM file $bamFile")
-            for (samRecord in it.queryOverlapping(arrayOf(hlaa, hlac, hlab))) {
-                futures.add(executorService.submit { bamCoverage.accept(samRecord) })
-            }
-
-        }
-
-        logger.info("Calculating coverage")
-        futures.forEach { it.get() }
-
-    }
-
-    private fun kmerCounts(bamFile: String, kmers: Set<String>): Map<String, Int> {
-        val kmerCount = BamKmer(kmers)
-        val futures = mutableListOf<Future<*>>()
-
-        SamReaderFactory.makeDefault().open(File(bamFile)).use {
-
-            val sequenceIndex = it.fileHeader.sequenceDictionary.getSequence("6").sequenceIndex
-            val hlaa = QueryInterval(sequenceIndex, 29909331, 29914232)
-            val hlac = QueryInterval(sequenceIndex, 31235946, 31240848)
-            val hlab = QueryInterval(sequenceIndex, 31321260, 31325935)
-
-//            val everything = QueryInterval(sequenceIndex, 29910331, 31324935)
-//            val hlaa = QueryInterval(sequenceIndex, 29910331, 29913232)
-//            val hlac = QueryInterval(sequenceIndex, 31236946, 31239848)
-//            val hlab = QueryInterval(sequenceIndex, 31322260, 31324935)
-
-            logger.info("Reading BAM file $bamFile")
-            for (samRecord in it.queryOverlapping(arrayOf(hlaa, hlac, hlab))) {
-                futures.add(executorService.submit { kmerCount.accept(samRecord) })
-            }
-        }
-
-        logger.info("Searching for kmers")
-        futures.forEach { it.get() }
-        return kmerCount.kmerCount()
-    }
-
-
-    private fun writeUnwrappedFiles(aFile: String, bFile: String, cFile: String) {
-        ProteinSequenceFile.writeUnwrappedFile(ProteinSequenceBoundaries.aBoundaries(), aFile, aFile.replace("txt", "unwrapped.txt"))
-        ProteinSequenceFile.writeUnwrappedFile(ProteinSequenceBoundaries.bBoundaries(), bFile, bFile.replace("txt", "unwrapped.txt"))
-        ProteinSequenceFile.writeUnwrappedFile(ProteinSequenceBoundaries.cBoundaries(), cFile, cFile.replace("txt", "unwrapped.txt"))
+                .filter { it.sequence.isNotEmpty() }
+                .map { it.pad(maxLength) }
     }
 
 
@@ -337,5 +218,36 @@ class LilacApplication : AutoCloseable, Runnable {
         executorService.shutdown()
         logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
     }
+
+    private fun filterCandidatesOnNucleotides(minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<NucleotideFragment>, vararg nucleotides: Int): List<HlaSequence> {
+
+        val reads = fragments
+                .filter { it.containsAllNucleotides(*nucleotides) }
+                .map { it.nucleotides(*nucleotides) }
+                .groupingBy { it }
+                .eachCount()
+                .filter { it.value >= minEvidence }
+                .keys
+                .map { it.toCharArray() }
+
+
+        return candidates.filter { it.consistentWith(nucleotides, reads) }
+
+    }
+
+    private fun filterCandidatesOnExonBoundaryNucleotide(aminoAcidIndex: Int, minEvidence: Int, candidates: Collection<HlaSequence>, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
+        val firstBaseCandidates = filterCandidatesOnNucleotides(minEvidence, candidates, aminoAcidFragments, aminoAcidIndex * 3)
+        return filterCandidatesOnNucleotides(minEvidence, firstBaseCandidates, aminoAcidFragments, aminoAcidIndex * 3 + 1, aminoAcidIndex * 3 + 2)
+    }
+
+    private fun filterCandidatesOnExonBoundaries(exonBoundaries: Collection<Int>, minEvidence: Int, candidates: Collection<HlaSequence>, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
+        var result = candidates.toList()
+        for (exonBoundary in exonBoundaries) {
+            result = filterCandidatesOnExonBoundaryNucleotide(exonBoundary, minEvidence, result, aminoAcidFragments)
+        }
+
+        return result
+    }
+
 
 }

@@ -12,6 +12,8 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
+import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
@@ -27,7 +29,7 @@ public class ReportingDbTest {
 
     @Test
     public void canReadReportingDbTsv() throws IOException {
-        List<ReportingEntry> reportingEntries = ReportingDb.read(REPORTING_DB_TSV);
+        List<ReportingEntry> reportingEntries = ReportingDatabase.read(REPORTING_DB_TSV);
 
         assertEquals(2, reportingEntries.size());
 

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.seq
 
+import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
 import com.hartwig.hmftools.lilac.hla.HlaAllele
-import com.hartwig.hmftools.lilac.phase.PhasedEvidence
 
 data class HlaSequence(val contig: String, val rawSequence: String) {
     val allele = HlaAllele(contig)
@@ -22,6 +22,10 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
     }
 
     fun match(indicies: IntArray, sequence: CharArray): HlaSequenceMatch {
+        if (indicies.isEmpty()) {
+            return HlaSequenceMatch.NONE
+        }
+
         var wildCardCount = 0
         for (i in indicies.indices) {
             val index = indicies[i]
@@ -36,7 +40,11 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
             }
         }
 
-        return if (wildCardCount > 0) HlaSequenceMatch.PARTIAL else HlaSequenceMatch.FULL
+        if (wildCardCount > 0) {
+            return if (wildCardCount == indicies.size) return HlaSequenceMatch.WILD else HlaSequenceMatch.PARTIAL
+        }
+
+        return HlaSequenceMatch.FULL
     }
 
     fun copyWithAdditionalSequence(additionalSequence: String): HlaSequence {

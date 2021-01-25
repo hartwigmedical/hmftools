@@ -63,7 +63,7 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
                 .build();
     }
 
-    static int[] baseCoverageSummary(Collection<ExonCoverage> exons) {
+    static int[] baseCoverageSummary(@NotNull Collection<ExonCoverage> exons) {
         int[] geneDepth = new int[MAX_BUCKET + 1];
         for (ExonCoverage exon : exons) {
             for (int baseDepth : exon.coverage()) {
@@ -75,7 +75,6 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
     }
 
     static double missedVariantLikelihood(int[] baseCoverage) {
-
         int totalCoverage = Arrays.stream(baseCoverage).sum();
         double totalLikelihood = 0;
 
@@ -122,7 +121,6 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
             if (depth < maxDepth) {
                 return 30 + i;
             }
-
         }
 
         return MAX_BUCKET;

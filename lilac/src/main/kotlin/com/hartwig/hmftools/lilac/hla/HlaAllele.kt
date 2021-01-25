@@ -21,8 +21,12 @@ data class HlaAllele(val gene: String, val alleleGroup: String, val protein: Str
         return "${fourDigitName()}$remainder"
     }
 
+    fun alleleGroupName(): String {
+        return "$gene*$alleleGroup"
+    }
+
     fun fourDigitName(): String {
-        return "$gene*$alleleGroup:$protein"
+        return if (protein.isEmpty()) alleleGroupName() else "$gene*$alleleGroup:$protein"
     }
 
     fun specificProtein(): HlaAllele {
