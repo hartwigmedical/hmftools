@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
+import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadRefPercentileData;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromCohortFile;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
@@ -96,6 +97,10 @@ public class SvClassifier implements CuppaClassifier
             for(Map.Entry<String, double[]> cancerPercentiles : entry.getValue().entrySet())
             {
                 final String cancerType = cancerPercentiles.getKey();
+
+                if(!isKnownCancerType(cancerType))
+                    continue;
+
                 double percentile = getPercentile(cancerPercentiles.getValue(), svCount, true);
                 cancerTypeValues.put(cancerType, percentile);
             }

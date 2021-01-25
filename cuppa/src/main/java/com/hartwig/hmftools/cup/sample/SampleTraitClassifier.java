@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
+import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.MS_INDELS_TMB;
 import static com.hartwig.hmftools.cup.sample.SampleTraitType.WGD;
@@ -30,7 +31,7 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
-public class SampleTraits implements CuppaClassifier
+public class SampleTraitClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -42,7 +43,7 @@ public class SampleTraits implements CuppaClassifier
 
     private boolean mIsValid;
 
-    public SampleTraits(final CuppaConfig config, final SampleDataCache sampleDataCache)
+    public SampleTraitClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -139,7 +140,7 @@ public class SampleTraits implements CuppaClassifier
 
     private void addTraitPrevalences(final SampleData sample, final SampleTraitsData sampleTraits, final List<SampleResult> results)
     {
-        for(Map.Entry<SampleTraitType, Map<String, Double>> entry : mRefTraitRates.entrySet())
+        for(Map.Entry<SampleTraitType,Map<String,Double>> entry : mRefTraitRates.entrySet())
         {
             final SampleTraitType traitType = entry.getKey();
 
@@ -186,6 +187,10 @@ public class SampleTraits implements CuppaClassifier
             for(Map.Entry<String, double[]> cancerPercentiles : entry.getValue().entrySet())
             {
                 final String cancerType = cancerPercentiles.getKey();
+
+                if(!isKnownCancerType(cancerType))
+                    continue;
+
                 double percentile = getPercentile(cancerPercentiles.getValue(), traitValue, true);
                 cancerTypeValues.put(cancerType, percentile);
             }

@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXP
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
+import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.rna.RefRnaExpression.loadGeneIdIndices;
@@ -44,7 +45,7 @@ import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-public class RnaExpression implements CuppaClassifier
+public class GeneExpressionClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -70,7 +71,7 @@ public class RnaExpression implements CuppaClassifier
 
     private boolean mIsValid;
 
-    public RnaExpression(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public GeneExpressionClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -230,7 +231,7 @@ public class RnaExpression implements CuppaClassifier
         {
             final String refCancerType = mRefCancerTypes.get(i);
 
-            if(refCancerType.equals(CANCER_TYPE_OTHER))
+            if(!isKnownCancerType(refCancerType))
                 continue;
 
             if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
@@ -299,6 +300,9 @@ public class RnaExpression implements CuppaClassifier
                         topMatches, sample.Id, refSampleId, css, EXPRESSION_PAIRWISE.toString(),
                         CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
             }
+
+            if(!isKnownCancerType(refCancerType))
+                continue;
 
             double cssWeight = pow(RNA_GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
 

@@ -249,6 +249,10 @@ public class SomaticClassifier implements CuppaClassifier
         for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
         {
             final String cancerType = cancerPercentiles.getKey();
+
+            if(!isKnownCancerType(cancerType))
+                continue;
+
             double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true);
             cancerTypeValues.put(cancerType, percentile);
         }

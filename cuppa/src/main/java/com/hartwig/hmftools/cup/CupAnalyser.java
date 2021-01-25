@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
-import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.ClassifierType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
@@ -25,7 +24,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
@@ -33,9 +31,8 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
-import com.hartwig.hmftools.cup.rna.AltSjClassifier;
-import com.hartwig.hmftools.cup.rna.RnaExpression;
-import com.hartwig.hmftools.cup.sample.SampleTraits;
+import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
+import com.hartwig.hmftools.cup.sample.SampleTraitClassifier;
 import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
 import com.hartwig.hmftools.cup.svs.SvClassifier;
 
@@ -76,13 +73,13 @@ public class CupAnalyser
             mClassifiers.add(new FeatureClassifier(mConfig, mSampleDataCache));
 
         if(mConfig.runClassifier(SAMPLE_TRAIT))
-            mClassifiers.add(new SampleTraits(mConfig, mSampleDataCache));
+            mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache));
 
         if(mConfig.runClassifier(SV))
             mClassifiers.add(new SvClassifier(mConfig, mSampleDataCache));
 
         if(mConfig.runClassifier(GENE_EXP))
-            mClassifiers.add(new RnaExpression(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new GeneExpressionClassifier(mConfig, mSampleDataCache, cmd));
 
         //if(mConfig.runClassifier(CategoryType.ALT_SJ))
         //    mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache));

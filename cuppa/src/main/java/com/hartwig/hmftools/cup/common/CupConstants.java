@@ -17,7 +17,6 @@ public class CupConstants
     public static final int POS_FREQ_BUCKET_SIZE = 500000;
     public static final int POS_FREQ_MAX_SAMPLE_COUNT = 20000;
 
-
     public static final double MIN_CLASSIFIER_SCORE = 0.01;
     public static final double CORRELATION_DAMPEN_FACTOR = 0.8;
 

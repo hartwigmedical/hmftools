@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_CO
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_CANCER;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
@@ -18,11 +17,8 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
+import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
-import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
-import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
-import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -31,7 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.cup.common.CategoryType;
-import com.hartwig.hmftools.cup.rna.RnaExpression;
+import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -136,7 +132,9 @@ public class CuppaConfig
         {
             if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
             {
-                Arrays.stream(CategoryType.values()).forEach(x -> IncludedCategories.add(x));
+                Arrays.stream(CategoryType.values())
+                        .filter(x -> x != ALT_SJ)
+                        .forEach(x -> IncludedCategories.add(x));
             }
             else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
             {
@@ -258,7 +256,7 @@ public class CuppaConfig
         options.addOption(WRITE_CLASSIFIERS_ONLY, false, "Cohort-only - only write classifier data");
 
         addDatabaseCmdLineArgs(options);
-        RnaExpression.addCmdLineArgs(options);
+        GeneExpressionClassifier.addCmdLineArgs(options);
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");

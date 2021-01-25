@@ -4,9 +4,8 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustLowProbabilities;
-import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
@@ -51,7 +50,7 @@ public class AltSjClassifier implements CuppaClassifier
         mIsValid &= loadRefAltSJs(config.RefAltSjPrevFile);
     }
 
-    public CategoryType categoryType() { return FEATURE; }
+    public CategoryType categoryType() { return ALT_SJ; }
     public boolean isValid() { return mIsValid; }
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
@@ -143,7 +142,7 @@ public class AltSjClassifier implements CuppaClassifier
             final String altSjStr = String.format("ALT-SJs=%d", matchedAltSJs);
 
             SampleResult result = new SampleResult(
-                    sample.Id, FEATURE, LIKELIHOOD, ClassifierType.ALT_SJ.toString(), altSjStr, cancerProbTotals);
+                    sample.Id, ALT_SJ, LIKELIHOOD, ClassifierType.ALT_SJ.toString(), altSjStr, cancerProbTotals);
 
             results.add(result);
         }

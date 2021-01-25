@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
+import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.extractTrinucleotideCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
@@ -154,7 +155,7 @@ public class RefSomatics implements RefClassifier
                     continue;
 
                 refMatrix.setCol(refSampleIndex, existingRefSampleCounts.getCol(i));
-                sampleCountsIndex.put(existingRefSampleIds.get(i), i);
+                sampleCountsIndex.put(existingRefSampleIds.get(i), refSampleIndex);
                 ++refSampleIndex;
             }
         }
@@ -264,7 +265,7 @@ public class RefSomatics implements RefClassifier
 
                     if(index >= matrix.Cols)
                     {
-                        CUP_LOGGER.error("file({}) invalid col({})", filename, i);
+                        CUP_LOGGER.error("file({}) invalid col({}) sampleId({})", filename, i, sampleIds.get(i));
                         return;
                     }
 
@@ -408,6 +409,9 @@ public class RefSomatics implements RefClassifier
         for(Map.Entry<String,List<Double>> entry : mCancerSnvCounts.entrySet())
         {
             final String cancerType = entry.getKey();
+
+            if(!isKnownCancerType(cancerType))
+                continue;
 
             final double[] percentiles = buildPercentiles(convertList(entry.getValue()));
             writeRefSnvCountData(cancerType, percentiles);
