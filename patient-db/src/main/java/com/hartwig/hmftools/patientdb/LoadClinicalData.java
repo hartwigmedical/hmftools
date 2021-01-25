@@ -196,21 +196,15 @@ public final class LoadClinicalData {
                 } else {
 
                     if (patient.baselineData().curatedPrimaryTumor().location() == null
-                            && patient.baselineData().curatedPrimaryTumor().searchTerm() == null && patient.baselineData()
+                            && patient.baselineData().curatedPrimaryTumor().searchTerm() == null || patient.baselineData()
                             .curatedPrimaryTumor()
                             .searchTerm()
                             .isEmpty()) {
                         patientsWithMissingDoid.add(patient.patientIdentifier());
                     }
                 }
-
-                if (lims.isBlacklistedForCurationTumorLocations(patient.patientIdentifier())) {
-                    patientsWithMissingDoid.add(patient.patientIdentifier());
-                }
-
             }
         }
-        LOGGER.info(patientsWithMissingDoid);
         return patientsWithMissingDoid;
     }
 
