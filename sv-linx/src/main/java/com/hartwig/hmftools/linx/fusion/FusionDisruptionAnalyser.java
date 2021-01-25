@@ -175,7 +175,7 @@ public class FusionDisruptionAnalyser
 
         if(cmdLineArgs.hasOption(WRITE_NEO_EPITOPES))
         {
-            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, mConfig.hasMultipleSamples(), mGeneDataCache);
+            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, mConfig.hasMultipleSamples(), mGeneDataCache, mFusionFinder.getKnownFusionCache());
         }
 
         if(mRunFusions)

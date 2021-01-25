@@ -11,12 +11,16 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,6 +30,8 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -41,13 +47,16 @@ public class NeoEpitopeWriter
     private String mSampleId;
 
     private final EnsemblDataCache mGeneTransCache;
+    private final KnownFusionCache mKnownFusionCache;
     private final List<NeoEpitopeFusion> mFusions;
 
-    public NeoEpitopeWriter(final String outputDir, boolean isMultiSample, final EnsemblDataCache geneDataCache)
+    public NeoEpitopeWriter(
+            final String outputDir, boolean isMultiSample, final EnsemblDataCache geneDataCache, final KnownFusionCache knownFusionCache)
     {
         mOutputDir = outputDir;
         mIsMultiSample = isMultiSample;
         mGeneTransCache = geneDataCache;
+        mKnownFusionCache = knownFusionCache;
 
         mFileWriter = null;
         mSampleId = null;
@@ -68,10 +77,6 @@ public class NeoEpitopeWriter
             final LinkedPair lowerLink, final LinkedPair upperLink)
     {
         if(breakendGenes1.isEmpty() || breakendGenes2.isEmpty())
-            return;
-
-        // avoid writing duplicates of the same junction
-        if(isDuplicate(breakendGenes1.get(0), breakendGenes2.get(0)))
             return;
 
         int[] extensionLengths = new int[FS_PAIR];
@@ -99,10 +104,16 @@ public class NeoEpitopeWriter
                 extensionLengths[geneStreamIndex] = lowerLink != null ? lowerLink.length() : -1;
                 extensionLengths[switchStream(geneStreamIndex)] = upperLink != null ? upperLink.length() : -1;
 
-                final List<BreakendTransData> validUpTrans = findValidTranscripts(upGene, extensionLengths[FS_UP]);
-                final List<BreakendTransData> validDownTrans = findValidTranscripts(downGene, extensionLengths[FS_DOWN]);
+                int maxUpstreamDistance = getMaxUpstreamDistance(upGene.GeneName, downGene.GeneName);
+
+                final List<BreakendTransData> validUpTrans = findValidTranscripts(upGene, extensionLengths[FS_UP], 0);
+                final List<BreakendTransData> validDownTrans = findValidTranscripts(downGene, extensionLengths[FS_DOWN], maxUpstreamDistance);
 
                 if(validUpTrans.isEmpty() || validDownTrans.isEmpty())
+                    continue;
+
+                // avoid writing duplicates of the same junction, including in the reverse direction
+                if(isDuplicate(breakendGenes1.get(0), breakendGenes2.get(0)) || isDuplicate(breakendGenes2.get(0), breakendGenes1.get(0)))
                     continue;
 
                 double avgJcn = (upGene.jcn() + downGene.jcn()) * 0.5;
@@ -129,7 +140,7 @@ public class NeoEpitopeWriter
         }
     }
 
-    private final List<BreakendTransData> findValidTranscripts(final BreakendGeneData gene, int linkExtensionLength)
+    private final List<BreakendTransData> findValidTranscripts(final BreakendGeneData gene, int linkExtensionLength, int maxUpstreamDistance)
     {
         final List<BreakendTransData> validTrans = Lists.newArrayList();
 
@@ -154,6 +165,9 @@ public class NeoEpitopeWriter
 
                 // cannot be NMD
                 if(transcript.TransData.BioType.equals(BIOTYPE_NONSENSE_MED_DECAY))
+                    continue;
+
+                if(transcript.getDistanceUpstream() > maxUpstreamDistance)
                     continue;
 
                 // check for a preceding splice acceptor from another transcript, whether same gene or not
@@ -189,6 +203,20 @@ public class NeoEpitopeWriter
         }
 
         return validTrans;
+    }
+
+    private int getMaxUpstreamDistance(final String upGene, final String downGene)
+    {
+        if(mKnownFusionCache.hasKnownFusion(upGene, downGene))
+            return MAX_UPSTREAM_DISTANCE_KNOWN;
+
+        if(mKnownFusionCache.hasPromiscuousFiveGene(upGene) && mKnownFusionCache.isHighImpactPromiscuous(PROMISCUOUS_5, upGene, downGene))
+            return MAX_UPSTREAM_DISTANCE_KNOWN;
+
+        if(mKnownFusionCache.hasPromiscuousThreeGene(downGene) && mKnownFusionCache.isHighImpactPromiscuous(PROMISCUOUS_3, upGene, downGene))
+            return MAX_UPSTREAM_DISTANCE_KNOWN;
+
+        return MAX_UPSTREAM_DISTANCE_OTHER;
     }
 
     private boolean hasValidTraversal(
