@@ -29,12 +29,14 @@ public class NeoEpitopeFile
     public final String[] GeneIds;
     public final String[] GeneNames;
     public final int[] NmdBases;
+    public final int[] StartCodonBases;
     public final String UpstreamAA;
     public final String DownstreamAA;
     public final String NovelAA;
     public final String[] Transcripts;
     public final String WildtypeAA;
-
+    public final int UnsplicedBases;
+    public final int[] SkippedAcceptorsDonors;
     public final int[][] CodingBasePositions;
     public final String[] CodingBases;
     public final String[] CodingBaseCigars;
@@ -42,7 +44,8 @@ public class NeoEpitopeFile
     public NeoEpitopeFile(
             final NeoEpitopeType varType, final String varInfo, final double copyNumber,
             final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
-            final String upAA, final String downAAs, final String novelAAs, int nmdBasesMin, int nmdBasesMax,
+            final String upAA, final String downAAs, final String novelAAs,
+            int nmdBasesMin, int nmdBasesMax, int scbBasesMin, int scbBasesMax, int unsplicedBases, int skippedDonors, int skippedAcceptors,
             final String transcriptsUp, final String transcriptsDown, final String wildtypeAAs,
             int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
             int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown)
@@ -53,10 +56,13 @@ public class NeoEpitopeFile
         GeneIds = new String[] { geneIdUp, geneIdDown };
         GeneNames = new String[] { geneNameUp, geneNameDown };
         NmdBases = new int[] { nmdBasesMin, nmdBasesMax };
+        StartCodonBases = new int[] { scbBasesMin, scbBasesMax };
         UpstreamAA = upAA;
         DownstreamAA = downAAs;
         NovelAA = novelAAs;
         WildtypeAA = wildtypeAAs;
+        UnsplicedBases = unsplicedBases;
+        SkippedAcceptorsDonors = new int[] { skippedDonors, skippedAcceptors };
         Transcripts = new String[] { transcriptsUp, transcriptsDown };
 
         CodingBases = new String[] { codingBasesUp, codingBasesDown };
@@ -123,6 +129,11 @@ public class NeoEpitopeFile
                 .add("NovelAA")
                 .add("NmdMin")
                 .add("NmdMax")
+                .add("StartCodonBasesMin")
+                .add("StartCodonBasesMax")
+                .add("UnsplicedBases")
+                .add("SkippedDonors")
+                .add("SkippedAcceptors")
                 .add("UpTranscripts")
                 .add("DownTranscripts")
                 .add("WildtypeAA")
@@ -154,6 +165,11 @@ public class NeoEpitopeFile
         sj.add(neo.NovelAA);
         sj.add(String.valueOf(neo.NmdBases[0]));
         sj.add(String.valueOf(neo.NmdBases[1]));
+        sj.add(String.valueOf(neo.StartCodonBases[0]));
+        sj.add(String.valueOf(neo.StartCodonBases[1]));
+        sj.add(String.valueOf(neo.UnsplicedBases));
+        sj.add(String.valueOf(neo.SkippedAcceptorsDonors[FS_UP]));
+        sj.add(String.valueOf(neo.SkippedAcceptorsDonors[FS_DOWN]));
         sj.add(neo.Transcripts[FS_UP]);
         sj.add(neo.Transcripts[FS_DOWN]);
         sj.add(neo.WildtypeAA);
@@ -183,6 +199,8 @@ public class NeoEpitopeFile
                 NeoEpitopeType.valueOf(values[index++]), values[index++], Double.parseDouble(values[index++]),
                 values[index++], values[index++], values[index++], values[index++],
                 values[index++], values[index++], values[index++], Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
+                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
                 values[index++], values[index++], values[index++],
                 Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++],
                 Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++]);

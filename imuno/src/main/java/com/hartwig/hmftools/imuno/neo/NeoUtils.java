@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
@@ -23,7 +25,9 @@ import static com.hartwig.hmftools.common.neo.AminoAcidConverter.isStopCodon;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
 
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.CodingBaseData;
@@ -491,6 +495,109 @@ public class NeoUtils
             return exonicBaseCount - newCodingBases;
 
         return -1;
+    }
+
+    public static int calcStartCodonBases(final NeoEpitope neData)
+    {
+        // distance from last upstream base to upstream coding start
+        final TranscriptData transData = neData.TransData[FS_UP];
+
+        if(transData.CodingStart == null)
+            return -1;
+
+        final List<ExonData> exonDataList = transData.exons();
+        int refPosition = neData.position(FS_UP);
+
+        int exonicBaseCount = 0;
+
+        if(neData.orientation(FS_UP) == NEG_ORIENT)
+        {
+            int codingPosition = transData.CodingEnd;
+
+            if(codingPosition < refPosition)
+                return -1;
+
+            for (int i = 0; i < exonDataList.size(); ++i)
+            {
+                final ExonData exon = exonDataList.get(i);
+
+                if(i == exonDataList.size() - 1)
+                    break;
+
+                if (refPosition > exon.End)
+                    continue;
+
+                if(exon.Start > codingPosition)
+                    break;
+
+                exonicBaseCount += min(codingPosition, exon.End) - max(refPosition, exon.Start) + 1;
+            }
+        }
+        else
+        {
+            for(int i = exonDataList.size() - 1; i >= 0; --i)
+            {
+                int codingPosition = transData.CodingStart;
+
+                if(codingPosition > refPosition)
+                    return -1;
+
+                final ExonData exon = exonDataList.get(i);
+
+                if(i == 0)
+                    break;
+
+                if(refPosition < exon.Start)
+                    continue;
+
+                if(exon.End < codingPosition)
+                    break;
+
+                exonicBaseCount += min(refPosition, exon.End) - max(codingPosition, exon.Start) + 1;
+            }
+        }
+
+        return exonicBaseCount;
+    }
+
+    public static int findSkippedExonBoundaries(final List<TranscriptData> transDataList, final int[] positionBounds, boolean findExonStart)
+    {
+        if(positionBounds[SE_START] >= positionBounds[SE_END])
+            return 0;
+
+        if(transDataList.isEmpty())
+            return 0;
+
+        final Set<Integer> skippedSites = Sets.newHashSet();
+
+        for(TranscriptData transData : transDataList)
+        {
+            for(ExonData exon : transData.exons())
+            {
+                if(findExonStart)
+                {
+                    if(exon.Start <= positionBounds[SE_START])
+                        continue;
+
+                    if(exon.Start >= positionBounds[SE_END])
+                        break;
+
+                    skippedSites.add(exon.Start);
+                }
+                else
+                {
+                    if(exon.End <= positionBounds[SE_START])
+                        continue;
+
+                    if(exon.End >= positionBounds[SE_END])
+                        break;
+
+                    skippedSites.add(exon.End);
+                }
+            }
+        }
+
+        return skippedSites.size();
     }
 
     public static String checkTrimBases(final String bases)

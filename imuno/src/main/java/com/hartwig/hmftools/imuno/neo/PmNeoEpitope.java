@@ -33,6 +33,7 @@ import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.CodingBaseData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -128,6 +129,10 @@ public class PmNeoEpitope extends NeoEpitope
     private boolean isInsert() { return mIndelBaseDiff > 0; }
     private boolean isDeletion() { return mIndelBaseDiff < 0; }
     private boolean isBaseChange() { return mIndelBaseDiff == 0; }
+    public int unsplicedDistance() { return 0; }
+    public int skippedAcceptors() { return 0; }
+    public int skippedDonors() { return 0; }
+    public void setSkippedSpliceSites(final EnsemblDataCache geneTransCache) {}
 
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {

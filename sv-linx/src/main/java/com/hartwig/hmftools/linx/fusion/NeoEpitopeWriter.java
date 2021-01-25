@@ -81,7 +81,7 @@ public class NeoEpitopeWriter
 
         int[] extensionLengths = new int[FS_PAIR];
 
-        int chainLength = traversedPairs.stream().mapToInt(x -> x.length()).sum();
+        int chainLength = traversedPairs != null ? traversedPairs.stream().mapToInt(x -> x.length()).sum() : 0;
 
         boolean fusionAdded = false;
 

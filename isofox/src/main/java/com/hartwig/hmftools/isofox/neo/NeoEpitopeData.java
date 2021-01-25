@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -37,8 +38,8 @@ public class NeoEpitopeData
 
     private final NeoFragmentSupport mFragmentSupport;
 
-    private double mCancerTpmTotal;
-    private double mCohortTpmTotal;
+    private final double[] mCancerTpmTotal;
+    private final double[] mCohortTpmTotal;
 
     public NeoEpitopeData(final NeoEpitopeFile source)
     {
@@ -68,8 +69,8 @@ public class NeoEpitopeData
         }
 
         mFragmentSupport = new NeoFragmentSupport();
-        mCancerTpmTotal = 0;
-        mCohortTpmTotal = 0;
+        mCancerTpmTotal = new double[] { 0, 0 };
+        mCohortTpmTotal = new double[] { 0, 0 };
     }
 
     public boolean isFusion() { return Source.VariantType.isFusion(); }
@@ -80,10 +81,10 @@ public class NeoEpitopeData
     public boolean posStrand(int stream) { return (stream == FS_UP) == (Orientations[stream] == POS_ORIENT); }
 
     public NeoFragmentSupport getFragmentSupport() { return mFragmentSupport; }
-    public void setTpmTotals(double cancerTotal, double cohortTotal)
+    public void setTpmTotals(int stream, double cancerTotal, double cohortTotal)
     {
-        mCancerTpmTotal = cancerTotal;
-        mCohortTpmTotal = cohortTotal;
+        mCancerTpmTotal[stream] = cancerTotal;
+        mCohortTpmTotal[stream] = cohortTotal;
     }
 
     public void setOrientation(final byte geneStrand)
@@ -173,20 +174,37 @@ public class NeoEpitopeData
                 .add("NovelAA")
                 .add("NmdMin")
                 .add("NmdMax")
+                .add("StartCodonBasesMin")
+                .add("StartCodonBasesMax")
                 .add("FragmentsNovel")
                 .add("BaseDepthUp")
                 .add("BaseDepthDown")
-                .add("TpmCancer")
-                .add("TpmCohort")
+                .add("TpmCancerUp")
+                .add("TpmCohortUp")
+                .add("TpmCancerDown")
+                .add("TpmCohortDown")
                 .add("UpTranscripts")
                 .add("DownTranscripts")
                 .add("WildtypeAA")
+                .add("UnsplicedBases")
+                .add("SkippedDonors")
+                .add("SkippedAcceptors")
+                .add("ChrUp")
+                .add("ChrDown")
+                .add("CodingPosUp")
+                .add("CodingPosDown")
                 .toString();
     }
 
     public String toString()
     {
         StringJoiner sj = new StringJoiner(DELIMITER);
+
+        int codingPosUp = Orientations[FS_UP] == POS_ORIENT ?
+                Source.CodingBasePositions[FS_UP][SE_END] : Source.CodingBasePositions[FS_UP][SE_START];
+
+        int codingPosDown = Orientations[FS_DOWN] == POS_ORIENT ?
+                Source.CodingBasePositions[FS_DOWN][SE_END] : Source.CodingBasePositions[FS_DOWN][SE_START];
 
         sj.add(Source.VariantType.toString());
         sj.add(Source.VariantInfo);
@@ -200,14 +218,25 @@ public class NeoEpitopeData
         sj.add(Source.NovelAA);
         sj.add(String.valueOf(Source.NmdBases[0]));
         sj.add(String.valueOf(Source.NmdBases[1]));
+        sj.add(String.valueOf(Source.StartCodonBases[0]));
+        sj.add(String.valueOf(Source.StartCodonBases[1]));
         sj.add(String.format("%d", mFragmentSupport.NovelFragments[EXACT_MATCH]));
         sj.add(String.format("%d", mFragmentSupport.RefBaseDepth[FS_UP]));
         sj.add(String.format("%d", mFragmentSupport.RefBaseDepth[FS_DOWN]));
-        sj.add(String.format("%6.3e", mCancerTpmTotal));
-        sj.add(String.format("%6.3e", mCohortTpmTotal));
+        sj.add(String.format("%6.3e", mCancerTpmTotal[FS_UP]));
+        sj.add(String.format("%6.3e", mCohortTpmTotal[FS_UP]));
+        sj.add(String.format("%6.3e", mCancerTpmTotal[FS_DOWN]));
+        sj.add(String.format("%6.3e", mCohortTpmTotal[FS_DOWN]));
         sj.add(Source.Transcripts[FS_UP]);
         sj.add(Source.Transcripts[FS_DOWN]);
         sj.add(Source.WildtypeAA);
+        sj.add(String.valueOf(Source.UnsplicedBases));
+        sj.add(String.valueOf(Source.SkippedAcceptorsDonors[FS_UP]));
+        sj.add(String.valueOf(Source.SkippedAcceptorsDonors[FS_DOWN]));
+        sj.add(Chromosomes[FS_UP]);
+        sj.add(Chromosomes[FS_DOWN]);
+        sj.add(String.valueOf(codingPosUp));
+        sj.add(String.valueOf(codingPosDown));
 
         return sj.toString();
     }

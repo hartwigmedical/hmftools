@@ -16,12 +16,18 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeType.OUT_OF_FRAME_FUSION
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBaseExcerpt;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBaseExcerpt;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptCodingData;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.setTranscriptContext;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
@@ -35,11 +41,13 @@ import htsjdk.samtools.CigarOperator;
 public class SvNeoEpitope extends NeoEpitope
 {
     private final NeoEpitopeFusion mSvFusion;
+    private final int[] mSkippedSpliceAcceptorDonors;
 
     public SvNeoEpitope(final NeoEpitopeFusion fusion)
     {
         super();
         mSvFusion = fusion;
+        mSkippedSpliceAcceptorDonors = new int[] { 0, 0 };
     }
 
     public int position(int stream)
@@ -72,6 +80,18 @@ public class SvNeoEpitope extends NeoEpitope
         else
             return Phases[FS_UP] == Phases[FS_DOWN];
     }
+
+    public int unsplicedDistance()
+    {
+        int upEndCodingBase = mSvFusion.Orientations[FS_UP] == POS_ORIENT ? ExtPositions[FS_UP][SE_END] : ExtPositions[FS_UP][SE_START];
+        int upUnspliced = abs(position(FS_UP) - upEndCodingBase);
+        int downEndCodingBase = mSvFusion.Orientations[FS_DOWN] == POS_ORIENT ? ExtPositions[FS_DOWN][SE_END] : ExtPositions[FS_DOWN][SE_START];
+        int downUnspliced = abs(position(FS_DOWN) - downEndCodingBase);
+        return upUnspliced + downUnspliced + mSvFusion.ChainLength;
+    }
+
+    public int skippedDonors() { return mSkippedSpliceAcceptorDonors[FS_UP]; }
+    public int skippedAcceptors() { return mSkippedSpliceAcceptorDonors[FS_DOWN]; }
 
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {
@@ -203,6 +223,37 @@ public class SvNeoEpitope extends NeoEpitope
                 toString(), phaseMatched(), upExtraBases, downExtraBases, upRequiredBases, downRequiredBases, codingInsSeqLen);
     }
 
+    public void setSkippedSpliceSites(final EnsemblDataCache geneTransCache)
+    {
+        // between the fusion position and the nearest coding
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
+        {
+            boolean findExonStart = mSvFusion.Orientations[fs] == NEG_ORIENT;
+
+            final int[] positionBoundaries = { 0, 0 };
+
+            if(mSvFusion.Orientations[fs] == POS_ORIENT)
+            {
+                positionBoundaries[SE_START] = ExtPositions[fs][SE_END];
+                positionBoundaries[SE_END] = position(fs);
+            }
+            else
+            {
+                positionBoundaries[SE_START] = position(fs);
+                positionBoundaries[SE_END] = ExtPositions[fs][SE_START];
+            }
+
+            final List<TranscriptData> transDataList = geneTransCache.getTranscripts(mSvFusion.GeneIds[fs]);
+            final int stream = fs;
+
+            final List<TranscriptData> candidateTransDataList = transDataList.stream()
+                    .filter(x -> x.TransId != TransData[stream].TransId).collect(Collectors.toList());
+
+            mSkippedSpliceAcceptorDonors[fs] = NeoUtils.findSkippedExonBoundaries(
+                    candidateTransDataList, positionBoundaries, findExonStart);
+        }
+    }
+
     public String toString()
     {
         return String.format("fusion up(%s: %s:%d:%d) down(%s: %s:%d:%d)",
@@ -211,6 +262,4 @@ public class SvNeoEpitope extends NeoEpitope
                 mSvFusion.GeneNames[FS_DOWN], mSvFusion.Chromosomes[FS_DOWN],
                 mSvFusion.Positions[FS_DOWN], mSvFusion.Orientations[FS_DOWN]);
     }
-
-
 }

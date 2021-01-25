@@ -793,7 +793,7 @@ public class NeoEpitopeTest
         // intronic
         NeoEpitopeFusion svData = new NeoEpitopeFusion(
                 GENE_ID_1, GENE_ID_1, CHR_1, 35, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 55, NEG_ORIENT,
-                1, 1, "", validTrans);
+                1, 1, "", 0, validTrans);
 
         NeoEpitope neData = new SvNeoEpitope(svData);
 
@@ -828,7 +828,7 @@ public class NeoEpitopeTest
         // intronic to exonic - skips to next exon
         svData = new NeoEpitopeFusion(
                 GENE_ID_1, GENE_ID_1, CHR_1, 35, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 45, NEG_ORIENT,
-                1, 1, "", validTrans);
+                1, 1, "", 0, validTrans);
 
         neData = new SvNeoEpitope(svData);
 
@@ -857,7 +857,7 @@ public class NeoEpitopeTest
         // exonic to exonic, in phase
         svData = new NeoEpitopeFusion(
                 GENE_ID_1, GENE_ID_1, CHR_1, 44, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 63, NEG_ORIENT,
-                1, 1, "", validTrans);
+                1, 1, "", 0, validTrans);
 
         neData = new SvNeoEpitope(svData);
 
@@ -889,7 +889,7 @@ public class NeoEpitopeTest
 
         svData = new NeoEpitopeFusion(
                 GENE_ID_1, GENE_ID_1, CHR_1, 44, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 63, NEG_ORIENT,
-                1, 1, insSequence, validTrans);
+                1, 1, insSequence, 0, validTrans);
 
         neData = new SvNeoEpitope(svData);
 

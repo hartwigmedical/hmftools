@@ -378,7 +378,8 @@ public class NeoEpitopesTest
         final String varInfo = fusionInfo(new String[] {chrUp, chrDown}, new int[] { posUp, posDown}, new byte[] { orientUp, orientDown });
 
         final NeoEpitopeFile neFile = new NeoEpitopeFile(varType, varInfo, 1, geneIdUp, geneIdDown, geneIdUp, geneIdDown,
-                "", "", "", 0, 0, transcriptsUp, transcriptsDown, "",
+                "", "", "", 0, 0, 0, 0, 0, 0, 0,
+                transcriptsUp, transcriptsDown, "",
                 codingBaseUpPosStart, codingBaseUpPosEnd, codingBasesUp, codingBaseCigarUp,
                 codingBaseDownPosStart, codingBaseDownPosEnd, codingBasesDown, codingBaseCigarDown);
 
@@ -392,7 +393,8 @@ public class NeoEpitopesTest
         final String varInfo = pointMutationInfo(chromosome, position, "A", "A");
 
         final NeoEpitopeFile neFile = new NeoEpitopeFile(varType, varInfo, 1, geneId, geneId, geneId, geneId,
-                "", "", "", 0, 0, transcripts, transcripts, "",
+                "", "", "", 0, 0, 0, 0, 0, 0, 0,
+                transcripts, transcripts, "",
                 codingBasePosStart, codingBasePosEnd, codingBases, codingBaseCigar, 0, 0, "", "");
 
         NeoEpitopeData neData = new NeoEpitopeData(neFile);

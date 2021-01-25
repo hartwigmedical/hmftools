@@ -359,17 +359,20 @@ public class NeoEpitopeReader
 
     private void addTpmMedians(final NeoEpitopeData neData)
     {
-        double cancerTotal = 0;
-        double cohortTotal = 0;
-
-        for(String transName : mCurrentNeoData.Transcripts[FS_UP])
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            final double[] result = mCohortTpmData.getTranscriptTpm(transName, mConfig.CancerType);
-            cancerTotal += result[CANCER_VALUE];
-            cohortTotal += result[COHORT_VALUE];
-        }
+            double cancerTotal = 0;
+            double cohortTotal = 0;
 
-        neData.setTpmTotals(cancerTotal, cohortTotal);
+            for(String transName : mCurrentNeoData.Transcripts[fs])
+            {
+                final double[] result = mCohortTpmData.getTranscriptTpm(transName, mConfig.CancerType);
+                cancerTotal += result[CANCER_VALUE];
+                cohortTotal += result[COHORT_VALUE];
+            }
+
+            neData.setTpmTotals(fs, cancerTotal, cohortTotal);
+        }
     }
 
     private void initialiseWriter()
