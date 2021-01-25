@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateRefPercentileData;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -75,7 +76,8 @@ public class SomaticDataLoader
 
             for(final SignatureAllocation sigAllocation : sigAllocations)
             {
-                sigContribs.put(sigAllocation.signature(), sigAllocation.allocation());
+                final String sigName = convertSignatureName(sigAllocation.signature());
+                sigContribs.put(sigName, sigAllocation.allocation());
             }
         }
 
@@ -96,7 +98,7 @@ public class SomaticDataLoader
                 // SampleId,SigName,SigContrib,SigPercent
                 final String[] items = line.split(DATA_DELIM, -1);
                 String sampleId = items[0];
-                String sigName = items[1];
+                String sigName = convertSignatureName(items[1]);
                 double sigContrib = Double.parseDouble(items[2]);
 
                 Map<String,Double> sigContribs = sampleSigContributions.get(sampleId);

@@ -364,6 +364,11 @@ public class RefSomatics implements RefClassifier
         }
     }
 
+    public static String convertSignatureName(final String sigName)
+    {
+        return sigName.replaceAll("Signature.", "Sig");
+    }
+
     private void buildSnvCountPercentiles()
     {
         for(Map.Entry<String,Integer> entry : mTriNucCountsIndex.entrySet())

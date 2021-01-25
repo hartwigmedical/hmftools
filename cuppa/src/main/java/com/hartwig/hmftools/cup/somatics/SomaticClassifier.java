@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
+import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateReportableSignatures;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
@@ -204,7 +205,8 @@ public class SomaticClassifier implements CuppaClassifier
             Map<String,Double> sigContribs = Maps.newHashMap();
             for(final SignatureAllocation sigAllocation : sigAllocations)
             {
-                sigContribs.put(sigAllocation.signature(), sigAllocation.allocation());
+                final String sigName = convertSignatureName(sigAllocation.signature());
+                sigContribs.put(sigName, sigAllocation.allocation());
             }
 
             mSampleSigContributions.put(sampleId, sigContribs);
@@ -519,6 +521,8 @@ public class SomaticClassifier implements CuppaClassifier
                 continue;
             }
 
+            Map<String, Double> cancerResults = Maps.newHashMap();
+
             for(Map.Entry<String,Map<String,double[]>> cancerContribs : mRefCancerSigContribPercentiles.entrySet())
             {
                 final String cancerType = cancerContribs.getKey();
@@ -526,16 +530,17 @@ public class SomaticClassifier implements CuppaClassifier
 
                 if(refSigPercentiles == null)
                 {
-                    CUP_LOGGER.error("missing sig({}) data for cancerType({})", sigName, cancerType);
-                    return;
+                    // CUP_LOGGER.debug("missing sig({}) data for cancerType({})", sigName, cancerType);
+                    cancerResults.put(cancerType, 0.0);
                 }
-
-                Map<String,Double> cancerResults = Maps.newHashMap();
-                double percentile = getPercentile(refSigPercentiles, sampleSigContrib, true);
-                cancerResults.put(cancerType, percentile);
-
-                results.add(new SampleResult(sample.Id, SNV, PERCENTILE, signatureDisplayName(sigName), round(sampleSigContrib), cancerResults));
+                else
+                {
+                    double percentile = getPercentile(refSigPercentiles, sampleSigContrib, true);
+                    cancerResults.put(cancerType, percentile);
+                }
             }
+
+            results.add(new SampleResult(sample.Id, SNV, PERCENTILE, signatureDisplayName(sigName), round(sampleSigContrib), cancerResults));
         }
     }
 
