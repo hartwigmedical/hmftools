@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.drug;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,7 +49,7 @@ public abstract class Drug {
     public abstract List<DrugEvidence> evidence();
 
     @NotNull
-    public abstract List<DrugTherapy> therapies();
+    public abstract List<TherapyInfo> therapies();
 
     @Nullable
     public abstract List<DrugGlobalApprovalStatus> globalApprovaStatus();

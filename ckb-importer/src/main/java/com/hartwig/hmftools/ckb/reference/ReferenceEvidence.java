@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.reference;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +28,7 @@ public abstract class ReferenceEvidence {
     public abstract ReferenceMolecularProfile molecularProfile();
 
     @NotNull
-    public abstract ReferenceTherapy therapy();
+    public abstract TherapyInfo therapy();
 
     @NotNull
     public abstract ReferenceIndication indication();

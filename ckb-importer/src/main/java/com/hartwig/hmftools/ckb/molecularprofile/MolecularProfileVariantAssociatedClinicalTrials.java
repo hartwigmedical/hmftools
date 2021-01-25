@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.molecularprofile;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +25,6 @@ public abstract class MolecularProfileVariantAssociatedClinicalTrials {
     public abstract String recruitment();
 
     @NotNull
-    public abstract List<MolecularProfileTherapy> therapy();
+    public abstract List<TherapyInfo> therapy();
 
 }

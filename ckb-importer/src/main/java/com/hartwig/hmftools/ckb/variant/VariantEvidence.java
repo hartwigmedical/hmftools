@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +28,7 @@ public abstract class VariantEvidence {
     public abstract VariantMolecularProfile molecularProfile();
 
     @NotNull
-    public abstract VariantTherapy therapy();
+    public abstract TherapyInfo therapy();
 
     @NotNull
     public abstract VariantIndication indication();

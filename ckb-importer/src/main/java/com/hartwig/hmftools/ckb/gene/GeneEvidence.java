@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.gene;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +28,7 @@ public abstract class GeneEvidence {
     public abstract GeneMolecularProfile molecularProfile();
 
     @NotNull
-    public abstract GeneTherapy therapy();
+    public abstract TherapyInfo therapy();
 
     @NotNull
     public abstract GeneIndication indication();

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.ckb.globaltherapyapprovalstatus;
 
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +14,7 @@ public abstract class GlobalTherapyApprovalStatusList {
     public abstract String id();
 
     @NotNull
-    public abstract GlobalTherapyApprovalStatusTherapy therapy();
+    public abstract TherapyInfo therapy();
 
     @NotNull
     public abstract GlobalTherapyApprovalStatusIndication indication();

@@ -13,6 +13,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialDataModelChecker;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -152,15 +154,15 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugTherapy> extractDrugTherapies(@NotNull JsonArray jsonArray) {
-        List<DrugTherapy> drugTherapies = Lists.newArrayList();
+    public static List<TherapyInfo> extractDrugTherapies(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> drugTherapies = Lists.newArrayList();
         JsonDatamodelChecker drugClinicalTrialTherapyChecker = DrugDataModelChecker.drugClinicalTrialTherapyObjectChecker();
 
         for (JsonElement drugTherpy : jsonArray) {
             JsonObject drugTherapyObject = drugTherpy.getAsJsonObject();
             drugClinicalTrialTherapyChecker.check(drugTherapyObject);
 
-            drugTherapies.add(ImmutableDrugTherapy.builder()
+            drugTherapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(drugTherapyObject, "id"))
                     .therapyName(JsonFunctions.string(drugTherapyObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(drugTherapyObject, "synonyms"))
@@ -208,12 +210,12 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static DrugTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonObject therapyObject = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugEvidenceTherapyChecker = DrugDataModelChecker.drugEvidenceTherapyObjectChecker();
         drugEvidenceTherapyChecker.check(therapyObject);
 
-        return ImmutableDrugTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(therapyObject, "id"))
                 .therapyName(JsonFunctions.string(therapyObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(therapyObject, "synonyms"))
@@ -253,15 +255,15 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugTherapy> extractTherapies(@NotNull JsonArray jsonArray) {
-        List<DrugTherapy> drugsTherapies = Lists.newArrayList();
+    public static List<TherapyInfo> extractTherapies(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> drugsTherapies = Lists.newArrayList();
         JsonDatamodelChecker drugTherapyChecker = DrugDataModelChecker.drugTherapyObjectChecker();
 
         for (JsonElement drugTherapy : jsonArray) {
             JsonObject drugTherapyObject = drugTherapy.getAsJsonObject();
             drugTherapyChecker.check(drugTherapyObject);
 
-            drugsTherapies.add(ImmutableDrugTherapy.builder()
+            drugsTherapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(drugTherapyObject, "id"))
                     .therapyName(JsonFunctions.string(drugTherapyObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(drugTherapyObject, "synonyms"))
@@ -292,12 +294,12 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static DrugTherapy extractTherapiesGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractTherapiesGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
         JsonObject therapiesGlobalApprovalStatusObject = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugGlobalApprovalStatusTherapyChecker = DrugDataModelChecker.drugGlobalApprovalStatusTherapyObjectChecker();
         drugGlobalApprovalStatusTherapyChecker.check(therapiesGlobalApprovalStatusObject);
 
-        return ImmutableDrugTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(therapiesGlobalApprovalStatusObject, "id"))
                 .therapyName(JsonFunctions.string(therapiesGlobalApprovalStatusObject, "therapyName"))
                 .synonyms(JsonFunctions.string(therapiesGlobalApprovalStatusObject, "synonyms"))

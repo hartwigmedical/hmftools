@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -133,15 +135,15 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<GeneTherapy> extractGeneTherapy(@NotNull JsonArray jsonArray) {
-        List<GeneTherapy> geneTherapies = Lists.newArrayList();
+    public static List<TherapyInfo> extractGeneTherapy(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> geneTherapies = Lists.newArrayList();
         JsonDatamodelChecker geneTherapiesChecker = GeneDataModelChecker.geneTherapiesObjectChecker();
 
         for (JsonElement geneTherapy : jsonArray) {
             JsonObject geneTherapyJsonObject = geneTherapy.getAsJsonObject();
             geneTherapiesChecker.check(geneTherapyJsonObject);
 
-            geneTherapies.add(ImmutableGeneTherapy.builder()
+            geneTherapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(geneTherapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(geneTherapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(geneTherapyJsonObject, "synonyms"))
@@ -189,11 +191,11 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static GeneTherapy extractGeneTherapyObject(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractGeneTherapyObject(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneTherapyChecker = GeneDataModelChecker.geneTherapyObjectChecker();
         geneTherapyChecker.check(jsonObject);
 
-        return ImmutableGeneTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))

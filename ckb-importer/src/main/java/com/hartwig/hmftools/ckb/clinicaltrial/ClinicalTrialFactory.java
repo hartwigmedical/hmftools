@@ -13,6 +13,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -105,14 +107,14 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<ClinicalTrialTherapy> retrieveClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
-        List<ClinicalTrialTherapy> therapies = Lists.newArrayList();
+    private static List<TherapyInfo> retrieveClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> therapies = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailTherapiesChecker = ClinicalTrialDataModelChecker.clinicalTrialTherapiesObjectChecker();
         for (JsonElement therapy : jsonArray) {
             JsonObject therapyObject = therapy.getAsJsonObject();
             clinicalTrailTherapiesChecker.check(therapyObject);
 
-            therapies.add(ImmutableClinicalTrialTherapy.builder()
+            therapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(therapyObject, "id"))
                     .therapyName(JsonFunctions.string(therapyObject, "therapyName"))
                     .synonyms(JsonFunctions.optionalNullableString(therapyObject, "synonyms"))
