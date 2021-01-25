@@ -81,6 +81,8 @@ public class NeoEpitopeWriter
 
         int[] extensionLengths = new int[FS_PAIR];
 
+        int chainLength = traversedPairs.stream().mapToInt(x -> x.length()).sum();
+
         boolean fusionAdded = false;
 
         for (final BreakendGeneData gene1 : breakendGenes1)
@@ -127,7 +129,7 @@ public class NeoEpitopeWriter
                 NeoEpitopeFusion fusion = new NeoEpitopeFusion(
                         upGene.StableId, upGene.GeneName, upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.id(),
                         downGene.StableId, downGene.GeneName, downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.id(),
-                        avgJcn, upGene.insertSequence(), new String[] { sjUp.toString(), sjDown.toString()});
+                        avgJcn, upGene.insertSequence(), chainLength, new String[] { sjUp.toString(), sjDown.toString()});
 
                 writeData(fusion);
 
