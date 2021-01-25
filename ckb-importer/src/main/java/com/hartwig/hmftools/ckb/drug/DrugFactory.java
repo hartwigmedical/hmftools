@@ -13,7 +13,9 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialDataModelChecker;
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -223,12 +225,12 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static DrugIndication extractIndications(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractIndications(@NotNull JsonObject jsonObject) {
         JsonObject indicationObject = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugEvidenceIndicationChecker = DrugDataModelChecker.drugEvidenceIndicationObjectChecker();
         drugEvidenceIndicationChecker.check(indicationObject);
 
-        return ImmutableDrugIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(indicationObject, "id"))
                 .name(JsonFunctions.string(indicationObject, "name"))
                 .source(JsonFunctions.string(indicationObject, "source"))
@@ -307,12 +309,12 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static DrugIndication extractIndicationsGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractIndicationsGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
         JsonObject indicationsGlobalApprovalStatusObject = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugGlobalApprovalStatusIndicationChecker = DrugDataModelChecker.drugGlobalApprovalStatusIndicationObjectChecker();
         drugGlobalApprovalStatusIndicationChecker.check(indicationsGlobalApprovalStatusObject);
 
-        return ImmutableDrugIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(indicationsGlobalApprovalStatusObject, "id"))
                 .name(JsonFunctions.string(indicationsGlobalApprovalStatusObject, "name"))
                 .source(JsonFunctions.string(indicationsGlobalApprovalStatusObject, "source"))

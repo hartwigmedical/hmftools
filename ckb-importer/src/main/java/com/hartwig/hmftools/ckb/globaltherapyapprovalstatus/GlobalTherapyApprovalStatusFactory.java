@@ -12,7 +12,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -103,12 +105,12 @@ public class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    public static GlobalTherapyApprovalStatusIndication extractGlobalTherapyApprovalStatusIndication(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractGlobalTherapyApprovalStatusIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusIndicationChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusIndicationObjectChecker();
         globalTherapyApprovalStatusIndicationChecker.check(jsonObject);
 
-        return ImmutableGlobalTherapyApprovalStatusIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))

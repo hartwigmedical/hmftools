@@ -12,7 +12,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -166,11 +168,11 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static ReferenceIndication extractIndication(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationChecker = ReferenceDataModelChecker.referenceIndicationChecker();
         indicationChecker.check(jsonObject);
 
-        return ImmutableReferenceIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))

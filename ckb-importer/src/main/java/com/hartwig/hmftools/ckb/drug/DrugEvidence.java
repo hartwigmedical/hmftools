@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.drug;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
@@ -31,7 +32,7 @@ public abstract class DrugEvidence {
     public abstract TherapyInfo therapy();
 
     @Nullable
-    public abstract DrugIndication indications();
+    public abstract IndicationInfo indications();
 
     @NotNull
     public abstract String responseType();

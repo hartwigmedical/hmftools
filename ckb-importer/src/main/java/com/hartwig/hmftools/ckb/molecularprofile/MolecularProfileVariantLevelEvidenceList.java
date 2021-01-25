@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.molecularprofile;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
@@ -31,7 +32,7 @@ public abstract class MolecularProfileVariantLevelEvidenceList {
     public abstract TherapyInfo therapy();
 
     @NotNull
-    public abstract MolecularProfileIndication indication();
+    public abstract IndicationInfo indication();
 
     @NotNull
     public abstract String responseType();

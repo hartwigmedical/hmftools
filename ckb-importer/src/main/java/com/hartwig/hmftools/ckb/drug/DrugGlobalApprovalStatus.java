@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.drug;
 
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
@@ -17,7 +18,7 @@ public abstract class DrugGlobalApprovalStatus {
     public abstract TherapyInfo therapy();
 
     @NotNull
-    public abstract DrugIndication indications();
+    public abstract IndicationInfo indications();
 
     @NotNull
     public abstract DrugMolecularProfile molecularProfile();

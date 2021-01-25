@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
@@ -31,7 +32,7 @@ public abstract class VariantExtendedEvidence {
     public abstract TherapyInfo therapy();
 
     @NotNull
-    public abstract VariantIndication indication();
+    public abstract IndicationInfo indication();
 
     @NotNull
     public abstract String responseType();
