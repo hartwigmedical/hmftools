@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustLowProbabilities;
-import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 
@@ -19,6 +18,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.ClassifierType;
@@ -33,8 +33,11 @@ public class AltSjClassifier implements CuppaClassifier
     private final CuppaConfig mConfig;
     private final Map<String,List<AltSjPrevData>> mSampleAltSJs; // currently unused
     private final Map<String,List<AltSjPrevData>> mRefAltSjPrevalence; // ref alt-SJs by chromosome
+    private final Set<Integer> mRefAltSjStartPositions; // for fast sample data filtering
     private final SampleDataCache mSampleDataCache;
     private boolean mIsValid;
+
+    private static final double ZERO_PREVALENCE_ALLOCATION = 0.03;
 
     public AltSjClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
@@ -42,6 +45,7 @@ public class AltSjClassifier implements CuppaClassifier
         mSampleAltSJs = Maps.newHashMap();
         mRefAltSjPrevalence = Maps.newHashMap();
         mSampleDataCache = sampleDataCache;
+        mRefAltSjStartPositions = Sets.newHashSet();
         mIsValid = true;
 
         if(config.RefAltSjPrevFile.isEmpty())
@@ -163,22 +167,23 @@ public class AltSjClassifier implements CuppaClassifier
             int chromosomeIndex = fieldsIndexMap.get("Chromosome");
             int posStartIndex = fieldsIndexMap.get("SjStart");
             int posEndIndex = fieldsIndexMap.get("SjEnd");
-            // int typeIndex = fieldsIndexMap.get("Type");
+            Integer typeIndex = fieldsIndexMap.get("Type"); // for info sake only
             int prevIndex = fieldsIndexMap.get("Prev");
 
-            double noPrevalence = NON_DRIVER_ZERO_PREVALENCE_ALLOCATION / mSampleDataCache.RefCancerSampleData.size();
+            double noPrevalence = ZERO_PREVALENCE_ALLOCATION / mSampleDataCache.RefCancerSampleData.size();
 
             for(String data : lines)
             {
                 final String items[] = data.split(",", -1);
 
-                final String cancerType = items[cancerIndex];
-                final String chromosome = items[chromosomeIndex];
+                String cancerType = items[cancerIndex];
+                String chromosome = items[chromosomeIndex];
+                String asjType = typeIndex != null ? items[typeIndex] : "N/A";
+                int asjPosStart = Integer.parseInt(items[posStartIndex]);
+                int asjPosEnd = Integer.parseInt(items[posEndIndex]);
                 double prevalence = Double.parseDouble(items[prevIndex]);
 
-                AltSjPrevData altSJ = new AltSjPrevData(
-                        items[geneIdIndex], "N/A", chromosome,
-                        Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]), 0);
+                AltSjPrevData altSJ = new AltSjPrevData(items[geneIdIndex], asjType, chromosome, asjPosStart, asjPosEnd, 0);
 
                 AltSjPrevData matchedAltSJ = null;
 
@@ -199,6 +204,8 @@ public class AltSjClassifier implements CuppaClassifier
                     altSJs.add(altSJ);
                     matchedAltSJ = altSJ;
                 }
+
+                mRefAltSjStartPositions.add(asjPosStart);
 
                 double adjPrevalence = prevalence + noPrevalence;
                 matchedAltSJ.CancerPrevalences.put(cancerType, adjPrevalence);
@@ -264,14 +271,20 @@ public class AltSjClassifier implements CuppaClassifier
             {
                 final String items[] = data.split(",", -1);
 
+                int asjPosStart = Integer.parseInt(items[posStartIndex]);
+
+                if(!mRefAltSjStartPositions.contains(asjPosStart))
+                    continue;
+
                 int fragCount = Integer.parseInt(items[fragCountIndex]);
 
                 if(fragCount < ALT_SJ_FRAG_COUNT_THRESHOLD)
                     continue;
 
-                sampleAltSJs.add(new AltSjPrevData(
-                        items[geneIdIndex], items[typeIndex], items[chromosomeIndex],
-                        Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex])));
+                String chromosome = items[chromosomeIndex];
+                int asjPosEnd = Integer.parseInt(items[posEndIndex]);
+
+                sampleAltSJs.add(new AltSjPrevData(items[geneIdIndex], items[typeIndex], chromosome, asjPosStart, asjPosEnd));
             }
         }
         catch(IOException e)
