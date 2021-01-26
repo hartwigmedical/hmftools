@@ -35,6 +35,9 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
+import org.apache.commons.compress.utils.Lists;
+
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
@@ -166,7 +169,9 @@ public class SvNeoEpitope extends NeoEpitope
 
         ExtPositions[FS_UP][SE_START] = cbExcerpt.Positions[SE_START];
         ExtPositions[FS_UP][SE_END] = cbExcerpt.Positions[SE_END];
-        ExtCigars[FS_UP] = cbExcerpt.CigarRef;
+
+        List<CigarElement> upCigarElements = Lists.newArrayList();
+        upCigarElements.addAll(cbExcerpt.CigarRef.getCigarElements());
 
         int codingInsSeqLen = 0;
 
@@ -176,16 +181,18 @@ public class SvNeoEpitope extends NeoEpitope
 
             if(TransData[FS_UP].Strand == POS_STRAND)
             {
-                ExtCigars[FS_UP].add(new CigarElement(codingInsSeqLen, CigarOperator.I));
+                upCigarElements.add(new CigarElement(codingInsSeqLen, CigarOperator.I));
                 RawCodingBases[FS_UP] += mSvFusion.InsertSequence;
             }
             else
             {
-                ExtCigars[FS_UP].getCigarElements().add(0, new CigarElement(codingInsSeqLen, CigarOperator.I));
+                upCigarElements.add(0, new CigarElement(codingInsSeqLen, CigarOperator.I));
                 RawCodingBases[FS_UP] = mSvFusion.InsertSequence + CodingBases[FS_UP];
             }
         }
 
+        ExtCigars[FS_UP] = new Cigar();
+        upCigarElements.forEach(x -> ExtCigars[FS_UP].add(x));
         ExtCodingBases[FS_UP] = RawCodingBases[FS_UP];
 
         NovelBaseIndex[FS_UP] = upExtraBases + codingInsSeqLen;

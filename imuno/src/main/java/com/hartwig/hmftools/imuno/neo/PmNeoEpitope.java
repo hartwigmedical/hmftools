@@ -252,6 +252,13 @@ public class PmNeoEpitope extends NeoEpitope
         CodingBaseExcerpt upExcerpt = getUpstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_UP], chromosome(FS_UP), upPosition, orientation(FS_UP), upRequiredBases);
 
+        if(upExcerpt == null)
+        {
+            // at or past end of transcript is invalid
+            Valid = false;
+            return;
+        }
+
         upCodingBases = upExcerpt.Bases;
 
         boolean canStartInExon = true; // assumed true for now RegionType[FS_UPSTREAM] == TranscriptRegionType.EXONIC;

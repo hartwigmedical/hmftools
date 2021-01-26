@@ -122,7 +122,10 @@ public class NeoUtils
             final String chromosome, int nePosition, byte neOrientation, int requiredBases)
     {
         if(requiredBases <= 0 || transData.CodingStart == null)
-            return new CodingBaseExcerpt("", nePosition, nePosition, null);
+            return null;
+
+        if(!positionWithin(nePosition, transData.CodingStart, transData.CodingEnd))
+            return null;
 
         final List<ExonData> exonDataList = transData.exons();
 
