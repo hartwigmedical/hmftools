@@ -16,10 +16,12 @@ import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.common.TreatmentApproach;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -223,15 +225,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceTreatmentApproach> extractTreatmentApproach(@NotNull JsonArray jsonArray) {
-        List<ReferenceTreatmentApproach> referenceTreatmentApproaches = Lists.newArrayList();
+    public static List<TreatmentApproach> extractTreatmentApproach(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproach> referenceTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker treatmentApproachChecker = ReferenceDataModelChecker.referenceTreatmentApprochObjectChecker();
 
         for (JsonElement treatmentApproach : jsonArray) {
             JsonObject treatmentApproachJsonObject = treatmentApproach.getAsJsonObject();
             treatmentApproachChecker.check(treatmentApproachJsonObject);
 
-            referenceTreatmentApproaches.add(ImmutableReferenceTreatmentApproach.builder()
+            referenceTreatmentApproaches.add(ImmutableTreatmentApproach.builder()
                     .id(JsonFunctions.string(treatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(treatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(treatmentApproachJsonObject, "profileName"))

@@ -2,8 +2,6 @@ package com.hartwig.hmftools.ckb.common;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.gene.GeneProfileTreatmentApproache;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +16,6 @@ public abstract class MolecularProfileInfo {
     @NotNull
     public abstract String profileName();
 
-    public abstract List<GeneProfileTreatmentApproache> profileTreatmentApproache();
+    public abstract List<TreatmentApproach> profileTreatmentApproache();
 
 }

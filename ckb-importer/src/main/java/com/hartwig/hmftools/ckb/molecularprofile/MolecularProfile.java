@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.molecularprofile;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +22,7 @@ public abstract class MolecularProfile {
     public abstract List<MolecularProfileGeneVariant> geneVariant();
 
     @NotNull
-    public abstract List<MolecularProfileProfileTreatmentApproache> profileProfileTreatmentApproache();
+    public abstract List<TreatmentApproach> profileProfileTreatmentApproache();
 
     @NotNull
     public abstract String createDate();

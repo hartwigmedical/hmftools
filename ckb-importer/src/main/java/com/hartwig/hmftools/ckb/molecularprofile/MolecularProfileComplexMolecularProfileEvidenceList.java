@@ -6,6 +6,7 @@ import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.common.TreatmentApproach;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +50,7 @@ public abstract class MolecularProfileComplexMolecularProfileEvidenceList {
     public abstract String ampCapAscoInferredTier();
 
     @NotNull
-    public abstract List<MolecularProfileRelevantTreatmentApproach> relevantTreatmentApproach();
+    public abstract List<TreatmentApproach> relevantTreatmentApproach();
 
 
 

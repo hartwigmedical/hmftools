@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.reference;
+package com.hartwig.hmftools.ckb.common;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ReferenceTreatmentApproach {
+public abstract class TreatmentApproach {
 
     @NotNull
     public abstract String id();
@@ -14,7 +14,6 @@ public abstract class ReferenceTreatmentApproach {
     @NotNull
     public abstract String name();
 
-    @Nullable
+    @NotNull
     public abstract String profileName();
-
 }

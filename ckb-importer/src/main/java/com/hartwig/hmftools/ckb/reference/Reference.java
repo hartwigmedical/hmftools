@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.reference;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +58,7 @@ public abstract class Reference {
     public abstract List<ReferenceTherapyObject> therapy();
 
     @NotNull
-    public abstract List<ReferenceTreatmentApproach> treatmentApproach();
+    public abstract List<TreatmentApproach> treatmentApproach();
 
     @NotNull
     public abstract List<ReferenceVariant> variant();
