@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ckb.drug;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.common.GlobalApprovalStatus;
+import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
@@ -53,7 +53,7 @@ public abstract class Drug {
     public abstract List<TherapyInfo> therapies();
 
     @Nullable
-    public abstract List<GlobalApprovalStatus> globalApprovaStatus();
+    public abstract List<GlobalApprovalStatusInfo> globalApprovaStatus();
 
 
 }

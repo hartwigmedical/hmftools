@@ -12,9 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialDataModelChecker;
-import com.hartwig.hmftools.ckb.common.GlobalApprovalStatus;
-import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatus;
+import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
@@ -281,15 +280,15 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<GlobalApprovalStatus> extractGlobalApprovaStatus(@NotNull JsonArray jsonArray) {
-        List<GlobalApprovalStatus> globalApproavalStatuses = Lists.newArrayList();
+    public static List<GlobalApprovalStatusInfo> extractGlobalApprovaStatus(@NotNull JsonArray jsonArray) {
+        List<GlobalApprovalStatusInfo> globalApproavalStatuses = Lists.newArrayList();
         JsonDatamodelChecker drugGlobalApprovalStatusChecker = DrugDataModelChecker.drugGlobalApprovalStatusObjectChecker();
 
         for (JsonElement globalApproavalStatus : jsonArray) {
             JsonObject globalTherapyObject = globalApproavalStatus.getAsJsonObject();
             drugGlobalApprovalStatusChecker.check(globalTherapyObject);
 
-            globalApproavalStatuses.add(ImmutableGlobalApprovalStatus.builder()
+            globalApproavalStatuses.add(ImmutableGlobalApprovalStatusInfo.builder()
                     .id(JsonFunctions.string(globalTherapyObject, "id"))
                     .therapy(extractTherapiesGlobalApprovalStatus(globalTherapyObject.getAsJsonObject("therapy")))
                     .indication(extractIndicationsGlobalApprovalStatus(globalTherapyObject.getAsJsonObject("indications")))

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ckb.therapy;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.common.GlobalApprovalStatus;
+import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +40,7 @@ public abstract class Therapy {
     public abstract List<TherapyDrug> drug();
 
     @NotNull
-    public abstract List<GlobalApprovalStatus> globalApprovalStatus();
+    public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();
 
 
 }
