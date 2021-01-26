@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
@@ -39,7 +40,7 @@ public abstract class TherapyEvidence {
     public abstract String responseType();
 
     @NotNull
-    public abstract List<TherapyReference> reference();
+    public abstract List<ReferenceInfo> reference();
 
     @NotNull
     public abstract String ampCapAscoEvidenceLevel();

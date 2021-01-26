@@ -15,9 +15,11 @@ import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialDataModelChecker;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -95,15 +97,15 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugReference> extractDrugReferences(@NotNull JsonArray jsonArray) {
-        List<DrugReference> drugReferences = Lists.newArrayList();
+    public static List<ReferenceInfo> extractDrugReferences(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> drugReferences = Lists.newArrayList();
         JsonDatamodelChecker drugReferenceChecker = DrugDataModelChecker.drugReferenceObjectChecker();
 
         for (JsonElement drugReference : jsonArray) {
             JsonObject drugsReferenceObject = drugReference.getAsJsonObject();
             drugReferenceChecker.check(drugsReferenceObject);
 
-            drugReferences.add(ImmutableDrugReference.builder()
+            drugReferences.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(drugsReferenceObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(drugsReferenceObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(drugsReferenceObject, "title"))
@@ -210,7 +212,6 @@ public class DrugFactory {
         return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(molecularProfileObject, "id"))
                 .profileName(JsonFunctions.string(molecularProfileObject, "profileName"))
-                .profileTreatmentApproache(null)
                 .build();
     }
 
@@ -241,15 +242,15 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugEvidenceReference> extractEvidenceReferences(@NotNull JsonArray jsonArray) {
-        List<DrugEvidenceReference> references = Lists.newArrayList();
+    public static List<ReferenceInfo> extractEvidenceReferences(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker drugEvidenceReferenceChecker = DrugDataModelChecker.drugEvidenceReferenceObjectChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceObject = reference.getAsJsonObject();
             drugEvidenceReferenceChecker.check(referenceObject);
 
-            references.add(ImmutableDrugEvidenceReference.builder()
+            references.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(referenceObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceObject, "title"))

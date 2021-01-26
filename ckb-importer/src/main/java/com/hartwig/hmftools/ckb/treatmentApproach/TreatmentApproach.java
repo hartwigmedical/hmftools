@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.treatmentApproach;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
@@ -28,7 +29,7 @@ public abstract class TreatmentApproach {
     public abstract TherapyInfo therapy();
 
     @NotNull
-    public abstract List<TreatmentApprochReference> reference();
+    public abstract List<ReferenceInfo> reference();
 
     @NotNull
     public abstract String createDate();

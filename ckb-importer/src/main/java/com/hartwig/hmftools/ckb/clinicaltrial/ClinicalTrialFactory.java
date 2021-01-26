@@ -107,7 +107,6 @@ public class ClinicalTrialFactory {
         return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.nullableString(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
-                .profileTreatmentApproache(null)
                 .build();
     }
 

@@ -14,9 +14,11 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -99,17 +101,17 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<GeneReference> extractGeneReferences(@NotNull JsonArray jsonArray) {
-        List<GeneReference> references = Lists.newArrayList();
+    public static List<ReferenceInfo> extractGeneReferences(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker geneReferenceChecker = GeneDataModelChecker.geneReferenceObjectChecker();
 
         for (JsonElement geneReference : jsonArray) {
             JsonObject geneReferenceJsonObject = geneReference.getAsJsonObject();
             geneReferenceChecker.check(geneReferenceJsonObject);
 
-            references.add(ImmutableGeneReference.builder()
+            references.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(geneReferenceJsonObject, "id"))
-                    .pubmedId(JsonFunctions.nullableString(geneReferenceJsonObject, "pubMedId"))
+                    .pubMedId(JsonFunctions.nullableString(geneReferenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(geneReferenceJsonObject, "title"))
                     .url(JsonFunctions.nullableString(geneReferenceJsonObject, "url"))
                     .build());
@@ -190,7 +192,6 @@ public class GeneFactory {
         return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
-                .profileTreatmentApproache(null) // is not present in array for evidence
                 .build();
     }
 

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.drug;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,5 +16,5 @@ public abstract class DrugDescription {
     public abstract String description();
 
     @NotNull
-    public abstract List<DrugReference> references();
+    public abstract List<ReferenceInfo> references();
 }

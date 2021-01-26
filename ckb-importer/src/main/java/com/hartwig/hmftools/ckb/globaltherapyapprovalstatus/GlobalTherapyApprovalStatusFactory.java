@@ -129,7 +129,6 @@ public class GlobalTherapyApprovalStatusFactory {
         return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
-                .profileTreatmentApproache(null)
                 .build();
     }
 
