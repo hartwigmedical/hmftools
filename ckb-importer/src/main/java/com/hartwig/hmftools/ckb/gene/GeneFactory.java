@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
@@ -125,20 +127,20 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<GeneClinicalTrial> extractGeneClinicalTrial(@NotNull JsonArray jsonArray) {
-        List<GeneClinicalTrial> clinicalTrials = Lists.newArrayList();
+    public static List<ClinicalTrialInfo> extractGeneClinicalTrial(@NotNull JsonArray jsonArray) {
+        List<ClinicalTrialInfo> clinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker geneClinicalTrialChecker = GeneDataModelChecker.geneClinicalTrialObjectChecker();
 
         for (JsonElement geneClinicalTrial : jsonArray) {
             JsonObject geneClinicalTrialJsonObject = geneClinicalTrial.getAsJsonObject();
             geneClinicalTrialChecker.check(geneClinicalTrialJsonObject);
 
-            clinicalTrials.add(ImmutableGeneClinicalTrial.builder()
+            clinicalTrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(geneClinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(geneClinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(geneClinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(geneClinicalTrialJsonObject, "recruitment"))
-                    .geneTherapy(extractGeneTherapy(geneClinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractGeneTherapy(geneClinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicalTrials;

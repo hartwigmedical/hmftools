@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.gene;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.VariantInfo;
 
@@ -50,7 +51,7 @@ public abstract class Gene {
     public abstract String updateDate();
 
     @NotNull
-    public abstract List<GeneClinicalTrial> clinicalTrial();
+    public abstract List<ClinicalTrialInfo> clinicalTrial();
 
     @NotNull
     public abstract List<GeneEvidence> evidence();

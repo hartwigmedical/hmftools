@@ -12,7 +12,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
@@ -141,15 +143,15 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugClinicalTrial> extractCliniclaTrials(@NotNull JsonArray jsonArray) {
-        List<DrugClinicalTrial> clinicalTrials = Lists.newArrayList();
+    public static List<ClinicalTrialInfo> extractCliniclaTrials(@NotNull JsonArray jsonArray) {
+        List<ClinicalTrialInfo> clinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker drugClinicalTrialChecker = DrugDataModelChecker.drugClinicalTrialObjectChecker();
 
         for (JsonElement clinicalTrial : jsonArray) {
             JsonObject clinicalTrialObject = clinicalTrial.getAsJsonObject();
             drugClinicalTrialChecker.check(clinicalTrialObject);
 
-            clinicalTrials.add(ImmutableDrugClinicalTrial.builder()
+            clinicalTrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(clinicalTrialObject, "nctId"))
                     .title(JsonFunctions.string(clinicalTrialObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialObject, "phase"))

@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.ckb.therapy;
+package com.hartwig.hmftools.ckb.common;
 
 import java.util.List;
-
-import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -10,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class TherapyClinicalTrial {
+public abstract class ClinicalTrialInfo {
 
     @NotNull
     public abstract String nctId();
@@ -25,6 +23,5 @@ public abstract class TherapyClinicalTrial {
     public abstract String recruitment();
 
     @NotNull
-    public abstract List<TherapyInfo> therapy();
-
+    public abstract List<TherapyInfo> therapies();
 }

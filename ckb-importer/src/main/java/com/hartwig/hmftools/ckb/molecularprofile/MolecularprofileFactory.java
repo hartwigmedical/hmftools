@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
@@ -281,21 +283,21 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<MolecularProfileVariantAssociatedClinicalTrials> extractVariantAssociatedClinicalTrials(
+    public static List<ClinicalTrialInfo> extractVariantAssociatedClinicalTrials(
             @NotNull JsonArray jsonArray) {
-        List<MolecularProfileVariantAssociatedClinicalTrials> variantAssociatedClinicalTrials = Lists.newArrayList();
+        List<ClinicalTrialInfo> variantAssociatedClinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker variantAssociatedClinicalTrialChecker = MolecularProfileDataModelChecker.variantAssociatedClinicalTrial();
 
         for (JsonElement variantAssociatedClinicalTrial : jsonArray) {
             JsonObject variantAssociatedClinicalTrialJsonObject = variantAssociatedClinicalTrial.getAsJsonObject();
             variantAssociatedClinicalTrialChecker.check(variantAssociatedClinicalTrialJsonObject);
 
-            variantAssociatedClinicalTrials.add(ImmutableMolecularProfileVariantAssociatedClinicalTrials.builder()
+            variantAssociatedClinicalTrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "recruitment"))
-                    .therapy(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return variantAssociatedClinicalTrials;

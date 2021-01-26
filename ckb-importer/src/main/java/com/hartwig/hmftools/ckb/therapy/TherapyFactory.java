@@ -12,7 +12,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
@@ -197,20 +199,20 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<TherapyClinicalTrial> extractClinicalTrial(@NotNull JsonArray jsonArray) {
-        List<TherapyClinicalTrial> clinicaltrials = Lists.newArrayList();
+    public static List<ClinicalTrialInfo> extractClinicalTrial(@NotNull JsonArray jsonArray) {
+        List<ClinicalTrialInfo> clinicaltrials = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrialChecker = TherapyDataModelChecker.clinicalTrialChecker();
 
         for (JsonElement clinicalTrial : jsonArray) {
             JsonObject clinicalTrialJsonObject = clinicalTrial.getAsJsonObject();
             clinicalTrialChecker.check(clinicalTrialJsonObject);
 
-            clinicaltrials.add(ImmutableTherapyClinicalTrial.builder()
+            clinicaltrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(clinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(clinicalTrialJsonObject, "recruitment"))
-                    .therapy(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicaltrials;

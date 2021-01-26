@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.molecularprofile;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.TreatmentApproach;
 import com.hartwig.hmftools.ckb.common.VariantInfo;
 
@@ -38,7 +39,7 @@ public abstract class MolecularProfile {
     public abstract MolecularProfileTreatmentApproachEvidence treatmentApproachEvidence();
 
     @NotNull
-    public abstract List<MolecularProfileVariantAssociatedClinicalTrials> variantAssociatedClinicalTrial();
+    public abstract List<ClinicalTrialInfo> variantAssociatedClinicalTrial();
 
     @NotNull
     public abstract MolecularProfileVariantLevelEvidence variantLevelEvidence();

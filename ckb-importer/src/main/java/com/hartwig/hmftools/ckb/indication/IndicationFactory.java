@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
@@ -157,20 +159,20 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static List<IndicationClinicalTrial> extractClinicalTrials(@NotNull JsonArray jsonArray) {
-        List<IndicationClinicalTrial> clinicalTrials = Lists.newArrayList();
+    public static List<ClinicalTrialInfo> extractClinicalTrials(@NotNull JsonArray jsonArray) {
+        List<ClinicalTrialInfo> clinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker indicationClinicalTrialChecker = IndicationDataModelChecker.indicationClinicaltrialObjectChecker();
 
         for (JsonElement clinicalTrial : jsonArray) {
             JsonObject clinicalTrialJsonObject = clinicalTrial.getAsJsonObject();
             indicationClinicalTrialChecker.check(clinicalTrialJsonObject);
 
-            clinicalTrials.add(ImmutableIndicationClinicalTrial.builder()
+            clinicalTrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(clinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(clinicalTrialJsonObject, "recruitment"))
-                    .therapy(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicalTrials;
