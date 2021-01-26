@@ -205,15 +205,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceTherapyObject> extractTherapy(@NotNull JsonArray jsonArray) {
-        List<ReferenceTherapyObject> referenceTherapies = Lists.newArrayList();
+    public static List<TherapyInfo> extractTherapy(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> referenceTherapies = Lists.newArrayList();
         JsonDatamodelChecker therapyChecker = ReferenceDataModelChecker.referenceTherapyObjectChecker();
 
         for (JsonElement therapy : jsonArray) {
             JsonObject therapyJsonObject = therapy.getAsJsonObject();
             therapyChecker.check(therapyJsonObject);
 
-            referenceTherapies.add(ImmutableReferenceTherapyObject.builder()
+            referenceTherapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(therapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))

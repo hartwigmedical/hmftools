@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.reference;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.common.TreatmentApproach;
 
 import org.immutables.value.Value;
@@ -55,7 +56,7 @@ public abstract class Reference {
     public abstract List<ReferenceEvidence> evidence();
 
     @NotNull
-    public abstract List<ReferenceTherapyObject> therapy();
+    public abstract List<TherapyInfo> therapy();
 
     @NotNull
     public abstract List<TreatmentApproach> treatmentApproach();
