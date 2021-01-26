@@ -49,7 +49,7 @@ public class VariantFactory {
         File[] filesVariant = new File(variantDir).listFiles();
 
         if (filesVariant != null) {
-            LOGGER.info("The total files in the varinat dir is {}", filesVariant.length);
+            LOGGER.info("The total files in the variant dir is {}", filesVariant.length);
 
             for (File variant : filesVariant) {
                 JsonParser parser = new JsonParser();
