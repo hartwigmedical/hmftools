@@ -37,7 +37,7 @@ public abstract class VariantEvidence {
     public abstract IndicationInfo indication();
 
     @NotNull
-    public abstract String resonseType();
+    public abstract String responseType();
 
     @NotNull
     public abstract List<ReferenceInfo> reference();

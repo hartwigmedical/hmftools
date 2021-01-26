@@ -231,7 +231,7 @@ public class VariantFactory {
                     .molecularProfile(extractMolecularProfile(evidenceJsonObject.getAsJsonObject("molecularProfile")))
                     .therapy(extractTherapy(evidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(evidenceJsonObject.getAsJsonObject("indication")))
-                    .resonseType(JsonFunctions.string(evidenceJsonObject, "responseType"))
+                    .responseType(JsonFunctions.string(evidenceJsonObject, "responseType"))
                     .reference(extractReferences(evidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(evidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(evidenceJsonObject, "ampCapAscoInferredTier"))
@@ -276,15 +276,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantExtendedEvidence> extractExtendedEvidence(@NotNull JsonArray jsonArray) {
-        List<VariantExtendedEvidence> extendedEvidences = Lists.newArrayList();
+    public static List<VariantEvidence> extractExtendedEvidence(@NotNull JsonArray jsonArray) {
+        List<VariantEvidence> extendedEvidences = Lists.newArrayList();
         JsonDatamodelChecker extendedEvidenceChecker = VariantDataModelChecker.extendedEvidenceObjectChecker();
 
         for (JsonElement extendedEvidence : jsonArray) {
             JsonObject extendedEvidenceJsonObject = extendedEvidence.getAsJsonObject();
             extendedEvidenceChecker.check(extendedEvidenceJsonObject);
 
-            extendedEvidences.add(ImmutableVariantExtendedEvidence.builder()
+            extendedEvidences.add(ImmutableVariantEvidence.builder()
                     .id(JsonFunctions.string(extendedEvidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(extendedEvidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(extendedEvidenceJsonObject, "evidenceType"))

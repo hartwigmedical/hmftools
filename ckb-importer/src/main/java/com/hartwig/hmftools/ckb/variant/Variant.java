@@ -56,7 +56,7 @@ public abstract class Variant {
     public abstract List<VariantEvidence> evidence();
 
     @NotNull
-    public abstract List<VariantExtendedEvidence> extendedEvidence();
+    public abstract List<VariantEvidence> extendedEvidence();
 
     @NotNull
     public abstract List<MolecularProfileInfo> molecularProfile();
