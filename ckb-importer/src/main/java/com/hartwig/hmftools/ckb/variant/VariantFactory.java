@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
@@ -130,11 +132,11 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static VariantGene extractGene(@NotNull JsonObject jsonObject) {
+    public static GeneInfo extractGene(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneObjectChecker = VariantDataModelChecker.geneObjectChecker();
         geneObjectChecker.check(jsonObject);
 
-        return ImmutableVariantGene.builder()
+        return ImmutableGeneInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .geneSymbol(JsonFunctions.string(jsonObject, "geneSymbol"))
                 .terms(JsonFunctions.stringList(jsonObject, "terms"))

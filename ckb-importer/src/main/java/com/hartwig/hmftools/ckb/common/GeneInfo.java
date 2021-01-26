@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.variant;
+package com.hartwig.hmftools.ckb.common;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantGene {
+public abstract class GeneInfo {
 
     @NotNull
     public abstract String id();

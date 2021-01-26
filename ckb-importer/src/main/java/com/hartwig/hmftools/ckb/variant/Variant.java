@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.GeneInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 
 import org.immutables.value.Value;
@@ -31,7 +32,7 @@ public abstract class Variant {
     public abstract String type();
 
     @NotNull
-    public abstract VariantGene gene();
+    public abstract GeneInfo gene();
 
     @NotNull
     public abstract String variant();

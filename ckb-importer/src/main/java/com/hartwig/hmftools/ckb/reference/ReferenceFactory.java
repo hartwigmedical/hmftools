@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
@@ -104,15 +106,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceGene> extractGene(@NotNull JsonArray jsonArray) {
-        List<ReferenceGene> referenceGenes = Lists.newArrayList();
+    public static List<GeneInfo> extractGene(@NotNull JsonArray jsonArray) {
+        List<GeneInfo> referenceGenes = Lists.newArrayList();
         JsonDatamodelChecker geneChecker = ReferenceDataModelChecker.referenceGeneObjectChecker();
 
         for (JsonElement gene : jsonArray) {
             JsonObject geneJsonObject = gene.getAsJsonObject();
             geneChecker.check(geneJsonObject);
 
-            referenceGenes.add(ImmutableReferenceGene.builder()
+            referenceGenes.add(ImmutableGeneInfo.builder()
                     .id(JsonFunctions.string(geneJsonObject, "id"))
                     .geneSymbol(JsonFunctions.string(geneJsonObject, "geneSymbol"))
                     .terms(JsonFunctions.stringList(geneJsonObject, "terms"))

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.ckb.variant;
 
+import com.hartwig.hmftools.ckb.common.GeneInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,5 +11,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class VariantPartnerGene {
 
     @NotNull
-    public abstract VariantGene gene();
+    public abstract GeneInfo gene();
 }
