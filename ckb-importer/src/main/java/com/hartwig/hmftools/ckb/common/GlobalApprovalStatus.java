@@ -1,8 +1,4 @@
-package com.hartwig.hmftools.ckb.therapy;
-
-import com.hartwig.hmftools.ckb.common.IndicationInfo;
-import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
-import com.hartwig.hmftools.ckb.common.TherapyInfo;
+package com.hartwig.hmftools.ckb.common;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -10,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class TherapyGlobalApprovalStatus {
+public abstract class GlobalApprovalStatus {
 
     @NotNull
     public abstract String id();

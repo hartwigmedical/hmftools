@@ -13,6 +13,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialDataModelChecker;
+import com.hartwig.hmftools.ckb.common.GlobalApprovalStatus;
+import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatus;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
@@ -279,18 +281,18 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugGlobalApprovalStatus> extractGlobalApprovaStatus(@NotNull JsonArray jsonArray) {
-        List<DrugGlobalApprovalStatus> globalApproavalStatuses = Lists.newArrayList();
+    public static List<GlobalApprovalStatus> extractGlobalApprovaStatus(@NotNull JsonArray jsonArray) {
+        List<GlobalApprovalStatus> globalApproavalStatuses = Lists.newArrayList();
         JsonDatamodelChecker drugGlobalApprovalStatusChecker = DrugDataModelChecker.drugGlobalApprovalStatusObjectChecker();
 
         for (JsonElement globalApproavalStatus : jsonArray) {
             JsonObject globalTherapyObject = globalApproavalStatus.getAsJsonObject();
             drugGlobalApprovalStatusChecker.check(globalTherapyObject);
 
-            globalApproavalStatuses.add(ImmutableDrugGlobalApprovalStatus.builder()
+            globalApproavalStatuses.add(ImmutableGlobalApprovalStatus.builder()
                     .id(JsonFunctions.string(globalTherapyObject, "id"))
                     .therapy(extractTherapiesGlobalApprovalStatus(globalTherapyObject.getAsJsonObject("therapy")))
-                    .indications(extractIndicationsGlobalApprovalStatus(globalTherapyObject.getAsJsonObject("indications")))
+                    .indication(extractIndicationsGlobalApprovalStatus(globalTherapyObject.getAsJsonObject("indications")))
                     .molecularProfile(extractMolecularProfileGlobalApprovalStatus(globalTherapyObject.getAsJsonObject("molecularProfile")))
                     .approvalAuthority(JsonFunctions.string(globalTherapyObject, "approvalAuthority"))
                     .approvalStatus(JsonFunctions.string(globalTherapyObject, "approvalStatus"))
