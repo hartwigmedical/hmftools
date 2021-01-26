@@ -12,6 +12,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -81,11 +85,11 @@ public class TreatmentApproachFactory {
     }
 
     @NotNull
-    public static TreatmentApproachTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker therapyObjectChecker = TreatmentApprochDataModelChecker.therapyObjectChecker();
         therapyObjectChecker.check(jsonObject);
 
-        return ImmutableTreatmentApproachTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
@@ -93,15 +97,15 @@ public class TreatmentApproachFactory {
     }
 
     @NotNull
-    public static List<TreatmentApprochReference> extractReference(@NotNull JsonArray jsonArray) {
-        List<TreatmentApprochReference> references = Lists.newArrayList();
+    public static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceObjectChecker = TreatmentApprochDataModelChecker.referenceObjectChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
             referenceObjectChecker.check(referenceJsonObject);
 
-            references.add(ImmutableTreatmentApprochReference.builder()
+            references.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.string(referenceJsonObject, "title"))

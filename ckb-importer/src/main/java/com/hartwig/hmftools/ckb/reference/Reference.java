@@ -2,6 +2,11 @@ package com.hartwig.hmftools.ckb.reference;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.VariantInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,19 +52,19 @@ public abstract class Reference {
     public abstract List<ReferenceDrug> drug();
 
     @NotNull
-    public abstract List<ReferenceGene> gene();
+    public abstract List<GeneInfo> gene();
 
     @NotNull
     public abstract List<ReferenceEvidence> evidence();
 
     @NotNull
-    public abstract List<ReferenceTherapyObject> therapy();
+    public abstract List<TherapyInfo> therapy();
 
     @NotNull
-    public abstract List<ReferenceTreatmentApproach> treatmentApproach();
+    public abstract List<TreatmentApproach> treatmentApproach();
 
     @NotNull
-    public abstract List<ReferenceVariant> variant();
+    public abstract List<VariantInfo> variant();
 
 
 

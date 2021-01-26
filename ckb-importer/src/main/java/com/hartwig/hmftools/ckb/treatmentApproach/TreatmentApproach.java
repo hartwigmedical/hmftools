@@ -2,6 +2,9 @@ package com.hartwig.hmftools.ckb.treatmentApproach;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,10 +26,10 @@ public abstract class TreatmentApproach {
     public abstract TreatmentApprochDrugClass drugClass();
 
     @Nullable
-    public abstract TreatmentApproachTherapy therapy();
+    public abstract TherapyInfo therapy();
 
     @NotNull
-    public abstract List<TreatmentApprochReference> reference();
+    public abstract List<ReferenceInfo> reference();
 
     @NotNull
     public abstract String createDate();

@@ -12,6 +12,20 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.common.ImmutableVariantInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.VariantInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -94,15 +108,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceGene> extractGene(@NotNull JsonArray jsonArray) {
-        List<ReferenceGene> referenceGenes = Lists.newArrayList();
+    public static List<GeneInfo> extractGene(@NotNull JsonArray jsonArray) {
+        List<GeneInfo> referenceGenes = Lists.newArrayList();
         JsonDatamodelChecker geneChecker = ReferenceDataModelChecker.referenceGeneObjectChecker();
 
         for (JsonElement gene : jsonArray) {
             JsonObject geneJsonObject = gene.getAsJsonObject();
             geneChecker.check(geneJsonObject);
 
-            referenceGenes.add(ImmutableReferenceGene.builder()
+            referenceGenes.add(ImmutableGeneInfo.builder()
                     .id(JsonFunctions.string(geneJsonObject, "id"))
                     .geneSymbol(JsonFunctions.string(geneJsonObject, "geneSymbol"))
                     .terms(JsonFunctions.stringList(geneJsonObject, "terms"))
@@ -141,22 +155,22 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static ReferenceMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker molecularProfileChecker = ReferenceDataModelChecker.referenceMolecularProfileObjectChecker();
         molecularProfileChecker.check(jsonObject);
 
-        return ImmutableReferenceMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
 
     @NotNull
-    public static ReferenceTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker therapyChecker = ReferenceDataModelChecker.referenceTherapyChecker();
         therapyChecker.check(jsonObject);
 
-        return ImmutableReferenceTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
@@ -164,11 +178,11 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static ReferenceIndication extractIndication(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationChecker = ReferenceDataModelChecker.referenceIndicationChecker();
         indicationChecker.check(jsonObject);
 
-        return ImmutableReferenceIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
@@ -176,15 +190,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceReference> extractReference(@NotNull JsonArray jsonArray) {
-        List<ReferenceReference> references = Lists.newArrayList();
+    public static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceChecker = ReferenceDataModelChecker.referenceReferenceChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
             referenceChecker.check(referenceJsonObject);
 
-            references.add(ImmutableReferenceReference.builder()
+            references.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
@@ -195,15 +209,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceTherapyObject> extractTherapy(@NotNull JsonArray jsonArray) {
-        List<ReferenceTherapyObject> referenceTherapies = Lists.newArrayList();
+    public static List<TherapyInfo> extractTherapy(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> referenceTherapies = Lists.newArrayList();
         JsonDatamodelChecker therapyChecker = ReferenceDataModelChecker.referenceTherapyObjectChecker();
 
         for (JsonElement therapy : jsonArray) {
             JsonObject therapyJsonObject = therapy.getAsJsonObject();
             therapyChecker.check(therapyJsonObject);
 
-            referenceTherapies.add(ImmutableReferenceTherapyObject.builder()
+            referenceTherapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(therapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))
@@ -215,15 +229,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceTreatmentApproach> extractTreatmentApproach(@NotNull JsonArray jsonArray) {
-        List<ReferenceTreatmentApproach> referenceTreatmentApproaches = Lists.newArrayList();
+    public static List<TreatmentApproach> extractTreatmentApproach(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproach> referenceTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker treatmentApproachChecker = ReferenceDataModelChecker.referenceTreatmentApprochObjectChecker();
 
         for (JsonElement treatmentApproach : jsonArray) {
             JsonObject treatmentApproachJsonObject = treatmentApproach.getAsJsonObject();
             treatmentApproachChecker.check(treatmentApproachJsonObject);
 
-            referenceTreatmentApproaches.add(ImmutableReferenceTreatmentApproach.builder()
+            referenceTreatmentApproaches.add(ImmutableTreatmentApproach.builder()
                     .id(JsonFunctions.string(treatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(treatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(treatmentApproachJsonObject, "profileName"))
@@ -235,15 +249,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceVariant> extarctVariant(@NotNull JsonArray jsonArray) {
-        List<ReferenceVariant> referenceVariants = Lists.newArrayList();
+    public static List<VariantInfo> extarctVariant(@NotNull JsonArray jsonArray) {
+        List<VariantInfo> referenceVariants = Lists.newArrayList();
         JsonDatamodelChecker variantChecker = ReferenceDataModelChecker.referenceVariantObjectChecker();
 
         for (JsonElement variant : jsonArray) {
             JsonObject variantJsonObject = variant.getAsJsonObject();
             variantChecker.check(variantJsonObject);
 
-            referenceVariants.add(ImmutableReferenceVariant.builder()
+            referenceVariants.add(ImmutableVariantInfo.builder()
                     .id(JsonFunctions.string(variantJsonObject, "id"))
                     .fullName(JsonFunctions.string(variantJsonObject, "fullName"))
                     .impact(JsonFunctions.nullableString(variantJsonObject, "impact"))

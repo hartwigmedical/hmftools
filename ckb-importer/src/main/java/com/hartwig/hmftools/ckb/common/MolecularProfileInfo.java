@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.ckb.gene;
+package com.hartwig.hmftools.ckb.common;
+
+import java.util.List;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,14 +8,14 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class GeneTherapy {
+public abstract class MolecularProfileInfo {
 
-    @NotNull
+    @Nullable
     public abstract String id();
 
     @NotNull
-    public abstract String therapyName();
+    public abstract String profileName();
 
-    @Nullable
-    public abstract String synonyms();
+    public abstract List<TreatmentApproach> profileTreatmentApproache();
+
 }

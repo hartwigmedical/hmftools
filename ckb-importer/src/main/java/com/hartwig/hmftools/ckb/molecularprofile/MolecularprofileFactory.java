@@ -12,6 +12,20 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.common.ImmutableVariantInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.VariantInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -74,15 +88,15 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<MolecularProfileGeneVariant> extractGeneVariant(@NotNull JsonArray jsonArray) {
-        List<MolecularProfileGeneVariant> geneVariants = Lists.newArrayList();
+    public static List<VariantInfo> extractGeneVariant(@NotNull JsonArray jsonArray) {
+        List<VariantInfo> geneVariants = Lists.newArrayList();
         JsonDatamodelChecker geneVariantChecker = MolecularProfileDataModelChecker.molecularProfileGeneVariantObjectChecker();
 
         for (JsonElement geneVariant : jsonArray) {
             JsonObject geneVariantJsonObject = geneVariant.getAsJsonObject();
             geneVariantChecker.check(geneVariantJsonObject);
 
-            geneVariants.add(ImmutableMolecularProfileGeneVariant.builder()
+            geneVariants.add(ImmutableVariantInfo.builder()
                     .id(JsonFunctions.string(geneVariantJsonObject, "id"))
                     .fullName(JsonFunctions.string(geneVariantJsonObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneVariantJsonObject, "impact"))
@@ -93,8 +107,8 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<MolecularProfileProfileTreatmentApproache> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
-        List<MolecularProfileProfileTreatmentApproache> profileTreatmentApproaches = Lists.newArrayList();
+    public static List<TreatmentApproach> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproach> profileTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker profileTreatmentApproachChecker =
                 MolecularProfileDataModelChecker.molecularProfileProfileTreatmentApproacjObjectChecker();
 
@@ -102,7 +116,7 @@ public class MolecularprofileFactory {
             JsonObject profileTreatmentApproachJsonObject = profileTreatmentApproach.getAsJsonObject();
             profileTreatmentApproachChecker.check(profileTreatmentApproachJsonObject);
 
-            profileTreatmentApproaches.add(ImmutableMolecularProfileProfileTreatmentApproache.builder()
+            profileTreatmentApproaches.add(ImmutableTreatmentApproach.builder()
                     .id(JsonFunctions.string(profileTreatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(profileTreatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(profileTreatmentApproachJsonObject, "profileName"))
@@ -155,22 +169,22 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker molecularProfileChecker = MolecularProfileDataModelChecker.molecularProfileMolecularprofile();
         molecularProfileChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
 
     @NotNull
-    public static MolecularProfileTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.molecularProfileTherapy();
         therapyChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
@@ -178,11 +192,11 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileIndication extractIndication(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationChecker = MolecularProfileDataModelChecker.molecularProfileIndication();
         indicationChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
@@ -190,15 +204,15 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<MolecularProfileReferences> extractReference(@NotNull JsonArray jsonArray) {
-        List<MolecularProfileReferences> references = Lists.newArrayList();
+    public static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceChecker = MolecularProfileDataModelChecker.molecularProfileReference();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
             referenceChecker.check(referenceJsonObject);
 
-            references.add(ImmutableMolecularProfileReferences.builder()
+            references.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
@@ -209,8 +223,8 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<MolecularProfileRelevantTreatmentApproach> extractRelevantTreatmentApproach(@NotNull JsonArray jsonArray) {
-        List<MolecularProfileRelevantTreatmentApproach> relevantTreatmentApproaches = Lists.newArrayList();
+    public static List<TreatmentApproach> extractRelevantTreatmentApproach(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproach> relevantTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker relevantTreatmentApproachChecker =
                 MolecularProfileDataModelChecker.molecularProfileRelevantTreatmentApproach();
 
@@ -218,7 +232,7 @@ public class MolecularprofileFactory {
             JsonObject relevantTreatmentApproachJsonObject = relevantTreatmentApproach.getAsJsonObject();
             relevantTreatmentApproachChecker.check(relevantTreatmentApproachJsonObject);
 
-            relevantTreatmentApproaches.add(ImmutableMolecularProfileRelevantTreatmentApproach.builder()
+            relevantTreatmentApproaches.add(ImmutableTreatmentApproach.builder()
                     .id(JsonFunctions.string(relevantTreatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(relevantTreatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(relevantTreatmentApproachJsonObject, "profileName"))
@@ -269,36 +283,36 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<MolecularProfileVariantAssociatedClinicalTrials> extractVariantAssociatedClinicalTrials(
+    public static List<ClinicalTrialInfo> extractVariantAssociatedClinicalTrials(
             @NotNull JsonArray jsonArray) {
-        List<MolecularProfileVariantAssociatedClinicalTrials> variantAssociatedClinicalTrials = Lists.newArrayList();
+        List<ClinicalTrialInfo> variantAssociatedClinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker variantAssociatedClinicalTrialChecker = MolecularProfileDataModelChecker.variantAssociatedClinicalTrial();
 
         for (JsonElement variantAssociatedClinicalTrial : jsonArray) {
             JsonObject variantAssociatedClinicalTrialJsonObject = variantAssociatedClinicalTrial.getAsJsonObject();
             variantAssociatedClinicalTrialChecker.check(variantAssociatedClinicalTrialJsonObject);
 
-            variantAssociatedClinicalTrials.add(ImmutableMolecularProfileVariantAssociatedClinicalTrials.builder()
+            variantAssociatedClinicalTrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "recruitment"))
-                    .therapy(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return variantAssociatedClinicalTrials;
     }
 
     @NotNull
-    public static List<MolecularProfileTherapy> extractTherapyList(@NotNull JsonArray jsonArray) {
-        List<MolecularProfileTherapy> therapies = Lists.newArrayList();
+    public static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> therapies = Lists.newArrayList();
         JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.molecularProfileTherapy();
 
         for (JsonElement therapy : jsonArray) {
             JsonObject therapyJsonObject = therapy.getAsJsonObject();
             therapyChecker.check(therapyJsonObject);
 
-            therapies.add(ImmutableMolecularProfileTherapy.builder()
+            therapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(therapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))
@@ -388,10 +402,4 @@ public class MolecularprofileFactory {
         }
         return extendedEvidenceList;
     }
-
-
-
-
-
-
 }

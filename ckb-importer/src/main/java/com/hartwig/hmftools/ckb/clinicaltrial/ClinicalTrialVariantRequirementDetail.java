@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.ckb.clinicaltrial;
 
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ClinicalTrialVariantRequirementDetail {
 
     @NotNull
-    public abstract ClinicalTrialMolecularProfile molecularProfile();
+    public abstract MolecularProfileInfo molecularProfile();
 
     @NotNull
     public abstract String requirementType();

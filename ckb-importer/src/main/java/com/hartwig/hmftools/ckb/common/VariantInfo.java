@@ -1,4 +1,8 @@
-package com.hartwig.hmftools.ckb.reference;
+package com.hartwig.hmftools.ckb.common;
+
+import java.util.List;
+
+import com.hartwig.hmftools.ckb.gene.GeneVariantDescription;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ReferenceVariant {
+public abstract class VariantInfo {
 
     @NotNull
     public abstract String id();
@@ -19,4 +23,7 @@ public abstract class ReferenceVariant {
 
     @Nullable
     public abstract String proteinEffect();
+
+    @NotNull
+    public abstract List<GeneVariantDescription> variantDescription();
 }

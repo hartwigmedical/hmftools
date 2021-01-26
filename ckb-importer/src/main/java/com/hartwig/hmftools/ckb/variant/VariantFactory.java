@@ -12,6 +12,20 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.common.ImmutableVariantInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.VariantInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -35,7 +49,7 @@ public class VariantFactory {
         File[] filesVariant = new File(variantDir).listFiles();
 
         if (filesVariant != null) {
-            LOGGER.info("The total files in the varinat dir is {}", filesVariant.length);
+            LOGGER.info("The total files in the variant dir is {}", filesVariant.length);
 
             for (File variant : filesVariant) {
                 JsonParser parser = new JsonParser();
@@ -100,15 +114,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VarinatReference> extractReferences(@NotNull JsonArray jsonArray) {
-        List<VarinatReference> references = Lists.newArrayList();
+    public static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceObjectChecker = VariantDataModelChecker.referenceObjectChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
             referenceObjectChecker.check(referenceJsonObject);
 
-            references.add(ImmutableVarinatReference.builder()
+            references.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
@@ -120,11 +134,11 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static VariantGene extractGene(@NotNull JsonObject jsonObject) {
+    public static GeneInfo extractGene(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneObjectChecker = VariantDataModelChecker.geneObjectChecker();
         geneObjectChecker.check(jsonObject);
 
-        return ImmutableVariantGene.builder()
+        return ImmutableGeneInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .geneSymbol(JsonFunctions.string(jsonObject, "geneSymbol"))
                 .terms(JsonFunctions.stringList(jsonObject, "terms"))
@@ -183,15 +197,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantVariant> extractVariant(@NotNull JsonArray jsonArray) {
-        List<VariantVariant> variants = Lists.newArrayList();
+    public static List<VariantInfo> extractVariant(@NotNull JsonArray jsonArray) {
+        List<VariantInfo> variants = Lists.newArrayList();
         JsonDatamodelChecker variantObjectChecker = VariantDataModelChecker.variantVariantObjectChecker();
 
         for (JsonElement variant : jsonArray) {
             JsonObject variantJsonObject = variant.getAsJsonObject();
             variantObjectChecker.check(variantJsonObject);
 
-            variants.add(ImmutableVariantVariant.builder()
+            variants.add(ImmutableVariantInfo.builder()
                     .id(JsonFunctions.string(variantJsonObject, "id"))
                     .fullName(JsonFunctions.string(variantJsonObject, "fullName"))
                     .impact(JsonFunctions.string(variantJsonObject, "impact"))
@@ -219,7 +233,7 @@ public class VariantFactory {
                     .molecularProfile(extractMolecularProfile(evidenceJsonObject.getAsJsonObject("molecularProfile")))
                     .therapy(extractTherapy(evidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(evidenceJsonObject.getAsJsonObject("indication")))
-                    .resonseType(JsonFunctions.string(evidenceJsonObject, "responseType"))
+                    .responseType(JsonFunctions.string(evidenceJsonObject, "responseType"))
                     .reference(extractReferences(evidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(evidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(evidenceJsonObject, "ampCapAscoInferredTier"))
@@ -229,23 +243,22 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static VariantMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker molecularProfileChecker = VariantDataModelChecker.molecularProfileObjectChecker();
         molecularProfileChecker.check(jsonObject);
 
-        return ImmutableVariantMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
-                .profileTreatmentApproach(null)
                 .build();
     }
 
     @NotNull
-    public static VariantTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker therapyChecker = VariantDataModelChecker.therapyChecker();
         therapyChecker.check(jsonObject);
 
-        return ImmutableVariantTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
@@ -253,11 +266,11 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static VariantIndication extractIndication(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationChecker = VariantDataModelChecker.indicationChecker();
         indicationChecker.check(jsonObject);
 
-        return ImmutableVariantIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
@@ -265,15 +278,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantExtendedEvidence> extractExtendedEvidence(@NotNull JsonArray jsonArray) {
-        List<VariantExtendedEvidence> extendedEvidences = Lists.newArrayList();
+    public static List<VariantEvidence> extractExtendedEvidence(@NotNull JsonArray jsonArray) {
+        List<VariantEvidence> extendedEvidences = Lists.newArrayList();
         JsonDatamodelChecker extendedEvidenceChecker = VariantDataModelChecker.extendedEvidenceObjectChecker();
 
         for (JsonElement extendedEvidence : jsonArray) {
             JsonObject extendedEvidenceJsonObject = extendedEvidence.getAsJsonObject();
             extendedEvidenceChecker.check(extendedEvidenceJsonObject);
 
-            extendedEvidences.add(ImmutableVariantExtendedEvidence.builder()
+            extendedEvidences.add(ImmutableVariantEvidence.builder()
                     .id(JsonFunctions.string(extendedEvidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(extendedEvidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(extendedEvidenceJsonObject, "evidenceType"))
@@ -291,17 +304,17 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantMolecularProfile> extarctMolecularProfilesList(@NotNull JsonArray jsonArray) {
-        List<VariantMolecularProfile> molecularProfiles = Lists.newArrayList();
+    public static List<MolecularProfileInfo> extarctMolecularProfilesList(@NotNull JsonArray jsonArray) {
+        List<MolecularProfileInfo> molecularProfiles = Lists.newArrayList();
         JsonDatamodelChecker molecularProfileChecker = VariantDataModelChecker.molecularProfileObjectChecker();
 
         for (JsonElement molecularProfile : jsonArray) {
             JsonObject molecularProfileJsonObject = molecularProfile.getAsJsonObject();
             molecularProfileChecker.check(molecularProfileJsonObject);
-            molecularProfiles.add(ImmutableVariantMolecularProfile.builder()
+            molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
                     .id(JsonFunctions.string(molecularProfileJsonObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileJsonObject, "profileName"))
-                    .profileTreatmentApproach(extractProfileTreatmentApproches(molecularProfileJsonObject.getAsJsonArray(
+                    .profileTreatmentApproache(extractProfileTreatmentApproches(molecularProfileJsonObject.getAsJsonArray(
                             "profileTreatmentApproaches")))
                     .build());
         }
@@ -310,15 +323,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantProfileTreatmentApproach> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
-        List<VariantProfileTreatmentApproach> profileTreatmentApproaches = Lists.newArrayList();
+    public static List<TreatmentApproach> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproach> profileTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker profileTreatmentApprochChecker = VariantDataModelChecker.profileTreatmentApprochObjectChecker();
 
         for (JsonElement profileTreatmentApproch : jsonArray) {
             JsonObject profileTreatmentApprochJsonObject = profileTreatmentApproch.getAsJsonObject();
             profileTreatmentApprochChecker.check(profileTreatmentApprochJsonObject);
 
-            profileTreatmentApproaches.add(ImmutableVariantProfileTreatmentApproach.builder()
+            profileTreatmentApproaches.add(ImmutableTreatmentApproach.builder()
                     .id(JsonFunctions.string(profileTreatmentApprochJsonObject, "id"))
                     .name(JsonFunctions.string(profileTreatmentApprochJsonObject, "name"))
                     .profileName(JsonFunctions.string(profileTreatmentApprochJsonObject, "profileName"))

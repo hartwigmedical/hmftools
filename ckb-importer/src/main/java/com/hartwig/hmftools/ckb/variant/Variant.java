@@ -2,6 +2,9 @@ package com.hartwig.hmftools.ckb.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +32,7 @@ public abstract class Variant {
     public abstract String type();
 
     @NotNull
-    public abstract VariantGene gene();
+    public abstract GeneInfo gene();
 
     @NotNull
     public abstract String variant();
@@ -53,10 +56,10 @@ public abstract class Variant {
     public abstract List<VariantEvidence> evidence();
 
     @NotNull
-    public abstract List<VariantExtendedEvidence> extendedEvidence();
+    public abstract List<VariantEvidence> extendedEvidence();
 
     @NotNull
-    public abstract List<VariantMolecularProfile> molecularProfile();
+    public abstract List<MolecularProfileInfo> molecularProfile();
 
     @NotNull
     public abstract List<VariantAllTranscriptCoordinate> allTranscriptCoordinate();

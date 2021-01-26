@@ -12,6 +12,18 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatusInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -87,15 +99,15 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<TherapyReference> extractReferences(@NotNull JsonArray jsonArray) {
-        List<TherapyReference> references = Lists.newArrayList();
+    public static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceChecker = TherapyDataModelChecker.referencesObjectChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
             referenceChecker.check(referenceJsonObject);
 
-            references.add(ImmutableTherapyReference.builder()
+            references.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
@@ -133,22 +145,22 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static TherapyMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker molecularProfileChecker = TherapyDataModelChecker.molecularProfileObjectChecker();
         molecularProfileChecker.check(jsonObject);
 
-        return ImmutableTherapyMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
 
     @NotNull
-    public static TherapyTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker therapyChecker = TherapyDataModelChecker.therapyChecker();
         therapyChecker.check(jsonObject);
 
-        return ImmutableTherapyTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
@@ -156,11 +168,11 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static TherapyIndication extractIndication(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationChecker = TherapyDataModelChecker.indicationChecker();
         indicationChecker.check(jsonObject);
 
-        return ImmutableTherapyIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
@@ -168,15 +180,15 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<TherapyReference> extractReference(@NotNull JsonArray jsonArray) {
-        List<TherapyReference> references = Lists.newArrayList();
+    public static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceChecker = TherapyDataModelChecker.referenceChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
             referenceChecker.check(referenceJsonObject);
 
-            references.add(ImmutableTherapyReference.builder()
+            references.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
@@ -187,35 +199,35 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<TherapyClinicalTrial> extractClinicalTrial(@NotNull JsonArray jsonArray) {
-        List<TherapyClinicalTrial> clinicaltrials = Lists.newArrayList();
+    public static List<ClinicalTrialInfo> extractClinicalTrial(@NotNull JsonArray jsonArray) {
+        List<ClinicalTrialInfo> clinicaltrials = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrialChecker = TherapyDataModelChecker.clinicalTrialChecker();
 
         for (JsonElement clinicalTrial : jsonArray) {
             JsonObject clinicalTrialJsonObject = clinicalTrial.getAsJsonObject();
             clinicalTrialChecker.check(clinicalTrialJsonObject);
 
-            clinicaltrials.add(ImmutableTherapyClinicalTrial.builder()
+            clinicaltrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(clinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(clinicalTrialJsonObject, "recruitment"))
-                    .therapy(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicaltrials;
     }
 
     @NotNull
-    public static List<TherapyTherapy> extractTherapyList(@NotNull JsonArray jsonArray) {
-        List<TherapyTherapy> therapies = Lists.newArrayList();
+    public static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> therapies = Lists.newArrayList();
         JsonDatamodelChecker therapyChecker = TherapyDataModelChecker.therapyChecker();
 
         for (JsonElement therapy : jsonArray) {
             JsonObject therapyJsonObject = therapy.getAsJsonObject();
             therapyChecker.check(therapyJsonObject);
 
-            therapies.add(ImmutableTherapyTherapy.builder()
+            therapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(therapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))
@@ -244,15 +256,15 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<TherapyGlobalApprovalStatus> extractGlobalApprovalStatus(@NotNull JsonArray jsonArray) {
-        List<TherapyGlobalApprovalStatus> globalApprovalStatuses = Lists.newArrayList();
+    public static List<GlobalApprovalStatusInfo> extractGlobalApprovalStatus(@NotNull JsonArray jsonArray) {
+        List<GlobalApprovalStatusInfo> globalApprovalStatuses = Lists.newArrayList();
         JsonDatamodelChecker globalApprovalStatusChecker = TherapyDataModelChecker.globalApprovalStatusChecker();
 
         for (JsonElement globalApprovalStatus : jsonArray) {
             JsonObject globalApprovalStatusJsonObject = globalApprovalStatus.getAsJsonObject();
             globalApprovalStatusChecker.check(globalApprovalStatusJsonObject);
 
-            globalApprovalStatuses.add(ImmutableTherapyGlobalApprovalStatus.builder()
+            globalApprovalStatuses.add(ImmutableGlobalApprovalStatusInfo.builder()
                     .id(JsonFunctions.string(globalApprovalStatusJsonObject, "id"))
                     .therapy(extractTherapy(globalApprovalStatusJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(globalApprovalStatusJsonObject.getAsJsonObject("indication")))

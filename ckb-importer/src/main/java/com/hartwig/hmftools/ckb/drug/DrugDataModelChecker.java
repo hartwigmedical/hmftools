@@ -115,6 +115,7 @@ public final class DrugDataModelChecker {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
+        map.put("profileTreatmentApproache", false); //check if needed
 
         return new JsonDatamodelChecker("DrugEvidenceMolecularProfileObject", map);
     }
@@ -198,6 +199,7 @@ public final class DrugDataModelChecker {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", false);
+        map.put("profileTreatmentApproache", null); //check if needed
 
         return new JsonDatamodelChecker("DrugGlobalApprovalStatusMolecularProfileObject", map);
     }

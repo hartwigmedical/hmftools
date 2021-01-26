@@ -2,6 +2,9 @@ package com.hartwig.hmftools.ckb.clinicaltrial;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +26,7 @@ public abstract class ClinicalTrial {
     public abstract String recruitment();
 
     @NotNull
-    public abstract List<ClinicalTrialTherapy> therapies();
+    public abstract List<TherapyInfo> therapies();
 
     @NotNull
     public abstract List<String> ageGroups();
@@ -41,7 +44,7 @@ public abstract class ClinicalTrial {
     public abstract String updateDate();
 
     @NotNull
-    public abstract List<ClinicalTrialIndication> indications();
+    public abstract List<IndicationInfo> indications();
 
     @NotNull
     public abstract List<ClinicalTrialVariantRequirementDetail> variantRequirementDetails();

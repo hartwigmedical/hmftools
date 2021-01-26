@@ -2,6 +2,12 @@ package com.hartwig.hmftools.ckb.molecularprofile;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,19 +29,19 @@ public abstract class MolecularProfileVariantLevelEvidenceList {
     public abstract String efficacyEvidence();
 
     @NotNull
-    public abstract MolecularProfileMolecularProfile molecularProfile();
+    public abstract MolecularProfileInfo molecularProfile();
 
     @NotNull
-    public abstract MolecularProfileTherapy therapy();
+    public abstract TherapyInfo therapy();
 
     @NotNull
-    public abstract MolecularProfileIndication indication();
+    public abstract IndicationInfo indication();
 
     @NotNull
     public abstract String responseType();
 
     @NotNull
-    public abstract List<MolecularProfileReferences> reference();
+    public abstract List<ReferenceInfo> reference();
 
     @NotNull
     public abstract String ampCapAscoEvidenceLevel();
@@ -44,5 +50,5 @@ public abstract class MolecularProfileVariantLevelEvidenceList {
     public abstract String ampCapAscoInferredTier();
 
     @NotNull
-    public abstract List<MolecularProfileRelevantTreatmentApproach> relevantTreatmentApproach();
+    public abstract List<TreatmentApproach> relevantTreatmentApproach();
 }

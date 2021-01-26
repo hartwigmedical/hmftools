@@ -60,6 +60,7 @@ public class GlobalTherapyApprovalStatusDataModelChecker {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
+        map.put("profileTreatmentApproache", false); //check if needed
 
         return new JsonDatamodelChecker("GlobalTherapyApprovalStatusMolecularProfileObject", map);
     }

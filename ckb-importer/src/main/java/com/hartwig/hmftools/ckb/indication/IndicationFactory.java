@@ -12,6 +12,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ReferenceInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -95,22 +105,22 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static IndicationMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationEvidenceMolecularProfileChecker = IndicationDataModelChecker.indicationEvidenceMolecularProfileObjectChecker();
         indicationEvidenceMolecularProfileChecker.check(jsonObject);
 
-        return ImmutableIndicationMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
 
     @NotNull
-    public static IndicationTherapy extractTherapy(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationEvidenceTherapyChecker = IndicationDataModelChecker.indicationEvidenceTherapyObjectChecker();
         indicationEvidenceTherapyChecker.check(jsonObject);
 
-        return ImmutableIndicationTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
@@ -118,11 +128,11 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static IndicationIndication extractIndication(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationEvidenceIndicationChecker = IndicationDataModelChecker.indicationEvidenceIndicationObjectChecker();
         indicationEvidenceIndicationChecker.check(jsonObject);
 
-        return ImmutableIndicationIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
@@ -130,15 +140,15 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static List<IndicationReference> extractReference(@NotNull JsonArray jsonArray) {
-        List<IndicationReference> references = Lists.newArrayList();
+    public static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+        List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker indicationEvidenceReferenceChecker = IndicationDataModelChecker.indicationEvidenceReferenceObjectChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
             indicationEvidenceReferenceChecker.check(referenceJsonObject);
 
-            references.add(ImmutableIndicationReference.builder()
+            references.add(ImmutableReferenceInfo.builder()
                     .id(JsonFunctions.string(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
@@ -149,35 +159,35 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static List<IndicationClinicalTrial> extractClinicalTrials(@NotNull JsonArray jsonArray) {
-        List<IndicationClinicalTrial> clinicalTrials = Lists.newArrayList();
+    public static List<ClinicalTrialInfo> extractClinicalTrials(@NotNull JsonArray jsonArray) {
+        List<ClinicalTrialInfo> clinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker indicationClinicalTrialChecker = IndicationDataModelChecker.indicationClinicaltrialObjectChecker();
 
         for (JsonElement clinicalTrial : jsonArray) {
             JsonObject clinicalTrialJsonObject = clinicalTrial.getAsJsonObject();
             indicationClinicalTrialChecker.check(clinicalTrialJsonObject);
 
-            clinicalTrials.add(ImmutableIndicationClinicalTrial.builder()
+            clinicalTrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(clinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(clinicalTrialJsonObject, "recruitment"))
-                    .therapy(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicalTrials;
     }
 
     @NotNull
-    public static List<IndicationTherapy> extractTherapyList(@NotNull JsonArray jsonArray) {
-        List<IndicationTherapy> therapies = Lists.newArrayList();
+    public static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> therapies = Lists.newArrayList();
         JsonDatamodelChecker indicationClinicalTrialTherapiesChecker = IndicationDataModelChecker.indicationEvidenceTherapyObjectChecker();
 
         for (JsonElement therapy : jsonArray) {
             JsonObject therapyJsonObject = therapy.getAsJsonObject();
             indicationClinicalTrialTherapiesChecker.check(therapyJsonObject);
 
-            therapies.add(ImmutableIndicationTherapy.builder()
+            therapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(therapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))

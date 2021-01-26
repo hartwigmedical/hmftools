@@ -13,6 +13,12 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -94,25 +100,25 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static ClinicalTrialMolecularProfile retrieveClinicalTrialsMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo retrieveClinicalTrialsMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker clinicalTrailMolecularProfileChecker =
                 ClinicalTrialDataModelChecker.clinicalTrialMolecularProfileObjectChecker();
         clinicalTrailMolecularProfileChecker.check(jsonObject);
-        return ImmutableClinicalTrialMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.nullableString(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
 
     @NotNull
-    private static List<ClinicalTrialTherapy> retrieveClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
-        List<ClinicalTrialTherapy> therapies = Lists.newArrayList();
+    private static List<TherapyInfo> retrieveClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> therapies = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailTherapiesChecker = ClinicalTrialDataModelChecker.clinicalTrialTherapiesObjectChecker();
         for (JsonElement therapy : jsonArray) {
             JsonObject therapyObject = therapy.getAsJsonObject();
             clinicalTrailTherapiesChecker.check(therapyObject);
 
-            therapies.add(ImmutableClinicalTrialTherapy.builder()
+            therapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.string(therapyObject, "id"))
                     .therapyName(JsonFunctions.string(therapyObject, "therapyName"))
                     .synonyms(JsonFunctions.optionalNullableString(therapyObject, "synonyms"))
@@ -122,14 +128,14 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<ClinicalTrialIndication> retrieveClinicalTrialsIndications(@NotNull JsonArray jsonArray) {
-        List<ClinicalTrialIndication> indications = Lists.newArrayList();
+    private static List<IndicationInfo> retrieveClinicalTrialsIndications(@NotNull JsonArray jsonArray) {
+        List<IndicationInfo> indications = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailIndicationsChecker = ClinicalTrialDataModelChecker.clinicalTrialIndicationsObjectChecker();
 
         for (JsonElement indication : jsonArray) {
             JsonObject indicationObject = indication.getAsJsonObject();
             clinicalTrailIndicationsChecker.check(indicationObject);
-            indications.add(ImmutableClinicalTrialIndication.builder()
+            indications.add(ImmutableIndicationInfo.builder()
                     .id(JsonFunctions.string(indicationObject, "id"))
                     .name(JsonFunctions.string(indicationObject, "name"))
                     .source(JsonFunctions.string(indicationObject, "source"))

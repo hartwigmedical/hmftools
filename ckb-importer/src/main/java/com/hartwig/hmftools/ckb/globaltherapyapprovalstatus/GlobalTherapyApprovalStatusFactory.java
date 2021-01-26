@@ -12,6 +12,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
+import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -88,12 +94,12 @@ public class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    public static GlobalTherapyApprovalStatusTherapy extractGlobalTherapyApprovalStatusTherapy(@NotNull JsonObject jsonObject) {
+    public static TherapyInfo extractGlobalTherapyApprovalStatusTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusTherapyChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusTherapyObjectChecker();
         globalTherapyApprovalStatusTherapyChecker.check(jsonObject);
 
-        return ImmutableGlobalTherapyApprovalStatusTherapy.builder()
+        return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
@@ -101,12 +107,12 @@ public class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    public static GlobalTherapyApprovalStatusIndication extractGlobalTherapyApprovalStatusIndication(@NotNull JsonObject jsonObject) {
+    public static IndicationInfo extractGlobalTherapyApprovalStatusIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusIndicationChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusIndicationObjectChecker();
         globalTherapyApprovalStatusIndicationChecker.check(jsonObject);
 
-        return ImmutableGlobalTherapyApprovalStatusIndication.builder()
+        return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
@@ -114,13 +120,13 @@ public class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    public static GlobalTherapyApprovalStatusMolecularProfile extractGlobalTherapyApprovalStatusMolecularProfile(
+    public static MolecularProfileInfo extractGlobalTherapyApprovalStatusMolecularProfile(
             @NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusMolecularProfileChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusMolecularprofileObjectChecker();
         globalTherapyApprovalStatusMolecularProfileChecker.check(jsonObject);
 
-        return ImmutableGlobalTherapyApprovalStatusMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();

@@ -65,6 +65,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -86,6 +87,7 @@ public final class LoadClinicalData {
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
     private static final String CURATED_PRIMARY_TUMOR_TSV = "curated_primary_tumor_tsv";
+    private static final String MISSING_DOID_TSV = "missing_doid_tsv";
 
     private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
     private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
@@ -141,7 +143,11 @@ public final class LoadClinicalData {
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, lims);
 
         LOGGER.info("Check for missing curation tumor location when info is known");
-        checkForMissingCuratedTumorLocations(sampleDataPerPatient, patients.values(), cmd.getOptionValue(REPORTING_DB_TSV), lims);
+        Set<String> patientsWithMissingDoid =
+                checkForMissingCuratedTumorLocations(sampleDataPerPatient, patients.values(), cmd.getOptionValue(REPORTING_DB_TSV), lims);
+
+        LOGGER.info("Writing patients with missing doids");
+        DumpPrimaryTumorData.writePatientsWithMissingDoidToTSV(cmd.getOptionValue(MISSING_DOID_TSV), patientsWithMissingDoid);
 
         LOGGER.info("Writing curated primary tumors");
         DumpPrimaryTumorData.writeCuratedPrimaryTumorsToTSV(cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV), patients.values());
@@ -163,9 +169,10 @@ public final class LoadClinicalData {
         LOGGER.info("Complete");
     }
 
-    private static void checkForMissingCuratedTumorLocations(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
+    private static Set<String> checkForMissingCuratedTumorLocations(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
             @NotNull Collection<Patient> patients, @NotNull String reportingDBTSv, @NotNull Lims lims) throws IOException {
         List<String> patientsInLims = determinePatientsForChecking(reportingDBTSv, sampleDataPerPatient, lims);
+        Set<String> patientsWithMissingDoid = Sets.newHashSet();
 
         for (Patient patient : patients) {
             if (patientsInLims.contains(patient.patientIdentifier())) {
@@ -186,14 +193,24 @@ public final class LoadClinicalData {
                                 patient.baselineData().curatedPrimaryTumor().searchTerm(),
                                 patient.patientIdentifier());
                     }
+                } else {
+
+                    if (patient.baselineData().curatedPrimaryTumor().location() == null
+                            && patient.baselineData().curatedPrimaryTumor().searchTerm() == null || patient.baselineData()
+                            .curatedPrimaryTumor()
+                            .searchTerm()
+                            .isEmpty()) {
+                        patientsWithMissingDoid.add(patient.patientIdentifier());
+                    }
                 }
             }
         }
+        return patientsWithMissingDoid;
     }
 
     @NotNull
     private static List<String> determinePatientsForChecking(@NotNull String reportingDBTSv,
-            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull Lims lims) throws IOException{
+            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull Lims lims) throws IOException {
         List<String> patientsInLims = Lists.newArrayList();
 
         List<String> reportedSamples = Lists.newArrayList();
@@ -604,6 +621,7 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV),
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV),
                 cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV),
+                cmd.getOptionValue(MISSING_DOID_TSV),
                 cmd.getOptionValue(DOID_JSON),
                 cmd.getOptionValue(REPORTING_DB_TSV));
 
@@ -648,6 +666,7 @@ public final class LoadClinicalData {
 
         options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, clinical data will be loaded into the database.");
         options.addOption(CURATED_PRIMARY_TUMOR_TSV, true, "Path towards to the curated primary tumor TSV.");
+        options.addOption(MISSING_DOID_TSV, true, "Path towards to the missing doid TSV");
 
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,

@@ -74,6 +74,7 @@ public class CkbImporterApplication {
 
     @NotNull
     private static CkbEntry readJsonData(@NotNull CkbImporterConfig config) throws IOException {
+        LOGGER.info("Start with reading all files");
 
         String ckbPath = config.cbkDir();
 
@@ -93,6 +94,8 @@ public class CkbImporterApplication {
                 TreatmentApproachFactory.readingTreatmentApproch(ckbPath + File.separator + TREATMENT_APPROACHES);
         List<Variant> variants = VariantFactory.readingVariant(ckbPath + File.separator + VARIANTS);
 
+        LOGGER.info("All files are readed");
+
         return ImmutableCkbEntry.builder()
                 .clinicalTrial(clinicalTrials)
                 .drug(drugs)
@@ -109,6 +112,8 @@ public class CkbImporterApplication {
     }
 
     private static void writingDataToDatabase(@NotNull CkbEntry ckbEntry) {
+        LOGGER.info("Start with writing data to DB");
+
         LOGGER.info("ClinicalTrial {}", ckbEntry.clinicalTrial().get(0));
         LOGGER.info("Drug {}", ckbEntry.drug().get(0));
         LOGGER.info("DrugClass {}", ckbEntry.drugClass().get(0));
@@ -120,6 +125,8 @@ public class CkbImporterApplication {
         LOGGER.info("Therapy {}", ckbEntry.therapy().get(0));
         LOGGER.info("TreatmentApproach {}", ckbEntry.treatmentApproach().get(0));
         LOGGER.info("Variant {}", ckbEntry.variant().get(0));
+
+        LOGGER.info("All data is written to the DB");
     }
 
 }
