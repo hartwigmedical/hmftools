@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reference;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
@@ -26,7 +27,7 @@ public abstract class ReferenceEvidence {
     public abstract String efficacyEvidence();
 
     @NotNull
-    public abstract ReferenceMolecularProfile molecularProfile();
+    public abstract MolecularProfileInfo molecularProfile();
 
     @NotNull
     public abstract TherapyInfo therapy();

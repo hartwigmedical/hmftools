@@ -13,8 +13,10 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -118,15 +120,16 @@ public class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    public static GlobalTherapyApprovalStatusMolecularProfile extractGlobalTherapyApprovalStatusMolecularProfile(
+    public static MolecularProfileInfo extractGlobalTherapyApprovalStatusMolecularProfile(
             @NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusMolecularProfileChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusMolecularprofileObjectChecker();
         globalTherapyApprovalStatusMolecularProfileChecker.check(jsonObject);
 
-        return ImmutableGlobalTherapyApprovalStatusMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
+                .profileTreatmentApproache(null)
                 .build();
     }
 

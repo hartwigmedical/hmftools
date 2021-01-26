@@ -14,8 +14,10 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -98,13 +100,14 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static ClinicalTrialMolecularProfile retrieveClinicalTrialsMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo retrieveClinicalTrialsMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker clinicalTrailMolecularProfileChecker =
                 ClinicalTrialDataModelChecker.clinicalTrialMolecularProfileObjectChecker();
         clinicalTrailMolecularProfileChecker.check(jsonObject);
-        return ImmutableClinicalTrialMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.nullableString(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
+                .profileTreatmentApproache(null)
                 .build();
     }
 

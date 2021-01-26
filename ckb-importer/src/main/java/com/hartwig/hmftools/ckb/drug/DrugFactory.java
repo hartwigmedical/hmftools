@@ -14,8 +14,10 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialDataModelChecker;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -200,14 +202,15 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static DrugMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonObject molecularProfileObject = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugEvidenceMolecularProfileChecker = DrugDataModelChecker.drugEvidenceMolecularProfileObjectChecker();
         drugEvidenceMolecularProfileChecker.check(molecularProfileObject);
 
-        return ImmutableDrugMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(molecularProfileObject, "id"))
                 .profileName(JsonFunctions.string(molecularProfileObject, "profileName"))
+                .profileTreatmentApproache(null)
                 .build();
     }
 
@@ -322,12 +325,12 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static DrugMolecularProfile extractMolecularProfileGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileInfo extractMolecularProfileGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
         JsonObject molecularProfileGlobalApprovalStatus = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugGlobalApprovalStatusMolecularProfileChecker = DrugDataModelChecker.drugGlobalApprovalStatusMolecularProfileObjectChecker();
         drugGlobalApprovalStatusMolecularProfileChecker.check(molecularProfileGlobalApprovalStatus);
 
-        return ImmutableDrugMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(molecularProfileGlobalApprovalStatus, "id"))
                 .profileName(JsonFunctions.string(molecularProfileGlobalApprovalStatus, "profileName"))
                 .build();

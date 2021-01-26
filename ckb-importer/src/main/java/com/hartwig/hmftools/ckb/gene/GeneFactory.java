@@ -13,8 +13,10 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -181,11 +183,11 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static GeneMolecularProfile extractGeneMolecularProfileObject(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileInfo extractGeneMolecularProfileObject(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneMolecularProfileChecker = GeneDataModelChecker.geneMolecularProfileObjectChecker();
         geneMolecularProfileChecker.check(jsonObject);
 
-        return ImmutableGeneMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .profileTreatmentApproache(null) // is not present in array for evidence
@@ -254,15 +256,15 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<GeneMolecularProfile> extarctMolecularProfile(@NotNull JsonArray jsonArray) {
-        List<GeneMolecularProfile> molecularProfiles = Lists.newArrayList();
+    public static List<MolecularProfileInfo> extarctMolecularProfile(@NotNull JsonArray jsonArray) {
+        List<MolecularProfileInfo> molecularProfiles = Lists.newArrayList();
         JsonDatamodelChecker geneMolecularProfileChecker = GeneDataModelChecker.geneMolecularProfileObjectChecker();
 
         for (JsonElement molecularProfile : jsonArray) {
             JsonObject molecularProfileObject = molecularProfile.getAsJsonObject();
             geneMolecularProfileChecker.check(molecularProfileObject);
 
-            molecularProfiles.add(ImmutableGeneMolecularProfile.builder()
+            molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
                     .id(JsonFunctions.string(molecularProfileObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileObject, "profileName"))
                     .profileTreatmentApproache(extractProfileTreatmentApproach(molecularProfileObject.getAsJsonArray("profileTreatmentApproaches")))

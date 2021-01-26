@@ -13,9 +13,13 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.gene.GeneProfileTreatmentApproache;
+import com.hartwig.hmftools.ckb.gene.ImmutableGeneProfileTreatmentApproache;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -233,14 +237,14 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static VariantMolecularProfile extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker molecularProfileChecker = VariantDataModelChecker.molecularProfileObjectChecker();
         molecularProfileChecker.check(jsonObject);
 
-        return ImmutableVariantMolecularProfile.builder()
+        return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
-                .profileTreatmentApproach(null)
+                .profileTreatmentApproache(null)
                 .build();
     }
 
@@ -295,17 +299,17 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantMolecularProfile> extarctMolecularProfilesList(@NotNull JsonArray jsonArray) {
-        List<VariantMolecularProfile> molecularProfiles = Lists.newArrayList();
+    public static List<MolecularProfileInfo> extarctMolecularProfilesList(@NotNull JsonArray jsonArray) {
+        List<MolecularProfileInfo> molecularProfiles = Lists.newArrayList();
         JsonDatamodelChecker molecularProfileChecker = VariantDataModelChecker.molecularProfileObjectChecker();
 
         for (JsonElement molecularProfile : jsonArray) {
             JsonObject molecularProfileJsonObject = molecularProfile.getAsJsonObject();
             molecularProfileChecker.check(molecularProfileJsonObject);
-            molecularProfiles.add(ImmutableVariantMolecularProfile.builder()
+            molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
                     .id(JsonFunctions.string(molecularProfileJsonObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileJsonObject, "profileName"))
-                    .profileTreatmentApproach(extractProfileTreatmentApproches(molecularProfileJsonObject.getAsJsonArray(
+                    .profileTreatmentApproache(extractProfileTreatmentApproches(molecularProfileJsonObject.getAsJsonArray(
                             "profileTreatmentApproaches")))
                     .build());
         }
@@ -314,15 +318,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantProfileTreatmentApproach> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
-        List<VariantProfileTreatmentApproach> profileTreatmentApproaches = Lists.newArrayList();
+    public static List<GeneProfileTreatmentApproache> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
+        List<GeneProfileTreatmentApproache> profileTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker profileTreatmentApprochChecker = VariantDataModelChecker.profileTreatmentApprochObjectChecker();
 
         for (JsonElement profileTreatmentApproch : jsonArray) {
             JsonObject profileTreatmentApprochJsonObject = profileTreatmentApproch.getAsJsonObject();
             profileTreatmentApprochChecker.check(profileTreatmentApprochJsonObject);
 
-            profileTreatmentApproaches.add(ImmutableVariantProfileTreatmentApproach.builder()
+            profileTreatmentApproaches.add(ImmutableGeneProfileTreatmentApproache.builder()
                     .id(JsonFunctions.string(profileTreatmentApprochJsonObject, "id"))
                     .name(JsonFunctions.string(profileTreatmentApprochJsonObject, "name"))
                     .profileName(JsonFunctions.string(profileTreatmentApprochJsonObject, "profileName"))

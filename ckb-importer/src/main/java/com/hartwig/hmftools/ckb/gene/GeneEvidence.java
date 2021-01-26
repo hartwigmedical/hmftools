@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.gene;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
 import org.immutables.value.Value;
@@ -26,7 +27,7 @@ public abstract class GeneEvidence {
     public abstract String efficacyEvidence();
 
     @NotNull
-    public abstract GeneMolecularProfile molecularProfile();
+    public abstract MolecularProfileInfo molecularProfile();
 
     @NotNull
     public abstract TherapyInfo therapy();
