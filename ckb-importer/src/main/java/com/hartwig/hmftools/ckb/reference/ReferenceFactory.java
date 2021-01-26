@@ -19,11 +19,13 @@ import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.common.ImmutableVariantInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.VariantInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -247,15 +249,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceVariant> extarctVariant(@NotNull JsonArray jsonArray) {
-        List<ReferenceVariant> referenceVariants = Lists.newArrayList();
+    public static List<VariantInfo> extarctVariant(@NotNull JsonArray jsonArray) {
+        List<VariantInfo> referenceVariants = Lists.newArrayList();
         JsonDatamodelChecker variantChecker = ReferenceDataModelChecker.referenceVariantObjectChecker();
 
         for (JsonElement variant : jsonArray) {
             JsonObject variantJsonObject = variant.getAsJsonObject();
             variantChecker.check(variantJsonObject);
 
-            referenceVariants.add(ImmutableReferenceVariant.builder()
+            referenceVariants.add(ImmutableVariantInfo.builder()
                     .id(JsonFunctions.string(variantJsonObject, "id"))
                     .fullName(JsonFunctions.string(variantJsonObject, "fullName"))
                     .impact(JsonFunctions.nullableString(variantJsonObject, "impact"))

@@ -17,11 +17,13 @@ import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.common.ImmutableVariantInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.VariantInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -84,15 +86,15 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<MolecularProfileGeneVariant> extractGeneVariant(@NotNull JsonArray jsonArray) {
-        List<MolecularProfileGeneVariant> geneVariants = Lists.newArrayList();
+    public static List<VariantInfo> extractGeneVariant(@NotNull JsonArray jsonArray) {
+        List<VariantInfo> geneVariants = Lists.newArrayList();
         JsonDatamodelChecker geneVariantChecker = MolecularProfileDataModelChecker.molecularProfileGeneVariantObjectChecker();
 
         for (JsonElement geneVariant : jsonArray) {
             JsonObject geneVariantJsonObject = geneVariant.getAsJsonObject();
             geneVariantChecker.check(geneVariantJsonObject);
 
-            geneVariants.add(ImmutableMolecularProfileGeneVariant.builder()
+            geneVariants.add(ImmutableVariantInfo.builder()
                     .id(JsonFunctions.string(geneVariantJsonObject, "id"))
                     .fullName(JsonFunctions.string(geneVariantJsonObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneVariantJsonObject, "impact"))

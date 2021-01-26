@@ -5,6 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.VariantInfo;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -63,7 +64,7 @@ public abstract class Reference {
     public abstract List<TreatmentApproach> treatmentApproach();
 
     @NotNull
-    public abstract List<ReferenceVariant> variant();
+    public abstract List<VariantInfo> variant();
 
 
 
