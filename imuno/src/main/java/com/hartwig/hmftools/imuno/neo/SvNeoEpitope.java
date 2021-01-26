@@ -250,7 +250,7 @@ public class SvNeoEpitope extends NeoEpitope
                     .filter(x -> x.TransId != TransData[stream].TransId).collect(Collectors.toList());
 
             mSkippedSpliceAcceptorDonors[fs] = NeoUtils.findSkippedExonBoundaries(
-                    candidateTransDataList, positionBoundaries, findExonStart);
+                    candidateTransDataList, positionBoundaries, findExonStart, fs == FS_DOWN);
         }
     }
 

@@ -8,13 +8,18 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.swapDnaToRna;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.swapRnaToDna;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.findSkippedExonBoundaries;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBases;
 
+import static junit.framework.TestCase.assertEquals;
+
+import java.util.List;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
 
+import org.apache.commons.compress.utils.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -285,6 +290,53 @@ public class NeoEpitopeUtilsTest
 
         actCodingBases = chr1Bases.substring(100, 111) + chr1Bases.substring(120, 131);
         Assert.assertEquals(actCodingBases, codingBases);
+    }
+
+    @Test
+    public void testSkippedAcceptorDonors()
+    {
+        int[] exonStarts = { 100, 300, 500, 700, 900 };
+
+        TranscriptData transData1 = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 100, null, null, false, "");
+
+        exonStarts = new int[] { 200, 500, 800, 1100 };
+
+        TranscriptData transData2 = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 100, null, null, false, "");
+
+        int[] posBoundaries = {50, 1200};
+
+        final List<TranscriptData> transDataList = Lists.newArrayList();
+        transDataList.add(transData1);
+        transDataList.add(transData2);
+
+        int skippedCount = findSkippedExonBoundaries(transDataList, posBoundaries, true, true);
+        assertEquals(6, skippedCount); // exon start at 500 is repeated so not double-counted
+
+        posBoundaries = new int[] {600, 1200};
+
+        skippedCount = findSkippedExonBoundaries(transDataList, posBoundaries, true, true);
+        assertEquals(4, skippedCount); // exon start at 500 is repeated so not double-counted
+
+        posBoundaries = new int[] {1200, 1400};
+
+        skippedCount = findSkippedExonBoundaries(transDataList, posBoundaries, true, true);
+        assertEquals(0, skippedCount); // exon start at 500 is repeated so not double-counted
+
+        // upstream donor skipping
+        posBoundaries = new int[] {350, 1300};
+
+        skippedCount = findSkippedExonBoundaries(transDataList, posBoundaries, false, false);
+        assertEquals(6, skippedCount); // exon start at 500 is repeated so not double-counted
+
+        posBoundaries = new int[] {650, 750};
+
+        skippedCount = findSkippedExonBoundaries(transDataList, posBoundaries, false, false);
+        assertEquals(0, skippedCount); // exon start at 500 is repeated so not double-counted
+
+
+
     }
 
 

@@ -560,7 +560,8 @@ public class NeoUtils
         return exonicBaseCount;
     }
 
-    public static int findSkippedExonBoundaries(final List<TranscriptData> transDataList, final int[] positionBounds, boolean findExonStart)
+    public static int findSkippedExonBoundaries(
+            final List<TranscriptData> transDataList, final int[] positionBounds, boolean findExonStart, boolean isAcceptor)
     {
         if(positionBounds[SE_START] >= positionBounds[SE_END])
             return 0;
@@ -574,6 +575,9 @@ public class NeoUtils
         {
             for(ExonData exon : transData.exons())
             {
+                if(isAcceptor && exon.Rank == 1)
+                    continue;
+
                 if(findExonStart)
                 {
                     if(exon.Start <= positionBounds[SE_START])
