@@ -18,15 +18,14 @@ import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.adjustCodingBasesForStrand;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.calcNonMediatedDecayBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.calcStartCodonBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.calcStopCodonBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.checkTrimBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
 
-import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.TranscriptCodingType;
 import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
@@ -57,8 +56,8 @@ public abstract class NeoEpitope
     public String NovelAcid;
     public int NmdBasesMin;
     public int NmdBasesMax;
-    public int StartCodonBasesMin;
-    public int StartCodonBasesMax;
+    public int CodingBasesLengthMin;
+    public int CodingBasesLengthMax;
     public String WildtypeAcids;
 
     public boolean Valid;
@@ -85,8 +84,8 @@ public abstract class NeoEpitope
         NovelAcid = "";
         NmdBasesMin = 0;
         NmdBasesMax = 0;
-        StartCodonBasesMin = 0;
-        StartCodonBasesMax = 0;
+        CodingBasesLengthMin = 0;
+        CodingBasesLengthMax = 0;
         WildtypeAcids = "";
         Valid = true;
 
@@ -186,8 +185,11 @@ public abstract class NeoEpitope
     {
         NmdBasesMin = NmdBasesMax = calcNonMediatedDecayBases(this);
 
-        // also record the bases to the start codon
-        StartCodonBasesMin = StartCodonBasesMax = calcStartCodonBases(this);
+        // also record the bases from the start codon to the stop codon (or end of transcript if there is none)
+        int upstreamCodingBases = calcStartCodonBases(this);
+        int downstreamCodingBases = calcStopCodonBases(this);
+
+        CodingBasesLengthMin = CodingBasesLengthMax = upstreamCodingBases + downstreamCodingBases;
     }
 
     public void setAminoAcids()
@@ -201,13 +203,11 @@ public abstract class NeoEpitope
         {
             int novelBases = NovelAcid.length() * 3;
             NovelCodonBases = NovelCodonBases.substring(0, novelBases);
+            DownstreamAcids = "";
         }
 
         IM_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",
                 this, UpstreamAcids, checkTrimBases(NovelAcid), checkTrimBases(DownstreamAcids));
-
-        if(NovelAcid.equals(STOP_SYMBOL))
-            DownstreamAcids = "";
     }
 
     public abstract void setSkippedSpliceSites(final EnsemblDataCache geneTransCache);
@@ -232,7 +232,7 @@ public abstract class NeoEpitope
                 variantType(), variantInfo(), copyNumber(),
                 TransData[FS_UP].GeneId, TransData[FS_DOWN].GeneId, geneName(FS_UP), geneName(FS_DOWN),
                 chromosome(FS_UP), chromosome(FS_DOWN), orientation(FS_UP), orientation(FS_DOWN),
-                UpstreamAcids, DownstreamAcids, NovelAcid, NmdBasesMin, NmdBasesMax, StartCodonBasesMin, StartCodonBasesMax,
+                UpstreamAcids, DownstreamAcids, NovelAcid, NmdBasesMin, NmdBasesMax, CodingBasesLengthMin, CodingBasesLengthMax,
                 unsplicedDistance(), skippedDonors(), skippedAcceptors(),
                 upTransStr.toString(), downTransStr.toString(), WildtypeAcids,
                 ExtPositions[FS_UP][SE_START], ExtPositions[FS_UP][SE_END], ExtCodingBases[FS_UP], ExtCigars[FS_UP].toString(),

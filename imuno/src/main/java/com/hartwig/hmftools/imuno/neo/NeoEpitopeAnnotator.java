@@ -302,8 +302,8 @@ public class NeoEpitopeAnnotator
                     final NeoEpitope otherNeData = neDataList.get(j);
                     int minNmdCount = min(neData.NmdBasesMin, otherNeData.NmdBasesMin);
                     int maxNmdCount = max(neData.NmdBasesMax, otherNeData.NmdBasesMax);
-                    int minScbCount = min(neData.StartCodonBasesMin, otherNeData.StartCodonBasesMin);
-                    int maxScbCount = max(neData.StartCodonBasesMax, otherNeData.StartCodonBasesMax);
+                    int minCodingBaseLen = min(neData.CodingBasesLengthMin, otherNeData.CodingBasesLengthMin);
+                    int maxCodingBaseLen = max(neData.CodingBasesLengthMax, otherNeData.CodingBasesLengthMax);
 
                     // remove exact matches or take the longer if one is a subset
                     if(aminoAcidStr.contains(otherNeData.aminoAcidString()))
@@ -325,8 +325,8 @@ public class NeoEpitopeAnnotator
                     // take the shortest NMD base count
                     neData.NmdBasesMin = minNmdCount;
                     neData.NmdBasesMax = maxNmdCount;
-                    neData.StartCodonBasesMin = minScbCount;
-                    neData.StartCodonBasesMax = maxScbCount;
+                    neData.CodingBasesLengthMin = minCodingBaseLen;
+                    neData.CodingBasesLengthMax = maxCodingBaseLen;
 
                     // collect up all transcripts
                     upTransNames.add(otherNeData.TransData[FS_UP].TransName);

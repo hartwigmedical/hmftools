@@ -500,6 +500,63 @@ public class NeoUtils
         return -1;
     }
 
+    public static int calcStopCodonBases(final NeoEpitope neData)
+    {
+        // distance from the downstream position to the stop codon or the end of the transcript if there is none
+        if(neData.NovelAcid.endsWith(STOP_SYMBOL))
+            return neData.NovelCodonBases.length();
+
+        final TranscriptData transData = neData.TransData[FS_DOWN];
+        final List<ExonData> exonDataList = transData.exons();
+        int refPosition = neData.position(FS_DOWN);
+
+        int codingBaseCount = 0;
+
+        if(neData.orientation(FS_DOWN) == NEG_ORIENT)
+        {
+            int codingStop = transData.CodingEnd != null ? transData.CodingEnd : transData.TransEnd;
+
+            if(codingStop <= refPosition)
+                return 0;
+
+            for (int i = 0; i < exonDataList.size(); ++i)
+            {
+                final ExonData exon = exonDataList.get(i);
+
+                if (refPosition > exon.End)
+                    continue;
+
+                if(exon.Start > codingStop)
+                    break;
+
+                codingBaseCount += min(codingStop, exon.End) - max(refPosition, exon.Start) + 1;
+            }
+        }
+        else
+        {
+            int codingStop = transData.CodingStart != null ? transData.CodingStart : transData.TransStart;
+
+            if(codingStop >= refPosition)
+                return 0;
+
+            for(int i = exonDataList.size() - 1; i >= 0; --i)
+            {
+                final ExonData exon = exonDataList.get(i);
+
+                if(refPosition < exon.Start)
+                    continue;
+
+                if(exon.End < codingStop)
+                    break;
+
+                codingBaseCount += min(refPosition, exon.End) - max(codingStop, exon.Start) + 1;
+            }
+        }
+
+        return codingBaseCount;
+    }
+
+
     public static int calcStartCodonBases(final NeoEpitope neData)
     {
         // distance from last upstream base to upstream coding start
@@ -511,7 +568,7 @@ public class NeoUtils
         final List<ExonData> exonDataList = transData.exons();
         int refPosition = neData.position(FS_UP);
 
-        int exonicBaseCount = 0;
+        int codingBaseCount = 0;
 
         if(neData.orientation(FS_UP) == NEG_ORIENT)
         {
@@ -524,16 +581,13 @@ public class NeoUtils
             {
                 final ExonData exon = exonDataList.get(i);
 
-                if(i == exonDataList.size() - 1)
-                    break;
-
                 if (refPosition > exon.End)
                     continue;
 
                 if(exon.Start > codingPosition)
                     break;
 
-                exonicBaseCount += min(codingPosition, exon.End) - max(refPosition, exon.Start) + 1;
+                codingBaseCount += min(codingPosition, exon.End) - max(refPosition, exon.Start) + 1;
             }
         }
         else
@@ -547,20 +601,17 @@ public class NeoUtils
 
                 final ExonData exon = exonDataList.get(i);
 
-                if(i == 0)
-                    break;
-
                 if(refPosition < exon.Start)
                     continue;
 
                 if(exon.End < codingPosition)
                     break;
 
-                exonicBaseCount += min(refPosition, exon.End) - max(codingPosition, exon.Start) + 1;
+                codingBaseCount += min(refPosition, exon.End) - max(codingPosition, exon.Start) + 1;
             }
         }
 
-        return exonicBaseCount;
+        return codingBaseCount;
     }
 
     public static int findSkippedExonBoundaries(

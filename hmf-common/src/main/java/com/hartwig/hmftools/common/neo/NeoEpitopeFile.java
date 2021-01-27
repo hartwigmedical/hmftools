@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +32,7 @@ public class NeoEpitopeFile
     public final String[] Chromosomes;
     public final byte[] Orientations;
     public final int[] NmdBases;
-    public final int[] StartCodonBases;
+    public final int[] CodingBasesLength;
     public final String UpstreamAA;
     public final String DownstreamAA;
     public final String NovelAA;
@@ -52,7 +51,7 @@ public class NeoEpitopeFile
             final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
             final String chrUp, final String chrDown, byte orientUp, byte orientDown,
             final String upAA, final String downAAs, final String novelAAs,
-            int nmdBasesMin, int nmdBasesMax, int scbBasesMin, int scbBasesMax, int unsplicedBases, int skippedDonors, int skippedAcceptors,
+            int nmdBasesMin, int nmdBasesMax, int codingBasesLengthMin, int codingBasesLengthMax, int unsplicedBases, int skippedDonors, int skippedAcceptors,
             final String transcriptsUp, final String transcriptsDown, final String wildtypeAAs,
             int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
             int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown,
@@ -66,7 +65,7 @@ public class NeoEpitopeFile
         Chromosomes = new String[] { chrUp, chrDown };
         Orientations = new byte[] { orientUp, orientDown };
         NmdBases = new int[] { nmdBasesMin, nmdBasesMax };
-        StartCodonBases = new int[] { scbBasesMin, scbBasesMax };
+        CodingBasesLength = new int[] { codingBasesLengthMin, codingBasesLengthMax };
         UpstreamAA = upAA;
         DownstreamAA = downAAs;
         NovelAA = novelAAs;
@@ -145,8 +144,8 @@ public class NeoEpitopeFile
                 .add("NovelAA")
                 .add("NmdMin")
                 .add("NmdMax")
-                .add("StartCodonBasesMin")
-                .add("StartCodonBasesMax")
+                .add("CodingBasesLengthMin")
+                .add("CodingBasesLengthMax")
                 .add("UnsplicedBases")
                 .add("SkippedDonors")
                 .add("SkippedAcceptors")
@@ -189,8 +188,8 @@ public class NeoEpitopeFile
         sj.add(neo.NovelAA);
         sj.add(String.valueOf(neo.NmdBases[0]));
         sj.add(String.valueOf(neo.NmdBases[1]));
-        sj.add(String.valueOf(neo.StartCodonBases[0]));
-        sj.add(String.valueOf(neo.StartCodonBases[1]));
+        sj.add(String.valueOf(neo.CodingBasesLength[0]));
+        sj.add(String.valueOf(neo.CodingBasesLength[1]));
         sj.add(String.valueOf(neo.UnsplicedBases));
         sj.add(String.valueOf(neo.SkippedAcceptorsDonors[FS_UP]));
         sj.add(String.valueOf(neo.SkippedAcceptorsDonors[FS_DOWN]));
@@ -212,20 +211,6 @@ public class NeoEpitopeFile
 
         return sj.toString();
     }
-
-    /*
-        public NeoEpitopeFile(
-            final NeoEpitopeType varType, final String varInfo, final double copyNumber,
-            final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
-            final String chrUp, final String chrDown, byte orientUp, byte orientDown,
-            final String upAA, final String downAAs, final String novelAAs,
-            int nmdBasesMin, int nmdBasesMax, int scbBasesMin, int scbBasesMax, int unsplicedBases, int skippedDonors, int skippedAcceptors,
-            final String transcriptsUp, final String transcriptsDown, final String wildtypeAAs,
-            int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
-            int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown,
-            int tmpCancerUp, int tmpCohortUp, int tmpCancerDown, int tmpCohortDown)
-
-     */
 
     @NotNull
     public static NeoEpitopeFile fromString(@NotNull final String data, boolean skipSampleId)
