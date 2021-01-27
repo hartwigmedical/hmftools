@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.hla
 
+import java.io.File
 import kotlin.math.roundToInt
 
 data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Double, val wildCoverage: Double, val alleles: List<HlaAlleleCoverage>) : Comparable<HlaComplexCoverage> {
@@ -24,6 +25,14 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Doubl
             return "totalCoverage\tuniqueCoverage\tsharedCoverage\twildCoverage\tallele1\tallele2\tallele3\tallele4\tallele5\tallele6"
         }
 
+        fun List<HlaComplexCoverage>.writeToFile(fileName: String) {
+            val file = File(fileName)
+            file.writeText(header() + "\n" )
+
+            for (coverage in this) {
+                file.appendText(coverage.toString() + "\n");
+            }
+        }
     }
 
 

@@ -8,6 +8,7 @@ import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
 import com.hartwig.hmftools.lilac.hla.HlaComplex
 import com.hartwig.hmftools.lilac.hla.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.hla.HlaComplexCoverage.Companion.writeToFile
 import com.hartwig.hmftools.lilac.hla.HlaComplexCoverageFactory
 import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
@@ -20,6 +21,7 @@ import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
 import java.util.concurrent.Executors
+import kotlin.math.max
 
 fun main(args: Array<String>) {
 
@@ -129,7 +131,7 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
                 nucleotideHeterozygousLoci,
                 nucleotideCandidates)
 
-        logger.info("Calculating overall coverage")
+        logger.info("Calculating overall allele[total,unique,shared,wide] coverage")
         val groupCoverage = coverageFactory.groupCoverage(candidateAlleles)
         val confirmedGroups = groupCoverage.alleles.filter { it.uniqueCoverage >= minConfirmedUniqueCoverage }.sortedDescending()
         val discardedGroups = groupCoverage.alleles.filter { it.uniqueCoverage in 1 until minConfirmedUniqueCoverage }.sortedDescending()
@@ -159,16 +161,16 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
         val complexCoverage = coverageFactory.complexCoverage(complexes)
         if (complexCoverage.isNotEmpty()) {
             val topCoverage = complexCoverage[0]
-            val topComplexes = complexCoverage.filter { it.totalCoverage >= topCoverage.totalCoverage - 10 }
+            val minCoverage = max(topCoverage.totalCoverage * 0.9, topCoverage.totalCoverage - 10)
+            val topComplexes = complexCoverage.filter { it.totalCoverage >= minCoverage }
+            topComplexes.writeToFile("$outputDir/$sample.coverage.txt")
 
             logger.info(HlaComplexCoverage.header())
             for (topComplex in topComplexes) {
                 logger.info(topComplex)
             }
-
         }
     }
-
 
     private fun readFromBam(bamFile: String): List<NucleotideFragment> {
         val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
