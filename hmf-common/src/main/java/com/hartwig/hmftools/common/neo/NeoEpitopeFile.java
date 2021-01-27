@@ -38,7 +38,7 @@ public class NeoEpitopeFile
     public final String NovelAA;
     public final String[] Transcripts;
     public final String WildtypeAA;
-    public final int UnsplicedBases;
+    public final int SplicedBases;
     public final int[] SkippedAcceptorsDonors;
     public final int[][] CodingBasePositions;
     public final String[] CodingBases;
@@ -51,7 +51,7 @@ public class NeoEpitopeFile
             final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
             final String chrUp, final String chrDown, byte orientUp, byte orientDown,
             final String upAA, final String downAAs, final String novelAAs,
-            int nmdBasesMin, int nmdBasesMax, int codingBasesLengthMin, int codingBasesLengthMax, int unsplicedBases, int skippedDonors, int skippedAcceptors,
+            int nmdBasesMin, int nmdBasesMax, int codingBasesLengthMin, int codingBasesLengthMax, int splicedBases, int skippedDonors, int skippedAcceptors,
             final String transcriptsUp, final String transcriptsDown, final String wildtypeAAs,
             int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
             int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown,
@@ -70,7 +70,7 @@ public class NeoEpitopeFile
         DownstreamAA = downAAs;
         NovelAA = novelAAs;
         WildtypeAA = wildtypeAAs;
-        UnsplicedBases = unsplicedBases;
+        SplicedBases = splicedBases;
         SkippedAcceptorsDonors = new int[] { skippedDonors, skippedAcceptors };
         Transcripts = new String[] { transcriptsUp, transcriptsDown };
 
@@ -146,7 +146,7 @@ public class NeoEpitopeFile
                 .add("NmdMax")
                 .add("CodingBasesLengthMin")
                 .add("CodingBasesLengthMax")
-                .add("UnsplicedBases")
+                .add("SplicedBases")
                 .add("SkippedDonors")
                 .add("SkippedAcceptors")
                 .add("UpTranscripts")
@@ -190,7 +190,7 @@ public class NeoEpitopeFile
         sj.add(String.valueOf(neo.NmdBases[1]));
         sj.add(String.valueOf(neo.CodingBasesLength[0]));
         sj.add(String.valueOf(neo.CodingBasesLength[1]));
-        sj.add(String.valueOf(neo.UnsplicedBases));
+        sj.add(String.valueOf(neo.SplicedBases));
         sj.add(String.valueOf(neo.SkippedAcceptorsDonors[FS_UP]));
         sj.add(String.valueOf(neo.SkippedAcceptorsDonors[FS_DOWN]));
         sj.add(neo.Transcripts[FS_UP]);
