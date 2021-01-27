@@ -47,7 +47,7 @@ public abstract class Variant {
     public abstract String updateDate();
 
     @Nullable
-    public abstract VariantReferenceTranscriptCoordinate referenceTranscriptCoordinates();
+    public abstract VariantTranscriptCoordinate referenceTranscriptCoordinates();
 
     @NotNull
     public abstract List<VariantPartnerGene> partnerGene();
@@ -65,7 +65,7 @@ public abstract class Variant {
     public abstract List<MolecularProfileInfo> molecularProfile();
 
     @NotNull
-    public abstract List<VariantAllTranscriptCoordinate> allTranscriptCoordinate();
+    public abstract List<VariantTranscriptCoordinate> allTranscriptCoordinate();
 
     @NotNull
     public abstract List<EffectInfo> memberVariant();

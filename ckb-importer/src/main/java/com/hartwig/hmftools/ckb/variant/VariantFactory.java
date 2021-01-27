@@ -152,11 +152,11 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static VariantReferenceTranscriptCoordinate extractReferenceTranscriptCoordinate(@NotNull JsonObject jsonObject) {
+    public static VariantTranscriptCoordinate extractReferenceTranscriptCoordinate(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneObjectChecker = VariantDataModelChecker.referenceTranscriptCoordinateObjectChecker();
         geneObjectChecker.check(jsonObject);
 
-        return ImmutableVariantReferenceTranscriptCoordinate.builder()
+        return ImmutableVariantTranscriptCoordinate.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .transcript(JsonFunctions.string(jsonObject, "transcript"))
                 .gDNA(JsonFunctions.string(jsonObject, "gDna"))
@@ -348,15 +348,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantAllTranscriptCoordinate> extractAllTranscriptCoordinates(@NotNull JsonArray jsonArray) {
-        List<VariantAllTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
+    public static List<VariantTranscriptCoordinate> extractAllTranscriptCoordinates(@NotNull JsonArray jsonArray) {
+        List<VariantTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
         JsonDatamodelChecker allTranscriptCoordinateChecker = VariantDataModelChecker.allTranscriptCoordinateObjectChecker();
 
         for (JsonElement allTranscriptCoordinate : jsonArray) {
             JsonObject allTranscriptCoordinatesJsonObject = allTranscriptCoordinate.getAsJsonObject();
             allTranscriptCoordinateChecker.check(allTranscriptCoordinatesJsonObject);
 
-            allTranscriptCoordinates.add(ImmutableVariantAllTranscriptCoordinate.builder()
+            allTranscriptCoordinates.add(ImmutableVariantTranscriptCoordinate.builder()
                     .id(JsonFunctions.string(allTranscriptCoordinatesJsonObject, "id"))
                     .transcript(JsonFunctions.string(allTranscriptCoordinatesJsonObject, "transcript"))
                     .gDNA(JsonFunctions.string(allTranscriptCoordinatesJsonObject, "gDna"))
