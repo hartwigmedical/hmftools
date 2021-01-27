@@ -18,6 +18,10 @@ public interface CkbImporterConfig {
 
     String CBK_DIR = "cbk_dir";
 
+    String DB_USER = "db_user";
+    String DB_PASS = "db_pass";
+    String DB_URL = "db_url";
+
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -27,11 +31,25 @@ public interface CkbImporterConfig {
         options.addOption(CBK_DIR, true, "Path towards the directory holding the ckb data");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
 
+        options.addOption(DB_USER, true, "Database user name.");
+        options.addOption(DB_PASS, true, "Database password.");
+        options.addOption(DB_URL, true, "Database url.");
+
         return options;
     }
 
     @NotNull
     String cbkDir();
+
+    @NotNull
+    String dbUser();
+
+    @NotNull
+    String dbPass();
+
+    @NotNull
+    String dbUrl();
+
 
        @NotNull
     static CkbImporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
@@ -40,7 +58,11 @@ public interface CkbImporterConfig {
         }
 
         return ImmutableCkbImporterConfig.builder()
-                .cbkDir(nonOptionalDir(cmd, CBK_DIR)).build();
+                .cbkDir(nonOptionalDir(cmd, CBK_DIR))
+                .dbUser(nonOptionalValue(cmd, DB_USER))
+                .dbPass(nonOptionalValue(cmd, DB_PASS))
+                .dbUrl(nonOptionalValue(cmd, DB_USER))
+                .build();
     }
 
     @NotNull

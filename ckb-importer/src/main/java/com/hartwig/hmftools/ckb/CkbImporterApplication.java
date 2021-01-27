@@ -2,10 +2,12 @@ package com.hartwig.hmftools.ckb;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialFactory;
+import com.hartwig.hmftools.ckb.dao.CkbDAO;
 import com.hartwig.hmftools.ckb.drug.Drug;
 import com.hartwig.hmftools.ckb.drug.DrugFactory;
 import com.hartwig.hmftools.ckb.drugclass.DrugClass;
@@ -27,6 +29,7 @@ import com.hartwig.hmftools.ckb.treatmentApproach.TreatmentApproachFactory;
 import com.hartwig.hmftools.ckb.variant.Variant;
 import com.hartwig.hmftools.ckb.variant.VariantFactory;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -52,7 +55,7 @@ public class CkbImporterApplication {
     private static final String TREATMENT_APPROACHES = "treatmentApproaches";
     private static final String VARIANTS = "variants";
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SQLException {
         LOGGER.info("Running CKB importer v{}", VERSION);
 
         Options options = CkbImporterConfig.createOptions();
@@ -67,10 +70,16 @@ public class CkbImporterApplication {
         }
 
         CkbEntry ckbEntry = readJsonData(config);
+       // CkbDAO ckbDAO = connect(config);
+
         writingDataToDatabase(ckbEntry);
 
         LOGGER.info("Complete!");
     }
+
+//    private static CkbDAO connect(@NotNull CkbImporterConfig config ) throws SQLException {
+//        return CkbDAO.connectToCkbDAO(config.dbUser(), config.dbPass(), "jdbc:" + config.dbUrl());
+//    }
 
     @NotNull
     private static CkbEntry readJsonData(@NotNull CkbImporterConfig config) throws IOException {
