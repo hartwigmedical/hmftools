@@ -14,7 +14,6 @@ import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
-import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.deflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.specificProteins
 import org.apache.commons.cli.*
@@ -57,6 +56,7 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
     private val startTime = System.currentTimeMillis()
     private val transcripts = HmfGenePanelSupplier.allGenesMap37()
 
+    private val sample = config.sample
     private val minBaseQual = config.minBaseQual
     private val minEvidence = config.minEvidence
     private val minFragmentsPerAllele = config.minFragmentsPerAllele
@@ -111,8 +111,8 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
         val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, aminoAcidFragments)
 
         val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect allNucleotideExonBoundaries
-        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
-        nucleotideCounts.writeVertically("/Users/jon/hmf/analysis/hla/nucleotides.count.txt")
+        aminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
+        nucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
 
 
         val candidateAlleles = candidates.map { it.allele }
@@ -128,7 +128,6 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
                 aminoAcidCandidates,
                 nucleotideHeterozygousLoci,
                 nucleotideCandidates)
-
 
         logger.info("Calculating overall coverage")
         val groupCoverage = coverageFactory.groupCoverage(candidateAlleles)
@@ -147,14 +146,9 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
             logger.info("... discarded ${discardedProtein.size} uniquely identifiable proteins: " + discardedProtein.joinToString(", "))
         }
 
-        HlaSequenceFile.writeFile("$outputDir/candidates.inflate.txt", candidates)
-        HlaSequenceFile.wipeFile("$outputDir/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(aProteinExonBoundaries, "$outputDir/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(bProteinExonBoundaries, "$outputDir/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(cProteinExonBoundaries, "$outputDir/candidates.deflate.txt")
-        val deflated = candidates.deflate()
-        HlaSequenceFile.appendFile("$outputDir/candidates.deflate.txt", deflated)
-
+        val boundariesList = listOf(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+        HlaSequenceFile.writeFile("$outputDir/$sample.candidates.inflate.txt", candidates)
+        HlaSequenceFile.writeDeflatedFile("$outputDir/$sample.candidates.deflate.txt", boundariesList, candidates)
 
         val complexes = HlaComplex.complexes(
                 confirmedGroups.take(6).map { it.allele },
