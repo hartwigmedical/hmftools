@@ -23,8 +23,8 @@ public abstract class DrugClass {
     public abstract String createDate();
 
     @NotNull
-    public abstract List<DrugInfo> drugs();
+    public abstract List<DrugInfo> drug();
 
     @NotNull
-    public abstract List<TreatmentApproachInfo> treatmentApproaches();
+    public abstract List<TreatmentApproachInfo> treatmentApproach();
 }

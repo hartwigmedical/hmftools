@@ -17,5 +17,5 @@ public abstract class GeneInfo {
     public abstract String geneSymbol();
 
     @NotNull
-    public abstract List<String> terms();
+    public abstract List<String> term();
 }

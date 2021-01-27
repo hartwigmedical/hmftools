@@ -66,7 +66,7 @@ public class ReferenceFactory {
 
                     references.add(ImmutableReference.builder()
                             .id(JsonFunctions.string(referenceEntryObject, "id"))
-                            .pubmedId(JsonFunctions.nullableString(referenceEntryObject, "pubMedId"))
+                            .pubMedId(JsonFunctions.nullableString(referenceEntryObject, "pubMedId"))
                             .title(JsonFunctions.nullableString(referenceEntryObject, "title"))
                             .url(JsonFunctions.nullableString(referenceEntryObject, "url"))
                             .authors(JsonFunctions.nullableString(referenceEntryObject, "authors"))
@@ -104,7 +104,7 @@ public class ReferenceFactory {
             referenceDrugs.add(ImmutableDrugInfo.builder()
                     .id(JsonFunctions.string(drugJsonObject, "id"))
                     .drugName(JsonFunctions.string(drugJsonObject, "drugName"))
-                    .terms(JsonFunctions.stringList(drugJsonObject, "terms"))
+                    .term(JsonFunctions.stringList(drugJsonObject, "terms"))
                     .build());
 
         }
@@ -123,7 +123,7 @@ public class ReferenceFactory {
             referenceGenes.add(ImmutableGeneInfo.builder()
                     .id(JsonFunctions.string(geneJsonObject, "id"))
                     .geneSymbol(JsonFunctions.string(geneJsonObject, "geneSymbol"))
-                    .terms(JsonFunctions.stringList(geneJsonObject, "terms"))
+                    .term(JsonFunctions.stringList(geneJsonObject, "terms"))
                     .build());
 
         }

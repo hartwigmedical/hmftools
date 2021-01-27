@@ -21,7 +21,7 @@ public abstract class Reference {
     public abstract String id();
 
     @Nullable
-    public abstract String pubmedId();
+    public abstract String pubMedId();
 
     @Nullable
     public abstract String title();

@@ -23,5 +23,5 @@ public abstract class VariantInfo {
     public abstract String proteinEffect();
 
     @NotNull
-    public abstract List<DescriptionInfo> variantDescription();
+    public abstract List<DescriptionInfo> description();
 }

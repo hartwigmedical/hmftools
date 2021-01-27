@@ -59,16 +59,16 @@ public class ClinicalTrialFactory {
                             .title(JsonFunctions.string(clinicalTrialsEntryObject, "title"))
                             .phase(JsonFunctions.string(clinicalTrialsEntryObject, "phase"))
                             .recruitment(JsonFunctions.string(clinicalTrialsEntryObject, "recruitment"))
-                            .therapies(retrieveClinicalTrialsTherapies(clinicalTrialsEntryObject.getAsJsonArray("therapies")))
-                            .ageGroups(JsonFunctions.stringList(clinicalTrialsEntryObject, "ageGroups"))
+                            .therapy(retrieveClinicalTrialsTherapies(clinicalTrialsEntryObject.getAsJsonArray("therapies")))
+                            .ageGroup(JsonFunctions.stringList(clinicalTrialsEntryObject, "ageGroups"))
                             .gender(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "gender"))
-                            .variantRequirements(JsonFunctions.string(clinicalTrialsEntryObject, "variantRequirements"))
+                            .variantRequirement(JsonFunctions.string(clinicalTrialsEntryObject, "variantRequirements"))
                             .sponsors(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "sponsors"))
                             .updateDate(JsonFunctions.string(clinicalTrialsEntryObject, "updateDate"))
-                            .indications(retrieveClinicalTrialsIndications(clinicalTrialsEntryObject.getAsJsonArray("indications")))
-                            .variantRequirementDetails(retrieveClinicalTrialsVariantRequirementDetails(clinicalTrialsEntryObject.getAsJsonArray(
+                            .indication(retrieveClinicalTrialsIndications(clinicalTrialsEntryObject.getAsJsonArray("indications")))
+                            .variantRequirementDetail(retrieveClinicalTrialsVariantRequirementDetails(clinicalTrialsEntryObject.getAsJsonArray(
                                     "variantRequirementDetails")))
-                            .clinicalTrialLocations(retrieveClinicalTrialsLocations(clinicalTrialsEntryObject.getAsJsonArray(
+                            .clinicalTrialLocation(retrieveClinicalTrialsLocations(clinicalTrialsEntryObject.getAsJsonArray(
                                     "clinicalTrialLocations")))
                             .build());
                 }
@@ -160,7 +160,7 @@ public class ClinicalTrialFactory {
                     .status(JsonFunctions.optionalNullableString(locationObject, "status"))
                     .state(JsonFunctions.optionalNullableString(locationObject, "state"))
                     .zip(JsonFunctions.optionalNullableString(locationObject, "zip"))
-                    .clinicalTrialContacts(retrieveClinicalTrialsContact(locationObject))
+                    .clinicalTrialContact(retrieveClinicalTrialsContact(locationObject))
                     .build());
         }
         return locations;

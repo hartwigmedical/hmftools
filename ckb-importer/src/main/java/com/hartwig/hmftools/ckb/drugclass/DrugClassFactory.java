@@ -54,8 +54,8 @@ public class DrugClassFactory {
                             .id(JsonFunctions.string(drugClassEntryObject, "id"))
                             .drugClass(JsonFunctions.string(drugClassEntryObject, "drugClass"))
                             .createDate(JsonFunctions.string(drugClassEntryObject, "createDate"))
-                            .drugs(retrieveDrugs(drugClassEntryObject.getAsJsonArray("drugs")))
-                            .treatmentApproaches(retrieveTreatmentApproaches(drugClassEntryObject.getAsJsonArray("treatmentApproaches")))
+                            .drug(retrieveDrugs(drugClassEntryObject.getAsJsonArray("drugs")))
+                            .treatmentApproach(retrieveTreatmentApproaches(drugClassEntryObject.getAsJsonArray("treatmentApproaches")))
                             .build());
                 }
                 reader.close();
@@ -75,7 +75,7 @@ public class DrugClassFactory {
             drugs.add(ImmutableDrugInfo.builder()
                     .id(JsonFunctions.string(drugsObject, "id"))
                     .drugName(JsonFunctions.string(drugsObject, "drugName"))
-                    .terms(JsonFunctions.optionalStringList(drugsObject, "terms"))
+                    .term(JsonFunctions.optionalStringList(drugsObject, "terms"))
                     .build());
         }
         return drugs;

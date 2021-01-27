@@ -67,7 +67,7 @@ public class MolecularprofileFactory {
                             .id(JsonFunctions.string(molecularProfileEntryObject, "id"))
                             .profileName(JsonFunctions.string(molecularProfileEntryObject, "profileName"))
                             .geneVariant(extractGeneVariant(molecularProfileEntryObject.getAsJsonArray("geneVariants")))
-                            .profileProfileTreatmentApproache(extractProfileTreatmentApproach(molecularProfileEntryObject.getAsJsonArray(
+                            .treatmentApproach(extractProfileTreatmentApproach(molecularProfileEntryObject.getAsJsonArray(
                                     "profileTreatmentApproaches")))
                             .createDate(JsonFunctions.string(molecularProfileEntryObject, "createDate"))
                             .updateDate(JsonFunctions.string(molecularProfileEntryObject, "updateDate"))
@@ -163,7 +163,7 @@ public class MolecularprofileFactory {
                     .reference(extractReference(complexMolecularProfileEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "ampCapAscoInferredTier"))
-                    .relevantTreatmentApproach(extractRelevantTreatmentApproach(complexMolecularProfileEvidenceJsonObject.getAsJsonArray(
+                    .treatmentApproach(extractRelevantTreatmentApproach(complexMolecularProfileEvidenceJsonObject.getAsJsonArray(
                             "relevantTreatmentApproaches")))
                     .build());
         }
@@ -277,7 +277,7 @@ public class MolecularprofileFactory {
                     .reference(extractReference(treatmentApproachEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "ampCapAscoInferredTier"))
-                    .relevantTreatmentApproach(extractRelevantTreatmentApproach(treatmentApproachEvidenceJsonObject.getAsJsonArray(
+                    .treatmentApproach(extractRelevantTreatmentApproach(treatmentApproachEvidenceJsonObject.getAsJsonArray(
                             "relevantTreatmentApproaches")))
                     .build());
         }
@@ -299,7 +299,7 @@ public class MolecularprofileFactory {
                     .title(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "recruitment"))
-                    .therapies(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapy(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return variantAssociatedClinicalTrials;
@@ -358,7 +358,7 @@ public class MolecularprofileFactory {
                     .reference(extractReference(variantLevelEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(variantLevelEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(variantLevelEvidenceJsonObject, "ampCapAscoInferredTier"))
-                    .relevantTreatmentApproach(extractRelevantTreatmentApproach(variantLevelEvidenceJsonObject.getAsJsonArray(
+                    .treatmentApproach(extractRelevantTreatmentApproach(variantLevelEvidenceJsonObject.getAsJsonArray(
                             "relevantTreatmentApproaches")))
                     .build());
         }

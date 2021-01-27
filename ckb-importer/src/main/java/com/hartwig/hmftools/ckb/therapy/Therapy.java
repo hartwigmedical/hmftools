@@ -26,7 +26,7 @@ public abstract class Therapy {
     public abstract String synonyms();
 
     @NotNull
-    public abstract List<DescriptionInfo> therapyDescription();
+    public abstract List<DescriptionInfo> description();
 
     @NotNull
     public abstract String createDate();

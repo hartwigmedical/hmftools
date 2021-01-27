@@ -17,5 +17,5 @@ public abstract class DrugInfo {
     public abstract String drugName();
 
     @NotNull
-    public abstract List<String> terms();
+    public abstract List<String> term();
 }

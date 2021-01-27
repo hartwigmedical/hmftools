@@ -24,7 +24,7 @@ public abstract class MolecularProfile {
     public abstract List<VariantInfo> geneVariant();
 
     @NotNull
-    public abstract List<TreatmentApproachInfo> profileProfileTreatmentApproache();
+    public abstract List<TreatmentApproachInfo> treatmentApproach();
 
     @NotNull
     public abstract String createDate();

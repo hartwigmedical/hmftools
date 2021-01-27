@@ -23,5 +23,5 @@ public abstract class EffectInfo {
     public abstract String proteinEffect();
 
     @NotNull
-    public abstract List<DescriptionInfo> geneVariantDescription();
+    public abstract List<DescriptionInfo> description();
 }

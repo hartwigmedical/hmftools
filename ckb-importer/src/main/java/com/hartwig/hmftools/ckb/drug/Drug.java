@@ -24,19 +24,19 @@ public abstract class Drug {
     public abstract String drugName();
 
     @NotNull
-    public abstract List<String> terms();
+    public abstract List<String> term();
 
     @NotNull
-    public abstract List<String> synonyms();
+    public abstract List<String> synonym();
 
     @Nullable
     public abstract String tradeName();
 
     @NotNull
-    public abstract List<DescriptionInfo> drugDescriptions();
+    public abstract List<DescriptionInfo> description();
 
     @NotNull
-    public abstract List<DrugClassInfo> drugClasses();
+    public abstract List<DrugClassInfo> drugClass();
 
     @Nullable
     public abstract String casRegistryNum();
@@ -48,16 +48,16 @@ public abstract class Drug {
     public abstract String createDate();
 
     @NotNull
-    public abstract List<ClinicalTrialInfo> clinicalTrials();
+    public abstract List<ClinicalTrialInfo> clinicalTrial();
 
     @NotNull
     public abstract List<EvidenceInfo> evidence();
 
     @NotNull
-    public abstract List<TherapyInfo> therapies();
+    public abstract List<TherapyInfo> therapy();
 
     @Nullable
-    public abstract List<GlobalApprovalStatusInfo> globalApprovaStatus();
+    public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();
 
 
 }

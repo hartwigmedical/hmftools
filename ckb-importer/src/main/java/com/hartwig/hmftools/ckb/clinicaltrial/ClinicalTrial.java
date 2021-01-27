@@ -26,16 +26,16 @@ public abstract class ClinicalTrial {
     public abstract String recruitment();
 
     @NotNull
-    public abstract List<TherapyInfo> therapies();
+    public abstract List<TherapyInfo> therapy();
 
     @NotNull
-    public abstract List<String> ageGroups();
+    public abstract List<String> ageGroup();
 
     @Nullable
     public abstract String gender();
 
     @NotNull
-    public abstract String variantRequirements();
+    public abstract String variantRequirement();
 
     @Nullable
     public abstract String sponsors();
@@ -44,11 +44,11 @@ public abstract class ClinicalTrial {
     public abstract String updateDate();
 
     @NotNull
-    public abstract List<IndicationInfo> indications();
+    public abstract List<IndicationInfo> indication();
 
     @NotNull
-    public abstract List<ClinicalTrialVariantRequirementDetail> variantRequirementDetails();
+    public abstract List<ClinicalTrialVariantRequirementDetail> variantRequirementDetail();
 
     @NotNull
-    public abstract List<ClinicalTrialLocation> clinicalTrialLocations();
+    public abstract List<ClinicalTrialLocation> clinicalTrialLocation();
 }

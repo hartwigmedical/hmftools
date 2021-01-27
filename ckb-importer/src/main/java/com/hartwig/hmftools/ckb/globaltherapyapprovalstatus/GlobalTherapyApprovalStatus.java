@@ -16,5 +16,5 @@ public abstract class GlobalTherapyApprovalStatus {
     public abstract String totalCount();
 
     @NotNull
-    public abstract List<GlobalApprovalStatusInfo> approvalStatusList();
+    public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();
 }

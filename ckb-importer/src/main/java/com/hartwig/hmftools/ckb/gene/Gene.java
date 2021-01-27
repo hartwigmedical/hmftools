@@ -39,7 +39,7 @@ public abstract class Gene {
     public abstract String mapLocation();
 
     @NotNull
-    public abstract List<DescriptionInfo> geneDescription();
+    public abstract List<DescriptionInfo> description();
 
     @Nullable
     public abstract String canonicalTranscript();
@@ -63,10 +63,10 @@ public abstract class Gene {
     public abstract List<VariantInfo> variant();
 
     @NotNull
-    public abstract List<MolecularProfileInfo> molecularProfiles();
+    public abstract List<MolecularProfileInfo> molecularProfile();
 
     @NotNull
-    public abstract List<EffectInfo> categoryVariants();
+    public abstract List<EffectInfo> categoryVariant();
 
 
 }

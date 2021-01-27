@@ -66,7 +66,7 @@ public class IndicationFactory {
                             .definition(JsonFunctions.nullableString(indicationEntryObject, "definition"))
                             .currentPreferredTerm(JsonFunctions.nullableString(indicationEntryObject, "currentPreferredTerm"))
                             .lastUpdateDateFromDO(JsonFunctions.nullableString(indicationEntryObject, "lastUpdateDateFromDO"))
-                            .altIds(JsonFunctions.stringList(indicationEntryObject, "altIds"))
+                            .altId(JsonFunctions.stringList(indicationEntryObject, "altIds"))
                             .termId(JsonFunctions.string(indicationEntryObject, "termId"))
                             .evidence(extractEvidence(indicationEntryObject.getAsJsonArray("evidence")))
                             .clinicalTrial(extractClinicalTrials(indicationEntryObject.getAsJsonArray("clinicalTrials")))
@@ -174,7 +174,7 @@ public class IndicationFactory {
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(clinicalTrialJsonObject, "recruitment"))
-                    .therapies(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapy(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicalTrials;

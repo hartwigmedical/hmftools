@@ -75,7 +75,7 @@ public class GeneFactory {
                             .synonym(JsonFunctions.stringList(geneEntryObject, "synonyms"))
                             .chromosome(JsonFunctions.nullableString(geneEntryObject, "chromosome"))
                             .mapLocation(JsonFunctions.nullableString(geneEntryObject, "mapLocation"))
-                            .geneDescription(extractGeneDescriptions(geneEntryObject.getAsJsonArray("geneDescriptions")))
+                            .description(extractGeneDescriptions(geneEntryObject.getAsJsonArray("geneDescriptions")))
                             .canonicalTranscript(JsonFunctions.nullableString(geneEntryObject, "canonicalTranscript"))
                             .geneRole(JsonFunctions.string(geneEntryObject, "geneRole"))
                             .createDate(JsonFunctions.string(geneEntryObject, "createDate"))
@@ -83,8 +83,8 @@ public class GeneFactory {
                             .clinicalTrial(extractGeneClinicalTrial(geneEntryObject.getAsJsonArray("clinicalTrials")))
                             .evidence(extractGeneEvidence(geneEntryObject.getAsJsonArray("evidence")))
                             .variant(extractGeneVariant(geneEntryObject.getAsJsonArray("variants")))
-                            .molecularProfiles(extarctMolecularProfile(geneEntryObject.getAsJsonArray("molecularProfiles")))
-                            .categoryVariants(extractCategoryVariant(geneEntryObject.getAsJsonArray("categoryVariants")))
+                            .molecularProfile(extarctMolecularProfile(geneEntryObject.getAsJsonArray("molecularProfiles")))
+                            .categoryVariant(extractCategoryVariant(geneEntryObject.getAsJsonArray("categoryVariants")))
                             .build());
                 }
                 reader.close();
@@ -106,7 +106,7 @@ public class GeneFactory {
 
             geneDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(geneDescriptionJsonObject, "description"))
-                    .references(extractGeneReferences(geneDescriptionJsonObject.getAsJsonArray("references")))
+                    .reference(extractGeneReferences(geneDescriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
         return geneDescriptions;
@@ -146,7 +146,7 @@ public class GeneFactory {
                     .title(JsonFunctions.string(geneClinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(geneClinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(geneClinicalTrialJsonObject, "recruitment"))
-                    .therapies(extractGeneTherapy(geneClinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapy(extractGeneTherapy(geneClinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicalTrials;
@@ -245,7 +245,7 @@ public class GeneFactory {
                     .fullName(JsonFunctions.string(geneVariantObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneVariantObject, "impact"))
                     .proteinEffect(JsonFunctions.nullableString(geneVariantObject, "proteinEffect"))
-                    .variantDescription(extractVariantDescription(geneVariantObject.getAsJsonArray("geneVariantDescriptions")))
+                    .description(extractVariantDescription(geneVariantObject.getAsJsonArray("geneVariantDescriptions")))
                     .build());
         }
         return geneVariants;
@@ -262,7 +262,7 @@ public class GeneFactory {
 
             geneVariantDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(variantDescriptionObject, "description"))
-                    .references(extractGeneReferences(variantDescriptionObject.getAsJsonArray("references")))
+                    .reference(extractGeneReferences(variantDescriptionObject.getAsJsonArray("references")))
                     .build());
         }
         return geneVariantDescriptions;
@@ -280,7 +280,7 @@ public class GeneFactory {
             molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
                     .id(JsonFunctions.string(molecularProfileObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileObject, "profileName"))
-                    .profileTreatmentApproache(extractProfileTreatmentApproach(molecularProfileObject.getAsJsonArray("profileTreatmentApproaches")))
+                    .treatmentApproach(extractProfileTreatmentApproach(molecularProfileObject.getAsJsonArray("profileTreatmentApproaches")))
                     .build());
         }
         return molecularProfiles;
@@ -318,7 +318,7 @@ public class GeneFactory {
                     .fullName(JsonFunctions.string(geneCategoryVariantObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneCategoryVariantObject, "impact"))
                     .proteinEffect(JsonFunctions.nullableString(geneCategoryVariantObject, "proteinEffect"))
-                    .geneVariantDescription(extractVariantDescription(geneCategoryVariantObject.getAsJsonArray("geneVariantDescriptions")))
+                    .description(extractVariantDescription(geneCategoryVariantObject.getAsJsonArray("geneVariantDescriptions")))
                     .build());
         }
         return geneCategoryVariants;

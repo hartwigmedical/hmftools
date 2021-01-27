@@ -29,7 +29,7 @@ public abstract class Variant {
     public abstract String proteinEffect();
 
     @NotNull
-    public abstract List<DescriptionInfo> geneVariantDescription();
+    public abstract List<DescriptionInfo> description();
 
     @Nullable
     public abstract String type();
@@ -47,7 +47,7 @@ public abstract class Variant {
     public abstract String updateDate();
 
     @Nullable
-    public abstract VariantTranscriptCoordinate referenceTranscriptCoordinates();
+    public abstract VariantTranscriptCoordinate referenceTranscriptCoordinate();
 
     @NotNull
     public abstract List<VariantPartnerGene> partnerGene();

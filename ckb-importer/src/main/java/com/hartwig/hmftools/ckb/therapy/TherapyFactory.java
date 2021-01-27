@@ -69,7 +69,7 @@ public class TherapyFactory {
                             .id(JsonFunctions.string(therapyEntryObject, "id"))
                             .therapyName(JsonFunctions.string(therapyEntryObject, "therapyName"))
                             .synonyms(JsonFunctions.nullableString(therapyEntryObject, "synonyms"))
-                            .therapyDescription(createDescription(therapyEntryObject.getAsJsonArray("therapyDescriptions")))
+                            .description(createDescription(therapyEntryObject.getAsJsonArray("therapyDescriptions")))
                             .createDate(JsonFunctions.string(therapyEntryObject, "createDate"))
                             .updateDate(JsonFunctions.nullableString(therapyEntryObject, "updateDate"))
                             .evidence(extractEvidence(therapyEntryObject.getAsJsonArray("evidence")))
@@ -97,7 +97,7 @@ public class TherapyFactory {
 
             descriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.nullableString(descriptionJsonObject, "description"))
-                    .references(extractReferences(descriptionJsonObject.getAsJsonArray("references")))
+                    .reference(extractReferences(descriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
 
@@ -218,7 +218,7 @@ public class TherapyFactory {
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(clinicalTrialJsonObject, "recruitment"))
-                    .therapies(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapy(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicaltrials;
@@ -254,7 +254,7 @@ public class TherapyFactory {
             drugs.add(ImmutableDrugInfo.builder()
                     .id(JsonFunctions.string(drugJsonObject, "id"))
                     .drugName(JsonFunctions.string(drugJsonObject, "drugName"))
-                    .terms(JsonFunctions.stringList(drugJsonObject, "terms"))
+                    .term(JsonFunctions.stringList(drugJsonObject, "terms"))
                     .build());
 
         }

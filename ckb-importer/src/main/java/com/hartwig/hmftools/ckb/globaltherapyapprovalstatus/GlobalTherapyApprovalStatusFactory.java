@@ -59,7 +59,7 @@ public class GlobalTherapyApprovalStatusFactory {
 
                     globalTherapyApprovalStatusses.add(ImmutableGlobalTherapyApprovalStatus.builder()
                             .totalCount(JsonFunctions.string(globalTherapyApprovalStatusEntryObject, "totalCount"))
-                            .approvalStatusList(extractGlobalTherapyApprovalStatus(globalTherapyApprovalStatusEntryObject.getAsJsonArray(
+                            .globalApprovalStatus(extractGlobalTherapyApprovalStatus(globalTherapyApprovalStatusEntryObject.getAsJsonArray(
                                     "globalTherapyApprovalStatuses")))
                             .build());
                 }

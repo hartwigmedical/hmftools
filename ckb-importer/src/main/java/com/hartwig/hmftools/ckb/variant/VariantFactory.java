@@ -72,13 +72,13 @@ public class VariantFactory {
                             .fullName(JsonFunctions.string(variantEntryObject, "fullName"))
                             .impact(JsonFunctions.nullableString(variantEntryObject, "impact"))
                             .proteinEffect(JsonFunctions.nullableString(variantEntryObject, "proteinEffect"))
-                            .geneVariantDescription(extractGeneDescription(variantEntryObject.getAsJsonArray("geneVariantDescriptions")))
+                            .description(extractGeneDescription(variantEntryObject.getAsJsonArray("geneVariantDescriptions")))
                             .type(JsonFunctions.nullableString(variantEntryObject, "type"))
                             .gene(extractGene(variantEntryObject.getAsJsonObject("gene")))
                             .variant(JsonFunctions.string(variantEntryObject, "variant"))
                             .createDate(JsonFunctions.string(variantEntryObject, "createDate"))
                             .updateDate(JsonFunctions.string(variantEntryObject, "updateDate"))
-                            .referenceTranscriptCoordinates(
+                            .referenceTranscriptCoordinate(
                                     variantEntryObject.has("referenceTranscriptCoordinates") && !variantEntryObject.get(
                                             "referenceTranscriptCoordinates").isJsonNull() ? extractReferenceTranscriptCoordinate(
                                             variantEntryObject.getAsJsonObject("referenceTranscriptCoordinates")) : null)
@@ -112,7 +112,7 @@ public class VariantFactory {
 
             geneVariantDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(geneVariantDescriptionJsonObject, "description"))
-                    .references(extractReferences(geneVariantDescriptionJsonObject.getAsJsonArray("references")))
+                    .reference(extractReferences(geneVariantDescriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
 
@@ -147,7 +147,7 @@ public class VariantFactory {
         return ImmutableGeneInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .geneSymbol(JsonFunctions.string(jsonObject, "geneSymbol"))
-                .terms(JsonFunctions.stringList(jsonObject, "terms"))
+                .term(JsonFunctions.stringList(jsonObject, "terms"))
                 .build();
     }
 
@@ -320,7 +320,7 @@ public class VariantFactory {
             molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
                     .id(JsonFunctions.string(molecularProfileJsonObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileJsonObject, "profileName"))
-                    .profileTreatmentApproache(extractProfileTreatmentApproches(molecularProfileJsonObject.getAsJsonArray(
+                    .treatmentApproach(extractProfileTreatmentApproches(molecularProfileJsonObject.getAsJsonArray(
                             "profileTreatmentApproaches")))
                     .build());
         }
@@ -384,7 +384,7 @@ public class VariantFactory {
                     .fullName(JsonFunctions.string(memberVariantObject, "fullName"))
                     .impact(JsonFunctions.string(memberVariantObject, "impact"))
                     .proteinEffect(JsonFunctions.string(memberVariantObject, "proteinEffect"))
-                    .geneVariantDescription(extractGeneDescription(memberVariantObject.getAsJsonArray("geneVariantDescriptions")))
+                    .description(extractGeneDescription(memberVariantObject.getAsJsonArray("geneVariantDescriptions")))
                     .build());
         }
         return memberVariants;

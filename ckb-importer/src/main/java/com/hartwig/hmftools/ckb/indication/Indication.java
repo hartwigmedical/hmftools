@@ -32,7 +32,7 @@ public abstract class Indication {
     public abstract String lastUpdateDateFromDO();
 
     @NotNull
-    public abstract List<String> altIds();
+    public abstract List<String> altId();
 
     @NotNull
     public abstract String termId();

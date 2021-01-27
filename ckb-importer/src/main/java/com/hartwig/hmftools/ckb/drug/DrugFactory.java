@@ -67,18 +67,18 @@ public class DrugFactory {
                     drugs.add(ImmutableDrug.builder()
                             .id(JsonFunctions.string(drugsEntryObject, "id"))
                             .drugName(JsonFunctions.string(drugsEntryObject, "drugName"))
-                            .terms(JsonFunctions.stringList(drugsEntryObject, "terms"))
-                            .synonyms(JsonFunctions.stringList(drugsEntryObject, "synonyms"))
+                            .term(JsonFunctions.stringList(drugsEntryObject, "terms"))
+                            .synonym(JsonFunctions.stringList(drugsEntryObject, "synonyms"))
                             .tradeName(JsonFunctions.nullableString(drugsEntryObject, "tradeName"))
-                            .drugDescriptions(extractDrugDescriptions(drugsEntryObject.getAsJsonArray("drugDescriptions")))
-                            .drugClasses(extractDrugsClasses(drugsEntryObject.getAsJsonArray("drugClasses")))
+                            .description(extractDrugDescriptions(drugsEntryObject.getAsJsonArray("drugDescriptions")))
+                            .drugClass(extractDrugsClasses(drugsEntryObject.getAsJsonArray("drugClasses")))
                             .casRegistryNum(JsonFunctions.nullableString(drugsEntryObject, "casRegistryNum"))
                             .nctId(JsonFunctions.nullableString(drugsEntryObject, "ncitId"))
                             .createDate(JsonFunctions.string(drugsEntryObject, "createDate"))
-                            .clinicalTrials(extractCliniclaTrials(drugsEntryObject.getAsJsonArray("clinicalTrials")))
+                            .clinicalTrial(extractCliniclaTrials(drugsEntryObject.getAsJsonArray("clinicalTrials")))
                             .evidence(extractEvidence(drugsEntryObject.getAsJsonArray("evidence")))
-                            .therapies(extractTherapies(drugsEntryObject.getAsJsonArray("therapies")))
-                            .globalApprovaStatus(drugsEntryObject.has("globalApprovaStatus") ? extractGlobalApprovaStatus(drugsEntryObject.getAsJsonArray("globalApprovaStatus")) : null)
+                            .therapy(extractTherapies(drugsEntryObject.getAsJsonArray("therapies")))
+                            .globalApprovalStatus(drugsEntryObject.has("globalApprovaStatus") ? extractGlobalApprovaStatus(drugsEntryObject.getAsJsonArray("globalApprovaStatus")) : null)
                             .build());
                 }
                 reader.close();
@@ -99,7 +99,7 @@ public class DrugFactory {
 
             drugDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(drugDescriptionObject, "description"))
-                    .references(extractDrugReferences(drugDescriptionObject.getAsJsonArray("references")))
+                    .reference(extractDrugReferences(drugDescriptionObject.getAsJsonArray("references")))
                     .build());
         }
         return drugDescriptions;
@@ -162,7 +162,7 @@ public class DrugFactory {
                     .title(JsonFunctions.string(clinicalTrialObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialObject, "phase"))
                     .recruitment(JsonFunctions.string(clinicalTrialObject, "recruitment"))
-                    .therapies(extractDrugTherapies(clinicalTrialObject.getAsJsonArray("therapies")))
+                    .therapy(extractDrugTherapies(clinicalTrialObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicalTrials;
