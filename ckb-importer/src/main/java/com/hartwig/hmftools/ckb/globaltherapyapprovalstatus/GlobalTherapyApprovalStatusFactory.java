@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
@@ -70,8 +72,8 @@ public class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    public static List<GlobalTherapyApprovalStatusList> extractGlobalTherapyApprovalStatus(@NotNull JsonArray jsonArray) {
-        List<GlobalTherapyApprovalStatusList> globalTherapyApprovalStatusses = Lists.newArrayList();
+    public static List<GlobalApprovalStatusInfo> extractGlobalTherapyApprovalStatus(@NotNull JsonArray jsonArray) {
+        List<GlobalApprovalStatusInfo> globalTherapyApprovalStatusses = Lists.newArrayList();
         JsonDatamodelChecker globalTherapyApprovalStatusListChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusListObjectChecker();
 
@@ -79,7 +81,7 @@ public class GlobalTherapyApprovalStatusFactory {
             JsonObject globalTherapyApprovalStatusJsonObject = globalTherapyApprovalStatus.getAsJsonObject();
             globalTherapyApprovalStatusListChecker.check(globalTherapyApprovalStatusJsonObject);
 
-            globalTherapyApprovalStatusses.add(ImmutableGlobalTherapyApprovalStatusList.builder()
+            globalTherapyApprovalStatusses.add(ImmutableGlobalApprovalStatusInfo.builder()
                     .id(JsonFunctions.string(globalTherapyApprovalStatusJsonObject, "id"))
                     .therapy(extractGlobalTherapyApprovalStatusTherapy(globalTherapyApprovalStatusJsonObject.getAsJsonObject("therapy")))
                     .indication(extractGlobalTherapyApprovalStatusIndication(globalTherapyApprovalStatusJsonObject.getAsJsonObject(
