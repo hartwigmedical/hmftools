@@ -19,6 +19,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
+import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LINKS;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 
@@ -81,7 +83,15 @@ public class NeoEpitopeWriter
 
         int[] extensionLengths = new int[FS_PAIR];
 
-        int chainLength = traversedPairs != null ? traversedPairs.stream().mapToInt(x -> x.length()).sum() : 0;
+        int chainLength = 0;
+
+        if(traversedPairs != null)
+        {
+            chainLength = traversedPairs.stream().mapToInt(x -> x.length()).sum();
+
+            if(traversedPairs.size() > FUSION_MAX_CHAIN_LINKS || chainLength > FUSION_MAX_CHAIN_LENGTH)
+                return;
+        }
 
         boolean fusionAdded = false;
 
