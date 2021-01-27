@@ -2,17 +2,17 @@ package com.hartwig.hmftools.ckb;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrial;
-import com.hartwig.hmftools.ckb.drug.Drug;
-import com.hartwig.hmftools.ckb.drugclass.DrugClass;
-import com.hartwig.hmftools.ckb.gene.Gene;
-import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
-import com.hartwig.hmftools.ckb.indication.Indication;
-import com.hartwig.hmftools.ckb.molecularprofile.MolecularProfile;
-import com.hartwig.hmftools.ckb.reference.Reference;
-import com.hartwig.hmftools.ckb.therapy.Therapy;
-import com.hartwig.hmftools.ckb.treatmentApproach.TreatmentApproach;
-import com.hartwig.hmftools.ckb.variant.Variant;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
+import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
+import com.hartwig.hmftools.ckb.datamodel.gene.Gene;
+import com.hartwig.hmftools.ckb.datamodel.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
+import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
+import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
+import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
+import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

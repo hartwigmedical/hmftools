@@ -5,31 +5,30 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrial;
-import com.hartwig.hmftools.ckb.clinicaltrial.ClinicalTrialFactory;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialFactory;
 import com.hartwig.hmftools.ckb.dao.CkbDAO;
-import com.hartwig.hmftools.ckb.drug.Drug;
-import com.hartwig.hmftools.ckb.drug.DrugFactory;
-import com.hartwig.hmftools.ckb.drugclass.DrugClass;
-import com.hartwig.hmftools.ckb.drugclass.DrugClassFactory;
-import com.hartwig.hmftools.ckb.gene.Gene;
-import com.hartwig.hmftools.ckb.gene.GeneFactory;
-import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
-import com.hartwig.hmftools.ckb.globaltherapyapprovalstatus.GlobalTherapyApprovalStatusFactory;
-import com.hartwig.hmftools.ckb.indication.Indication;
-import com.hartwig.hmftools.ckb.indication.IndicationFactory;
-import com.hartwig.hmftools.ckb.molecularprofile.MolecularProfile;
-import com.hartwig.hmftools.ckb.molecularprofile.MolecularprofileFactory;
-import com.hartwig.hmftools.ckb.reference.Reference;
-import com.hartwig.hmftools.ckb.reference.ReferenceFactory;
-import com.hartwig.hmftools.ckb.therapy.Therapy;
-import com.hartwig.hmftools.ckb.therapy.TherapyFactory;
-import com.hartwig.hmftools.ckb.treatmentApproach.TreatmentApproach;
-import com.hartwig.hmftools.ckb.treatmentApproach.TreatmentApproachFactory;
-import com.hartwig.hmftools.ckb.variant.Variant;
-import com.hartwig.hmftools.ckb.variant.VariantFactory;
+import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
+import com.hartwig.hmftools.ckb.datamodel.drug.DrugFactory;
+import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
+import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClassFactory;
+import com.hartwig.hmftools.ckb.datamodel.gene.Gene;
+import com.hartwig.hmftools.ckb.datamodel.gene.GeneFactory;
+import com.hartwig.hmftools.ckb.datamodel.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
+import com.hartwig.hmftools.ckb.datamodel.globaltherapyapprovalstatus.GlobalTherapyApprovalStatusFactory;
+import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
+import com.hartwig.hmftools.ckb.datamodel.indication.IndicationFactory;
+import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularprofileFactory;
+import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
+import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
+import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
+import com.hartwig.hmftools.ckb.datamodel.therapy.TherapyFactory;
+import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.TreatmentApproachFactory;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
+import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -70,16 +69,16 @@ public class CkbImporterApplication {
         }
 
         CkbEntry ckbEntry = readJsonData(config);
-       // CkbDAO ckbDAO = connect(config);
+        CkbDAO ckbDAO = connect(config);
 
         writingDataToDatabase(ckbEntry);
 
         LOGGER.info("Complete!");
     }
 
-//    private static CkbDAO connect(@NotNull CkbImporterConfig config ) throws SQLException {
-//        return CkbDAO.connectToCkbDAO(config.dbUser(), config.dbPass(), "jdbc:" + config.dbUrl());
-//    }
+    private static CkbDAO connect(@NotNull CkbImporterConfig config) throws SQLException {
+        return CkbDAO.connectToCkbDAO(config.dbUser(), config.dbPass(), "jdbc:" + config.dbUrl());
+    }
 
     @NotNull
     private static CkbEntry readJsonData(@NotNull CkbImporterConfig config) throws IOException {
