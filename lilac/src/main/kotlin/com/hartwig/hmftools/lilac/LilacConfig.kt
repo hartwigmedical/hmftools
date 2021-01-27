@@ -10,10 +10,11 @@ import java.io.IOException
 
 const val INPUT_BAM_OPTION = "input_bam"
 const val RESOURCE_DIR_OPTION = "resource_dir"
-const val OUTPUT_DIR_OPTION = "output_dif"
+const val OUTPUT_DIR_OPTION = "output_dir"
 const val REF_GENOME_OPTION = "ref_genome"
 const val MIN_BASE_QUAL = "min_base_qual"
 const val MIN_EVIDENCE = "min_evidence"
+const val THREADS = "threads"
 const val MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele"
 const val MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single"
 const val MIN_CONFIRMED_UNIQUE_COVERAGE = "min_confirmed_unique_coverage"
@@ -27,8 +28,8 @@ data class LilacConfig(
         val minEvidence: Int,
         val minFragmentsPerAllele: Int,
         val minFragmentsToRemoveSingle: Int,
-        val minConfirmedUniqueCoverage: Int
-) {
+        val minConfirmedUniqueCoverage: Int,
+        val threads: Int) {
 
     companion object {
 
@@ -45,6 +46,7 @@ data class LilacConfig(
             val minFragmentsPerAllele = Configs.defaultIntValue(cmd, MIN_FRAGMENTS_PER_ALLELE, defaultConfig.minFragmentsPerAllele)
             val minFragmentsToRemoveSingle = Configs.defaultIntValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, defaultConfig.minFragmentsToRemoveSingle)
             val minConfirmedUniqueCoverage = Configs.defaultIntValue(cmd, MIN_CONFIRMED_UNIQUE_COVERAGE, defaultConfig.minConfirmedUniqueCoverage)
+            val threads = Configs.defaultIntValue(cmd, THREADS, defaultConfig.threads)
 
             return LilacConfig(
                     inputBam,
@@ -55,7 +57,7 @@ data class LilacConfig(
                     minEvidence,
                     minFragmentsPerAllele,
                     minFragmentsToRemoveSingle,
-                    minConfirmedUniqueCoverage)
+                    minConfirmedUniqueCoverage, threads)
 
         }
 
@@ -69,7 +71,8 @@ data class LilacConfig(
                     3,
                     6,
                     40,
-                    3)
+                    3,
+                    1)
         }
 
         fun createOptions(): Options {
@@ -83,6 +86,7 @@ data class LilacConfig(
             options.addOption(optional(MIN_FRAGMENTS_PER_ALLELE, "MIN_FRAGMENTS_PER_ALLELE"))
             options.addOption(optional(MIN_FRAGMENTS_TO_REMOVE_SINGLE, "MIN_FRAGMENTS_TO_REMOVE_SINGLE"))
             options.addOption(optional(MIN_CONFIRMED_UNIQUE_COVERAGE, "MIN_CONFIRMED_UNIQUE_COVERAGE"))
+            options.addOption(optional(THREADS, "Number of threads"))
             return options
         }
 

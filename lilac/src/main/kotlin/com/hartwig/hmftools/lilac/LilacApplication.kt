@@ -6,9 +6,9 @@ import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
-import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
-import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.coverageString
 import com.hartwig.hmftools.lilac.hla.HlaComplex
+import com.hartwig.hmftools.lilac.hla.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.hla.HlaComplexCoverageFactory
 import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
@@ -57,23 +57,17 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
     private val startTime = System.currentTimeMillis()
     private val transcripts = HmfGenePanelSupplier.allGenesMap37()
 
-    val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("LILAC-%d").build()
-    val executorService = Executors.newFixedThreadPool(7, namedThreadFactory)
+    private val minBaseQual = config.minBaseQual
+    private val minEvidence = config.minEvidence
+    private val minFragmentsPerAllele = config.minFragmentsPerAllele
+    private val minFragmentsToRemoveSingle = config.minFragmentsToRemoveSingle
+    private val minConfirmedUniqueCoverage = config.minConfirmedUniqueCoverage
+    private val resourcesDir = config.resourceDir
+    private val outputDir = config.outputDir
+    private val bamFile = config.inputBam
 
-    val minBaseQual = config.minBaseQual
-    val minEvidence = config.minEvidence
-    val minFragmentsPerAllele = config.minFragmentsPerAllele
-    val minFragmentsToRemoveSingle = config.minFragmentsToRemoveSingle
-    val minConfirmedUniqueCoverage = config.minConfirmedUniqueCoverage
-
-    val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
-    val outputDir = "/Users/jon/hmf/analysis/hla/output"
-
-    //            val bamFile = "/Users/jon/hmf/analysis/hla/bam/GIABvsSELFv004R.hla.bam"
-//    val bamFile = "/Users/jon/hmf/analysis/hla/bam/COLO829v001R.hla.bam"
-//    val bamFile = "/Users/jon/hmf/analysis/hla/bam/COLO829v002R.hla.bam"
-    val bamFile = "/Users/jon/hmf/analysis/hla/bam/COLO829v003R.hla.bam"
-
+    private val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("LILAC-%d").build()
+    private val executorService = Executors.newFixedThreadPool(config.threads, namedThreadFactory)
 
     override fun run() {
         logger.info("Starting LILAC with parameters:")
@@ -110,7 +104,6 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
         val bCandidates = candidateFactory.candidates(hlaBContext, aminoAcidPipeline.typeB())
         val cCandidates = candidateFactory.candidates(hlaCContext, aminoAcidPipeline.typeC())
         val candidates = aCandidates + bCandidates + cCandidates
-//listOf<HlaSequence>()//
 
         // Coverage
         val aminoAcidFragments = aminoAcidPipeline.combined()
@@ -128,19 +121,31 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
         val aminoAcidCandidates = aminoAcidSequences.filter { it.allele in candidateAlleles }
         val nucleotideCandidates = nucleotideSequences.filter { it.allele.specificProtein() in candidateAlleleSpecificProteins }
 
-        val coverageFactory = HlaAlleleCoverageFactory(aminoAcidFragments, aminoAcidCounts.heterozygousLoci(), aminoAcidCandidates, nucleotideHeterozygousLoci, nucleotideCandidates)
+        val coverageFactory = HlaComplexCoverageFactory(
+                executorService,
+                aminoAcidFragments,
+                aminoAcidCounts.heterozygousLoci(),
+                aminoAcidCandidates,
+                nucleotideHeterozygousLoci,
+                nucleotideCandidates)
 
 
         logger.info("Calculating overall coverage")
         val groupCoverage = coverageFactory.groupCoverage(candidateAlleles)
-        val confirmedGroups = groupCoverage.filter { it.uniqueCoverage >= minConfirmedUniqueCoverage }.sortedDescending()
+        val confirmedGroups = groupCoverage.alleles.filter { it.uniqueCoverage >= minConfirmedUniqueCoverage }.sortedDescending()
+        val discardedGroups = groupCoverage.alleles.filter { it.uniqueCoverage in 1 until minConfirmedUniqueCoverage }.sortedDescending()
         logger.info("... found ${confirmedGroups.size} uniquely identifiable groups: " + confirmedGroups.joinToString(", "))
-
+        if (discardedGroups.isNotEmpty()) {
+            logger.info("... discarded ${discardedGroups.size} uniquely identifiable groups: " + discardedGroups.joinToString(", "))
+        }
 
         val proteinCoverage = coverageFactory.proteinCoverage(candidateAlleles)
-        val confirmedProtein = proteinCoverage.filter { it.uniqueCoverage >= minConfirmedUniqueCoverage }.sortedDescending()
+        val confirmedProtein = proteinCoverage.alleles.filter { it.uniqueCoverage >= minConfirmedUniqueCoverage }.sortedDescending()
+        val discardedProtein = proteinCoverage.alleles.filter { it.uniqueCoverage in 1 until minConfirmedUniqueCoverage }.sortedDescending()
         logger.info("... found ${confirmedProtein.size} uniquely identifiable proteins: " + confirmedProtein.joinToString(", "))
-
+        if (discardedProtein.isNotEmpty()) {
+            logger.info("... discarded ${discardedProtein.size} uniquely identifiable proteins: " + discardedProtein.joinToString(", "))
+        }
 
         HlaSequenceFile.writeFile("$outputDir/candidates.inflate.txt", candidates)
         HlaSequenceFile.wipeFile("$outputDir/candidates.deflate.txt")
@@ -156,15 +161,18 @@ class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
                 confirmedProtein.take(6).map { it.allele },
                 candidates.map { it.allele })
 
-        logger.info("Calcuating coverage of ${complexes.size} complexes")
+        logger.info("Calculating coverage of ${complexes.size} complexes")
+        val complexCoverage = coverageFactory.complexCoverage(complexes)
+        if (complexCoverage.isNotEmpty()) {
+            val topCoverage = complexCoverage[0]
+            val topComplexes = complexCoverage.filter { it.totalCoverage >= topCoverage.totalCoverage - 10 }
 
-        println("TotalCoverage\tUniqueCoverage\tSharedCoverage\tWild\tAllele1\tAllele2\tAllele3\tAllele4\tAllele5\tAllele6")
-        for (complex in complexes) {
-            val complexCoverage = coverageFactory.proteinCoverage(complex.alleles)
-            println(complexCoverage.coverageString())
+            logger.info(HlaComplexCoverage.header())
+            for (topComplex in topComplexes) {
+                logger.info(topComplex)
+            }
+
         }
-
-
     }
 
 
