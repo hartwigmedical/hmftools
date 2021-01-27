@@ -43,22 +43,22 @@
         <plugins>
 
             <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <executions>
-                <execution>
-                    <id>Generate CKB DB</id>
-                    <phase>generate-sources</phase>
-                    <goals>
-                        <goal>exec</goal>
-                    </goals>
-                    <configuration>
-                        <workingDirectory>${basedir}/src/main/resources/database</workingDirectory>
-                        <executable>${basedir}/src/main/resources/database/regenerate_local_ckb_db</executable>
-                    </configuration>
-                </execution>
-            </executions>
-        </plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>Generate CKB DB</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/src/main/resources/database</workingDirectory>
+                            <executable>${basedir}/src/main/resources/database/regenerate_local_ckb_db</executable>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
