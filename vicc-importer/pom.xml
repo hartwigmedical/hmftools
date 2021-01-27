@@ -107,7 +107,7 @@
                     <generator>
                         <database>
                             <name>org.jooq.util.mysql.MySQLDatabase</name>
-                            <includes>.*</includes>x
+                            <includes>.*</includes>
                             <inputSchema>vicc_test</inputSchema>
                         </database>
                         <target>
