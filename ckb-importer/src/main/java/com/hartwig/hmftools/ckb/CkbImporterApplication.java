@@ -76,9 +76,9 @@ public class CkbImporterApplication {
             LOGGER.info("Skipping DB writing.");
         } else {
             CkbDAO ckbDAO = connect(config);
-            LOGGER.info("Deleting all from VICC db");
+            LOGGER.info("Deleting all from CKB db");
             ckbDAO.deleteAll();
-            LOGGER.info("Starting insertion of all VICC entries");
+            LOGGER.info("Starting insertion of all CKB entries");
             ckbDAO.writeCkb(ckbEntry);
 
         }
