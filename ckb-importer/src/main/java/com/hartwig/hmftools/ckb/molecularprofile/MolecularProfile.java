@@ -33,16 +33,16 @@ public abstract class MolecularProfile {
     public abstract String updateDate();
 
     @NotNull
-    public abstract MolecularProfileComplexMolecularProfileEvidence complexMolecularProfileEvidence();
+    public abstract MolecularProfileExtendedEvidence complexMolecularProfileEvidence();
 
     @NotNull
-    public abstract MolecularProfileTreatmentApproachEvidence treatmentApproachEvidence();
+    public abstract MolecularProfileExtendedEvidence treatmentApproachEvidence();
 
     @NotNull
     public abstract List<ClinicalTrialInfo> variantAssociatedClinicalTrial();
 
     @NotNull
-    public abstract MolecularProfileVariantLevelEvidence variantLevelEvidence();
+    public abstract MolecularProfileExtendedEvidence variantLevelEvidence();
 
     @NotNull
     public abstract MolecularProfileExtendedEvidence extendedEvidence();

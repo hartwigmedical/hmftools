@@ -128,14 +128,14 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileComplexMolecularProfileEvidence extractComplexMolecularProfileEvidence(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileExtendedEvidence extractComplexMolecularProfileEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker complexMolecularProfileEvidenceChecker =
                 MolecularProfileDataModelChecker.molecularProfileComplexMolecularProfileEvidence();
         complexMolecularProfileEvidenceChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileComplexMolecularProfileEvidence.builder()
+        return ImmutableMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
-                .complexMolecularProfileEvidence(extractComplexMolecularProfileEvidenceList(jsonObject.getAsJsonArray(
+                .evidence(extractComplexMolecularProfileEvidenceList(jsonObject.getAsJsonArray(
                         "complexMolecularProfileEvidence")))
                 .build();
     }
@@ -244,14 +244,14 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileTreatmentApproachEvidence extractTreatmentApproachEvidence(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileExtendedEvidence extractTreatmentApproachEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker treatmentApproachEvidenceeChecker =
                 MolecularProfileDataModelChecker.molecularProfileTreatmentApproachEvidence();
         treatmentApproachEvidenceeChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileTreatmentApproachEvidence.builder()
+        return ImmutableMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
-                .treatmentApproachEvidenceList(extractTreatmentApproachEvidenceList(jsonObject.getAsJsonArray("treatmentApproachEvidence")))
+                .evidence(extractTreatmentApproachEvidenceList(jsonObject.getAsJsonArray("treatmentApproachEvidence")))
                 .build();
     }
 
@@ -325,14 +325,14 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileVariantLevelEvidence extractVariantlevelEvidence(@NotNull JsonObject jsonObject) {
+    public static MolecularProfileExtendedEvidence extractVariantlevelEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker variantLevelEvidenceChecker =
                 MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidence();
         variantLevelEvidenceChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileVariantLevelEvidence.builder()
+        return ImmutableMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
-                .variantLevelEvidenceList(extractVariantlevelEvidenceList(jsonObject.getAsJsonArray("variantLevelEvidences")))
+                .evidence(extractVariantlevelEvidenceList(jsonObject.getAsJsonArray("variantLevelEvidences")))
                 .build();
     }
 
@@ -373,7 +373,7 @@ public class MolecularprofileFactory {
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
-                .extendedEvidenceList(extractExtendedEvidenceList(jsonObject.getAsJsonArray("extendedEvidence")))
+                .evidence(extractExtendedEvidenceList(jsonObject.getAsJsonArray("extendedEvidence")))
                 .build();
     }
 

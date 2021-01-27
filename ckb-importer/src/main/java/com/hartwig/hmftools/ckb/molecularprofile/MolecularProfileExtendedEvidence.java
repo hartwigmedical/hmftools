@@ -16,5 +16,5 @@ public abstract class MolecularProfileExtendedEvidence {
     public abstract String totalCount();
 
     @NotNull
-    public abstract List<EvidenceInfo> extendedEvidenceList();
+    public abstract List<EvidenceInfo> evidence();
 }
