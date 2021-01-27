@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.VAR_INFO_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -172,17 +173,40 @@ public class NeoFragmentMatcher
 
             // combine the coords
             final List<int[]> codingBaseCoords = Lists.newArrayList();
+            final int[] fusionJunction = new int[SE_PAIR];
 
             if(neData.Orientations[FS_UP] == POS_ORIENT)
             {
+                fusionJunction[SE_START] = neData.Source.CodingBasePositions[FS_UP][SE_END];
+                fusionJunction[SE_END] = neData.Source.CodingBasePositions[FS_DOWN][SE_START];
                 codingBaseCoords.addAll(neData.CodingBaseCoords[FS_UP]);
                 codingBaseCoords.addAll(neData.CodingBaseCoords[FS_DOWN]);
             }
             else
             {
+                fusionJunction[SE_START] = neData.Source.CodingBasePositions[FS_DOWN][SE_END];
+                fusionJunction[SE_END] = neData.Source.CodingBasePositions[FS_UP][SE_START];
                 codingBaseCoords.addAll(neData.CodingBaseCoords[FS_DOWN]);
                 codingBaseCoords.addAll(neData.CodingBaseCoords[FS_UP]);
             }
+
+            // the read must have an N-split matching the fusion junction
+            boolean supportsSplit = false;
+
+            for(int i = 0; i < read.getMappedRegionCoords().size() - 1; ++i)
+            {
+                final int[] coordLower = read.getMappedRegionCoords().get(i);
+                final int[] coordUpper = read.getMappedRegionCoords().get(i + 1);
+
+                if(coordLower[SE_END] == fusionJunction[SE_START] && coordUpper[SE_START] == fusionJunction[SE_END])
+                {
+                    supportsSplit = true;
+                    break;
+                }
+            }
+
+            if(!supportsSplit)
+                return support;
 
             int overlapBases = calcCoordinatesOverlap(read.getMappedRegionCoords(), neData.CodingBaseCoords[stream]);
 

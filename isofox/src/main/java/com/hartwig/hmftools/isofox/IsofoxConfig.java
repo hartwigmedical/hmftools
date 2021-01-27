@@ -219,7 +219,11 @@ public class IsofoxConfig
         {
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
             loadGeneIdsFile(inputFile, RestrictedGeneIds);
-            ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
+
+            if(!RestrictedGeneIds.isEmpty())
+            {
+                ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
+            }
         }
         else if(cmd.hasOption(RESTRICTED_GENE_IDS))
         {
