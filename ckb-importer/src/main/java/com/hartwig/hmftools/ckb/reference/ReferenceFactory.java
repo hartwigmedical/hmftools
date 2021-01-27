@@ -12,7 +12,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
@@ -127,15 +129,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceEvidence> extractEvidence(@NotNull JsonArray jsonArray) {
-        List<ReferenceEvidence> referenceEvidences = Lists.newArrayList();
+    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+        List<EvidenceInfo> referenceEvidences = Lists.newArrayList();
         JsonDatamodelChecker evidenceChecker = ReferenceDataModelChecker.referenceEvidenceObjectChecker();
 
         for (JsonElement evidence : jsonArray) {
             JsonObject evidenceJsonObject = evidence.getAsJsonObject();
             evidenceChecker.check(evidenceJsonObject);
 
-            referenceEvidences.add(ImmutableReferenceEvidence.builder()
+            referenceEvidences.add(ImmutableEvidenceInfo.builder()
                     .id(JsonFunctions.string(evidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(evidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(evidenceJsonObject, "evidenceType"))

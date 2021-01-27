@@ -1,12 +1,6 @@
-package com.hartwig.hmftools.ckb.molecularprofile;
+package com.hartwig.hmftools.ckb.common;
 
 import java.util.List;
-
-import com.hartwig.hmftools.ckb.common.IndicationInfo;
-import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
-import com.hartwig.hmftools.ckb.common.ReferenceInfo;
-import com.hartwig.hmftools.ckb.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.common.TreatmentApproach;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularProfileComplexMolecularProfileEvidenceList {
+public abstract class EvidenceInfo {
 
     @NotNull
     public abstract String id();
@@ -49,10 +43,6 @@ public abstract class MolecularProfileComplexMolecularProfileEvidenceList {
     @NotNull
     public abstract String ampCapAscoInferredTier();
 
-    @NotNull
+    @Nullable
     public abstract List<TreatmentApproach> relevantTreatmentApproach();
-
-
-
-
 }

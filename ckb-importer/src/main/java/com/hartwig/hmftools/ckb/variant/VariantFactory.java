@@ -12,7 +12,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
@@ -217,15 +219,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantEvidence> extractEvidence(@NotNull JsonArray jsonArray) {
-        List<VariantEvidence> evidences = Lists.newArrayList();
+    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+        List<EvidenceInfo> evidences = Lists.newArrayList();
         JsonDatamodelChecker evidenceChecker = VariantDataModelChecker.evidenceObjectChecker();
 
         for (JsonElement evidence : jsonArray) {
             JsonObject evidenceJsonObject = evidence.getAsJsonObject();
             evidenceChecker.check(evidenceJsonObject);
 
-            evidences.add(ImmutableVariantEvidence.builder()
+            evidences.add(ImmutableEvidenceInfo.builder()
                     .id(JsonFunctions.string(evidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(evidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(evidenceJsonObject, "evidenceType"))
@@ -278,15 +280,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantEvidence> extractExtendedEvidence(@NotNull JsonArray jsonArray) {
-        List<VariantEvidence> extendedEvidences = Lists.newArrayList();
+    public static List<EvidenceInfo> extractExtendedEvidence(@NotNull JsonArray jsonArray) {
+        List<EvidenceInfo> extendedEvidences = Lists.newArrayList();
         JsonDatamodelChecker extendedEvidenceChecker = VariantDataModelChecker.extendedEvidenceObjectChecker();
 
         for (JsonElement extendedEvidence : jsonArray) {
             JsonObject extendedEvidenceJsonObject = extendedEvidence.getAsJsonObject();
             extendedEvidenceChecker.check(extendedEvidenceJsonObject);
 
-            extendedEvidences.add(ImmutableVariantEvidence.builder()
+            extendedEvidences.add(ImmutableEvidenceInfo.builder()
                     .id(JsonFunctions.string(extendedEvidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(extendedEvidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(extendedEvidenceJsonObject, "evidenceType"))

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.molecularprofile;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.EvidenceInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +16,6 @@ public abstract class MolecularProfileComplexMolecularProfileEvidence {
     public abstract String totalCount();
 
     @NotNull
-    public abstract List<MolecularProfileComplexMolecularProfileEvidenceList> complexMolecularProfileEvidence();
+    public abstract List<EvidenceInfo> complexMolecularProfileEvidence();
 
 }

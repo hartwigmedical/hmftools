@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 
@@ -53,10 +54,10 @@ public abstract class Variant {
     public abstract List<VariantCategoryVariantPath> categoryVariantPath();
 
     @NotNull
-    public abstract List<VariantEvidence> evidence();
+    public abstract List<EvidenceInfo> evidence();
 
     @NotNull
-    public abstract List<VariantEvidence> extendedEvidence();
+    public abstract List<EvidenceInfo> extendedEvidence();
 
     @NotNull
     public abstract List<MolecularProfileInfo> molecularProfile();

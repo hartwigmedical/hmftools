@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.indication;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +38,7 @@ public abstract class Indication {
     public abstract String termId();
 
     @NotNull
-    public abstract List<IndicationEvidence> evidence();
+    public abstract List<EvidenceInfo> evidence();
 
     @NotNull
     public abstract List<ClinicalTrialInfo> clinicalTrial();
