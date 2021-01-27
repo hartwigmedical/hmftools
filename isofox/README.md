@@ -74,7 +74,7 @@ Reference files are available for HG19 and HG38 [HMFTools-Resources](https://res
 ### Transcript Expression
 The expression function in Isofox depends on the calculation of expected rates for each gene and transcript given a set of fragment lengths. These can be computed from scratch each time a sample is run, or pre-computed independently once and then loaded from file for subsequent sample runs. Using the pre-computed expected counts file reduces the processing time by around 95%.
 
-Each release of Isofox will be accompanied by a set of pre-computed cache files. Alternatively to generate this file, use the function EXPECTED_TRANS_COUNTS, passing in the same fragment length values used for normal transcript expression.
+Each release of Isofox will be accompanied by a set of pre-computed cache files (see HMF Resource link above). Alternatively to generate this file, use the function EXPECTED_TRANS_COUNTS, passing in the same fragment length values used for normal transcript expression.
 
 ```
 java -jar isofox.jar 
@@ -109,8 +109,8 @@ Argument | Description
 ---|---
 apply_calc_frag_lengths | Use the actual fragment length distribution to adjust  
 frag_length_min_count | Minimum number of fragments to observe for length distributon calcs, default = 1M 
+apply_exp_rates | Calculate TPM using expectation maximisation routine
 exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0' 
-apply_exp_rates 
 exp_counts_file | Pre-computed expected counts per transcript and gene
 apply_gc_bias_adjust | Adjusted transcript counts by actual vs expected GC ratio distribution
 exp_gc_ratios_file | Pre-computed expected GC ratio counts per transcript
