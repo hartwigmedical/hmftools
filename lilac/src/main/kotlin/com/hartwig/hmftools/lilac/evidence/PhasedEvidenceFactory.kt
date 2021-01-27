@@ -2,36 +2,42 @@ package com.hartwig.hmftools.lilac.evidence
 
 import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
+import com.hartwig.hmftools.lilac.nuc.ExpectedAlleles
 
-class PhasedEvidenceFactory(private val minEvidence: Int, private val minFragments: Int) {
+class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val minFragmentsToRemoveSingles: Int, private val minEvidence: Int) {
 
-    fun evidence(aminoAcidAminoAcidFragments: List<AminoAcidFragment>): List<PhasedEvidence> {
+    fun evidence(expectedAlleles: ExpectedAlleles, aminoAcidAminoAcidFragments: List<AminoAcidFragment>): List<PhasedEvidence> {
         val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, aminoAcidAminoAcidFragments)
-
         val heterozygousIndices = aminoAcidCounts.heterozygousLoci()
-        val heterozygousEvidence = ExtendEvidence(minFragments, heterozygousIndices, aminoAcidAminoAcidFragments)
+        println(heterozygousIndices)
 
-        val allEvidence = mutableSetOf<PhasedEvidence>()
-        val initialEvidence = heterozygousEvidence.initialEvidence()
-        var unprocessedEvidence = initialEvidence
+        val heterozygousEvidence = ExtendEvidence(minFragmentsPerAllele, minFragmentsToRemoveSingles, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles)
 
-        allEvidence.addAll(initialEvidence)
+        val finalisedEvidence = mutableSetOf<PhasedEvidence>()
+        val unprocessedEvidence = mutableListOf<PhasedEvidence>()
+        unprocessedEvidence.addAll(heterozygousEvidence.pairedEvidence())
+
 
         while (unprocessedEvidence.isNotEmpty()) {
-            val topEvidence = unprocessedEvidence[0]
-            allEvidence.add(topEvidence)
+            val top = unprocessedEvidence.removeAt(0)
+            println("Processing: $top")
 
-            val newEvidence = heterozygousEvidence.extendConsecutive(topEvidence, allEvidence)
-            allEvidence.addAll(newEvidence)
+            val (parent, children) = heterozygousEvidence.merge(top, finalisedEvidence + unprocessedEvidence)
 
-            val updatedEvidence = mutableSetOf<PhasedEvidence>()
-            updatedEvidence.addAll(unprocessedEvidence.drop(1))
-            updatedEvidence.addAll(newEvidence)
+            if (children.isNotEmpty()) {
+                println("Produced:   $parent")
+                finalisedEvidence.removeAll(children)
+                unprocessedEvidence.removeAll(children)
+                unprocessedEvidence.add(parent)
+            } else {
+                finalisedEvidence.add(parent)
+            }
 
-            unprocessedEvidence = updatedEvidence.sorted()
+            unprocessedEvidence.sort()
         }
 
-        return longestEvidence(allEvidence)
+//        return longestEvidence(finalisedEvidence)
+        return finalisedEvidence.sortedBy { it.aminoAcidIndices[0] }
 
     }
 

@@ -30,8 +30,8 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
 
                 if (fullAlleles.size == 1 && partialAlleles.isEmpty() && wildAlleles.isEmpty())  {
                     uniqueCoverageMap.compute(fullAlleles.first()) {_, oldValue ->  (oldValue ?: 0) + 1}
-//                    if (fullAlleles.first() == HlaAllele("C*03:326")) {
-//                        println("sdf")
+//                    if (fullAlleles.first() == HlaAllele("C*07:57")) {
+//                        println(fragment.aminoAcidFragment.id)
 //                    }
 
                 } else {

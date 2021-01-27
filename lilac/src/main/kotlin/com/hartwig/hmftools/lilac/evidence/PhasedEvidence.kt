@@ -56,13 +56,20 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
         return evidence.values.sum()
     }
 
+    fun removeSingles(minTotalEvidence: Int): PhasedEvidence {
+        if (totalEvidence() >= minTotalEvidence) {
+            return PhasedEvidence(aminoAcidIndices, evidence.filter { it.value > 1 })
+        }
+
+        return this
+    }
+
     companion object {
 
-        fun evidence(minEvidence: Int, aminoAcidFragments: List<AminoAcidFragment>, vararg indices: Int): PhasedEvidence {
+        fun evidence(aminoAcidFragments: List<AminoAcidFragment>, vararg indices: Int): PhasedEvidence {
             val filteredFragments = aminoAcidFragments.filter { it.containsAll(indices) }
             val aminoAcidEvidence = filteredFragments.map { it.toAminoAcids(indices) }.groupingBy { it }.eachCount()
-            val filteredEvidence = aminoAcidEvidence.filter { it.value >= minEvidence }
-            return PhasedEvidence(indices, filteredEvidence)
+            return PhasedEvidence(indices, aminoAcidEvidence)
         }
 
         private fun AminoAcidFragment.toAminoAcids(indices: IntArray): String {

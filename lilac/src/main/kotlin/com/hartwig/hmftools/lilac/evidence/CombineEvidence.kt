@@ -4,6 +4,16 @@ import kotlin.math.min
 
 object CombineEvidence {
 
+    fun combine(left: PhasedEvidence, common: PhasedEvidence, right: PhasedEvidence): PhasedEvidence {
+        val leftWithCommon = combineOverlapping(left, common)
+        val result =  combineOverlapping(leftWithCommon, right)
+        return result
+    }
+
+    fun canCombine(left: PhasedEvidence, common: PhasedEvidence, right: PhasedEvidence): Boolean {
+        return canCombine(left, common) && canCombine(common, right)
+    }
+
     fun canCombine(left: PhasedEvidence, right: PhasedEvidence): Boolean {
 
         val indexIntersection = (left.aminoAcidIndices.toSet() intersect right.aminoAcidIndices.toSet()).toList().sorted()
@@ -13,9 +23,6 @@ object CombineEvidence {
 
         val uniqueToLeft = left.aminoAcidIndices.filter { it !in indexIntersection }
         val uniqueToRight = right.aminoAcidIndices.filter { it !in indexIntersection }
-        if (uniqueToLeft.isEmpty() && uniqueToRight.isEmpty()) {
-            return false
-        }
 
         if (uniqueToRight.isNotEmpty() && uniqueToLeft.any { it > uniqueToRight.min()!! }) {
             return false

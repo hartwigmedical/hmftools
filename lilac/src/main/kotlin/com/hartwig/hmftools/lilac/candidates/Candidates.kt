@@ -5,40 +5,57 @@ import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilac.hla.HlaAllele
+import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFiltering
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import org.apache.logging.log4j.LogManager
 
-class Candidates(private val minBaseCount: Int, private val minFragmentCount: Int, private val nucleotideSequences: List<HlaSequence>, private val aminoAcidSequences: List<HlaSequence>) {
+class Candidates(
+        private val minFragmentsPerAllele: Int,
+        private val minFragmentsToRemoveSingles: Int,
+        private val minBaseCount: Int,
+        private val nucleotideSequences: List<HlaSequence>,
+        private val aminoAcidSequences: List<HlaSequence>) {
 
     companion object {
         val logger = LogManager.getLogger(this::class.java)
     }
 
-    fun candidates(gene: String, aminoAcidBoundary: Set<Int>, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
+    fun candidates(context: HlaContext, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
+        val gene = context.gene
+        val aminoAcidBoundary = context.aminoAcidBoundaries
+        val expectedAlleles = context.expectedAlleles
 
         logger.info("Determining initial candidate set for gene HLA-$gene")
         val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
-//        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.${gene}.count.txt")
+//        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/output/aminoacids.${gene}.count.txt")
 //        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, aminoAcidFragments)
 
         val geneCandidates = aminoAcidSequences.filter { it.allele.gene == gene }
         logger.info(" ... ${geneCandidates.size} candidates before filtering")
 
-        // Nucleotide filtering
-        val nucleotideFiltering = NucleotideFiltering(minBaseCount, aminoAcidBoundary)
-        val nucleotideSpecificProteinCandidates = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideSequences, aminoAcidFragments).map { it.allele.specificProtein() }.toSet()
-        val nucleotideCandidates = geneCandidates.filter { it.allele.specificProtein() in nucleotideSpecificProteinCandidates }
-        logger.info(" ... ${nucleotideCandidates.size} candidates after nucleotide exon boundary filtering")
-
         // Amino acid filtering
-        val aminoAcidCandidates = initialCandidates(aminoAcidCounts, nucleotideCandidates)
+        val aminoAcidCandidates = aminoAcidCandidates(aminoAcidBoundary, aminoAcidCounts, geneCandidates)
+        val aminoAcidCandidateAlleles = aminoAcidCandidates.map { it.allele }.toSet()
+        val aminoAcidSpecificAllelesCandidate = aminoAcidCandidateAlleles.map { it.specificProtein() }.toSet()
+
         logger.info(" ... ${aminoAcidCandidates.size} candidates after amino acid filtering")
 
-        val phasedEvidenceFactory = PhasedEvidenceFactory(minBaseCount, minFragmentCount)
-        val phasedEvidence = phasedEvidenceFactory.evidence(aminoAcidFragments)
+        // Nucleotide filtering
+        val nucleotideFiltering = NucleotideFiltering(minBaseCount, aminoAcidBoundary)
+        val nucleotideCandidatesAfterAminoAcidFiltering = nucleotideSequences
+                .filter { it.allele.specificProtein() in aminoAcidSpecificAllelesCandidate }
+        val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, aminoAcidFragments)
+                .map { it.allele.specificProtein() }
+                .toSet()
 
-        val phasedCandidates = filterCandidates(aminoAcidCandidates, phasedEvidence)
+        val nucleotideCandidates = aminoAcidCandidates.filter { it.allele.specificProtein() in nucleotideSpecificAllelesCandidate }
+        logger.info(" ... ${nucleotideCandidates.size} candidates after exon boundary filtering")
+
+        val phasedEvidenceFactory = PhasedEvidenceFactory(minFragmentsPerAllele, minFragmentsToRemoveSingles, minBaseCount)
+        val phasedEvidence = phasedEvidenceFactory.evidence(expectedAlleles, aminoAcidFragments)
+
+        val phasedCandidates = filterCandidates(nucleotideCandidates, phasedEvidence)
         logger.info(" ... ${phasedCandidates.size} candidates after phasing: " + phasedCandidates.map { it.allele }.joinToString(", "))
 
         return phasedCandidates
@@ -75,7 +92,14 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
     private fun checkColo8289Candidates(candidates: Collection<HlaSequence>): Int {
         var count = 0
 
+        if (candidates.any { it.allele == HlaAllele("A*01:01:01:01") }) {
+            count++;
+        }
+
         if (candidates.any { it.allele == HlaAllele("C*03:04:01:01") }) {
+            count++;
+        }
+        if (candidates.any { it.allele == HlaAllele("C*07:01:01:01") }) {
             count++;
         }
 
@@ -91,9 +115,10 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
     }
 
 
-    private fun initialCandidates(aminoAcidCount: SequenceCount, candidates: List<HlaSequence>): List<HlaSequence> {
+    private fun aminoAcidCandidates(boundaries: Set<Int>, aminoAcidCount: SequenceCount, candidates: List<HlaSequence>): List<HlaSequence> {
         var result = candidates
-        val locations = (0 until aminoAcidCount.length).toSet().filter { aminoAcidCount.depth(it) >= minFragmentCount }
+//        val locations = (0 until aminoAcidCount.length).filter { aminoAcidCount.depth(it) >= 12 }
+        val locations = (0 until aminoAcidCount.length).toSet() subtract boundaries
         for (location in locations) {
             result = filterCandidates(location, aminoAcidCount.sequenceAt(location), result)
         }
@@ -108,7 +133,7 @@ class Candidates(private val minBaseCount: Int, private val minFragmentCount: In
         var candidates = initialCandidates
         for (i in evidence.indices) {
             val newEvidence = evidence[i]
-//            logger.info(" ... $newEvidence")
+            logger.info(" ... $newEvidence")
             candidates = matchingCandidates(newEvidence, candidates)
 //            logger.info(" ... contains ${(checkColo8289Candidates(candidates))} COLO829 ")
 

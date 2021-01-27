@@ -2,13 +2,14 @@ package com.hartwig.hmftools.lilac
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
+import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
-import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCoverageFactory.Companion.coverageString
 import com.hartwig.hmftools.lilac.hla.HlaComplex
+import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequence
@@ -16,15 +17,36 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.deflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.specificProteins
+import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
+import java.io.IOException
 import java.util.concurrent.Executors
 
 fun main(args: Array<String>) {
-    LilacApplication().use { x -> x.run() }
+
+    @Throws(ParseException::class)
+    fun createCommandLine(args: Array<String>, options: Options): CommandLine {
+        val parser: CommandLineParser = DefaultParser()
+        return parser.parse(options, args)
+    }
+
+    val options = LilacConfig.createOptions()
+    try {
+        val cmd = createCommandLine(args, options)
+        val config = LilacConfig.createConfig(cmd)
+        LilacApplication(config).use { x -> x.run() }
+    } catch (e: IOException) {
+        logger.warn(e)
+    } catch (e: ParseException) {
+        logger.warn(e)
+        val formatter = HelpFormatter()
+        formatter.printHelp("lilac", options)
+    }
+
 }
 
 
-class LilacApplication : AutoCloseable, Runnable {
+class LilacApplication(config: LilacConfig) : AutoCloseable, Runnable {
     companion object {
         val logger = LogManager.getLogger(this::class.java)
         const val HLA_A = "HLA-A"
@@ -38,23 +60,28 @@ class LilacApplication : AutoCloseable, Runnable {
     val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("LILAC-%d").build()
     val executorService = Executors.newFixedThreadPool(7, namedThreadFactory)
 
-    val minBaseQual = 30
-    val minEvidence = 2
-    val minFragments = 30
-
-    val minConfirmedUniqueCoverage = 2
+    val minBaseQual = config.minBaseQual
+    val minEvidence = config.minEvidence
+    val minFragmentsPerAllele = config.minFragmentsPerAllele
+    val minFragmentsToRemoveSingle = config.minFragmentsToRemoveSingle
+    val minConfirmedUniqueCoverage = config.minConfirmedUniqueCoverage
 
     val resourcesDir = "/Users/jon/hmf/analysis/hla/resources"
-    val outputDir = "/Users/jon/hmf/analysis/hla/resources"
+    val outputDir = "/Users/jon/hmf/analysis/hla/output"
 
-//            val bamFile = "/Users/jon/hmf/analysis/hla/GIABvsSELFv004R.hla.bam"
-    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v001R.hla.bam"
-//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v002T.hla.bam"
-//    val bamFile = "/Users/jon/hmf/analysis/hla/COLO829v003T.hla.bam"
+    //            val bamFile = "/Users/jon/hmf/analysis/hla/bam/GIABvsSELFv004R.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/bam/COLO829v001R.hla.bam"
+//    val bamFile = "/Users/jon/hmf/analysis/hla/bam/COLO829v002R.hla.bam"
+    val bamFile = "/Users/jon/hmf/analysis/hla/bam/COLO829v003R.hla.bam"
 
 
     override fun run() {
-        logger.info("Starting LILAC")
+        logger.info("Starting LILAC with parameters:")
+        logger.info("     minFragmentsPerAllele = $minFragmentsPerAllele")
+        logger.info("minFragmentsToRemoveSingle = $minFragmentsToRemoveSingle")
+        logger.info("               minBaseQual = $minBaseQual")
+        logger.info("               minEvidence = $minEvidence")
+        logger.info("         minUniqueCoverage = $minConfirmedUniqueCoverage")
 
         val aProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 364, 365)
         val bProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
@@ -72,11 +99,16 @@ class LilacApplication : AutoCloseable, Runnable {
         logger.info("Reading protein files")
         val aminoAcidSequences = readProteinFiles(resourcesDir)
 
+        // Context
+        val hlaAContext = HlaContext.hlaA(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+        val hlaBContext = HlaContext.hlaB(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+        val hlaCContext = HlaContext.hlaC(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+
         // Candidates
-        val candidateFactory = Candidates(minEvidence, minFragments, nucleotideSequences, aminoAcidSequences)
-        val aCandidates = candidateFactory.candidates("A", aProteinExonBoundaries, aminoAcidPipeline.typeA())
-        val bCandidates = candidateFactory.candidates("B", bProteinExonBoundaries, aminoAcidPipeline.typeB())
-        val cCandidates = candidateFactory.candidates("C", cProteinExonBoundaries, aminoAcidPipeline.typeC())
+        val candidateFactory = Candidates(minFragmentsPerAllele, minFragmentsToRemoveSingle, minEvidence, nucleotideSequences, aminoAcidSequences)
+        val aCandidates = candidateFactory.candidates(hlaAContext, aminoAcidPipeline.typeA())
+        val bCandidates = candidateFactory.candidates(hlaBContext, aminoAcidPipeline.typeB())
+        val cCandidates = candidateFactory.candidates(hlaCContext, aminoAcidPipeline.typeC())
         val candidates = aCandidates + bCandidates + cCandidates
 //listOf<HlaSequence>()//
 
@@ -88,7 +120,6 @@ class LilacApplication : AutoCloseable, Runnable {
         val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect allNucleotideExonBoundaries
         aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/aminoacids.count.txt")
         nucleotideCounts.writeVertically("/Users/jon/hmf/analysis/hla/nucleotides.count.txt")
-
 
 
         val candidateAlleles = candidates.map { it.allele }
@@ -111,6 +142,15 @@ class LilacApplication : AutoCloseable, Runnable {
         logger.info("... found ${confirmedProtein.size} uniquely identifiable proteins: " + confirmedProtein.joinToString(", "))
 
 
+        HlaSequenceFile.writeFile("$outputDir/candidates.inflate.txt", candidates)
+        HlaSequenceFile.wipeFile("$outputDir/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(aProteinExonBoundaries, "$outputDir/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(bProteinExonBoundaries, "$outputDir/candidates.deflate.txt")
+        HlaSequenceFile.writeBoundary(cProteinExonBoundaries, "$outputDir/candidates.deflate.txt")
+        val deflated = candidates.deflate()
+        HlaSequenceFile.appendFile("$outputDir/candidates.deflate.txt", deflated)
+
+
         val complexes = HlaComplex.complexes(
                 confirmedGroups.take(6).map { it.allele },
                 confirmedProtein.take(6).map { it.allele },
@@ -123,15 +163,6 @@ class LilacApplication : AutoCloseable, Runnable {
             val complexCoverage = coverageFactory.proteinCoverage(complex.alleles)
             println(complexCoverage.coverageString())
         }
-
-
-        val sequences = (candidates union (aminoAcidSequences.filter { it.allele == HlaAllele("B*08:01:04") })).map { HlaSequence(it.contig, it.sequence) }
-        HlaSequenceFile.writeFile("/Users/jon/hmf/analysis/hla/candidates.inflate.txt", sequences)
-        HlaSequenceFile.wipeFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(aProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(bProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-        HlaSequenceFile.writeBoundary(cProteinExonBoundaries, "/Users/jon/hmf/analysis/hla/candidates.deflate.txt")
-        HlaSequenceFile.appendFile("/Users/jon/hmf/analysis/hla/candidates.deflate.txt", sequences.deflate())
 
 
     }
