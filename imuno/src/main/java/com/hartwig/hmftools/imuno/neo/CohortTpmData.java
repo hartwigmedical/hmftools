@@ -1,11 +1,7 @@
-package com.hartwig.hmftools.isofox.neo;
+package com.hartwig.hmftools.imuno.neo;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -14,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
@@ -45,7 +40,7 @@ public class CohortTpmData
             Double tpm = cancerTpmMap.get(ALL_TYPES);
             results[COHORT_VALUE] = tpm != null ? tpm : 0;
 
-            if(cancerType != null && cancerTpmMap.containsKey(cancerType))
+            if(cancerType != null && !cancerType.isEmpty() && cancerTpmMap.containsKey(cancerType))
             {
                 results[CANCER_VALUE] = cancerTpmMap.get(cancerType);
             }
@@ -54,12 +49,18 @@ public class CohortTpmData
         return results;
     }
 
+    private static final String GENE_EXP_DELIM = ",";
+    private static final String FLD_GENE_ID = "GeneId";
+    private static final String FLD_GENE_NAME = "GeneName";
+    private static final String FLD_TRANS_NAME = "TransName";
+
+
     private void loadCohortFile(final String filename)
     {
         // GeneId,GeneName,TransName,Mesothelium,etc
         if(!Files.exists(Paths.get(filename)))
         {
-            ISF_LOGGER.error("invalid cohort TPM file({})", filename);
+            IM_LOGGER.error("invalid cohort TPM file({})", filename);
             return;
         }
 
@@ -72,7 +73,7 @@ public class CohortTpmData
             if (line == null)
                 return;
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, DELIMITER);
+            final Map<String,Integer> fieldsMap = createFieldsIndexMap(line, GENE_EXP_DELIM);
 
             final List<String> cancerTypes = fieldsMap.keySet().stream()
                     .filter(x -> !x.equals(FLD_GENE_ID) && !x.equals(FLD_GENE_NAME) && !x.equals(FLD_TRANS_NAME))
@@ -82,7 +83,7 @@ public class CohortTpmData
 
             while ((line = fileReader.readLine()) != null)
             {
-                final String[] items = line.split(DELIMITER, -1);
+                final String[] items = line.split(GENE_EXP_DELIM, -1);
 
                 final String transName = items[transNameIndex];
                 final Map<String,Double> cancerTpmMap = Maps.newHashMap();
@@ -95,11 +96,11 @@ public class CohortTpmData
                 }
             }
 
-            ISF_LOGGER.info("loaded {} cohort TPM median data", mTransCancerTpmMap.size());
+            IM_LOGGER.info("loaded {} cohort TPM median data", mTransCancerTpmMap.size());
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to load cohort TPM median data file({}): {}", filename, e.toString());
+            IM_LOGGER.error("failed to load cohort TPM median data file({}): {}", filename, e.toString());
             return;
         }
 

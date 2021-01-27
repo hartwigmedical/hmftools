@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +29,9 @@ public class NeoEpitopeFile
     public final double CopyNumber;
     public final String[] GeneIds;
     public final String[] GeneNames;
+
+    public final String[] Chromosomes;
+    public final byte[] Orientations;
     public final int[] NmdBases;
     public final int[] StartCodonBases;
     public final String UpstreamAA;
@@ -40,21 +44,27 @@ public class NeoEpitopeFile
     public final int[][] CodingBasePositions;
     public final String[] CodingBases;
     public final String[] CodingBaseCigars;
+    public final double[] CancerTpmTotal;
+    public final double[] CohortTpmTotal;
 
     public NeoEpitopeFile(
             final NeoEpitopeType varType, final String varInfo, final double copyNumber,
             final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
+            final String chrUp, final String chrDown, byte orientUp, byte orientDown,
             final String upAA, final String downAAs, final String novelAAs,
             int nmdBasesMin, int nmdBasesMax, int scbBasesMin, int scbBasesMax, int unsplicedBases, int skippedDonors, int skippedAcceptors,
             final String transcriptsUp, final String transcriptsDown, final String wildtypeAAs,
             int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
-            int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown)
+            int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown,
+            double tmpCancerUp, double tmpCohortUp, double tmpCancerDown, double tmpCohortDown)
     {
         VariantType = varType;
         VariantInfo = varInfo;
         CopyNumber = copyNumber;
         GeneIds = new String[] { geneIdUp, geneIdDown };
         GeneNames = new String[] { geneNameUp, geneNameDown };
+        Chromosomes = new String[] { chrUp, chrDown };
+        Orientations = new byte[] { orientUp, orientDown };
         NmdBases = new int[] { nmdBasesMin, nmdBasesMax };
         StartCodonBases = new int[] { scbBasesMin, scbBasesMax };
         UpstreamAA = upAA;
@@ -70,6 +80,8 @@ public class NeoEpitopeFile
         CodingBasePositions = new int[FS_PAIR][SE_PAIR];
         CodingBasePositions[FS_UP] = new int[] {codingBaseUpPosStart, codingBaseUpPosEnd};
         CodingBasePositions[FS_DOWN] = new int[] {codingBaseDownPosStart, codingBaseDownPosEnd};
+        CancerTpmTotal = new double[] { tmpCancerUp, tmpCohortUp };
+        CohortTpmTotal = new double[] { tmpCancerDown, tmpCohortDown };
     }
 
     private static final String FILE_EXTENSION = ".imu.neo_epitope.tsv";
@@ -124,6 +136,10 @@ public class NeoEpitopeFile
                 .add("GeneIdDown")
                 .add("GeneNameUp")
                 .add("GeneNameDown")
+                .add("ChrUp")
+                .add("ChrDown")
+                .add("OrientUp")
+                .add("OrientDown")
                 .add("UpstreamAA")
                 .add("DownstreamAA")
                 .add("NovelAA")
@@ -145,6 +161,10 @@ public class NeoEpitopeFile
                 .add("CodingBaseDownPosEnd")
                 .add("CodingBasesDown")
                 .add("CodingBaseCigarDown")
+                .add("TpmCancerUp")
+                .add("TpmCohortUp")
+                .add("TpmCancerDown")
+                .add("TpmCohortDown")
                 .toString();
     }
 
@@ -160,6 +180,10 @@ public class NeoEpitopeFile
         sj.add(neo.GeneIds[FS_DOWN]);
         sj.add(neo.GeneNames[FS_UP]);
         sj.add(neo.GeneNames[FS_DOWN]);
+        sj.add(neo.Chromosomes[FS_UP]);
+        sj.add(neo.Chromosomes[FS_DOWN]);
+        sj.add(String.valueOf(neo.Orientations[FS_UP]));
+        sj.add(String.valueOf(neo.Orientations[FS_DOWN]));
         sj.add(neo.UpstreamAA);
         sj.add(neo.DownstreamAA);
         sj.add(neo.NovelAA);
@@ -181,9 +205,27 @@ public class NeoEpitopeFile
         sj.add(String.valueOf(neo.CodingBasePositions[FS_DOWN][SE_END]));
         sj.add(neo.CodingBases[FS_DOWN]);
         sj.add(neo.CodingBaseCigars[FS_DOWN]);
+        sj.add(String.format("%6.3e", neo.CancerTpmTotal[FS_UP]));
+        sj.add(String.format("%6.3e", neo.CohortTpmTotal[FS_UP]));
+        sj.add(String.format("%6.3e", neo.CancerTpmTotal[FS_DOWN]));
+        sj.add(String.format("%6.3e", neo.CohortTpmTotal[FS_DOWN]));
 
         return sj.toString();
     }
+
+    /*
+        public NeoEpitopeFile(
+            final NeoEpitopeType varType, final String varInfo, final double copyNumber,
+            final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
+            final String chrUp, final String chrDown, byte orientUp, byte orientDown,
+            final String upAA, final String downAAs, final String novelAAs,
+            int nmdBasesMin, int nmdBasesMax, int scbBasesMin, int scbBasesMax, int unsplicedBases, int skippedDonors, int skippedAcceptors,
+            final String transcriptsUp, final String transcriptsDown, final String wildtypeAAs,
+            int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
+            int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown,
+            int tmpCancerUp, int tmpCohortUp, int tmpCancerDown, int tmpCohortDown)
+
+     */
 
     @NotNull
     public static NeoEpitopeFile fromString(@NotNull final String data, boolean skipSampleId)
@@ -198,12 +240,14 @@ public class NeoEpitopeFile
         return new NeoEpitopeFile(
                 NeoEpitopeType.valueOf(values[index++]), values[index++], Double.parseDouble(values[index++]),
                 values[index++], values[index++], values[index++], values[index++],
+                values[index++], values[index++], Byte.parseByte(values[index++]), Byte.parseByte(values[index++]),
                 values[index++], values[index++], values[index++], Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
                 Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
                 Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),
                 values[index++], values[index++], values[index++],
                 Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++],
-                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++]);
+                Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++],
+                Double.parseDouble(values[index++]), Double.parseDouble(values[index++]), Double.parseDouble(values[index++]), Double.parseDouble(values[index++]));
     }
 
     public static final String ITEM_DELIM = ";";

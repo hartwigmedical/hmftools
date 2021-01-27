@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.isofox.neo;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.Math.nextDown;
-
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -12,18 +8,13 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.configPathValid;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
-import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
-import static com.hartwig.hmftools.isofox.neo.CohortTpmData.CANCER_VALUE;
-import static com.hartwig.hmftools.isofox.neo.CohortTpmData.COHORT_VALUE;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.checkBaseCoverage;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findFusionSupport;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findPointMutationSupport;
-import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -66,7 +57,6 @@ public class NeoEpitopeReader
     private NeoEpitopeData mCurrentNeoData;
     private final Map<String,ReadGroup> mReadGroups;
 
-    private final CohortTpmData mCohortTpmData;
     private BufferedWriter mWriter;
 
     public NeoEpitopeReader(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
@@ -91,7 +81,6 @@ public class NeoEpitopeReader
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
 
         loadNeoEpitopes(mConfig.NeoEpitopeFile);
-        mCohortTpmData = new CohortTpmData(mConfig.CancerTpmFile);
         initialiseWriter();
     }
 
@@ -145,8 +134,6 @@ public class NeoEpitopeReader
             {
                 calcPointMutationSupport();
             }
-
-            addTpmMedians(neData);
 
             writeData(neData);
         }
@@ -355,24 +342,6 @@ public class NeoEpitopeReader
         }
 
         mCurrentNeoData.getFragmentSupport().combineSupport(readGroupSupport);
-    }
-
-    private void addTpmMedians(final NeoEpitopeData neData)
-    {
-        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
-        {
-            double cancerTotal = 0;
-            double cohortTotal = 0;
-
-            for(String transName : mCurrentNeoData.Transcripts[fs])
-            {
-                final double[] result = mCohortTpmData.getTranscriptTpm(transName, mConfig.CancerType);
-                cancerTotal += result[CANCER_VALUE];
-                cohortTotal += result[COHORT_VALUE];
-            }
-
-            neData.setTpmTotals(fs, cancerTotal, cohortTotal);
-        }
     }
 
     private void initialiseWriter()

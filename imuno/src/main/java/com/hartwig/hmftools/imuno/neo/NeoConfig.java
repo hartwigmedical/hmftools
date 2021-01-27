@@ -20,6 +20,7 @@ import org.apache.commons.cli.Options;
 public class NeoConfig
 {
     public final List<String> SampleIds;
+    public final String CancerType;
 
     public final RefGenomeInterface RefGenome;
 
@@ -30,11 +31,13 @@ public class NeoConfig
     public final String OutputDir;
 
     public static final String SAMPLE = "sample";
+    public static final String CANCER_TYPE = "cancer_type";
 
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SV_FUSION_FILE = "sv_fusion_file";
     public static final String GENE_ID_FILE = "gene_id_file";
     public static final String REF_GENOME = "ref_genome";
+    public static final String CANCER_TPM_FILE = "cancer_tpm_file";
     public static final String REQ_AMINO_ACIDS = "req_amino_acids";
     public static final String WRITE_TRANS_DATA = "write_trans_data";
 
@@ -59,6 +62,8 @@ public class NeoConfig
             SampleIds.add(sampleIdConfig);
         }
 
+        CancerType = cmd.getOptionValue(CANCER_TYPE);
+
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
         RefGenome = loadRefGenome(refGenomeFilename);
 
@@ -81,6 +86,7 @@ public class NeoConfig
             final int requiredAminoAcids)
     {
         SampleIds = sampleIds;
+        CancerType = "";
         RefGenome = refGenome;
         RestrictedGeneIds = restrictedGeneIds;
         RequiredAminoAcids = requiredAminoAcids;
@@ -91,10 +97,12 @@ public class NeoConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SAMPLE, true, "Sample - Id(s) separated by ';' or CSV file");
+        options.addOption(CANCER_TYPE, true, "Tumor cancer type (optional) - to retrieve cancer median TPM");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl data cache directory");
         options.addOption(GENE_ID_FILE, true, "Restrict to specific genes");
         options.addOption(REF_GENOME, true, "Ref genome");
         options.addOption(SV_FUSION_FILE, true, "SV fusion file (single sample or cohort)");
+        options.addOption(CANCER_TPM_FILE, true, "TPM per cancer type and pan-cancer");
         options.addOption(WRITE_TRANS_DATA, false, "Write transcript data for each neo-epitope");
         options.addOption(REQ_AMINO_ACIDS, true, "Number of amino acids in neo-epitopes (default: 18)");
         options.addOption(OUTPUT_DIR, true, "Output directory");

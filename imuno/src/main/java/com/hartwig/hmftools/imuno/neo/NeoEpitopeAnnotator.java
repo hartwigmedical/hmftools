@@ -20,6 +20,9 @@ import static com.hartwig.hmftools.imuno.common.ImunoCommon.DOWNSTREAM_PRE_GENE_
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
+import static com.hartwig.hmftools.imuno.neo.CohortTpmData.CANCER_VALUE;
+import static com.hartwig.hmftools.imuno.neo.CohortTpmData.COHORT_VALUE;
+import static com.hartwig.hmftools.imuno.neo.NeoConfig.CANCER_TPM_FILE;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.SV_FUSION_FILE;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
 
@@ -63,6 +66,7 @@ public class NeoEpitopeAnnotator
 
     private final EnsemblDataCache mGeneTransCache;
     private final DatabaseAccess mDbAccess;
+    private final CohortTpmData mCohortTpmData;
 
     private String mCurrentSampleId;
     private BufferedWriter mWriter;
@@ -83,6 +87,7 @@ public class NeoEpitopeAnnotator
         mDbAccess = DatabaseAccess.createDatabaseAccess(cmd);
         mCurrentSampleId = "";
 
+        mCohortTpmData = new CohortTpmData(cmd.getOptionValue(CANCER_TPM_FILE));
         loadSvNeoEpitopes(cmd.getOptionValue(SV_FUSION_FILE));
     }
 
@@ -333,6 +338,26 @@ public class NeoEpitopeAnnotator
         }
     }
 
+    private void populateTpmMedians(
+            final Set<String> upTransNames, final Set<String> downTransNames, final double[] tpmCancer, final double[] tpmCohort)
+    {
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
+        {
+            double cancerTotal = 0;
+            double cohortTotal = 0;
+
+            for(String transName : fs == FS_UP ? upTransNames : downTransNames)
+            {
+                final double[] result = mCohortTpmData.getTranscriptTpm(transName, mConfig.CancerType);
+                cancerTotal += result[CANCER_VALUE];
+                cohortTotal += result[COHORT_VALUE];
+            }
+
+            tpmCancer[fs] = cancerTotal;
+            tpmCohort[fs] = cohortTotal;
+        }
+    }
+
     private void writeData(final NeoEpitope neData, final Set<String> upTransNames, final Set<String> downTransNames)
     {
         if(mConfig.OutputDir.isEmpty())
@@ -357,7 +382,11 @@ public class NeoEpitopeAnnotator
             if(mConfig.isMultiSample())
                 mWriter.write(String.format("%s,", mCurrentSampleId));
 
-            final NeoEpitopeFile neFile = neData.toFile(upTransNames, downTransNames);
+            final double[] tpmCancer = {0, 0};
+            final double[] tpmCohort = {0, 0};
+            populateTpmMedians(upTransNames, downTransNames, tpmCancer, tpmCohort);
+
+            final NeoEpitopeFile neFile = neData.toFile(upTransNames, downTransNames, tpmCancer, tpmCohort);
             mWriter.write(NeoEpitopeFile.toString(neFile));
             mWriter.newLine();
         }

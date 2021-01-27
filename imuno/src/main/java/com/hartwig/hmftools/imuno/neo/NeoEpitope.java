@@ -219,7 +219,9 @@ public abstract class NeoEpitope
 
     public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
 
-    public NeoEpitopeFile toFile(final Set<String> upTransNames, final Set<String> downTransNames)
+    public NeoEpitopeFile toFile(
+            final Set<String> upTransNames, final Set<String> downTransNames,
+            final double[] tpmCancer, final double[] tpmCohort)
     {
         final StringJoiner upTransStr = new StringJoiner(";");
         final StringJoiner downTransStr = new StringJoiner(";");
@@ -229,11 +231,13 @@ public abstract class NeoEpitope
         return new NeoEpitopeFile(
                 variantType(), variantInfo(), copyNumber(),
                 TransData[FS_UP].GeneId, TransData[FS_DOWN].GeneId, geneName(FS_UP), geneName(FS_DOWN),
+                chromosome(FS_UP), chromosome(FS_DOWN), orientation(FS_UP), orientation(FS_DOWN),
                 UpstreamAcids, DownstreamAcids, NovelAcid, NmdBasesMin, NmdBasesMax, StartCodonBasesMin, StartCodonBasesMax,
                 unsplicedDistance(), skippedDonors(), skippedAcceptors(),
                 upTransStr.toString(), downTransStr.toString(), WildtypeAcids,
                 ExtPositions[FS_UP][SE_START], ExtPositions[FS_UP][SE_END], ExtCodingBases[FS_UP], ExtCigars[FS_UP].toString(),
                 ExtPositions[FS_DOWN][SE_START], ExtPositions[FS_DOWN][SE_END], ExtCodingBases[FS_DOWN],
-                ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "");
+                ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "",
+                tpmCancer[FS_UP], tpmCohort[FS_UP], tpmCancer[FS_DOWN], tpmCohort[FS_DOWN]);
     }
 }
