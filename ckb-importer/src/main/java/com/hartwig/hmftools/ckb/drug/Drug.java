@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.drug;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.DrugClassInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
@@ -34,7 +35,7 @@ public abstract class Drug {
     public abstract List<DrugDescription> drugDescriptions();
 
     @NotNull
-    public abstract List<DrugClass> drugClasses();
+    public abstract List<DrugClassInfo> drugClasses();
 
     @Nullable
     public abstract String casRegistryNum();

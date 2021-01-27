@@ -13,9 +13,11 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.DrugClassInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableDrugClassInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
@@ -128,15 +130,15 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugClass> extractDrugsClasses(@NotNull JsonArray jsonArray) {
-        List<DrugClass> drugClasses = Lists.newArrayList();
+    public static List<DrugClassInfo> extractDrugsClasses(@NotNull JsonArray jsonArray) {
+        List<DrugClassInfo> drugClasses = Lists.newArrayList();
         JsonDatamodelChecker drugClassChecker = DrugDataModelChecker.drugClassObjectChecker();
 
         for (JsonElement drugClass : jsonArray) {
             JsonObject drugClassObject = drugClass.getAsJsonObject();
             drugClassChecker.check(drugClassObject);
 
-            drugClasses.add(ImmutableDrugClass.builder()
+            drugClasses.add(ImmutableDrugClassInfo.builder()
                     .id(JsonFunctions.string(drugClassObject, "id"))
                     .drugClass(JsonFunctions.string(drugClassObject, "drugClass"))
                     .build());

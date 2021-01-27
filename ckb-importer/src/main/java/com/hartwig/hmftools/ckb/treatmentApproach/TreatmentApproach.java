@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.treatmentApproach;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.DrugClassInfo;
 import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
 
@@ -23,7 +24,7 @@ public abstract class TreatmentApproach {
     public abstract String profileName();
 
     @Nullable
-    public abstract TreatmentApprochDrugClass drugClass();
+    public abstract DrugClassInfo drugClass();
 
     @Nullable
     public abstract TherapyInfo therapy();
