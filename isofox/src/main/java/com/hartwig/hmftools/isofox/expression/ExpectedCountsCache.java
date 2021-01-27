@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -105,11 +106,17 @@ public class ExpectedCountsCache
 
             if(mConfig.FragmentSizeData.size() == 0)
             {
+                StringJoiner sj = new StringJoiner(", ");
                 for(int i = 3; i < headerItems.length; ++i)
                 {
                     int fragmentLength = Integer.parseInt(headerItems[i].replaceAll(EXP_COUNT_LENGTH_HEADER, ""));
-                    mConfig.FragmentSizeData.add(new FragmentSize(fragmentLength, 0));
+
+                    // set default of 1 for frequency in case it is not sampled
+                    mConfig.FragmentSizeData.add(new FragmentSize(fragmentLength, 1));
+                    sj.add(String.valueOf(fragmentLength));
                 }
+
+                ISF_LOGGER.info("fragment lengths({}) set from expected transcript counts file", sj.toString());
             }
             else if(mConfig.FragmentSizeData.size() != fileFragmentLengthCount)
             {

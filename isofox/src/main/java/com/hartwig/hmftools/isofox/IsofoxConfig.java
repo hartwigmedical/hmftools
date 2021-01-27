@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.isofox;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_SINGLE_MAP_QUALITY;
@@ -244,7 +247,6 @@ public class IsofoxConfig
         IsofoxConstants.SINGLE_MAP_QUALITY = Short.parseShort(cmd.getOptionValue(SINGLE_MAP_QUAL, String.valueOf(DEFAULT_SINGLE_MAP_QUALITY)));
         DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
         MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
-        FragmentLengthSamplingCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, "0"));
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
@@ -264,7 +266,11 @@ public class IsofoxConfig
         NeoEpitopeFile = cmd.getOptionValue(NEO_EPITOPE_FILE);
 
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
+
         ApplyFragmentLengthAdjust = cmd.hasOption(APPLY_FRAG_LENGTH_ADJUSTMENT);
+        int defaultFragLengthSamplingCount = ApplyFragmentLengthAdjust ? DEFAULT_FRAG_LENGTH_MIN_COUNT : 0;
+        FragmentLengthSamplingCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, String.valueOf(defaultFragLengthSamplingCount)));
+
         ApplyMapQualityAdjust = cmd.hasOption(APPLY_MQ_ADJUST);
         ApplyGcBiasAdjust = cmd.hasOption(APPLY_GC_BIAS_ADJUSTMENT);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
@@ -277,7 +283,7 @@ public class IsofoxConfig
             {
                 String[] flItem = fragLengths[i].split("-");
                 int fragLength = Integer.parseInt(flItem[FL_LENGTH]);
-                int fragFrequency = Integer.parseInt(flItem[ExpectedRatesGenerator.FL_FREQUENCY]);
+                int fragFrequency = max(Integer.parseInt(flItem[ExpectedRatesGenerator.FL_FREQUENCY]), 1);
                 FragmentSizeData.add(new FragmentSize(fragLength, fragFrequency));
             }
         }
