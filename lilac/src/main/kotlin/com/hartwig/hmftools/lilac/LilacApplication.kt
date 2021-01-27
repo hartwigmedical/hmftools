@@ -189,7 +189,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
     private fun readFromBam(bamFile: String): List<NucleotideFragment> {
         val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
-        val reader = SAMRecordReader(1000, transcripts)
+        val reader = SAMRecordReader(1000, config.refGenome, transcripts)
         val reads = reader.readFromBam(bamFile)
         return NucleotideFragment.fromReads(minBaseQual, reads).filter { it.isNotEmpty() }
     }

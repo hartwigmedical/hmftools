@@ -11,7 +11,7 @@ import java.util.function.Consumer
 import kotlin.math.max
 import kotlin.math.min
 
-class SAMRecordReader(maxDistance: Int, private val transcripts: List<HmfTranscriptRegion>) {
+class SAMRecordReader(maxDistance: Int, private val refGenome: String, private val transcripts: List<HmfTranscriptRegion>) {
     private val codingRegions = transcripts.map { GenomeRegions.create(it.chromosome(), it.codingStart() - maxDistance, it.codingEnd() + maxDistance) }
 
     companion object {
@@ -41,10 +41,19 @@ class SAMRecordReader(maxDistance: Int, private val transcripts: List<HmfTranscr
         return CodingRegions.codingRegions(transcript)
     }
 
+    private fun samReaderFactory(): SamReaderFactory {
+        val default = SamReaderFactory.makeDefault()
+        return if (refGenome.isNotEmpty()) {
+            default.referenceSequence(File(refGenome))
+        } else  {
+            default
+        }
+    }
+
     private fun realign(gene: String, hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
         val slicer = SAMSlicer(1)
         val result = mutableListOf<SAMRecordRead>()
-        SamReaderFactory.makeDefault().open(File(bamFileName)).use { samReader ->
+        samReaderFactory().open(File(bamFileName)).use { samReader ->
 
             val consumer = Consumer<SAMRecord> { samRecord ->
 
