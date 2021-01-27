@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.lilac.candidates
 
 import com.hartwig.hmftools.lilac.SequenceCount
-import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
-import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFiltering
@@ -11,8 +9,6 @@ import com.hartwig.hmftools.lilac.seq.HlaSequence
 import org.apache.logging.log4j.LogManager
 
 class Candidates(
-        private val minFragmentsPerAllele: Int,
-        private val minFragmentsToRemoveSingles: Int,
         private val minBaseCount: Int,
         private val nucleotideSequences: List<HlaSequence>,
         private val aminoAcidSequences: List<HlaSequence>) {
@@ -21,13 +17,13 @@ class Candidates(
         val logger = LogManager.getLogger(this::class.java)
     }
 
-    fun candidates(context: HlaContext, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
+    fun candidates(context: HlaContext, phasedEvidence: List<PhasedEvidence>): List<HlaSequence> {
         val gene = context.gene
         val aminoAcidBoundary = context.aminoAcidBoundaries
         val expectedAlleles = context.expectedAlleles
 
         logger.info("Determining initial candidate set for gene HLA-$gene")
-        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, aminoAcidFragments)
+        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, context.fragments)
 //        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/output/aminoacids.${gene}.count.txt")
 //        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, aminoAcidFragments)
 
@@ -45,15 +41,12 @@ class Candidates(
         val nucleotideFiltering = NucleotideFiltering(minBaseCount, aminoAcidBoundary)
         val nucleotideCandidatesAfterAminoAcidFiltering = nucleotideSequences
                 .filter { it.allele.specificProtein() in aminoAcidSpecificAllelesCandidate }
-        val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, aminoAcidFragments)
+        val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, context.fragments)
                 .map { it.allele.specificProtein() }
                 .toSet()
 
         val nucleotideCandidates = aminoAcidCandidates.filter { it.allele.specificProtein() in nucleotideSpecificAllelesCandidate }
         logger.info(" ... ${nucleotideCandidates.size} candidates after exon boundary filtering")
-
-        val phasedEvidenceFactory = PhasedEvidenceFactory(minFragmentsPerAllele, minFragmentsToRemoveSingles, minBaseCount)
-        val phasedEvidence = phasedEvidenceFactory.evidence(expectedAlleles, aminoAcidFragments)
 
         val phasedCandidates = filterCandidates(nucleotideCandidates, phasedEvidence)
         logger.info(" ... ${phasedCandidates.size} candidates after phasing: " + phasedCandidates.map { it.allele }.joinToString(", "))
@@ -133,10 +126,7 @@ class Candidates(
         var candidates = initialCandidates
         for (i in evidence.indices) {
             val newEvidence = evidence[i]
-            logger.info(" ... $newEvidence")
             candidates = matchingCandidates(newEvidence, candidates)
-//            logger.info(" ... contains ${(checkColo8289Candidates(candidates))} COLO829 ")
-
         }
 
         return candidates

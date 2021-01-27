@@ -21,6 +21,7 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
         return match(sequenceIndices, sequence) != HlaSequenceMatch.NONE
     }
 
+
     fun match(indicies: IntArray, sequence: CharArray): HlaSequenceMatch {
         if (indicies.isEmpty()) {
             return HlaSequenceMatch.NONE

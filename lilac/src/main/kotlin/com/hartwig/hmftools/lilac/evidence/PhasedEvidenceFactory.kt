@@ -2,9 +2,28 @@ package com.hartwig.hmftools.lilac.evidence
 
 import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
+import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.ExpectedAlleles
+import org.apache.logging.log4j.LogManager
 
 class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val minFragmentsToRemoveSingles: Int, private val minEvidence: Int) {
+
+    companion object {
+        val logger = LogManager.getLogger(this::class.java)
+    }
+
+
+    fun evidence(context: HlaContext): List<PhasedEvidence> {
+        logger.info("Phasing HLA-${context.gene} records")
+        val result =  evidence(context.expectedAlleles, context.fragments)
+
+        logger.info("Phased ${result.size} sequences: ")
+        for (phasedEvidence in result) {
+            logger.info(" ... $phasedEvidence")
+        }
+
+        return result
+    }
 
     fun evidence(expectedAlleles: ExpectedAlleles, aminoAcidAminoAcidFragments: List<AminoAcidFragment>): List<PhasedEvidence> {
         val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, aminoAcidAminoAcidFragments)
@@ -36,7 +55,6 @@ class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val 
             unprocessedEvidence.sort()
         }
 
-//        return longestEvidence(finalisedEvidence)
         return finalisedEvidence.sortedBy { it.aminoAcidIndices[0] }
 
     }
