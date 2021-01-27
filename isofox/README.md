@@ -179,7 +179,6 @@ java -jar isofox.jar
     -gene_transcripts_dir /path_ensembl_data_cache_files/ 
     -output_dir /path_to_output_data/ 
     -read_length 151 
-    -single_map_qual 255
     -long_frag_limit 550 
     -known_fusion_file /path_to_fusion_ref_file/known_fusion_data.csv
     -threads 10 
