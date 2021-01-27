@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.molecularprofile;
+package com.hartwig.hmftools.ckb.reader.molecularprofile;
 
 import java.io.File;
 import java.io.FileReader;
@@ -28,6 +28,10 @@ import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
+import com.hartwig.hmftools.ckb.datamodel.molecularprofile.ImmutableMolecularProfile;
+import com.hartwig.hmftools.ckb.datamodel.molecularprofile.ImmutableMolecularProfileExtendedEvidence;
+import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfileExtendedEvidence;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 

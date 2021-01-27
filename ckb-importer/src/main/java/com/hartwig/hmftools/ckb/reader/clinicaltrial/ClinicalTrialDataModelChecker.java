@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
+package com.hartwig.hmftools.ckb.reader.clinicaltrial;
 
 import java.util.Map;
 

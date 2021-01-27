@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.variant;
+package com.hartwig.hmftools.ckb.reader.variant;
 
 import java.io.File;
 import java.io.FileReader;
@@ -32,6 +32,14 @@ import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
+import com.hartwig.hmftools.ckb.datamodel.variant.ImmutableVariant;
+import com.hartwig.hmftools.ckb.datamodel.variant.ImmutableVariantCategoryVariantPath;
+import com.hartwig.hmftools.ckb.datamodel.variant.ImmutableVariantPartnerGene;
+import com.hartwig.hmftools.ckb.datamodel.variant.ImmutableVariantTranscriptCoordinate;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
+import com.hartwig.hmftools.ckb.datamodel.variant.VariantCategoryVariantPath;
+import com.hartwig.hmftools.ckb.datamodel.variant.VariantPartnerGene;
+import com.hartwig.hmftools.ckb.datamodel.variant.VariantTranscriptCoordinate;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 

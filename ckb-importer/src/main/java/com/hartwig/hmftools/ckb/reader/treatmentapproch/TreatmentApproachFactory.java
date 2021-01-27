@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.treatmentApproach;
+package com.hartwig.hmftools.ckb.reader.treatmentapproch;
 
 import java.io.File;
 import java.io.FileReader;
@@ -18,6 +18,8 @@ import com.hartwig.hmftools.ckb.datamodel.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.TreatmentApproach;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 

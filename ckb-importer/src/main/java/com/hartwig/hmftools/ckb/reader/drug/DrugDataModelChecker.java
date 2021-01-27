@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.drug;
+package com.hartwig.hmftools.ckb.reader.drug;
 
 import java.util.Map;
 

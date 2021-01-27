@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.reference;
+package com.hartwig.hmftools.ckb.reader.reference;
 
 import java.util.Map;
 

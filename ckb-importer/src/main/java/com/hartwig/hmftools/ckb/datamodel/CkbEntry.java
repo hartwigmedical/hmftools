@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb;
+package com.hartwig.hmftools.ckb.datamodel;
 
 import java.util.List;
 

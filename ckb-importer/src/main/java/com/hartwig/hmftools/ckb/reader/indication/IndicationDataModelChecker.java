@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.indication;
+package com.hartwig.hmftools.ckb.reader.indication;
 
 import java.util.Map;
 

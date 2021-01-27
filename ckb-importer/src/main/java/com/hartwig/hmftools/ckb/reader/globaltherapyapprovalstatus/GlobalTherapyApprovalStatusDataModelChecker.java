@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.globaltherapyapprovalstatus;
+package com.hartwig.hmftools.ckb.reader.globaltherapyapprovalstatus;
 
 import java.util.Map;
 

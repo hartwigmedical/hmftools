@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.variant;
+package com.hartwig.hmftools.ckb.reader.variant;
 
 import java.util.Map;
 

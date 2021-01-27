@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.drugclass;
+package com.hartwig.hmftools.ckb.reader.drugclass;
 
 import java.io.File;
 import java.io.FileReader;
@@ -16,6 +16,8 @@ import com.hartwig.hmftools.ckb.datamodel.common.DrugInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableDrugInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
+import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
+import com.hartwig.hmftools.ckb.datamodel.drugclass.ImmutableDrugClass;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 

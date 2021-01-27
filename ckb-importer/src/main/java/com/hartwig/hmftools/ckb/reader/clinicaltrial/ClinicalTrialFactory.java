@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
+package com.hartwig.hmftools.ckb.reader.clinicaltrial;
 
 import java.io.File;
 import java.io.FileReader;
@@ -13,6 +13,14 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialLocation;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialVariantRequirementDetail;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ImmutableClinicalTrial;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ImmutableClinicalTrialContact;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ImmutableClinicalTrialLocation;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ImmutableClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTherapyInfo;

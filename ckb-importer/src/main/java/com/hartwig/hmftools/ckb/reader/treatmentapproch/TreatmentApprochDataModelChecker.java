@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.treatmentApproach;
+package com.hartwig.hmftools.ckb.reader.treatmentapproch;
 
 import java.util.Map;
 

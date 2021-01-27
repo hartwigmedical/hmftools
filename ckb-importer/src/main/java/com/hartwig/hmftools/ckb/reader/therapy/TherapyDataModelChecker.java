@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.therapy;
+package com.hartwig.hmftools.ckb.reader.therapy;
 
 import java.util.Map;
 

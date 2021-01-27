@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.globaltherapyapprovalstatus;
+package com.hartwig.hmftools.ckb.reader.globaltherapyapprovalstatus;
 
 import java.io.File;
 import java.io.FileReader;
@@ -20,6 +20,8 @@ import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.datamodel.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
+import com.hartwig.hmftools.ckb.datamodel.globaltherapyapprovalstatus.ImmutableGlobalTherapyApprovalStatus;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 

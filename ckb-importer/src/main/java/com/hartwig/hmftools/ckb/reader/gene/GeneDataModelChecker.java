@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.gene;
+package com.hartwig.hmftools.ckb.reader.gene;
 
 import java.util.Map;
 

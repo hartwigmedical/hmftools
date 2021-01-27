@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.molecularprofile;
+package com.hartwig.hmftools.ckb.reader.molecularprofile;
 
 import java.util.Map;
 

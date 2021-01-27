@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.gene;
+package com.hartwig.hmftools.ckb.reader.gene;
 
 import java.io.File;
 import java.io.FileReader;
@@ -32,6 +32,8 @@ import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
+import com.hartwig.hmftools.ckb.datamodel.gene.Gene;
+import com.hartwig.hmftools.ckb.datamodel.gene.ImmutableGene;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
