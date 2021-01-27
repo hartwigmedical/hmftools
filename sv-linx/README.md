@@ -913,33 +913,13 @@ Shown below is an example of a SS18-SSX1 fusion:
 
 ## Version History
 
-1.11
-- Functional:
-    - uses driver gene panel with reportable disruptions to report homozygous disruptions and disruptive breakends
-    - exon DEL-DUP fusions now allow exon skipping
-    - resolved pairs cannot be interrupted by non-simple, non-contained SVs
-    - satellite SGL merge requires same arm
-    - disallow single-cluster DELs from being AMP candidates
+- [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/sv-linx-v1.13) 
 
-- Fusion changes:
-    - see Linx documentation for full details
-    - mark some 3’ promiscuous as high-impact
-    - report promiscuous fusion in known exon ranges
-    - replace phased column with INFRAME, SKIPPED_EXONS or OUT_OF_FRAME
-    - write a likelihood column: HIGH if known, IG known, exon del-dup or promiscuous exon, otherwise LOW or NA is not reported
-    - set exons skipped to zero for exonic breakends
-    - allow chain terminated for IG known pair and exon del-dups
-    - allow SGL to use alt mappings without QualScore specified
-    - support alternate mapping for known and IG-region fusions
+- [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/sv-linx-v1.12) 
 
-- Bugs:
-    - re-test cluster-merge by foldbacks after final chaining for non-assembled chained foldbacks
+- [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/sv-linx-v1.11) 
 
-- Technical:
-    - loads driver gene panel from file (-driver_gene_panel)
-    - allow chain-terminated non-known fusions to be loaded tp DB and written to file (but still not reportable)
-    - removed support for old-style fusion reference files (fusion_pairs_csv, promiscuous_five_csv and promiscuous_three_csv)
-
+- [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/sv-linx-v1.10) 
 
 1.10
 - Functional:
