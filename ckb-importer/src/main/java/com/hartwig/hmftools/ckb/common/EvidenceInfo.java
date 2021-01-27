@@ -28,7 +28,7 @@ public abstract class EvidenceInfo {
     @NotNull
     public abstract TherapyInfo therapy();
 
-    @NotNull
+    @Nullable
     public abstract IndicationInfo indication();
 
     @NotNull
