@@ -12,8 +12,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableDescriptionInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
@@ -97,18 +99,18 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantGeneVariantDescription> extractGeneDescription(@NotNull JsonArray jsonArray) {
+    public static List<DescriptionInfo> extractGeneDescription(@NotNull JsonArray jsonArray) {
 
-        List<VariantGeneVariantDescription> geneVariantDescriptions = Lists.newArrayList();
+        List<DescriptionInfo> geneVariantDescriptions = Lists.newArrayList();
         JsonDatamodelChecker variantGeneVariantDescriptionObjectChecker = VariantDataModelChecker.geneVariantDescriptionObjectChecker();
 
         for (JsonElement geneVariantDescription : jsonArray) {
             JsonObject geneVariantDescriptionJsonObject = geneVariantDescription.getAsJsonObject();
             variantGeneVariantDescriptionObjectChecker.check(geneVariantDescriptionJsonObject);
 
-            geneVariantDescriptions.add(ImmutableVariantGeneVariantDescription.builder()
+            geneVariantDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(geneVariantDescriptionJsonObject, "description"))
-                    .reference(extractReferences(geneVariantDescriptionJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(geneVariantDescriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
 

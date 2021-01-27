@@ -2,8 +2,6 @@ package com.hartwig.hmftools.ckb.common;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.gene.GeneVariantDescription;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,5 +23,5 @@ public abstract class VariantInfo {
     public abstract String proteinEffect();
 
     @NotNull
-    public abstract List<GeneVariantDescription> variantDescription();
+    public abstract List<DescriptionInfo> variantDescription();
 }

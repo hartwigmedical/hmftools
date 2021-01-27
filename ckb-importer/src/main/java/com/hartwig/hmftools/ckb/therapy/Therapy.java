@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.therapy;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.common.DrugInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
@@ -25,7 +26,7 @@ public abstract class Therapy {
     public abstract String synonyms();
 
     @NotNull
-    public abstract List<TherapyTherapyDescription> therapyDescription();
+    public abstract List<DescriptionInfo> therapyDescription();
 
     @NotNull
     public abstract String createDate();

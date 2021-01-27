@@ -13,10 +13,12 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.common.DrugClassInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableDescriptionInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableDrugClassInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatusInfo;
@@ -88,14 +90,14 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugDescription> extractDrugDescriptions(@NotNull JsonArray jsonArray) {
-        List<DrugDescription> drugDescriptions = Lists.newArrayList();
+    public static List<DescriptionInfo> extractDrugDescriptions(@NotNull JsonArray jsonArray) {
+        List<DescriptionInfo> drugDescriptions = Lists.newArrayList();
         JsonDatamodelChecker drugDescriptionChecker = DrugDataModelChecker.drugDescriptionObjectChecker();
         for (JsonElement drugDescription : jsonArray) {
             JsonObject drugDescriptionObject = drugDescription.getAsJsonObject();
             drugDescriptionChecker.check(drugDescriptionObject);
 
-            drugDescriptions.add(ImmutableDrugDescription.builder()
+            drugDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(drugDescriptionObject, "description"))
                     .references(extractDrugReferences(drugDescriptionObject.getAsJsonArray("references")))
                     .build());

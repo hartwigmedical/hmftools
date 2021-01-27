@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.gene;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.VariantInfo;
@@ -37,7 +38,7 @@ public abstract class Gene {
     public abstract String mapLocation();
 
     @NotNull
-    public abstract List<GeneDescription> geneDescription();
+    public abstract List<DescriptionInfo> geneDescription();
 
     @Nullable
     public abstract String canonicalTranscript();

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
@@ -27,7 +28,7 @@ public abstract class Variant {
     public abstract String proteinEffect();
 
     @NotNull
-    public abstract List<VariantGeneVariantDescription> geneVariantDescription();
+    public abstract List<DescriptionInfo> geneVariantDescription();
 
     @Nullable
     public abstract String type();

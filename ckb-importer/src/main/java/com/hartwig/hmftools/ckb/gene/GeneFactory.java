@@ -13,8 +13,10 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableDescriptionInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
@@ -92,17 +94,17 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<GeneDescription> extractGeneDescriptions(@NotNull JsonArray jsonArray) {
-        List<GeneDescription> geneDescriptions = Lists.newArrayList();
+    public static List<DescriptionInfo> extractGeneDescriptions(@NotNull JsonArray jsonArray) {
+        List<DescriptionInfo> geneDescriptions = Lists.newArrayList();
         JsonDatamodelChecker geneDescriptionChecker = GeneDataModelChecker.geneDescriptionObjectChecker();
 
         for (JsonElement geneDescription : jsonArray) {
             JsonObject geneDescriptionJsonObject = geneDescription.getAsJsonObject();
             geneDescriptionChecker.check(geneDescriptionJsonObject);
 
-            geneDescriptions.add(ImmutableGeneDescription.builder()
+            geneDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(geneDescriptionJsonObject, "description"))
-                    .geneReference(extractGeneReferences(geneDescriptionJsonObject.getAsJsonArray("references")))
+                    .references(extractGeneReferences(geneDescriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
         return geneDescriptions;
@@ -248,17 +250,17 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<GeneVariantDescription> extractVariantDescription(@NotNull JsonArray jsonArray) {
-        List<GeneVariantDescription> geneVariantDescriptions = Lists.newArrayList();
+    public static List<DescriptionInfo> extractVariantDescription(@NotNull JsonArray jsonArray) {
+        List<DescriptionInfo> geneVariantDescriptions = Lists.newArrayList();
         JsonDatamodelChecker geneVariantDescriptionChecker = GeneDataModelChecker.geneVariantDescriptionObjectChecker();
 
         for (JsonElement variantDescription : jsonArray) {
             JsonObject variantDescriptionObject = variantDescription.getAsJsonObject();
             geneVariantDescriptionChecker.check(variantDescriptionObject);
 
-            geneVariantDescriptions.add(ImmutableGeneVariantDescription.builder()
+            geneVariantDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(variantDescriptionObject, "description"))
-                    .reference(extractGeneReferences(variantDescriptionObject.getAsJsonArray("references")))
+                    .references(extractGeneReferences(variantDescriptionObject.getAsJsonArray("references")))
                     .build());
         }
         return geneVariantDescriptions;

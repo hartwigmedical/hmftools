@@ -13,10 +13,12 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.common.DrugInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableDescriptionInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableDrugInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatusInfo;
@@ -85,17 +87,17 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<TherapyTherapyDescription> createDescription(@NotNull JsonArray jsonArray) {
-        List<TherapyTherapyDescription> descriptions = Lists.newArrayList();
+    public static List<DescriptionInfo> createDescription(@NotNull JsonArray jsonArray) {
+        List<DescriptionInfo> descriptions = Lists.newArrayList();
         JsonDatamodelChecker descriptionChecker = TherapyDataModelChecker.descriptionObjectChecker();
 
         for (JsonElement description : jsonArray) {
             JsonObject descriptionJsonObject = description.getAsJsonObject();
             descriptionChecker.check(descriptionJsonObject);
 
-            descriptions.add(ImmutableTherapyTherapyDescription.builder()
+            descriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.nullableString(descriptionJsonObject, "description"))
-                    .reference(extractReferences(descriptionJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(descriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
 
