@@ -20,13 +20,13 @@ import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
-import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableVariantInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.common.VariantInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -109,8 +109,8 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<TreatmentApproach> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
-        List<TreatmentApproach> profileTreatmentApproaches = Lists.newArrayList();
+    public static List<TreatmentApproachInfo> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproachInfo> profileTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker profileTreatmentApproachChecker =
                 MolecularProfileDataModelChecker.molecularProfileProfileTreatmentApproacjObjectChecker();
 
@@ -118,7 +118,7 @@ public class MolecularprofileFactory {
             JsonObject profileTreatmentApproachJsonObject = profileTreatmentApproach.getAsJsonObject();
             profileTreatmentApproachChecker.check(profileTreatmentApproachJsonObject);
 
-            profileTreatmentApproaches.add(ImmutableTreatmentApproach.builder()
+            profileTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
                     .id(JsonFunctions.string(profileTreatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(profileTreatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(profileTreatmentApproachJsonObject, "profileName"))
@@ -225,8 +225,8 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<TreatmentApproach> extractRelevantTreatmentApproach(@NotNull JsonArray jsonArray) {
-        List<TreatmentApproach> relevantTreatmentApproaches = Lists.newArrayList();
+    public static List<TreatmentApproachInfo> extractRelevantTreatmentApproach(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproachInfo> relevantTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker relevantTreatmentApproachChecker =
                 MolecularProfileDataModelChecker.molecularProfileRelevantTreatmentApproach();
 
@@ -234,7 +234,7 @@ public class MolecularprofileFactory {
             JsonObject relevantTreatmentApproachJsonObject = relevantTreatmentApproach.getAsJsonObject();
             relevantTreatmentApproachChecker.check(relevantTreatmentApproachJsonObject);
 
-            relevantTreatmentApproaches.add(ImmutableTreatmentApproach.builder()
+            relevantTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
                     .id(JsonFunctions.string(relevantTreatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(relevantTreatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(relevantTreatmentApproachJsonObject, "profileName"))

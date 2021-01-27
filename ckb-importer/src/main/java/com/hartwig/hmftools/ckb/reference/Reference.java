@@ -6,7 +6,7 @@ import com.hartwig.hmftools.ckb.common.DrugInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.common.VariantInfo;
 
 import org.immutables.value.Value;
@@ -63,7 +63,7 @@ public abstract class Reference {
     public abstract List<TherapyInfo> therapy();
 
     @NotNull
-    public abstract List<TreatmentApproach> treatmentApproach();
+    public abstract List<TreatmentApproachInfo> treatmentApproach();
 
     @NotNull
     public abstract List<VariantInfo> variant();

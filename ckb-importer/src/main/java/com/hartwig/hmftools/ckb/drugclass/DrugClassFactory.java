@@ -14,8 +14,8 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.DrugInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableDrugInfo;
-import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
-import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproachInfo;
+import com.hartwig.hmftools.ckb.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -81,15 +81,15 @@ public class DrugClassFactory {
         return drugs;
     }
 
-    private static List<TreatmentApproach> retrieveTreatmentApproaches(@NotNull JsonArray jsonArray) {
-        List<TreatmentApproach> treatmentApproaches = Lists.newArrayList();
+    private static List<TreatmentApproachInfo> retrieveTreatmentApproaches(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproachInfo> treatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker drugsClassTreatmentApprochChecker = DrugClassDataModelChecker.drugClassTreatmentApproachesObjectChecker();
 
         for (JsonElement treatmentApproach : jsonArray) {
             JsonObject treatmentApproachObject = treatmentApproach.getAsJsonObject();
             drugsClassTreatmentApprochChecker.check(treatmentApproachObject);
 
-            treatmentApproaches.add(ImmutableTreatmentApproach.builder()
+            treatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
                     .id(JsonFunctions.string(treatmentApproachObject, "id"))
                     .name(JsonFunctions.string(treatmentApproachObject, "name"))
                     .profileName(JsonFunctions.string(treatmentApproachObject, "profileName"))

@@ -20,13 +20,13 @@ import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
-import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableVariantInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.common.VariantInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -325,15 +325,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<TreatmentApproach> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
-        List<TreatmentApproach> profileTreatmentApproaches = Lists.newArrayList();
+    public static List<TreatmentApproachInfo> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproachInfo> profileTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker profileTreatmentApprochChecker = VariantDataModelChecker.profileTreatmentApprochObjectChecker();
 
         for (JsonElement profileTreatmentApproch : jsonArray) {
             JsonObject profileTreatmentApprochJsonObject = profileTreatmentApproch.getAsJsonObject();
             profileTreatmentApprochChecker.check(profileTreatmentApprochJsonObject);
 
-            profileTreatmentApproaches.add(ImmutableTreatmentApproach.builder()
+            profileTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
                     .id(JsonFunctions.string(profileTreatmentApprochJsonObject, "id"))
                     .name(JsonFunctions.string(profileTreatmentApprochJsonObject, "name"))
                     .profileName(JsonFunctions.string(profileTreatmentApprochJsonObject, "profileName"))

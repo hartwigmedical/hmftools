@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ckb.molecularprofile;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
-import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.common.VariantInfo;
 
 import org.immutables.value.Value;
@@ -24,7 +24,7 @@ public abstract class MolecularProfile {
     public abstract List<VariantInfo> geneVariant();
 
     @NotNull
-    public abstract List<TreatmentApproach> profileProfileTreatmentApproache();
+    public abstract List<TreatmentApproachInfo> profileProfileTreatmentApproache();
 
     @NotNull
     public abstract String createDate();
