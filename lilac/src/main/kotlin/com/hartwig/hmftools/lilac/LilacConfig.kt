@@ -1,0 +1,134 @@
+package com.hartwig.hmftools.lilac
+
+import com.hartwig.hmftools.common.cli.Configs
+import org.apache.commons.cli.CommandLine
+import org.apache.commons.cli.Option
+import org.apache.commons.cli.Options
+import org.apache.commons.cli.ParseException
+import java.io.File
+import java.io.IOException
+
+const val INPUT_BAM_OPTION = "input_bam"
+const val RESOURCE_DIR_OPTION = "resource_dir"
+const val OUTPUT_DIR_OPTION = "output_dif"
+const val REF_GENOME_OPTION = "ref_genome"
+const val MIN_BASE_QUAL = "min_base_qual"
+const val MIN_EVIDENCE = "min_evidence"
+const val MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele"
+const val MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single"
+const val MIN_CONFIRMED_UNIQUE_COVERAGE = "min_confirmed_unique_coverage"
+
+data class LilacConfig(
+        val inputBam: String,
+        val resourceDir: String,
+        val outputDir: String,
+        val refGenome: String,
+        val minBaseQual: Int,
+        val minEvidence: Int,
+        val minFragmentsPerAllele: Int,
+        val minFragmentsToRemoveSingle: Int,
+        val minConfirmedUniqueCoverage: Int
+) {
+
+    companion object {
+
+        @Throws(ParseException::class, IOException::class)
+        fun createConfig(cmd: CommandLine): LilacConfig {
+            val inputBam = requiredFile(cmd, INPUT_BAM_OPTION)
+            val resourceDir = requiredDir(cmd, RESOURCE_DIR_OPTION)
+            val outputDir = requiredDir(cmd, OUTPUT_DIR_OPTION)
+            val defaultConfig = default(inputBam, resourceDir, outputDir)
+
+            val refGenome = optionalFile(cmd, REF_GENOME_OPTION, "")
+            val minBaseQual = Configs.defaultIntValue(cmd, MIN_BASE_QUAL, defaultConfig.minBaseQual)
+            val minEvidence = Configs.defaultIntValue(cmd, MIN_EVIDENCE, defaultConfig.minEvidence)
+            val minFragmentsPerAllele = Configs.defaultIntValue(cmd, MIN_FRAGMENTS_PER_ALLELE, defaultConfig.minFragmentsPerAllele)
+            val minFragmentsToRemoveSingle = Configs.defaultIntValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, defaultConfig.minFragmentsToRemoveSingle)
+            val minConfirmedUniqueCoverage = Configs.defaultIntValue(cmd, MIN_CONFIRMED_UNIQUE_COVERAGE, defaultConfig.minConfirmedUniqueCoverage)
+
+            return LilacConfig(
+                    inputBam,
+                    resourceDir,
+                    outputDir,
+                    refGenome,
+                    minBaseQual,
+                    minEvidence,
+                    minFragmentsPerAllele,
+                    minFragmentsToRemoveSingle,
+                    minConfirmedUniqueCoverage)
+
+        }
+
+        private fun default(inputBam: String, resourceDir: String, outputDir: String): LilacConfig {
+            return LilacConfig(
+                    inputBam,
+                    resourceDir,
+                    outputDir,
+                    "",
+                    30,
+                    3,
+                    6,
+                    40,
+                    3)
+        }
+
+        fun createOptions(): Options {
+            val options = Options()
+            options.addOption(requiredOption(INPUT_BAM_OPTION, "Path to input bam"))
+            options.addOption(requiredOption(RESOURCE_DIR_OPTION, "Path to resource files"))
+            options.addOption(requiredOption(OUTPUT_DIR_OPTION, "Path to output"))
+            options.addOption(optional(REF_GENOME_OPTION, "REF_GENOME_OPTION"))
+            options.addOption(optional(MIN_BASE_QUAL, "MIN_BASE_QUAL"))
+            options.addOption(optional(MIN_EVIDENCE, "MIN_EVIDENCE"))
+            options.addOption(optional(MIN_FRAGMENTS_PER_ALLELE, "MIN_FRAGMENTS_PER_ALLELE"))
+            options.addOption(optional(MIN_FRAGMENTS_TO_REMOVE_SINGLE, "MIN_FRAGMENTS_TO_REMOVE_SINGLE"))
+            options.addOption(optional(MIN_CONFIRMED_UNIQUE_COVERAGE, "MIN_CONFIRMED_UNIQUE_COVERAGE"))
+            return options
+        }
+
+        @Throws(IOException::class)
+        internal fun requiredFile(cmd: CommandLine, argument: String): String {
+            val result = cmd.getOptionValue(argument)
+            if (!File(result).exists()) {
+                throw IOException("Unable to read file $result")
+            }
+
+            return result
+        }
+
+        @Throws(IOException::class)
+        internal fun optionalFile(cmd: CommandLine, argument: String, default: String): String {
+            if (cmd.hasOption(argument)) {
+                return requiredFile(cmd, argument)
+            }
+
+            return default
+        }
+
+        @Throws(IOException::class)
+        internal fun requiredDir(cmd: CommandLine, argument: String): String {
+            val result = cmd.getOptionValue(argument)
+            val dir = File(result)
+            if (!dir.exists() && !dir.mkdirs()) {
+                throw IOException("Unable to create director $result")
+            }
+
+            return result
+        }
+
+        private fun optional(argument: String, description: String): Option {
+            val result = Option(argument, true, description)
+            result.isRequired = false
+            return result
+        }
+
+
+        private fun requiredOption(argument: String, description: String): Option {
+            val result = Option(argument, true, description)
+            result.isRequired = true
+            return result
+        }
+
+    }
+
+}
