@@ -12,8 +12,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.DrugInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableDrugInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
@@ -91,15 +93,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceDrug> extractDrug(@NotNull JsonArray jsonArray) {
-        List<ReferenceDrug> referenceDrugs = Lists.newArrayList();
+    public static List<DrugInfo> extractDrug(@NotNull JsonArray jsonArray) {
+        List<DrugInfo> referenceDrugs = Lists.newArrayList();
         JsonDatamodelChecker drugChecker = ReferenceDataModelChecker.referenceDrugObjectChecker();
 
         for (JsonElement drug : jsonArray) {
             JsonObject drugJsonObject = drug.getAsJsonObject();
             drugChecker.check(drugJsonObject);
 
-            referenceDrugs.add(ImmutableReferenceDrug.builder()
+            referenceDrugs.add(ImmutableDrugInfo.builder()
                     .id(JsonFunctions.string(drugJsonObject, "id"))
                     .drugName(JsonFunctions.string(drugJsonObject, "drugName"))
                     .terms(JsonFunctions.stringList(drugJsonObject, "terms"))
