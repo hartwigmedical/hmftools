@@ -3,6 +3,8 @@ package com.hartwig.hmftools.ckb.therapy;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.DrugInfo;
+import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
 
 import org.immutables.value.Value;
@@ -32,13 +34,13 @@ public abstract class Therapy {
     public abstract String updateDate();
 
     @NotNull
-    public abstract List<TherapyEvidence> evidence();
+    public abstract List<EvidenceInfo> evidence();
 
     @NotNull
     public abstract List<ClinicalTrialInfo> clinicalTrial();
 
     @NotNull
-    public abstract List<TherapyDrug> drug();
+    public abstract List<DrugInfo> drug();
 
     @NotNull
     public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();

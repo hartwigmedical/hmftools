@@ -81,7 +81,7 @@ open class NucleotideFragment(
 
     fun nucleotides(): List<Char> = nucleotides
 
-    fun nucleotideIndices(): List<Int> = nucleotideLoci
+    fun nucleotideLoci(): List<Int> = nucleotideLoci
 
     fun nucleotideQuality(): List<Int> = nucleotideQuality
 

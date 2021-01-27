@@ -13,7 +13,9 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
@@ -79,15 +81,15 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static List<IndicationEvidence> extractEvidence(@NotNull JsonArray jsonArray) {
-        List<IndicationEvidence> evidences = Lists.newArrayList();
+    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+        List<EvidenceInfo> evidences = Lists.newArrayList();
         JsonDatamodelChecker indicationEvidenceChecker = IndicationDataModelChecker.indicationEvidenceObjectChecker();
 
         for (JsonElement evidence : jsonArray) {
             JsonObject evidenceJsonObject = evidence.getAsJsonObject();
             indicationEvidenceChecker.check(evidenceJsonObject);
 
-            evidences.add(ImmutableIndicationEvidence.builder()
+            evidences.add(ImmutableEvidenceInfo.builder()
                     .id(JsonFunctions.string(evidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(evidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(evidenceJsonObject, "evidenceType"))

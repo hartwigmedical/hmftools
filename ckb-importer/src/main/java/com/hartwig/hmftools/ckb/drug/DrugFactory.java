@@ -13,8 +13,12 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.DrugClassInfo;
+import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableDrugClassInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
@@ -126,15 +130,15 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugClass> extractDrugsClasses(@NotNull JsonArray jsonArray) {
-        List<DrugClass> drugClasses = Lists.newArrayList();
+    public static List<DrugClassInfo> extractDrugsClasses(@NotNull JsonArray jsonArray) {
+        List<DrugClassInfo> drugClasses = Lists.newArrayList();
         JsonDatamodelChecker drugClassChecker = DrugDataModelChecker.drugClassObjectChecker();
 
         for (JsonElement drugClass : jsonArray) {
             JsonObject drugClassObject = drugClass.getAsJsonObject();
             drugClassChecker.check(drugClassObject);
 
-            drugClasses.add(ImmutableDrugClass.builder()
+            drugClasses.add(ImmutableDrugClassInfo.builder()
                     .id(JsonFunctions.string(drugClassObject, "id"))
                     .drugClass(JsonFunctions.string(drugClassObject, "drugClass"))
                     .build());
@@ -181,24 +185,24 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugEvidence> extractEvidence(@NotNull JsonArray jsonArray) {
-        List<DrugEvidence> evidences = Lists.newArrayList();
+    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+        List<EvidenceInfo> evidences = Lists.newArrayList();
         JsonDatamodelChecker drugEvidenceChecker = DrugDataModelChecker.drugEvidenceObjectChecker();
 
         for (JsonElement evidence : jsonArray) {
             JsonObject evidenceObject = evidence.getAsJsonObject();
             drugEvidenceChecker.check(evidenceObject);
 
-            evidences.add(ImmutableDrugEvidence.builder()
+            evidences.add(ImmutableEvidenceInfo.builder()
                     .id(JsonFunctions.string(evidenceObject, "id"))
                     .approvalStatus(JsonFunctions.string(evidenceObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(evidenceObject, "evidenceType"))
                     .efficacyEvidence(JsonFunctions.string(evidenceObject, "efficacyEvidence"))
                     .molecularProfile(extractMolecularProfile(evidenceObject.getAsJsonObject("molecularProfile")))
                     .therapy(extractTherapy(evidenceObject.getAsJsonObject("therapy")))
-                    .indications(evidenceObject.has("indications") ? extractIndications(evidenceObject.getAsJsonObject("indications")) : null)
+                    .indication(evidenceObject.has("indications") ? extractIndications(evidenceObject.getAsJsonObject("indications")) : null)
                     .responseType(JsonFunctions.string(evidenceObject, "responseType"))
-                    .references(extractEvidenceReferences(evidenceObject.getAsJsonArray("references")))
+                    .reference(extractEvidenceReferences(evidenceObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(evidenceObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(evidenceObject, "ampCapAscoInferredTier"))
                     .build());

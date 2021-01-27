@@ -4,6 +4,7 @@ import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import kotlin.math.roundToInt
 
 data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val sharedCoverage: Double, val wildCoverage: Double) : Comparable<HlaAlleleCoverage> {
+    val totalCoverage = uniqueCoverage + sharedCoverage + wildCoverage
 
     companion object {
 
@@ -30,8 +31,8 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
 
                 if (fullAlleles.size == 1 && partialAlleles.isEmpty() && wildAlleles.isEmpty())  {
                     uniqueCoverageMap.compute(fullAlleles.first()) {_, oldValue ->  (oldValue ?: 0) + 1}
-//                    if (fullAlleles.first() == HlaAllele("C*03:326")) {
-//                        println("sdf")
+//                    if (fullAlleles.first() == HlaAllele("C*07:57")) {
+//                        println(fragment.aminoAcidFragment.id)
 //                    }
 
                 } else {
@@ -65,7 +66,7 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
     }
 
     override fun toString(): String {
-        return "$allele[t=${(uniqueCoverage + sharedCoverage).roundToInt()}, u=$uniqueCoverage, s=${sharedCoverage.roundToInt()}, w=${wildCoverage.roundToInt()}]"
+        return "$allele[${totalCoverage.roundToInt()},$uniqueCoverage,${sharedCoverage.roundToInt()},${wildCoverage.roundToInt()}]"
     }
 
 

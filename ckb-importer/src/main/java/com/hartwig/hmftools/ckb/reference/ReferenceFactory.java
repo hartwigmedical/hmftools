@@ -12,19 +12,23 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.DrugInfo;
+import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableDrugInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
-import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.common.ImmutableTreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableVariantInfo;
 import com.hartwig.hmftools.ckb.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.common.VariantInfo;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
@@ -89,15 +93,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceDrug> extractDrug(@NotNull JsonArray jsonArray) {
-        List<ReferenceDrug> referenceDrugs = Lists.newArrayList();
+    public static List<DrugInfo> extractDrug(@NotNull JsonArray jsonArray) {
+        List<DrugInfo> referenceDrugs = Lists.newArrayList();
         JsonDatamodelChecker drugChecker = ReferenceDataModelChecker.referenceDrugObjectChecker();
 
         for (JsonElement drug : jsonArray) {
             JsonObject drugJsonObject = drug.getAsJsonObject();
             drugChecker.check(drugJsonObject);
 
-            referenceDrugs.add(ImmutableReferenceDrug.builder()
+            referenceDrugs.add(ImmutableDrugInfo.builder()
                     .id(JsonFunctions.string(drugJsonObject, "id"))
                     .drugName(JsonFunctions.string(drugJsonObject, "drugName"))
                     .terms(JsonFunctions.stringList(drugJsonObject, "terms"))
@@ -127,15 +131,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceEvidence> extractEvidence(@NotNull JsonArray jsonArray) {
-        List<ReferenceEvidence> referenceEvidences = Lists.newArrayList();
+    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+        List<EvidenceInfo> referenceEvidences = Lists.newArrayList();
         JsonDatamodelChecker evidenceChecker = ReferenceDataModelChecker.referenceEvidenceObjectChecker();
 
         for (JsonElement evidence : jsonArray) {
             JsonObject evidenceJsonObject = evidence.getAsJsonObject();
             evidenceChecker.check(evidenceJsonObject);
 
-            referenceEvidences.add(ImmutableReferenceEvidence.builder()
+            referenceEvidences.add(ImmutableEvidenceInfo.builder()
                     .id(JsonFunctions.string(evidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(evidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(evidenceJsonObject, "evidenceType"))
@@ -229,15 +233,15 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<TreatmentApproach> extractTreatmentApproach(@NotNull JsonArray jsonArray) {
-        List<TreatmentApproach> referenceTreatmentApproaches = Lists.newArrayList();
+    public static List<TreatmentApproachInfo> extractTreatmentApproach(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproachInfo> referenceTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker treatmentApproachChecker = ReferenceDataModelChecker.referenceTreatmentApprochObjectChecker();
 
         for (JsonElement treatmentApproach : jsonArray) {
             JsonObject treatmentApproachJsonObject = treatmentApproach.getAsJsonObject();
             treatmentApproachChecker.check(treatmentApproachJsonObject);
 
-            referenceTreatmentApproaches.add(ImmutableTreatmentApproach.builder()
+            referenceTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
                     .id(JsonFunctions.string(treatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(treatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(treatmentApproachJsonObject, "profileName"))

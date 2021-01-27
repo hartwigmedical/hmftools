@@ -2,7 +2,8 @@ package com.hartwig.hmftools.ckb.drugclass;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.common.TreatmentApproach;
+import com.hartwig.hmftools.ckb.common.DrugInfo;
+import com.hartwig.hmftools.ckb.common.TreatmentApproachInfo;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -22,8 +23,8 @@ public abstract class DrugClass {
     public abstract String createDate();
 
     @NotNull
-    public abstract List<DrugClassDrug> drugs();
+    public abstract List<DrugInfo> drugs();
 
     @NotNull
-    public abstract List<TreatmentApproach> treatmentApproaches();
+    public abstract List<TreatmentApproachInfo> treatmentApproaches();
 }

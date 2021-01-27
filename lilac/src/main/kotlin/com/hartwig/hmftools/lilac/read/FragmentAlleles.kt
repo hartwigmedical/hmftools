@@ -19,7 +19,7 @@ class FragmentAlleles(val aminoAcidFragment: AminoAcidFragment, val full: Collec
                 aminoAcidLoci: Collection<Int>, aminoAcidSequences: Collection<HlaSequence>,
                 nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequence>): FragmentAlleles {
 
-            val fragmentNucleotideLoci = (aminoAcidFragment.nucleotideIndices() intersect nucleotideLoci).sorted().toIntArray()
+            val fragmentNucleotideLoci = (aminoAcidFragment.nucleotideLoci() intersect nucleotideLoci).sorted().toIntArray()
             val fragmentNucleotides = fragmentNucleotideLoci.map { aminoAcidFragment.nucleotide(it) }.toCharArray()
             val matchingNucleotideSequences = nucleotideSequences
                     .map { Pair(it.allele, it.match(fragmentNucleotideLoci, fragmentNucleotides)) }
@@ -45,6 +45,12 @@ class FragmentAlleles(val aminoAcidFragment: AminoAcidFragment, val full: Collec
             val partialAminoAcidMatch = matchingAminoAcidSequences.filter { it.second == HlaSequenceMatch.PARTIAL }.map { it.first }.toSet()
             val wildAminoAcidMatch = matchingAminoAcidSequences.filter { it.second == HlaSequenceMatch.WILD }.map { it.first }.toSet()
 
+//            if (fullAminoAcidMatch.size == 1 && partialAminoAcidMatch.isEmpty() && wildAminoAcidMatch.isEmpty() && fullAminoAcidMatch.first() == HlaAllele("C*07:57")) {
+//                println(aminoAcidFragment.id)
+//                println(fragmentAminoAcidLoci.joinToString(","))
+//                println(fragmentAminoAcids.joinToString(","))
+//            }
+
 
             if (fullNucleotideMatch.isEmpty() && partialNucleotideMatch.isEmpty()) {
                 return FragmentAlleles(aminoAcidFragment, fullAminoAcidMatch, partialAminoAcidMatch, wildAminoAcidMatch)
@@ -52,6 +58,12 @@ class FragmentAlleles(val aminoAcidFragment: AminoAcidFragment, val full: Collec
 
             val consistentFull = fullAminoAcidMatch.filter { it.specificProtein() in fullNucleotideMatch }
             val remainingFull = fullAminoAcidMatch.filter { it.specificProtein() !in fullNucleotideMatch }
+
+//            if (consistentFull.size == 1 && consistentFull.isEmpty() && wildAminoAcidMatch.isEmpty()  && partialAminoAcidMatch.isEmpty() && consistentFull.first() == HlaAllele("C*07:57")) {
+//                println(aminoAcidFragment.id)
+//                println(fragmentNucleotideLoci.joinToString(","))
+//                println(fragmentNucleotides.joinToString(","))
+//            }
 
             return FragmentAlleles(aminoAcidFragment, consistentFull, remainingFull union partialAminoAcidMatch, wildAminoAcidMatch)
 

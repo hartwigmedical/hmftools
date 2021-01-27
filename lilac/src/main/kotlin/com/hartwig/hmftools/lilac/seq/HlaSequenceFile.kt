@@ -62,6 +62,17 @@ object HlaSequenceFile {
         return resultMap.values.toList()
     }
 
+    fun writeDeflatedFile(deflatedFileName: String, boundaries: List<Set<Int>>, sequences: List<HlaSequence>) {
+        val outputFile = File(deflatedFileName)
+        outputFile.writeText("")
+
+        for (boundary in boundaries) {
+            writeBoundary(boundary, deflatedFileName)
+        }
+
+        appendFile(deflatedFileName, sequences.deflate())
+    }
+
     fun wipeFile(outputFileName: String) {
         val outputFile = File(outputFileName)
         outputFile.writeText("")

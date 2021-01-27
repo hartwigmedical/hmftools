@@ -7,25 +7,26 @@ class NucleotideFiltering(private val minBaseCount: Int, private val aminoAcidBo
     fun filterCandidatesOnAminoAcidBoundaries(candidates: Collection<HlaSequence>, fragments: List<NucleotideFragment>): List<HlaSequence> {
         var result = candidates.toList()
         for (aminoAcid in aminoAcidBoundaries) {
-            result = filterCandidateOnAminoAcid(result, fragments, aminoAcid)
+            val nucleotideStart = aminoAcid * 3
+            val startSequences = nucleotideSequence(fragments, nucleotideStart)
+            val endSequences = nucleotideSequence(fragments, nucleotideStart + 1, nucleotideStart  + 2)
+
+            result = result.filter { it.consistentWith(nucleotideStart, startSequences, endSequences) }
         }
 
         return result
     }
 
-    private fun filterCandidateOnAminoAcid(candidates: Collection<HlaSequence>, fragments: List<NucleotideFragment>, aminoAcid: Int): List<HlaSequence> {
-        val aminoAcidPredicate = aminoAcidPredicate(fragments, aminoAcid)
-        return candidates.filter(aminoAcidPredicate)
+    private fun HlaSequence.consistentWith(startLoci: Int, startSequences: List<CharArray>, endSequences: List<CharArray>): Boolean {
+        val startIsConsistent = startSequences.isEmpty() || this.consistentWith(listOf(startLoci).toIntArray(), startSequences)
+        val endIsConsistent = endSequences.isEmpty() || this.consistentWith(listOf(startLoci + 1, startLoci + 2).toIntArray(), endSequences)
+        return startIsConsistent && endIsConsistent
     }
 
-    private fun aminoAcidPredicate(fragments: List<NucleotideFragment>, aminoAcidIndex: Int): (HlaSequence) -> Boolean {
-        val firstPredicate = nucleotidePredicate(fragments, aminoAcidIndex * 3)
-        val remainingPredicate = nucleotidePredicate(fragments, aminoAcidIndex * 3 + 1, aminoAcidIndex * 3 + 2)
-        return { x: HlaSequence -> firstPredicate(x) && remainingPredicate(x) }
-    }
 
-    private fun nucleotidePredicate(fragments: List<NucleotideFragment>, vararg nucleotideIndices: Int): (HlaSequence) -> Boolean {
-        val fragmentsContainingSpecifiedNucleotides = fragments
+
+    private fun nucleotideSequence(fragments: List<NucleotideFragment>, vararg nucleotideIndices: Int): List<CharArray> {
+        return fragments
                 .filter { it.containsAllNucleotides(*nucleotideIndices) }
                 .map { it.nucleotides(*nucleotideIndices) }
                 .groupingBy { it }
@@ -34,7 +35,7 @@ class NucleotideFiltering(private val minBaseCount: Int, private val aminoAcidBo
                 .keys
                 .map { it.toCharArray() }
 
-        return { x: HlaSequence -> fragmentsContainingSpecifiedNucleotides.isEmpty() || x.consistentWith(nucleotideIndices, fragmentsContainingSpecifiedNucleotides) }
     }
+
 
 }

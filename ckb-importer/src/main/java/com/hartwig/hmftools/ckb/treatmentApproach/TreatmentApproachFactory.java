@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.hartwig.hmftools.ckb.common.DrugClassInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableDrugClassInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.common.ReferenceInfo;
@@ -74,11 +76,11 @@ public class TreatmentApproachFactory {
     }
 
     @NotNull
-    public static TreatmentApprochDrugClass createDrugClass(@NotNull JsonObject jsonObject) {
+    public static DrugClassInfo createDrugClass(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker drugClassObjectChecker = TreatmentApprochDataModelChecker.drugClassObjectChecker();
         drugClassObjectChecker.check(jsonObject);
 
-        return ImmutableTreatmentApprochDrugClass.builder()
+        return ImmutableDrugClassInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
                 .drugClass(JsonFunctions.string(jsonObject, "drugClass"))
                 .build();

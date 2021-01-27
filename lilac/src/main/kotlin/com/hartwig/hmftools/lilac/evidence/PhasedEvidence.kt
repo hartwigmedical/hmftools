@@ -1,11 +1,18 @@
 package com.hartwig.hmftools.lilac.evidence
 
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
+import com.hartwig.hmftools.lilac.seq.HlaSequence
 import java.util.*
-import kotlin.math.min
 
 
 data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<String, Int>) : Comparable<PhasedEvidence> {
+
+    fun inconsistentEvidence(candidates: Collection<HlaSequence>): PhasedEvidence {
+        fun consistentWithAny(sequence: CharArray): Boolean {
+            return candidates.any { it.consistentWith(aminoAcidIndices, sequence) }
+        }
+        return PhasedEvidence(aminoAcidIndices, evidence.filter { !consistentWithAny(it.key.toCharArray()) })
+    }
 
     fun unambiguousHeadIndices(): IntArray {
         return aminoAcidIndices.filterIndexed { index, _ -> index < unambiguousHeadLength() }.toIntArray()
@@ -48,10 +55,6 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
         return overlap == other.aminoAcidIndices.size
     }
 
-    fun overlaps(other: PhasedEvidence): Boolean {
-        val overlap = (other.aminoAcidIndices.toSet() intersect aminoAcidIndices.toSet()).size
-        return overlap > 0 && overlap < aminoAcidIndices.size && overlap < other.aminoAcidIndices.size
-    }
 
     fun minEvidence(): Int {
         return evidence.values.min() ?: 0
@@ -61,6 +64,13 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
         return evidence.values.sum()
     }
 
+    fun removeSingles(minTotalEvidence: Int): PhasedEvidence {
+        if (totalEvidence() >= minTotalEvidence) {
+            return PhasedEvidence(aminoAcidIndices, evidence.filter { it.value > 1 })
+        }
+
+        return this
+    }
 
     companion object {
 
@@ -76,35 +86,6 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
 
         private fun AminoAcidFragment.containsAll(indices: IntArray): Boolean {
             return indices.all { this.containsAminoAcid(it) && this.aminoAcid(it) != '.' }
-        }
-
-        fun combineOverlapping(left: PhasedEvidence, right: PhasedEvidence): PhasedEvidence {
-            assert(left.overlaps(right))
-            assert(right.overlaps(left))
-            assert(left.aminoAcidIndices[0] < right.aminoAcidIndices[0])
-
-            val indexUnion = (left.aminoAcidIndices.toSet() union right.aminoAcidIndices.toSet()).toList().sorted()
-            val indexIntersection = (left.aminoAcidIndices.toSet() intersect right.aminoAcidIndices.toSet()).toList().sorted()
-
-            val uniqueToLeft = left.aminoAcidIndices.filter { it !in indexIntersection }
-            val uniqueToRight = right.aminoAcidIndices.filter { it !in indexIntersection }
-
-            assert(uniqueToLeft.all { it < indexIntersection.min() ?: 0 })
-            assert(uniqueToRight.all { it > indexIntersection.max() ?: 0 })
-
-            val result = mutableMapOf<String, Int>()
-            for ((leftSequence, leftCount) in left.evidence) {
-                val leftUnique = leftSequence.substring(0, uniqueToLeft.size)
-                val leftCommon = leftSequence.substring(uniqueToLeft.size)
-                for ((rightSequence, rightCount) in right.evidence) {
-                    val rightCommon = rightSequence.substring(0, indexIntersection.size)
-                    if (leftCommon == rightCommon) {
-                        val combined = leftUnique + rightSequence
-                        result[combined] = min(leftCount, rightCount)
-                    }
-                }
-            }
-            return PhasedEvidence(indexUnion.toIntArray(), result)
         }
 
     }
@@ -133,9 +114,6 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
     override fun toString(): String {
         val uniqueTail = unambiguousTailLength()
         val uniqueHead = unambiguousHeadLength()
-        val bases = 3 * (aminoAcidIndices[aminoAcidIndices.size - 1] - aminoAcidIndices[0])
-
-//        return "PhasedEvidence(head=${uniqueHead} tail=${uniqueTail} loci=${aminoAcidIndices.size} types=${evidence.size} indices=${aminoAcidIndices.contentToString()}, evidence=${evidenceString()}, total=${totalEvidence()})"
         return "PhasedEvidence(head=${uniqueHead} tail=${uniqueTail} loci=${aminoAcidIndices.size} types=${evidence.size} indices=${aminoAcidIndices.contentToString()}, evidence=${evidence}, total=${totalEvidence()})"
     }
 

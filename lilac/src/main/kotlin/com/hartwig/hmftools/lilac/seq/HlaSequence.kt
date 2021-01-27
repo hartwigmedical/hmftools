@@ -21,6 +21,7 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
         return match(sequenceIndices, sequence) != HlaSequenceMatch.NONE
     }
 
+
     fun match(indicies: IntArray, sequence: CharArray): HlaSequenceMatch {
         if (indicies.isEmpty()) {
             return HlaSequenceMatch.NONE
@@ -74,12 +75,12 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
         val joiner = StringBuilder()
         for (i in sequence.indices) {
             when {
-                rawSequence[i] == '.' -> joiner.append('.')
-                rawSequence[i] == '|' -> joiner.append('|')
-                rawSequence[i] == '*' -> joiner.append('*')
-                i > template.length - 1 -> joiner.append(rawSequence[i])
-                rawSequence[i] == template[i] -> joiner.append('-')
-                else -> joiner.append(rawSequence[i])
+                sequence[i] == '.' -> joiner.append('.')
+                sequence[i] == '|' -> joiner.append('|')
+                sequence[i] == '*' -> joiner.append('*')
+                i > template.length - 1 -> joiner.append(sequence[i])
+                sequence[i] == template[i] -> joiner.append('-')
+                else -> joiner.append(sequence[i])
             }
         }
         return HlaSequence(contig, joiner.toString())

@@ -112,7 +112,7 @@ public class CkbImporterTestApp {
         LOGGER.info("MolecularProfile {}", ckbEntry.molecularProfile().get(0));
         LOGGER.info("Reference {}", ckbEntry.reference().get(0));
         LOGGER.info("Therapy {}", ckbEntry.therapy().get(0));
-        LOGGER.info("TreatmentApproach {}", ckbEntry.treatmentApproach().get(0));
+        LOGGER.info("TreatmentApproachInfo {}", ckbEntry.treatmentApproach().get(0));
         LOGGER.info("Variant {}", ckbEntry.variant().get(0));
     }
 
