@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.variant;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.common.DescriptionInfo;
+import com.hartwig.hmftools.ckb.common.EffectInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
 import com.hartwig.hmftools.ckb.common.MolecularProfileInfo;
@@ -67,7 +68,7 @@ public abstract class Variant {
     public abstract List<VariantAllTranscriptCoordinate> allTranscriptCoordinate();
 
     @NotNull
-    public abstract List<VariantMemberVariant> memberVariant();
+    public abstract List<EffectInfo> memberVariant();
 
 
 }

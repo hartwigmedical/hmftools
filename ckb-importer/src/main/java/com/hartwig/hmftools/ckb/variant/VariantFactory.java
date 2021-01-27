@@ -13,9 +13,11 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.DescriptionInfo;
+import com.hartwig.hmftools.ckb.common.EffectInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.GeneInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableDescriptionInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableEffectInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableGeneInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
@@ -369,15 +371,15 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantMemberVariant> extractMemberVariants(@NotNull JsonArray jsonArray) {
-        List<VariantMemberVariant> memberVariants = Lists.newArrayList();
+    public static List<EffectInfo> extractMemberVariants(@NotNull JsonArray jsonArray) {
+        List<EffectInfo> memberVariants = Lists.newArrayList();
         JsonDatamodelChecker memberVariantChecker = VariantDataModelChecker.memberVariantObjectChecker();
 
         for (JsonElement memberVariant : jsonArray) {
             JsonObject memberVariantObject = memberVariant.getAsJsonObject();
             memberVariantChecker.check(memberVariantObject);
 
-            memberVariants.add(ImmutableVariantMemberVariant.builder()
+            memberVariants.add(ImmutableEffectInfo.builder()
                     .id(JsonFunctions.string(memberVariantObject, "id"))
                     .fullName(JsonFunctions.string(memberVariantObject, "fullName"))
                     .impact(JsonFunctions.string(memberVariantObject, "impact"))

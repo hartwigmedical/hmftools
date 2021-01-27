@@ -14,9 +14,11 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.DescriptionInfo;
+import com.hartwig.hmftools.ckb.common.EffectInfo;
 import com.hartwig.hmftools.ckb.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableDescriptionInfo;
+import com.hartwig.hmftools.ckb.common.ImmutableEffectInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.common.ImmutableMolecularProfileInfo;
@@ -303,15 +305,15 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<GeneCategoryVariant> extractCategoryVariant(@NotNull JsonArray jsonArray) {
-        List<GeneCategoryVariant> geneCategoryVariants = Lists.newArrayList();
+    public static List<EffectInfo> extractCategoryVariant(@NotNull JsonArray jsonArray) {
+        List<EffectInfo> geneCategoryVariants = Lists.newArrayList();
         JsonDatamodelChecker geneProfileTreatmentApprochChecker = GeneDataModelChecker.geneCategoryVariantObjectChecker();
 
         for (JsonElement geneCategoryVariant : jsonArray) {
             JsonObject geneCategoryVariantObject = geneCategoryVariant.getAsJsonObject();
             geneProfileTreatmentApprochChecker.check(geneCategoryVariantObject);
 
-            geneCategoryVariants.add(ImmutableGeneCategoryVariant.builder()
+            geneCategoryVariants.add(ImmutableEffectInfo.builder()
                     .id(JsonFunctions.string(geneCategoryVariantObject, "id"))
                     .fullName(JsonFunctions.string(geneCategoryVariantObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneCategoryVariantObject, "impact"))
