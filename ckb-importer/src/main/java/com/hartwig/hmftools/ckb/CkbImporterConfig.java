@@ -22,6 +22,8 @@ public interface CkbImporterConfig {
     String DB_PASS = "db_pass";
     String DB_URL = "db_url";
 
+    String SKIP_DATABASE_WRITING = "skip_database_writing";
+
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -34,6 +36,8 @@ public interface CkbImporterConfig {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+
+        options.addOption(SKIP_DATABASE_WRITING, false, "If this flag is set to true, we skip the writing to the database");
 
         return options;
     }
@@ -50,8 +54,9 @@ public interface CkbImporterConfig {
     @NotNull
     String dbUrl();
 
+    boolean skipDatabaseWriting();
 
-       @NotNull
+    @NotNull
     static CkbImporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -62,6 +67,7 @@ public interface CkbImporterConfig {
                 .dbUser(nonOptionalValue(cmd, DB_USER))
                 .dbPass(nonOptionalValue(cmd, DB_PASS))
                 .dbUrl(nonOptionalValue(cmd, DB_USER))
+                .skipDatabaseWriting(cmd.hasOption(SKIP_DATABASE_WRITING))
                 .build();
     }
 

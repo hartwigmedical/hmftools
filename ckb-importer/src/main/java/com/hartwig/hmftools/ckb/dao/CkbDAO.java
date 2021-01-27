@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -48,4 +51,14 @@ public class CkbDAO {
         this.context = context;
     }
 
+    public void deleteAll() {
+        ClinicalTrialDAO.deleteClinicalTrial(context);
+    }
+
+    public void writeCkb(@NotNull CkbEntry ckbEntry) {
+        for (ClinicalTrial clinicalTrial: ckbEntry.clinicalTrial()) {
+            ClinicalTrialDAO.writeClinicalTrial(context, clinicalTrial);
+
+        }
+    }
 }

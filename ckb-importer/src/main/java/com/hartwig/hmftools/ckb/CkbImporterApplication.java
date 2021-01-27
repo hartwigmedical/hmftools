@@ -71,9 +71,17 @@ public class CkbImporterApplication {
         }
 
         CkbEntry ckbEntry = readJsonData(config);
-        CkbDAO ckbDAO = connect(config);
 
-        writingDataToDatabase(ckbEntry);
+        if (config.skipDatabaseWriting()) {
+            LOGGER.info("Skipping DB writing.");
+        } else {
+            CkbDAO ckbDAO = connect(config);
+            LOGGER.info("Deleting all from VICC db");
+            ckbDAO.deleteAll();
+            LOGGER.info("Starting insertion of all VICC entries");
+            ckbDAO.writeCkb(ckbEntry);
+
+        }
 
         LOGGER.info("Complete!");
     }
@@ -119,24 +127,6 @@ public class CkbImporterApplication {
                 .treatmentApproach(treatmentApproaches)
                 .variant(variants)
                 .build();
-    }
-
-    private static void writingDataToDatabase(@NotNull CkbEntry ckbEntry) {
-        LOGGER.info("Start with writing data to DB");
-
-        LOGGER.info("ClinicalTrial {}", ckbEntry.clinicalTrial().get(0));
-        LOGGER.info("Drug {}", ckbEntry.drug().get(0));
-        LOGGER.info("DrugClass {}", ckbEntry.drugClass().get(0));
-        LOGGER.info("Gene {}", ckbEntry.gene().get(0));
-        LOGGER.info("GlobalTherapyApprovalStatus {}", ckbEntry.globalTherapyApprovalStatus().get(0));
-        LOGGER.info("Indication {}", ckbEntry.indication().get(0));
-        LOGGER.info("MolecularProfile {}", ckbEntry.molecularProfile().get(0));
-        LOGGER.info("Reference {}", ckbEntry.reference().get(0));
-        LOGGER.info("Therapy {}", ckbEntry.therapy().get(0));
-        LOGGER.info("TreatmentApproachInfo {}", ckbEntry.treatmentApproach().get(0));
-        LOGGER.info("Variant {}", ckbEntry.variant().get(0));
-
-        LOGGER.info("All data is written to the DB");
     }
 
 }
