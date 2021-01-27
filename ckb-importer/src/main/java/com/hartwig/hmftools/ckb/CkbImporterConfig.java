@@ -66,7 +66,7 @@ public interface CkbImporterConfig {
                 .cbkDir(nonOptionalDir(cmd, CBK_DIR))
                 .dbUser(nonOptionalValue(cmd, DB_USER))
                 .dbPass(nonOptionalValue(cmd, DB_PASS))
-                .dbUrl(nonOptionalValue(cmd, DB_USER))
+                .dbUrl(nonOptionalValue(cmd, DB_URL))
                 .skipDatabaseWriting(cmd.hasOption(SKIP_DATABASE_WRITING))
                 .build();
     }

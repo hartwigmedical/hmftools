@@ -164,14 +164,14 @@ public class ClinicalTrialDAO {
     }
 
     static void deleteClinicalTrial(@NotNull DSLContext context) {
-        context.deleteFrom(CLINICALTRIAL).execute();
-        context.deleteFrom(CLINICALTRIALAGEGROUP).execute();
-        context.deleteFrom(CLINICALTRIALTHERAPY).execute();
-        context.deleteFrom(CLINICALTRIALINDICATION).execute();
-        context.deleteFrom(CLINICALTRIALVARIANTREQUIREMENTDETAIL).execute();
-        context.deleteFrom(CLINICALTRIALVARIANTREQUIREMENTDETAILMOLECULARPROFILE).execute();
-        context.deleteFrom(CLINICALTRIALLOCATION).execute();
-        context.deleteFrom(CLINICALTRIALCONTACT).execute();
 
+        context.deleteFrom(CLINICALTRIALCONTACT).execute();
+        context.deleteFrom(CLINICALTRIALLOCATION).execute();
+        context.deleteFrom(CLINICALTRIALVARIANTREQUIREMENTDETAILMOLECULARPROFILE).execute();
+        context.deleteFrom(CLINICALTRIALVARIANTREQUIREMENTDETAIL).execute();
+        context.deleteFrom(CLINICALTRIALINDICATION).execute();
+        context.deleteFrom(CLINICALTRIALTHERAPY).execute();
+        context.deleteFrom(CLINICALTRIALAGEGROUP).execute();
+        context.deleteFrom(CLINICALTRIAL).execute();
     }
 }
