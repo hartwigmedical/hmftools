@@ -78,7 +78,7 @@ public class CkbDAO {
 
     private int counting(int count, @NotNull String specificObject, int totalEntriesOfObject) {
         count++;
-        if (count % 100 == 0) {
+        if (count % 1000 == 0) {
             LOGGER.info(" Completed inserting {} of {} CKB entries into CKB db of the {} entries",
                     count,
                     specificObject,
