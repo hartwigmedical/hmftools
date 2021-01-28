@@ -4,8 +4,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import com.hartwig.hmftools.ckb.DrugDAO;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +24,6 @@ public class CkbDAO {
     private static final Logger LOGGER = LogManager.getLogger(CkbDAO.class);
 
     private static final String DEV_CATALOG = "ckb_test";
-
 
     @NotNull
     private final DSLContext context;
@@ -53,12 +54,36 @@ public class CkbDAO {
 
     public void deleteAll() {
         ClinicalTrialDAO.clearClinicalTrial(context);
+        DrugDAO.clearDrug(context);
     }
 
     public void writeCkb(@NotNull CkbEntry ckbEntry) {
-        for (ClinicalTrial clinicalTrial: ckbEntry.clinicalTrial()) {
+        int count = 0;
+        LOGGER.info("Starting writing clinical trial");
+        for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrial()) {
             ClinicalTrialDAO.writeClinicalTrial(context, clinicalTrial);
-
+            count = counting(count, "clinical trial object", ckbEntry.clinicalTrial().size());
         }
+        LOGGER.info("Finished writing clinical trial");
+
+        LOGGER.info("Starting writing drug object");
+        count = 0;
+        for (Drug drug : ckbEntry.drug()) {
+            DrugDAO.writeDrug(context, drug);
+            count = counting(count, "drug object", ckbEntry.drug().size());
+        }
+        LOGGER.info("Finished writing drug object");
+
+    }
+
+    private int counting(int count, @NotNull String specificObject, int totalEntriesOfObject) {
+        count++;
+        if (count % 100 == 0) {
+            LOGGER.info(" Completed inserting {} of {} CKB entries into CKB db of the {} entries",
+                    count,
+                    specificObject,
+                    totalEntriesOfObject);
+        }
+        return count;
     }
 }
