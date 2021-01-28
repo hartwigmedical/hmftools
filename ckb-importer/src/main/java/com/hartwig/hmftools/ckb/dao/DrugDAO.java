@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb;
+package com.hartwig.hmftools.ckb.dao;
 
 import static com.hartwig.hmftools.ckb.database.Tables.DRUG;
 import static com.hartwig.hmftools.ckb.database.Tables.DRUGCLINICALTRIAL;

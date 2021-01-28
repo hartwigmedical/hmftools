@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.ckb.DrugDAO;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
