@@ -120,7 +120,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         inconsistentEvidenceFactory.validateEvidence("C", cPhasedEvidence)
 
         // Candidates
-        val candidateFactory = Candidates(minEvidence, nucleotideSequences, aminoAcidSequences)
+        val candidateFactory = Candidates(config, nucleotideSequences, aminoAcidSequences)
         val aCandidates = candidateFactory.candidates(hlaAContext, aFragments, aPhasedEvidence)
         val bCandidates = candidateFactory.candidates(hlaBContext, bFragments, bPhasedEvidence)
         val cCandidates = candidateFactory.candidates(hlaCContext, cFragments, cPhasedEvidence)

@@ -37,6 +37,8 @@ data class LilacConfig(
         val expectedAlleles: List<HlaAllele>
 ) {
 
+    val outputFilePrefix = "${outputDir}/$sample"
+
     companion object {
 
         @Throws(ParseException::class, IOException::class)

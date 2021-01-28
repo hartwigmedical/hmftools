@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.candidates
 
+import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
@@ -9,10 +10,9 @@ import com.hartwig.hmftools.lilac.nuc.NucleotideFiltering
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import org.apache.logging.log4j.LogManager
 
-class Candidates(
-        private val minBaseCount: Int,
-        private val nucleotideSequences: List<HlaSequence>,
-        private val aminoAcidSequences: List<HlaSequence>) {
+class Candidates(private val config: LilacConfig,
+                 private val nucleotideSequences: List<HlaSequence>,
+                 private val aminoAcidSequences: List<HlaSequence>) {
 
     companion object {
         val logger = LogManager.getLogger(this::class.java)
@@ -24,8 +24,8 @@ class Candidates(
         val expectedAlleles = context.expectedAlleles
 
         logger.info("Determining initial candidate set for gene HLA-$gene")
-        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, fragments)
-//        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/output/aminoacids.${gene}.count.txt")
+        val aminoAcidCounts = SequenceCount.aminoAcids(config.minEvidence, fragments)
+        aminoAcidCounts.writeVertically("${config.outputFilePrefix}.aminoacids.${gene}.count.txt")
 //        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, aminoAcidFragments)
 
         val geneCandidates = aminoAcidSequences.filter { it.allele.gene == gene }
@@ -39,7 +39,7 @@ class Candidates(
         logger.info(" ... ${aminoAcidCandidates.size} candidates after amino acid filtering")
 
         // Nucleotide filtering
-        val nucleotideFiltering = NucleotideFiltering(minBaseCount, aminoAcidBoundary)
+        val nucleotideFiltering = NucleotideFiltering(config.minEvidence, aminoAcidBoundary)
         val nucleotideCandidatesAfterAminoAcidFiltering = nucleotideSequences
                 .filter { it.allele.specificProtein() in aminoAcidSpecificAllelesCandidate }
         val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, fragments)
