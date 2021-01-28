@@ -3,11 +3,20 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- TODO Remove per 1st of March 2021
 DROP TABLE IF EXISTS ckbEntry;
 
+DROP TABLE IF EXISTS clinicalTrialContact;
+DROP TABLE IF EXISTS clinicalTrialLocation;
+DROP TABLE IF EXISTS clinicalTrialVariantRequirementDetailMolecularProfile;
+DROP TABLE IF EXISTS clinicalTrialVariantRequirementDetail;
+DROP TABLE IF EXISTS clinicalTrialIndication;
+DROP TABLE IF EXISTS clinicalTrialTherapy;
+DROP TABLE IF EXISTS clinicalTrialAgeGroup;
 DROP TABLE IF EXISTS clinicalTrial;
+
+
 CREATE TABLE clinicalTrial
 (   id int NOT NULL AUTO_INCREMENT,
     nctId varchar(255),
-    title varchar(255),
+    title varchar(500),
     phase varchar(255),
     recruitment varchar(255),
     gender varchar(255),
@@ -17,7 +26,6 @@ CREATE TABLE clinicalTrial
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialAgeGroup;
 CREATE TABLE clinicalTrialAgeGroup
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
@@ -26,7 +34,6 @@ CREATE TABLE clinicalTrialAgeGroup
     FOREIGN KEY (clinicalTrialId) REFERENCES clinicalTrial(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialTherapy;
 CREATE TABLE clinicalTrialTherapy
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
@@ -37,7 +44,6 @@ CREATE TABLE clinicalTrialTherapy
     FOREIGN KEY (clinicalTrialId) REFERENCES clinicalTrial(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialIndication;
 CREATE TABLE clinicalTrialIndication
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
@@ -48,7 +54,6 @@ CREATE TABLE clinicalTrialIndication
     FOREIGN KEY (clinicalTrialId) REFERENCES clinicalTrial(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialVariantRequirementDetail;
 CREATE TABLE clinicalTrialVariantRequirementDetail
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
@@ -57,7 +62,6 @@ CREATE TABLE clinicalTrialVariantRequirementDetail
     FOREIGN KEY (clinicalTrialId) REFERENCES clinicalTrial(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialVariantRequirementDetailMolecularProfile;
 CREATE TABLE clinicalTrialVariantRequirementDetailMolecularProfile
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialVariantRequirementDetailId int NOT NULL,
@@ -67,7 +71,6 @@ CREATE TABLE clinicalTrialVariantRequirementDetailMolecularProfile
     FOREIGN KEY (clinicalTrialVariantRequirementDetailId) REFERENCES clinicalTrialVariantRequirementDetail(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialLocation;
 CREATE TABLE clinicalTrialLocation
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
@@ -82,7 +85,6 @@ CREATE TABLE clinicalTrialLocation
     FOREIGN KEY (clinicalTrialId) REFERENCES clinicalTrial(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialContact;
 CREATE TABLE clinicalTrialContact
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialLocationId int NOT NULL,
