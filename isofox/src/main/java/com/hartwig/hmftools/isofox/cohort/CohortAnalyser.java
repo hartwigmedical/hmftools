@@ -26,6 +26,7 @@ import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
 import com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
+import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
@@ -67,6 +68,13 @@ public class CohortAnalyser
                 {
                     AltSjCohortAnalyser altSjCohort = new AltSjCohortAnalyser(mConfig, mCmdLineArgs);
                     altSjCohort.processAltSpliceJunctions();
+                    break;
+                }
+
+                case ALT_SPLICE_JUNCTION_MATRIX:
+                {
+                    AltSjCohortMatrix altSjMatrix = new AltSjCohortMatrix(mConfig, mCmdLineArgs);
+                    altSjMatrix.processAltSpliceJunctions();
                     break;
                 }
 

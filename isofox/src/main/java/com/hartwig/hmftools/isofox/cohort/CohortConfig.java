@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
+import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -242,6 +243,7 @@ public class CohortConfig
         FusionCohortConfig.addCmdLineOptions(options);
         ExpressionCohortConfig.addCmdLineOptions(options);
         SpliceSiteCache.addCmdLineOptions(options);
+        AltSjCohortMatrix.addCmdLineOptions(options);
 
         addDatabaseCmdLineArgs(options);
 

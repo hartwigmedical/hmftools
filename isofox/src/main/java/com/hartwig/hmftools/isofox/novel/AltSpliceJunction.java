@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.MIXED;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.CIRCULAR;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,11 @@ public class AltSpliceJunction
     private final int[] mNearestExonDistance;
 
     private final String mInitialReadId;
+
+    public static final String FLD_ALT_SJ_POS_START = "SjStart";
+    public static final String FLD_ALT_SJ_POS_END = "SjEnd";
+    public static final String FLD_ALT_SJ_TYPE = "Type";
+    public static final String FLD_ALT_SJ_FRAG_COUNT = "FragCount";
 
     public AltSpliceJunction(
             final String chromosome, final int[] spliceJunction, AltSpliceJunctionType type, final String initialReadId,
@@ -373,7 +379,7 @@ public class AltSpliceJunction
         final String[] items = data.split(DELIMITER);
 
         final int[] spliceJunction =
-                { Integer.parseInt(items[fieldIndexMap.get("SjStart")]), Integer.parseInt(items[fieldIndexMap.get("SjEnd")]) };
+                { Integer.parseInt(items[fieldIndexMap.get(FLD_ALT_SJ_POS_START)]), Integer.parseInt(items[fieldIndexMap.get(FLD_ALT_SJ_POS_END)]) };
 
         final AltSpliceJunctionContext[] contexts =
                 { AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("ContextStart")]),
@@ -382,13 +388,13 @@ public class AltSpliceJunction
         AltSpliceJunction altSJ = new AltSpliceJunction(
                 items[fieldIndexMap.get("Chromosome")],
                 spliceJunction,
-                AltSpliceJunctionType.valueOf(items[fieldIndexMap.get("Type")]),
-                fieldIndexMap.containsKey("InitialReadId") ? items[fieldIndexMap.get("Type")] : "",
+                AltSpliceJunctionType.valueOf(items[fieldIndexMap.get(FLD_ALT_SJ_TYPE)]),
+                fieldIndexMap.containsKey("InitialReadId") ? items[fieldIndexMap.get("InitialReadId")] : "",
                 contexts,
                 Lists.newArrayList(), Lists.newArrayList());
 
-        altSJ.setGeneId(items[fieldIndexMap.get("GeneId")]);
-        altSJ.addFragmentCount(Integer.parseInt(items[fieldIndexMap.get("FragCount")]));
+        altSJ.setGeneId(items[fieldIndexMap.get(FLD_GENE_ID)]);
+        altSJ.addFragmentCount(Integer.parseInt(items[fieldIndexMap.get(FLD_ALT_SJ_FRAG_COUNT)]));
         altSJ.addPositionCount(SE_START, Integer.parseInt(items[fieldIndexMap.get("DepthStart")]));
         altSJ.addPositionCount(SE_END, Integer.parseInt(items[fieldIndexMap.get("DepthEnd")]));
 

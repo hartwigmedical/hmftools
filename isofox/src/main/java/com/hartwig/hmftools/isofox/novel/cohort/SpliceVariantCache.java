@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.FLD_ALT_SJ_POS_END;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.COHORT_ALT_SJ_FILE;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.SOMATIC_VARIANT_FILE;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.SV_BREAKEND_FILE;
@@ -204,8 +206,8 @@ public class SpliceVariantCache
             int sampleCountIndex = fieldsMap.get("SampleCount");
             // int typeIndex = fieldsMap.get("Type");
             int chromosomeIndex = fieldsMap.get("Chromosome");
-            int sjStartPosIndex = fieldsMap.get("SjStart");
-            int sjEndPosIndex = fieldsMap.get("SjEnd");
+            int sjStartPosIndex = fieldsMap.get(FLD_ALT_SJ_POS_START);
+            int sjEndPosIndex = fieldsMap.get(FLD_ALT_SJ_POS_END);
 
             while ((line = fileReader.readLine()) != null)
             {

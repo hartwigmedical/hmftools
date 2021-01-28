@@ -16,6 +16,7 @@ public enum AnalysisType
     EXPRESSION_COHORT_MEDIANS, // as above but for transcripts
     SAMPLE_GENE_PERCENTILES, // reports where on a percentile a specific sample's gene expression lies
     ALT_SPLICE_JUNCTION, // combine and analyse alternate splice junctions for a cohort
+    ALT_SPLICE_JUNCTION_MATRIX, // generates a for a cohort's alt-SJs
     SPLICE_VARIANT_MATCHING, // match alternate splice junctions with (candidate-splicing) somatic variants
     FUSION, // process fusions for a cohort - filter passing fusions, form a cohort file, compare with external fusions
     PASSING_FUSION,
@@ -23,7 +24,7 @@ public enum AnalysisType
     SPLICE_SITE_PERCENTILES,
     EXTERNAL_EXPRESSION_COMPARE, // combine expression data from Isofox and another source
     GENE_EXPRESSION_COMPARE, // compare gene expression across 2 cohorts of samples
-    GENE_EXPRESSION_MATRIX, // generates a single gene by sample matrix for expression data
+    GENE_EXPRESSION_MATRIX, // generates a matrix for gene expression data
     TRANSCRIPT_EXPRESSION_MATRIX; // as above but for transcript expression
 
     public static String getIsofoxFileId(AnalysisType type)
@@ -43,6 +44,7 @@ public enum AnalysisType
 
             case ALT_SPLICE_JUNCTION:
             case SPLICE_VARIANT_MATCHING:
+            case ALT_SPLICE_JUNCTION_MATRIX:
                 return ALT_SJ_FILE_ID;
 
             case SPLICE_SITE_PERCENTILES:
