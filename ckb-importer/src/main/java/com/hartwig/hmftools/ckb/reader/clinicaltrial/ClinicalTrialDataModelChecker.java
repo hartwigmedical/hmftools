@@ -45,7 +45,6 @@ public final class ClinicalTrialDataModelChecker {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
-        map.put("profileTreatmentApproache", false); //TODO check if needed
         return new JsonDatamodelChecker("ClinicalTrialMolecularProfileObject", map);
     }
 
