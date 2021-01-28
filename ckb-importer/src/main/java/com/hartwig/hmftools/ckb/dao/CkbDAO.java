@@ -52,7 +52,7 @@ public class CkbDAO {
     }
 
     public void deleteAll() {
-        ClinicalTrialDAO.deleteClinicalTrial(context);
+        ClinicalTrialDAO.clearClinicalTrial(context);
     }
 
     public void writeCkb(@NotNull CkbEntry ckbEntry) {
