@@ -11,6 +11,7 @@ import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceValidation
 import com.hartwig.hmftools.lilac.hla.*
 import com.hartwig.hmftools.lilac.hla.HlaComplexCoverage.Companion.writeToFile
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
+import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
@@ -84,6 +85,12 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val allProteinExonBoundaries = (aProteinExonBoundaries + bProteinExonBoundaries + cProteinExonBoundaries)
         val allNucleotideExonBoundaries = allProteinExonBoundaries.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
 
+        // Context
+        val hlaContextFactory = HlaContextFactory(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+        val hlaAContext = hlaContextFactory.hlaA()
+        val hlaBContext = hlaContextFactory.hlaB()
+        val hlaCContext = hlaContextFactory.hlaC()
+
         logger.info("Reading nucleotide files")
         val nucleotideSequences = readNucleotideFiles(resourcesDir)
 
@@ -91,20 +98,20 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val aminoAcidSequences = readProteinFiles(resourcesDir)
 
         logger.info("Querying records from $bamFile")
+        val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
         val rawNucleotideFragments = readFromBam(bamFile)
-        val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minEvidence, aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, rawNucleotideFragments)
-
-        // Context
-        val hlaAContext = HlaContext.hlaA(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, aminoAcidPipeline.typeA())
-        val hlaBContext = HlaContext.hlaB(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, aminoAcidPipeline.typeB())
-        val hlaCContext = HlaContext.hlaC(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, aminoAcidPipeline.typeC())
+        val geneEnrichedNucleotideFragments = nucleotideGeneEnrichment.enrich(rawNucleotideFragments)
+        val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minEvidence, geneEnrichedNucleotideFragments)
+        val aFragments = aminoAcidPipeline.type(hlaAContext)
+        val bFragments = aminoAcidPipeline.type(hlaBContext)
+        val cFragments = aminoAcidPipeline.type(hlaCContext)
 
         // Phasing
         logger.info("Phasing bam records")
         val phasedEvidenceFactory = PhasedEvidenceFactory(minFragmentsPerAllele, config.minFragmentsToRemoveSingle, config.minEvidence)
-        val aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext)
-        val bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext)
-        val cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext)
+        val aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aFragments)
+        val bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bFragments)
+        val cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cFragments)
 
         // Unexpected Phasing
         val inconsistentEvidenceFactory = PhasedEvidenceValidation(aminoAcidSequences, config.expectedAlleles)
@@ -114,13 +121,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         // Candidates
         val candidateFactory = Candidates(minEvidence, nucleotideSequences, aminoAcidSequences)
-        val aCandidates = candidateFactory.candidates(hlaAContext, aPhasedEvidence)
-        val bCandidates = candidateFactory.candidates(hlaBContext, bPhasedEvidence)
-        val cCandidates = candidateFactory.candidates(hlaCContext, cPhasedEvidence)
+        val aCandidates = candidateFactory.candidates(hlaAContext, aFragments, aPhasedEvidence)
+        val bCandidates = candidateFactory.candidates(hlaBContext, bFragments, bPhasedEvidence)
+        val cCandidates = candidateFactory.candidates(hlaCContext, cFragments, cPhasedEvidence)
         val candidates = aCandidates + bCandidates + cCandidates
 
         // Coverage
-        val aminoAcidFragments = aminoAcidPipeline.combined()
+        val aminoAcidFragments = aminoAcidPipeline.combined(allProteinExonBoundaries)
         val nucleotideCounts = SequenceCount.nucleotides(minEvidence, aminoAcidFragments)
         val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, aminoAcidFragments)
 

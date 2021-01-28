@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.candidates
 
 import com.hartwig.hmftools.lilac.SequenceCount
+import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContext
@@ -17,13 +18,13 @@ class Candidates(
         val logger = LogManager.getLogger(this::class.java)
     }
 
-    fun candidates(context: HlaContext, phasedEvidence: List<PhasedEvidence>): List<HlaSequence> {
+    fun candidates(context: HlaContext, fragments: List<AminoAcidFragment>, phasedEvidence: List<PhasedEvidence>): List<HlaSequence> {
         val gene = context.gene
         val aminoAcidBoundary = context.aminoAcidBoundaries
         val expectedAlleles = context.expectedAlleles
 
         logger.info("Determining initial candidate set for gene HLA-$gene")
-        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, context.fragments)
+        val aminoAcidCounts = SequenceCount.aminoAcids(minBaseCount, fragments)
 //        aminoAcidCounts.writeVertically("/Users/jon/hmf/analysis/hla/output/aminoacids.${gene}.count.txt")
 //        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, aminoAcidFragments)
 
@@ -41,7 +42,7 @@ class Candidates(
         val nucleotideFiltering = NucleotideFiltering(minBaseCount, aminoAcidBoundary)
         val nucleotideCandidatesAfterAminoAcidFiltering = nucleotideSequences
                 .filter { it.allele.specificProtein() in aminoAcidSpecificAllelesCandidate }
-        val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, context.fragments)
+        val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, fragments)
                 .map { it.allele.specificProtein() }
                 .toSet()
 

@@ -2,12 +2,12 @@ package com.hartwig.hmftools.lilac.nuc
 
 class NucleotideGeneEnrichment(aBoundaries: Set<Int>, bBoundaries: Set<Int>, cBoundaries: Set<Int>) {
 
-    private val aFilterB = ((aBoundaries subtract bBoundaries) union (bBoundaries subtract aBoundaries)).min()!! * 3
-    private val aFilterC = ((aBoundaries subtract cBoundaries) union (cBoundaries subtract aBoundaries)).min()!! * 3
-    private val bFilterA = ((bBoundaries subtract aBoundaries) union (aBoundaries subtract bBoundaries)).min()!! * 3
-    private val bFilterC = ((bBoundaries subtract cBoundaries) union (cBoundaries subtract bBoundaries)).min()!! * 3
-    private val cFilterA = ((cBoundaries subtract aBoundaries) union (aBoundaries subtract cBoundaries)).min()!! * 3
-    private val cFilterB = ((cBoundaries subtract bBoundaries) union (bBoundaries subtract cBoundaries)).min()!! * 3
+    val aFilterB = ((aBoundaries subtract bBoundaries) union (bBoundaries subtract aBoundaries)).min()!!
+    val aFilterC = ((aBoundaries subtract cBoundaries) union (cBoundaries subtract aBoundaries)).min()!!
+    val bFilterA = ((bBoundaries subtract aBoundaries) union (aBoundaries subtract bBoundaries)).min()!!
+    val bFilterC = ((bBoundaries subtract cBoundaries) union (cBoundaries subtract bBoundaries)).min()!!
+    val cFilterA = ((cBoundaries subtract aBoundaries) union (aBoundaries subtract cBoundaries)).min()!!
+    val cFilterB = ((cBoundaries subtract bBoundaries) union (bBoundaries subtract cBoundaries)).min()!!
 
     fun enrich(fragments: List<NucleotideFragment>): List<NucleotideFragment> {
         return fragments.map { it.enrichGenes() }
@@ -32,19 +32,19 @@ class NucleotideGeneEnrichment(aBoundaries: Set<Int>, bBoundaries: Set<Int>, cBo
 
     private fun NucleotideFragment.matchToA(): Boolean {
         return this.genes.contains("HLA-A")
-                || (this.genes.contains("HLA-B") && (this.nucleotideLoci().max() ?: 0) < aFilterB)
-                || (this.genes.contains("HLA-C") && (this.nucleotideLoci().max() ?: 0) < aFilterC)
+                || (this.genes.contains("HLA-B") && (this.nucleotideLoci().max() ?: 0) < 3 * aFilterB)
+                || (this.genes.contains("HLA-C") && (this.nucleotideLoci().max() ?: 0) < 3 * aFilterC)
     }
 
     private fun NucleotideFragment.matchToB(): Boolean {
         return this.genes.contains("HLA-B")
-                || (this.genes.contains("HLA-A") && (this.nucleotideLoci().max() ?: 0) < bFilterA)
-                || (this.genes.contains("HLA-C") && (this.nucleotideLoci().max() ?: 0) < bFilterC)
+                || (this.genes.contains("HLA-A") && (this.nucleotideLoci().max() ?: 0) < 3 * bFilterA)
+                || (this.genes.contains("HLA-C") && (this.nucleotideLoci().max() ?: 0) < 3 * bFilterC)
     }
 
     private fun NucleotideFragment.matchToC(): Boolean {
         return this.genes.contains("HLA-C")
-                || (this.genes.contains("HLA-A") && (this.nucleotideLoci().max() ?: 0) < cFilterA)
-                || (this.genes.contains("HLA-B") && (this.nucleotideLoci().max() ?: 0) < cFilterB)
+                || (this.genes.contains("HLA-A") && (this.nucleotideLoci().max() ?: 0) < 3 * cFilterA)
+                || (this.genes.contains("HLA-B") && (this.nucleotideLoci().max() ?: 0) < 3 * cFilterB)
     }
 }

@@ -18,14 +18,15 @@ class ExtendEvidence(
             val indices = listOf(heterozygousLoci[i], heterozygousLoci[i + 1])
             val filteredFragments = aminoAcidFragments.filter { it.containsAll(indices) }
             if (filteredFragments.isNotEmpty()) {
-                val minTotalFragments = minTotalFragments(filteredFragments)
-                val evidence = PhasedEvidence.evidence(aminoAcidFragments, *indices.toIntArray())
-                        .removeSingles(minFragmentsToRemoveSingles)
-//                if (evidence.totalEvidence() >= 12) {
-                if (evidence.totalEvidence() >= minTotalFragments) {
-                    result.add(evidence)
+                val minTotalFragments = minTotalFragments(indices)
+
+                val left = PhasedEvidence.evidence(aminoAcidFragments, indices[0])
+                val right = PhasedEvidence.evidence(aminoAcidFragments, indices[1])
+                val combinedEvidence = PhasedEvidence.evidence(aminoAcidFragments, *indices.toIntArray()).removeSingles(minFragmentsToRemoveSingles)
+                if (combinedEvidence.totalEvidence() >= minTotalFragments && CombineEvidence.canCombine(left, combinedEvidence, right)) {
+                    result.add(combinedEvidence)
                 } else {
-                    println("FAIL:" + evidence)
+                    println("FAIL:" + combinedEvidence)
                 }
             }
         }
@@ -81,16 +82,9 @@ class ExtendEvidence(
         return Pair(current, setOf())
     }
 
-    private fun minTotalFragments(fragments: List<AminoAcidFragment>): Int {
-        if (fragments.isEmpty()) {
-            return minFragmentsPerAllele
-        }
 
-        val minExpectedAlleles = fragments
-                .map { it.aminoAcidIndices() }
-                .map { expectedAlleles.expectedAlleles(it) }.min()!!
-
-        return minExpectedAlleles * minFragmentsPerAllele
+    private fun minTotalFragments(indices: List<Int>): Int {
+        return expectedAlleles.expectedAlleles(indices) * minFragmentsPerAllele
     }
 
     private fun merge(current: PhasedEvidence, left: PhasedEvidence, right: PhasedEvidence): Pair<PhasedEvidence, Set<PhasedEvidence>> {
@@ -101,7 +95,7 @@ class ExtendEvidence(
 
         val filteredFragments = aminoAcidFragments.filter { it.containsAll(mergeIndices) }
         if (filteredFragments.isNotEmpty()) {
-            val minTotalFragments = minTotalFragments(filteredFragments)
+            val minTotalFragments = minTotalFragments(mergeIndices)
             val mergeEvidence = PhasedEvidence.evidence(filteredFragments, *mergeIndices.toIntArray()).removeSingles(minFragmentsToRemoveSingles)
             if (CombineEvidence.canCombine(left, mergeEvidence, right)) {
                 val combined = CombineEvidence.combine(left, mergeEvidence, right)
