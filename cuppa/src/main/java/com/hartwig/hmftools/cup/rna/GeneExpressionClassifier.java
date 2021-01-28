@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXPONENT;
@@ -240,7 +241,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             boolean matchesCancerType = sample.CancerType.equals(refCancerType);
 
             final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
-                    adjustRefTpmTotals(mRefCancerTypeGeneExpression.getCol(i), sampleGeneTPMs) : mRefCancerTypeGeneExpression.getCol(i);
+                    adjustRefCounts(mRefCancerTypeGeneExpression.getCol(i), sampleGeneTPMs, 1) : mRefCancerTypeGeneExpression.getCol(i);
 
             double css = calcCosineSim(sampleGeneTPMs, refPosFreqs);
 
@@ -329,18 +330,6 @@ public class GeneExpressionClassifier implements CuppaClassifier
                 sample.Id, CLASSIFIER, LIKELIHOOD, EXPRESSION_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
 
         similarities.addAll(topMatches);
-    }
-
-    private double[] adjustRefTpmTotals(final double[] refGeneTpmTotals, final double[] sampleGeneTPMs)
-    {
-        double[] adjustedTPMs = new double[refGeneTpmTotals.length];
-
-        for(int b = 0; b < refGeneTpmTotals.length; ++b)
-        {
-            adjustedTPMs[b] = max(refGeneTpmTotals[b] - sampleGeneTPMs[b], 0);
-        }
-
-        return adjustedTPMs;
     }
 
     private void loadSampleGeneExpressionData(final String filename)

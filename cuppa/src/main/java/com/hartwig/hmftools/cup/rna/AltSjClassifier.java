@@ -1,17 +1,32 @@
 package com.hartwig.hmftools.cup.rna;
 
+import static java.lang.Math.log;
 import static java.lang.Math.max;
+import static java.lang.Math.pow;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.initVector;
+import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
+import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustLowProbabilities;
+import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
+import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
+import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
+import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +34,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.ClassifierType;
@@ -31,27 +47,95 @@ import com.hartwig.hmftools.cup.common.SampleSimilarity;
 public class AltSjClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
-    private final Map<String,List<AltSjPrevData>> mSampleAltSJs; // currently unused
-    private final Map<String,List<AltSjPrevData>> mRefAltSjPrevalence; // ref alt-SJs by chromosome
-    private final Set<Integer> mRefAltSjStartPositions; // for fast sample data filtering
     private final SampleDataCache mSampleDataCache;
     private boolean mIsValid;
+
+    // prevalence method
+    private final Map<String,List<AltSjPrevData>> mRefAltSjPrevalence; // ref alt-SJs by chromosome
+
+    // matrix CSS method
+    private Matrix mRefCancerTypeMatrix;
+    private final Map<String,Integer> mRefAsjIndexMap; // map from Alt-SJ into matrix rows
+    private final List<String> mRefCancerTypes; // cancer types from matrix columns
+    private final Set<Integer> mRefAltSjStartPositions; // for fast sample data filtering
+    private double[] mSampleFragCounts;
 
     private static final double ZERO_PREVALENCE_ALLOCATION = 0.03;
 
     public AltSjClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
-        mSampleAltSJs = Maps.newHashMap();
-        mRefAltSjPrevalence = Maps.newHashMap();
         mSampleDataCache = sampleDataCache;
-        mRefAltSjStartPositions = Sets.newHashSet();
         mIsValid = true;
+
+        mRefAltSjPrevalence = Maps.newHashMap();
+        mRefAltSjStartPositions = Sets.newHashSet();
+
+        mRefAsjIndexMap = Maps.newHashMap();
+        mRefCancerTypes = Lists.newArrayList();
+        mRefCancerTypeMatrix = null;
+        mSampleFragCounts = null;
 
         if(config.RefAltSjPrevFile.isEmpty())
             return;
 
-        mIsValid &= loadRefAltSJs(config.RefAltSjPrevFile);
+        final List<String> ignoreFields = Lists.newArrayList("GeneId", "Chromosome", "PosStart", "PosEnd");
+        loadRefAltSjIndices(config.RefAltSjPrevFile);
+        mRefCancerTypeMatrix = loadMatrixDataFile(config.RefAltSjPrevFile, mRefCancerTypes, ignoreFields);
+
+        if(mRefCancerTypeMatrix ==  null)
+        {
+            mIsValid = false;
+            return;
+        }
+
+        mRefCancerTypeMatrix.cacheTranspose();
+        mSampleFragCounts = new double[mRefCancerTypeMatrix.Rows];
+
+        // as a prevalence file
+        // mIsValid &= loadRefAltSJs(config.RefAltSjPrevFile);
+    }
+
+    private static String formAltSjKey(final String chromosome, int posStart, int posEnd)
+    {
+        return String.format("%s-%d-%d", chromosome, posStart, posEnd);
+    }
+
+    private boolean loadRefAltSjIndices(final String filename)
+    {
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String header = fileReader.readLine();
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
+
+            int chrIndex = fieldsIndexMap.get("Chromosome");
+            int posStartIndex = fieldsIndexMap.get("PosStart");
+            int posEndIndex = fieldsIndexMap.get("PosEnd");
+
+            String line = fileReader.readLine();
+            int altSjIndex = 0;
+
+            while(line != null)
+            {
+                final String[] items = line.split(DATA_DELIM, -1);
+
+                final String asjKey = formAltSjKey(
+                        items[chrIndex], Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]));
+
+                mRefAsjIndexMap.put(asjKey, altSjIndex++);
+
+                line = fileReader.readLine();
+            }
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read RNA ref alt-SJs from file({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
     }
 
     public CategoryType categoryType() { return ALT_SJ; }
@@ -59,16 +143,143 @@ public class AltSjClassifier implements CuppaClassifier
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        if(!mIsValid || mRefAltSjPrevalence.isEmpty())
+        if(!mIsValid || (mRefAltSjPrevalence.isEmpty() && mRefCancerTypeMatrix == null))
             return;
 
+        if(!loadSampleAltSJsToArray(sample.Id))
+            return;
+
+        addCancerCssResults(sample, results);
+
+        /*
         final List<AltSjPrevData> sampleAltSJs = loadSampleAltSJs(sample.Id);
 
         if(sampleAltSJs == null || sampleAltSJs.isEmpty())
             return;
 
         calcCancerTypeProbability(sample, sampleAltSJs, results);
+        */
     }
+
+    // CSS METHOD
+    private void addCancerCssResults(final SampleData sample, final List<SampleResult> results)
+    {
+        int refCancerCount = mRefCancerTypeMatrix.Cols;
+
+        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
+
+        for(int i = 0; i < refCancerCount; ++i)
+        {
+            final String refCancerType = mRefCancerTypes.get(i);
+
+            if(!isKnownCancerType(refCancerType))
+                continue;
+
+            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
+                continue;
+
+            boolean matchesCancerType = sample.CancerType.equals(refCancerType);
+
+            final double[] refAsjFragCounts = sample.isRefSample() && matchesCancerType ?
+                    adjustRefCounts(mRefCancerTypeMatrix.getCol(i), mSampleFragCounts, 1) : mRefCancerTypeMatrix.getCol(i);
+
+            double css = calcCosineSim(mSampleFragCounts, refAsjFragCounts, true);
+
+            if(css < RNA_GENE_EXP_CSS_THRESHOLD)
+                continue;
+
+            if(mSampleDataCache.isSingleSample() && CUP_LOGGER.isDebugEnabled())
+            {
+                int matchedSites = 0;
+                int sampleSites = 0;
+                int refSites = 0;
+
+                for(int j = 0; j < mSampleFragCounts.length; ++j)
+                {
+                    if(mSampleFragCounts[j] > 0)
+                        ++sampleSites;
+
+                    if(refAsjFragCounts[j] > 0)
+                        ++refSites;
+
+                    if(mSampleFragCounts[j] > 0 && refAsjFragCounts[j] > 0)
+                        ++matchedSites;
+                }
+
+                CUP_LOGGER.debug("sample({}) cancer({}) refCancer({}) css({}) sites(sample={} ref={} matched={})",
+                        sample.Id, sample.CancerType, refCancerType, String.format("%.4f", css),
+                        sampleSites, refSites, matchedSites);
+            }
+
+            double cssWeight = pow(RNA_GENE_EXP_DIFF_EXPONENT, -100 * (1 - css));
+
+            double weightedCss = css * cssWeight;
+            cancerCssTotals.put(refCancerType, weightedCss);
+        }
+
+        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
+
+        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+        {
+            cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
+        }
+
+        results.add(new SampleResult(
+                sample.Id, CLASSIFIER, LIKELIHOOD, ALT_SJ.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+    }
+
+    private boolean loadSampleAltSJsToArray(final String sampleId)
+    {
+        final String filename = mConfig.SampleDataDir + sampleId + ALT_SJ_FILE_ID;
+
+        initVector(mSampleFragCounts, 0);
+
+        if(!Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            final List<String> lines = Files.readAllLines(Paths.get(filename));
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DATA_DELIM);
+            lines.remove(0);
+
+            int chrIndex = fieldsIndexMap.get("Chromosome");
+            int posStartIndex = fieldsIndexMap.get("SjStart");
+            int posEndIndex = fieldsIndexMap.get("SjEnd");
+            int fragCountIndex = fieldsIndexMap.get("FragCount");
+
+            boolean hasRefAltSJs = false;
+
+            for(String data : lines)
+            {
+                final String items[] = data.split(DATA_DELIM, -1);
+
+                final String asjKey = formAltSjKey(
+                        items[chrIndex], Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]));
+
+                Integer matrixIndex = mRefAsjIndexMap.get(asjKey);
+
+                if(matrixIndex == null)
+                    continue;
+
+                int fragCount = Integer.parseInt(items[fragCountIndex]);
+                hasRefAltSJs = true;
+
+                mSampleFragCounts[matrixIndex] = log(fragCount + 1);
+            }
+
+            return hasRefAltSJs;
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to load alt splice junction file({}): {}", filename.toString(), e.toString());
+            return false;
+        }
+    }
+
+
+    // PREVALENCE METHOD
 
     private AltSjPrevData findRefAltSjData(final AltSjPrevData altSJ)
     {
@@ -257,7 +468,7 @@ public class AltSjClassifier implements CuppaClassifier
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), ",");
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DATA_DELIM);
             lines.remove(0);
 
             int geneIdIndex = fieldsIndexMap.get("GeneId");
@@ -269,7 +480,7 @@ public class AltSjClassifier implements CuppaClassifier
 
             for(String data : lines)
             {
-                final String items[] = data.split(",", -1);
+                final String items[] = data.split(DATA_DELIM, -1);
 
                 int asjPosStart = Integer.parseInt(items[posStartIndex]);
 

@@ -182,4 +182,17 @@ public class CupCalcs
         return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, dataType, "", cancerTypeValues);
     }
 
+    public static double[] adjustRefCounts(final double[] refCounts, final double[] sampleCounts, final double sampleFactor)
+    {
+        double[] adjustedCounts = new double[refCounts.length];
+
+        for(int b = 0; b < refCounts.length; ++b)
+        {
+            adjustedCounts[b] = max(refCounts[b] - (sampleCounts[b] * sampleFactor), 0);
+        }
+
+        return adjustedCounts;
+    }
+
+
 }

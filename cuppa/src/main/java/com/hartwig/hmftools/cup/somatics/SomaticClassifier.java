@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
+import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
@@ -402,8 +403,10 @@ public class SomaticClassifier implements CuppaClassifier
 
             boolean matchesCancerType = sample.CancerType.equals(refCancerType);
 
+            double adjustMultiplier = sampleTotal > SNV_POS_FREQ_SNV_TOTAL_THRESHOLD ? SNV_POS_FREQ_SNV_TOTAL_THRESHOLD / sampleTotal : 1;
+
             final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
-                    adjustRefPosFreqCounts(mRefCancerSnvPosFrequencies.getCol(i), sampleCounts, sampleTotal) : mRefCancerSnvPosFrequencies.getCol(i);
+                    adjustRefCounts(mRefCancerSnvPosFrequencies.getCol(i), sampleCounts, adjustMultiplier) : mRefCancerSnvPosFrequencies.getCol(i);
 
             double css = calcCosineSim(sampleCounts, refPosFreqs);
 
@@ -434,20 +437,6 @@ public class SomaticClassifier implements CuppaClassifier
 
         // then run pairwise analysis if similarities are being analysed
         // addSnvPosSimilarities(sample, sampleCounts, similarities);
-    }
-
-    private double[] adjustRefPosFreqCounts(final double[] refPosFreqs, final double[] sampleCounts, final double sampleTotal)
-    {
-        double adjustMultiplier = sampleTotal > SNV_POS_FREQ_SNV_TOTAL_THRESHOLD ? SNV_POS_FREQ_SNV_TOTAL_THRESHOLD / sampleTotal : 1;
-
-        double[] adjustedCounts = new double[refPosFreqs.length];
-
-        for(int b = 0; b < refPosFreqs.length; ++b)
-        {
-            adjustedCounts[b] = max(refPosFreqs[b] - (sampleCounts[b] * adjustMultiplier), 0);
-        }
-
-        return adjustedCounts;
     }
 
     private void addSnvPosSimilarities(final SampleData sample, final double[] sampleCounts, final List<SampleSimilarity> similarities)
