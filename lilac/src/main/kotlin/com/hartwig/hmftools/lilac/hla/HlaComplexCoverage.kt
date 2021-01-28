@@ -65,17 +65,17 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Doubl
             return totalCoverageCompare
         }
 
-        val uniqueCoverageCompare = uniqueCoverage.compareTo(other.uniqueCoverage)
-        if (uniqueCoverageCompare != 0) {
-            return uniqueCoverageCompare
-        }
-
         val sharedCoverageCompare = sharedCoverage.compareTo(other.sharedCoverage)
         if (sharedCoverageCompare != 0) {
             return sharedCoverageCompare
         }
 
-        return wildCoverage.compareTo(other.wildCoverage)
+        val wildCoverageCompare = wildCoverage.compareTo(other.wildCoverage)
+        if (wildCoverageCompare != 0) {
+            return -wildCoverageCompare
+        }
+
+        return uniqueCoverage.compareTo(other.wildCoverage)
     }
 
 
