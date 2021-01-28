@@ -18,11 +18,11 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Doubl
                 wild += coverage.wildCoverage
             }
 
-            return HlaComplexCoverage(unique, shared, wild, alleles)
+            return HlaComplexCoverage(unique, shared, wild, alleles.expand())
         }
 
         fun header(): String {
-            return "totalCoverage\tuniqueCoverage\tsharedCoverage\twildCoverage\tallele1\tallele2\tallele3\tallele4\tallele5\tallele6"
+            return "totalCoverage\tuniqueCoverage\tsharedCoverage\twildCoverage\ttypes\tallele1\tallele2\tallele3\tallele4\tallele5\tallele6"
         }
 
         fun List<HlaComplexCoverage>.writeToFile(fileName: String) {
@@ -33,8 +33,31 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Doubl
                 file.appendText(coverage.toString() + "\n");
             }
         }
-    }
 
+        private fun List<HlaAlleleCoverage>.expand(): List<HlaAlleleCoverage> {
+            if (this.size == 6) {
+                return this.sortedBy { it.allele }
+            }
+
+            val a = this.filter { it.allele.gene == "A" }
+            val b = this.filter { it.allele.gene == "B" }
+            val c = this.filter { it.allele.gene == "C" }
+
+            return (a.duplicateSingle() + b.duplicateSingle() + c.duplicateSingle()).sortedBy { it.allele }
+        }
+
+        private fun List<HlaAlleleCoverage>.duplicateSingle(): List<HlaAlleleCoverage> {
+            if (this.size == 1) {
+                val single = this[0]
+                val duplicate = HlaAlleleCoverage(single.allele, 0,0.0, 0.0)
+                return listOf(single, duplicate)
+
+            }
+
+            return this
+        }
+
+    }
 
     override fun compareTo(other: HlaComplexCoverage): Int {
         val totalCoverageCompare = totalCoverage.compareTo(other.totalCoverage)
@@ -58,7 +81,8 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Doubl
 
 
     override fun toString(): String {
-        return "${totalCoverage.roundToInt()}\t$uniqueCoverage\t${sharedCoverage.roundToInt()}\t${wildCoverage.roundToInt()}\t${alleles.size}\t${alleles.joinToString("\t")}"
+        val types = alleles.map { it.allele }.toSet()
+        return "${totalCoverage.roundToInt()}\t$uniqueCoverage\t${sharedCoverage.roundToInt()}\t${wildCoverage.roundToInt()}\t${types.size}\t${alleles.joinToString("\t")}"
     }
 
 

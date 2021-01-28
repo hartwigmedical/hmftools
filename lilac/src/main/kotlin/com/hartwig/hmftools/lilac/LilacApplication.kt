@@ -23,7 +23,7 @@ import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
 import java.util.concurrent.Executors
-import kotlin.math.max
+import kotlin.math.min
 
 fun main(args: Array<String>) {
 
@@ -176,7 +176,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val complexCoverage = coverageFactory.complexCoverage(complexes)
         if (complexCoverage.isNotEmpty()) {
             val topCoverage = complexCoverage[0]
-            val minCoverage = max(topCoverage.totalCoverage * 0.9, topCoverage.totalCoverage - 10)
+            val minCoverage = min(topCoverage.totalCoverage * 0.99, topCoverage.totalCoverage - 10)
             val topComplexes = complexCoverage.filter { it.totalCoverage >= minCoverage }
             topComplexes.writeToFile("$outputDir/$sample.coverage.txt")
 

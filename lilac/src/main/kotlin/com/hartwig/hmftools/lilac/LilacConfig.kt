@@ -9,7 +9,7 @@ import java.io.File
 import java.io.IOException
 
 const val SAMPLE = "sample"
-const val INPUT_BAM_OPTION = "input_bam"
+const val INPUT_BAM_OPTION = "sample_bam"
 const val RESOURCE_DIR_OPTION = "resource_dir"
 const val OUTPUT_DIR_OPTION = "output_dir"
 const val REF_GENOME_OPTION = "ref_genome"
