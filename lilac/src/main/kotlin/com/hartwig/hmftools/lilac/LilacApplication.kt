@@ -8,11 +8,8 @@ import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceValidation
-import com.hartwig.hmftools.lilac.hla.HlaComplex
-import com.hartwig.hmftools.lilac.hla.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.hla.*
 import com.hartwig.hmftools.lilac.hla.HlaComplexCoverage.Companion.writeToFile
-import com.hartwig.hmftools.lilac.hla.HlaComplexCoverageFactory
-import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequence
@@ -110,10 +107,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext)
 
         // Unexpected Phasing
-        val inconsistentEvidenceFactory = PhasedEvidenceValidation(aminoAcidSequences)
-        inconsistentEvidenceFactory.validateEvidence(aPhasedEvidence)
-        inconsistentEvidenceFactory.validateEvidence(bPhasedEvidence)
-        inconsistentEvidenceFactory.validateEvidence(cPhasedEvidence)
+        val inconsistentEvidenceFactory = PhasedEvidenceValidation(aminoAcidSequences, config.expectedAlleles)
+        inconsistentEvidenceFactory.validateEvidence("A", aPhasedEvidence)
+        inconsistentEvidenceFactory.validateEvidence("B", bPhasedEvidence)
+        inconsistentEvidenceFactory.validateEvidence("C", cPhasedEvidence)
 
         // Candidates
         val candidateFactory = Candidates(minEvidence, nucleotideSequences, aminoAcidSequences)
@@ -164,8 +161,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         }
 
         val boundariesList = listOf(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+
         HlaSequenceFile.writeFile("$outputDir/$sample.candidates.inflate.txt", candidates)
-        HlaSequenceFile.writeDeflatedFile("$outputDir/$sample.candidates.deflate.txt", boundariesList, candidates)
+        val template = aminoAcidSequences.filter { it.allele == HlaAllele("A*01:01:01:01") }.first()
+        HlaSequenceFile.writeDeflatedFile("$outputDir/$sample.candidates.deflate.txt", boundariesList, template, candidates)
 
         val complexes = HlaComplex.complexes(
                 confirmedGroups.take(6).map { it.allele },

@@ -33,13 +33,11 @@ object HlaSequenceFile {
         return this.map {it.inflate(template) }
     }
 
-    fun List<HlaSequence>.deflate(): List<HlaSequence> {
+    fun List<HlaSequence>.deflate(template: HlaSequence): List<HlaSequence> {
         if (this.isEmpty()) {
             return this
         }
-
-        val template = this[0].sequence
-        return listOf(this[0]) + this.drop(1).map { it.deflate(template) }
+        return listOf(template) + this.filter { it.allele != template.allele }.map { it.deflate(template.sequence) }
     }
 
     fun List<HlaSequence>.specificProteins(): List<HlaSequence> {
@@ -62,7 +60,7 @@ object HlaSequenceFile {
         return resultMap.values.toList()
     }
 
-    fun writeDeflatedFile(deflatedFileName: String, boundaries: List<Set<Int>>, sequences: List<HlaSequence>) {
+    fun writeDeflatedFile(deflatedFileName: String, boundaries: List<Set<Int>>, template: HlaSequence, sequences: List<HlaSequence>) {
         val outputFile = File(deflatedFileName)
         outputFile.writeText("")
 
@@ -70,7 +68,7 @@ object HlaSequenceFile {
             writeBoundary(boundary, deflatedFileName)
         }
 
-        appendFile(deflatedFileName, sequences.deflate())
+        appendFile(deflatedFileName, sequences.deflate(template))
     }
 
     fun wipeFile(outputFileName: String) {
