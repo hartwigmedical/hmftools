@@ -318,7 +318,7 @@ public class AltSjCohortMatrix
                 for(int s = 0; s < itemNames.size(); ++s)
                 {
                     int fragCount = mMatrixData[asjIndex][s];
-                    writer.write(String.format(",%.3f", log(fragCount + 1)));
+                    writer.write(String.format(",%.3f", log(fragCount + 1.0)));
                 }
 
                 writer.newLine();

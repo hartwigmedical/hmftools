@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class NeoEpitopeFile
 {
+    public final int Id;
     public final NeoEpitopeType VariantType;
     public final String VariantInfo;
     public final double CopyNumber;
@@ -47,7 +48,7 @@ public class NeoEpitopeFile
     public final double[] CohortTpmTotal;
 
     public NeoEpitopeFile(
-            final NeoEpitopeType varType, final String varInfo, final double copyNumber,
+            int id, final NeoEpitopeType varType, final String varInfo, final double copyNumber,
             final String geneIdUp, final String geneIdDown, final String geneNameUp, final String geneNameDown,
             final String chrUp, final String chrDown, byte orientUp, byte orientDown,
             final String upAA, final String downAAs, final String novelAAs,
@@ -57,6 +58,7 @@ public class NeoEpitopeFile
             int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown,
             double tmpCancerUp, double tmpCohortUp, double tmpCancerDown, double tmpCohortDown)
     {
+        Id = id;
         VariantType = varType;
         VariantInfo = varInfo;
         CopyNumber = copyNumber;
@@ -128,6 +130,7 @@ public class NeoEpitopeFile
     public static String header()
     {
         return new StringJoiner(DELIMITER)
+                .add("NeId")
                 .add("VariantType")
                 .add("VariantInfo")
                 .add("JunctionCopyNumber")
@@ -172,6 +175,7 @@ public class NeoEpitopeFile
     {
         StringJoiner sj = new StringJoiner(DELIMITER);
 
+        sj.add(String.valueOf(neo.Id));
         sj.add(neo.VariantType.toString());
         sj.add(neo.VariantInfo);
         sj.add(String.format("%.4f", neo.CopyNumber));
@@ -223,7 +227,7 @@ public class NeoEpitopeFile
             ++index;
 
         return new NeoEpitopeFile(
-                NeoEpitopeType.valueOf(values[index++]), values[index++], Double.parseDouble(values[index++]),
+                Integer.parseInt(values[index++]), NeoEpitopeType.valueOf(values[index++]), values[index++], Double.parseDouble(values[index++]),
                 values[index++], values[index++], values[index++], values[index++],
                 values[index++], values[index++], Byte.parseByte(values[index++]), Byte.parseByte(values[index++]),
                 values[index++], values[index++], values[index++], Integer.parseInt(values[index++]), Integer.parseInt(values[index++]),

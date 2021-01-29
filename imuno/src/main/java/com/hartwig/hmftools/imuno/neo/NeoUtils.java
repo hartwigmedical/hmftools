@@ -692,4 +692,49 @@ public class NeoUtils
         return aminoAcidStr;
     }
 
+    public static Set<String> generatePeptides(
+            final String upAAs, final String novelAAs, final String downAAs, final int[] peptideLengths)
+    {
+        final Set<String> peptides = Sets.newHashSet();
+
+        final String fullAminoAcids = upAAs + novelAAs + downAAs;
+        int upstreamLength = upAAs.length();
+        int novelLength = novelAAs.length();
+        boolean hasNovelAAs = !novelAAs.isEmpty();
+
+        int fullLength = fullAminoAcids.length();
+
+        if(fullAminoAcids.endsWith(STOP_SYMBOL))
+            --fullLength;
+
+        // eg upstream length = 10, index 0 -> 9, novel at index 10 and downstream at index 11, or no novel and downstream at index 10
+        for(int length = peptideLengths[SE_START]; length <= peptideLengths[SE_END]; ++length)
+        {
+            int currentIndex = 0;
+
+            while(true)
+            {
+                // skip to point where novel or downstream is included
+                if(currentIndex + length <= upstreamLength)
+                {
+                    ++currentIndex;
+                    continue;
+                }
+
+                // break if into the downstream (canonical) sequence
+                if((!hasNovelAAs && currentIndex >= upstreamLength) || currentIndex >= upstreamLength + novelLength)
+                    break;
+
+                if(currentIndex + length > fullLength)
+                    break;
+
+                String peptide = fullAminoAcids.substring(currentIndex, currentIndex + length);
+                peptides.add(peptide);
+                ++currentIndex;
+            }
+        }
+
+        return peptides;
+    }
+
 }

@@ -220,7 +220,7 @@ public abstract class NeoEpitope
     public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
 
     public NeoEpitopeFile toFile(
-            final Set<String> upTransNames, final Set<String> downTransNames,
+            final int neId, final Set<String> upTransNames, final Set<String> downTransNames,
             final double[] tpmCancer, final double[] tpmCohort)
     {
         final StringJoiner upTransStr = new StringJoiner(";");
@@ -229,7 +229,7 @@ public abstract class NeoEpitope
         downTransNames.forEach(x -> downTransStr.add(x));
 
         return new NeoEpitopeFile(
-                variantType(), variantInfo(), copyNumber(),
+                neId, variantType(), variantInfo(), copyNumber(),
                 TransData[FS_UP].GeneId, TransData[FS_DOWN].GeneId, geneName(FS_UP), geneName(FS_DOWN),
                 chromosome(FS_UP), chromosome(FS_DOWN), orientation(FS_UP), orientation(FS_DOWN),
                 UpstreamAcids, DownstreamAcids, NovelAcid, NmdBasesMin, NmdBasesMax, CodingBasesLengthMin, CodingBasesLengthMax,

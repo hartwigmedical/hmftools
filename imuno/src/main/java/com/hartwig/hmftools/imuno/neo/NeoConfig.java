@@ -3,12 +3,17 @@ package com.hartwig.hmftools.imuno.neo;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.loadGeneIdsFile;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.loadSampleIdsFile;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -21,6 +26,8 @@ public class NeoConfig
 {
     public final List<String> SampleIds;
     public final String CancerType;
+    public final List<String> HlaTypes;
+    public final int[] PeptideLengths;
 
     public final RefGenomeInterface RefGenome;
 
@@ -32,6 +39,8 @@ public class NeoConfig
 
     public static final String SAMPLE = "sample";
     public static final String CANCER_TYPE = "cancer_type";
+    public static final String HLA_TYPES = "hla_types";
+    public static final String PEPTIDE_LENGTHS = "peptide_lengths";
 
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SV_FUSION_FILE = "sv_fusion_file";
@@ -62,6 +71,35 @@ public class NeoConfig
             SampleIds.add(sampleIdConfig);
         }
 
+
+        HlaTypes = Lists.newArrayList();
+
+        if(cmd.hasOption(HLA_TYPES))
+        {
+            HlaTypes.addAll(Arrays.stream(cmd.getOptionValue(HLA_TYPES).split(";")).collect(Collectors.toList()));
+        }
+
+        PeptideLengths = new int[SE_PAIR];
+
+        if(cmd.hasOption(PEPTIDE_LENGTHS))
+        {
+            String[] lengths = cmd.getOptionValue(PEPTIDE_LENGTHS).split("-");
+
+            if(lengths.length == 1)
+            {
+                PeptideLengths[SE_START] = PeptideLengths[SE_END] = Integer.parseInt(lengths[0]);
+            }
+            else if(lengths.length == 2)
+            {
+                PeptideLengths[SE_START] = Integer.parseInt(lengths[SE_START]);
+                PeptideLengths[SE_END] = Integer.parseInt(lengths[SE_END]);
+            }
+            else
+            {
+                IM_LOGGER.error("invalid peptide lengths: {}", cmd.getOptionValue(PEPTIDE_LENGTHS));
+            }
+        }
+
         CancerType = cmd.getOptionValue(CANCER_TYPE);
 
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
@@ -87,6 +125,8 @@ public class NeoConfig
     {
         SampleIds = sampleIds;
         CancerType = "";
+        HlaTypes = Lists.newArrayList();
+        PeptideLengths = new int[SE_PAIR];
         RefGenome = refGenome;
         RestrictedGeneIds = restrictedGeneIds;
         RequiredAminoAcids = requiredAminoAcids;
@@ -98,6 +138,8 @@ public class NeoConfig
     {
         options.addOption(SAMPLE, true, "Sample - Id(s) separated by ';' or CSV file");
         options.addOption(CANCER_TYPE, true, "Tumor cancer type (optional) - to retrieve cancer median TPM");
+        options.addOption(HLA_TYPES, true, "Sample HLA types, separated by ';'");
+        options.addOption(PEPTIDE_LENGTHS, true, "Peptide length min-max, separated by '-', eg 8-12");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl data cache directory");
         options.addOption(GENE_ID_FILE, true, "Restrict to specific genes");
         options.addOption(REF_GENOME, true, "Ref genome");

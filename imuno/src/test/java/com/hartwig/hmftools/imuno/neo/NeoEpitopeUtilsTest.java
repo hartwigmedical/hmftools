@@ -9,12 +9,15 @@ import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBa
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.swapDnaToRna;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.swapRnaToDna;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.findSkippedExonBoundaries;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.generatePeptides;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getUpstreamCodingBases;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
@@ -334,10 +337,69 @@ public class NeoEpitopeUtilsTest
 
         skippedCount = findSkippedExonBoundaries(transDataList, posBoundaries, false, false);
         assertEquals(0, skippedCount); // exon start at 500 is repeated so not double-counted
-
-
-
     }
 
+    @Test
+    public void testPeptideCombinations()
+    {
+        // standard missense type
+        String upAAs = "ABC";
+        String novelAAs = "D";
+        String downAAs = "EFG";
+
+        Set<String> peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4});
+        assertEquals(7, peptides.size());
+        assertTrue(peptides.contains("BCD"));
+        assertTrue(peptides.contains("CDE"));
+        assertTrue(peptides.contains("DEF"));
+        assertTrue(peptides.contains("ABCD"));
+        assertTrue(peptides.contains("BCDE"));
+        assertTrue(peptides.contains("CDEF"));
+        assertTrue(peptides.contains("DEFG"));
+
+        // insertion type
+        novelAAs = "DXX";
+
+        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4});
+        assertEquals(11, peptides.size());
+        assertTrue(peptides.contains("BCD"));
+        assertTrue(peptides.contains("CDX"));
+        assertTrue(peptides.contains("DXX"));
+        assertTrue(peptides.contains("XXE"));
+        assertTrue(peptides.contains("XEF"));
+        assertTrue(peptides.contains("ABCD"));
+        assertTrue(peptides.contains("BCDX"));
+        assertTrue(peptides.contains("CDXX"));
+        assertTrue(peptides.contains("DXXE"));
+        assertTrue(peptides.contains("XXEF"));
+        assertTrue(peptides.contains("XEFG"));
+
+        // no novel - like a fusion
+        novelAAs = "";
+        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4});
+        assertEquals(5, peptides.size());
+        assertTrue(peptides.contains("BCE"));
+        assertTrue(peptides.contains("CEF"));
+        assertTrue(peptides.contains("ABCE"));
+        assertTrue(peptides.contains("BCEF"));
+        assertTrue(peptides.contains("CEFG"));
+
+        // all downstream bases novel
+        novelAAs = "VWXYZ";
+        downAAs = "";
+        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4});
+        assertEquals(10, peptides.size());
+        assertTrue(peptides.contains("BCV"));
+        assertTrue(peptides.contains("CVW"));
+        assertTrue(peptides.contains("VWX"));
+        assertTrue(peptides.contains("WXY"));
+        assertTrue(peptides.contains("XYZ"));
+
+        assertTrue(peptides.contains("ABCV"));
+        assertTrue(peptides.contains("BCVW"));
+        assertTrue(peptides.contains("CVWX"));
+        assertTrue(peptides.contains("VWXY"));
+        assertTrue(peptides.contains("WXYZ"));
+    }
 
 }
