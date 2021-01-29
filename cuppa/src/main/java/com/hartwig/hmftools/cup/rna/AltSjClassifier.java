@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cup.rna;
 
+import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
@@ -181,7 +182,7 @@ public class AltSjClassifier implements CuppaClassifier
             boolean matchesCancerType = sample.CancerType.equals(refCancerType);
 
             final double[] refAsjFragCounts = sample.isRefSample() && matchesCancerType ?
-                    adjustRefCounts(mRefCancerTypeMatrix.getCol(i), mSampleFragCounts, 1) : mRefCancerTypeMatrix.getCol(i);
+                    adjustRefCounts(mRefCancerTypeMatrix.getCol(i), mSampleFragCounts) : mRefCancerTypeMatrix.getCol(i);
 
             double css = calcCosineSim(mSampleFragCounts, refAsjFragCounts, true);
 
@@ -227,6 +228,22 @@ public class AltSjClassifier implements CuppaClassifier
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, ALT_SJ.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
+
+    private double[] adjustRefCounts(final double[] refCounts, final double[] sampleCounts)
+    {
+        // remove the sample's counts after first de-logging both counts
+        double[] adjustedCounts = new double[refCounts.length];
+
+        for(int b = 0; b < refCounts.length; ++b)
+        {
+            double sampleCount = exp(sampleCounts[b]) - 1;
+            double refCount = exp(refCounts[b]) - 1;
+            adjustedCounts[b] = log(max(refCount - sampleCount, 0) + 1);
+        }
+
+        return adjustedCounts;
+    }
+
 
     private boolean loadSampleAltSJsToArray(final String sampleId)
     {

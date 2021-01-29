@@ -194,5 +194,4 @@ public class CupCalcs
         return adjustedCounts;
     }
 
-
 }
