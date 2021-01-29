@@ -65,19 +65,18 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Doubl
             return totalCoverageCompare
         }
 
-        val sharedCoverageCompare = sharedCoverage.compareTo(other.sharedCoverage)
-        if (sharedCoverageCompare != 0) {
-            return sharedCoverageCompare
-        }
-
         val wildCoverageCompare = wildCoverage.compareTo(other.wildCoverage)
         if (wildCoverageCompare != 0) {
             return -wildCoverageCompare
         }
 
+        val sharedCoverageCompare = sharedCoverage.compareTo(other.sharedCoverage)
+        if (sharedCoverageCompare != 0) {
+            return sharedCoverageCompare
+        }
+
         return uniqueCoverage.compareTo(other.wildCoverage)
     }
-
 
 
     override fun toString(): String {
