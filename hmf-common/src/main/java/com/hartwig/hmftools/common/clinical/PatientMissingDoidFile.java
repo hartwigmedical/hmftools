@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -19,24 +20,25 @@ public class PatientMissingDoidFile {
 
     }
 
-    public static void writeMissingDoid(@NotNull String outputPath, @NotNull Set<String> patients) throws IOException {
+    public static void writeMissingDoid(@NotNull String outputPath, @NotNull Map<String, String> patients) throws IOException {
         Files.write(new File(outputPath).toPath(), toLinesMissingDoid(patients));
     }
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLinesMissingDoid(@NotNull Set<String> patients) {
+    static List<String> toLinesMissingDoid(@NotNull Map<String, String> patients) {
         List<String> lines = Lists.newArrayList();
         lines.add(headerMissingDoid());
-        for (String patient : patients) {
-            lines.add(toStringMissingDoid(patient));
+        for (String patient : patients.keySet()) {
+            String patientMessage = patient + TAB_DELIMITER + patients.get(patient);
+            lines.add(toStringMissingDoid(patientMessage));
         }
         return lines;
     }
 
     @NotNull
     private static String headerMissingDoid() {
-        return new StringJoiner(TAB_DELIMITER).add("patientIdentifier")
+        return new StringJoiner(TAB_DELIMITER).add("patientIdentifier").add("reason")
                 .toString();
     }
 
