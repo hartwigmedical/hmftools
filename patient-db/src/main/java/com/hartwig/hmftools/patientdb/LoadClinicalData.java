@@ -178,8 +178,8 @@ public final class LoadClinicalData {
         List<String> reportedSamples = Lists.newArrayList();
         for (ReportingEntry entry : ReportingDatabase.read(reportingDBTSv)) {
             reportedSamples.add(entry.tumorBarcode());
-
         }
+
         for (List<SampleData> sampleDataList : sampleDataPerPatient.values()) {
             for (SampleData sampleData : sampleDataList) {
                 if (!lims.isBlacklistedForCurationTumorLocations(sampleData.sampleId().substring(0, 12))) {
