@@ -53,7 +53,8 @@ public class LoadPurpleData {
                 GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
         List<PurpleCopyNumber> copyNumbers =
                 PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
-        List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilenameForReading(purplePath, tumorSample));
+        List<DriverCatalog> somaticDriverCatalog =
+                DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilenameForReading(purplePath, tumorSample));
 
         String germlineDriverCatalogFileName = DriverCatalogFile.generateGermlineFilename(purplePath, tumorSample);
         List<DriverCatalog> germlineDriverCatalog = new File(germlineDriverCatalogFileName).exists()
