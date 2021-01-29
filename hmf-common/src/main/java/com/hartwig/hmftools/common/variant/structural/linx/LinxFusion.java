@@ -84,7 +84,7 @@ public abstract class LinxFusion
         final String header = lines.get(0);
         lines.remove(0);
 
-        if(!header.contains("Likelihood"))
+        if(!header.contains("likelihood"))
         {
             final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(header,DELIMITER);
             return lines.stream().map(x -> fromString_v1_10(x, fieldIndexMap)).collect(toList());
