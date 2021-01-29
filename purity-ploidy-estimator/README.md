@@ -990,7 +990,7 @@ SNPs are colored according to the type of base change (e.g. C>T/G>A in red) and 
 INDELs are colored yellow and red for insertions and deletions respectively.
                                 
 The third circle shows all observed tumor purity adjusted copy number changes, including both focal and chromosomal somatic events. 
-Copy number losses are indicated in red, green shows regions of copy number gain.
+Absolute copy number less than 2 is indicated in red, green shows regions of copy number greater than 2.
 The scale ranges from 0 (complete loss) to 6 (high level gains).
 If the absolute copy number is > 6 it is shown as 6 with a green dot on the diagram.
 

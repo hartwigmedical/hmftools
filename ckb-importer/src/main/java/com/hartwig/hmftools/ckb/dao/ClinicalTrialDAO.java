@@ -163,15 +163,16 @@ public class ClinicalTrialDAO {
         }
     }
 
-    static void deleteClinicalTrial(@NotNull DSLContext context) {
-
-        context.deleteFrom(CLINICALTRIALCONTACT).execute();
-        context.deleteFrom(CLINICALTRIALLOCATION).execute();
-        context.deleteFrom(CLINICALTRIALVARIANTREQUIREMENTDETAILMOLECULARPROFILE).execute();
-        context.deleteFrom(CLINICALTRIALVARIANTREQUIREMENTDETAIL).execute();
-        context.deleteFrom(CLINICALTRIALINDICATION).execute();
-        context.deleteFrom(CLINICALTRIALTHERAPY).execute();
-        context.deleteFrom(CLINICALTRIALAGEGROUP).execute();
-        context.deleteFrom(CLINICALTRIAL).execute();
+    static void clearClinicalTrial(@NotNull DSLContext context) {
+        context.execute("SET FOREIGN_KEY_CHECKS = 0;");
+        context.truncate(CLINICALTRIALCONTACT).execute();
+        context.truncate(CLINICALTRIALLOCATION).execute();
+        context.truncate(CLINICALTRIALVARIANTREQUIREMENTDETAILMOLECULARPROFILE).execute();
+        context.truncate(CLINICALTRIALVARIANTREQUIREMENTDETAIL).execute();
+        context.truncate(CLINICALTRIALINDICATION).execute();
+        context.truncate(CLINICALTRIALTHERAPY).execute();
+        context.truncate(CLINICALTRIALAGEGROUP).execute();
+        context.truncate(CLINICALTRIAL).execute();
+        context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 }

@@ -143,7 +143,7 @@ public final class LoadClinicalData {
                 loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, lims);
 
         LOGGER.info("Check for missing curation tumor location when info is known");
-        Set<String> patientsWithMissingDoid =
+        Map<String, String> patientsWithMissingDoid =
                 checkForMissingCuratedTumorLocations(sampleDataPerPatient, patients.values(), cmd.getOptionValue(REPORTING_DB_TSV), lims);
 
         LOGGER.info("Writing patients with missing doids");
@@ -169,12 +169,36 @@ public final class LoadClinicalData {
         LOGGER.info("Complete");
     }
 
-    private static Set<String> checkForMissingCuratedTumorLocations(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
+    private static Map<String, String> checkForMissingCuratedTumorLocations(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
             @NotNull Collection<Patient> patients, @NotNull String reportingDBTSv, @NotNull Lims lims) throws IOException {
-        List<String> patientsInLims = determinePatientsForChecking(reportingDBTSv, sampleDataPerPatient, lims);
-        Set<String> patientsWithMissingDoid = Sets.newHashSet();
+
+        List<String> patientsInLims = Lists.newArrayList();
+        Map<String, String> patientsWithMissingDoid = Maps.newHashMap();
+        List<String> patientArray = Lists.newArrayList();
+        List<String> reportedSamples = Lists.newArrayList();
+
+        for (ReportingEntry entry : ReportingDatabase.read(reportingDBTSv)) {
+            reportedSamples.add(entry.tumorBarcode());
+        }
+
+        for (List<SampleData> sampleDataList : sampleDataPerPatient.values()) {
+            for (SampleData sampleData : sampleDataList) {
+                if (!lims.isBlacklistedForCurationTumorLocations(sampleData.sampleId().substring(0, 12))) {
+                    if (!reportedSamples.contains(sampleData.sampleBarcode()) && sampleData.isSomaticTumorSample()) {
+                        patientsInLims.add(sampleData.sampleId().substring(0, 12));
+                    } else if (reportedSamples.contains(sampleData.sampleBarcode()) && sampleData.isSomaticTumorSample()) {
+                        if (!sampleData.sampleId().startsWith("WIDE") && !sampleData.sampleId().startsWith("CORE")) {
+                            patientsWithMissingDoid.put(sampleData.sampleId().substring(0, 12), "patientAlreadyReported");
+                        }
+                    }
+                } else if (lims.isBlacklistedForCurationTumorLocations(sampleData.sampleId().substring(0, 12))) {
+                    patientsWithMissingDoid.put(sampleData.sampleId().substring(0, 12), "patientBlacklisted");
+                }
+            }
+        }
 
         for (Patient patient : patients) {
+            patientArray.add(patient.patientIdentifier());
             if (patientsInLims.contains(patient.patientIdentifier())) {
                 if (patient.baselineData().curatedPrimaryTumor().location() == null
                         && patient.baselineData().curatedPrimaryTumor().searchTerm() != null && !patient.baselineData()
@@ -187,48 +211,33 @@ public final class LoadClinicalData {
                 }
 
                 if (patient.patientIdentifier().startsWith("CORE") || patient.patientIdentifier().startsWith("WIDE")) {
-                    if (patient.baselineData().curatedPrimaryTumor().searchTerm().isEmpty()
-                            || patient.baselineData().curatedPrimaryTumor().searchTerm() == null) {
-                        LOGGER.warn("Could not extract tumor location {} of patient {}",
-                                patient.baselineData().curatedPrimaryTumor().searchTerm(),
-                                patient.patientIdentifier());
-                    }
-                } else {
-
                     if (patient.baselineData().curatedPrimaryTumor().location() == null
                             && patient.baselineData().curatedPrimaryTumor().searchTerm() == null || patient.baselineData()
                             .curatedPrimaryTumor()
                             .searchTerm()
                             .isEmpty()) {
-                        patientsWithMissingDoid.add(patient.patientIdentifier());
+                        LOGGER.warn("Could not extract tumor location {} of patient {}",
+                                patient.baselineData().curatedPrimaryTumor().searchTerm(),
+                                patient.patientIdentifier());
+                    }
+                } else {
+                    if (patient.baselineData().curatedPrimaryTumor().location() == null
+                            && patient.baselineData().curatedPrimaryTumor().searchTerm() == null || patient.baselineData()
+                            .curatedPrimaryTumor()
+                            .searchTerm()
+                            .isEmpty()) {
+                        patientsWithMissingDoid.put(patient.patientIdentifier(), "patientWithMissingDoid");
                     }
                 }
+            }
+        }
+
+        for (String patient: patientsInLims) {
+            if (!patientArray.contains(patient)) {
+                patientsWithMissingDoid.put(patient, "patientNotExtracted");
             }
         }
         return patientsWithMissingDoid;
-    }
-
-    @NotNull
-    private static List<String> determinePatientsForChecking(@NotNull String reportingDBTSv,
-            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull Lims lims) throws IOException {
-        List<String> patientsInLims = Lists.newArrayList();
-
-        List<String> reportedSamples = Lists.newArrayList();
-        for (ReportingEntry entry : ReportingDatabase.read(reportingDBTSv)) {
-            reportedSamples.add(entry.tumorBarcode());
-
-        }
-        for (List<SampleData> sampleDataList : sampleDataPerPatient.values()) {
-            for (SampleData sampleData : sampleDataList) {
-                if (!lims.isBlacklistedForCurationTumorLocations(sampleData.sampleId().substring(0, 12))) {
-                    if (!reportedSamples.contains(sampleData.sampleBarcode()) && sampleData.isSomaticTumorSample()) {
-                        patientsInLims.add(sampleData.sampleId().substring(0, 12));
-                    }
-                }
-
-            }
-        }
-        return patientsInLims;
     }
 
     @NotNull
