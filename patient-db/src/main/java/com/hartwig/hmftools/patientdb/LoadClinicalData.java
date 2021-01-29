@@ -176,6 +176,7 @@ public final class LoadClinicalData {
         Map<String, String> patientsWithMissingDoid = Maps.newHashMap();
         List<String> patientArray = Lists.newArrayList();
         List<String> reportedSamples = Lists.newArrayList();
+
         for (ReportingEntry entry : ReportingDatabase.read(reportingDBTSv)) {
             reportedSamples.add(entry.tumorBarcode());
         }
