@@ -182,7 +182,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val complexCoverage = coverageFactory.complexCoverage(complexes)
         if (complexCoverage.isNotEmpty()) {
             val topCoverage = complexCoverage[0]
-            val minCoverage = min(topCoverage.totalCoverage * 0.99, topCoverage.totalCoverage - 10)
+            val minCoverage = min(topCoverage.totalCoverage * 0.99, topCoverage.totalCoverage - 10.0)
             val topComplexes = complexCoverage.filter { it.totalCoverage >= minCoverage }
             topComplexes.writeToFile("$outputDir/$sample.coverage.txt")
 
@@ -190,6 +190,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             for (topComplex in topComplexes) {
                 logger.info(topComplex)
             }
+
+            logger.info("WINNING ALLELES: ${topCoverage.alleles.map { it.allele }}")
 
             val winningAlleles = topCoverage.alleles.map { it.allele }
             val winningSequences = candidates.filter { candidate -> candidate.allele in winningAlleles }
