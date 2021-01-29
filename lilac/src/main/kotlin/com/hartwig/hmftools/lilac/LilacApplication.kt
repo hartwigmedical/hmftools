@@ -91,12 +91,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val hlaBContext = hlaContextFactory.hlaB()
         val hlaCContext = hlaContextFactory.hlaC()
 
-        logger.info("Reading nucleotide files")
-        val nucleotideSequences = readNucleotideFiles(resourcesDir)
-
-        logger.info("Reading protein files")
-        val aminoAcidSequences = readProteinFiles(resourcesDir)
-
         logger.info("Querying records from $bamFile")
         val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
         val rawNucleotideFragments = readFromBam(bamFile)
@@ -106,6 +100,12 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val bFragments = aminoAcidPipeline.type(hlaBContext)
         val cFragments = aminoAcidPipeline.type(hlaCContext)
 
+        logger.info("Reading nucleotide files")
+        val nucleotideSequences = readNucleotideFiles(resourcesDir)
+
+        logger.info("Reading protein files")
+        val aminoAcidSequences = readProteinFiles(resourcesDir)
+
         // Phasing
         logger.info("Phasing bam records")
         val phasedEvidenceFactory = PhasedEvidenceFactory(minFragmentsPerAllele, config.minFragmentsToRemoveSingle, config.minEvidence)
@@ -113,11 +113,11 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bFragments)
         val cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cFragments)
 
-        // Unexpected Phasing
-        val inconsistentEvidenceFactory = PhasedEvidenceValidation(aminoAcidSequences, config.expectedAlleles)
-        inconsistentEvidenceFactory.validateEvidence("A", aPhasedEvidence)
-        inconsistentEvidenceFactory.validateEvidence("B", bPhasedEvidence)
-        inconsistentEvidenceFactory.validateEvidence("C", cPhasedEvidence)
+        // Validate phasing against expected sequences
+        val expectedSequences = aminoAcidSequences.filter {  it.allele in config.expectedAlleles }
+        PhasedEvidenceValidation.validateExpected("A", aPhasedEvidence, expectedSequences )
+        PhasedEvidenceValidation.validateExpected("B", bPhasedEvidence, expectedSequences)
+        PhasedEvidenceValidation.validateExpected("C", cPhasedEvidence,expectedSequences)
 
         // Candidates
         val candidateFactory = Candidates(config, nucleotideSequences, aminoAcidSequences)
@@ -190,6 +190,12 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             for (topComplex in topComplexes) {
                 logger.info(topComplex)
             }
+
+            val winningAlleles = topCoverage.alleles.map { it.allele }
+            val winningSequences = candidates.filter { candidate -> candidate.allele in winningAlleles }
+            PhasedEvidenceValidation.validateAgainstFinalCandidates("A", aPhasedEvidence, winningSequences)
+            PhasedEvidenceValidation.validateAgainstFinalCandidates("B", bPhasedEvidence, winningSequences)
+            PhasedEvidenceValidation.validateAgainstFinalCandidates("C", cPhasedEvidence, winningSequences)
         }
     }
 
