@@ -3,7 +3,9 @@ package com.hartwig.hmftools.lilac.read
 import com.hartwig.hmftools.common.genome.bed.NamedBed
 import com.hartwig.hmftools.common.genome.region.*
 import com.hartwig.hmftools.lilac.sam.SAMSlicer
+import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMRecord
+import htsjdk.samtools.SAMUtilsExtra.getAlignmentBlocksWithSoftClips
 import htsjdk.samtools.SamReaderFactory
 import org.apache.logging.log4j.LogManager
 import java.io.File
@@ -58,14 +60,16 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
             val consumer = Consumer<SAMRecord> { samRecord ->
 
                 if (samRecord.bothEndsinRangeOfCodingTranscripts()) {
-                    for (alignmentBlock in samRecord.alignmentBlocks) {
+                    for (alignmentBlock in samRecord.getAlignmentBlocksWithSoftClips()) {
                         val alignmentStart = alignmentBlock.referenceStart
                         val alignmentEnd = alignmentStart + alignmentBlock.length - 1
                         if (alignmentStart <= region.end() && alignmentEnd >= region.start()) {
                             if (reverseStrand) {
-                                result.add(realignReverseStrand(gene, hlaCodingRegionOffset, region, alignmentStart, alignmentEnd, samRecord))
+                                val new = realignReverseStrand(gene, hlaCodingRegionOffset, region, alignmentBlock, samRecord)
+                                result.add(new)
                             } else {
-                                result.add(realignForwardStrand(gene, hlaCodingRegionOffset, region, alignmentStart, alignmentEnd, samRecord))
+                                val new = realignForwardStrand(gene, hlaCodingRegionOffset, region, alignmentBlock, samRecord)
+                                result.add(new)
                             }
                         }
                     }
@@ -77,8 +81,15 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
         return result
     }
 
+    private fun AlignmentBlock.getReferenceEnd(): Int {
+        return this.referenceStart + this.length - 1
+    }
 
-    private fun realignForwardStrand(gene: String, hlaExonOffset: Int, region: GenomeRegion, alignmentStart: Int, alignmentEnd: Int, samRecord: SAMRecord): SAMRecordRead {
+    private fun realignForwardStrand(gene: String, hlaExonOffset: Int, region: GenomeRegion, alignmentBlock: AlignmentBlock, samRecord: SAMRecord): SAMRecordRead {
+        val alignmentStart = alignmentBlock.referenceStart
+        val alignmentEnd = alignmentBlock.getReferenceEnd()
+        val alignmentStartReadIndex = alignmentBlock.readStart - 1
+
         val hlaExonStartPosition = region.start().toInt()
         val hlaExonEndPosition = region.end().toInt()
 
@@ -86,13 +97,18 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
         val hlaEnd = min(alignmentEnd, hlaExonEndPosition)
         val length = hlaEnd - hlaStart + 1
 
-        val readIndex = samRecord.getReadPositionAtReferencePosition(hlaStart) - 1
+        val readIndex = alignmentStartReadIndex + hlaStart - alignmentStart
         val hlaStartIndex = hlaStart - hlaExonStartPosition + hlaExonOffset
 
         return SAMRecordRead(gene, hlaStartIndex, readIndex, length, false, samRecord)
     }
 
-    private fun realignReverseStrand(gene: String, hlaExonOffset: Int, region: GenomeRegion, alignmentStart: Int, alignmentEnd: Int, samRecord: SAMRecord): SAMRecordRead {
+
+    private fun realignReverseStrand(gene: String, hlaExonOffset: Int, region: GenomeRegion, alignmentBlock: AlignmentBlock, samRecord: SAMRecord): SAMRecordRead {
+        val alignmentStart = alignmentBlock.referenceStart
+        val alignmentEnd = alignmentBlock.getReferenceEnd()
+        val alignmentStartReadIndex = alignmentBlock.readStart - 1
+
         val hlaExonStartPosition = region.end().toInt()
         val hlaExonEndPosition = region.start().toInt()
 
@@ -100,7 +116,7 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
         val hlaEnd = max(alignmentStart, hlaExonEndPosition)
         val length = hlaStart - hlaEnd + 1
 
-        val readIndex = samRecord.getReadPositionAtReferencePosition(hlaStart) - 1
+        val readIndex = alignmentStartReadIndex + hlaStart - alignmentStart
         val hlaStartIndex = hlaExonStartPosition - hlaStart + hlaExonOffset
 
         return SAMRecordRead(gene, hlaStartIndex, readIndex, length, true, samRecord)
