@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
@@ -45,18 +46,31 @@ public class TranscriptUtils
     public static int calcExonicCodingPhase(final ExonData exon, int codingStart, int codingEnd, byte strand, int position)
     {
         // if coding has started in an earlier exon, then take the exon start phase and process new coding bases
+        // ie if previous exon's end phase was 2, then start phase of this exon will also be 2, and first base will tick to phase 0
         // if coding begins with the first base, then if phase is not specified, then assume '1',
         // otherwise use the starting phase to adjust the exonic phase ie:
         // PredEndPhase = if ExonPhase < 0 then CodingBases %% 3 else ExonPhase+CodingBases %% 3
+
+        if(!positionWithin(position, codingStart, codingEnd))
+            return PHASE_NONE;
+
+        // coding bases up to and including the specified position
         int codingBases = strand == POS_STRAND ? position - max(exon.Start, codingStart) + 1 : min(exon.End, codingEnd) - position + 1;
 
-        if((strand == POS_STRAND && codingStart <= exon.Start) || (strand == NEG_STRAND && codingEnd >= exon.End))
+        if((strand == POS_STRAND && codingStart == exon.Start) || (strand == NEG_STRAND && codingEnd == exon.End))
         {
-            int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
-            return (startPhase + codingBases) % 3;
+            // coding starts on the first base of this exon - coding bases = 1 means take the initial phase, hence the subtraction of 1
+            int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_1 : exon.PhaseStart;
+            return (startPhase + (codingBases - 1)) % 3;
+        }
+        else if((strand == POS_STRAND && codingStart < exon.Start) || (strand == NEG_STRAND && codingEnd > exon.End))
+        {
+            // coding started before this exon
+            return (exon.PhaseStart + codingBases) % 3;
         }
         else
         {
+            // coding starts within the exon - assumes start with phase 1
             return codingBases % 3;
         }
     }

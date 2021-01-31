@@ -507,7 +507,7 @@ public class NeoEpitopeAnnotator
 
         if(!Files.exists(Paths.get(filename)))
         {
-            IM_LOGGER.error("Linx neo-epitope file({}) not found", filename);
+            IM_LOGGER.warn("Linx neo-epitope file({}) not found", filename);
             return;
         }
 

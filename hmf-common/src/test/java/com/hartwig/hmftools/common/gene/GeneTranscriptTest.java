@@ -64,9 +64,11 @@ public class GeneTranscriptTest
 
         // special case of coding starting at the exon but with phase -1 specified
         assertEquals(PHASE_1, calcExonicCodingPhase(exon, 10, 25, POS_STRAND, 10));
-        assertEquals(PHASE_1, calcExonicCodingPhase(exon, 5, 20, NEG_STRAND, 20));
 
-        // where coding begins before the exon
+        // invalid test since coding has started without phase being set for the exon data
+        // assertEquals(PHASE_1, calcExonicCodingPhase(exon, 5, 20, NEG_STRAND, 20));
+
+        // coding begins before the exon
         exon = new ExonData(1, 10, 20, 1, PHASE_2, PHASE_2);
 
         assertEquals(PHASE_0, calcExonicCodingPhase(exon, 5, 25, POS_STRAND, 10));
@@ -75,9 +77,9 @@ public class GeneTranscriptTest
         assertEquals(PHASE_0, calcExonicCodingPhase(exon, 5, 25, NEG_STRAND, 20));
         assertEquals(PHASE_1, calcExonicCodingPhase(exon, 5, 25, NEG_STRAND, 19));
 
-        // coding begins at the exon boundary with phase specificed
-        assertEquals(PHASE_0, calcExonicCodingPhase(exon, 10, 25, POS_STRAND, 10));
-        assertEquals(PHASE_0, calcExonicCodingPhase(exon, 5, 20, NEG_STRAND, 20));
+        // coding begins at the exon boundary with phase specified
+        assertEquals(PHASE_2, calcExonicCodingPhase(exon, 10, 25, POS_STRAND, 10));
+        assertEquals(PHASE_0, calcExonicCodingPhase(exon, 10, 50, NEG_STRAND, 20));
     }
 
     @Test
@@ -195,19 +197,19 @@ public class GeneTranscriptTest
                 TRANS_ID_1, TRANS_NAME_1, GENE_ID_1, false, POS_STRAND,
                 10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
 
-        transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 1, PHASE_2, PHASE_1));
-        transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, PHASE_1, PHASE_0));
-        transData.exons().add(new ExonData(TRANS_ID_1, 50, 60, 2, PHASE_0, PHASE_NONE));
+        transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 1, PHASE_2, PHASE_0));
+        transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, PHASE_0, PHASE_1));
+        transData.exons().add(new ExonData(TRANS_ID_1, 50, 60, 3, PHASE_1, PHASE_NONE));
 
         cbData = calcCodingBases(transData, 10);
 
         assertEquals(1, cbData.CodingBases);
-        assertEquals(PHASE_0, cbData.Phase);
+        assertEquals(PHASE_2, cbData.Phase);
 
         cbData = calcCodingBases(transData, 20);
 
         assertEquals(11, cbData.CodingBases);
-        assertEquals(PHASE_1, cbData.Phase);
+        assertEquals(PHASE_0, cbData.Phase);
 
         // and on the negative strand
         codingStart = 30;
@@ -216,19 +218,24 @@ public class GeneTranscriptTest
                 TRANS_ID_1, TRANS_NAME_1, GENE_ID_1, false, NEG_STRAND,
                 10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
 
-        transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 1, PHASE_NONE, PHASE_NONE));
-        transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, PHASE_1, PHASE_0));
-        transData.exons().add(new ExonData(TRANS_ID_1, 50, 60, 2, PHASE_2, PHASE_1));
+        transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 3, PHASE_NONE, PHASE_NONE));
+        transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, PHASE_0, PHASE_1));
+        transData.exons().add(new ExonData(TRANS_ID_1, 50, 60, 1, PHASE_2, PHASE_0));
 
         cbData = calcCodingBases(transData, 60);
 
         assertEquals(1, cbData.CodingBases);
+        assertEquals(PHASE_2, cbData.Phase);
+
+        cbData = calcCodingBases(transData, 50);
+
+        assertEquals(11, cbData.CodingBases);
         assertEquals(PHASE_0, cbData.Phase);
 
         cbData = calcCodingBases(transData, 40);
 
         assertEquals(12, cbData.CodingBases);
-        assertEquals(PHASE_2, cbData.Phase);
+        assertEquals(PHASE_1, cbData.Phase);
     }
 
     @Test
