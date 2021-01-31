@@ -366,7 +366,6 @@ public class LinxApplication
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: Ensembl data cache directory");
         options.addOption(FILTER_QC_PASS, false, "Optional: If present will filter out QC-fail sample");
         options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
-        options.addOption(REF_GENOME_FILE, true, "Path to the indexed ref genome fasta file");
 
         // allow sub-components to add their specific config
         LinxConfig.addCmdLineArgs(options);

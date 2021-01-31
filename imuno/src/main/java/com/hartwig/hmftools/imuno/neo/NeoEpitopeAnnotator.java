@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.imuno.neo;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -8,8 +7,10 @@ import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIO
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_FUSION_COHORT_FILE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_SAMPLE_ID;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.generateFilename;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
@@ -25,14 +26,17 @@ import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.imuno.neo.CohortTpmData.CANCER_VALUE;
 import static com.hartwig.hmftools.imuno.neo.CohortTpmData.COHORT_VALUE;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.CANCER_TPM_FILE;
-import static com.hartwig.hmftools.imuno.neo.NeoConfig.SV_FUSION_FILE;
+import static com.hartwig.hmftools.imuno.neo.NeoConfig.SV_FUSION_DATA_DIR;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.convertHlaTypeForPredictions;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.generatePeptides;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,15 +75,15 @@ public class NeoEpitopeAnnotator
     private final DatabaseAccess mDbAccess;
     private final CohortTpmData mCohortTpmData;
 
-    private String mCurrentSampleId;
+    private SampleData mCurrentSample;
     private int mNextNeoEpitopeId;
-    private BufferedWriter mWriter;
+    private BufferedWriter mNeoEpitopeWriter;
     private BufferedWriter mPeptideWriter;
 
     public NeoEpitopeAnnotator(final CommandLine cmd)
     {
         mConfig = new NeoConfig(cmd);
-        mWriter = null;
+        mNeoEpitopeWriter = null;
         mPeptideWriter = null;
 
         mSampleFusionMap = Maps.newHashMap();
@@ -91,40 +95,62 @@ public class NeoEpitopeAnnotator
         mGeneTransCache.createGeneNameIdMap();
 
         mDbAccess = DatabaseAccess.createDatabaseAccess(cmd);
-        mCurrentSampleId = "";
+        mCurrentSample = null;
         mNextNeoEpitopeId = 0;
 
         mCohortTpmData = new CohortTpmData(cmd.getOptionValue(CANCER_TPM_FILE));
-        loadSvNeoEpitopes(cmd.getOptionValue(SV_FUSION_FILE));
     }
 
     public void run()
     {
-        // check required inputs and config
-        for(final String sampleId : mConfig.SampleIds)
-        {
-            mCurrentSampleId = sampleId;
+        if(mConfig.Samples.isEmpty())
+            return;
 
-            final List<NeoEpitopeFusion> fusions = getSvFusions(sampleId);
-            final List<PointMutationData> pointMutations = getSomaticVariants(sampleId);
+        if(mConfig.Samples.size() == 1)
+        {
+            IM_LOGGER.info("processing sample({})", mConfig.Samples.get(0).Id);
+        }
+        else
+        {
+            IM_LOGGER.info("processing {} samples", mConfig.Samples.size());
+        }
+
+        // check required inputs and config
+        for(final SampleData sample : mConfig.Samples)
+        {
+            mCurrentSample = sample;
+
+            final List<NeoEpitopeFusion> fusions = getSvFusions();
+            final List<PointMutationData> pointMutations = getSomaticVariants();
 
             IM_LOGGER.debug("sample({}) loaded {} fusions and {} point mutations",
-                    sampleId, fusions.size(), pointMutations.size());
+                    sample.Id, fusions.size(), pointMutations.size());
 
             addSvFusions(fusions);
             addPointMutations(pointMutations);
+
+            if(!mConfig.WriteCohortFile)
+            {
+                closeBufferedWriter(mNeoEpitopeWriter);
+                closeBufferedWriter(mPeptideWriter);
+                mNeoEpitopeWriter = null;
+                mPeptideWriter = null;
+            }
         }
 
-        closeBufferedWriter(mWriter);
-        closeBufferedWriter(mPeptideWriter);
+        if(mConfig.WriteCohortFile)
+        {
+            closeBufferedWriter(mNeoEpitopeWriter);
+            closeBufferedWriter(mPeptideWriter);
+        }
     }
 
-    private final List<PointMutationData> getSomaticVariants(final String sampleId)
+    private final List<PointMutationData> getSomaticVariants()
     {
         final List<PointMutationData> pointMutations = Lists.newArrayList();
 
         final Result<Record> result = mDbAccess.context().select().from(Tables.SOMATICVARIANT)
-                .where(Tables.SOMATICVARIANT.SAMPLEID.eq(sampleId))
+                .where(Tables.SOMATICVARIANT.SAMPLEID.eq(mCurrentSample.Id))
                 .and(Tables.SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(Tables.SOMATICVARIANT.GENE.notEqual(""))
                 .fetch();
@@ -155,10 +181,16 @@ public class NeoEpitopeAnnotator
         return pointMutations;
     }
 
-    private final List<NeoEpitopeFusion> getSvFusions(final String sampleId)
+    private final List<NeoEpitopeFusion> getSvFusions()
     {
-        final List<NeoEpitopeFusion> fusions = mSampleFusionMap.get(sampleId);
-        mSampleFusionMap.remove(sampleId);
+        if(mSampleFusionMap.isEmpty())
+        {
+            loadSvNeoEpitopes();
+        }
+
+        final List<NeoEpitopeFusion> fusions = mSampleFusionMap.get(mCurrentSample.Id);
+        mSampleFusionMap.remove(mCurrentSample.Id);
+
         return fusions != null ? fusions : Lists.newArrayList();
     }
 
@@ -358,7 +390,7 @@ public class NeoEpitopeAnnotator
 
             for(String transName : fs == FS_UP ? upTransNames : downTransNames)
             {
-                final double[] result = mCohortTpmData.getTranscriptTpm(transName, mConfig.CancerType);
+                final double[] result = mCohortTpmData.getTranscriptTpm(transName, mCurrentSample.CancerType);
                 cancerTotal += result[CANCER_VALUE];
                 cohortTotal += result[COHORT_VALUE];
             }
@@ -375,30 +407,34 @@ public class NeoEpitopeAnnotator
 
         try
         {
-            if(mWriter == null)
+            if(mNeoEpitopeWriter == null)
             {
-                String outputFileName = mConfig.isMultiSample() ?
-                        mConfig.OutputDir + "IMU_NEO_EPITOPES.csv" : mConfig.OutputDir + mCurrentSampleId + ".imu.neo_epitopes.csv";
+                String outputFileName = mConfig.OutputDir;
 
-                mWriter = createBufferedWriter(outputFileName, false);
+                if(mConfig.WriteCohortFile)
+                    outputFileName += "IMU_NEO_EPITOPES.csv";
+                else
+                    outputFileName += mCurrentSample.Id + ".imu.neo_epitopes.csv";
 
-                if(mConfig.isMultiSample())
-                    mWriter.write("SampleId,");
+                mNeoEpitopeWriter = createBufferedWriter(outputFileName, false);
 
-                mWriter.write(NeoEpitopeFile.header());
-                mWriter.newLine();
+                if(mConfig.WriteCohortFile)
+                    mNeoEpitopeWriter.write("SampleId,");
+
+                mNeoEpitopeWriter.write(NeoEpitopeFile.header());
+                mNeoEpitopeWriter.newLine();
             }
 
-            if(mConfig.isMultiSample())
-                mWriter.write(String.format("%s,", mCurrentSampleId));
+            if(mConfig.WriteCohortFile)
+                mNeoEpitopeWriter.write(String.format("%s,", mCurrentSample.Id));
 
             final double[] tpmCancer = {0, 0};
             final double[] tpmCohort = {0, 0};
             populateTpmMedians(upTransNames, downTransNames, tpmCancer, tpmCohort);
 
             final NeoEpitopeFile neFile = neData.toFile(neId, upTransNames, downTransNames, tpmCancer, tpmCohort);
-            mWriter.write(NeoEpitopeFile.toString(neFile));
-            mWriter.newLine();
+            mNeoEpitopeWriter.write(NeoEpitopeFile.toString(neFile));
+            mNeoEpitopeWriter.newLine();
         }
         catch (final IOException e)
         {
@@ -411,35 +447,47 @@ public class NeoEpitopeAnnotator
         if(mConfig.OutputDir.isEmpty())
             return;
 
-        if(mConfig.HlaTypes.isEmpty() || mConfig.PeptideLengths[SE_START] == 0 || mConfig.PeptideLengths[SE_END] == 0)
+        if(mCurrentSample.HlaTypes.isEmpty() || mConfig.PeptideLengths[SE_START] == 0 || mConfig.PeptideLengths[SE_END] == 0)
             return;
 
         try
         {
             if(mPeptideWriter == null)
             {
-                String outputFileName = mConfig.isMultiSample() ?
-                        mConfig.OutputDir + "IMU_HLA_PEPTIDES.csv" : mConfig.OutputDir + mCurrentSampleId + ".imu.hla_peptides.csv";
+                String outputFileName = mConfig.OutputDir;
+
+                if(mConfig.WriteCohortFile)
+                    outputFileName += "IMU_HLA_PEPTIDES.csv";
+                else
+                    outputFileName += mCurrentSample.Id + ".imu.hla_peptides.csv";
 
                 mPeptideWriter = createBufferedWriter(outputFileName, false);
 
-                if(mConfig.isMultiSample())
+                if(mConfig.WriteCohortFile)
                     mPeptideWriter.write("SampleId,");
 
                 mPeptideWriter.write("NeId,HlaAllele,Peptide");
                 mPeptideWriter.newLine();
             }
 
-            if(mConfig.isMultiSample())
-                mPeptideWriter.write(String.format("%s,", mCurrentSampleId));
+            if(mConfig.WriteCohortFile)
+                mPeptideWriter.write(String.format("%s,", mCurrentSample.Id));
 
             final Set<String> peptides = generatePeptides(neData.UpstreamAcids, neData.NovelAcid, neData.DownstreamAcids, mConfig.PeptideLengths);
 
-            for(String hlaType : mConfig.HlaTypes)
+            for(String hlaType : mCurrentSample.HlaTypes)
             {
+                final String predictionHlaType = convertHlaTypeForPredictions(hlaType);
+
+                if(predictionHlaType == null)
+                {
+                    IM_LOGGER.error("sample({} skipping invalid HLA type: {}", mCurrentSample.Id, hlaType);
+                    continue;
+                }
+
                 for(String peptide : peptides)
                 {
-                    mPeptideWriter.write(String.format("%d,%s,%s", neId, hlaType, peptide));
+                    mPeptideWriter.write(String.format("%d,%s,%s", neId, predictionHlaType, peptide));
                     mPeptideWriter.newLine();
                 }
             }
@@ -450,10 +498,18 @@ public class NeoEpitopeAnnotator
         }
     }
 
-    private void loadSvNeoEpitopes(final String filename)
+    private void loadSvNeoEpitopes()
     {
-        if(filename == null || filename.isEmpty())
+        boolean isCohortFile = mConfig.WriteCohortFile;
+
+        final String filename = isCohortFile ?
+                mConfig.SvFusionsDir + NE_FUSION_COHORT_FILE : generateFilename(mConfig.SvFusionsDir, mCurrentSample.Id);
+
+        if(!Files.exists(Paths.get(filename)))
+        {
+            IM_LOGGER.error("Linx neo-epitope file({}) not found", filename);
             return;
+        }
 
         try
         {
@@ -467,9 +523,6 @@ public class NeoEpitopeAnnotator
                 return;
             }
 
-            boolean hasSampleId = line.contains(NE_SAMPLE_ID);
-            final String singleSampleId = mConfig.SampleIds.size() == 1 ? mConfig.SampleIds.get(0) : "";
-
             int neCount = 0;
             String currentSampleId = "";
             List<NeoEpitopeFusion> fusions = null;
@@ -477,10 +530,14 @@ public class NeoEpitopeAnnotator
             while ((line = fileReader.readLine()) != null)
             {
                 final String[] items = line.split(DELIMITER, -1);
-                final String sampleId = hasSampleId ? items[0] : singleSampleId;
 
-                if(!mConfig.SampleIds.contains(sampleId))
-                    continue;
+                final String sampleId = isCohortFile ? items[0] : mCurrentSample.Id;
+
+                if(isCohortFile)
+                {
+                    if(!mConfig.Samples.stream().noneMatch(x -> x.Id.equals(sampleId)))
+                        continue;
+                }
 
                 if(!currentSampleId.equals(sampleId))
                 {
@@ -489,7 +546,7 @@ public class NeoEpitopeAnnotator
                     mSampleFusionMap.put(sampleId, fusions);
                 }
 
-                fusions.add(NeoEpitopeFusion.fromString(line, hasSampleId));
+                fusions.add(NeoEpitopeFusion.fromString(line, isCohortFile));
                 ++neCount;
             }
 

@@ -737,4 +737,31 @@ public class NeoUtils
         return peptides;
     }
 
+    public static String convertHlaTypeForPredictions(final String hlaType)
+    {
+        // accepted: A*:01:01:01:01 or A*:01:01:01:01 or A*11:01
+        // output: HLA-A0101
+        if(hlaType.startsWith("HLA-") && hlaType.length() == 9)
+            return hlaType;
+
+        if(hlaType.contains("*") && hlaType.contains(":"))
+        {
+            String[] geneTypes = hlaType.split("\\*");
+
+            if(geneTypes.length != 2)
+                return null;
+
+            String[] types = geneTypes[1].split(":");
+
+            if(types.length == 2)
+                return "HLA-" + geneTypes[0] + types[0] + types[1];
+            else if(types.length >= 3 && types[0].isEmpty())
+                return "HLA-" + geneTypes[0] + types[1] + types[2];
+            else
+                return null;
+        }
+
+        return null;
+    }
+
 }

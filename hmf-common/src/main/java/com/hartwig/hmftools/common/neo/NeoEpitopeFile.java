@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -46,6 +45,11 @@ public class NeoEpitopeFile
     public final String[] CodingBaseCigars;
     public final double[] CancerTpmTotal;
     public final double[] CohortTpmTotal;
+
+    public static final String DELIMITER = ",";
+    public static final String ITEM_DELIM = ";";
+    public static final String VAR_INFO_DELIM = ":";
+    public static final String FUSION_INFO_DELIM = ";";
 
     public NeoEpitopeFile(
             int id, final NeoEpitopeType varType, final String varInfo, final double copyNumber,
@@ -238,10 +242,6 @@ public class NeoEpitopeFile
                 Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++],
                 Double.parseDouble(values[index++]), Double.parseDouble(values[index++]), Double.parseDouble(values[index++]), Double.parseDouble(values[index++]));
     }
-
-    public static final String ITEM_DELIM = ";";
-    public static final String VAR_INFO_DELIM = ":";
-    public static final String FUSION_INFO_DELIM = ";";
 
     public static String pointMutationInfo(final String chromosome, int position, final String ref, final String alt)
     {

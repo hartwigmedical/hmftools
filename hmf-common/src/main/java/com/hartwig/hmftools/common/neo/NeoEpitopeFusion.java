@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,8 +30,6 @@ public class NeoEpitopeFusion
 
     public final String[] Transcripts;
 
-    public static final String DELIMITER = ",";
-
     public NeoEpitopeFusion(
             final String geneIdUp, final String geneNameUp, final String chrUp, int posUp, byte orientUp, int svIdUp,
             final String geneIdDown, final String geneNameDown, final String chrDown, int posDown, byte orientDown, int svIdDown,
@@ -49,6 +48,7 @@ public class NeoEpitopeFusion
     }
 
     private static final String FILE_EXTENSION = ".linx.neo_epitope.tsv";
+    public static final String NE_FUSION_COHORT_FILE = "LNX_NEO_EPITOPES.csv";
     public static final String NE_SAMPLE_ID = "sampleId";
 
     @NotNull

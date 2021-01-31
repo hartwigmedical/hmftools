@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_FUSION_COHORT_FILE;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -33,8 +33,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 
@@ -45,7 +43,7 @@ public class NeoEpitopeWriter
     private final String mOutputDir;
 
     private boolean mIsMultiSample;
-    private BufferedWriter mFileWriter;
+    private BufferedWriter mWriter;
     private String mSampleId;
 
     private final EnsemblDataCache mGeneTransCache;
@@ -60,16 +58,20 @@ public class NeoEpitopeWriter
         mGeneTransCache = geneDataCache;
         mKnownFusionCache = knownFusionCache;
 
-        mFileWriter = null;
+        mWriter = null;
         mSampleId = null;
         mFusions = Lists.newArrayList();
     }
 
     public void initialiseSample(final String sampleId)
     {
-        mSampleId = sampleId;
+        if(!mIsMultiSample && mWriter != null)
+        {
+            closeBufferedWriter(mWriter);
+            mWriter = null;
+        }
 
-        // clear any cache
+        mSampleId = sampleId;
         mFusions.clear();
     }
 
@@ -293,35 +295,25 @@ public class NeoEpitopeWriter
     {
         try
         {
-            if(mFileWriter == null)
+            if(mWriter == null)
             {
+                String outputFileName = mIsMultiSample ?
+                        mOutputDir + NE_FUSION_COHORT_FILE : NeoEpitopeFusion.generateFilename(mOutputDir, mSampleId);
+
+                mWriter = createBufferedWriter(outputFileName, false);
+
                 if(mIsMultiSample)
-                {
-                    String outputFileName = mOutputDir + "LNX_NEO_EPITOPES.csv";
+                    mWriter.write("sampleId,");
 
-                    mFileWriter = createBufferedWriter(outputFileName, false);
-
-                    mFileWriter.write("sampleId");
-                    mFileWriter.write(NeoEpitopeFusion.header());
-                    mFileWriter.newLine();
-                }
-                else
-                {
-                    String outputFileName = NeoEpitopeFusion.generateFilename(mOutputDir, mSampleId);
-
-                    mFileWriter = createBufferedWriter(outputFileName, false);
-                    mFileWriter.write(NeoEpitopeFusion.header());
-                    mFileWriter.newLine();
-                }
+                mWriter.write(NeoEpitopeFusion.header());
+                mWriter.newLine();
             }
 
             if(mIsMultiSample)
-            {
-                mFileWriter.write(String.format("%s",mSampleId));
-            }
+                mWriter.write(String.format("%s,",mSampleId));
 
-            mFileWriter.write(NeoEpitopeFusion.toString(fusion));
-            mFileWriter.newLine();
+            mWriter.write(NeoEpitopeFusion.toString(fusion));
+            mWriter.newLine();
         }
         catch (final IOException e)
         {
@@ -331,7 +323,7 @@ public class NeoEpitopeWriter
 
     public void close()
     {
-        closeBufferedWriter(mFileWriter);
+        closeBufferedWriter(mWriter);
     }
 
 }

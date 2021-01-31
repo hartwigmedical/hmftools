@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.FUSION_MAX_CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
@@ -126,7 +125,6 @@ public class FusionDisruptionAnalyser
         options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
         options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
         options.addOption(WRITE_NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
-        options.addOption(REF_GENOME_FILE, true, "Reference genome file");
 
         options.addOption(RNA_FUSIONS_FILE, true, "Sample RNA fusion data to match vs Linx fusions");
         options.addOption(RNA_FILE_SOURCE, true, "RNA fusion source: ISOFOX, ARRIBA or STARFUSION");
@@ -138,7 +136,7 @@ public class FusionDisruptionAnalyser
 
     public static boolean validConfig(final CommandLine cmd)
     {
-        return configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, REF_GENOME_FILE) && configPathValid(cmd, KNOWN_FUSIONS_FILE);
+        return configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, KNOWN_FUSIONS_FILE);
     }
 
     private void initialise(final CommandLine cmdLineArgs)
@@ -175,7 +173,7 @@ public class FusionDisruptionAnalyser
 
         if(cmdLineArgs.hasOption(WRITE_NEO_EPITOPES))
         {
-            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, mConfig.hasMultipleSamples(), mGeneDataCache, mFusionFinder.getKnownFusionCache());
+            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, false, mGeneDataCache, mFusionFinder.getKnownFusionCache());
         }
 
         if(mRunFusions)
