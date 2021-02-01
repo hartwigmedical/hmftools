@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_FUSION_COHORT_
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.generateFilename;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -32,6 +33,7 @@ import static com.hartwig.hmftools.imuno.neo.NeoUtils.generatePeptides;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -148,6 +150,44 @@ public class NeoEpitopeAnnotator
     {
         final List<PointMutationData> pointMutations = Lists.newArrayList();
 
+        if(mConfig.MutationsFile != null)
+        {
+            try
+            {
+                final List<String> fileContents = Files.readAllLines(new File(mConfig.MutationsFile).toPath());
+
+                if(fileContents.isEmpty())
+                    return pointMutations;
+
+                final String header = fileContents.get(0);
+                fileContents.remove(0);
+                final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+
+                for(String data : fileContents)
+                {
+                    final String[] items = data.split(DELIMITER);
+
+                    pointMutations.add(new PointMutationData(
+                            items[fieldsIndexMap.get("Chromosome")],
+                            Integer.parseInt(items[fieldsIndexMap.get("Position")]),
+                            items[fieldsIndexMap.get("Ref")],
+                            items[fieldsIndexMap.get("Alt")],
+                            items[fieldsIndexMap.get("GeneName")],
+                            CodingEffect.valueOf(items[fieldsIndexMap.get("CodingEffect")]),
+                            1, -1));
+                }
+            }
+            catch (IOException e)
+            {
+                IM_LOGGER.warn("failed to load common HLA types file({}): {}", mConfig.MutationsFile, e.toString());
+            }
+
+            return pointMutations;
+        }
+
+        if(mDbAccess == null)
+            return pointMutations;
+
         final Result<Record> result = mDbAccess.context().select().from(Tables.SOMATICVARIANT)
                 .where(Tables.SOMATICVARIANT.SAMPLEID.eq(mCurrentSample.Id))
                 .and(Tables.SOMATICVARIANT.FILTER.eq(PASS_FILTER))
@@ -184,6 +224,9 @@ public class NeoEpitopeAnnotator
     {
         if(mSampleFusionMap.isEmpty())
         {
+            if(mConfig.SvFusionsDir == null)
+                return Lists.newArrayList();
+
             loadSvNeoEpitopes();
         }
 
@@ -446,6 +489,11 @@ public class NeoEpitopeAnnotator
         if(mConfig.OutputDir.isEmpty())
             return;
 
+        if(!mConfig.CommonHlaTypes.isEmpty() && mCurrentSample.HlaTypes.isEmpty())
+        {
+            mCurrentSample.HlaTypes.addAll(mConfig.CommonHlaTypes);
+        }
+
         if(mCurrentSample.HlaTypes.isEmpty() || mConfig.PeptideLengths[SE_START] == 0 || mConfig.PeptideLengths[SE_END] == 0)
             return;
 
@@ -465,7 +513,7 @@ public class NeoEpitopeAnnotator
                 if(mConfig.WriteCohortFile)
                     mPeptideWriter.write("SampleId,");
 
-                mPeptideWriter.write("NeId,HlaAllele,Peptide,NFlank,CFlank");
+                mPeptideWriter.write("NeId,HlaAllele,Peptide,n_flank,c_flank");
                 mPeptideWriter.newLine();
             }
 

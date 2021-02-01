@@ -12,7 +12,12 @@ import static com.hartwig.hmftools.imuno.common.ImunoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.loadGeneIdsFile;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.loadSampleDataFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -30,6 +35,8 @@ public class NeoConfig
     public final RefGenomeInterface RefGenome;
 
     public final List<String> RestrictedGeneIds;
+    public final List<String> CommonHlaTypes;
+    public final String MutationsFile;
 
     public final int RequiredAminoAcids;
     public final boolean WriteTransData;
@@ -39,9 +46,11 @@ public class NeoConfig
 
     public static final String SAMPLE = "sample";
     public static final String CANCER_TYPE = "cancer_type";
-    public static final String HLA_TYPES = "hla_types";
     public static final String PEPTIDE_LENGTHS = "peptide_lengths";
     public static final String PEPTIDE_FLANKS = "peptide_flanks";
+
+    public static final String HLA_TYPES_FILE = "hla_types_file";
+    public static final String MUTATIONS_FILE = "mutations_file";
 
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SV_FUSION_DATA_DIR = "sv_fusion_data_dir";
@@ -111,18 +120,24 @@ public class NeoConfig
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
         RefGenome = loadRefGenome(refGenomeFilename);
 
-        RestrictedGeneIds = Lists.newArrayList();
         SvFusionsDir = cmd.getOptionValue(SV_FUSION_DATA_DIR);
         OutputDir = parseOutputDir(cmd);
 
         RequiredAminoAcids = Integer.parseInt(cmd.getOptionValue(REQ_AMINO_ACIDS, String.valueOf(DEFAULT_AMINO_ACID_REF_COUNT)));
+
+        CommonHlaTypes = Lists.newArrayList();
+
+        if(cmd.hasOption(HLA_TYPES_FILE))
+            loadCommonHlaTypes(cmd.getOptionValue(HLA_TYPES_FILE));
+
+        MutationsFile = cmd.getOptionValue(MUTATIONS_FILE);
+
         WriteTransData = cmd.hasOption(WRITE_TRANS_DATA);
         WriteCohortFile = cmd.hasOption(WRITE_COHORT_FILE);
 
+        RestrictedGeneIds = Lists.newArrayList();
         if(cmd.hasOption(GENE_ID_FILE))
-        {
             loadGeneIdsFile(cmd.getOptionValue(GENE_ID_FILE), RestrictedGeneIds);
-        }
     }
 
     public boolean isMultiSample() { return Samples.size() > 1; }
@@ -137,6 +152,8 @@ public class NeoConfig
         RefGenome = refGenome;
         RestrictedGeneIds = restrictedGeneIds;
         RequiredAminoAcids = requiredAminoAcids;
+        CommonHlaTypes = Lists.newArrayList();
+        MutationsFile = null;
         SvFusionsDir = "";
         OutputDir = "";
         WriteTransData = false;
@@ -147,7 +164,8 @@ public class NeoConfig
     {
         options.addOption(SAMPLE, true, "Sample - Id(s) separated by ';' or CSV file");
         options.addOption(CANCER_TYPE, true, "Tumor cancer type (optional) - to retrieve cancer median TPM");
-        options.addOption(HLA_TYPES, true, "Sample HLA types, separated by ';'");
+        options.addOption(HLA_TYPES_FILE, true, "File with a list of HLA types");
+        options.addOption(MUTATIONS_FILE, true, "File with a list of point mutations");
         options.addOption(PEPTIDE_LENGTHS, true, "Peptide length min-max, separated by '-', eg 8-12");
         options.addOption(PEPTIDE_FLANKS, true, "Peptide flanking amino acids");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl data cache directory");
@@ -163,6 +181,27 @@ public class NeoConfig
         DatabaseAccess.addDatabaseCmdLineArgs(options);
     }
 
+    public void loadCommonHlaTypes(final String filename)
+    {
+        if (!Files.exists(Paths.get(filename)))
+        {
+            IM_LOGGER.warn("invalid HLA types file({})", filename);
+            return;
+        }
 
+        try
+        {
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+
+            if(fileContents.isEmpty())
+                return;
+
+            CommonHlaTypes.addAll(fileContents);
+        }
+        catch (IOException e)
+        {
+            IM_LOGGER.warn("failed to load common HLA types file({}): {}", filename, e.toString());
+        }
+    }
 
 }
