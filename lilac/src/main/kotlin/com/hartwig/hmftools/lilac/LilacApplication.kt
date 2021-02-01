@@ -159,7 +159,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             logger.info("... discarded ${discardedGroups.size} uniquely identifiable groups: " + discardedGroups.joinToString(", "))
         }
 
-        val proteinCoverage = coverageFactory.proteinCoverage(candidateAlleles)
+        val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
+        val proteinCoverage = coverageFactory.proteinCoverage(candidatesAfterConfirmedGroups)
         val confirmedProtein = proteinCoverage.alleles.filter { it.uniqueCoverage >= minConfirmedUniqueCoverage }.sortedDescending()
         val discardedProtein = proteinCoverage.alleles.filter { it.uniqueCoverage in 1 until minConfirmedUniqueCoverage }.sortedDescending()
         logger.info("... found ${confirmedProtein.size} uniquely identifiable proteins: " + confirmedProtein.joinToString(", "))
@@ -283,5 +284,14 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         return result
     }
 
+    private fun List<HlaAllele>.filterWithConfirmedGroups(confirmedGroups: List<HlaAllele>): List<HlaAllele> {
+        val a = confirmedGroups.filter { it.gene == "A" }
+        val b = confirmedGroups.filter { it.gene == "B" }
+        val c = confirmedGroups.filter { it.gene == "C" }
+        val map = mapOf(Pair("A", a), Pair("B", b), Pair("C", c))
+
+        return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(it.alleleGroup()) }
+
+    }
 
 }
