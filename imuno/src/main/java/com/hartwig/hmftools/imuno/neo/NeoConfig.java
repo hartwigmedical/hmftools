@@ -196,6 +196,9 @@ public class NeoConfig
             if(fileContents.isEmpty())
                 return;
 
+            if(fileContents.get(0).contains("HlaType"))
+                fileContents.remove(0);
+
             CommonHlaTypes.addAll(fileContents);
         }
         catch (IOException e)
