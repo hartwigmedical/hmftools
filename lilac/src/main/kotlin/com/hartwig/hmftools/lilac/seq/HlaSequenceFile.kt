@@ -47,14 +47,7 @@ object HlaSequenceFile {
             val fourDigitName = sequence.allele.specificProtein()
             if (!resultMap.containsKey(fourDigitName)) {
                 resultMap[fourDigitName] = sequence
-            } else {
-                val existing = resultMap[fourDigitName]!!
-                if (existing.length < sequence.length) {
-                    logger.debug("Replacing ${existing.allele} with ${sequence.allele}")
-                    resultMap[fourDigitName] = sequence
-                }
             }
-
         }
 
         return resultMap.values.toList()
