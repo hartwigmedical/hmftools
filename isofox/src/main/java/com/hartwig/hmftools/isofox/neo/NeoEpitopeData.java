@@ -6,15 +6,13 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.DELIMITER;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.generateMappedCoords;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.cigarFromStr;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
-import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.PARTIAL_MATCH;
 
 import java.util.List;
 import java.util.StringJoiner;
