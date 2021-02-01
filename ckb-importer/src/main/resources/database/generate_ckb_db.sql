@@ -41,7 +41,7 @@ CREATE TABLE clinicalTrial
     gender varchar(255),
     variantRequirement varchar(255),
     sponsors varchar(255),
-    updateDate varchar(255),
+    updateDate datetime,
     PRIMARY KEY (id)
 );
 
@@ -123,7 +123,7 @@ CREATE TABLE drug
     tradeName varchar(255),
     casRegistryNum varchar(255),
     nctId varchar(255),
-    createDate varchar(255),
+    createDate date,
     PRIMARY KEY (id)
 );
 

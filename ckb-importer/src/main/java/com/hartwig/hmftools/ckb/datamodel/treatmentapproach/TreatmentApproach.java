@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.treatmentapproach;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.DrugClassInfo;
@@ -31,9 +32,9 @@ public abstract class TreatmentApproach {
     @NotNull
     public abstract List<ReferenceInfo> reference();
 
-    @NotNull
-    public abstract String createDate();
+    @Nullable
+    public abstract Date createDate();
 
-    @NotNull
-    public abstract String updateDate();
+    @Nullable
+    public abstract Date updateDate();
 }

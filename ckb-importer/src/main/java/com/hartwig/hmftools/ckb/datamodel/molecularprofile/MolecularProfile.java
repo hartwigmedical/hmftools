@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.molecularprofile;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
@@ -25,11 +26,11 @@ public abstract class MolecularProfile {
     @NotNull
     public abstract List<TreatmentApproachInfo> treatmentApproach();
 
-    @NotNull
-    public abstract String createDate();
+    @Nullable
+    public abstract Date createDate();
 
-    @NotNull
-    public abstract String updateDate();
+    @Nullable
+    public abstract Date updateDate();
 
     @NotNull
     public abstract MolecularProfileExtendedEvidence complexMolecularProfileEvidence();

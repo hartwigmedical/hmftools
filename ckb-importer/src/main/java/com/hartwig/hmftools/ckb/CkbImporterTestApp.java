@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.text.ParseException;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
@@ -51,7 +52,7 @@ public class CkbImporterTestApp {
     private static final String TREATMENT_APPROACHES = "treatmentApproaches";
     private static final String VARIANTS = "variants";
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ParseException {
         Configurator.setRootLevel(Level.DEBUG);
 
         String hostname = InetAddress.getLocalHost().getHostName();
@@ -73,7 +74,7 @@ public class CkbImporterTestApp {
     }
 
     @NotNull
-    private static CkbEntry readJsonData(@NotNull String ckbPath) throws IOException {
+    private static CkbEntry readJsonData(@NotNull String ckbPath) throws IOException, ParseException {
 
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
         List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reader.therapy;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -48,7 +50,7 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<Therapy> readingTherapy(@NotNull String therapyDir) throws IOException {
+    public static List<Therapy> readingTherapy(@NotNull String therapyDir) throws IOException, ParseException {
         LOGGER.info("Start reading therapies");
 
         List<Therapy> therapies = Lists.newArrayList();
@@ -72,8 +74,8 @@ public class TherapyFactory {
                             .therapyName(JsonFunctions.string(therapyEntryObject, "therapyName"))
                             .synonyms(JsonFunctions.nullableString(therapyEntryObject, "synonyms"))
                             .description(createDescription(therapyEntryObject.getAsJsonArray("therapyDescriptions")))
-                            .createDate(JsonFunctions.string(therapyEntryObject, "createDate"))
-                            .updateDate(JsonFunctions.nullableString(therapyEntryObject, "updateDate"))
+                            .createDate(DateConverter.convertDate(JsonFunctions.string(therapyEntryObject, "createDate")))
+                            .updateDate(DateConverter.convertDate(JsonFunctions.nullableString(therapyEntryObject, "updateDate")))
                             .evidence(extractEvidence(therapyEntryObject.getAsJsonArray("evidence")))
                             .clinicalTrial(extractClinicalTrial(therapyEntryObject.getAsJsonArray("clinicalTrials")))
                             .drug(extractDrug(therapyEntryObject.getAsJsonArray("drugs")))

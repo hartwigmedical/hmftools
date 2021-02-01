@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reader.clinicaltrial;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -27,6 +28,7 @@ import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -43,7 +45,7 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrial> readingClinicalTrial(@NotNull String clinicalTrialDir) throws IOException {
+    public static List<ClinicalTrial> readingClinicalTrial(@NotNull String clinicalTrialDir) throws IOException, ParseException {
         LOGGER.info("Start reading clinical trials");
 
         List<ClinicalTrial> clinicalTrials = Lists.newArrayList();
@@ -72,7 +74,7 @@ public class ClinicalTrialFactory {
                             .gender(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "gender"))
                             .variantRequirement(JsonFunctions.string(clinicalTrialsEntryObject, "variantRequirements"))
                             .sponsors(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "sponsors"))
-                            .updateDate(JsonFunctions.string(clinicalTrialsEntryObject, "updateDate"))
+                            .updateDate(DateConverter.convertDate(JsonFunctions.string(clinicalTrialsEntryObject, "updateDate")))
                             .indication(retrieveClinicalTrialsIndications(clinicalTrialsEntryObject.getAsJsonArray("indications")))
                             .variantRequirementDetail(retrieveClinicalTrialsVariantRequirementDetails(clinicalTrialsEntryObject.getAsJsonArray(
                                     "variantRequirementDetails")))

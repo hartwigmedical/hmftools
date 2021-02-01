@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reader.molecularprofile;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.ckb.datamodel.molecularprofile.ImmutableMolecularPro
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.ImmutableMolecularProfileExtendedEvidence;
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfileExtendedEvidence;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -48,7 +50,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<MolecularProfile> readingMolecularprofile(@NotNull String molecularprofileDir) throws IOException {
+    public static List<MolecularProfile> readingMolecularprofile(@NotNull String molecularprofileDir) throws IOException, ParseException {
         LOGGER.info("Start reading molecular profiles");
 
         List<MolecularProfile> molecularProfiles = Lists.newArrayList();
@@ -73,8 +75,8 @@ public class MolecularprofileFactory {
                             .geneVariant(extractGeneVariant(molecularProfileEntryObject.getAsJsonArray("geneVariants")))
                             .treatmentApproach(extractProfileTreatmentApproach(molecularProfileEntryObject.getAsJsonArray(
                                     "profileTreatmentApproaches")))
-                            .createDate(JsonFunctions.string(molecularProfileEntryObject, "createDate"))
-                            .updateDate(JsonFunctions.string(molecularProfileEntryObject, "updateDate"))
+                            .createDate(DateConverter.convertDate(JsonFunctions.string(molecularProfileEntryObject, "createDate")))
+                            .updateDate(DateConverter.convertDate(JsonFunctions.string(molecularProfileEntryObject, "updateDate")))
                             .complexMolecularProfileEvidence(extractComplexMolecularProfileEvidence(molecularProfileEntryObject.getAsJsonObject(
                                     "complexMolecularProfileEvidence")))
                             .treatmentApproachEvidence(extractTreatmentApproachEvidence(molecularProfileEntryObject.getAsJsonObject(

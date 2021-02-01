@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.variant;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.DescriptionInfo;
@@ -39,11 +40,11 @@ public abstract class Variant {
     @NotNull
     public abstract String variant();
 
-    @NotNull
-    public abstract String createDate();
+    @Nullable
+    public abstract Date createDate();
 
-    @NotNull
-    public abstract String updateDate();
+    @Nullable
+    public abstract Date updateDate();
 
     @Nullable
     public abstract VariantTranscriptCoordinate referenceTranscriptCoordinate();

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.therapy;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
@@ -27,11 +28,11 @@ public abstract class Therapy {
     @NotNull
     public abstract List<DescriptionInfo> description();
 
-    @NotNull
-    public abstract String createDate();
+    @Nullable
+    public abstract Date createDate();
 
     @Nullable
-    public abstract String updateDate();
+    public abstract Date updateDate();
 
     @NotNull
     public abstract List<EvidenceInfo> evidence();

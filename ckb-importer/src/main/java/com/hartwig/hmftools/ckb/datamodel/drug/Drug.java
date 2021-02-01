@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.drug;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
@@ -43,8 +44,8 @@ public abstract class Drug {
     @Nullable
     public abstract String nctId();
 
-    @NotNull
-    public abstract String createDate();
+    @Nullable
+    public abstract Date createDate();
 
     @NotNull
     public abstract List<ClinicalTrialInfo> clinicalTrial();

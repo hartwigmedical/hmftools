@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reader.gene;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -34,6 +35,7 @@ import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
 import com.hartwig.hmftools.ckb.datamodel.gene.Gene;
 import com.hartwig.hmftools.ckb.datamodel.gene.ImmutableGene;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -50,7 +52,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<Gene> readingGenes(@NotNull String geneDir) throws IOException {
+    public static List<Gene> readingGenes(@NotNull String geneDir) throws IOException, ParseException {
         LOGGER.info("Start reading genes");
 
         List<Gene> genes = Lists.newArrayList();
@@ -80,8 +82,8 @@ public class GeneFactory {
                             .description(extractGeneDescriptions(geneEntryObject.getAsJsonArray("geneDescriptions")))
                             .canonicalTranscript(JsonFunctions.nullableString(geneEntryObject, "canonicalTranscript"))
                             .geneRole(JsonFunctions.string(geneEntryObject, "geneRole"))
-                            .createDate(JsonFunctions.string(geneEntryObject, "createDate"))
-                            .updateDate(JsonFunctions.nullableString(geneEntryObject, "updateDate"))
+                            .createDate(DateConverter.convertDate(JsonFunctions.string(geneEntryObject, "createDate")))
+                            .updateDate(DateConverter.convertDate(JsonFunctions.nullableString(geneEntryObject, "updateDate")))
                             .clinicalTrial(extractGeneClinicalTrial(geneEntryObject.getAsJsonArray("clinicalTrials")))
                             .evidence(extractGeneEvidence(geneEntryObject.getAsJsonArray("evidence")))
                             .variant(extractGeneVariant(geneEntryObject.getAsJsonArray("variants")))

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reader.variant;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -40,6 +41,7 @@ import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantCategoryVariantPath;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantPartnerGene;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantTranscriptCoordinate;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -56,7 +58,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<Variant> readingVariant(@NotNull String variantDir) throws IOException {
+    public static List<Variant> readingVariant(@NotNull String variantDir) throws IOException, ParseException {
         LOGGER.info("Start reading variant");
 
         List<Variant> variants = Lists.newArrayList();
@@ -84,8 +86,8 @@ public class VariantFactory {
                             .type(JsonFunctions.nullableString(variantEntryObject, "type"))
                             .gene(extractGene(variantEntryObject.getAsJsonObject("gene")))
                             .variant(JsonFunctions.string(variantEntryObject, "variant"))
-                            .createDate(JsonFunctions.string(variantEntryObject, "createDate"))
-                            .updateDate(JsonFunctions.string(variantEntryObject, "updateDate"))
+                            .createDate(DateConverter.convertDate(JsonFunctions.string(variantEntryObject, "createDate")))
+                            .updateDate(DateConverter.convertDate(JsonFunctions.string(variantEntryObject, "updateDate")))
                             .referenceTranscriptCoordinate(
                                     variantEntryObject.has("referenceTranscriptCoordinates") && !variantEntryObject.get(
                                             "referenceTranscriptCoordinates").isJsonNull() ? extractReferenceTranscriptCoordinate(

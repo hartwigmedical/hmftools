@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reader.drug;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodel.drug.ImmutableDrug;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -47,7 +49,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<Drug> readingDrugs(@NotNull String drugsDir) throws IOException {
+    public static List<Drug> readingDrugs(@NotNull String drugsDir) throws IOException, ParseException {
         LOGGER.info("Start reading drug");
 
         List<Drug> drugs = Lists.newArrayList();
@@ -76,7 +78,7 @@ public class DrugFactory {
                             .drugClass(extractDrugsClasses(drugsEntryObject.getAsJsonArray("drugClasses")))
                             .casRegistryNum(JsonFunctions.nullableString(drugsEntryObject, "casRegistryNum"))
                             .nctId(JsonFunctions.nullableString(drugsEntryObject, "ncitId"))
-                            .createDate(JsonFunctions.string(drugsEntryObject, "createDate"))
+                            .createDate(DateConverter.convertDate(JsonFunctions.string(drugsEntryObject, "createDate")))
                             .clinicalTrial(extractCliniclaTrials(drugsEntryObject.getAsJsonArray("clinicalTrials")))
                             .evidence(extractEvidence(drugsEntryObject.getAsJsonArray("evidence")))
                             .therapy(extractTherapies(drugsEntryObject.getAsJsonArray("therapies")))
