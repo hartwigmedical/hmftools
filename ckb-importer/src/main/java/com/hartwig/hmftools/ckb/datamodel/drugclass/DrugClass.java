@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.drugclass;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.DrugInfo;
@@ -13,14 +14,13 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DrugClass {
 
-    @NotNull
-    public abstract String id();
+    public abstract int id();
 
     @NotNull
     public abstract String drugClass();
 
-    @NotNull
-    public abstract String createDate();
+    @Nullable
+    public abstract Date createDate();
 
     @NotNull
     public abstract List<DrugInfo> drug();

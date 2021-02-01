@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.IndicationInfo;
@@ -40,8 +41,8 @@ public abstract class ClinicalTrial {
     @Nullable
     public abstract String sponsors();
 
-    @NotNull
-    public abstract String updateDate();
+    @Nullable
+    public abstract Date updateDate();
 
     @NotNull
     public abstract List<IndicationInfo> indication();

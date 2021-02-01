@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reader.therapy;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -48,7 +50,7 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<Therapy> readingTherapy(@NotNull String therapyDir) throws IOException {
+    public static List<Therapy> readingTherapy(@NotNull String therapyDir) throws IOException, ParseException {
         LOGGER.info("Start reading therapies");
 
         List<Therapy> therapies = Lists.newArrayList();
@@ -68,12 +70,12 @@ public class TherapyFactory {
                     therapyObjectChecker.check(therapyEntryObject);
 
                     therapies.add(ImmutableTherapy.builder()
-                            .id(JsonFunctions.string(therapyEntryObject, "id"))
+                            .id(JsonFunctions.integer(therapyEntryObject, "id"))
                             .therapyName(JsonFunctions.string(therapyEntryObject, "therapyName"))
                             .synonyms(JsonFunctions.nullableString(therapyEntryObject, "synonyms"))
                             .description(createDescription(therapyEntryObject.getAsJsonArray("therapyDescriptions")))
-                            .createDate(JsonFunctions.string(therapyEntryObject, "createDate"))
-                            .updateDate(JsonFunctions.nullableString(therapyEntryObject, "updateDate"))
+                            .createDate(DateConverter.convertDate(JsonFunctions.string(therapyEntryObject, "createDate")))
+                            .updateDate(DateConverter.convertDate(JsonFunctions.nullableString(therapyEntryObject, "updateDate")))
                             .evidence(extractEvidence(therapyEntryObject.getAsJsonArray("evidence")))
                             .clinicalTrial(extractClinicalTrial(therapyEntryObject.getAsJsonArray("clinicalTrials")))
                             .drug(extractDrug(therapyEntryObject.getAsJsonArray("drugs")))
@@ -116,7 +118,7 @@ public class TherapyFactory {
             referenceChecker.check(referenceJsonObject);
 
             references.add(ImmutableReferenceInfo.builder()
-                    .id(JsonFunctions.string(referenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
                     .url(JsonFunctions.nullableString(referenceJsonObject, "url"))
@@ -136,7 +138,7 @@ public class TherapyFactory {
             evidenceChecker.check(evidenceJsonObject);
 
             evidences.add(ImmutableEvidenceInfo.builder()
-                    .id(JsonFunctions.string(evidenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(evidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(evidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(evidenceJsonObject, "evidenceType"))
                     .efficacyEvidence(JsonFunctions.string(evidenceJsonObject, "efficacyEvidence"))
@@ -158,7 +160,7 @@ public class TherapyFactory {
         molecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
@@ -169,7 +171,7 @@ public class TherapyFactory {
         therapyChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
                 .build();
@@ -181,7 +183,7 @@ public class TherapyFactory {
         indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -197,7 +199,7 @@ public class TherapyFactory {
             referenceChecker.check(referenceJsonObject);
 
             references.add(ImmutableReferenceInfo.builder()
-                    .id(JsonFunctions.string(referenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
                     .url(JsonFunctions.nullableString(referenceJsonObject, "url"))
@@ -236,7 +238,7 @@ public class TherapyFactory {
             therapyChecker.check(therapyJsonObject);
 
             therapies.add(ImmutableTherapyInfo.builder()
-                    .id(JsonFunctions.string(therapyJsonObject, "id"))
+                    .id(JsonFunctions.integer(therapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))
                     .build());
@@ -254,7 +256,7 @@ public class TherapyFactory {
             drugChecker.check(drugJsonObject);
 
             drugs.add(ImmutableDrugInfo.builder()
-                    .id(JsonFunctions.string(drugJsonObject, "id"))
+                    .id(JsonFunctions.integer(drugJsonObject, "id"))
                     .drugName(JsonFunctions.string(drugJsonObject, "drugName"))
                     .term(JsonFunctions.stringList(drugJsonObject, "terms"))
                     .build());
@@ -273,7 +275,7 @@ public class TherapyFactory {
             globalApprovalStatusChecker.check(globalApprovalStatusJsonObject);
 
             globalApprovalStatuses.add(ImmutableGlobalApprovalStatusInfo.builder()
-                    .id(JsonFunctions.string(globalApprovalStatusJsonObject, "id"))
+                    .id(JsonFunctions.integer(globalApprovalStatusJsonObject, "id"))
                     .therapy(extractTherapy(globalApprovalStatusJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(globalApprovalStatusJsonObject.getAsJsonObject("indication")))
                     .molecularProfile(extractMolecularProfile(globalApprovalStatusJsonObject.getAsJsonObject("molecularProfile")))

@@ -11,7 +11,7 @@ import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
-import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 
 import org.immutables.value.Value;

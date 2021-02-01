@@ -1,5 +1,6 @@
-package com.hartwig.hmftools.ckb.datamodel.treatmentApproach;
+package com.hartwig.hmftools.ckb.datamodel.treatmentapproach;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.DrugClassInfo;
@@ -14,8 +15,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class TreatmentApproach {
 
-    @NotNull
-    public abstract String id();
+    public abstract int id();
 
     @NotNull
     public abstract String name();
@@ -32,9 +32,9 @@ public abstract class TreatmentApproach {
     @NotNull
     public abstract List<ReferenceInfo> reference();
 
-    @NotNull
-    public abstract String createDate();
+    @Nullable
+    public abstract Date createDate();
 
-    @NotNull
-    public abstract String updateDate();
+    @Nullable
+    public abstract Date updateDate();
 }

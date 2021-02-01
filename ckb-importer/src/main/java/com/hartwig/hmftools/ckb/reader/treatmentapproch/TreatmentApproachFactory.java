@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reader.treatmentapproch;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -18,8 +19,9 @@ import com.hartwig.hmftools.ckb.datamodel.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.ImmutableTreatmentApproach;
-import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -36,7 +38,7 @@ public class TreatmentApproachFactory {
     }
 
     @NotNull
-    public static List<TreatmentApproach> readingTreatmentApproch(@NotNull String treatmentApprochDir) throws IOException {
+    public static List<TreatmentApproach> readingTreatmentApproch(@NotNull String treatmentApprochDir) throws IOException, ParseException {
         LOGGER.info("Start reading treatment approach");
 
         List<TreatmentApproach> treatmentAppraoch = Lists.newArrayList();
@@ -56,7 +58,7 @@ public class TreatmentApproachFactory {
                     treatmentApprochObjectChecker.check(treatmentApprochEntryObject);
 
                     treatmentAppraoch.add(ImmutableTreatmentApproach.builder()
-                            .id(JsonFunctions.string(treatmentApprochEntryObject, "id"))
+                            .id(JsonFunctions.integer(treatmentApprochEntryObject, "id"))
                             .name(JsonFunctions.string(treatmentApprochEntryObject, "name"))
                             .profileName(JsonFunctions.string(treatmentApprochEntryObject, "profileName"))
                             .drugClass(treatmentApprochEntryObject.has("drugClass") && !treatmentApprochEntryObject.get("drugClass")
@@ -65,8 +67,8 @@ public class TreatmentApproachFactory {
                                     ? extractTherapy(treatmentApprochEntryObject.getAsJsonObject("therapy"))
                                     : null)
                             .reference(extractReference(treatmentApprochEntryObject.getAsJsonArray("references")))
-                            .createDate(JsonFunctions.string(treatmentApprochEntryObject, "createDate"))
-                            .updateDate(JsonFunctions.string(treatmentApprochEntryObject, "updateDate"))
+                            .createDate(DateConverter.convertDate(JsonFunctions.string(treatmentApprochEntryObject, "createDate")))
+                            .updateDate(DateConverter.convertDate(JsonFunctions.string(treatmentApprochEntryObject, "updateDate")))
                             .build());
                 }
                 reader.close();
@@ -83,7 +85,7 @@ public class TreatmentApproachFactory {
         drugClassObjectChecker.check(jsonObject);
 
         return ImmutableDrugClassInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .drugClass(JsonFunctions.string(jsonObject, "drugClass"))
                 .build();
     }
@@ -94,7 +96,7 @@ public class TreatmentApproachFactory {
         therapyObjectChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
                 .build();
@@ -110,7 +112,7 @@ public class TreatmentApproachFactory {
             referenceObjectChecker.check(referenceJsonObject);
 
             references.add(ImmutableReferenceInfo.builder()
-                    .id(JsonFunctions.string(referenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.string(referenceJsonObject, "title"))
                     .url(JsonFunctions.nullableString(referenceJsonObject, "url"))

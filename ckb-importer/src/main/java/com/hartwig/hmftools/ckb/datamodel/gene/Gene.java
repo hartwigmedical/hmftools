@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.gene;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
@@ -17,8 +18,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Gene {
 
-    @NotNull
-    public abstract String id();
+    public abstract int id();
 
     @NotNull
     public abstract String geneSymbol();
@@ -47,11 +47,11 @@ public abstract class Gene {
     @NotNull
     public abstract String geneRole();
 
-    @NotNull
-    public abstract String createDate();
+    @Nullable
+    public abstract Date createDate();
 
     @Nullable
-    public abstract String updateDate();
+    public abstract Date updateDate();
 
     @NotNull
     public abstract List<ClinicalTrialInfo> clinicalTrial();

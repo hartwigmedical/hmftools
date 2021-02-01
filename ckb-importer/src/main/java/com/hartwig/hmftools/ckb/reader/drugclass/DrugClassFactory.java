@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.reader.drugclass;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.datamodel.drugclass.ImmutableDrugClass;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
@@ -33,7 +35,7 @@ public class DrugClassFactory {
     }
 
     @NotNull
-    public static List<DrugClass> readingDrugClasses(@NotNull String drugClassesDir) throws IOException {
+    public static List<DrugClass> readingDrugClasses(@NotNull String drugClassesDir) throws IOException, ParseException {
         LOGGER.info("Start reading drug classes");
 
         List<DrugClass> drugClasses = Lists.newArrayList();
@@ -53,9 +55,9 @@ public class DrugClassFactory {
                     drugsClassChecker.check(drugClassEntryObject);
 
                     drugClasses.add(ImmutableDrugClass.builder()
-                            .id(JsonFunctions.string(drugClassEntryObject, "id"))
+                            .id(JsonFunctions.integer(drugClassEntryObject, "id"))
                             .drugClass(JsonFunctions.string(drugClassEntryObject, "drugClass"))
-                            .createDate(JsonFunctions.string(drugClassEntryObject, "createDate"))
+                            .createDate(DateConverter.convertDate(JsonFunctions.string(drugClassEntryObject, "createDate")))
                             .drug(retrieveDrugs(drugClassEntryObject.getAsJsonArray("drugs")))
                             .treatmentApproach(retrieveTreatmentApproaches(drugClassEntryObject.getAsJsonArray("treatmentApproaches")))
                             .build());
@@ -75,7 +77,7 @@ public class DrugClassFactory {
             drugsClassDrugChecker.check(drugsObject);
 
             drugs.add(ImmutableDrugInfo.builder()
-                    .id(JsonFunctions.string(drugsObject, "id"))
+                    .id(JsonFunctions.integer(drugsObject, "id"))
                     .drugName(JsonFunctions.string(drugsObject, "drugName"))
                     .term(JsonFunctions.optionalStringList(drugsObject, "terms"))
                     .build());
@@ -92,7 +94,7 @@ public class DrugClassFactory {
             drugsClassTreatmentApprochChecker.check(treatmentApproachObject);
 
             treatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
-                    .id(JsonFunctions.string(treatmentApproachObject, "id"))
+                    .id(JsonFunctions.integer(treatmentApproachObject, "id"))
                     .name(JsonFunctions.string(treatmentApproachObject, "name"))
                     .profileName(JsonFunctions.string(treatmentApproachObject, "profileName"))
                     .build());

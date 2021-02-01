@@ -26,7 +26,7 @@ import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.ckb.reader.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.reader.therapy.TherapyFactory;
-import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
 import com.hartwig.hmftools.ckb.reader.treatmentapproch.TreatmentApproachFactory;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.ckb.reader.variant.VariantFactory;
@@ -56,7 +56,7 @@ public class CkbImporterApplication {
     private static final String TREATMENT_APPROACHES = "treatmentApproaches";
     private static final String VARIANTS = "variants";
 
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) throws IOException, SQLException, java.text.ParseException {
         LOGGER.info("Running CKB importer v{}", VERSION);
 
         Options options = CkbImporterConfig.createOptions();
@@ -91,7 +91,7 @@ public class CkbImporterApplication {
     }
 
     @NotNull
-    private static CkbEntry readJsonData(@NotNull CkbImporterConfig config) throws IOException {
+    private static CkbEntry readJsonData(@NotNull CkbImporterConfig config) throws IOException, java.text.ParseException {
         LOGGER.info("Start with reading all files");
 
         String ckbPath = config.cbkDir();

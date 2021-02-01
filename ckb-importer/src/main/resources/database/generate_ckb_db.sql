@@ -41,7 +41,7 @@ CREATE TABLE clinicalTrial
     gender varchar(255),
     variantRequirement varchar(255),
     sponsors varchar(255),
-    updateDate varchar(255),
+    updateDate datetime,
     PRIMARY KEY (id)
 );
 
@@ -56,7 +56,7 @@ CREATE TABLE clinicalTrialAgeGroup
 CREATE TABLE clinicalTrialTherapy
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
-    therapyId varchar(255),
+    therapyId int NOT NULL,
     therapyName varchar(255),
     synonyms varchar(255),
     PRIMARY KEY (id),
@@ -66,7 +66,7 @@ CREATE TABLE clinicalTrialTherapy
 CREATE TABLE clinicalTrialIndication
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
-    indicationId varchar(255),
+    indicationId int NOT NULL,
     name varchar(255),
     source varchar(255),
     PRIMARY KEY (id),
@@ -84,7 +84,7 @@ CREATE TABLE clinicalTrialVariantRequirementDetail
 CREATE TABLE clinicalTrialVariantRequirementDetailMolecularProfile
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialVariantRequirementDetailId int NOT NULL,
-    idMolecularProfile varchar(255),
+    idMolecularProfile int NOT NULL,
     profileName varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (clinicalTrialVariantRequirementDetailId) REFERENCES clinicalTrialVariantRequirementDetail(id)
@@ -118,12 +118,12 @@ CREATE TABLE clinicalTrialContact
 
 CREATE TABLE drug
 (   id int NOT NULL AUTO_INCREMENT,
-    idOfDrug varchar(255),
+    idOfDrug int NOT NULL,
     drugName varchar(500),
     tradeName varchar(255),
     casRegistryNum varchar(255),
     nctId varchar(255),
-    createDate varchar(255),
+    createDate date,
     PRIMARY KEY (id)
 );
 
@@ -154,7 +154,7 @@ CREATE TABLE drugDescription
 CREATE TABLE drugDescriptionReference
 (   id int NOT NULL AUTO_INCREMENT,
     drugDescriptionId int NOT NULL,
-    drugDescriptionReferenceId varchar(255),
+    drugDescriptionReferenceId int NOT NULL,
     pubMedId varchar(255),
     title varchar(500),
     url varchar(255),
@@ -172,7 +172,7 @@ CREATE TABLE drugDescriptionReference
 CREATE TABLE drugDrugClass
 (   id int NOT NULL AUTO_INCREMENT,
     drugId int NOT NULL,
-    drugDrugClassId varchar(255),
+    drugDrugClassId int NOT NULL,
     drugClass varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (drugId) REFERENCES drug(id)
@@ -192,7 +192,7 @@ CREATE TABLE drugClinicalTrial
 CREATE TABLE drugClinicalTrialTherapy
 (   id int NOT NULL AUTO_INCREMENT,
     drugClinicalTrialId int NOT NULL,
-    drugClinicalTrialTherapyId varchar(255),
+    drugClinicalTrialTherapyId int NOT NULL,
     therapyName varchar(255),
     synonym varchar(255),
     PRIMARY KEY (id),
@@ -202,7 +202,7 @@ CREATE TABLE drugClinicalTrialTherapy
 CREATE TABLE drugEvidence
 (   id int NOT NULL AUTO_INCREMENT,
     drugId int NOT NULL,
-    drugEvidenceId varchar(255),
+    drugEvidenceId int NOT NULL,
     approvalStatus varchar(255),
     evidenceType varchar(255),
     efficacyEvidence varchar(1000),
@@ -216,7 +216,7 @@ CREATE TABLE drugEvidence
 CREATE TABLE drugEvidenceMolecularProfile
 (   id int NOT NULL AUTO_INCREMENT,
     drugEvidenceId int NOT NULL,
-    drugEvidenceMolecularProfileId varchar(255),
+    drugEvidenceMolecularProfileId int NOT NULL,
     profileName varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (drugEvidenceId) REFERENCES drugEvidence(id)
@@ -225,7 +225,7 @@ CREATE TABLE drugEvidenceMolecularProfile
 CREATE TABLE drugEvidenceTherapy
 (   id int NOT NULL AUTO_INCREMENT,
     drugEvidenceId int NOT NULL,
-    drugEvidenceTherapyId varchar(255),
+    drugEvidenceTherapyId int NOT NULL,
     therapyName varchar(255),
     synonym varchar(255),
     PRIMARY KEY (id),
@@ -235,7 +235,7 @@ CREATE TABLE drugEvidenceTherapy
 CREATE TABLE drugEvidenceIndication
 (   id int NOT NULL AUTO_INCREMENT,
     drugEvidenceId int NOT NULL,
-    drugEvidenceIndicationId varchar(255),
+    drugEvidenceIndicationId int NOT NULL,
     name varchar(255),
     source varchar(255),
     PRIMARY KEY (id),
@@ -245,7 +245,7 @@ CREATE TABLE drugEvidenceIndication
 CREATE TABLE drugEvidenceReference
 (   id int NOT NULL AUTO_INCREMENT,
     drugEvidenceId int NOT NULL,
-    drugEvidenceReferenceId varchar(255),
+    drugEvidenceReferenceId int NOT NULL,
     pubMedId varchar(255),
     title varchar(500),
     url varchar(255),
@@ -256,7 +256,7 @@ CREATE TABLE drugEvidenceReference
 CREATE TABLE drugEvidenceTreatmentApproch
 (   id int NOT NULL AUTO_INCREMENT,
     drugEvidenceId int NOT NULL,
-    drugEvidenceTreatmentApprochId varchar(255),
+    drugEvidenceTreatmentApprochId int NOT NULL,
     name varchar(255),
     profileName varchar(255),
     PRIMARY KEY (id),
@@ -266,7 +266,7 @@ CREATE TABLE drugEvidenceTreatmentApproch
 CREATE TABLE drugTherapy
 (   id int NOT NULL AUTO_INCREMENT,
     drugId int NOT NULL,
-    drugTherapyId varchar(255),
+    drugTherapyId int NOT NULL,
     therapyname varchar(255),
     synonym varchar(255),
     PRIMARY KEY (id),
@@ -276,7 +276,7 @@ CREATE TABLE drugTherapy
 CREATE TABLE drugGlobalApproavalStatus
 (   id int NOT NULL AUTO_INCREMENT,
     drugId int NOT NULL,
-    drugGlobalApproavalStatusId varchar(255),
+    drugGlobalApproavalStatusId int NOT NULL,
     approvalAuthority varchar(255),
     approvalStatus varchar(255),
     PRIMARY KEY (id),
@@ -286,7 +286,7 @@ CREATE TABLE drugGlobalApproavalStatus
 CREATE TABLE drugGlobalApproavalStatusTherapy
 (   id int NOT NULL AUTO_INCREMENT,
     drugGlobalApproavalStatusId int NOT NULL,
-    drugGlobalApproavalStatusTherapyId varchar(255),
+    drugGlobalApproavalStatusTherapyId int NOT NULL,
     therapyName varchar(255),
     synonym varchar(255),
     PRIMARY KEY (id),
@@ -296,7 +296,7 @@ CREATE TABLE drugGlobalApproavalStatusTherapy
 CREATE TABLE drugGlobalApproavalStatusIndication
 (   id int NOT NULL AUTO_INCREMENT,
     drugGlobalApproavalStatusId int NOT NULL,
-    drugGlobalApproavalStatusIndicationId varchar(255),
+    drugGlobalApproavalStatusIndicationId int NOT NULL,
     name varchar(255),
     source varchar(255),
     PRIMARY KEY (id),
@@ -306,7 +306,7 @@ CREATE TABLE drugGlobalApproavalStatusIndication
 CREATE TABLE drugGlobalApproavalStatusMolecularProfile
 (   id int NOT NULL AUTO_INCREMENT,
     drugGlobalApproavalStatusId int NOT NULL,
-    drugGlobalApproavalStatusMolecularProfileId varchar(255),
+    drugGlobalApproavalStatusMolecularProfileId int NOT NULL,
     profileName varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (drugGlobalApproavalStatusId) REFERENCES drugGlobalApproavalStatus(id)

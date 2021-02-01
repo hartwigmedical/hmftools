@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.molecularprofile;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
@@ -14,8 +15,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MolecularProfile {
 
-    @NotNull
-    public abstract String id();
+    public abstract int id();
 
     @NotNull
     public abstract String profileName();
@@ -26,11 +26,11 @@ public abstract class MolecularProfile {
     @NotNull
     public abstract List<TreatmentApproachInfo> treatmentApproach();
 
-    @NotNull
-    public abstract String createDate();
+    @Nullable
+    public abstract Date createDate();
 
-    @NotNull
-    public abstract String updateDate();
+    @Nullable
+    public abstract Date updateDate();
 
     @NotNull
     public abstract MolecularProfileExtendedEvidence complexMolecularProfileEvidence();
