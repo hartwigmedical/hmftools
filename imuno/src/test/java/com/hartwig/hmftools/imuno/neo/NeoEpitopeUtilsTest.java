@@ -18,6 +18,7 @@ import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
@@ -347,59 +348,75 @@ public class NeoEpitopeUtilsTest
         String novelAAs = "D";
         String downAAs = "EFG";
 
-        Set<String> peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4});
+        List<PeptideData> peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4}, 1);
         assertEquals(7, peptides.size());
-        assertTrue(peptides.contains("BCD"));
-        assertTrue(peptides.contains("CDE"));
-        assertTrue(peptides.contains("DEF"));
-        assertTrue(peptides.contains("ABCD"));
-        assertTrue(peptides.contains("BCDE"));
-        assertTrue(peptides.contains("CDEF"));
-        assertTrue(peptides.contains("DEFG"));
+
+        List<String> peptideStrings = peptides.stream().map(x -> x.Peptide).collect(Collectors.toList()); 
+        assertTrue(peptideStrings.contains("BCD"));
+        assertTrue(peptideStrings.contains("CDE"));
+        assertTrue(peptideStrings.contains("DEF"));
+        assertTrue(peptideStrings.contains("ABCD"));
+        assertTrue(peptideStrings.contains("BCDE"));
+        assertTrue(peptideStrings.contains("CDEF"));
+        assertTrue(peptideStrings.contains("DEFG"));
 
         // insertion type
         novelAAs = "DXX";
 
-        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4});
+        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4}, 0);
+        peptideStrings = peptides.stream().map(x -> x.Peptide).collect(Collectors.toList());
         assertEquals(11, peptides.size());
-        assertTrue(peptides.contains("BCD"));
-        assertTrue(peptides.contains("CDX"));
-        assertTrue(peptides.contains("DXX"));
-        assertTrue(peptides.contains("XXE"));
-        assertTrue(peptides.contains("XEF"));
-        assertTrue(peptides.contains("ABCD"));
-        assertTrue(peptides.contains("BCDX"));
-        assertTrue(peptides.contains("CDXX"));
-        assertTrue(peptides.contains("DXXE"));
-        assertTrue(peptides.contains("XXEF"));
-        assertTrue(peptides.contains("XEFG"));
+        assertTrue(peptideStrings.contains("BCD"));
+        assertTrue(peptideStrings.contains("CDX"));
+        assertTrue(peptideStrings.contains("DXX"));
+        assertTrue(peptideStrings.contains("XXE"));
+        assertTrue(peptideStrings.contains("XEF"));
+        assertTrue(peptideStrings.contains("ABCD"));
+        assertTrue(peptideStrings.contains("BCDX"));
+        assertTrue(peptideStrings.contains("CDXX"));
+        assertTrue(peptideStrings.contains("DXXE"));
+        assertTrue(peptideStrings.contains("XXEF"));
+        assertTrue(peptideStrings.contains("XEFG"));
 
         // no novel - like a fusion
         novelAAs = "";
-        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4});
+        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4}, 0);
+        peptideStrings = peptides.stream().map(x -> x.Peptide).collect(Collectors.toList());
+
         assertEquals(5, peptides.size());
-        assertTrue(peptides.contains("BCE"));
-        assertTrue(peptides.contains("CEF"));
-        assertTrue(peptides.contains("ABCE"));
-        assertTrue(peptides.contains("BCEF"));
-        assertTrue(peptides.contains("CEFG"));
+        assertTrue(peptideStrings.contains("BCE"));
+        assertTrue(peptideStrings.contains("CEF"));
+        assertTrue(peptideStrings.contains("ABCE"));
+        assertTrue(peptideStrings.contains("BCEF"));
+        assertTrue(peptideStrings.contains("CEFG"));
 
         // all downstream bases novel
         novelAAs = "VWXYZ";
         downAAs = "";
-        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4});
-        assertEquals(10, peptides.size());
-        assertTrue(peptides.contains("BCV"));
-        assertTrue(peptides.contains("CVW"));
-        assertTrue(peptides.contains("VWX"));
-        assertTrue(peptides.contains("WXY"));
-        assertTrue(peptides.contains("XYZ"));
+        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 4}, 0);
+        peptideStrings = peptides.stream().map(x -> x.Peptide).collect(Collectors.toList());
 
-        assertTrue(peptides.contains("ABCV"));
-        assertTrue(peptides.contains("BCVW"));
-        assertTrue(peptides.contains("CVWX"));
-        assertTrue(peptides.contains("VWXY"));
-        assertTrue(peptides.contains("WXYZ"));
+        assertEquals(10, peptides.size());
+        assertTrue(peptideStrings.contains("BCV"));
+        assertTrue(peptideStrings.contains("CVW"));
+        assertTrue(peptideStrings.contains("VWX"));
+        assertTrue(peptideStrings.contains("WXY"));
+        assertTrue(peptideStrings.contains("XYZ"));
+
+        assertTrue(peptideStrings.contains("ABCV"));
+        assertTrue(peptideStrings.contains("BCVW"));
+        assertTrue(peptideStrings.contains("CVWX"));
+        assertTrue(peptideStrings.contains("VWXY"));
+        assertTrue(peptideStrings.contains("WXYZ"));
+
+        // test flanks specifically
+        upAAs = "ABCDEFG";
+        novelAAs = "";
+        downAAs = "TUVWXYZ";
+        peptides = generatePeptides(upAAs, novelAAs, downAAs, new int[] {3, 3}, 5);
+        assertEquals(2, peptides.size());
+        assertTrue(peptides.stream().anyMatch(x -> x.Peptide.equals("FGT") && x.UpFlank.equals("ABCDE") && x.DownFlank.equals("UVWXY")));
+        assertTrue(peptides.stream().anyMatch(x -> x.Peptide.equals("GTU") && x.UpFlank.equals("BCDEF") && x.DownFlank.equals("VWXYZ")));
     }
 
 }

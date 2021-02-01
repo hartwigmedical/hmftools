@@ -7,9 +7,9 @@ import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIO
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_FUSION_COHORT_FILE;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.generateFilename;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.imuno.neo.CohortTpmData.CANCER_VALUE;
 import static com.hartwig.hmftools.imuno.neo.CohortTpmData.COHORT_VALUE;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.CANCER_TPM_FILE;
-import static com.hartwig.hmftools.imuno.neo.NeoConfig.SV_FUSION_DATA_DIR;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.convertHlaTypeForPredictions;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.generatePeptides;
@@ -466,14 +465,15 @@ public class NeoEpitopeAnnotator
                 if(mConfig.WriteCohortFile)
                     mPeptideWriter.write("SampleId,");
 
-                mPeptideWriter.write("NeId,HlaAllele,Peptide");
+                mPeptideWriter.write("NeId,HlaAllele,Peptide,NFlank,CFlank");
                 mPeptideWriter.newLine();
             }
 
             if(mConfig.WriteCohortFile)
                 mPeptideWriter.write(String.format("%s,", mCurrentSample.Id));
 
-            final Set<String> peptides = generatePeptides(neData.UpstreamAcids, neData.NovelAcid, neData.DownstreamAcids, mConfig.PeptideLengths);
+            final List<PeptideData> peptides = generatePeptides(
+                    neData.UpstreamAcids, neData.NovelAcid, neData.DownstreamAcids, mConfig.PeptideLengths, mConfig.PeptideFlanks);
 
             for(String hlaType : mCurrentSample.HlaTypes)
             {
@@ -485,13 +485,18 @@ public class NeoEpitopeAnnotator
                     continue;
                 }
 
-                for(String peptide : peptides)
+                for(PeptideData peptideData : peptides)
                 {
                     // skip any peptide which is contained within the upstream wildtype AAs
-                    if(neData.UpstreamWildTypeAcids.contains(peptide))
+                    if(neData.UpstreamWildTypeAcids.contains(peptideData.Peptide))
                         continue;
 
-                    mPeptideWriter.write(String.format("%d,%s,%s", neId, predictionHlaType, peptide));
+                    // for now skip any upstream peptide containing the 21st AA until MhcFlurry can handle it
+                    if(peptideData.Peptide.contains(AA_SELENOCYSTEINE) || peptideData.UpFlank.contains(AA_SELENOCYSTEINE))
+                        continue;
+
+                    mPeptideWriter.write(String.format("%d,%s,%s,%s,%s",
+                            neId, predictionHlaType, peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank));
                     mPeptideWriter.newLine();
                 }
             }

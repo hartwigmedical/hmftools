@@ -25,6 +25,7 @@ public class NeoConfig
 {
     public final List<SampleData> Samples;
     public final int[] PeptideLengths;
+    public final int PeptideFlanks;
 
     public final RefGenomeInterface RefGenome;
 
@@ -40,6 +41,7 @@ public class NeoConfig
     public static final String CANCER_TYPE = "cancer_type";
     public static final String HLA_TYPES = "hla_types";
     public static final String PEPTIDE_LENGTHS = "peptide_lengths";
+    public static final String PEPTIDE_FLANKS = "peptide_flanks";
 
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SV_FUSION_DATA_DIR = "sv_fusion_data_dir";
@@ -104,6 +106,8 @@ public class NeoConfig
             }
         }
 
+        PeptideFlanks = Integer.parseInt(cmd.getOptionValue(PEPTIDE_FLANKS, "0"));
+
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
         RefGenome = loadRefGenome(refGenomeFilename);
 
@@ -129,6 +133,7 @@ public class NeoConfig
     {
         Samples = samples;
         PeptideLengths = new int[SE_PAIR];
+        PeptideFlanks = 0;
         RefGenome = refGenome;
         RestrictedGeneIds = restrictedGeneIds;
         RequiredAminoAcids = requiredAminoAcids;
@@ -144,6 +149,7 @@ public class NeoConfig
         options.addOption(CANCER_TYPE, true, "Tumor cancer type (optional) - to retrieve cancer median TPM");
         options.addOption(HLA_TYPES, true, "Sample HLA types, separated by ';'");
         options.addOption(PEPTIDE_LENGTHS, true, "Peptide length min-max, separated by '-', eg 8-12");
+        options.addOption(PEPTIDE_FLANKS, true, "Peptide flanking amino acids");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl data cache directory");
         options.addOption(GENE_ID_FILE, true, "Restrict to specific genes");
         options.addOption(REF_GENOME, true, "Ref genome");

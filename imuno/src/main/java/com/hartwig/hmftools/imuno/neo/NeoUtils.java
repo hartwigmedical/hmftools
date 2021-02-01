@@ -34,6 +34,8 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.CodingBaseData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
+import org.apache.commons.compress.utils.Lists;
+
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -693,10 +695,11 @@ public class NeoUtils
         return aminoAcidStr;
     }
 
-    public static Set<String> generatePeptides(
-            final String upAAs, final String novelAAs, final String downAAs, final int[] peptideLengths)
+    public static List<PeptideData> generatePeptides(
+            final String upAAs, final String novelAAs, final String downAAs, final int[] peptideLengths, int flankingBases)
     {
-        final Set<String> peptides = Sets.newHashSet();
+        final Set<String> uniquePeptides = Sets.newHashSet();
+        final List<PeptideData> peptides = Lists.newArrayList();
 
         // replace any mis-classified upstream stop-codons with 'U' = selenocysteine
         final String fullAminoAcids = upAAs.replaceAll(STOP_SYMBOL, AA_SELENOCYSTEINE) + novelAAs + downAAs;
@@ -731,7 +734,31 @@ public class NeoUtils
                     break;
 
                 String peptide = fullAminoAcids.substring(currentIndex, currentIndex + length);
-                peptides.add(peptide);
+
+                if(!uniquePeptides.contains(peptide))
+                {
+                    uniquePeptides.add(peptide);
+
+                    String upFlank = "";
+                    String downFlank = "";
+
+                    if(flankingBases > 0)
+                    {
+                        if(currentIndex > 0)
+                            upFlank = fullAminoAcids.substring(max(currentIndex - flankingBases, 0), currentIndex);
+
+                        if(currentIndex + length < fullAminoAcids.length())
+                        {
+                            downFlank = fullAminoAcids.substring(
+                                    currentIndex + length, min(currentIndex + length + flankingBases, fullAminoAcids.length()));
+
+                            downFlank = downFlank.replaceAll(STOP_SYMBOL, "");
+                        }
+                    }
+
+                    peptides.add(new PeptideData(peptide, upFlank, downFlank));
+                }
+
                 ++currentIndex;
             }
         }
