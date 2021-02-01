@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.imuno.neo.NeoEpitopeUtilsTest.CHR_1;
 import static com.hartwig.hmftools.imuno.neo.NeoEpitopeUtilsTest.GENE_ID_1;
 import static com.hartwig.hmftools.imuno.neo.NeoEpitopeUtilsTest.TRANS_ID_1;
 import static com.hartwig.hmftools.imuno.neo.NeoEpitopeUtilsTest.generateRandomBases;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
 
 import static org.junit.Assert.assertEquals;
 
@@ -443,31 +444,57 @@ public class NeoEpitopeTest
 
         // delete - of 2 bases, out of phase
         pmData = new PointMutationData(
-                CHR_1, 40, chr1Bases.substring(40, 43), chr1Bases.substring(40, 41),
+                CHR_1, 46, chr1Bases.substring(46, 49), chr1Bases.substring(46, 47),
                 GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
 
         neData = new PmNeoEpitope(pmData);
 
         neData.setTranscriptData(transDataPosStrand, transDataPosStrand);
 
-        assertEquals(40, neData.position(FS_UP));
-        assertEquals(43, neData.position(FS_DOWN));
+        assertEquals(46, neData.position(FS_UP));
+        assertEquals(49, neData.position(FS_DOWN));
         assertEquals(PHASE_1, neData.Phases[FS_UP]);
         assertEquals(PHASE_1, neData.Phases[FS_DOWN]);
         Assert.assertFalse(neData.phaseMatched());
 
         neData.setCodingBases(refGenome, 3);
 
-        upBases = chr1Bases.substring(25, 31);
+        upBases = chr1Bases.substring(28, 31) + chr1Bases.substring(40, 46);
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        novelBases = chr1Bases.substring(40, 41) + chr1Bases.substring(43, 51) + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91)
+        novelBases = chr1Bases.substring(46, 47) + chr1Bases.substring(49, 51) + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91)
                 + chr1Bases.substring(100, 111);
         assertEquals(novelBases, neData.NovelCodonBases);
 
         assertEquals("", neData.CodingBases[FS_DOWN]);
 
-        // delete - of 2 bases, out of phase, but delete starting with a new codon's first 2 bases
+        // delete - of 2 bases, out of phase, starting mnid codon
+        pmData = new PointMutationData(
+                CHR_1, 47, chr1Bases.substring(47, 50), chr1Bases.substring(47, 48),
+                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+
+        neData = new PmNeoEpitope(pmData);
+
+        neData.setTranscriptData(transDataPosStrand, transDataPosStrand);
+
+        assertEquals(47, neData.position(FS_UP));
+        assertEquals(50, neData.position(FS_DOWN));
+        assertEquals(PHASE_2, neData.Phases[FS_UP]);
+        assertEquals(PHASE_2, neData.Phases[FS_DOWN]);
+        Assert.assertFalse(neData.phaseMatched());
+
+        neData.setCodingBases(refGenome, 3);
+
+        upBases = chr1Bases.substring(28, 31) + chr1Bases.substring(40, 46);
+        assertEquals(upBases, neData.CodingBases[FS_UP]);
+
+        novelBases = chr1Bases.substring(46, 48) + chr1Bases.substring(50, 51) + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91)
+                + chr1Bases.substring(100, 111);
+        assertEquals(novelBases, neData.NovelCodonBases);
+
+        assertEquals("", neData.CodingBases[FS_DOWN]);
+
+        // delete - of 2 bases, out of phase, but deleting a new codon's first 2 bases
         pmData = new PointMutationData(
                 CHR_1, 42, chr1Bases.substring(42, 45), chr1Bases.substring(42, 43),
                 GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
@@ -488,6 +515,32 @@ public class NeoEpitopeTest
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
         novelBases = chr1Bases.substring(45, 51) + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91)
+                + chr1Bases.substring(100, 111);
+        assertEquals(novelBases, neData.NovelCodonBases);
+
+        assertEquals("", neData.CodingBases[FS_DOWN]);
+
+        // same again but with enough room to get required upstream bases
+        pmData = new PointMutationData(
+                CHR_1, 45, chr1Bases.substring(45, 48), chr1Bases.substring(45, 46),
+                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+
+        neData = new PmNeoEpitope(pmData);
+
+        neData.setTranscriptData(transDataPosStrand, transDataPosStrand);
+
+        assertEquals(45, neData.position(FS_UP));
+        assertEquals(48, neData.position(FS_DOWN));
+        assertEquals(PHASE_0, neData.Phases[FS_UP]);
+        assertEquals(PHASE_0, neData.Phases[FS_DOWN]);
+        Assert.assertFalse(neData.phaseMatched());
+
+        neData.setCodingBases(refGenome, 3);
+
+        upBases = chr1Bases.substring(28, 31) + chr1Bases.substring(40, 46);
+        assertEquals(upBases, neData.CodingBases[FS_UP]);
+
+        novelBases = chr1Bases.substring(48, 51) + chr1Bases.substring(60, 71) + chr1Bases.substring(80, 91)
                 + chr1Bases.substring(100, 111);
         assertEquals(novelBases, neData.NovelCodonBases);
 
@@ -518,6 +571,37 @@ public class NeoEpitopeTest
 
         downBases = chr1Bases.substring(46, 51) + chr1Bases.substring(60, 64);
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
+
+        neData.setAminoAcids(refGenome, 3);
+        String upWildtypeBases = chr1Bases.substring(25, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 61);
+        String upWildAAs = getAminoAcids(upWildtypeBases, true);
+        assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
+
+        // same again but allowing for enough coding bases upstream to satisfy the required count
+        pmData = new PointMutationData(
+                CHR_1, 45, chr1Bases.substring(45, 49), chr1Bases.substring(45, 46),
+                GENE_ID_1, NONSENSE_OR_FRAMESHIFT, 1, -1);
+
+        neData = new PmNeoEpitope(pmData);
+
+        neData.setTranscriptData(transDataPosStrand, transDataPosStrand);
+
+        assertEquals(45, neData.position(FS_UP));
+        assertEquals(49, neData.position(FS_DOWN));
+        assertEquals(PHASE_0, neData.Phases[FS_UP]);
+        assertEquals(PHASE_1, neData.Phases[FS_DOWN]);
+        Assert.assertTrue(neData.phaseMatched());
+
+        neData.setCodingBases(refGenome, 3);
+
+        upBases = chr1Bases.substring(28, 31) + chr1Bases.substring(40, 46);
+        assertEquals(upBases, neData.CodingBases[FS_UP]);
+
+        assertEquals("", neData.NovelCodonBases);
+
+        downBases = chr1Bases.substring(49, 51) + chr1Bases.substring(60, 67);
+        assertEquals(downBases, neData.CodingBases[FS_DOWN]);
+
 
         // delete on negative strand
         codingStart = 25;
@@ -576,6 +660,11 @@ public class NeoEpitopeTest
 
         downBases = reverseStrandBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
+
+        neData.setAminoAcids(refGenome, 3);
+        upWildtypeBases = chr1Bases.substring(30, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 66);
+        upWildAAs = getAminoAcids(reverseStrandBases(upWildtypeBases), true);
+        assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
 
         // again but a base up
         pmData = new PointMutationData(
@@ -825,6 +914,11 @@ public class NeoEpitopeTest
 
         assertEquals("", neData.CodingBases[FS_DOWN]);
 
+        neData.setAminoAcids(refGenome, 3);
+        String upWildtypeBases = chr1Bases.substring(25, 31) + chr1Bases.substring(40, 50);
+        String upWildAAs = getAminoAcids(upWildtypeBases, true);
+        assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
+
         // intronic to exonic - skips to next exon
         svData = new NeoEpitopeFusion(
                 GENE_ID_1, GENE_ID_1, CHR_1, 35, POS_ORIENT, 1, GENE_ID_1, GENE_ID_1, CHR_1, 45, NEG_ORIENT,
@@ -916,6 +1010,10 @@ public class NeoEpitopeTest
 
         assertEquals("", neData.CodingBases[FS_DOWN]);
 
+        neData.setAminoAcids(refGenome, 3);
+        upWildtypeBases = chr1Bases.substring(25, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 61);
+        upWildAAs = getAminoAcids(upWildtypeBases, true);
+        assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
     }
 
 }

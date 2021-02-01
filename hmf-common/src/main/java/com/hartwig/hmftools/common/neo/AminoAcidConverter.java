@@ -9,6 +9,7 @@ public class AminoAcidConverter
     public static final String STOP_SYMBOL = "_";
 
     public static final String START_CODON = "AUG";
+    public static final String AA_SELENOCYSTEINE = "U";
 
     public static final String UNKNOWN = "ERROR";
 

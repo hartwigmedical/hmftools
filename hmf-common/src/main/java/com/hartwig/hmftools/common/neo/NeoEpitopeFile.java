@@ -45,6 +45,7 @@ public class NeoEpitopeFile
     public final String[] CodingBaseCigars;
     public final double[] CancerTpmTotal;
     public final double[] CohortTpmTotal;
+    public final boolean WildtypeNovelAAMatch;
 
     public static final String DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
@@ -60,7 +61,7 @@ public class NeoEpitopeFile
             final String transcriptsUp, final String transcriptsDown, final String wildtypeAAs,
             int codingBaseUpPosStart, int codingBaseUpPosEnd, final String codingBasesUp, final String codingBaseCigarUp,
             int codingBaseDownPosStart, int codingBaseDownPosEnd, final String codingBasesDown, final String codingBaseCigarDown,
-            double tmpCancerUp, double tmpCohortUp, double tmpCancerDown, double tmpCohortDown)
+            double tmpCancerUp, double tmpCohortUp, double tmpCancerDown, double tmpCohortDown, boolean wildtypeNovelAAMatch)
     {
         Id = id;
         VariantType = varType;
@@ -87,6 +88,7 @@ public class NeoEpitopeFile
         CodingBasePositions[FS_DOWN] = new int[] {codingBaseDownPosStart, codingBaseDownPosEnd};
         CancerTpmTotal = new double[] { tmpCancerUp, tmpCohortUp };
         CohortTpmTotal = new double[] { tmpCancerDown, tmpCohortDown };
+        WildtypeNovelAAMatch = wildtypeNovelAAMatch;
     }
 
     private static final String FILE_EXTENSION = ".imu.neo_epitope.tsv";
@@ -171,6 +173,7 @@ public class NeoEpitopeFile
                 .add("TpmCohortUp")
                 .add("TpmCancerDown")
                 .add("TpmCohortDown")
+                .add("WildtypeNovelAAMatch")
                 .toString();
     }
 
@@ -216,6 +219,7 @@ public class NeoEpitopeFile
         sj.add(String.format("%6.3e", neo.CohortTpmTotal[FS_UP]));
         sj.add(String.format("%6.3e", neo.CancerTpmTotal[FS_DOWN]));
         sj.add(String.format("%6.3e", neo.CohortTpmTotal[FS_DOWN]));
+        sj.add(String.valueOf(neo.WildtypeNovelAAMatch));
 
         return sj.toString();
     }
@@ -240,7 +244,8 @@ public class NeoEpitopeFile
                 values[index++], values[index++], values[index++],
                 Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++],
                 Integer.parseInt(values[index++]), Integer.parseInt(values[index++]), values[index++], values[index++],
-                Double.parseDouble(values[index++]), Double.parseDouble(values[index++]), Double.parseDouble(values[index++]), Double.parseDouble(values[index++]));
+                Double.parseDouble(values[index++]), Double.parseDouble(values[index++]),
+                Double.parseDouble(values[index++]), Double.parseDouble(values[index++]), Boolean.parseBoolean(values[index++]));
     }
 
     public static String pointMutationInfo(final String chromosome, int position, final String ref, final String alt)

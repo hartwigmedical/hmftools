@@ -6,8 +6,10 @@ import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -21,6 +23,7 @@ import static com.hartwig.hmftools.imuno.neo.NeoUtils.calcStartCodonBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.calcStopCodonBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.checkTrimBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
+import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBaseExcerpt;
 
 import java.util.Set;
 import java.util.StringJoiner;
@@ -59,6 +62,7 @@ public abstract class NeoEpitope
     public int CodingBasesLengthMin;
     public int CodingBasesLengthMax;
     public String WildtypeAcids;
+    public String UpstreamWildTypeAcids; // wildtype AAs starting from the upstream AAs
 
     public boolean Valid;
 
@@ -66,6 +70,8 @@ public abstract class NeoEpitope
     public String[] ExtCodingBases;
     public int[][] ExtPositions; // coding base up and down position
     public final Cigar[] ExtCigars;
+
+    public static final int UPSTREAM_WILDTYPE_AA_LENGTH = 10;
 
     public NeoEpitope()
     {
@@ -87,6 +93,7 @@ public abstract class NeoEpitope
         CodingBasesLengthMin = 0;
         CodingBasesLengthMax = 0;
         WildtypeAcids = "";
+        UpstreamWildTypeAcids = "";
         Valid = true;
 
         ExtCodingBases = new String[] {"", ""};
@@ -166,15 +173,15 @@ public abstract class NeoEpitope
                 downstreamBases = "";
             }
 
-            // check superflous bases from longer inserts
-            int requiredLength = reqAminoAcids * 3;
-
-            if(upstreamBases.length() > requiredLength)
-                upstreamBases = upstreamBases.substring(upstreamBases.length() - requiredLength);
-
             CodingBases[FS_UP] = upstreamBases;
             CodingBases[FS_DOWN] = downstreamBases;
         }
+
+        // check superflous upstream bases from longer inserts or INDELs
+        int requiredLength = reqAminoAcids * 3;
+
+        if(CodingBases[FS_UP].length() > requiredLength)
+            CodingBases[FS_UP] = CodingBases[FS_UP].substring(CodingBases[FS_UP].length() - requiredLength);
 
         IM_LOGGER.trace("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
                 this, CodingBases[FS_UP], checkTrimBases(NovelCodonBases),
@@ -192,7 +199,7 @@ public abstract class NeoEpitope
         CodingBasesLengthMin = CodingBasesLengthMax = upstreamCodingBases + downstreamCodingBases;
     }
 
-    public void setAminoAcids()
+    public void setAminoAcids(final RefGenomeInterface refGenome, int reqWildtypeAminoAcids)
     {
         UpstreamAcids = getAminoAcids(CodingBases[FS_UP], false);
         NovelAcid = getAminoAcids(NovelCodonBases, true);
@@ -204,6 +211,25 @@ public abstract class NeoEpitope
             int novelBases = NovelAcid.length() * 3;
             NovelCodonBases = NovelCodonBases.substring(0, novelBases);
             DownstreamAcids = "";
+        }
+
+        // cache bases downstream of mutation in the reference to check for non-novel AAs later on
+        int upstreamAAPosStart = orientation(FS_UP) == POS_ORIENT ? ExtPositions[FS_UP][SE_START] : ExtPositions[FS_UP][SE_END];
+        byte wtOrient = orientation(FS_UP) == POS_ORIENT ? NEG_ORIENT : POS_ORIENT;
+        int requiredBases = CodingBases[FS_UP].length() + reqWildtypeAminoAcids * 3;
+
+        CodingBaseExcerpt wildTypeUpExcerpt = getDownstreamCodingBaseExcerpt(
+                refGenome, TransData[FS_UP], chromosome(FS_UP), upstreamAAPosStart, wtOrient,
+                requiredBases, true, false, false);
+
+        if(wildTypeUpExcerpt != null)
+        {
+            String upWildtypeBases = wildTypeUpExcerpt.Bases;
+
+            if(strand(FS_UP) == NEG_STRAND)
+                upWildtypeBases = reverseStrandBases(upWildtypeBases);
+
+            UpstreamWildTypeAcids = getAminoAcids(upWildtypeBases, true);
         }
 
         IM_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",
@@ -218,6 +244,24 @@ public abstract class NeoEpitope
     }
 
     public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
+
+    public boolean hasWildtypeAminoAcidMatch()
+    {
+        int upstreamAALength = UpstreamAcids.length();
+        if(UpstreamWildTypeAcids.length() < upstreamAALength + 1)
+            return false;
+
+        // check if the first novel or downstream AA matches the first wildtype upstream AA
+        String upWildtypeAA = UpstreamWildTypeAcids.substring(upstreamAALength, upstreamAALength + 1);
+        String downAA;
+
+        if(!NovelAcid.isEmpty())
+            downAA = NovelAcid.substring(0, 1);
+        else
+            downAA = DownstreamAcids.substring(0, 1);
+
+        return upWildtypeAA.equals(downAA);
+    }
 
     public NeoEpitopeFile toFile(
             final int neId, final Set<String> upTransNames, final Set<String> downTransNames,
@@ -238,6 +282,6 @@ public abstract class NeoEpitope
                 ExtPositions[FS_UP][SE_START], ExtPositions[FS_UP][SE_END], ExtCodingBases[FS_UP], ExtCigars[FS_UP].toString(),
                 ExtPositions[FS_DOWN][SE_START], ExtPositions[FS_DOWN][SE_END], ExtCodingBases[FS_DOWN],
                 ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "",
-                tpmCancer[FS_UP], tpmCohort[FS_UP], tpmCancer[FS_DOWN], tpmCohort[FS_DOWN]);
+                tpmCancer[FS_UP], tpmCohort[FS_UP], tpmCancer[FS_DOWN], tpmCohort[FS_DOWN], hasWildtypeAminoAcidMatch());
     }
 }

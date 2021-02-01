@@ -240,6 +240,12 @@ public class PmNeoEpitope extends NeoEpitope
         if(posStrand())
         {
             upPosition = mPointMutation.Position - 1;
+
+            if(!isBaseChange() && upExtraBases == 0 && getUpstreamStartPhase() == PHASE_0)
+            {
+                // since ref base will be the same, require 1 less coding bases upstream
+                --upRequiredBases;
+            }
         }
         else
         {

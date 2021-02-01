@@ -301,7 +301,7 @@ public class NeoEpitopeAnnotator
             return;
 
         neDataList.forEach(x -> x.setCodingBases(mConfig.RefGenome, mConfig.RequiredAminoAcids));
-        neDataList.forEach(x -> x.setAminoAcids());
+        neDataList.forEach(x -> x.setAminoAcids(mConfig.RefGenome, mConfig.RequiredAminoAcids));
         neDataList.forEach(x -> x.setNonsenseMediatedDecay());
         neDataList.forEach(x -> x.setSkippedSpliceSites(mGeneTransCache));
 
@@ -487,6 +487,10 @@ public class NeoEpitopeAnnotator
 
                 for(String peptide : peptides)
                 {
+                    // skip any peptide which is contained within the upstream wildtype AAs
+                    if(neData.UpstreamWildTypeAcids.contains(peptide))
+                        continue;
+
                     mPeptideWriter.write(String.format("%d,%s,%s", neId, predictionHlaType, peptide));
                     mPeptideWriter.newLine();
                 }

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -697,7 +698,8 @@ public class NeoUtils
     {
         final Set<String> peptides = Sets.newHashSet();
 
-        final String fullAminoAcids = upAAs + novelAAs + downAAs;
+        // replace any mis-classified upstream stop-codons with 'U' = selenocysteine
+        final String fullAminoAcids = upAAs.replaceAll(STOP_SYMBOL, AA_SELENOCYSTEINE) + novelAAs + downAAs;
         int upstreamLength = upAAs.length();
         int novelLength = novelAAs.length();
         boolean hasNovelAAs = !novelAAs.isEmpty();
