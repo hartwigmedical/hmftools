@@ -18,8 +18,8 @@ import com.hartwig.hmftools.ckb.datamodel.common.ImmutableReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.ImmutableTreatmentApproach;
-import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.ImmutableTreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 

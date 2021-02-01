@@ -24,7 +24,7 @@ import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.ckb.reader.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.reader.therapy.TherapyFactory;
-import com.hartwig.hmftools.ckb.datamodel.treatmentApproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
 import com.hartwig.hmftools.ckb.reader.treatmentapproch.TreatmentApproachFactory;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.ckb.reader.variant.VariantFactory;
